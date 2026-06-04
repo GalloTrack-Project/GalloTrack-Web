@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GalloTrack - Gamefowl Profiles</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <nav class="bg-emerald-700 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">GALLOTRACK</h1>
+            <div class="space-x-4 flex items-center">
+                <a href="/" class="hover:underline opacity-80">Dashboard</a>
+                <a href="/profiles" class="hover:underline font-semibold">Gamefowl Profiles</a>
+                {% if current_user.is_authenticated %}
+                    <span class="text-sm">{{ current_user.username }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-8 px-4 max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-lg {% if category == 'danger' %}bg-red-100 text-red-700{% elif category == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Registration Form -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Gamefowl Registration</h2>
+                <p class="text-sm text-gray-500 mb-6">Input comprehensive physical specs and biological markings to maintain data integrity.</p>
+
+                <form method="POST" action="/add_fowl" class="space-y-6" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            {{ form.name.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.name(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none") }}
+                            {% if form.name.errors %}
+                                <div class="text-red-500 text-xs mt-1">
+                                    {% for error in form.name.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {{ form.breed.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.breed(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none") }}
+                            {% if form.breed.errors %}
+                                <div class="text-red-500 text-xs mt-1">
+                                    {% for error in form.breed.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            {{ form.gender.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.gender(class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500") }}
+                            {% if form.gender.errors %}
+                                <div class="text-red-500 text-xs mt-1">
+                                    {% for error in form.gender.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {{ form.age_months.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.age_months(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none", placeholder="Months") }}
+                            {% if form.age_months.errors %}
+                                <div class="text-red-500 text-xs mt-1">
+                                    {% for error in form.age_months.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {{ form.feather_color.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.feather_color(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none") }}
+                        </div>
+                        <div>
+                            {{ form.leg_color.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.leg_color(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none") }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            {{ form.weight_kg.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.weight_kg(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none", placeholder="kg") }}
+                        </div>
+                        <div>
+                            {{ form.height_inches.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                            {{ form.height_inches(class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none", placeholder="inches") }}
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
+                        <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3">Lineage Ancestry Relationship</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                {{ form.sire_id.label(class="block text-xs font-semibold text-gray-600 mb-1") }}
+                                {{ form.sire_id(class="w-full p-2 border border-gray-300 rounded bg-white text-sm") }}
+                            </div>
+                            <div>
+                                {{ form.dam_id.label(class="block text-xs font-semibold text-gray-600 mb-1") }}
+                                {{ form.dam_id(class="w-full p-2 border border-gray-300 rounded bg-white text-sm") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                        <div>
+                            {{ form.status.label(class="text-sm font-medium text-gray-700 mr-2") }}
+                            {{ form.status(class="p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500") }}
+                        </div>
+                        {{ form.submit(class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow transition") }}
+                    </div>
+                </form>
+            </div>
+
+            <!-- Gamefowl List -->
+            {% if gamefowl_list %}
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Your Gamefowl ({{ gamefowl_list | length }})</h2>
+                    <div class="space-y-3">
+                        {% for bird in gamefowl_list %}
+                            <div class="border rounded-lg p-4 hover:shadow-md transition">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-bold text-lg">
+                                            <a href="/gamefowl/{{ bird.id }}" class="text-emerald-600 hover:text-emerald-700">
+                                                {{ bird.name }}
+                                            </a>
+                                        </h3>
+                                        <p class="text-gray-600">{{ bird.breed }} - {{ bird.gender }} ({{ bird.age_months }} months)</p>
+                                        <p class="text-sm text-gray-500">Status: {{ bird.status }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold text-emerald-600">{{ "%.0f"|format(bird.get_winning_percentage()) }}%</p>
+                                        <p class="text-sm text-gray-600">
+                                            {% set record = bird.get_match_record() %}
+                                            {{ record.wins }}W-{{ record.losses }}L-{{ record.draws }}D
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Sidebar: Performance Overview -->
+        <div class="space-y-6">
+            {% if gamefowl_list %}
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-amber-500">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">Overall Performance</h3>
+                    <p class="text-xs text-gray-400 mb-4">Your fleet's combined performance.</p>
+
+                    {% set total_wins = gamefowl_list | map(attribute='get_match_record') | sum(attribute='wins', start=0) %}
+                    {% set total_losses = gamefowl_list | map(attribute='get_match_record') | sum(attribute='losses', start=0) %}
+                    {% set total_matches = total_wins + total_losses %}
+
+                    <div class="text-center py-4 bg-gray-50 rounded mb-4">
+                        <span class="block text-gray-400 text-xs uppercase font-semibold">Average Winning Rate</span>
+                        {% if total_matches > 0 %}
+                            <span class="text-4xl font-extrabold text-amber-600">{{ "%.1f"|format((total_wins / total_matches) * 100) }}%</span>
+                        {% else %}
+                            <span class="text-4xl font-extrabold text-gray-400">N/A</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-center text-sm font-semibold">
+                        <div class="bg-emerald-50 text-emerald-700 p-2 rounded">
+                            <span class="block text-xs text-emerald-600 font-normal">Wins</span> {{ total_wins }}
+                        </div>
+                        <div class="bg-rose-50 text-rose-700 p-2 rounded">
+                            <span class="block text-xs text-rose-600 font-normal">Losses</span> {{ total_losses }}
+                        </div>
+                        <div class="bg-gray-100 text-gray-700 p-2 rounded">
+                            <span class="block text-xs text-gray-500 font-normal">Total</span> {{ total_matches }}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-blue-50 p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Ready to Get Started?</h3>
+                    <p class="text-blue-700 text-sm">
+                        Add your first gamefowl profile using the form on the left. Track their lineage, log match results, and analyze performance!
+                    </p>
+                </div>
+            {% endif %}
+
+            <!-- Data Privacy Notice -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">Data Privacy</h3>
+                <p class="text-xs text-gray-600">
+                    In compliance with Republic Act No. 10173 (Data Privacy Act of 2012), your gamefowl records and lineage information are encrypted and securely stored. Only you can access your data.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GalloTrack - Analytics Dashboard</title>
+    <!-- Tailwind CSS para sa malinis na UI -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js para sa totoong Visual Charts at Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-emerald-700 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">GALLOTRACK</h1>
+            <div class="space-x-4">
+                <a href="/dashboard" class="hover:underline font-semibold">Dashboard</a>
+                <a href="/profiles" class="hover:underline opacity-80">Gamefowl Profiles</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="container mx-auto mt-8 px-4 max-w-6xl space-y-8">
+        
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Sprint 4: Analytics Dashboard</h2>
+            <p class="text-sm text-gray-500">Real-time dynamic data visualizations for gamefowl metrics.</p>
+        </div>
+
+        <!-- GRAPHS SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Chart 1: Individual Bird Win Rate (Pie/Doughnut Chart) -->
+            <div class="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Overall Match Win/Loss/Draw Ratio</h3>
+                <div class="w-64 h-64">
+                    <canvas id="winRateChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Bloodline Performance Trends (Bar Chart) -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Bloodline Performance Trends (By Breed)</h3>
+                <div class="w-full h-64">
+                    <canvas id="bloodlineChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MATCH HISTORY TIMELINE SECTION -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Match History Timeline</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-bold">
+                        <tr>
+                            <th class="p-4">Match Date</th>
+                            <th class="p-4">Gamefowl Name</th>
+                            <th class="p-4">Opponent</th>
+                            <th class="p-4 text-center">Result Outcome</th>
+                            <th class="p-4">Performance Metrics/Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <!-- Halimbawang Static Data na papalitan natin ng dynamic database variables mamaya -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 text-xs text-gray-400">2026-06-01</td>
+                            <td class="p-4 font-bold text-gray-800">Black Jack (Sweater)</td>
+                            <td class="p-4">Kelso Strain</td>
+                            <td class="p-4 text-center"><span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-3 py-1 rounded">WIN</span></td>
+                            <td class="p-4 text-xs italic text-gray-400">High agility, dominant high-breaking attacks.</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 text-xs text-gray-400">2026-05-28</td>
+                            <td class="p-4 font-bold text-gray-800">Lightning Hawk (Lemon)</td>
+                            <td class="p-4">Radio Line</td>
+                            <td class="p-4 text-center"><span class="bg-rose-100 text-rose-800 text-xs font-extrabold px-3 py-1 rounded">LOSS</span></td>
+                            <td class="p-4 text-xs italic text-gray-400">Countered on ground exchanges, lower endurance.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SCRIPT PARA MAG-RENDER ANG MGA CHARTS AND GRAPHS -->
+    <script>
+        // 1. Script para sa Individual/Overall Win Rate (Doughnut Chart)
+        const ctxWin = document.getElementById('winRateChart').getContext('2d');
+        new Chart(ctxWin, {
+            type: 'doughnut',
+            data: {
+                labels: ['Wins', 'Losses', 'Draws'],
+                datasets: [{
+                    data: [12, 4, 2], // Lalagyan natin ng variables mula sa Python mamaya
+                    backgroundColor: ['#10b981', '#f43f5e', '#6b7280'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // 2. Script para sa Bloodline Performance Trends (Bar Chart)
+        const ctxBlood = document.getElementById('bloodlineChart').getContext('2d');
+        new Chart(ctxBlood, {
+            type: 'bar',
+            data: {
+                labels: ['Sweater', 'Lemon', 'Hatch', 'Kelso', 'Grey'], // Mga breeds/rasa
+                datasets: [{
+                    label: 'Total Wins Secured',
+                    data: [8, 5, 4, 2, 1], // Bilang ng panalo kada breed
+                    backgroundColor: '#047857',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
