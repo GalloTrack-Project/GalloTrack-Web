@@ -59,7 +59,7 @@ export default function GalloTrackSystem() {
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Form Fields
+  // Form Field States wired to structural parameters
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('Sweater');
   const [newGender, setNewGender] = useState('Rooster');
@@ -206,7 +206,7 @@ export default function GalloTrackSystem() {
       if (insertErr) {
         alert(`Database Insertion Error: ${insertErr.message}`);
       } else {
-        alert('GalloTrack Notice: Record successfully saved.');
+        alert('GalloTrack Notice: Record successfully saved with expanded behavioral & color indices.');
         setNewName(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setSelectedImage(null);
         fetchDatabaseResources();
       }
@@ -285,11 +285,7 @@ export default function GalloTrackSystem() {
           </nav>
           
           <div className="p-4 border-t border-slate-800 bg-slate-950/60 space-y-3">
-            {/* INAYOS: Semicolon syntax integration para mawala ang void truthiness check error */}
-            <button 
-              onClick={() => { setUsername(''); setPassword(''); setCurrentPage('login'); }} 
-              className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer"
-            >
+            <button onClick={() => { setUsername(''); setPassword(''); setCurrentPage('login'); }} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
               <span>🚪 Terminate Core Session</span>
             </button>
             <div className="text-center text-[9px] text-slate-600 font-mono tracking-widest uppercase">ISUFST CLUSTER SYSTEM</div>
@@ -409,7 +405,7 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-2 gap-2.5">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Color Category</label>
-                          <select value={newColorCategory} onChange={(e) => setNewColorCategory(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-bold outline-none focus:bg-white focus:border-emerald-500 transition-all">
+                          <select value={newColorCategory} onChange={(e) => { setNewColorCategory(e.target.value); setNewColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-bold outline-none focus:bg-white focus:border-emerald-500 transition-all">
                             <option value="Red">Red Class</option>
                             <option value="Light Color">Light Color Class</option>
                           </select>
@@ -526,9 +522,9 @@ export default function GalloTrackSystem() {
                                 <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md uppercase tracking-wide">{fowl.breed}</span>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-[11px] text-slate-500 font-medium bg-slate-50/60 p-2 rounded-xl border border-slate-100">
-                                <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
-                                <div>Trait: <strong className="text-emerald-700 font-bold">{fowl.behavior_trait}</strong></div>
-                                <div>Eye Spec: <strong className="text-slate-800">{fowl.eye_variant}</strong></div>
+                                <div>Color: <strong className="text-slate-800">{fowl.color_category || 'Red'} ({fowl.color || 'Bright Red'})</strong></div>
+                                <div>Trait: <strong className="text-emerald-700 font-bold">{fowl.behavior_trait || 'Wave-Motion Cutter'}</strong></div>
+                                <div>Eye Spec: <strong className="text-slate-800">{fowl.eye_variant || 'Standard Eye'}</strong></div>
                                 <div>Age: <strong className="text-slate-800">{fowl.age}</strong></div>
                                 <div>Weight: <strong className="text-slate-800">{fowl.weight}</strong></div>
                               </div>
@@ -582,7 +578,7 @@ export default function GalloTrackSystem() {
                         </div>
                         <div className="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-50 p-2 rounded-xl text-slate-600 font-medium border border-slate-100">
                           <div>Class: <strong className="text-slate-900">{item.color}</strong></div>
-                          <div>Trait: <strong className="text-emerald-700">{item.behavior_trait}</strong></div>
+                          <div>Trait: <strong className="text-emerald-700">{item.behavior_trait || 'Wave-Motion Cutter'}</strong></div>
                         </div>
                       </div>
                     </div>
