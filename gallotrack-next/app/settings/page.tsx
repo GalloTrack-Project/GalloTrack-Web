@@ -2,90 +2,104 @@
 import { useState } from 'react'
 
 export default function SettingsPage() {
+  const [defaultStrain, setDefaultStrain] = useState('Sweater')
+  const [cloudLogs, setCloudLogs] = useState(true)
+  const [eventAlerts, setEventAlerts] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [defaultBreed, setDefaultBreed] = useState('Sweater')
-  const [notifications, setNotifications] = useState(true)
-  const [systemLogs, setSystemLogs] = useState(true)
 
-  async function handleSaveSettings() {
+  function handleSaveSettings(e: React.FormEvent) {
+    e.preventDefault()
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
-      alert('GalloTrack System Notice: Core application parameters updated successfully!')
-    }, 800)
+      alert('GalloTrack System Notice: Global administrative configuration changes committed successfully.')
+    }, 500)
   }
 
   return (
-    <div className="max-w-xl mx-auto mt-6 p-6 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
-      <div>
-        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">System Settings</h2>
-        <p className="text-xs text-zinc-400 font-medium">Configure global administrative rules and deployment behaviors</p>
+    <div className="max-w-2xl mx-auto mt-4 space-y-6 animate-fadeIn">
+      {/* HEADER CARD */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>
+        <p className="text-xs text-slate-400 font-medium mt-1">Configure global administrative operational rules and secure cloud deployment behaviors</p>
       </div>
 
-      <hr className="border-zinc-200 dark:border-zinc-800" />
-
-      <div className="space-y-4">
-        <h3 className="text-xs font-black text-emerald-700 dark:text-emerald-500 uppercase tracking-widest">Application Preferences</h3>
+      {/* CONFIGURATION FORM */}
+      <form onSubmit={handleSaveSettings} className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-6">
         
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-          <div>
-            <label className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">Default Ancestry Strain</label>
-            <span className="text-[10px] text-zinc-400 font-medium">Pre-selected classification value inside the profiling matrix engine</span>
+        {/* SECTION 1: APPLICATION PREFERENCES */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-emerald-700 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center space-x-2">
+            <span>⚙️</span> <span>Application Preferences</span>
+          </h3>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/40 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div className="space-y-0.5">
+              <label className="block text-xs font-extrabold text-slate-800">Default Ancestry Strain</label>
+              <span className="text-[11px] text-slate-400 font-medium block">Pre-selected classification value inside the profiling matrix engine</span>
+            </div>
+            <select 
+              value={defaultStrain} 
+              onChange={(e) => setDefaultStrain(e.target.value)}
+              className="p-2 px-3 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none focus:border-emerald-500 transition-all shadow-sm"
+            >
+              <option value="Sweater">Sweater</option>
+              <option value="Roundhead">Roundhead</option>
+              <option value="Lemon">Lemon</option>
+              <option value="Hatch">Hatch</option>
+              <option value="Kelso">Kelso</option>
+            </select>
           </div>
-          <select 
-            value={defaultBreed} 
-            onChange={(e) => setDefaultBreed(e.target.value)}
-            className="p-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800 text-zinc-800 dark:text-white font-bold outline-none"
+        </div>
+
+        {/* SECTION 2: SECURITY & VERIFICATION TOGGLES */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-emerald-700 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center space-x-2">
+            <span>🛡️</span> <span>Security & Verification Toggles</span>
+          </h3>
+          
+          <div className="space-y-3">
+            {/* TOGGLE 1 */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/40 flex justify-between items-center px-5">
+              <div className="space-y-0.5">
+                <span className="block text-xs font-extrabold text-slate-800">Real-time Cloud Auditing Logs</span>
+                <span className="text-[11px] text-slate-400 font-medium block">Record cryptographic transaction updates to cluster node registries</span>
+              </div>
+              <input 
+                type="checkbox" 
+                checked={cloudLogs} 
+                onChange={(e) => setCloudLogs(e.target.checked)}
+                className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+              />
+            </div>
+
+            {/* TOGGLE 2 */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/40 flex justify-between items-center px-5">
+              <div className="space-y-0.5">
+                <span className="block text-xs font-extrabold text-slate-800">System Event Alerts</span>
+                <span className="text-[11px] text-slate-400 font-medium block">Enable pop-up notification frames during dynamic operations</span>
+              </div>
+              <input 
+                type="checkbox" 
+                checked={eventAlerts} 
+                onChange={(e) => setEventAlerts(e.target.checked)}
+                className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* COMMIT BUTTON */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-md shadow-slate-900/10 transition-all cursor-pointer disabled:opacity-50 tracking-wider uppercase"
           >
-            <option value="Sweater">Sweater</option>
-            <option value="Lemon">Lemon</option>
-            <option value="Hatch">Hatch</option>
-            <option value="Kelso">Kelso</option>
-          </select>
+            {loading ? 'Committing Configuration...' : 'Commit Configuration Changes'}
+          </button>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        <h3 className="text-xs font-black text-emerald-700 dark:text-emerald-500 uppercase tracking-widest">Security & Verification Toggles</h3>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-            <div>
-              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">Real-time Cloud Auditing Logs</span>
-              <span className="text-[10px] text-zinc-400 font-medium">Record cryptographic transaction updates to cluster node registries</span>
-            </div>
-            <input 
-              type="checkbox" 
-              checked={systemLogs} 
-              onChange={(e) => setSystemLogs(e.target.checked)}
-              className="w-4 h-4 accent-emerald-600 cursor-pointer"
-            />
-          </div>
-
-          <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-            <div>
-              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">System Event Alerts</span>
-              <span className="text-[10px] text-zinc-400 font-medium">Enable pop-up notification frames during dynamic operations</span>
-            </div>
-            <input 
-              type="checkbox" 
-              checked={notifications} 
-              onChange={(e) => setNotifications(e.target.checked)}
-              className="w-4 h-4 accent-emerald-600 cursor-pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      <hr className="border-zinc-200 dark:border-zinc-800" />
-
-      <button
-        onClick={handleSaveSettings}
-        disabled={loading}
-        className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-md shadow-emerald-700/10 transition-all cursor-pointer disabled:opacity-50"
-      >
-        {loading ? 'Saving Parameters...' : 'Commit Configuration Changes'}
-      </button>
+      </form>
     </div>
   )
 }
