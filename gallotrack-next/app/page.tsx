@@ -552,40 +552,48 @@ export default function GalloTrackSystem() {
             )}
 
             {/* ==================== MARKETPLACE CATALOG PANEL ==================== */}
-            {currentPage === 'marketplace' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Verified Breeding Cohort Catalog</h1>
-                    <p className="text-xs text-slate-500 font-medium">Transparent cohort matrix filterable by active pedigree clusters</p>
-                  </div>
-                  <input type="text" placeholder="🔍 Search lineage strains (e.g., Roundhead)..." value={search} onChange={(e) => setSearch(e.target.value)} className="p-3 border border-slate-200 rounded-xl bg-slate-50/50 text-xs outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 w-full sm:w-72 transition-all shadow-inner font-medium" />
-                </div>
+{currentPage === 'marketplace' && (
+  <div className="space-y-6 animate-fadeIn">
+    <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Verified Breeding Cohort Catalog</h1>
+        <p className="text-xs text-slate-500 font-medium">Transparent cohort matrix filterable by active pedigree clusters</p>
+      </div>
+      <input type="text" placeholder="🔍 Search lineage strains (e.g., Roundhead)..." value={search} onChange={(e) => setSearch(e.target.value)} className="p-3 border border-slate-200 rounded-xl bg-slate-50/50 text-xs outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 w-full sm:w-72 transition-all shadow-inner font-medium" />
+    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {fowls.filter(item => item.status === 'Active' && item.breed.toLowerCase().includes(search.toLowerCase())).map(item => (
-                    <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 flex gap-4 items-center shadow-sm relative overflow-hidden hover:border-slate-300 transition-all">
-                      <span className="absolute top-3 right-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">✓ Verified Pedigree</span>
-                      
-                      <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center font-mono font-bold text-slate-300 text-[9px] relative shadow-inner">
-                        {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
-                      </div>
-                      
-                      <div className="space-y-2 flex-1">
-                        <div>
-                          <h4 className="text-lg font-black text-slate-900 tracking-tight">{item.name}</h4>
-                          <span className="text-[10px] font-bold text-slate-400 block mt-0.5">Strain Grouping: <span className="text-slate-800 font-extrabold">{item.breed}</span></span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-50 p-2 rounded-xl text-slate-600 font-medium border border-slate-100">
-                          <div>Class: <strong className="text-slate-900">{item.color}</strong></div>
-                          <div>Trait: <strong className="text-emerald-700">{item.behavior_trait || 'Wave-Motion Cutter'}</strong></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {fowls.filter(item => item.status === 'Active' && item.breed.toLowerCase().includes(search.toLowerCase())).map(item => (
+        <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-center shadow-sm relative overflow-hidden hover:border-slate-300 transition-all">
+          <span className="absolute top-3 right-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">✓ Verified Pedigree</span>
+          
+          <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center font-mono font-bold text-slate-300 text-[9px] relative shadow-inner">
+            {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+          </div>
+          
+          <div className="space-y-2 flex-1 w-full">
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="text-lg font-black text-slate-900 tracking-tight">{item.name}</h4>
+                <span className="text-[9px] font-mono font-bold bg-slate-900 text-white px-2 py-0.5 rounded uppercase">{item.growth_stage || 'Stag'}</span>
               </div>
-            )}
+              <span className="text-[10px] font-bold text-slate-400 block mt-0.5">Strain Grouping: <span className="text-slate-800 font-extrabold">{item.breed}</span></span>
+            </div>
+            
+            {/* PINAGANDANG INFOGRID: Ipinapakita na ang advanced metadata fields */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] bg-slate-50 p-2.5 rounded-xl text-slate-600 font-medium border border-slate-100/80">
+              <div>Class: <strong className="text-slate-900">{item.color_category || 'Red'} ({item.color || 'Bright Red'})</strong></div>
+              <div>Trait: <strong className="text-emerald-700 font-bold">{item.behavior_trait || 'Wave Cutter'}</strong></div>
+              <div className="col-span-2 border-t border-slate-200/40 mt-1 pt-1 text-[10px] text-slate-400 font-mono">
+                EYE VARIANT: <span className="text-slate-700 font-bold">{item.eye_variant || 'Standard Eye'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
             {/* EXTERNAL CORE ROUTING BLOCKS */}
             {currentPage === 'profile' && <div className="p-2 animate-fadeIn"><ProfilePage /></div>}
