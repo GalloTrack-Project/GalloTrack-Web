@@ -53,6 +53,10 @@ interface MatchRecord {
 export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
+  
+  // 🔀 Sub-tab selector para sa Profiling page ('form' o 'registry')
+  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry'>('form');
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -61,7 +65,6 @@ export default function GalloTrackSystem() {
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 📜 Reference para sa Scrollable Main Container
   const mainScrollRef = useRef<HTMLElement>(null);
 
   // Form Field States
@@ -94,12 +97,12 @@ export default function GalloTrackSystem() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 🔄 Awtomatikong ibinabalik sa pinakataas ang scroll kapag lumipat ng page/tab
+  // Reset scroll when tab changes
   useEffect(() => {
     if (mainScrollRef.current) {
       mainScrollRef.current.scrollTop = 0;
     }
-  }, [currentPage]);
+  }, [currentPage, profilingSubTab]);
 
   const fetchDatabaseResources = async () => {
     setLoading(true);
@@ -226,9 +229,10 @@ export default function GalloTrackSystem() {
       if (insertErr) {
         alert(`Database Insertion Error: ${insertErr.message}`);
       } else {
-        alert('GalloTrack Notice: Record successfully saved with expanded behavioral & color indices.');
+        alert('GalloTrack Notice: Record successfully saved.');
         setNewName(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setSelectedImage(null);
         fetchDatabaseResources();
+        setProfilingSubTab('registry'); // Kusang lilipat sa listahan pagkatapos mag-save!
       }
     } catch (err: any) {
       alert(`Upload Error: ${err.message || err}`);
@@ -244,7 +248,6 @@ export default function GalloTrackSystem() {
     else fetchDatabaseResources();
   };
 
-  // Render Splash Screen loading
   if (showSplash) {
     return <SplashScreen onFinished={() => setShowSplash(false)} />;
   }
@@ -277,7 +280,7 @@ export default function GalloTrackSystem() {
         </div>
       )}
 
-      {/* ==================== ENTERPRISE NAVIGATION ==================== */}
+      {/* ==================== ENTERPRISE NAVIGATION (Desktop Sidebar) ==================== */}
       {currentPage !== 'login' && (
         <aside className="hidden md:flex w-64 bg-slate-900 text-slate-200 flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-slate-800 shadow-2xl h-full justify-between">
           <div>
@@ -331,10 +334,10 @@ export default function GalloTrackSystem() {
             <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border">Dingle Campus Hub</span>
           </header>
 
-          {/* 📜 Main Scrollable Panel (Ginamitan natin ng mainScrollRef) */}
+          {/* Main Scrollable Area */}
           <main ref={mainScrollRef} className="p-4 md:p-8 flex-1 overflow-y-auto max-w-6xl w-full mx-auto pb-24 md:pb-8">
             
-            {/* Dashboard Analytics Panel */}
+            {/* ==================== 📊 DASHBOARD PANEL ==================== */}
             {currentPage === 'dashboard' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
@@ -393,28 +396,51 @@ export default function GalloTrackSystem() {
               </div>
             )}
 
-            {/* Profiling Engine Panel */}
+            {/* ==================== 🧬 PROFILING ENGINE PANEL (MAY SUB-TABS!) ==================== */}
             {currentPage === 'profiling' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
-                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profiling & Lineage Core Matrix</h1>
-                  <p className="text-xs text-slate-500 font-medium">Encode specific traits to track ancestry weights and biological specifications</p>
+              <div className="space-y-5 animate-fadeIn">
+                
+                {/* Header Profile Title */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col gap-3">
+                  <div>
+                    <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profiling & Lineage Core Matrix</h1>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
+                  </div>
+
+                  {/* 🔀 Premium Segmented Control Switcher */}
+                  <div className="bg-slate-100 p-1 rounded-xl flex w-full border border-slate-200/40 mt-1 shrink-0">
+                    <button 
+                      onClick={() => setProfilingSubTab('form')}
+                      className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+                    >
+                      📝 Encode Node
+                    </button>
+                    <button 
+                      onClick={() => setProfilingSubTab('registry')}
+                      className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+                    >
+                      🌳 Family Registry ({fowls.length})
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Register Form */}
-                  <form onSubmit={handleAddFowl} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-1 self-start">
-                    <h3 className="font-bold text-xs text-emerald-700 uppercase tracking-widest border-b pb-3 flex items-center space-x-2"><span>📝</span><span>Encode Registry Node</span></h3>
-                    <div className="space-y-3">
+                {/* 1️⃣ SUB-TAB: ENCODE REGISTRY FORM (Split into Visual Cards) */}
+                {profilingSubTab === 'form' && (
+                  <form onSubmit={handleAddFowl} className="space-y-4 animate-fadeIn">
+                    
+                    {/* Card A: Identifiers & Strain */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+                      <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2">
+                        <span>🏷️</span> <span>Step 1: Core Identifiers</span>
+                      </h3>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Identifier Name</label>
-                        <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 transition-all font-medium" placeholder="e.g., Roundhead Storm" required />
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Identifier Name</label>
+                        <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 transition-all font-medium" placeholder="e.g., Roundhead Storm" required />
                       </div>
-
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Genetic Strain</label>
-                          <select value={newBreed} onChange={(e) => setNewBreed(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Genetic Strain</label>
+                          <select value={newBreed} onChange={(e) => setNewBreed(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
                             <option value="Roundhead">Roundhead</option>
                             <option value="Sweater">Sweater</option>
                             <option value="Lemon">Lemon</option>
@@ -423,25 +449,31 @@ export default function GalloTrackSystem() {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Gender Class</label>
-                          <select value={newGender} onChange={(e) => setNewGender(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
-                            <option value="Rooster">Rooster</option>
-                            <option value="Hen">Hen</option>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Gender Class</label>
+                          <select value={newGender} onChange={(e) => setNewGender(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
+                            <option value="Rooster">Rooster (Cock)</option>
+                            <option value="Hen">Hen (Pullet)</option>
                           </select>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-2">
+                    {/* Card B: Physical & Behavioral Specifications */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+                      <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2">
+                        <span>🧬</span> <span>Step 2: Physical & Behavioral Matrix</span>
+                      </h3>
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Color Group</label>
-                          <select value={newColorCategory} onChange={(e) => { setNewColorCategory(e.target.value); setNewColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Color Category</label>
+                          <select value={newColorCategory} onChange={(e) => { setNewColorCategory(e.target.value); setNewColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
                             <option value="Red">Red Class</option>
                             <option value="Light Color">Light Class</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Specific Tone</label>
-                          <select value={newColor} onChange={(e) => setNewColor(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-medium">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Specific Tone</label>
+                          <select value={newColor} onChange={(e) => setNewColor(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-medium">
                             {newColorCategory === 'Red' ? (
                               <>
                                 <option value="Bright Red">Bright Red</option>
@@ -458,51 +490,78 @@ export default function GalloTrackSystem() {
                           </select>
                         </div>
                       </div>
-
-                      <div className="grid grid-cols-3 gap-1.5">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Age (Mos)</label>
-                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0" required />
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Behavioral Trait</label>
+                          <select value={newBehaviorTrait} onChange={(e) => setNewBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-medium outline-none">
+                            <option value="Wave-Motion Cutter">Wave Cutter</option>
+                            <option value="Side-Stepper Slasher">Side-Stepper</option>
+                            <option value="Aggressive Shuffler">Aggressive</option>
+                            <option value="Strategic / Smart Combat">Strategic Combat</option>
+                          </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Growth</label>
-                          <input type="text" value={newGrowthStage} readOnly className="w-full p-2 border border-emerald-100 rounded-xl text-xs text-center font-bold bg-emerald-50 text-emerald-800" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Weight (kg)</label>
-                          <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0.0" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Sire (Father)</label>
-                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Sire" required />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Dam (Mother)</label>
-                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Dam" required />
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Eye Variant</label>
+                          <select value={newEyeVariant} onChange={(e) => setNewEyeVariant(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-medium outline-none">
+                            <option value="Standard Eye">Standard Eye</option>
+                            <option value="Prairie Eye Sub-strain">Prairie Eye</option>
+                          </select>
                         </div>
                       </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Age (Mos)</label>
+                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0" required />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Growth</label>
+                          <input type="text" value={newGrowthStage} readOnly className="w-full p-2.5 border border-emerald-100 rounded-xl text-xs text-center font-bold bg-emerald-50 text-emerald-800" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Weight (kg)</label>
+                          <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0.0" />
+                        </div>
+                      </div>
+                    </div>
 
-                      <div className="pt-2">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Image File</label>
+                    {/* Card C: Ancestry Parents & Attachment */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+                      <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2">
+                        <span>🌳</span> <span>Step 3: Ancestry Roots & Photo</span>
+                      </h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Sire (Father)</label>
+                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Sire" required />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Dam (Mother)</label>
+                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Dam" required />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Fowl Attachment</label>
                         <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-all">
-                          <span className="text-[10px] text-slate-500 font-bold">📷 {selectedImage ? selectedImage.name : 'Select Image'}</span>
+                          <span className="text-[10px] text-slate-500 font-bold">📷 {selectedImage ? selectedImage.name : 'Choose fowl image file'}</span>
                           <input type="file" accept="image/*" onChange={(e) => e.target.files && setSelectedImage(e.target.files[0])} className="hidden" />
                         </label>
                       </div>
                     </div>
-                    <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md uppercase tracking-wider">
-                      {uploadingImage ? 'Uploading...' : 'Commit Registry Node'}
+
+                    {/* Submit Node */}
+                    <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all">
+                      {uploadingImage ? 'Uploading Attachment...' : 'Commit Node Objects'}
                     </button>
                   </form>
+                )}
 
-                  {/* Fowl Records Grid */}
-                  <div className="lg:col-span-2 space-y-4">
-                    <h3 className="font-bold text-xs text-slate-400 uppercase tracking-widest pl-1">Automated Family Tree Records Registry</h3>
+                {/* 2️⃣ SUB-TAB: COMPACT FAMILY RECORDS LIST */}
+                {profilingSubTab === 'registry' && (
+                  <div className="space-y-4 animate-fadeIn">
                     {fowls.length === 0 ? (
-                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No farm objects inside the live cloud cluster. Encode above!</div>
+                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">
+                        No farm objects inside the live cloud cluster. Encode on the other tab!
+                      </div>
                     ) : fowls.map(fowl => {
                       const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
                       return (
@@ -532,7 +591,7 @@ export default function GalloTrackSystem() {
                       );
                     })}
                   </div>
-                </div>
+                )}
               </div>
             )}
 
