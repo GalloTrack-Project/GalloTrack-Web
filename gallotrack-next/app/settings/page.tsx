@@ -17,7 +17,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-4 space-y-6 animate-fadeIn">
+    <div className="max-w-2xl mx-auto mt-4 space-y-6 animate-fadeIn text-slate-800">
       {/* HEADER CARD */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
         <h2 className="text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>

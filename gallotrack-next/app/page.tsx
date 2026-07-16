@@ -1,10 +1,11 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { createClient } from '@supabase/supabase-js';
-import ProfilePage from './profile/page';
-import SettingsPage from './settings/page';
+import ProfilePage from '@/app/profile/page';
+import SettingsPage from '@/app/settings/page';
+import SplashScreen from '@/components/SplashScreen';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -50,6 +51,7 @@ interface MatchRecord {
 }
 
 export default function GalloTrackSystem() {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -59,7 +61,10 @@ export default function GalloTrackSystem() {
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Form Field States wired to structural parameters
+  // 📜 Reference para sa Scrollable Main Container
+  const mainScrollRef = useRef<HTMLElement>(null);
+
+  // Form Field States
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('Sweater');
   const [newGender, setNewGender] = useState('Rooster');
@@ -80,6 +85,21 @@ export default function GalloTrackSystem() {
   
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Splash Screen Effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 🔄 Awtomatikong ibinabalik sa pinakataas ang scroll kapag lumipat ng page/tab
+  useEffect(() => {
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
+  }, [currentPage]);
 
   const fetchDatabaseResources = async () => {
     setLoading(true);
@@ -224,12 +244,17 @@ export default function GalloTrackSystem() {
     else fetchDatabaseResources();
   };
 
+  // Render Splash Screen loading
+  if (showSplash) {
+    return <SplashScreen onFinished={() => setShowSplash(false)} />;
+  }
+
   return (
-    <div className="bg-[#f1f5f9] min-h-screen font-sans antialiased text-slate-800 flex flex-col md:flex-row">
+    <div className="bg-[#f1f5f9] min-h-screen font-sans antialiased text-slate-800 flex flex-col md:flex-row overflow-hidden h-screen w-full">
       
       {/* ==================== PREMIUM LOGIN FRAMEWORK ==================== */}
       {currentPage === 'login' && (
-        <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#047857]">
+        <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#047857] overflow-hidden">
           <div className="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl border border-white/20 max-w-md w-full space-y-8 transition-all">
             <div className="text-center space-y-3">
               <span className="text-[10px] font-black tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase border border-emerald-200/50">ISUFST CICT Official Capstone</span>
@@ -252,37 +277,37 @@ export default function GalloTrackSystem() {
         </div>
       )}
 
-      {/* ==================== ENTERPRISE SIDEBAR NAVIGATION ==================== */}
+      {/* ==================== ENTERPRISE NAVIGATION ==================== */}
       {currentPage !== 'login' && (
-        <aside className="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-slate-800 shadow-2xl">
-          <div className="p-6 border-b border-slate-800/60 bg-slate-950/40 flex justify-between items-center">
-            <div>
+        <aside className="hidden md:flex w-64 bg-slate-900 text-slate-200 flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-slate-800 shadow-2xl h-full justify-between">
+          <div>
+            <div className="p-6 border-b border-slate-800/60 bg-slate-950/40">
               <h2 className="text-2xl font-black tracking-tight text-white bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">GALLOTRACK</h2>
-              <span className="text-[9px] font-mono font-bold text-emerald-400 tracking-wider uppercase mt-1 block">v1.2.0 Production stable</span>
+              <span className="text-[9px] font-mono font-bold text-emerald-400 tracking-wider uppercase mt-1 block font-extrabold">v1.2.0 Production stable</span>
             </div>
+            <nav className="p-4 space-y-1.5 mt-4">
+              {[
+                { id: 'dashboard', label: 'Dashboard Analytics', icon: '📊' },
+                { id: 'profiling', label: 'Profiling & Lineage', icon: '🧬' },
+                { id: 'marketplace', label: ' Breeding Catalog', icon: '🛒' },
+                { id: 'profile', label: 'Profile Management', icon: '👤' },
+                { id: 'settings', label: 'System Settings', icon: '⚙️' },
+              ].map((menu) => (
+                <button 
+                  key={menu.id}
+                  onClick={() => setCurrentPage(menu.id as any)} 
+                  className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                    currentPage === menu.id 
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-700/30 font-extrabold' 
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
+                  }`}
+                >
+                  <span className="text-sm">{menu.icon}</span>
+                  <span>{menu.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
-          <nav className="flex-1 p-4 space-y-1.5 mt-4">
-            {[
-              { id: 'dashboard', label: 'Dashboard Analytics', icon: '📊' },
-              { id: 'profiling', label: 'Profiling & Lineage', icon: '🧬' },
-              { id: 'marketplace', label: ' Breeding Catalog', icon: '🛒' },
-              { id: 'profile', label: 'Profile Management', icon: '👤' },
-              { id: 'settings', label: 'System Settings', icon: '⚙️' },
-            ].map((menu) => (
-              <button 
-                key={menu.id}
-                onClick={() => setCurrentPage(menu.id as any)} 
-                className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer ${
-                  currentPage === menu.id 
-                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-700/30 font-extrabold' 
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
-                }`}
-              >
-                <span className="text-sm">{menu.icon}</span>
-                <span>{menu.label}</span>
-              </button>
-            ))}
-          </nav>
           
           <div className="p-4 border-t border-slate-800 bg-slate-950/60 space-y-3">
             <button onClick={() => { setUsername(''); setPassword(''); setCurrentPage('login'); }} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
@@ -293,48 +318,53 @@ export default function GalloTrackSystem() {
         </aside>
       )}
 
-      {/* ==================== MAIN PANEL REGION ==================== */}
+      {/* ==================== MAIN CONTENT & VIEWPORT FRAME ==================== */}
       {currentPage !== 'login' && (
-        <div className="flex-1 md:pl-64 flex flex-col min-h-screen">
-          <header className="bg-white border-b border-slate-200/80 p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm px-8">
-            <div className="text-xs font-mono font-bold text-slate-400 flex items-center space-x-2">
+        <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden">
+          
+          {/* Header Bar */}
+          <header className="bg-white border-b border-slate-200/80 p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm px-6 shrink-0">
+            <div className="text-[10px] md:text-xs font-mono font-bold text-slate-400 flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>SUPABASE POSTGRESQL DATA LINK: ACTIVE</span>
             </div>
-            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border">Dingle Campus Hub</span>
+            <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border">Dingle Campus Hub</span>
           </header>
 
-          <main className="p-6 md:p-8 flex-1 max-w-6xl w-full mx-auto space-y-6">
+          {/* 📜 Main Scrollable Panel (Ginamitan natin ng mainScrollRef) */}
+          <main ref={mainScrollRef} className="p-4 md:p-8 flex-1 overflow-y-auto max-w-6xl w-full mx-auto pb-24 md:pb-8">
             
-            {/* ==================== DASHBOARD PANEL ==================== */}
+            {/* Dashboard Analytics Panel */}
             {currentPage === 'dashboard' && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dynamic Cross-Breeding Analytics</h1>
-                    <p className="text-xs text-slate-500 font-medium">Aggregated empirical cross-breed success algorithms and genetic performance metrics</p>
-                  </div>
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Dynamic Cross-Breeding Analytics</h1>
+                  <p className="text-xs text-slate-500 font-medium">Aggregated empirical cross-breed success algorithms and genetic performance metrics</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col items-center">
                     <h3 className="text-xs font-black text-slate-400 uppercase mb-6 tracking-widest text-center w-full border-b pb-3">Cross-Breed Win Ratios (Empirical Logs)</h3>
-                    <div className="w-56 h-56"><Doughnut data={{ labels: ['Roundhead Cross', 'Hatch Cross', 'Kelso Combos'], datasets: [{ data: [65, 45, 58], backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'], borderWidth: 0 }] }} options={{ responsive: true, maintainAspectRatio: false }} /></div>
+                    <div className="w-48 h-48 sm:w-56 sm:h-56">
+                      <Doughnut data={{ labels: ['Roundhead Cross', 'Hatch Cross', 'Kelso Combos'], datasets: [{ data: [65, 45, 58], backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'], borderWidth: 0 }] }} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
                   </div>
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
-                    <h3 className="text-xs font-black text-slate-400 uppercase mb-6 tracking-widest border-b pb-3">Lineage Cohort Success Probability (%)</h3>
-                    <div className="w-full h-56"><Bar data={{ labels: ['Roundhead', 'Sweater', 'Lemon', 'Kelso', 'Hatch'], datasets: [{ label: 'Estimated Success Rate %', data: [78, 70, 62, 68, 55], backgroundColor: '#059669', borderRadius: 8 }] }} options={{ responsive: true, maintainAspectRatio: false }} /></div>
+                    <h3 className="text-xs font-black text-slate-400 uppercase mb-6 tracking-widest border-b pb-3 text-center">Lineage Cohort Success Probability (%)</h3>
+                    <div className="w-full h-48 sm:h-56">
+                      <Bar data={{ labels: ['Roundhead', 'Sweater', 'Lemon', 'Kelso', 'Hatch'], datasets: [{ label: 'Estimated Success Rate %', data: [78, 70, 62, 68, 55], backgroundColor: '#059669', borderRadius: 8 }] }} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
                   </div>
                 </div>
 
-                {/* MATCH LOGS */}
+                {/* Match Logs Table */}
                 <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-                  <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center px-6">
+                  <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">Historical Analytics Match Logs</h3>
-                    <span className="text-[10px] font-mono bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-md">D4 Analytics DB</span>
+                    <span className="text-[9px] font-mono bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-md">D4 Analytics DB</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
+                    <table className="w-full text-left text-[11px] border-collapse">
                       <thead>
                         <tr className="bg-slate-50/70 text-slate-500 font-bold uppercase border-b border-slate-200/60">
                           <th className="p-4 pl-6">Match Date</th>
@@ -352,7 +382,7 @@ export default function GalloTrackSystem() {
                             <td className="p-4 text-slate-600 font-medium">{log.type}</td>
                             <td className="p-4 text-slate-400 font-normal">{log.location}</td>
                             <td className="p-4 text-center">
-                              <span className={`px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-wide border ${log.outcome === 'Win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome === 'Loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome}</span>
+                              <span className={`px-2.5 py-0.5 rounded-full font-black text-[9px] uppercase tracking-wide border ${log.outcome === 'Win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome === 'Loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome}</span>
                             </td>
                           </tr>
                         ))}
@@ -363,29 +393,28 @@ export default function GalloTrackSystem() {
               </div>
             )}
 
-            {/* ==================== PROFILING ENGINE PANEL ==================== */}
+            {/* Profiling Engine Panel */}
             {currentPage === 'profiling' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">Profiling & Lineage Core Matrix</h1>
+                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profiling & Lineage Core Matrix</h1>
                   <p className="text-xs text-slate-500 font-medium">Encode specific traits to track ancestry weights and biological specifications</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* FORM DESIGN */}
-                  <form onSubmit={handleAddFowl} className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-1 self-start">
+                  {/* Register Form */}
+                  <form onSubmit={handleAddFowl} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-1 self-start">
                     <h3 className="font-bold text-xs text-emerald-700 uppercase tracking-widest border-b pb-3 flex items-center space-x-2"><span>📝</span><span>Encode Registry Node</span></h3>
-                    
-                    <div className="space-y-3.5">
+                    <div className="space-y-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Identifier Name</label>
-                        <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 transition-all font-medium" placeholder="e.g., Roundhead Storm" required />
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Identifier Name</label>
+                        <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 transition-all font-medium" placeholder="e.g., Roundhead Storm" required />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Genetic Strain</label>
-                          <select value={newBreed} onChange={(e) => setNewBreed(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Genetic Strain</label>
+                          <select value={newBreed} onChange={(e) => setNewBreed(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
                             <option value="Roundhead">Roundhead</option>
                             <option value="Sweater">Sweater</option>
                             <option value="Lemon">Lemon</option>
@@ -394,153 +423,109 @@ export default function GalloTrackSystem() {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Gender Class</label>
-                          <select value={newGender} onChange={(e) => setNewGender(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all">
-                            <option value="Rooster">Rooster (Cock)</option>
-                            <option value="Hen">Hen (Pullet)</option>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Gender Class</label>
+                          <select value={newGender} onChange={(e) => setNewGender(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
+                            <option value="Rooster">Rooster</option>
+                            <option value="Hen">Hen</option>
                           </select>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Color Category</label>
-                          <select value={newColorCategory} onChange={(e) => { setNewColorCategory(e.target.value); setNewColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-bold outline-none focus:bg-white focus:border-emerald-500 transition-all">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Color Group</label>
+                          <select value={newColorCategory} onChange={(e) => { setNewColorCategory(e.target.value); setNewColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
                             <option value="Red">Red Class</option>
-                            <option value="Light Color">Light Color Class</option>
+                            <option value="Light Color">Light Class</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Specific Tone</label>
-                          <select value={newColor} onChange={(e) => setNewColor(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-medium outline-none focus:bg-white focus:border-emerald-500 transition-all">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Specific Tone</label>
+                          <select value={newColor} onChange={(e) => setNewColor(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 font-medium">
                             {newColorCategory === 'Red' ? (
                               <>
                                 <option value="Bright Red">Bright Red</option>
                                 <option value="Dark Red">Dark Red</option>
                                 <option value="Light Red">Light Red</option>
-                                <option value="Red Cup">Red Cup</option>
                               </>
                             ) : (
                               <>
                                 <option value="Talisay / Grey">Talisay / Grey</option>
                                 <option value="White Cup">White Cup</option>
                                 <option value="Black">Black</option>
-                                <option value="Bulik">Bulik</option>
-                                <option value="Brown">Brown</option>
                               </>
                             )}
                           </select>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Behavioral Trait</label>
-                          <select value={newBehaviorTrait} onChange={(e) => setNewBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all">
-                            <option value="Wave-Motion Cutter">Wave-Motion Cutter</option>
-                            <option value="Side-Stepper Slasher">Side-Stepper Slasher</option>
-                            <option value="Aggressive Shuffler">Aggressive Shuffler</option>
-                            <option value="Strategic / Smart Combat">Strategic Combat</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Eye Variant</label>
-                          <select value={newEyeVariant} onChange={(e) => setNewEyeVariant(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all">
-                            <option value="Standard Eye">Standard Eye</option>
-                            <option value="Prairie Eye Sub-strain">Prairie Eye</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-1.5">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Age (Mos)</label>
-                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold bg-slate-50/50" placeholder="0" required />
+                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0" required />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Growth Stage</label>
-                          <input type="text" value={newGrowthStage} readOnly className="w-full p-2.5 border border-emerald-200 rounded-xl text-xs text-center font-mono bg-emerald-50/50 font-bold text-emerald-800" />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Growth</label>
+                          <input type="text" value={newGrowthStage} readOnly className="w-full p-2 border border-emerald-100 rounded-xl text-xs text-center font-bold bg-emerald-50 text-emerald-800" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Weight (kg)</label>
-                          <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold bg-slate-50/50" placeholder="0.0" />
+                          <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0.0" />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3">
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Sire (Father)</label>
-                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Sire Identity" required />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Sire (Father)</label>
+                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Sire" required />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Dam (Mother)</label>
-                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Dam Identity" required />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Dam (Mother)</label>
+                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Dam" required />
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-slate-100">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wide">Fowl Image Attachment</label>
-                        <div className="flex items-center justify-center w-full">
-                          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-all">
-                            <div className="flex flex-col items-center justify-center pt-2 pb-2">
-                              <p className="text-[11px] text-slate-500 font-bold">📷 {selectedImage ? selectedImage.name : 'Choose fowl image file'}</p>
-                            </div>
-                            <input type="file" accept="image/*" onChange={(e) => e.target.files && setSelectedImage(e.target.files[0])} className="hidden" />
-                          </label>
-                        </div>
+                      <div className="pt-2">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Image File</label>
+                        <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-all">
+                          <span className="text-[10px] text-slate-500 font-bold">📷 {selectedImage ? selectedImage.name : 'Select Image'}</span>
+                          <input type="file" accept="image/*" onChange={(e) => e.target.files && setSelectedImage(e.target.files[0])} className="hidden" />
+                        </label>
                       </div>
                     </div>
-                    <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-md shadow-slate-900/10 cursor-pointer transition-all disabled:opacity-50 tracking-wider uppercase">
-                      {uploadingImage ? 'Uploading Image...' : 'Commit Node Objects'}
+                    <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md uppercase tracking-wider">
+                      {uploadingImage ? 'Uploading...' : 'Commit Registry Node'}
                     </button>
                   </form>
 
-                  {/* FOWL CARDS DISPLAY LIST */}
+                  {/* Fowl Records Grid */}
                   <div className="lg:col-span-2 space-y-4">
                     <h3 className="font-bold text-xs text-slate-400 uppercase tracking-widest pl-1">Automated Family Tree Records Registry</h3>
                     {fowls.length === 0 ? (
-                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs italic shadow-sm">No farm objects inside the live cloud cluster. Encode above!</div>
+                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No farm objects inside the live cloud cluster. Encode above!</div>
                     ) : fowls.map(fowl => {
                       const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
                       return (
-                        <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center transition-all hover:shadow-md hover:border-slate-300">
-                          
-                          <div className="w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono font-bold shadow-inner relative">
-                            {fowl.image_url ? (
-                              <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-center p-1">NO PHOTO REGISTRY</span>
-                            )}
+                        <div key={fowl.id} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center">
+                          <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                           </div>
                           
-                          <div className="flex-1 w-full space-y-3.5">
-                            <span className="absolute top-0 right-0 text-[9px] font-black uppercase px-4 py-1.5 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
-                            
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <h4 className="text-xl font-extrabold text-slate-900 tracking-tight">{fowl.name}</h4>
-                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md uppercase tracking-wide">{fowl.breed}</span>
-                              </div>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-[11px] text-slate-500 font-medium bg-slate-50/60 p-2 rounded-xl border border-slate-100">
-                                <div>Color: <strong className="text-slate-800">{fowl.color_category || 'Red'} ({fowl.color || 'Bright Red'})</strong></div>
-                                <div>Trait: <strong className="text-emerald-700 font-bold">{fowl.behavior_trait || 'Wave-Motion Cutter'}</strong></div>
-                                <div>Eye Spec: <strong className="text-slate-800">{fowl.eye_variant || 'Standard Eye'}</strong></div>
-                                <div>Age: <strong className="text-slate-800">{fowl.age}</strong></div>
-                                <div>Weight: <strong className="text-slate-800">{fowl.weight}</strong></div>
-                              </div>
+                          <div className="flex-1 w-full space-y-2">
+                            <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
+                              <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 rounded-md uppercase">{fowl.breed}</span>
                             </div>
-
-                            <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-200/40 relative">
-                              <span className="text-[8px] font-mono font-bold text-slate-300 uppercase tracking-widest absolute top-1 left-2">Genetic Tree Nodes</span>
-                              <div className="grid grid-cols-2 gap-4 text-center mt-2">
-                                <div className="bg-white p-2 rounded-lg border border-slate-100 shadow-sm text-xs"><span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-0.5">Sire Line</span><span className="font-extrabold text-slate-800">{fowl.sire}</span></div>
-                                <div className="bg-white p-2 rounded-lg border border-slate-100 shadow-sm text-xs"><span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-0.5">Dam Line</span><span className="font-extrabold text-slate-800">{fowl.dam}</span></div>
-                              </div>
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] text-slate-500 bg-slate-50/50 p-2 rounded-xl">
+                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div>Sire: <strong className="text-slate-800">{fowl.sire}</strong></div>
+                              <div>Dam: <strong className="text-slate-800">{fowl.dam}</strong></div>
                             </div>
-
-                            <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 px-4 rounded-xl border border-slate-200/50 flex justify-between items-center gap-4">
-                              <div className="font-semibold">Identified Siblings: <span className="text-emerald-700 font-black">{siblings.length > 0 ? siblings.join(', ') : 'None detected'}</span></div>
-                              {fowl.status === 'Active' && <button onClick={() => handleArchiveFowl(fowl.id)} className="bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 font-bold px-3 py-1 border border-slate-200 rounded-xl text-[10px] transition-all cursor-pointer shadow-sm">🗎 Archive</button>}
+                            <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-1.5 px-3 rounded-lg border">
+                              <div className="font-semibold">Siblings: <span className="text-emerald-700 font-bold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+                              {fowl.status === 'Active' && <button onClick={() => handleArchiveFowl(fowl.id)} className="bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 px-2 py-0.5 border rounded-lg text-[9px] font-bold">🗎 Archive</button>}
                             </div>
                           </div>
                         </div>
@@ -551,55 +536,69 @@ export default function GalloTrackSystem() {
               </div>
             )}
 
-            {/* ==================== MARKETPLACE CATALOG PANEL ==================== */}
-{currentPage === 'marketplace' && (
-  <div className="space-y-6 animate-fadeIn">
-    <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Verified Breeding Cohort Catalog</h1>
-        <p className="text-xs text-slate-500 font-medium">Transparent cohort matrix filterable by active pedigree clusters</p>
-      </div>
-      <input type="text" placeholder="🔍 Search lineage strains (e.g., Roundhead)..." value={search} onChange={(e) => setSearch(e.target.value)} className="p-3 border border-slate-200 rounded-xl bg-slate-50/50 text-xs outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 w-full sm:w-72 transition-all shadow-inner font-medium" />
-    </div>
+            {/* Catalog Panel */}
+            {currentPage === 'marketplace' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h1 className="text-xl font-black text-slate-900 tracking-tight">Verified Breeding Cohort Catalog</h1>
+                    <p className="text-xs text-slate-500 font-medium">Transparent cohort matrix filterable by active pedigree clusters</p>
+                  </div>
+                  <input type="text" placeholder="🔍 Search lineage strains..." value={search} onChange={(e) => setSearch(e.target.value)} className="p-2.5 border border-slate-200 rounded-xl bg-slate-50/50 text-xs outline-none focus:bg-white focus:border-emerald-500 w-full sm:w-60 transition-all" />
+                </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {fowls.filter(item => item.status === 'Active' && item.breed.toLowerCase().includes(search.toLowerCase())).map(item => (
-        <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-center shadow-sm relative overflow-hidden hover:border-slate-300 transition-all">
-          <span className="absolute top-3 right-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">✓ Verified Pedigree</span>
-          
-          <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center font-mono font-bold text-slate-300 text-[9px] relative shadow-inner">
-            {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
-          </div>
-          
-          <div className="space-y-2 flex-1 w-full">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h4 className="text-lg font-black text-slate-900 tracking-tight">{item.name}</h4>
-                <span className="text-[9px] font-mono font-bold bg-slate-900 text-white px-2 py-0.5 rounded uppercase">{item.growth_stage || 'Stag'}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {fowls.filter(item => item.status === 'Active' && item.breed.toLowerCase().includes(search.toLowerCase())).map(item => (
+                    <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200/60 flex flex-col sm:flex-row gap-3 items-center shadow-sm relative overflow-hidden">
+                      <span className="absolute top-2 right-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">✓ Verified Pedigree</span>
+                      <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center font-mono text-slate-300 text-[8px] relative">
+                        {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+                      </div>
+                      <div className="space-y-1 flex-1 w-full text-xs">
+                        <div className="flex items-center space-x-1.5">
+                          <h4 className="font-black text-slate-900">{item.name}</h4>
+                          <span className="text-[8px] font-mono font-bold bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase">{item.growth_stage || 'Stag'}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold">Strain: <span className="text-slate-800">{item.breed}</span></p>
+                        <div className="grid grid-cols-2 gap-1 bg-slate-50 p-1.5 rounded-lg text-[10px] text-slate-600">
+                          <div>Tone: <strong className="text-slate-800">{item.color}</strong></div>
+                          <div>Trait: <strong className="text-emerald-700">{item.behavior_trait}</strong></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <span className="text-[10px] font-bold text-slate-400 block mt-0.5">Strain Grouping: <span className="text-slate-800 font-extrabold">{item.breed}</span></span>
-            </div>
-            
-            {/* PINAGANDANG INFOGRID: Ipinapakita na ang advanced metadata fields */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] bg-slate-50 p-2.5 rounded-xl text-slate-600 font-medium border border-slate-100/80">
-              <div>Class: <strong className="text-slate-900">{item.color_category || 'Red'} ({item.color || 'Bright Red'})</strong></div>
-              <div>Trait: <strong className="text-emerald-700 font-bold">{item.behavior_trait || 'Wave Cutter'}</strong></div>
-              <div className="col-span-2 border-t border-slate-200/40 mt-1 pt-1 text-[10px] text-slate-400 font-mono">
-                EYE VARIANT: <span className="text-slate-700 font-bold">{item.eye_variant || 'Standard Eye'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+            )}
 
-            {/* EXTERNAL CORE ROUTING BLOCKS */}
-            {currentPage === 'profile' && <div className="p-2 animate-fadeIn"><ProfilePage /></div>}
-            {currentPage === 'settings' && <div className="p-2 animate-fadeIn"><SettingsPage /></div>}
+            {/* External Custom Core Subpages */}
+            {currentPage === 'profile' && <div className="p-1 animate-fadeIn"><ProfilePage /></div>}
+            {currentPage === 'settings' && <div className="p-1 animate-fadeIn"><SettingsPage /></div>}
 
           </main>
+
+          {/* ==================== 📱 PREMIUM BOTTOM NAV (Only visible on Mobile view) ==================== */}
+          <nav className="fixed bottom-0 left-0 right-0 h-16 border-t border-slate-200 bg-white flex justify-around items-center px-4 shrink-0 z-50 md:hidden shadow-lg">
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+              { id: 'profiling', label: 'Profiling', icon: '🧬' },
+              { id: 'marketplace', label: 'Catalog', icon: '🛒' },
+              { id: 'profile', label: 'Profile', icon: '👤' },
+              { id: 'settings', label: 'Settings', icon: '⚙️' },
+            ].map((menu) => (
+              <button 
+                key={menu.id}
+                onClick={() => setCurrentPage(menu.id as any)}
+                className={`flex flex-col items-center justify-center w-12 h-full cursor-pointer transition-all ${
+                  currentPage === menu.id ? 'text-emerald-600 scale-105' : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <span className="text-lg">{menu.icon}</span>
+                <span className="text-[8px] font-black mt-0.5 tracking-wider">{menu.label}</span>
+              </button>
+            ))}
+          </nav>
+
         </div>
       )}
 
