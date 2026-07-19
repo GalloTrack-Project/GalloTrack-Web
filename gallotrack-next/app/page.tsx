@@ -331,15 +331,26 @@ export default function GalloTrackSystem() {
     }
   };
 
-  const handleArchiveFowl = async (id: number) => {
-    const { error: updateErr } = await supabase.from('fowl').update({ status: 'Archived' }).eq('id', id);
-    if (updateErr) showToastMessage(updateErr.message, 'error');
-    else {
-      showToastMessage('Node successfully shifted to relational archive log.', 'warning');
-      fetchDatabaseResources();
-      if (selectedFowlForDetails?.id === id) {
-        setSelectedFowlForDetails(null);
+  // 🔄 ARCHIVE HANDLER (WILL REMOVE THE BUTTON FOREVER ONCE CLICKED)
+  const handleArchiveFowlOnly = async (id: number) => {
+    setLoading(true);
+    try {
+      const { error: updateErr } = await supabase
+        .from('fowl')
+        .update({ status: 'Archived' })
+        .eq('id', id);
+
+      if (updateErr) {
+        showToastMessage(updateErr.message, 'error');
+      } else {
+        showToastMessage('Node successfully shifted to relational archive log.', 'warning');
+        if (selectedFowlForDetails?.id === id) setSelectedFowlForDetails(null);
+        fetchDatabaseResources();
       }
+    } catch (err: any) {
+      showToastMessage(err.message || err, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -435,7 +446,7 @@ export default function GalloTrackSystem() {
   const calculateCohortSuccessProbability = () => {
     const cohortScores: { [key: string]: number[] } = {};
 
-    fowls.forEach((fowl) => {
+    fowls.filter(f => f.status === 'Active').forEach((fowl) => {
       const breed = fowl.breed;
       if (!cohortScores[breed]) {
         cohortScores[breed] = [];
@@ -669,7 +680,7 @@ export default function GalloTrackSystem() {
                   </div>
                 </div>
 
-                {/* SUB-TABS (Form layouts remain optimal)... */}
+                {/* 1️⃣ SUB-TAB: ENCODE REGISTRY FORM */}
                 {profilingSubTab === 'form' && (
                   <form onSubmit={handleAddFowl} className="space-y-4 animate-fadeIn">
                     <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
@@ -698,7 +709,39 @@ export default function GalloTrackSystem() {
                         </div>
                       </div>
                     </div>
-                    {/* (Other secondary structural form sub-tabs remain active) */}
+
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+                      <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2"><span>🧬</span> <span>Step 2: Physical Parameters</span></h3>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Age (Mos)</label>
+                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0" required />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Growth</label>
+                          <input type="text" value={newGrowthStage} readOnly className="w-full p-2.5 border border-emerald-100 rounded-xl text-xs text-center font-bold bg-emerald-50 text-emerald-800" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Weight (kg)</label>
+                          <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" placeholder="0.0" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+                      <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2"><span>🌳</span> <span>Step 3: Ancestry Roots & Photo</span></h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Sire (Father)</label>
+                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Sire" required />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Dam (Mother)</label>
+                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Dam" required />
+                        </div>
+                      </div>
+                    </div>
+
                     <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all">
                       {uploadingImage ? 'Uploading Attachment...' : 'Commit Node Objects'}
                     </button>
@@ -721,17 +764,27 @@ export default function GalloTrackSystem() {
                             <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
-                              <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 rounded-md uppercase">{fowl.breed}</span>
+                              <span className={`text-[9px] font-black border px-2 rounded-md uppercase ${fowl.status === 'Active' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'}`}>{fowl.breed} ({fowl.status})</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
-                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                             </div>
+                            
+                            {/* 🛠️ Action Buttons Inside the Card */}
                             <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
                               <button onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
                               <button onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">✏️ Edit</button>
+                              
+                              {/* 👁️ LALABAS LANG ITONG BUTTON KAPAG ACTIVE. KAPAG ARCHIVED, MAWAWALA NA SYA DITO */}
                               {fowl.status === 'Active' && (
-                                <button onClick={() => handleArchiveFowl(fowl.id)} className="flex-1 min-w-[70px] bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🗎 Archive</button>
+                                <button 
+                                  onClick={() => handleArchiveFowlOnly(fowl.id)} 
+                                  disabled={loading}
+                                  className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
+                                >
+                                  <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                                </button>
                               )}
                             </div>
                           </div>
