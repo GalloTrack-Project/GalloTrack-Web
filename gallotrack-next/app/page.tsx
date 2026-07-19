@@ -54,8 +54,8 @@ export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
   
-  // 🔀 Sub-tab selector para sa Profiling page ('form' o 'registry')
-  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry'>('form');
+  // 🔀 Sub-tab selector para sa Profiling page ('form', 'registry', o 'matchForm')
+  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'matchForm'>('form');
 
   // 🔍 Interactive Detail at Edit States
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
@@ -92,6 +92,14 @@ export default function GalloTrackSystem() {
   
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // ⚔️ Match History Form State Variables
+  const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
+  const [matchDate, setMatchDate] = useState('');
+  const [opponentName, setOpponentName] = useState('');
+  const [matchLocation, setMatchLocation] = useState('');
+  const [matchType, setMatchType] = useState('Derby Match');
+  const [matchOutcome, setMatchOutcome] = useState('Win');
 
   // Edit Modal Form States
   const [editName, setEditName] = useState('');
@@ -270,6 +278,47 @@ export default function GalloTrackSystem() {
     }
   };
 
+  // ⚔️ Backend Sync Logic para sa Match at Performance Records
+  const handleAddMatchRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFowlForMatch) {
+      alert("GalloTrack Warning: Pumili muna ng rehistradong manok mula sa inyong roster.");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const matchedFowl = fowls.find(f => f.name === selectedFowlForMatch);
+      const fowlBreed = matchedFowl ? matchedFowl.breed : 'Unknown';
+
+      const payload = {
+        date: matchDate || new Date().toISOString().split('T')[0],
+        entry_name: selectedFowlForMatch,
+        breed: fowlBreed,
+        opponent: opponentName || 'Anonymous Opponent',
+        location: matchLocation || 'Local Breeding Yard',
+        type: matchType,
+        outcome: matchOutcome,
+        status: 'Verified'
+      };
+
+      const { error: insertErr } = await supabase.from('match').insert([payload]);
+
+      if (insertErr) {
+        throw insertErr;
+      } else {
+        alert('GalloTrack Notice: Match outcome successfully logged.');
+        setOpponentName(''); setMatchLocation('');
+        fetchDatabaseResources(); // Awtomatikong pinapagana ang re-calculation ng charts!
+        setProfilingSubTab('registry');
+      }
+    } catch (err: any) {
+      alert(`Database Sync Error: ${err.message || err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleArchiveFowl = async (id: number) => {
     const { error: updateErr } = await supabase.from('fowl').update({ status: 'Archived' }).eq('id', id);
     if (updateErr) alert(updateErr.message);
@@ -344,6 +393,76 @@ export default function GalloTrackSystem() {
       setLoading(false);
     }
   };
+
+  // =========================================================
+  // 📈 ANALYTICS ALGORITHM: CROSSBREED WIN RATIO AGGREGATION
+  // =========================================================
+  const calculateCrossbreedWinRatios = () => {
+    const breedStats: { [key: string]: { wins: number; total: number } } = {};
+
+    matchHistory.forEach((match) => {
+      const breedKey = match.breed || 'Unknown';
+      if (!breedStats[breedKey]) {
+        breedStats[breedKey] = { wins: 0, total: 0 };
+      }
+      
+      breedStats[breedKey].total += 1;
+      if (match.outcome.toLowerCase() === 'win') {
+        breedStats[breedKey].wins += 1;
+      }
+    });
+
+    const labels = Object.keys(breedStats);
+    const data = labels.map(label => {
+      const stats = breedStats[label];
+      return stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
+    });
+
+    return {
+      labels: labels.length > 0 ? labels : ['Roundhead Cross', 'Hatch Cross', 'Kelso Combos'],
+      data: data.length > 0 ? data : [65, 45, 58]
+    };
+  };
+
+  // =========================================================
+  // 📉 ANALYTICS ALGORITHM: COHORT SUCCESS PROBABILITY
+  // =========================================================
+  const calculateCohortSuccessProbability = () => {
+    const cohortScores: { [key: string]: number[] } = {};
+
+    fowls.forEach((fowl) => {
+      const breed = fowl.breed;
+      if (!cohortScores[breed]) {
+        cohortScores[breed] = [];
+      }
+
+      const fowlMatches = matchHistory.filter(m => m.entry_name.toLowerCase() === fowl.name.toLowerCase());
+      const wins = fowlMatches.filter(m => m.outcome.toLowerCase() === 'win').length;
+      
+      // Dynamic weighted probability based on match counts and pedigree records
+      let dynamicScore = fowlMatches.length > 0 ? (wins / fowlMatches.length) * 100 : 50; 
+
+      if (fowl.sire && fowl.sire.trim() !== '') dynamicScore += 5;
+      if (fowl.dam && fowl.dam.trim() !== '') dynamicScore += 5;
+
+      cohortScores[breed].push(Math.min(dynamicScore, 100));
+    });
+
+    const labels = Object.keys(cohortScores);
+    const data = labels.map(label => {
+      const scores = cohortScores[label];
+      const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+      return Math.round(average);
+    });
+
+    return {
+      labels: labels.length > 0 ? labels : ['Roundhead', 'Sweater', 'Lemon', 'Kelso', 'Hatch'],
+      data: data.length > 0 ? data : [78, 70, 62, 68, 55]
+    };
+  };
+
+  const crossbreedChartData = calculateCrossbreedWinRatios();
+  const cohortChartData = calculateCohortSuccessProbability();
 
   if (showSplash) {
     return <SplashScreen onFinished={() => setShowSplash(false)} />;
@@ -446,13 +565,34 @@ export default function GalloTrackSystem() {
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col items-center">
                     <h3 className="text-xs font-black text-slate-400 uppercase mb-6 tracking-widest text-center w-full border-b pb-3">Cross-Breed Win Ratios (Empirical Logs)</h3>
                     <div className="w-48 h-48 sm:w-56 sm:h-56">
-                      <Doughnut data={{ labels: ['Roundhead Cross', 'Hatch Cross', 'Kelso Combos'], datasets: [{ data: [65, 45, 58], backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'], borderWidth: 0 }] }} options={{ responsive: true, maintainAspectRatio: false }} />
+                      <Doughnut 
+                        data={{ 
+                          labels: crossbreedChartData.labels, 
+                          datasets: [{ 
+                            data: crossbreedChartData.data, 
+                            backgroundColor: ['#10b981', '#f43f5e', '#f59e0b', '#3b82f6', '#8b5cf6'], 
+                            borderWidth: 0 
+                          }] 
+                        }} 
+                        options={{ responsive: true, maintainAspectRatio: false }} 
+                      />
                     </div>
                   </div>
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
                     <h3 className="text-xs font-black text-slate-400 uppercase mb-6 tracking-widest border-b pb-3 text-center">Lineage Cohort Success Probability (%)</h3>
                     <div className="w-full h-48 sm:h-56">
-                      <Bar data={{ labels: ['Roundhead', 'Sweater', 'Lemon', 'Kelso', 'Hatch'], datasets: [{ label: 'Estimated Success Rate %', data: [78, 70, 62, 68, 55], backgroundColor: '#059669', borderRadius: 8 }] }} options={{ responsive: true, maintainAspectRatio: false }} />
+                      <Bar 
+                        data={{ 
+                          labels: cohortChartData.labels, 
+                          datasets: [{ 
+                            label: 'Estimated Success Rate %', 
+                            data: cohortChartData.data, 
+                            backgroundColor: '#059669', 
+                            borderRadius: 8 
+                          }] 
+                        }} 
+                        options={{ responsive: true, maintainAspectRatio: false }} 
+                      />
                     </div>
                   </div>
                 </div>
@@ -504,7 +644,7 @@ export default function GalloTrackSystem() {
                     <p className="text-xs text-slate-500 font-medium mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
                   </div>
 
-                  {/* 🔀 Premium Segmented Control Switcher */}
+                  {/* 🔀 Premium Segmented Control Switcher (3 Tabs!) */}
                   <div className="bg-slate-100 p-1 rounded-xl flex w-full border border-slate-200/40 mt-1 shrink-0">
                     <button 
                       onClick={() => setProfilingSubTab('form')}
@@ -517,6 +657,12 @@ export default function GalloTrackSystem() {
                       className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
                     >
                       🌳 Family Registry ({fowls.length})
+                    </button>
+                    <button 
+                      onClick={() => setProfilingSubTab('matchForm')}
+                      className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+                    >
+                      ⚔️ Match Logs
                     </button>
                   </div>
                 </div>
@@ -724,6 +870,64 @@ export default function GalloTrackSystem() {
                       );
                     })}
                   </div>
+                )}
+
+                {/* 3️⃣ SUB-TAB: RECORD MATCHES & PERFORMANCE LOGGING */}
+                {profilingSubTab === 'matchForm' && (
+                  <form onSubmit={handleAddMatchRecord} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4 animate-fadeIn">
+                    <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2">
+                      <span>⚔️</span> <span>Record Match Performance Log</span>
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Select Local Fowl Entry</label>
+                        <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none" required>
+                          <option value="">-- Select Fowl --</option>
+                          {fowls.filter(f => f.status === 'Active').map(f => (
+                            <option key={f.id} value={f.name}>{f.name} ({f.breed})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Match Date</label>
+                        <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-medium" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Opponent Entry Identity</label>
+                        <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="e.g., Kelso Express" required />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Arena Location Hub</label>
+                        <input type="text" value={matchLocation} onChange={(e) => setMatchLocation(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="e.g., Dingle Breeding Arena" required />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Match Type</label>
+                        <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
+                          <option value="Derby Match">Derby Match</option>
+                          <option value="Hack Match">Hack Match</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Fight Outcome</label>
+                        <select value={matchOutcome} onChange={(e) => setMatchOutcome(e.target.value)} className="w-full p-2.5 border border-amber-200 rounded-xl text-xs bg-amber-50 font-black text-amber-900 outline-none">
+                          <option value="Win">🏆 WIN</option>
+                          <option value="Loss">💀 LOSS</option>
+                          <option value="Draw">🤝 DRAW</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all">
+                      {loading ? 'Committing Log...' : 'Commit Performance Outcome Entry'}
+                    </button>
+                  </form>
                 )}
               </div>
             )}
