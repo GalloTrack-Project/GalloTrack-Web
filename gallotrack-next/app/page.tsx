@@ -67,6 +67,7 @@ export default function GalloTrackSystem() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
@@ -532,7 +533,24 @@ export default function GalloTrackSystem() {
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">System Password</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="••••••••••••" required />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    className="w-full p-3.5 pr-11 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" 
+                    placeholder="••••••••••••" 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? '👁️' : '🙈'}
+                  </button>
+                </div>
               </div>
               {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl shadow-xs">{error}</div>}
               <button type="submit" className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-slate-900/20 cursor-pointer text-xs tracking-wider uppercase">
