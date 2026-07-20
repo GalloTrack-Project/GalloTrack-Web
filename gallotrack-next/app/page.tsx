@@ -192,6 +192,20 @@ export default function GalloTrackSystem() {
     }
   };
 
+  const handleEditAgeChange = (val: string) => {
+    setEditAge(val);
+    if (val && !isNaN(Number(val))) {
+      setEditGrowthStage(autoComputeGrowthStage(Number(val)));
+    }
+  };
+
+  const getSiblingsForFowl = (sire: string, dam: string, currentId: number) => {
+    if (!sire || !dam) return [];
+    return fowls
+      .filter(f => f.id !== currentId && f.sire?.toLowerCase() === sire.toLowerCase() && f.dam?.toLowerCase() === dam.toLowerCase())
+      .map(f => f.name);
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username.trim() !== '' && password === 'cict123') {
@@ -337,16 +351,16 @@ export default function GalloTrackSystem() {
     setEditName(fowl.name);
     setEditBreed(fowl.breed);
     setEditGender(fowl.gender);
-    setEditColorCategory(fowl.color_category);
-    setEditColor(fowl.color);
-    setEditBehaviorTrait(fowl.behavior_trait);
+    setEditColorCategory(fowl.color_category || 'Red');
+    setEditColor(fowl.color || 'Bright Red');
+    setEditBehaviorTrait(fowl.behavior_trait || 'Wave-Motion Tracker');
     setEditEyeVariant(fowl.eye_variant || 'Standard Eye');
     setEditAge(fowl.age ? fowl.age.replace(' Months', '') : '');
-    setEditGrowthStage(fowl.growth_stage);
+    setEditGrowthStage(fowl.growth_stage || 'Stag');
     setEditWeight(fowl.weight ? fowl.weight.replace(' kg', '') : '');
     setEditHeight(fowl.height ? fowl.height.replace(' cm', '') : '');
-    setEditSire(fowl.sire);
-    setEditDam(fowl.dam);
+    setEditSire(fowl.sire || '');
+    setEditDam(fowl.dam || '');
     setEditSirePct(fowl.sire_pct ?? 100);
     setEditDamPct(fowl.dam_pct ?? 100);
   };
@@ -462,7 +476,7 @@ export default function GalloTrackSystem() {
   }
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen font-sans antialiased text-slate-800 flex flex-col md:flex-row overflow-hidden h-screen w-full relative">
+    <div className="bg-[#f8fafc] min-h-screen font-sans antialiased text-slate-800 flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative">
       
       {toast.show && (
         <div className="fixed top-5 right-5 z-[999] flex items-center p-4 max-w-sm rounded-2xl shadow-xl border backdrop-blur-md animate-slideIn bg-white/95 border-slate-200/80">
@@ -516,6 +530,7 @@ export default function GalloTrackSystem() {
               ].map((menu) => (
                 <button 
                   key={menu.id}
+                  type="button"
                   onClick={() => setCurrentPage(menu.id as any)} 
                   className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer ${
                     currentPage === menu.id 
@@ -540,17 +555,35 @@ export default function GalloTrackSystem() {
       )}
 
       {currentPage !== 'login' && (
-        <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden pb-20 md:pb-0">
+        <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-16 md:pb-0">
           
-          <header className="bg-white border-b border-slate-200/80 p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm px-6 shrink-0">
-            <div className="text-[10px] md:text-xs font-mono font-bold text-slate-400 flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>SUPABASE POSTGRESQL DATA LINK: ACTIVE</span>
+          <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-sm shrink-0">
+            <div className="p-3 md:p-4 flex justify-between items-center px-4 md:px-6">
+              <div className="flex items-center space-x-2">
+                <span className="md:hidden font-black text-slate-900 text-base tracking-tight bg-gradient-to-r from-slate-900 to-emerald-600 bg-clip-text text-transparent">GALLOTRACK</span>
+                <div className="text-[10px] md:text-xs font-mono font-bold text-slate-400 flex items-center space-x-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="hidden sm:inline">SUPABASE POSTGRESQL DATA LINK: ACTIVE</span>
+                  <span className="sm:hidden text-emerald-600 font-semibold">LIVE LINK</span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border hidden sm:inline-block">Dingle Hub</span>
+                <button 
+                  type="button"
+                  onClick={() => { setUsername(''); setPassword(''); setCurrentPage('login'); showToastMessage('System cluster session destroyed.', 'warning'); }}
+                  className="md:hidden bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/60 p-1.5 px-2.5 rounded-lg text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1"
+                  title="Terminate Core Session"
+                >
+                  <span>🚪</span>
+                  <span>Exit</span>
+                </button>
+              </div>
             </div>
-            <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border">Dingle Campus Hub</span>
           </header>
 
-          <main ref={mainScrollRef} className="p-4 md:p-8 flex-1 overflow-y-auto max-w-6xl w-full mx-auto">
+          <main ref={mainScrollRef} className="p-4 md:p-8 flex-1 overflow-y-auto max-w-6xl w-full mx-auto pb-28 md:pb-8">
             
             {currentPage === 'dashboard' && (
               <div className="space-y-6 animate-fadeIn">
@@ -606,7 +639,7 @@ export default function GalloTrackSystem() {
                     <span className="text-[9px] font-mono bg-slate-200/80 text-slate-600 font-black px-2.5 py-1 rounded-lg">D4 Analytics DB</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] border-collapse">
+                    <table className="w-full text-left text-[11px] border-collapse min-w-[500px]">
                       <thead>
                         <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/60">
                           <th className="p-4 pl-6">Match Date</th>
@@ -642,10 +675,10 @@ export default function GalloTrackSystem() {
                     <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profiling & Lineage Core Matrix</h1>
                     <p className="text-xs text-slate-400 font-semibold mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
                   </div>
-                  <div className="bg-slate-100 p-1 rounded-xl flex w-full border border-slate-200/40 mt-1 shrink-0">
-                    <button onClick={() => setProfilingSubTab('form')} className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>📝 Encode Node</button>
-                    <button onClick={() => setProfilingSubTab('registry')} className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>🌳 Family Registry ({fowls.length})</button>
-                    <button onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>⚔️ Match Logs</button>
+                  <div className="bg-slate-100 p-1 rounded-xl flex flex-wrap sm:flex-nowrap w-full border border-slate-200/40 mt-1 shrink-0 gap-1 sm:gap-0">
+                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[100px] py-2 text-[11px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>📝 Encode Node</button>
+                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[100px] py-2 text-[11px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>🌳 Family Registry ({fowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[100px] py-2 text-[11px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>⚔️ Match Logs</button>
                   </div>
                 </div>
 
@@ -657,7 +690,7 @@ export default function GalloTrackSystem() {
                         <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Identifier Name</label>
                         <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 transition-all font-medium" placeholder="e.g., Roundhead Storm" required />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Genetic Strain</label>
                           <select value={newBreed} onChange={(e) => setNewBreed(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none">
@@ -698,7 +731,7 @@ export default function GalloTrackSystem() {
 
                     <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
                       <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2"><span>🌳</span> <span>Step 3: Ancestry Roots & Photo</span></h3>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Sire (Father)</label>
                           <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Sire" required />
@@ -707,6 +740,23 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Dam (Mother)</label>
                           <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none" placeholder="Dam" required />
                         </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Sire Pct (%)</label>
+                          <input type="number" value={sirePct} onChange={(e) => setSirePct(Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none font-bold" min="0" max="100" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Dam Pct (%)</label>
+                          <input type="number" value={damPct} onChange={(e) => setDamPct(Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50/50 outline-none font-bold" min="0" max="100" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wide">Fowl Attachment</label>
+                        <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100/70 transition-all">
+                          <span className="text-[10px] text-slate-500 font-bold">📷 {selectedImage ? selectedImage.name : 'Choose fowl image file'}</span>
+                          <input type="file" accept="image/*" onChange={(e) => e.target.files && setSelectedImage(e.target.files[0])} className="hidden" />
+                        </label>
                       </div>
                     </div>
 
@@ -720,39 +770,49 @@ export default function GalloTrackSystem() {
                   <div className="space-y-4 animate-fadeIn">
                     {fowls.length === 0 ? (
                       <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No farm objects inside cluster.</div>
-                    ) : fowls.map(fowl => (
-                      <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center">
-                        <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
-                          {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
-                        </div>
-                        <div className="flex-1 w-full space-y-3">
-                          <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
-                            <span className={`text-[9px] font-black border px-2 rounded-md uppercase ${fowl.status === 'Active' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'}`}>{fowl.breed} ({fowl.status})</span>
+                    ) : fowls.map(fowl => {
+                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
+                      return (
+                        <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center">
+                          <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                           </div>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                            <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                            <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
-                            <button onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
-                            <button onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">✏️ Edit</button>
+                          <div className="flex-1 w-full space-y-3">
+                            <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
+                              <span className={`text-[9px] font-black border px-2 rounded-md uppercase ${fowl.status === 'Active' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'}`}>{fowl.breed} ({fowl.status})</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                            </div>
                             
-                            {fowl.status === 'Active' && (
-                              <button 
-                                onClick={() => handleArchiveFowlOnly(fowl.id)} 
-                                disabled={loading}
-                                className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
-                              >
-                                <span className="flex items-center justify-center gap-1">🗎 Archive</span>
-                              </button>
-                            )}
+                            <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2 px-3 rounded-lg border">
+                              <div className="font-semibold">Siblings: <span className="text-emerald-700 font-bold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
+                              <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">✏️ Edit</button>
+                              
+                              {fowl.status === 'Active' && (
+                                <button 
+                                  type="button"
+                                  onClick={() => handleArchiveFowlOnly(fowl.id)} 
+                                  disabled={loading}
+                                  className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
+                                >
+                                  <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -826,8 +886,15 @@ export default function GalloTrackSystem() {
                         {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                       </div>
                       <div className="space-y-1 flex-1 w-full text-xs">
-                        <h4 className="font-black text-slate-900">{item.name}</h4>
+                        <div className="flex items-center space-x-1.5">
+                          <h4 className="font-black text-slate-900">{item.name}</h4>
+                          <span className="text-[8px] font-mono font-bold bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase">{item.growth_stage || 'Stag'}</span>
+                        </div>
                         <p className="text-[10px] text-slate-400 font-bold">Strain: <span className="text-slate-800">{item.breed}</span></p>
+                        <div className="grid grid-cols-2 gap-1 bg-slate-50 p-1.5 rounded-lg text-[10px] text-slate-600">
+                          <div>Tone: <strong className="text-slate-800">{item.color}</strong></div>
+                          <div>Trait: <strong className="text-emerald-700">{item.behavior_trait}</strong></div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -839,43 +906,306 @@ export default function GalloTrackSystem() {
             {currentPage === 'settings' && <div className="p-1 animate-fadeIn"><SettingsPage /></div>}
           </main>
 
-          {editingFowl && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-              <form onSubmit={handleUpdateFowl} className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-xl">
-                <h3 className="font-black text-sm text-slate-900">Edit Fowl Properties</h3>
-                <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs" required />
-                <div className="flex gap-2">
-                  <button type="submit" className="flex-1 bg-emerald-600 text-white p-2.5 rounded-xl text-xs font-bold">Save Changes</button>
-                  <button type="button" onClick={() => setEditingFowl(null)} className="flex-1 bg-slate-100 p-2.5 rounded-xl text-xs font-bold">Cancel</button>
-                </div>
-              </form>
+          {/* ==================== 📱 MOBILE BOTTOM NAVIGATION BAR ==================== */}
+          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-2xl md:hidden pb-[env(safe-area-inset-bottom,0px)]">
+            <div className="flex justify-around items-center h-16 px-1">
+              {[
+                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                { id: 'profiling', label: 'Profiling', icon: '🧬' },
+                { id: 'marketplace', label: 'Catalog', icon: '🛒' },
+                { id: 'profile', label: 'Profile', icon: '👤' },
+                { id: 'settings', label: 'Settings', icon: '⚙️' },
+              ].map((menu) => (
+                <button 
+                  key={menu.id}
+                  type="button"
+                  onClick={() => setCurrentPage(menu.id as any)}
+                  className={`flex flex-col items-center justify-center flex-1 h-full py-1 cursor-pointer transition-all active:scale-95 ${
+                    currentPage === menu.id ? 'text-emerald-600 font-extrabold scale-105' : 'text-slate-400 hover:text-slate-600 font-medium'
+                  }`}
+                >
+                  <span className="text-xl leading-none">{menu.icon}</span>
+                  <span className="text-[10px] mt-1 tracking-tight">{menu.label}</span>
+                </button>
+              ))}
             </div>
-          )}
-
-          {/* ==================== 📱 MOBILE BOTTOM NAVIGATION BAR (FIX PARA SA PHONE VIEW) ==================== */}
-          <nav className="fixed bottom-0 left-0 right-0 h-16 border-t border-slate-200 bg-white flex justify-around items-center px-4 md:hidden z-50 shadow-2xl">
-            {[
-              { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-              { id: 'profiling', label: 'Profiling', icon: '🧬' },
-              { id: 'marketplace', label: 'Catalog', icon: '🛒' },
-              { id: 'profile', label: 'Profile', icon: '👤' },
-              { id: 'settings', label: 'Settings', icon: '⚙️' },
-            ].map((menu) => (
-              <button 
-                key={menu.id}
-                onClick={() => setCurrentPage(menu.id as any)}
-                className={`flex flex-col items-center justify-center w-14 h-full cursor-pointer transition-all ${
-                  currentPage === menu.id ? 'text-emerald-600 font-black scale-105' : 'text-slate-400'
-                }`}
-              >
-                <span className="text-lg">{menu.icon}</span>
-                <span className="text-[9px] font-bold mt-0.5">{menu.label}</span>
-              </button>
-            ))}
           </nav>
 
         </div>
       )}
+
+      {/* ==================== 🔍 MORE DETAILS POPUP OVERLAY (MODAL) ==================== */}
+      {selectedFowlForDetails && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🧬</span>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">Genetic Profile & Analysis</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ID #{selectedFowlForDetails.id}</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setSelectedFowlForDetails(null)}
+                className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-600">
+              
+              <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border">
+                <div className="w-16 h-16 bg-slate-200 rounded-xl overflow-hidden shadow-inner flex-shrink-0">
+                  {selectedFowlForDetails.image_url ? (
+                    <img src={selectedFowlForDetails.image_url} alt={selectedFowlForDetails.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-mono text-[8px] text-slate-400 font-bold">NO PHOTO</div>
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <h4 className="text-lg font-black text-slate-900">{selectedFowlForDetails.name}</h4>
+                    <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">{selectedFowlForDetails.breed}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">Growth Classification: <strong className="text-slate-700">{selectedFowlForDetails.growth_stage}</strong></p>
+                </div>
+              </div>
+
+              <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>
+                
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                    <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire})</span>
+                    <span className="text-slate-800">{selectedFowlForDetails.sire_pct ?? 100}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div className="bg-sky-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.sire_pct ?? 100}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                    <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam})</span>
+                    <span className="text-slate-800">{selectedFowlForDetails.dam_pct ?? 100}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div className="bg-pink-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.dam_pct ?? 100}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-[11px]">
+                  <span className="font-extrabold text-slate-700">Combined Bloodline Index</span>
+                  <span className="font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+                    {selectedFowlForDetails.bloodline_pct ?? 100}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Age Parameter</span>
+                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.age || 'N/A'}</strong>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Structural Weight</span>
+                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.weight || 'N/A'}</strong>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Height Dimension</span>
+                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.height || 'N/A'}</strong>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
+                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Visual Color Range</span>
+                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Behavioral Spec</span>
+                  <strong className="text-emerald-700 text-xs mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                <span className="font-bold text-slate-500">Global Archive Node Status</span>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${selectedFowlForDetails.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                  ● {selectedFowlForDetails.status}
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== ✏️ EDIT NODE POPUP OVERLAY (MODAL) ==================== */}
+      {editingFowl && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">✏️</span>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">Edit Node Registry</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Update parameters for {editingFowl.name}</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingFowl(null)}
+                className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                ✕ Cancel
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateFowl} className="overflow-y-auto p-6 space-y-4 text-xs">
+              
+              <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/40">
+                <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
+                  <span>🏷️</span> <span>Core Identity</span>
+                </h4>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Identifier Name</label>
+                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none focus:border-emerald-500 font-medium" required />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Genetic Strain</label>
+                    <select value={editBreed} onChange={(e) => setEditBreed(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
+                      <option value="Roundhead">Roundhead</option>
+                      <option value="Sweater">Sweater</option>
+                      <option value="Lemon">Lemon</option>
+                      <option value="Hatch">Hatch</option>
+                      <option value="Kelso">Kelso</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Gender Class</label>
+                    <select value={editGender} onChange={(e) => setEditGender(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
+                      <option value="Rooster">Rooster (Cock)</option>
+                      <option value="Hen">Hen (Pullet)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/40">
+                <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
+                  <span>📐</span> <span>Physical Parameters</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Color Group</label>
+                    <select value={editColorCategory} onChange={(e) => { setEditColorCategory(e.target.value); setEditColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
+                      <option value="Red">Red Class</option>
+                      <option value="Light Color">Light Class</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Specific Tone</label>
+                    <select value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 font-medium">
+                      {editColorCategory === 'Red' ? (
+                        <>
+                          <option value="Bright Red">Bright Red</option>
+                          <option value="Dark Red">Dark Red</option>
+                          <option value="Light Red">Light Red</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Talisay / Grey">Talisay / Grey</option>
+                          <option value="White Cup">White Cup</option>
+                          <option value="Black">Black</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age (Mos)</label>
+                    <input type="number" value={editAge} onChange={(e) => handleEditAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold bg-white" placeholder="0" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Growth</label>
+                    <input type="text" value={editGrowthStage} readOnly className="w-full p-2.5 border border-emerald-100 rounded-xl text-xs text-center font-bold bg-emerald-50 text-emerald-800" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Weight (kg)</label>
+                    <input type="text" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold bg-white" placeholder="0.0" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Height (cm)</label>
+                    <input type="text" value={editHeight} onChange={(e) => setEditHeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white" placeholder="e.g., 40" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Eye Variant</label>
+                    <select value={editEyeVariant} onChange={(e) => setEditEyeVariant(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 font-medium outline-none">
+                      <option value="Standard Eye">Standard Eye</option>
+                      <option value="Prairie Eye Sub-strain">Prairie Eye</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Behavioral Trait</label>
+                  <select value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white text-slate-700 font-medium outline-none">
+                    <option value="Wave-Motion Tracker">Wave Tracker</option>
+                    <option value="Precision Stepper">Precision Stepper</option>
+                    <option value="Aggressive Alertness">Aggressive Alertness</option>
+                    <option value="Smart Lineage Spec">Smart Lineage Spec</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/40">
+                <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
+                  <span>🌳</span> <span>Ancestry Lineage Roots</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sire (Father)</label>
+                    <input type="text" value={editSire} onChange={(e) => setEditSire(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none" placeholder="Sire" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Dam (Mother)</label>
+                    <input type="text" value={editDam} onChange={(e) => setEditDam(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none" placeholder="Dam" required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sire Pct (%)</label>
+                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none font-bold" min="0" max="100" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Dam Pct (%)</label>
+                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none font-bold" min="0" max="100" />
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all"
+              >
+                {loading ? 'Saving Parameters...' : 'Commit Updated Registry Node'}
+              </button>
+
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
