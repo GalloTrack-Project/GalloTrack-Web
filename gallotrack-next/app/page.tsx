@@ -611,28 +611,40 @@ export default function GalloTrackSystem() {
         <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-16 md:pb-0">
           
           {/* HEADER STRIP */}
-          <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-xs shrink-0">
-            <div className="p-3.5 md:p-4 flex justify-between items-center px-4 md:px-7">
+          <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-40 shadow-xs shrink-0">
+            <div className="py-3.5 px-4 sm:px-6 md:px-8 flex justify-between items-center">
+              
+              {/* LEFT: Mobile Title & Supabase Status Badge */}
               <div className="flex items-center space-x-3">
                 <span className="md:hidden font-black text-slate-900 text-lg tracking-tight bg-gradient-to-r from-slate-900 to-emerald-700 bg-clip-text text-transparent">GALLOTRACK</span>
-                <div className="text-[10px] md:text-xs font-mono font-bold text-slate-500 flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-sm"></span>
+                
+                <div className="bg-emerald-50/80 border border-emerald-200/60 text-emerald-800 px-3 py-1.5 rounded-full flex items-center space-x-2 text-[10px] sm:text-xs font-mono font-bold shadow-2xs">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
                   <span className="hidden sm:inline">SUPABASE POSTGRESQL LINK: ONLINE</span>
-                  <span className="sm:hidden text-emerald-700 font-extrabold">LIVE DB LINK</span>
+                  <span className="sm:hidden font-extrabold uppercase tracking-wide">DB ONLINE</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100/90 px-3 py-1 rounded-full border border-slate-200/60 hidden sm:inline-block">Dingle Campus Cluster</span>
+              {/* RIGHT: Campus Metadata Tag & Mobile Session Exit */}
+              <div className="flex items-center space-x-2.5">
+                <div className="bg-slate-100/90 border border-slate-200/80 text-slate-600 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold flex items-center space-x-1.5 shadow-2xs">
+                  <span className="text-slate-400">📍</span>
+                  <span>Dingle Campus Cluster</span>
+                </div>
+
                 <button 
                   type="button"
                   onClick={() => { setUsername(''); setPassword(''); setCurrentPage('login'); showToastMessage('System cluster session destroyed.', 'warning'); }}
-                  className="md:hidden bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 p-1.5 px-3 rounded-xl text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1 shadow-2xs"
+                  className="md:hidden bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 p-1.5 px-3 rounded-full text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1 shadow-2xs"
                   title="Terminate Core Session"
                 >
-                  <span>🚪 Session Exit</span>
+                  <span>🚪 Exit</span>
                 </button>
               </div>
+
             </div>
           </header>
 
