@@ -61,7 +61,6 @@ export default function GalloTrackSystem() {
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'matchForm'>('form');
 
-  // Premium Toast Notification State
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' });
 
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
@@ -77,7 +76,6 @@ export default function GalloTrackSystem() {
 
   const mainScrollRef = useRef<HTMLElement>(null);
 
-  // Form Field States
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('Sweater');
   const [newGender, setNewGender] = useState('Rooster');
@@ -99,7 +97,6 @@ export default function GalloTrackSystem() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Match History Form State Variables
   const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
   const [matchDate, setMatchDate] = useState('');
   const [opponentName, setOpponentName] = useState('');
@@ -107,7 +104,6 @@ export default function GalloTrackSystem() {
   const [matchType, setMatchType] = useState('Derby Match');
   const [matchOutcome, setMatchOutcome] = useState('Win');
 
-  // Edit Modal Form States
   const [editName, setEditName] = useState('');
   const [editBreed, setEditBreed] = useState('');
   const [editGender, setEditGender] = useState('');
@@ -124,7 +120,6 @@ export default function GalloTrackSystem() {
   const [editSirePct, setEditSirePct] = useState(100);
   const [editDamPct, setEditDamPct] = useState(100);
 
-  // Helper Trigger for Dynamic Toast
   const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -148,12 +143,12 @@ export default function GalloTrackSystem() {
   const fetchDatabaseResources = async () => {
     setLoading(true);
     try {
-      const { data: fowlData, error: fowlErr } = await supabase
+      const { data: fowlData } = await supabase
         .from('fowl')
         .select('*')
         .order('id', { ascending: false });
 
-      const { data: matchData, error: matchErr } = await supabase
+      const { data: matchData } = await supabase
         .from('match')
         .select('*')
         .order('id', { ascending: false });
@@ -195,22 +190,6 @@ export default function GalloTrackSystem() {
     if (val && !isNaN(Number(val))) {
       setNewGrowthStage(autoComputeGrowthStage(Number(val)));
     }
-  };
-
-  const handleEditAgeChange = (val: string) => {
-    setEditAge(val);
-    if (val && !isNaN(Number(val))) {
-      setEditGrowthStage(autoComputeGrowthStage(Number(val)));
-    }
-  };
-
-  const getSiblingsForFowl = (currentSire: string, currentDam: string, currentId: number) => {
-    if (!currentSire || !currentDam) return [];
-    return fowls.filter(f => 
-      f.id !== currentId && 
-      f.sire.toLowerCase().trim() === currentSire.toLowerCase().trim() &&
-      f.dam.toLowerCase().trim() === currentDam.toLowerCase().trim()
-    ).map(f => f.name);
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -331,7 +310,6 @@ export default function GalloTrackSystem() {
     }
   };
 
-  // 🔄 ARCHIVE HANDLER (WILL REMOVE THE BUTTON FOREVER ONCE CLICKED)
   const handleArchiveFowlOnly = async (id: number) => {
     setLoading(true);
     try {
@@ -486,7 +464,6 @@ export default function GalloTrackSystem() {
   return (
     <div className="bg-[#f8fafc] min-h-screen font-sans antialiased text-slate-800 flex flex-col md:flex-row overflow-hidden h-screen w-full relative">
       
-      {/* ==================== 🚀 PREMIUM HUD TOAST NOTIFICATION SYSTEM ==================== */}
       {toast.show && (
         <div className="fixed top-5 right-5 z-[999] flex items-center p-4 max-w-sm rounded-2xl shadow-xl border backdrop-blur-md animate-slideIn bg-white/95 border-slate-200/80">
           <div className={`flex items-center justify-center w-8 h-8 rounded-xl mr-3 font-bold text-sm ${
@@ -498,7 +475,6 @@ export default function GalloTrackSystem() {
         </div>
       )}
 
-      {/* ==================== PREMIUM LOGIN FRAMEWORK ==================== */}
       {currentPage === 'login' && (
         <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#047857] overflow-hidden">
           <div className="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl border border-white/20 max-w-md w-full space-y-8 transition-all">
@@ -523,7 +499,6 @@ export default function GalloTrackSystem() {
         </div>
       )}
 
-      {/* ==================== ENTERPRISE NAVIGATION (Desktop Sidebar) ==================== */}
       {currentPage !== 'login' && (
         <aside className="hidden md:flex w-64 bg-slate-900 text-slate-200 flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-slate-800 shadow-2xl h-full justify-between">
           <div>
@@ -564,11 +539,9 @@ export default function GalloTrackSystem() {
         </aside>
       )}
 
-      {/* ==================== MAIN CONTENT & VIEWPORT FRAME ==================== */}
       {currentPage !== 'login' && (
-        <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden">
+        <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden pb-20 md:pb-0">
           
-          {/* Header Bar */}
           <header className="bg-white border-b border-slate-200/80 p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm px-6 shrink-0">
             <div className="text-[10px] md:text-xs font-mono font-bold text-slate-400 flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -577,10 +550,8 @@ export default function GalloTrackSystem() {
             <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border">Dingle Campus Hub</span>
           </header>
 
-          {/* Main Scrollable Area */}
-          <main ref={mainScrollRef} className="p-4 md:p-8 flex-1 overflow-y-auto max-w-6xl w-full mx-auto pb-24 md:pb-8">
+          <main ref={mainScrollRef} className="p-4 md:p-8 flex-1 overflow-y-auto max-w-6xl w-full mx-auto">
             
-            {/* ==================== 📊 UPGRADED PRO DASHBOARD PANEL ==================== */}
             {currentPage === 'dashboard' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -629,7 +600,6 @@ export default function GalloTrackSystem() {
                   </div>
                 </div>
 
-                {/* Match Logs Table */}
                 <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden mt-6">
                   <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-600 uppercase tracking-wider">Historical Analytics Match Logs</h3>
@@ -665,7 +635,6 @@ export default function GalloTrackSystem() {
               </div>
             )}
 
-            {/* ==================== 🧬 PROFILING ENGINE PANEL ==================== */}
             {currentPage === 'profiling' && (
               <div className="space-y-5 animate-fadeIn">
                 <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col gap-3">
@@ -680,7 +649,6 @@ export default function GalloTrackSystem() {
                   </div>
                 </div>
 
-                {/* 1️⃣ SUB-TAB: ENCODE REGISTRY FORM */}
                 {profilingSubTab === 'form' && (
                   <form onSubmit={handleAddFowl} className="space-y-4 animate-fadeIn">
                     <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
@@ -748,53 +716,46 @@ export default function GalloTrackSystem() {
                   </form>
                 )}
 
-                {/* 2️⃣ SUB-TAB: COMPACT FAMILY RECORDS LIST */}
                 {profilingSubTab === 'registry' && (
                   <div className="space-y-4 animate-fadeIn">
                     {fowls.length === 0 ? (
                       <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No farm objects inside cluster.</div>
-                    ) : fowls.map(fowl => {
-                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
-                      return (
-                        <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center">
-                          <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
-                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+                    ) : fowls.map(fowl => (
+                      <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center">
+                        <div className="w-20 h-20 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                          {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+                        </div>
+                        <div className="flex-1 w-full space-y-3">
+                          <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
+                          <div className="flex items-center space-x-2">
+                            <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
+                            <span className={`text-[9px] font-black border px-2 rounded-md uppercase ${fowl.status === 'Active' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'}`}>{fowl.breed} ({fowl.status})</span>
                           </div>
-                          <div className="flex-1 w-full space-y-3">
-                            <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
-                            <div className="flex items-center space-x-2">
-                              <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
-                              <span className={`text-[9px] font-black border px-2 rounded-md uppercase ${fowl.status === 'Active' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'}`}>{fowl.breed} ({fowl.status})</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                            </div>
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                            <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                            <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                            <button onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
+                            <button onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">✏️ Edit</button>
                             
-                            {/* 🛠️ Action Buttons Inside the Card */}
-                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
-                              <button onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
-                              <button onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">✏️ Edit</button>
-                              
-                              {/* 👁️ LALABAS LANG ITONG BUTTON KAPAG ACTIVE. KAPAG ARCHIVED, MAWAWALA NA SYA DITO */}
-                              {fowl.status === 'Active' && (
-                                <button 
-                                  onClick={() => handleArchiveFowlOnly(fowl.id)} 
-                                  disabled={loading}
-                                  className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
-                                >
-                                  <span className="flex items-center justify-center gap-1">🗎 Archive</span>
-                                </button>
-                              )}
-                            </div>
+                            {fowl.status === 'Active' && (
+                              <button 
+                                onClick={() => handleArchiveFowlOnly(fowl.id)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
+                              >
+                                <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                              </button>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
 
-                {/* 3️⃣ SUB-TAB: RECORD MATCHES & PERFORMANCE LOGGING */}
                 {profilingSubTab === 'matchForm' && (
                   <form onSubmit={handleAddMatchRecord} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4 animate-fadeIn">
                     <h3 className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider flex items-center space-x-1.5 border-b pb-2"><span>⚔️</span> <span>Record Match Performance Log</span></h3>
@@ -848,7 +809,6 @@ export default function GalloTrackSystem() {
               </div>
             )}
 
-            {/* Catalog Panel */}
             {currentPage === 'marketplace' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -866,9 +826,7 @@ export default function GalloTrackSystem() {
                         {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                       </div>
                       <div className="space-y-1 flex-1 w-full text-xs">
-                        <div className="flex items-center space-x-1.5">
-                          <h4 className="font-black text-slate-900">{item.name}</h4>
-                        </div>
+                        <h4 className="font-black text-slate-900">{item.name}</h4>
                         <p className="text-[10px] text-slate-400 font-bold">Strain: <span className="text-slate-800">{item.breed}</span></p>
                       </div>
                     </div>
@@ -877,11 +835,45 @@ export default function GalloTrackSystem() {
               </div>
             )}
 
-            {/* External Custom Core Subpages */}
             {currentPage === 'profile' && <div className="p-1 animate-fadeIn"><ProfilePage /></div>}
             {currentPage === 'settings' && <div className="p-1 animate-fadeIn"><SettingsPage /></div>}
-
           </main>
+
+          {editingFowl && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+              <form onSubmit={handleUpdateFowl} className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-xl">
+                <h3 className="font-black text-sm text-slate-900">Edit Fowl Properties</h3>
+                <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs" required />
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 bg-emerald-600 text-white p-2.5 rounded-xl text-xs font-bold">Save Changes</button>
+                  <button type="button" onClick={() => setEditingFowl(null)} className="flex-1 bg-slate-100 p-2.5 rounded-xl text-xs font-bold">Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* ==================== 📱 MOBILE BOTTOM NAVIGATION BAR (FIX PARA SA PHONE VIEW) ==================== */}
+          <nav className="fixed bottom-0 left-0 right-0 h-16 border-t border-slate-200 bg-white flex justify-around items-center px-4 md:hidden z-50 shadow-2xl">
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+              { id: 'profiling', label: 'Profiling', icon: '🧬' },
+              { id: 'marketplace', label: 'Catalog', icon: '🛒' },
+              { id: 'profile', label: 'Profile', icon: '👤' },
+              { id: 'settings', label: 'Settings', icon: '⚙️' },
+            ].map((menu) => (
+              <button 
+                key={menu.id}
+                onClick={() => setCurrentPage(menu.id as any)}
+                className={`flex flex-col items-center justify-center w-14 h-full cursor-pointer transition-all ${
+                  currentPage === menu.id ? 'text-emerald-600 font-black scale-105' : 'text-slate-400'
+                }`}
+              >
+                <span className="text-lg">{menu.icon}</span>
+                <span className="text-[9px] font-bold mt-0.5">{menu.label}</span>
+              </button>
+            ))}
+          </nav>
+
         </div>
       )}
     </div>
