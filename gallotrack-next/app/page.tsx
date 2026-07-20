@@ -59,10 +59,9 @@ interface ToastState {
 export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
-  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'matchForm'>('form');
+  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'matchForm'>('form');
 
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' });
-
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [editingFowl, setEditingFowl] = useState<FowlRecord | null>(null);
 
@@ -71,6 +70,8 @@ export default function GalloTrackSystem() {
   const [error, setError] = useState('');
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
+  const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
+  const archivedFowls = fowls.filter(f => f.status === 'Archived');
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -336,6 +337,28 @@ export default function GalloTrackSystem() {
         showToastMessage(updateErr.message, 'error');
       } else {
         showToastMessage('Node successfully shifted to relational archive log.', 'warning');
+        if (selectedFowlForDetails?.id === id) setSelectedFowlForDetails(null);
+        fetchDatabaseResources();
+      }
+    } catch (err: any) {
+      showToastMessage(err.message || err, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestoreFowlOnly = async (id: number) => {
+    setLoading(true);
+    try {
+      const { error: updateErr } = await supabase
+        .from('fowl')
+        .update({ status: 'Active' })
+        .eq('id', id);
+
+      if (updateErr) {
+        showToastMessage(updateErr.message, 'error');
+      } else {
+        showToastMessage('Node successfully restored to active family registry.', 'success');
         if (selectedFowlForDetails?.id === id) setSelectedFowlForDetails(null);
         fetchDatabaseResources();
       }
@@ -676,9 +699,10 @@ export default function GalloTrackSystem() {
                     <p className="text-xs text-slate-400 font-semibold mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
                   </div>
                   <div className="bg-slate-100 p-1 rounded-xl flex flex-wrap sm:flex-nowrap w-full border border-slate-200/40 mt-1 shrink-0 gap-1 sm:gap-0">
-                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[100px] py-2 text-[11px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>📝 Encode Node</button>
-                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[100px] py-2 text-[11px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>🌳 Family Registry ({fowls.length})</button>
-                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[100px] py-2 text-[11px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>⚔️ Match Logs</button>
+                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[85px] py-2 text-[10px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>📝 Encode Node</button>
+                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[85px] py-2 text-[10px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>🌳 Active ({activeFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[85px] py-2 text-[10px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>📦 Archived ({archivedFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[85px] py-2 text-[10px] sm:text-xs font-black rounded-lg transition-all text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>⚔️ Match Logs</button>
                   </div>
                 </div>
 
@@ -768,9 +792,9 @@ export default function GalloTrackSystem() {
 
                 {profilingSubTab === 'registry' && (
                   <div className="space-y-4 animate-fadeIn">
-                    {fowls.length === 0 ? (
-                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No farm objects inside cluster.</div>
-                    ) : fowls.map(fowl => {
+                    {activeFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No active farm objects inside cluster.</div>
+                    ) : activeFowls.map(fowl => {
                       const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
                       return (
                         <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center">
@@ -781,7 +805,7 @@ export default function GalloTrackSystem() {
                             <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-slate-900 text-white rounded-bl-xl tracking-wider shadow-sm">{fowl.growth_stage || 'Stag'}</span>
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-extrabold text-slate-900">{fowl.name}</h4>
-                              <span className={`text-[9px] font-black border px-2 rounded-md uppercase ${fowl.status === 'Active' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200'}`}>{fowl.breed} ({fowl.status})</span>
+                              <span className="text-[9px] font-black border px-2 rounded-md uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                               <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -798,16 +822,60 @@ export default function GalloTrackSystem() {
                               <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
                               <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">✏️ Edit</button>
                               
-                              {fowl.status === 'Active' && (
-                                <button 
-                                  type="button"
-                                  onClick={() => handleArchiveFowlOnly(fowl.id)} 
-                                  disabled={loading}
-                                  className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
-                                >
-                                  <span className="flex items-center justify-center gap-1">🗎 Archive</span>
-                                </button>
-                              )}
+                              <button 
+                                type="button"
+                                onClick={() => handleArchiveFowlOnly(fowl.id)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[70px] text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/40"
+                              >
+                                <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {profilingSubTab === 'archived' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    {archivedFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center border rounded-2xl text-slate-400 text-xs shadow-sm">No archived records found in cluster.</div>
+                    ) : archivedFowls.map(fowl => {
+                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
+                      return (
+                        <div key={fowl.id} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-center bg-slate-50/50">
+                          <div className="w-20 h-20 bg-slate-100 border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
+                          </div>
+                          <div className="flex-1 w-full space-y-3">
+                            <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3 py-1 bg-amber-600 text-white rounded-bl-xl tracking-wider shadow-sm">Archived</span>
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-base font-extrabold text-slate-700">{fowl.name}</h4>
+                              <span className="text-[9px] font-black border px-2 rounded-md uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                            </div>
+                            
+                            <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2 px-3 rounded-lg border">
+                              <div className="font-semibold">Siblings: <span className="text-emerald-700 font-bold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black py-1.5 rounded-lg border text-center cursor-pointer transition-all">🔍 Details</button>
+                              <button 
+                                type="button" 
+                                onClick={() => handleRestoreFowlOnly(fowl.id)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[90px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/60 text-[10px] font-black py-1.5 rounded-lg text-center cursor-pointer transition-all flex items-center justify-center gap-1 font-bold"
+                              >
+                                <span>↺</span> <span>Restore Node</span>
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -1035,9 +1103,20 @@ export default function GalloTrackSystem() {
 
               <div className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
                 <span className="font-bold text-slate-500">Global Archive Node Status</span>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${selectedFowlForDetails.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                  ● {selectedFowlForDetails.status}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${selectedFowlForDetails.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    ● {selectedFowlForDetails.status}
+                  </span>
+                  {selectedFowlForDetails.status === 'Archived' && (
+                    <button
+                      type="button"
+                      onClick={() => handleRestoreFowlOnly(selectedFowlForDetails.id)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm transition-all cursor-pointer"
+                    >
+                      ↺ Restore
+                    </button>
+                  )}
+                </div>
               </div>
 
             </div>
