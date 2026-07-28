@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function ProfilePage() {
   const [fullName, setFullName] = useState('Hazel Dela Cruz')
@@ -7,10 +7,25 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('gallotrack_admin_name')
+      const storedPhone = localStorage.getItem('gallotrack_admin_phone')
+      if (storedName) setFullName(storedName)
+      if (storedPhone) setPhoneNumber(storedPhone)
+    }
+  }, [])
+
   function handleUpdateProfile(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setSavedSuccess(false)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gallotrack_admin_name', fullName)
+      localStorage.setItem('gallotrack_admin_phone', phoneNumber)
+    }
+
     setTimeout(() => {
       setLoading(false)
       setSavedSuccess(true)

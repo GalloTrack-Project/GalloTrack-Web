@@ -228,6 +228,7 @@ export default function GalloTrackSystem() {
     if (username.trim() !== '' && password === 'cict123') {
       setError('');
       setCurrentPage('dashboard');
+      let adminName = 'Hazel';
       if (typeof window !== 'undefined') {
         if (rememberMe) {
           localStorage.setItem('gallotrack_rememberMe', 'true');
@@ -238,8 +239,12 @@ export default function GalloTrackSystem() {
           localStorage.removeItem('gallotrack_session');
           localStorage.removeItem('gallotrack_username');
         }
+        const storedName = localStorage.getItem('gallotrack_admin_name');
+        if (storedName) {
+          adminName = storedName.split(' ')[0];
+        }
       }
-      setTimeout(() => showToastMessage('Access Authenticated. Welcome back, Hazel!', 'success'), 400);
+      setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, ${adminName}!`, 'success'), 400);
     } else {
       setError('Data Privacy Act Notice: Cryptographic verification mismatch.');
     }
