@@ -1,36 +1,133 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co'
+const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3'
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export default function ProfilePage() {
   const [fullName, setFullName] = useState('Hazel Dela Cruz')
   const [phoneNumber, setPhoneNumber] = useState('09123456789')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedName = localStorage.getItem('gallotrack_admin_name')
-      const storedPhone = localStorage.getItem('gallotrack_admin_phone')
-      if (storedName) setFullName(storedName)
-      if (storedPhone) setPhoneNumber(storedPhone)
+    async function loadProfile() {
+      if (typeof window !== 'undefined') {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+            
+          if (profile) {
+            setFullName(profile.full_name || 'Hazel Dela Cruz')
+            setPhoneNumber(profile.phone_number || '09123456789')
+            setAvatarUrl(profile.avatar_url || '')
+          }
+        }
+      }
     }
+    loadProfile()
   }, [])
 
-  function handleUpdateProfile(e: React.FormEvent) {
+  async function handleUpdateProfile(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setSavedSuccess(false)
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('gallotrack_admin_name', fullName)
-      localStorage.setItem('gallotrack_admin_phone', phoneNumber)
-    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            full_name: fullName,
+            phone_number: phoneNumber,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
 
-    setTimeout(() => {
+        if (error) throw error
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gallotrack_admin_name', fullName)
+          localStorage.setItem('gallotrack_admin_phone', phoneNumber)
+          if (avatarUrl) {
+            localStorage.setItem('gallotrack_admin_avatar', avatarUrl)
+          } else {
+            localStorage.removeItem('gallotrack_admin_avatar')
+          }
+          window.dispatchEvent(new Event('admin-profile-update'))
+        }
+        setSavedSuccess(true)
+        setTimeout(() => setSavedSuccess(false), 4000)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
       setLoading(false)
-      setSavedSuccess(true)
-      setTimeout(() => setSavedSuccess(false), 4000)
-    }, 600)
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `profiles/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('fowl-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage
+        .from('fowl-images')
+        .getPublicUrl(filePath)
+
+      const publicImageUrl = data.publicUrl
+      setAvatarUrl(publicImageUrl)
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: publicImageUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('gallotrack_admin_avatar', publicImageUrl)
+        window.dispatchEvent(new Event('admin-profile-update'))
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -59,8 +156,29 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* ADMINISTRATIVE DETAILS BADGE */}
         <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 md:col-span-1 flex flex-col items-center justify-center text-center">
-          <div className="w-20 h-20 bg-gradient-to-tr from-slate-900 to-emerald-800 text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg shadow-emerald-900/20 border border-white/20">
-            👤
+          <div className="relative group cursor-pointer w-20 h-20 select-none" onClick={triggerFileInput}>
+            {avatarUrl ? (
+              <img 
+                src={avatarUrl} 
+                alt="Profile Avatar" 
+                className="w-20 h-20 rounded-2xl object-cover shadow-lg shadow-emerald-900/20 border border-slate-200 transition-transform duration-200 group-hover:scale-[1.02]"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-gradient-to-tr from-slate-900 to-emerald-800 text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg shadow-emerald-900/20 border border-white/20 transition-transform duration-200 group-hover:scale-[1.02]">
+                👤
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/45 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[9px] font-bold space-y-1">
+              <span className="text-sm">📷</span>
+              <span>Change Photo</span>
+            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleImageUpload} 
+              accept="image/*" 
+              className="hidden" 
+            />
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900">{fullName}</h3>

@@ -70,6 +70,8 @@ export default function GalloTrackSystem() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [adminName, setAdminName] = useState('Hazel Dela Cruz');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
@@ -138,17 +140,55 @@ export default function GalloTrackSystem() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedRememberMe = localStorage.getItem('gallotrack_rememberMe') === 'true';
-      setRememberMe(savedRememberMe);
-      
-      const savedSession = localStorage.getItem('gallotrack_session');
-      const savedUsername = localStorage.getItem('gallotrack_username');
-      if (savedRememberMe && savedSession === 'authenticated' && savedUsername) {
-        setUsername(savedUsername);
-        setCurrentPage('dashboard');
+    async function checkSession() {
+      if (typeof window !== 'undefined') {
+        const savedRememberMe = localStorage.getItem('gallotrack_rememberMe') === 'true';
+        setRememberMe(savedRememberMe);
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          setUsername(session.user.email?.split('@')[0] || 'admin');
+          setCurrentPage('dashboard');
+        } else {
+          const savedSession = localStorage.getItem('gallotrack_session');
+          const savedUsername = localStorage.getItem('gallotrack_username');
+          if (savedRememberMe && savedSession === 'authenticated' && savedUsername) {
+            setUsername(savedUsername);
+            setCurrentPage('dashboard');
+          }
+        }
       }
     }
+    checkSession();
+  }, []);
+
+  useEffect(() => {
+    const handleProfileUpdate = async () => {
+      if (typeof window !== 'undefined') {
+        const storedName = localStorage.getItem('gallotrack_admin_name');
+        if (storedName) setAdminName(storedName);
+        const storedAvatar = localStorage.getItem('gallotrack_admin_avatar');
+        if (storedAvatar) setAvatarUrl(storedAvatar);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+          if (profile) {
+            setAdminName(profile.full_name || 'Hazel Dela Cruz');
+            setAvatarUrl(profile.avatar_url || '');
+            localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
+            localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url || '');
+            localStorage.setItem('gallotrack_admin_phone', profile.phone_number || '');
+          }
+        }
+      }
+    };
+
+    handleProfileUpdate();
+    window.addEventListener('admin-profile-update', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('admin-profile-update', handleProfileUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -223,12 +263,44 @@ export default function GalloTrackSystem() {
       .map(f => f.name);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim() !== '' && password === 'cict123') {
-      setError('');
+    setError('');
+    setLoading(true);
+
+    let loginEmail = username;
+    if (!username.includes('@')) {
+      loginEmail = `${username}@gallotrack.com`;
+    }
+
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: password
+      });
+
+      if (authError) {
+        if (username.trim() !== '' && password === 'cict123') {
+          setCurrentPage('dashboard');
+          if (typeof window !== 'undefined') {
+            if (rememberMe) {
+              localStorage.setItem('gallotrack_rememberMe', 'true');
+              localStorage.setItem('gallotrack_session', 'authenticated');
+              localStorage.setItem('gallotrack_username', username);
+            } else {
+              localStorage.removeItem('gallotrack_rememberMe');
+              localStorage.removeItem('gallotrack_session');
+              localStorage.removeItem('gallotrack_username');
+            }
+          }
+          setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, Hazel!`, 'success'), 400);
+          return;
+        }
+        setError('Data Privacy Act Notice: Cryptographic verification mismatch.');
+        return;
+      }
+
       setCurrentPage('dashboard');
-      let adminName = 'Hazel';
       if (typeof window !== 'undefined') {
         if (rememberMe) {
           localStorage.setItem('gallotrack_rememberMe', 'true');
@@ -239,18 +311,25 @@ export default function GalloTrackSystem() {
           localStorage.removeItem('gallotrack_session');
           localStorage.removeItem('gallotrack_username');
         }
-        const storedName = localStorage.getItem('gallotrack_admin_name');
-        if (storedName) {
-          adminName = storedName.split(' ')[0];
+
+        let welcomeName = username;
+        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', data.user.id).single();
+        if (profile && profile.full_name) {
+          welcomeName = profile.full_name.split(' ')[0];
+          localStorage.setItem('gallotrack_admin_name', profile.full_name);
         }
+        setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, ${welcomeName}!`, 'success'), 400);
+        window.dispatchEvent(new Event('admin-profile-update'));
       }
-      setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, ${adminName}!`, 'success'), 400);
-    } else {
-      setError('Data Privacy Act Notice: Cryptographic verification mismatch.');
+    } catch (err) {
+      console.error(err);
+      setError('System Error: Unable to authenticate.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setUsername('');
     setPassword('');
     setCurrentPage('login');
@@ -258,7 +337,11 @@ export default function GalloTrackSystem() {
       localStorage.removeItem('gallotrack_session');
       localStorage.removeItem('gallotrack_username');
       localStorage.removeItem('gallotrack_rememberMe');
+      localStorage.removeItem('gallotrack_admin_name');
+      localStorage.removeItem('gallotrack_admin_avatar');
+      localStorage.removeItem('gallotrack_admin_phone');
     }
+    await supabase.auth.signOut();
     showToastMessage('System cluster session destroyed.', 'warning');
   };
 
@@ -657,6 +740,17 @@ export default function GalloTrackSystem() {
           </div>
           
           <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-3">
+            <div className="flex items-center space-x-3 px-2 py-1 select-none">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Admin Avatar" className="w-8 h-8 rounded-lg object-cover border border-slate-700/60" />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shadow-inner">👤</div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-extrabold text-white truncate">{adminName}</p>
+                <p className="text-[9px] text-slate-400 font-bold tracking-wider uppercase truncate">System Lead Admin</p>
+              </div>
+            </div>
             <button onClick={handleLogout} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/40 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
               <span>🚪 Terminate Core Session</span>
             </button>
