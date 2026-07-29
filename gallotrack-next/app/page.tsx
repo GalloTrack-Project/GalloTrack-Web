@@ -87,8 +87,8 @@ export default function GalloTrackSystem() {
   const mainScrollRef = useRef<HTMLElement>(null);
 
   const [newName, setNewName] = useState('');
-  const [newBreed, setNewBreed] = useState('Sweater');
-  const [newGender, setNewGender] = useState('Rooster');
+  const [newBreed, setNewBreed] = useState('');
+  const [newGender, setNewGender] = useState('');
   const [newColor, setNewColor] = useState('Bright Red');
   const [newColorCategory, setNewColorCategory] = useState('Red');
   const [newGrowthStage, setNewGrowthStage] = useState('');
@@ -460,8 +460,8 @@ export default function GalloTrackSystem() {
       
       const payload = {
         name: newName,
-        breed: newBreed,
-        gender: newGender,
+        breed: newBreed || 'Unspecified Strain',
+        gender: newGender || 'Rooster',
         color: newColor,
         color_category: newColorCategory,
         growth_stage: newGrowthStage,
@@ -486,7 +486,7 @@ export default function GalloTrackSystem() {
         showToastMessage(`Database Error: ${insertErr.message}`, 'error');
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        setNewName(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null);
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null);
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -1095,7 +1095,7 @@ export default function GalloTrackSystem() {
                             value={newBreed} 
                             onChange={(e) => setNewBreed(e.target.value)} 
                             className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" 
-                            placeholder="Select or type strain (e.g. Sweater)"
+                            placeholder="Select or type strain..."
                             required 
                           />
                           <datalist id="genetic-strains">
@@ -1115,7 +1115,8 @@ export default function GalloTrackSystem() {
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
-                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-700 outline-none focus:border-emerald-500 transition-all cursor-pointer">
+                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold outline-none focus:border-emerald-500 transition-all cursor-pointer ${newGender ? 'text-slate-700' : 'text-slate-400 font-normal'}`} required>
+                            <option value="" disabled>Select Gender Class</option>
                             <option value="Rooster">Rooster (Cock)</option>
                             <option value="Hen">Hen (Pullet)</option>
                           </select>
