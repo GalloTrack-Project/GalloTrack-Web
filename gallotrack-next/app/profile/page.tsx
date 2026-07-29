@@ -7,7 +7,7 @@ const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3'
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export default function ProfilePage() {
-  const [fullName, setFullName] = useState('Hazel Dela Cruz')
+  const [fullName, setFullName] = useState('Hazel Dato-on')
   const [phoneNumber, setPhoneNumber] = useState('09123456789')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,7 +26,7 @@ export default function ProfilePage() {
             .single()
             
           if (profile) {
-            setFullName(profile.full_name || 'Hazel Dela Cruz')
+            setFullName(profile.full_name || 'Hazel Dato-on')
             setPhoneNumber(profile.phone_number || '09123456789')
             setAvatarUrl(profile.avatar_url || '')
           }
@@ -131,108 +131,116 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn text-slate-800">
+    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn text-slate-800">
       {/* HEADER SECTION */}
-      <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profile Management</h2>
           <p className="text-xs text-slate-400 font-semibold mt-0.5">Manage administrative credentials and personnel identity access layers</p>
         </div>
-        <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm">
-          ● Frame Authenticated
+        <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+          Frame Authenticated
         </span>
       </div>
 
       {savedSuccess && (
         <div className="bg-emerald-50/90 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fadeIn">
           <div className="flex items-center space-x-2">
-            <span className="text-base">✓</span>
+            <span className="w-6 h-6 bg-emerald-200 rounded-full flex items-center justify-center text-emerald-700 text-xs font-black">✓</span>
             <span>GalloTrack System Notice: Administrative identity credentials updated successfully.</span>
           </div>
-          <span className="text-[10px] text-emerald-600 font-mono">D4 CLUSTER SYNC</span>
+          <span className="text-[10px] text-emerald-600 font-mono font-black">D4 CLUSTER SYNC</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* ADMINISTRATIVE DETAILS BADGE */}
-        <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 md:col-span-1 flex flex-col items-center justify-center text-center">
-          <div className="relative group cursor-pointer w-20 h-20 select-none" onClick={triggerFileInput}>
+        <div className="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 md:col-span-1 flex flex-col items-center text-center">
+          <div className="relative group cursor-pointer select-none" onClick={triggerFileInput}>
             {avatarUrl ? (
               <img 
                 src={avatarUrl} 
                 alt="Profile Avatar" 
-                className="w-20 h-20 rounded-2xl object-cover shadow-lg shadow-emerald-900/20 border border-slate-200 transition-transform duration-200 group-hover:scale-[1.02]"
+                className="w-24 h-24 rounded-2xl object-cover shadow-lg shadow-emerald-900/15 border border-slate-200/80 transition-all duration-200 group-hover:scale-[1.03] group-hover:shadow-emerald-900/25"
               />
             ) : (
-              <div className="w-20 h-20 bg-gradient-to-tr from-slate-900 to-emerald-800 text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg shadow-emerald-900/20 border border-white/20 transition-transform duration-200 group-hover:scale-[1.02]">
-                👤
+              <div className="w-24 h-24 bg-gradient-to-br from-teal-700 to-emerald-800 text-white rounded-2xl flex items-center justify-center text-4xl font-black shadow-lg shadow-emerald-900/15 border border-white/10 transition-all duration-200 group-hover:scale-[1.03]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
             )}
-            <div className="absolute inset-0 bg-black/45 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[9px] font-bold space-y-1">
-              <span className="text-sm">📷</span>
+            <div className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
               <span>Change Photo</span>
             </div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleImageUpload} 
-              accept="image/*" 
-              className="hidden" 
-            />
+            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
           </div>
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900">{fullName}</h3>
-            <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-200/60 mt-1 inline-block uppercase tracking-wider">System Lead Admin</span>
+          <div className="space-y-1.5">
+            <h3 className="text-lg font-extrabold text-slate-900">{fullName}</h3>
+            <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60 inline-block uppercase tracking-wider">System Lead Admin</span>
           </div>
-          <hr className="w-full border-slate-100" />
-          <div className="w-full text-left space-y-2 text-[11px] text-slate-500 font-mono">
-            <div className="flex justify-between"><span>HUB LOCATION:</span> <span className="text-slate-800 font-bold">ISUFST-DINGLE</span></div>
-            <div className="flex justify-between"><span>CLUSTER NODE:</span> <span className="text-slate-800 font-bold">NODE-ALPHA</span></div>
-            <div className="flex justify-between"><span>GLOBAL ACCESS:</span> <span className="text-emerald-600 font-bold">VERIFIED</span></div>
+          <div className="w-full border-t border-slate-100 pt-4 space-y-2.5 text-[11px] text-slate-500 font-mono">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-slate-400 font-bold tracking-wide">HUB LOCATION</span>
+              <span className="text-slate-800 font-black">ISUFST-DINGLE</span>
+            </div>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-slate-400 font-bold tracking-wide">CLUSTER NODE</span>
+              <span className="text-slate-800 font-black">NODE-ALPHA</span>
+            </div>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-slate-400 font-bold tracking-wide">GLOBAL ACCESS</span>
+              <span className="text-emerald-600 font-black flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                VERIFIED
+              </span>
+            </div>
           </div>
         </div>
 
         {/* INPUT IDENTITY FORM */}
-        <form onSubmit={handleUpdateProfile} className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 md:col-span-2">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider flex items-center space-x-1.5">
-              <span>🪪</span> <span>Administrative Identity Credentials</span>
+        <form onSubmit={handleUpdateProfile} className="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 md:col-span-2">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+            <h3 className="text-xs font-black text-teal-800 uppercase tracking-widest flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+              Administrative Identity Credentials
             </h3>
-            <span className="text-[9px] font-mono text-slate-400 font-semibold">SECURE CLUSTER FORM</span>
+            <span className="text-[9px] font-mono text-slate-400 font-semibold tracking-wide">SECURE FORM</span>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 tracking-wider">Full Account Name</label>
-              <input 
-                type="text" 
-                value={fullName} 
-                onChange={(e) => setFullName(e.target.value)} 
-                className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none" 
-                required 
-              />
+              <label className="block text-[10px] font-black text-slate-600 uppercase mb-2 tracking-widest">Full Account Name</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" required />
+              </div>
             </div>
-
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 tracking-wider">Contact Communication Number</label>
-              <input 
-                type="text" 
-                value={phoneNumber} 
-                onChange={(e) => setPhoneNumber(e.target.value)} 
-                className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none" 
-                required 
-              />
+              <label className="block text-[10px] font-black text-slate-600 uppercase mb-2 tracking-widest">Contact Communication Number</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" required />
+              </div>
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl text-xs shadow-md shadow-slate-900/10 transition-all duration-200 cursor-pointer disabled:opacity-50 tracking-wider uppercase flex items-center justify-center space-x-2"
+              className="group relative w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 px-4 rounded-xl text-xs shadow-lg shadow-teal-900/25 transition-all duration-200 cursor-pointer disabled:opacity-50 tracking-wider uppercase flex items-center justify-center gap-3 overflow-hidden"
             >
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              <span>{loading ? 'Updating Credentials...' : 'Commit Account Updates'}</span>
+              <span className="relative tracking-widest">{loading ? 'Updating Credentials...' : 'Commit Account Updates'}</span>
+              {!loading && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              )}
             </button>
           </div>
         </form>

@@ -35,6 +35,8 @@ interface FowlRecord {
   dam_pct: number;
   bloodline_pct: number;
   status: string;
+  death_reason?: string;
+  archive_reason?: string;
   image_url?: string;
 }
 
@@ -48,6 +50,7 @@ interface MatchRecord {
   type: string;
   outcome: string;
   status: string;
+  video_url?: string;
 }
 
 interface ToastState {
@@ -59,10 +62,14 @@ interface ToastState {
 export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
-  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'matchForm'>('form');
+  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'deceased' | 'matchForm'>('form');
 
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' });
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
+  const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
+  const [selectedFowlForArchive, setSelectedFowlForArchive] = useState<FowlRecord | null>(null);
+  const [deathReasonInput, setDeathReasonInput] = useState('Illness');
+  const [archiveReasonInput, setArchiveReasonInput] = useState('SOLD');
   const [editingFowl, setEditingFowl] = useState<FowlRecord | null>(null);
 
   const [username, setUsername] = useState('');
@@ -81,6 +88,7 @@ export default function GalloTrackSystem() {
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
   const archivedFowls = fowls.filter(f => f.status === 'Archived');
+  const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -113,6 +121,8 @@ export default function GalloTrackSystem() {
   const [matchLocation, setMatchLocation] = useState('');
   const [matchType, setMatchType] = useState('Derby Match');
   const [matchOutcome, setMatchOutcome] = useState('Win');
+  const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [editName, setEditName] = useState('');
   const [editBreed, setEditBreed] = useState('');
@@ -510,6 +520,26 @@ export default function GalloTrackSystem() {
       const matchedFowl = fowls.find(f => f.name === selectedFowlForMatch);
       const fowlBreed = matchedFowl ? matchedFowl.breed : 'Unknown';
 
+      let videoUrl = '';
+      if (matchVideoFile) {
+        setUploadingVideo(true);
+        const fileExt = matchVideoFile.name.split('.').pop();
+        const fileName = `match-videos/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('fowl-images')
+          .upload(fileName, matchVideoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from('fowl-images')
+          .getPublicUrl(fileName);
+
+        videoUrl = data.publicUrl;
+        setUploadingVideo(false);
+      }
+
       const payload = {
         date: matchDate || new Date().toISOString().split('T')[0],
         entry_name: selectedFowlForMatch,
@@ -518,7 +548,8 @@ export default function GalloTrackSystem() {
         location: matchLocation || 'Local Breeding Yard',
         type: matchType,
         outcome: matchOutcome,
-        status: 'Verified'
+        status: 'Verified',
+        video_url: videoUrl || null
       };
 
       const { error: insertErr } = await supabase.from('match').insert([payload]);
@@ -527,7 +558,7 @@ export default function GalloTrackSystem() {
         throw insertErr;
       } else {
         showToastMessage('Performance match vector successfully computed and logged.', 'success');
-        setOpponentName(''); setMatchLocation('');
+        setOpponentName(''); setMatchLocation(''); setMatchVideoFile(null);
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -535,6 +566,7 @@ export default function GalloTrackSystem() {
       showToastMessage(`Database Write Constraint Fault: ${err.message || err}`, 'error');
     } finally {
       setLoading(false);
+      setUploadingVideo(false);
     }
   };
 
@@ -543,7 +575,7 @@ export default function GalloTrackSystem() {
     try {
       const { error: updateErr } = await supabase
         .from('fowl')
-        .update({ status: 'Archived' })
+        .update({ status: 'Archived', archive_reason: archiveReasonInput })
         .eq('id', id);
 
       if (updateErr) {
@@ -551,6 +583,30 @@ export default function GalloTrackSystem() {
       } else {
         showToastMessage('Node successfully shifted to relational archive log.', 'warning');
         if (selectedFowlForDetails?.id === id) setSelectedFowlForDetails(null);
+        fetchDatabaseResources();
+      }
+    } catch (err: any) {
+      showToastMessage(err.message || err, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleArchiveFowlWithReason = async () => {
+    if (!selectedFowlForArchive) return;
+    setLoading(true);
+    try {
+      const { error: updateErr } = await supabase
+        .from('fowl')
+        .update({ status: 'Archived', archive_reason: archiveReasonInput })
+        .eq('id', selectedFowlForArchive.id);
+
+      if (updateErr) {
+        showToastMessage(updateErr.message, 'error');
+      } else {
+        showToastMessage(`Gamefowl archived under ${archiveReasonInput} status log.`, 'warning');
+        if (selectedFowlForDetails?.id === selectedFowlForArchive.id) setSelectedFowlForDetails(null);
+        setSelectedFowlForArchive(null);
         fetchDatabaseResources();
       }
     } catch (err: any) {
@@ -573,6 +629,30 @@ export default function GalloTrackSystem() {
       } else {
         showToastMessage('Node successfully restored to active family registry.', 'success');
         if (selectedFowlForDetails?.id === id) setSelectedFowlForDetails(null);
+        fetchDatabaseResources();
+      }
+    } catch (err: any) {
+      showToastMessage(err.message || err, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkFowlDeceased = async () => {
+    if (!selectedFowlForDeceased) return;
+    setLoading(true);
+    try {
+      const { error: updateErr } = await supabase
+        .from('fowl')
+        .update({ status: 'Deceased', death_reason: deathReasonInput, death_date: new Date().toISOString().split('T')[0] })
+        .eq('id', selectedFowlForDeceased.id);
+
+      if (updateErr) {
+        showToastMessage(updateErr.message, 'error');
+      } else {
+        showToastMessage('Gamefowl node recorded under mortality archive log.', 'error');
+        if (selectedFowlForDetails?.id === selectedFowlForDeceased.id) setSelectedFowlForDetails(null);
+        setSelectedFowlForDeceased(null);
         fetchDatabaseResources();
       }
     } catch (err: any) {
@@ -706,8 +786,43 @@ export default function GalloTrackSystem() {
     };
   };
 
+  const calculateMortalityBreakdown = () => {
+    const counts: Record<string, number> = { Illness: 0, Injury: 0, Natural: 0, Culling: 0, Other: 0 };
+    deceasedFowls.forEach(f => {
+      const r = f.death_reason || 'Illness';
+      if (counts[r] !== undefined) counts[r]++;
+      else counts['Other']++;
+    });
+    const labels = Object.keys(counts);
+    const data = Object.values(counts);
+    const hasData = data.some(v => v > 0);
+    return {
+      labels: hasData ? labels : ['Illness', 'Injury', 'Natural', 'Culling', 'Other'],
+      data: hasData ? data : [2, 1, 1, 1, 0]
+    };
+  };
+
+  const getArchiveBadgeStyle = (reason?: string) => {
+    const r = (reason || 'RETIRED').toUpperCase();
+    switch (r) {
+      case 'SOLD':
+        return { label: '● SOLD', bg: 'bg-emerald-700 text-white' };
+      case 'CULLED':
+        return { label: '● CULLED', bg: 'bg-purple-800 text-white' };
+      case 'RETIRED':
+        return { label: '● RETIRED', bg: 'bg-amber-600 text-white' };
+      case 'DIED':
+        return { label: '● DIED', bg: 'bg-rose-900 text-white' };
+      case 'OTHER':
+        return { label: '● OTHER', bg: 'bg-slate-700 text-white' };
+      default:
+        return { label: `● ${r}`, bg: 'bg-amber-600 text-white' };
+    }
+  };
+
   const crossbreedChartData = calculateCrossbreedWinRatios();
   const cohortChartData = calculateCohortSuccessProbability();
+  const mortalityChartData = calculateMortalityBreakdown();
 
   if (showSplash) {
     return <SplashScreen onFinished={() => setShowSplash(false)} />;
@@ -730,102 +845,129 @@ export default function GalloTrackSystem() {
 
       {/* LOGIN VIEW */}
       {currentPage === 'login' && (
-        <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#091319] via-[#0f1d24] to-[#043328] overflow-hidden relative">
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
-          <div className="bg-white/95 backdrop-blur-xl p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/20 max-w-md w-full space-y-8 relative z-10 transition-all">
-            <div className="text-center space-y-3">
-              <span className="text-[10px] font-black tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full uppercase border border-emerald-200/60 shadow-xs">ISUFST CICT Official Capstone</span>
-              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">GALLO<span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">TRACK</span></h1>
-              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">Advanced Gamefowl Lineage Analytics & Structural Trace Registry Framework</p>
-            </div>
+        <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328] overflow-hidden relative">
+          {/* Geometric wireframe pattern overlay */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="wireframe" width="60" height="60" patternUnits="userSpaceOnUse">
+                <path d="M 0 0 L 60 0 L 60 60 L 0 60 Z" fill="none" stroke="#ffffff" strokeWidth="0.5"/>
+                <path d="M 30 0 L 30 60 M 0 30 L 60 30" fill="none" stroke="#ffffff" strokeWidth="0.3" strokeDasharray="2 3"/>
+                <circle cx="30" cy="30" r="3" fill="#ffffff" opacity="0.3"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#wireframe)"/>
+          </svg>
+          {/* Ambient glow orbs */}
+          <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            {!isSignUp ? (
-              <form onSubmit={handleLogin} className="space-y-5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Administrative Identity</label>
-                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter username or email" required />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">System Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? 'text' : 'password'} 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="w-full p-3.5 pr-11 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" 
-                      placeholder="••••••••••••" 
-                      required 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold"
-                      title={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? '👁️' : '🙈'}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between py-1">
-                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+          <div className="bg-white rounded-3xl shadow-2xl shadow-black/20 max-w-md w-full relative z-10 overflow-hidden">
+            <div className="p-8 sm:p-10 space-y-7">
+              {/* Header & Branding */}
+              <div className="text-center space-y-2">
+                <span className="text-[9px] font-bold tracking-[0.2em] text-teal-700 uppercase block">ISUFST CICT Capstone Project</span>
+                <h1 className="text-3xl sm:text-4xl font-black text-teal-900 tracking-tight leading-none">GALLOTRACK</h1>
+                <p className="text-[10px] text-slate-400 font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
+              </div>
+
+              <div className="h-px bg-gradient-to-r from-transparent via-teal-200 to-transparent"></div>
+
+              {!isSignUp ? (
+                <form onSubmit={handleLogin} className="space-y-5">
+                  {/* ADMINISTRATIVE IDENTITY */}
+                  <div>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Administrative Identity</label>
                     <div className="relative">
-                      <input 
-                        type="checkbox" 
-                        checked={rememberMe} 
-                        onChange={(e) => setRememberMe(e.target.checked)} 
-                        className="sr-only peer" 
-                      />
-                      <div className="relative w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-500"></div>
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      </span>
+                      <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter email address" required />
                     </div>
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider select-none">Remember Me</span>
-                  </label>
-                </div>
+                  </div>
 
-                {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl shadow-xs">{error}</div>}
-                {successMessage && <div className="text-xs text-emerald-700 font-bold text-center bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-xl shadow-xs leading-relaxed">{successMessage}</div>}
-                
-                <button type="submit" className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-slate-900/20 cursor-pointer text-xs tracking-wider uppercase">
-                  Log In
-                </button>
-                
-                <div className="text-center pt-2">
-                  <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[11px] font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-wider cursor-pointer">
-                    Don't have an account? Register as Owner
+                  {/* SYSTEM PASSWORD */}
+                  <div>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">System Password</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      </span>
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="••••••••••••" required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
+                        {showPassword ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* REMEMBER ME */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center space-x-2.5 cursor-pointer select-none group">
+                      <div className="relative">
+                        <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="sr-only peer" />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-700 shadow-inner"></div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-teal-700 transition-colors">Remember Me</span>
+                    </label>
+                  </div>
+
+                  {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl">{error}</div>}
+                  {successMessage && <div className="text-xs text-emerald-700 font-bold text-center bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-xl leading-relaxed">{successMessage}</div>}
+
+                  {/* SUBMIT BUTTON */}
+                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-teal-900/30 cursor-pointer overflow-hidden">
+                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative flex items-center justify-center gap-3">
+                      <span className="text-sm tracking-widest">LOG IN</span>
+                      <span className="text-[9px] font-bold text-teal-200/80 tracking-wide flex items-center gap-1">
+                        Secure Access
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                      </span>
+                    </div>
                   </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Owner Full Name</label>
-                  <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter your full name" required />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Email Address</label>
-                  <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter email address" required />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Password</label>
-                  <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Create secure password" required />
-                </div>
-                
-                {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl shadow-xs">{error}</div>}
-                
-                <button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-600/20 cursor-pointer text-xs tracking-wider uppercase flex items-center justify-center space-x-2">
-                  {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                  <span>{loading ? 'Creating Account...' : 'Register Owner'}</span>
-                </button>
-                
-                <div className="text-center pt-2">
-                  <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[11px] font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-wider cursor-pointer">
-                    Already have an account? Log In
+
+                  {/* FOOTER LINKS */}
+                  <div className="space-y-4 pt-1">
+                    <div className="flex items-center justify-center gap-4">
+                      <button type="button" className="text-[10px] font-bold text-slate-400 hover:text-teal-700 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-200 hover:decoration-teal-300">Forgot Password?</button>
+                      <span className="text-slate-200 text-[8px]">|</span>
+                      <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-teal-700 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-200 hover:decoration-teal-300">Create Account</button>
+                    </div>
+                    <p className="text-[9px] text-slate-300 font-semibold text-center tracking-wide">Powered by Advanced Gamefowl Analytics</p>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-5">
+                  <div>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Owner Full Name</label>
+                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter your full name" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Email Address</label>
+                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter email address" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Password</label>
+                    <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Create secure password" required />
+                  </div>
+
+                  {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl">{error}</div>}
+
+                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-teal-900/30 cursor-pointer flex items-center justify-center space-x-2">
+                    {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                    <span className="tracking-widest">{loading ? 'Creating Account...' : 'Register Owner'}</span>
                   </button>
-                </div>
-              </form>
-            )}
+
+                  <div className="pt-1">
+                    <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-teal-700 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-200 hover:decoration-teal-300 w-full text-center block">Already have an account? Log In</button>
+                    <p className="text-[9px] text-slate-300 font-semibold text-center tracking-wide mt-4">Powered by Advanced Gamefowl Analytics</p>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -952,21 +1094,26 @@ export default function GalloTrackSystem() {
                 </div>
 
                 {/* METRIC BADGE GRID */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div className="bg-gradient-to-br from-emerald-600 to-teal-700 p-5 sm:p-6 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20">
                     <span className="text-[10px] uppercase font-black tracking-widest opacity-80">Active Gamefowl</span>
                     <div className="text-3xl sm:text-4xl font-black tracking-tight">{activeFowls.length}</div>
-                    <span className="text-[10px] font-mono opacity-90 block">ENCODED CLUSTER NODES</span>
+                    <span className="text-[10px] font-mono opacity-90 block">ENCODED</span>
                   </div>
                   <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Archived Records</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{archivedFowls.length}</div>
-                    <span className="text-[10px] font-mono text-amber-700 font-bold block">RELATIONAL ARCHIVE LOG</span>
+                    <span className="text-[10px] font-mono text-amber-700 font-bold block">LOG</span>
+                  </div>
+                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-rose-200/60 shadow-sm space-y-2">
+                    <span className="text-[10px] text-rose-500 uppercase font-black tracking-widest">Deceased Records</span>
+                    <div className="text-3xl sm:text-4xl font-black text-rose-700 tracking-tight">{deceasedFowls.length}</div>
+                    <span className="text-[10px] font-mono text-rose-600 font-bold block">MORTALITY AUDIT</span>
                   </div>
                   <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Total Matches</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
-                    <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED DERBY VECTOR LOGS</span>
+                    <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED</span>
                   </div>
                   <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Win Rate</span>
@@ -975,13 +1122,20 @@ export default function GalloTrackSystem() {
                     </div>
                     <span className="text-[10px] font-mono text-slate-500 font-bold block">EMPIRICAL SUCCESS INDEX</span>
                   </div>
+                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Mortality Rate</span>
+                    <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
+                      {fowls.length > 0 ? `${Math.round((deceasedFowls.length / fowls.length) * 100)}%` : '0%'}
+                    </div>
+                    <span className="text-[10px] font-mono text-rose-500 font-bold block">DECEASED BREAKDOWN</span>
+                  </div>
                 </div>
 
                 {/* CHARTS CONTAINER GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]">
-                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100">Cross-Breed Win Ratios (Empirical Logs)</h3>
-                    <div className="w-48 h-48 sm:w-56 sm:h-56 my-auto flex items-center justify-center">
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100">Cross-Breed Win Ratios</h3>
+                    <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
                       <Doughnut 
                         data={{ 
                           labels: crossbreedChartData.labels, 
@@ -996,8 +1150,8 @@ export default function GalloTrackSystem() {
                     </div>
                   </div>
                   <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-[350px]">
-                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest border-b pb-3 text-center border-slate-100">Lineage Cohort Success Probability (%)</h3>
-                    <div className="w-full h-48 sm:h-56 my-auto">
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest border-b pb-3 text-center border-slate-100">Lineage Cohort Success Rate (%)</h3>
+                    <div className="w-full h-44 sm:h-48 my-auto">
                       <Bar 
                         data={{ 
                           labels: cohortChartData.labels, 
@@ -1009,6 +1163,24 @@ export default function GalloTrackSystem() {
                           }] 
                         }} 
                         options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { font: { size: 10, weight: 'bold' } } }, x: { ticks: { font: { size: 10, weight: 'bold' } } } } }} 
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]">
+                    <h3 className="text-xs font-black text-rose-700 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100 flex items-center justify-center space-x-1">
+                      <span>💀</span> <span>Deceased Mortality Breakdown</span>
+                    </h3>
+                    <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
+                      <Doughnut 
+                        data={{ 
+                          labels: mortalityChartData.labels, 
+                          datasets: [{ 
+                            data: mortalityChartData.data, 
+                            backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#64748b', '#0d9488'], 
+                            borderWidth: 0 
+                          }] 
+                        }} 
+                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
                       />
                     </div>
                   </div>
@@ -1029,12 +1201,13 @@ export default function GalloTrackSystem() {
                           <th className="p-4">Config Structure</th>
                           <th className="p-4">Arena Location</th>
                           <th className="p-4 text-center">Outcome Status</th>
+                          <th className="p-4 text-center">Video</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                         {matchHistory.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="p-8 text-center text-slate-400 text-xs">
+                            <td colSpan={6} className="p-8 text-center text-slate-400 text-xs">
                               No match logs recorded.
                             </td>
                           </tr>
@@ -1047,6 +1220,13 @@ export default function GalloTrackSystem() {
                               <td className="p-4 text-slate-500 font-normal">{log.location}</td>
                               <td className="p-4 text-center">
                                 <span className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome === 'Win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome === 'Loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome}</span>
+                              </td>
+                              <td className="p-4 text-center">
+                                {log.video_url ? (
+                                  <a href={log.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 underline underline-offset-2">▶ PLAY</a>
+                                ) : (
+                                  <span className="text-[9px] text-slate-300 font-bold">—</span>
+                                )}
                               </td>
                             </tr>
                           ))
@@ -1069,10 +1249,11 @@ export default function GalloTrackSystem() {
                   
                   {/* SUBTAB SWITCHER BAR */}
                   <div className="bg-slate-100/90 p-1 rounded-2xl flex flex-wrap sm:flex-nowrap w-full border border-slate-200/60 mt-1 shrink-0 gap-1">
-                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[90px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>📝 Encode Node</button>
-                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[90px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>🌳 Active ({activeFowls.length})</button>
-                    <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[90px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>📦 Archived ({archivedFowls.length})</button>
-                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[90px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>⚔️ Match Logs</button>
+                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>📝 Encode</button>
+                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>🌳 Active ({activeFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>📦 Archived ({archivedFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-white text-rose-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>💀 Deceased ({deceasedFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>⚔️ Match Logs</button>
                   </div>
                 </div>
 
@@ -1243,16 +1424,25 @@ export default function GalloTrackSystem() {
                             </div>
                             
                             <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[75px] bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
-                              <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[75px] bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-800 text-[11px] font-extrabold py-2 rounded-xl border border-emerald-200/60 text-center cursor-pointer transition-all duration-150">✏️ Edit</button>
+                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
+                              <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-800 text-[11px] font-extrabold py-2 rounded-xl border border-emerald-200/60 text-center cursor-pointer transition-all duration-150">✏️ Edit</button>
                               
                               <button 
                                 type="button"
-                                onClick={() => handleArchiveFowlOnly(fowl.id)} 
+                                onClick={() => setSelectedFowlForArchive(fowl)} 
                                 disabled={loading}
-                                className="flex-1 min-w-[75px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-rose-50 hover:bg-rose-100 active:scale-[0.98] text-rose-700 border-rose-200/60"
+                                className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-amber-50 hover:bg-amber-100 active:scale-[0.98] text-amber-800 border-amber-200/60"
                               >
                                 <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                              </button>
+
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedFowlForDeceased(fowl)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-rose-50 hover:bg-rose-100 active:scale-[0.98] text-rose-700 border-rose-200/60"
+                              >
+                                <span className="flex items-center justify-center gap-1">💀 Deceased</span>
                               </button>
                             </div>
                           </div>
@@ -1279,7 +1469,14 @@ export default function GalloTrackSystem() {
                             {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
                           </div>
                           <div className="flex-1 w-full space-y-3">
-                            <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-amber-600 text-white rounded-bl-xl tracking-widest shadow-2xs">Archived</span>
+                            {(() => {
+                              const badge = getArchiveBadgeStyle(fowl.archive_reason);
+                              return (
+                                <span className={`absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 ${badge.bg} rounded-bl-xl tracking-widest shadow-2xs`}>
+                                  {badge.label}
+                                </span>
+                              );
+                            })()}
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-black text-slate-700">{fowl.name}</h4>
                               <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
@@ -1313,6 +1510,55 @@ export default function GalloTrackSystem() {
                   </div>
                 )}
 
+                {/* DECEASED ROSTER LIST */}
+                {profilingSubTab === 'deceased' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    {deceasedFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+                        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto">💀</div>
+                        <h3 className="text-base font-extrabold text-slate-800">No Mortality Records</h3>
+                        <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl nodes recorded under mortality logs.</p>
+                      </div>
+                    ) : (
+                      deceasedFowls.map(fowl => {
+                        return (
+                          <div key={fowl.id} className="bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center">
+                            <div className="w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
+                              {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+                            </div>
+                            <div className="flex-1 w-full space-y-3">
+                              <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-xl tracking-widest shadow-2xs">● DECEASED</span>
+                              <div className="flex items-center space-x-2">
+                                <h4 className="text-base font-black text-slate-900 line-through opacity-75">{fowl.name}</h4>
+                                <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
+                                <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-slate-600 bg-slate-100 border-slate-200">Reason: {fowl.death_reason || 'Illness'}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
+                                <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                                <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                                <div>Growth Stage: <strong className="text-slate-800">{fowl.growth_stage || 'Chick'}</strong></div>
+                                <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                                <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[95px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/60 text-[11px] font-extrabold py-2 rounded-xl text-center cursor-pointer transition-all duration-150">🔍 View Analytics & Match Logs</button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRestoreFowlOnly(fowl.id)} 
+                                  disabled={loading}
+                                  className="flex-1 min-w-[95px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
+                                >
+                                  <span>↺</span> <span>Reactivate Node</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
                 {/* MATCH LOG FORM */}
                 {profilingSubTab === 'matchForm' && (
                   <form onSubmit={handleAddMatchRecord} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fadeIn">
@@ -1341,15 +1587,40 @@ export default function GalloTrackSystem() {
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Arena Location Hub</label>
-                        <input type="text" value={matchLocation} onChange={(e) => setMatchLocation(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Dingle Breeding Arena" required />
+                        <input 
+                          list="arena-locations" 
+                          value={matchLocation} 
+                          onChange={(e) => setMatchLocation(e.target.value)} 
+                          className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" 
+                          placeholder="Select or type arena..." 
+                          required 
+                        />
+                        <datalist id="arena-locations">
+                          <option value="Dingle Breeding Arena" />
+                          <option value="Iloilo Coliseum" />
+                          <option value="Passi Sports Complex" />
+                          <option value="Janiuay Cockpit Arena" />
+                          <option value="Pototan Coliseum" />
+                          <option value="Santa Barbara Sports Complex" />
+                          <option value="Dumangas Cockpit Arena" />
+                          <option value="San Enrique Arena" />
+                          <option value="Local Farm Pit" />
+                        </datalist>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Match Type</label>
-                        <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none cursor-pointer">
+                        <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none cursor-pointer focus:border-emerald-500 transition-all">
                           <option value="Derby Match">Derby Match</option>
                           <option value="Hack Match">Hack Match</option>
+                          <option value="2-Cock Derby">2-Cock Derby</option>
+                          <option value="3-Cock Derby">3-Cock Derby</option>
+                          <option value="4-Cock Derby">4-Cock Derby</option>
+                          <option value="5-Cock Derby">5-Cock Derby</option>
+                          <option value="Special Championship">Special Championship</option>
+                          <option value="Regional Circuit">Regional Circuit</option>
+                          <option value="Main Event / Solo">Main Event / Solo</option>
                         </select>
                       </div>
                       <div>
@@ -1361,7 +1632,14 @@ export default function GalloTrackSystem() {
                         </select>
                       </div>
                     </div>
-                    <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 flex items-center justify-center space-x-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Video Evidence Upload</label>
+                      <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-slate-50/80 hover:bg-slate-100/70 transition-all">
+                        <span className="text-xs text-slate-600 font-bold">🎥 {matchVideoFile ? matchVideoFile.name : 'Upload fight match recording (MP4, MOV, AVI)'}</span>
+                        <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" onChange={(e) => e.target.files && setMatchVideoFile(e.target.files[0])} className="hidden" />
+                      </label>
+                    </div>
+                    <button type="submit" disabled={loading || uploadingVideo} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 flex items-center justify-center space-x-2">
                       {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                       <span>{loading ? 'Committing Log...' : 'Commit Performance Outcome Entry'}</span>
                     </button>
@@ -1445,123 +1723,337 @@ export default function GalloTrackSystem() {
         </div>
       )}
 
-      {/* GENETIC DETAILS MODAL OVERLAY */}
+      {/* INDIVIDUAL GAMEFOWL ANALYTICS & MATCH HISTORY MODAL */}
       {selectedFowlForDetails && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[90vh]">
-            
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <div className="flex items-center space-x-2">
-                <span className="text-xl">🧬</span>
-                <div>
-                  <h3 className="font-extrabold text-slate-900 text-base">Genetic Profile & Analysis</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ID #{selectedFowlForDetails.id}</p>
-                </div>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto relative">
+            <button 
+              onClick={() => setSelectedFowlForDetails(null)} 
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-base font-black text-slate-900 tracking-tight border-b pb-3 border-slate-100 flex items-center space-x-2">
+              <span>🧬</span> <span>Individual Gamefowl Analytics & Match Logs</span>
+            </h3>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+              <div className="w-24 h-24 bg-white border border-slate-200 rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner">
+                {selectedFowlForDetails.image_url ? (
+                  <img src={selectedFowlForDetails.image_url} alt={selectedFowlForDetails.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center font-mono text-[8px] text-slate-400 font-bold">NO PHOTO</div>
+                )}
               </div>
-              <button 
-                type="button"
-                onClick={() => setSelectedFowlForDetails(null)}
-                className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
-              >
-                ✕ Close
-              </button>
+              <div className="space-y-1.5 text-center sm:text-left flex-1">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <h4 className="text-lg font-black text-slate-900">{selectedFowlForDetails.name}</h4>
+                  <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
+                  {(() => {
+                    if (selectedFowlForDetails.archive_reason) {
+                      const badge = getArchiveBadgeStyle(selectedFowlForDetails.archive_reason);
+                      return (
+                        <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase ${badge.bg} border border-white/20 shadow-2xs`}>
+                          {badge.label}
+                        </span>
+                      );
+                    }
+                    if (selectedFowlForDetails.status === 'Deceased') {
+                      return (
+                        <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase bg-rose-900 text-white border border-rose-950 shadow-2xs">
+                          ● DECEASED ({selectedFowlForDetails.death_reason || 'Illness'})
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ● ACTIVE
+                      </span>
+                    );
+                  })()}
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Growth Stage: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.growth_stage || 'Chick'}</strong> | Dynamic Age: <strong className="text-emerald-700 font-bold">{selectedFowlForDetails.age || 'N/A'}</strong>
+                </p>
+              </div>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-600">
+            {/* COMBAT PERFORMANCE STATS VECTOR */}
+            {(() => {
+              const fowlMatches = matchHistory.filter(m => m.entry_name?.toLowerCase() === selectedFowlForDetails.name.toLowerCase());
+              const totalFights = fowlMatches.length;
+              const wins = fowlMatches.filter(m => m.outcome.toLowerCase() === 'win').length;
+              const losses = fowlMatches.filter(m => m.outcome.toLowerCase() === 'loss').length;
+              const draws = fowlMatches.filter(m => m.outcome.toLowerCase() === 'draw').length;
+              const winRate = totalFights > 0 ? Math.round((wins / totalFights) * 100) : 0;
+
+              return (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl space-y-3 shadow-sm border border-slate-700/60">
+                    <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-700/80">
+                      <span>⚔️ Combat Analytics & Performance Vectors</span>
+                      <span className="font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">FOWL ID: #{selectedFowlForDetails.id}</span>
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                      <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase block">Total Fights</span>
+                        <strong className="text-base text-white font-black">{totalFights}</strong>
+                      </div>
+                      <div className="bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-700/40">
+                        <span className="text-[9px] text-emerald-400 font-bold uppercase block">Wins</span>
+                        <strong className="text-base text-emerald-400 font-black">{wins} 🏆</strong>
+                      </div>
+                      <div className="bg-rose-950/40 p-2.5 rounded-xl border border-rose-700/40">
+                        <span className="text-[9px] text-rose-400 font-bold uppercase block">Losses</span>
+                        <strong className="text-base text-rose-400 font-black">{losses} 💀</strong>
+                      </div>
+                      <div className="bg-amber-950/40 p-2.5 rounded-xl border border-amber-700/40">
+                        <span className="text-[9px] text-amber-400 font-bold uppercase block">Draws</span>
+                        <strong className="text-base text-amber-400 font-black">{draws} 🤝</strong>
+                      </div>
+                      <div className="bg-teal-950/40 p-2.5 rounded-xl border border-teal-700/40 col-span-2 sm:col-span-1">
+                        <span className="text-[9px] text-teal-300 font-bold uppercase block">Win Rate</span>
+                        <strong className="text-base text-teal-300 font-black">{winRate}%</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* DEDICATED INDIVIDUAL MATCH LOG TABLE */}
+                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+                    <div className="p-3 bg-slate-50 border-b border-slate-200/80 flex justify-between items-center">
+                      <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-wider">Individual Fight History Logs ({totalFights})</h4>
+                      <span className="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">MATCH LOG PARITY</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-[11px] border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100/70 text-slate-500 font-extrabold uppercase border-b border-slate-200">
+                            <th className="p-2.5 pl-4">Match Date</th>
+                            <th className="p-2.5">Opponent Entry</th>
+                            <th className="p-2.5">Arena Location</th>
+                            <th className="p-2.5">Match Type</th>
+                            <th className="p-2.5 text-center">Outcome</th>
+                            <th className="p-2.5 text-center">Video</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
+                          {fowlMatches.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="p-6 text-center text-slate-400 text-xs">
+                                No derby performance logs recorded for this specific gamefowl node.
+                              </td>
+                            </tr>
+                          ) : (
+                            fowlMatches.map(match => (
+                              <tr key={match.id} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="p-2.5 pl-4 font-mono text-[10px] text-slate-500">{match.date}</td>
+                                <td className="p-2.5 font-bold text-slate-800">{match.opponent}</td>
+                                <td className="p-2.5 text-slate-600">{match.location}</td>
+                                <td className="p-2.5"><span className="bg-slate-100 border border-slate-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded-full">{match.type}</span></td>
+                                <td className="p-2.5 text-center">
+                                  <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border ${
+                                    match.outcome.toLowerCase() === 'win' 
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                      : match.outcome.toLowerCase() === 'loss' 
+                                      ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  }`}>
+                                    {match.outcome}
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  {match.video_url ? (
+                                    <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 underline underline-offset-2">▶ PLAY</a>
+                                  ) : (
+                                    <span className="text-[9px] text-slate-300 font-bold">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>
               
-              <div className="flex items-center space-x-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
-                <div className="w-16 h-16 bg-slate-200 rounded-xl overflow-hidden shadow-inner flex-shrink-0">
-                  {selectedFowlForDetails.image_url ? (
-                    <img src={selectedFowlForDetails.image_url} alt={selectedFowlForDetails.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-mono text-[8px] text-slate-400 font-bold">NO PHOTO</div>
-                  )}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                  <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire})</span>
+                  <span className="text-slate-800">{selectedFowlForDetails.sire_pct ?? 100}%</span>
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h4 className="text-lg font-black text-slate-900">{selectedFowlForDetails.name}</h4>
-                    <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-medium">Growth Classification: <strong className="text-slate-700">{selectedFowlForDetails.growth_stage}</strong></p>
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div className="bg-sky-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.sire_pct ?? 100}%` }}></div>
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                    <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire})</span>
-                    <span className="text-slate-800">{selectedFowlForDetails.sire_pct ?? 100}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div className="bg-sky-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.sire_pct ?? 100}%` }}></div>
-                  </div>
+              <div className="space-y-1 pt-1">
+                <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                  <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam})</span>
+                  <span className="text-slate-800">{selectedFowlForDetails.dam_pct ?? 100}%</span>
                 </div>
-
-                <div className="space-y-1 pt-1">
-                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                    <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam})</span>
-                    <span className="text-slate-800">{selectedFowlForDetails.dam_pct ?? 100}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div className="bg-pink-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.dam_pct ?? 100}%` }}></div>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-[11px]">
-                  <span className="font-extrabold text-slate-700">Combined Bloodline Index</span>
-                  <span className="font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
-                    {selectedFowlForDetails.bloodline_pct ?? 100}%
-                  </span>
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div className="bg-pink-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.dam_pct ?? 100}%` }}></div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Age Parameter</span>
-                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.age || 'N/A'}</strong>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Structural Weight</span>
-                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.weight || 'N/A'}</strong>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Height Dimension</span>
-                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.height || 'N/A'}</strong>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
-                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Visual Color Range</span>
-                  <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Behavioral Spec</span>
-                  <strong className="text-emerald-700 text-xs mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
-                </div>
+              <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-[11px]">
+                <span className="font-extrabold text-slate-700">Combined Bloodline Index</span>
+                <span className="font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+                  {selectedFowlForDetails.bloodline_pct ?? 100}%
+                </span>
               </div>
+            </div>
 
-              <div className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <span className="font-bold text-slate-500">Global Archive Node Status</span>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${selectedFowlForDetails.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                    ● {selectedFowlForDetails.status}
-                  </span>
-                  {selectedFowlForDetails.status === 'Archived' && (
-                    <button
-                      type="button"
-                      onClick={() => handleRestoreFowlOnly(selectedFowlForDetails.id)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm transition-all cursor-pointer"
-                    >
-                      ↺ Restore
-                    </button>
-                  )}
-                </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Structural Weight</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.weight || 'N/A'}</strong>
               </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Height Dimension</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.height || 'N/A'}</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Visual Color Range</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 sm:col-span-2">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Behavioral Spec</span>
+                <strong className="text-emerald-700 text-xs mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* MARK DECEASED MODAL DIALOG */}
+      {selectedFowlForDeceased && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl border border-rose-200 max-w-md w-full p-6 space-y-5 relative">
+            <button 
+              onClick={() => setSelectedFowlForDeceased(null)} 
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center space-x-3 text-rose-700 border-b pb-3 border-rose-100">
+              <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-xl">💀</div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">Record Mortality Audit</h3>
+                <p className="text-[11px] text-slate-500 font-semibold">Transition node to Deceased status</p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200/60 space-y-1">
+              <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
+              <p className="text-[10px] text-slate-500">This action records the mortality of this gamefowl node in system analytics.</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Cause / Reason of Death</label>
+              <select 
+                value={deathReasonInput} 
+                onChange={(e) => setDeathReasonInput(e.target.value)} 
+                className="w-full p-3 border border-slate-200 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-800 outline-none focus:border-rose-500 cursor-pointer"
+              >
+                <option value="Illness">Illness / Disease</option>
+                <option value="Injury">Injury / Fight Trauma</option>
+                <option value="Natural">Natural Causes / Old Age</option>
+                <option value="Culling">Selective Culling</option>
+                <option value="Other">Other Unspecified Cause</option>
+              </select>
+            </div>
+
+            <div className="flex space-x-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setSelectedFowlForDeceased(null)} 
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleMarkFowlDeceased} 
+                disabled={loading}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md"
+              >
+                {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>Record Deceased</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ARCHIVE REASON MODAL DIALOG */}
+      {selectedFowlForArchive && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl border border-amber-200 max-w-md w-full p-6 space-y-5 relative">
+            <button 
+              onClick={() => setSelectedFowlForArchive(null)} 
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center space-x-3 text-amber-800 border-b pb-3 border-amber-100">
+              <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center text-xl">📦</div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">Archive Gamefowl Node</h3>
+                <p className="text-[11px] text-slate-500 font-semibold">Select reason for inventory removal</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/60 space-y-1">
+              <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-amber-800 font-black">{selectedFowlForArchive.name}</strong> ({selectedFowlForArchive.breed})</p>
+              <p className="text-[10px] text-slate-500">This node will be shifted to the relational archive log with the specified reason badge.</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Select Archive Reason</label>
+              <select 
+                value={archiveReasonInput} 
+                onChange={(e) => setArchiveReasonInput(e.target.value)} 
+                className="w-full p-3 border border-slate-200 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-800 outline-none focus:border-amber-500 cursor-pointer"
+              >
+                <option value="SOLD">🏷️ SOLD (Transferred or Sold to Buyer)</option>
+                <option value="RETIRED">🌾 RETIRED (Retired from Circuit / Breeding)</option>
+                <option value="CULLED">✂️ CULLED (Selective Culling)</option>
+                <option value="DIED">💀 DIED (Passed Away / Fight Trauma)</option>
+                <option value="OTHER">📦 OTHER (Unspecified Reason)</option>
+              </select>
+            </div>
+
+            <div className="flex space-x-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setSelectedFowlForArchive(null)} 
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleArchiveFowlWithReason} 
+                disabled={loading}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md"
+              >
+                {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>Confirm Archive</span>
+              </button>
             </div>
           </div>
         </div>
