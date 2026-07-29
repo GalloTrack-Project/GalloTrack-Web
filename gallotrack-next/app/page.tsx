@@ -91,7 +91,7 @@ export default function GalloTrackSystem() {
   const [newGender, setNewGender] = useState('Rooster');
   const [newColor, setNewColor] = useState('Bright Red');
   const [newColorCategory, setNewColorCategory] = useState('Red');
-  const [newGrowthStage, setNewGrowthStage] = useState('Stag');
+  const [newGrowthStage, setNewGrowthStage] = useState('');
   const [newBehaviorTrait, setNewBehaviorTrait] = useState('Wave-Motion Tracker');
   const [newEyeVariant, setNewEyeVariant] = useState('Standard Eye');
   const [newBirthdate, setNewBirthdate] = useState('');
@@ -240,24 +240,40 @@ export default function GalloTrackSystem() {
     }
   }, [currentPage]);
 
-  const autoComputeGrowthStage = (monthsValue: number) => {
-    if (monthsValue >= 5 && monthsValue <= 11) return 'Stag';
-    if (monthsValue >= 12 && monthsValue <= 24) return 'Bull Stag';
-    if (monthsValue > 24) return 'Cock';
-    return 'Stag';
+  const autoComputeGrowthStage = (monthsValue: number | null, gender: string = 'Rooster') => {
+    if (monthsValue === null || isNaN(monthsValue)) return '';
+    const isFemale = gender === 'Hen' || gender === 'Pullet';
+
+    if (monthsValue >= 0 && monthsValue <= 5) {
+      return 'Chick';
+    }
+    if (monthsValue >= 6 && monthsValue <= 11) {
+      return isFemale ? 'Pullet' : 'Stag';
+    }
+    if (monthsValue >= 12 && monthsValue <= 24) {
+      return isFemale ? 'Hen' : 'Bull Stag';
+    }
+    if (monthsValue > 24) {
+      return isFemale ? 'Hen' : 'Cock';
+    }
+    return '';
   };
 
-  const handleAgeChange = (val: string) => {
+  const handleAgeChange = (val: string, genderVal: string = newGender) => {
     setAge(val);
-    if (val && !isNaN(Number(val))) {
-      setNewGrowthStage(autoComputeGrowthStage(Number(val)));
+    if (val.trim() === '' || isNaN(Number(val))) {
+      setNewGrowthStage('');
+    } else {
+      setNewGrowthStage(autoComputeGrowthStage(Number(val), genderVal));
     }
   };
 
-  const handleEditAgeChange = (val: string) => {
+  const handleEditAgeChange = (val: string, genderVal: string = editGender) => {
     setEditAge(val);
-    if (val && !isNaN(Number(val))) {
-      setEditGrowthStage(autoComputeGrowthStage(Number(val)));
+    if (val.trim() === '' || isNaN(Number(val))) {
+      setEditGrowthStage('');
+    } else {
+      setEditGrowthStage(autoComputeGrowthStage(Number(val), genderVal));
     }
   };
 
@@ -451,8 +467,8 @@ export default function GalloTrackSystem() {
         eye_variant: newEyeVariant,
         birthdate: newBirthdate || '2026-01-01',
         age: age ? `${age} Months` : 'N/A',
-        weight: weight ? `${weight} kg` : 'N/A',
-        height: height ? `${height} cm` : 'N/A',
+        weight: weight ? `${weight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
+        height: height ? `${height.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
         sire: sireName,
         dam: damName,
         sire_pct: Number(sirePct),
@@ -468,7 +484,7 @@ export default function GalloTrackSystem() {
         showToastMessage(`Database Error: ${insertErr.message}`, 'error');
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        setNewName(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setSelectedImage(null);
+        setNewName(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null);
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -573,8 +589,9 @@ export default function GalloTrackSystem() {
     setEditColor(fowl.color || 'Bright Red');
     setEditBehaviorTrait(fowl.behavior_trait || 'Wave-Motion Tracker');
     setEditEyeVariant(fowl.eye_variant || 'Standard Eye');
+    const parsedAge = fowl.age ? Number(fowl.age.replace(/[^0-9.]/g, '')) : 0;
     setEditAge(fowl.age ? fowl.age.replace(' Months', '') : '');
-    setEditGrowthStage(fowl.growth_stage || 'Stag');
+    setEditGrowthStage(fowl.growth_stage || autoComputeGrowthStage(isNaN(parsedAge) ? 0 : parsedAge, fowl.gender));
     setEditWeight(fowl.weight ? fowl.weight.replace(' kg', '') : '');
     setEditHeight(fowl.height ? fowl.height.replace(' cm', '') : '');
     setEditSire(fowl.sire || '');
@@ -600,8 +617,8 @@ export default function GalloTrackSystem() {
         behavior_trait: editBehaviorTrait,
         eye_variant: editEyeVariant,
         age: editAge ? `${editAge} Months` : 'N/A',
-        weight: editWeight ? `${editWeight} kg` : 'N/A',
-        height: editHeight ? `${editHeight} cm` : 'N/A',
+        weight: editWeight ? `${editWeight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
+        height: editHeight ? `${editHeight.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
         sire: editSire,
         dam: editDam,
         sire_pct: Number(editSirePct),
@@ -1069,17 +1086,32 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Genetic Strain</label>
-                          <select value={newBreed} onChange={(e) => setNewBreed(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-700 outline-none focus:border-emerald-500 transition-all cursor-pointer">
-                            <option value="Roundhead">Roundhead</option>
-                            <option value="Sweater">Sweater</option>
-                            <option value="Lemon">Lemon</option>
-                            <option value="Hatch">Hatch</option>
-                            <option value="Kelso">Kelso</option>
-                          </select>
+                          <input 
+                            list="genetic-strains" 
+                            value={newBreed} 
+                            onChange={(e) => setNewBreed(e.target.value)} 
+                            className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" 
+                            placeholder="Select or type strain (e.g. Sweater)"
+                            required 
+                          />
+                          <datalist id="genetic-strains">
+                            <option value="Sweater" />
+                            <option value="Hatch" />
+                            <option value="Roundhead" />
+                            <option value="Kelso" />
+                            <option value="Lemon 84" />
+                            <option value="Albany" />
+                            <option value="Claret" />
+                            <option value="Whitehackle" />
+                            <option value="Black" />
+                            <option value="Melsin" />
+                            <option value="Bennie" />
+                            <option value="Joe Madigin" />
+                          </datalist>
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
-                          <select value={newGender} onChange={(e) => setNewGender(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-700 outline-none focus:border-emerald-500 transition-all cursor-pointer">
+                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-700 outline-none focus:border-emerald-500 transition-all cursor-pointer">
                             <option value="Rooster">Rooster (Cock)</option>
                             <option value="Hen">Hen (Pullet)</option>
                           </select>
@@ -1091,18 +1123,32 @@ export default function GalloTrackSystem() {
                       <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
                         <span>🧬</span> <span>Step 2: Physical Parameters</span>
                       </h3>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Age (Mos)</label>
                           <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold" placeholder="0" required />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Growth</label>
-                          <input type="text" value={newGrowthStage} readOnly className="w-full p-3 border border-emerald-200/60 rounded-xl text-xs text-center font-extrabold bg-emerald-50 text-emerald-800 shadow-2xs" />
+                          <input 
+                            type="text" 
+                            value={newGrowthStage} 
+                            readOnly 
+                            placeholder="Awaiting age..." 
+                            className={`w-full p-3 border rounded-xl text-xs text-center font-extrabold shadow-2xs transition-all ${
+                              newGrowthStage 
+                                ? 'border-emerald-200/60 bg-emerald-50 text-emerald-800' 
+                                : 'border-slate-200/90 bg-slate-50/50 text-slate-400 font-medium'
+                            }`} 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Height (cm)</label>
+                          <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none focus:border-emerald-500" placeholder="e.g. 45" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Weight (kg)</label>
-                          <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold" placeholder="0.0" />
+                          <input type="number" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                         </div>
                       </div>
                     </div>
@@ -1543,17 +1589,32 @@ export default function GalloTrackSystem() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Genetic Strain</label>
-                    <select value={editBreed} onChange={(e) => setEditBreed(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
-                      <option value="Roundhead">Roundhead</option>
-                      <option value="Sweater">Sweater</option>
-                      <option value="Lemon">Lemon</option>
-                      <option value="Hatch">Hatch</option>
-                      <option value="Kelso">Kelso</option>
-                    </select>
+                    <input 
+                      list="edit-genetic-strains" 
+                      value={editBreed} 
+                      onChange={(e) => setEditBreed(e.target.value)} 
+                      className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none focus:border-emerald-500 font-medium" 
+                      placeholder="Select or type strain"
+                      required 
+                    />
+                    <datalist id="edit-genetic-strains">
+                      <option value="Sweater" />
+                      <option value="Hatch" />
+                      <option value="Roundhead" />
+                      <option value="Kelso" />
+                      <option value="Lemon 84" />
+                      <option value="Albany" />
+                      <option value="Claret" />
+                      <option value="Whitehackle" />
+                      <option value="Black" />
+                      <option value="Melsin" />
+                      <option value="Bennie" />
+                      <option value="Joe Madigin" />
+                    </datalist>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Gender Class</label>
-                    <select value={editGender} onChange={(e) => setEditGender(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
+                    <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
                       <option value="Rooster">Rooster (Cock)</option>
                       <option value="Hen">Hen (Pullet)</option>
                     </select>
@@ -1592,18 +1653,32 @@ export default function GalloTrackSystem() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age (Mos)</label>
                     <input type="number" value={editAge} onChange={(e) => handleEditAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" required />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Growth</label>
-                    <input type="text" value={editGrowthStage} readOnly className="w-full p-2.5 border border-emerald-100 rounded-xl text-xs text-center font-bold bg-emerald-50 text-emerald-800" />
+                    <input 
+                      type="text" 
+                      value={editGrowthStage} 
+                      readOnly 
+                      placeholder="Awaiting age..." 
+                      className={`w-full p-2.5 border rounded-xl text-xs text-center font-bold transition-all ${
+                        editGrowthStage 
+                          ? 'border-emerald-100 bg-emerald-50 text-emerald-800' 
+                          : 'border-slate-200 bg-slate-50 text-slate-400 font-normal'
+                      }`} 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Height (cm)</label>
+                    <input type="number" step="0.1" value={editHeight} onChange={(e) => setEditHeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold outline-none focus:border-emerald-500" placeholder="e.g. 45" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Weight (kg)</label>
-                    <input type="text" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" />
+                    <input type="number" step="0.01" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                   </div>
                 </div>
               </div>
