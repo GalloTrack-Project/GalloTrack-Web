@@ -72,6 +72,11 @@ export default function GalloTrackSystem() {
   const [rememberMe, setRememberMe] = useState(false);
   const [adminName, setAdminName] = useState('Hazel Dela Cruz');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
@@ -266,6 +271,7 @@ export default function GalloTrackSystem() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     let loginEmail = username;
@@ -296,7 +302,13 @@ export default function GalloTrackSystem() {
           setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, Hazel!`, 'success'), 400);
           return;
         }
-        setError('Data Privacy Act Notice: Cryptographic verification mismatch.');
+        setError(authError.message);
+        return;
+      }
+
+      if (data.user && !data.user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        setError('Please verify your email address before logging in. Check your inbox for the verification link.');
         return;
       }
 
@@ -313,10 +325,31 @@ export default function GalloTrackSystem() {
         }
 
         let welcomeName = username;
-        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', data.user.id).single();
-        if (profile && profile.full_name) {
-          welcomeName = profile.full_name.split(' ')[0];
-          localStorage.setItem('gallotrack_admin_name', profile.full_name);
+        // Fetch or create profile row in the database
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+        if (profile) {
+          if (profile.full_name) {
+            welcomeName = profile.full_name.split(' ')[0];
+            localStorage.setItem('gallotrack_admin_name', profile.full_name);
+          }
+          if (profile.avatar_url) {
+            localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url);
+          }
+          if (profile.phone_number) {
+            localStorage.setItem('gallotrack_admin_phone', profile.phone_number);
+          }
+        } else {
+          const fullNameMeta = data.user.user_metadata?.full_name || username;
+          const { error: insertErr } = await supabase.from('profiles').insert([{
+            id: data.user.id,
+            full_name: fullNameMeta,
+            phone_number: '09123456789',
+            avatar_url: ''
+          }]);
+          if (!insertErr) {
+            welcomeName = fullNameMeta.split(' ')[0];
+            localStorage.setItem('gallotrack_admin_name', fullNameMeta);
+          }
         }
         setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, ${welcomeName}!`, 'success'), 400);
         window.dispatchEvent(new Event('admin-profile-update'));
@@ -324,6 +357,41 @@ export default function GalloTrackSystem() {
     } catch (err) {
       console.error(err);
       setError('System Error: Unable to authenticate.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+    setLoading(true);
+
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: regEmail,
+        password: regPassword,
+        options: {
+          data: {
+            full_name: regName
+          }
+        }
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+
+      setSuccessMessage('Owner registration initiated. Verification email sent, please check your inbox before logging in.');
+      setRegName('');
+      setRegEmail('');
+      setRegPassword('');
+      setIsSignUp(false);
+    } catch (err) {
+      console.error(err);
+      setError('System Error: Unable to complete registration.');
     } finally {
       setLoading(false);
     }
@@ -342,7 +410,7 @@ export default function GalloTrackSystem() {
       localStorage.removeItem('gallotrack_admin_phone');
     }
     await supabase.auth.signOut();
-    showToastMessage('System cluster session destroyed.', 'warning');
+    showToastMessage('System session terminated.', 'warning');
   };
 
   const handleAddFowl = async (e: React.FormEvent) => {
@@ -652,53 +720,91 @@ export default function GalloTrackSystem() {
               <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">Advanced Gamefowl Lineage Analytics & Structural Trace Registry Framework</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Administrative Identity</label>
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter username" required />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">System Password</label>
-                <div className="relative">
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    className="w-full p-3.5 pr-11 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" 
-                    placeholder="••••••••••••" 
-                    required 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold"
-                    title={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? '👁️' : '🙈'}
-                  </button>
+            {!isSignUp ? (
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Administrative Identity</label>
+                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter username or email" required />
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-1">
-                <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">System Password</label>
                   <div className="relative">
                     <input 
-                      type="checkbox" 
-                      checked={rememberMe} 
-                      onChange={(e) => setRememberMe(e.target.checked)} 
-                      className="sr-only peer" 
+                      type={showPassword ? 'text' : 'password'} 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="w-full p-3.5 pr-11 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" 
+                      placeholder="••••••••••••" 
+                      required 
                     />
-                    <div className="relative w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? '👁️' : '🙈'}
+                    </button>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider select-none">Remember Me</span>
-                </label>
-              </div>
+                </div>
+                
+                <div className="flex items-center justify-between py-1">
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe} 
+                        onChange={(e) => setRememberMe(e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="relative w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider select-none">Remember Me</span>
+                  </label>
+                </div>
 
-              {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl shadow-xs">{error}</div>}
-              <button type="submit" className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-slate-900/20 cursor-pointer text-xs tracking-wider uppercase">
-                Log In
-              </button>
-            </form>
+                {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl shadow-xs">{error}</div>}
+                {successMessage && <div className="text-xs text-emerald-700 font-bold text-center bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-xl shadow-xs leading-relaxed">{successMessage}</div>}
+                
+                <button type="submit" className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-slate-900/20 cursor-pointer text-xs tracking-wider uppercase">
+                  Log In
+                </button>
+                
+                <div className="text-center pt-2">
+                  <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[11px] font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-wider cursor-pointer">
+                    Don't have an account? Register as Owner
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Owner Full Name</label>
+                  <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter your full name" required />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Email Address</label>
+                  <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Enter email address" required />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Password</label>
+                  <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold outline-none shadow-xs" placeholder="Create secure password" required />
+                </div>
+                
+                {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl shadow-xs">{error}</div>}
+                
+                <button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-600/20 cursor-pointer text-xs tracking-wider uppercase flex items-center justify-center space-x-2">
+                  {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                  <span>{loading ? 'Creating Account...' : 'Register Owner'}</span>
+                </button>
+                
+                <div className="text-center pt-2">
+                  <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[11px] font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-wider cursor-pointer">
+                    Already have an account? Log In
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
