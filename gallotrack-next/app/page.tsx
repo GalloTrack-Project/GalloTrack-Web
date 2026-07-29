@@ -278,7 +278,7 @@ export default function GalloTrackSystem() {
   };
 
   const getSiblingsForFowl = (sire: string, dam: string, currentId: number) => {
-    if (!sire || !dam) return [];
+    if (!sire || !dam || sire === 'Foundation Stock' || dam === 'Foundation Stock') return [];
     return fowls
       .filter(f => f.id !== currentId && f.sire?.toLowerCase() === sire.toLowerCase() && f.dam?.toLowerCase() === dam.toLowerCase())
       .map(f => f.name);
@@ -471,8 +471,8 @@ export default function GalloTrackSystem() {
         age: age ? `${age} Months` : 'N/A',
         weight: weight ? `${weight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
         height: height ? `${height.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
-        sire: sireName,
-        dam: damName,
+        sire: sireName.trim() ? sireName.trim() : 'Foundation Stock',
+        dam: damName.trim() ? damName.trim() : 'Foundation Stock',
         sire_pct: sPct,
         dam_pct: dPct,
         bloodline_pct: calculatedBloodline,
@@ -623,8 +623,8 @@ export default function GalloTrackSystem() {
         age: editAge ? `${editAge} Months` : 'N/A',
         weight: editWeight ? `${editWeight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
         height: editHeight ? `${editHeight.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
-        sire: editSire,
-        dam: editDam,
+        sire: editSire.trim() ? editSire.trim() : 'Foundation Stock',
+        dam: editDam.trim() ? editDam.trim() : 'Foundation Stock',
         sire_pct: sPct,
         dam_pct: dPct,
         bloodline_pct: calculatedBloodline
@@ -1164,12 +1164,16 @@ export default function GalloTrackSystem() {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Sire (Father)</label>
-                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="Sire" required />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
+                            Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional / foundation stock)</span>
+                          </label>
+                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g. Foundation Stock or Sire Name" />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Dam (Mother)</label>
-                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="Dam" required />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
+                            Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional / foundation stock)</span>
+                          </label>
+                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g. Foundation Stock or Dam Name" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -1698,12 +1702,16 @@ export default function GalloTrackSystem() {
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sire (Father)</label>
-                    <input type="text" value={editSire} onChange={(e) => setEditSire(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none" required />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                    </label>
+                    <input type="text" value={editSire} onChange={(e) => setEditSire(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none font-medium" placeholder="Foundation Stock" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Dam (Mother)</label>
-                    <input type="text" value={editDam} onChange={(e) => setEditDam(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none" required />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                    </label>
+                    <input type="text" value={editDam} onChange={(e) => setEditDam(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none font-medium" placeholder="Foundation Stock" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
