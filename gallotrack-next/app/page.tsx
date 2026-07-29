@@ -97,8 +97,8 @@ export default function GalloTrackSystem() {
   const [newBirthdate, setNewBirthdate] = useState('');
   const [sireName, setSireName] = useState('');
   const [damName, setDamName] = useState('');
-  const [sirePct, setSirePct] = useState(100);
-  const [damPct, setDamPct] = useState(100);
+  const [sirePct, setSirePct] = useState<number | string>(100);
+  const [damPct, setDamPct] = useState<number | string>(100);
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [age, setAge] = useState(''); 
@@ -127,8 +127,8 @@ export default function GalloTrackSystem() {
   const [editHeight, setEditHeight] = useState('');
   const [editSire, setEditSire] = useState('');
   const [editDam, setEditDam] = useState('');
-  const [editSirePct, setEditSirePct] = useState(100);
-  const [editDamPct, setEditDamPct] = useState(100);
+  const [editSirePct, setEditSirePct] = useState<number | string>(100);
+  const [editDamPct, setEditDamPct] = useState<number | string>(100);
 
   const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
@@ -454,7 +454,9 @@ export default function GalloTrackSystem() {
         publicImageUrl = data.publicUrl;
       }
 
-      const calculatedBloodline = (Number(sirePct) + Number(damPct)) / 2;
+      const sPct = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 100 : Number(sirePct);
+      const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 100 : Number(damPct);
+      const calculatedBloodline = (sPct + dPct) / 2;
       
       const payload = {
         name: newName,
@@ -471,8 +473,8 @@ export default function GalloTrackSystem() {
         height: height ? `${height.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
         sire: sireName,
         dam: damName,
-        sire_pct: Number(sirePct),
-        dam_pct: Number(damPct),
+        sire_pct: sPct,
+        dam_pct: dPct,
         bloodline_pct: calculatedBloodline,
         status: 'Active',
         image_url: publicImageUrl
@@ -606,7 +608,9 @@ export default function GalloTrackSystem() {
     setLoading(true);
 
     try {
-      const calculatedBloodline = (Number(editSirePct) + Number(editDamPct)) / 2;
+      const sPct = editSirePct === '' || editSirePct === null || isNaN(Number(editSirePct)) ? 100 : Number(editSirePct);
+      const dPct = editDamPct === '' || editDamPct === null || isNaN(Number(editDamPct)) ? 100 : Number(editDamPct);
+      const calculatedBloodline = (sPct + dPct) / 2;
       const payload = {
         name: editName,
         breed: editBreed,
@@ -621,8 +625,8 @@ export default function GalloTrackSystem() {
         height: editHeight ? `${editHeight.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
         sire: editSire,
         dam: editDam,
-        sire_pct: Number(editSirePct),
-        dam_pct: Number(editDamPct),
+        sire_pct: sPct,
+        dam_pct: dPct,
         bloodline_pct: calculatedBloodline
       };
 
@@ -1169,12 +1173,16 @@ export default function GalloTrackSystem() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Sire Pct (%)</label>
-                          <input type="number" value={sirePct} onChange={(e) => setSirePct(Number(e.target.value))} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold" min="0" max="100" />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
+                            Sire Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                          </label>
+                          <input type="number" value={sirePct} onChange={(e) => setSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Dam Pct (%)</label>
-                          <input type="number" value={damPct} onChange={(e) => setDamPct(Number(e.target.value))} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold" min="0" max="100" />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
+                            Dam Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                          </label>
+                          <input type="number" value={damPct} onChange={(e) => setDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
                         </div>
                       </div>
                       <div>
@@ -1699,12 +1707,16 @@ export default function GalloTrackSystem() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sire Heritage Pct (%)</label>
-                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold" min="0" max="100" />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Sire Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                    </label>
+                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Dam Heritage Pct (%)</label>
-                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold" min="0" max="100" />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Dam Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                    </label>
+                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
                   </div>
                 </div>
               </div>
