@@ -46,13 +46,14 @@ export default function ProfilePage() {
       if (user) {
         const { error } = await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: user.id,
+            user_id: user.id,
             full_name: fullName,
             phone_number: phoneNumber,
             avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
-          .eq('id', user.id)
 
         if (error) throw error
 
@@ -133,12 +134,12 @@ export default function ProfilePage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn text-slate-800">
       {/* HEADER SECTION */}
-      <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div className="antigravity-hover bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profile Management</h2>
           <p className="text-xs text-slate-400 font-semibold mt-0.5">Manage administrative credentials and personnel identity access layers</p>
         </div>
-        <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm flex items-center gap-1.5">
+        <span className="antigravity-badge text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
           Frame Authenticated
         </span>
@@ -156,8 +157,8 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* ADMINISTRATIVE DETAILS BADGE */}
-        <div className="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 md:col-span-1 flex flex-col items-center text-center">
-          <div className="relative group cursor-pointer select-none" onClick={triggerFileInput}>
+        <div className="antigravity-card bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 md:col-span-1 flex flex-col items-center text-center">
+          <div className="antigravity-avatar relative group cursor-pointer select-none" onClick={triggerFileInput}>
             {avatarUrl ? (
               <img 
                 src={avatarUrl} 
@@ -177,7 +178,7 @@ export default function ProfilePage() {
           </div>
           <div className="space-y-1.5">
             <h3 className="text-lg font-extrabold text-slate-900">{fullName}</h3>
-            <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60 inline-block uppercase tracking-wider">System Lead Admin</span>
+            <span className="antigravity-badge text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60 inline-block uppercase tracking-wider">System Lead Admin</span>
           </div>
           <div className="w-full border-t border-slate-100 pt-4 space-y-2.5 text-[11px] text-slate-500 font-mono">
             <div className="flex items-center justify-between px-1">
@@ -199,7 +200,7 @@ export default function ProfilePage() {
         </div>
 
         {/* INPUT IDENTITY FORM */}
-        <form onSubmit={handleUpdateProfile} className="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 md:col-span-2">
+        <form onSubmit={handleUpdateProfile} className="antigravity-hover bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 md:col-span-2">
           <div className="flex justify-between items-center border-b border-slate-100 pb-4">
             <h3 className="text-xs font-black text-teal-800 uppercase tracking-widest flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>

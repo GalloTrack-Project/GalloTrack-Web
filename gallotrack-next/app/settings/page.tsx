@@ -22,12 +22,12 @@ export default function SettingsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn text-slate-800">
       {/* HEADER CARD */}
-      <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div className="antigravity-hover bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>
           <p className="text-xs text-slate-400 font-semibold mt-0.5">Configure global administrative rules, default parameters, and secure cloud behaviors</p>
         </div>
-        <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm">
+        <span className="antigravity-badge text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm">
           ● Config Synchronized
         </span>
       </div>
@@ -43,14 +43,14 @@ export default function SettingsPage() {
       )}
 
       {/* CONFIGURATION FORM */}
-      <form onSubmit={handleSaveSettings} className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+      <form onSubmit={handleSaveSettings} className="antigravity-hover bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
         
         {/* SECTION 1: APPLICATION PREFERENCES */}
         <div className="space-y-4">
           <h3 className="text-xs font-black text-emerald-700 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center space-x-2">
             <span>⚙️</span> <span>Application Matrix Preferences</span>
           </h3>
-          <div className="bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-slate-50 transition-all">
+          <div className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-slate-50 transition-all">
             <div className="space-y-0.5">
               <label className="block text-xs font-extrabold text-slate-800">Default Ancestry Strain Classification</label>
               <span className="text-[11px] text-slate-400 font-medium block">Pre-selected classification value inside the profiling matrix encoder</span>
@@ -77,7 +77,7 @@ export default function SettingsPage() {
           
           <div className="space-y-3">
             {/* TOGGLE 1 */}
-            <label className="bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex justify-between items-center px-5 cursor-pointer hover:bg-slate-50 transition-all">
+            <label className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex justify-between items-center px-5 cursor-pointer hover:bg-slate-50 transition-all">
               <div className="space-y-0.5">
                 <span className="block text-xs font-extrabold text-slate-800">Real-time Cloud Auditing Logs</span>
                 <span className="text-[11px] text-slate-400 font-medium block">Record cryptographic transaction updates to cluster node registries</span>
@@ -91,7 +91,7 @@ export default function SettingsPage() {
             </label>
 
             {/* TOGGLE 2 */}
-            <label className="bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex justify-between items-center px-5 cursor-pointer hover:bg-slate-50 transition-all">
+            <label className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex justify-between items-center px-5 cursor-pointer hover:bg-slate-50 transition-all">
               <div className="space-y-0.5">
                 <span className="block text-xs font-extrabold text-slate-800">System Event Pop-up Alerts</span>
                 <span className="text-[11px] text-slate-400 font-medium block">Enable dynamic pop-up notification frames during analytical operations</span>

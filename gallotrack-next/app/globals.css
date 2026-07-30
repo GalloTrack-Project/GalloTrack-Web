@@ -24,3 +24,118 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ANTI-GRAVITY FLOATING VISUAL EFFECTS */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.35deg);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-11px) rotate(-0.4deg);
+  }
+}
+
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4.5px);
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(0.2deg);
+  }
+}
+
+@keyframes antigravity-glow {
+  0%, 100% {
+    box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.15);
+  }
+  50% {
+    box-shadow: 0 20px 35px -5px rgba(20, 184, 166, 0.3);
+  }
+}
+
+/* Floating animation helper classes */
+.antigravity-card {
+  animation: float 6.5s ease-in-out infinite;
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease, background-color 0.35s ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.antigravity-card:hover {
+  animation-play-state: paused;
+  transform: translateY(-9px) scale(1.014);
+  box-shadow: 0 26px 42px -10px rgba(13, 148, 136, 0.32), 0 14px 24px -8px rgba(0, 0, 0, 0.14), 0 0 20px 2px rgba(20, 184, 166, 0.12);
+  border-color: rgba(13, 148, 136, 0.45) !important;
+}
+
+.antigravity-badge {
+  animation: float-subtle 4.8s ease-in-out infinite;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, border-color 0.25s ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.antigravity-badge:hover {
+  animation-play-state: paused;
+  transform: translateY(-3.5px) scale(1.045);
+  box-shadow: 0 12px 22px -4px rgba(20, 184, 166, 0.38);
+}
+
+.antigravity-avatar {
+  animation: float-slow 7.8s ease-in-out infinite;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.3s ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.antigravity-avatar:hover {
+  animation-play-state: paused;
+  transform: translateY(-6px) scale(1.035);
+  box-shadow: 0 20px 36px -6px rgba(13, 148, 136, 0.42), 0 0 16px 2px rgba(20, 184, 166, 0.25);
+}
+
+.antigravity-hover {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.antigravity-hover:hover {
+  transform: translateY(-7px) scale(1.01);
+  box-shadow: 0 22px 34px -10px rgba(13, 148, 136, 0.25), 0 12px 18px -5px rgba(0, 0, 0, 0.1);
+  border-color: rgba(13, 148, 136, 0.35) !important;
+}
+
+.antigravity-login-card {
+  animation: float-gentle 7s ease-in-out infinite;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.antigravity-login-card:hover {
+  animation-play-state: paused;
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 30px 60px -12px rgba(13, 148, 136, 0.35), 0 16px 30px -10px rgba(0, 0, 0, 0.35);
+  border-color: rgba(20, 184, 166, 0.5) !important;
+}
+
+

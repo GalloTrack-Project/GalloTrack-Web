@@ -215,27 +215,36 @@ export default function GalloTrackSystem() {
   const fetchDatabaseResources = async () => {
     setLoading(true);
     try {
-      const { data: fowlData } = await supabase
-        .from('fowl')
-        .select('*')
-        .order('id', { ascending: false });
+      const { data: { user } } = await supabase.auth.getUser();
 
-      const { data: matchData } = await supabase
-        .from('match')
-        .select('*')
-        .order('id', { ascending: false });
+      if (user) {
+        const { data: fowlData } = await supabase
+          .from('fowl')
+          .select('*')
+          .or(`user_id.eq.${user.id},user_id.is.null`)
+          .order('id', { ascending: false });
 
-      if (fowlData) setFowls(fowlData);
-      
-      if (matchData && matchData.length > 0) {
-        setMatchHistory(matchData);
+        const { data: matchData } = await supabase
+          .from('match')
+          .select('*')
+          .or(`user_id.eq.${user.id},user_id.is.null`)
+          .order('id', { ascending: false });
+
+        setFowls(fowlData || []);
+        setMatchHistory(matchData || []);
       } else {
-        setMatchHistory([
-          { id: 101, date: '2026-05-12', entry_name: 'Red Thunder', breed: 'Sweater', opponent: 'Kelso Express', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', status: 'Verified' },
-          { id: 102, date: '2026-05-18', entry_name: 'Gold Blade', breed: 'Lemon', opponent: 'Hatch Dominator', location: 'Iloilo Exhibition Center', type: 'Hack Match', outcome: 'Win', status: 'Verified' },
-          { id: 103, date: '2026-05-25', entry_name: 'Red Thunder', breed: 'Sweater', opponent: 'Lemon Slasher', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Loss', status: 'Verified' },
-          { id: 104, date: '2026-06-02', entry_name: 'Red Thunder', breed: 'Sweater', opponent: 'Grey Warrior', location: 'Local Breeding Yard', type: 'Hack Match', outcome: 'Draw', status: 'Verified' }
-        ]);
+        const { data: fowlData } = await supabase
+          .from('fowl')
+          .select('*')
+          .order('id', { ascending: false });
+
+        const { data: matchData } = await supabase
+          .from('match')
+          .select('*')
+          .order('id', { ascending: false });
+
+        setFowls(fowlData || []);
+        setMatchHistory(matchData || []);
       }
     } catch (err) {
       console.error(err);
@@ -468,7 +477,9 @@ export default function GalloTrackSystem() {
       const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 100 : Number(damPct);
       const calculatedBloodline = (sPct + dPct) / 2;
       
-      const payload = {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const payload: any = {
         name: newName,
         breed: newBreed || 'Unspecified Strain',
         gender: newGender || 'Rooster',
@@ -489,6 +500,7 @@ export default function GalloTrackSystem() {
         status: 'Active',
         image_url: publicImageUrl
       };
+      if (user?.id) payload.user_id = user.id;
 
       const { error: insertErr } = await supabase.from('fowl').insert([payload]);
 
@@ -540,7 +552,9 @@ export default function GalloTrackSystem() {
         setUploadingVideo(false);
       }
 
-      const payload = {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const payload: any = {
         date: matchDate || new Date().toISOString().split('T')[0],
         entry_name: selectedFowlForMatch,
         breed: fowlBreed,
@@ -551,6 +565,7 @@ export default function GalloTrackSystem() {
         status: 'Verified',
         video_url: videoUrl || null
       };
+      if (user?.id) payload.user_id = user.id;
 
       const { error: insertErr } = await supabase.from('match').insert([payload]);
 
@@ -748,8 +763,8 @@ export default function GalloTrackSystem() {
     });
 
     return {
-      labels: labels.length > 0 ? labels : ['Roundhead Cross', 'Hatch Cross', 'Kelso Combos'],
-      data: data.length > 0 ? data : [65, 45, 58]
+      labels: labels.length > 0 ? labels : ['No Encoded Matches'],
+      data: data.length > 0 ? data : [0]
     };
   };
 
@@ -781,8 +796,8 @@ export default function GalloTrackSystem() {
     });
 
     return {
-      labels: labels.length > 0 ? labels : ['Roundhead', 'Sweater', 'Lemon', 'Kelso', 'Hatch'],
-      data: data.length > 0 ? data : [78, 70, 62, 68, 55]
+      labels: labels.length > 0 ? labels : ['No Active Strains'],
+      data: data.length > 0 ? data : [0]
     };
   };
 
@@ -798,7 +813,7 @@ export default function GalloTrackSystem() {
     const hasData = data.some(v => v > 0);
     return {
       labels: hasData ? labels : ['Illness', 'Injury', 'Natural', 'Culling', 'Other'],
-      data: hasData ? data : [2, 1, 1, 1, 0]
+      data: hasData ? data : [0, 0, 0, 0, 0]
     };
   };
 
@@ -861,7 +876,7 @@ export default function GalloTrackSystem() {
           <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="bg-white rounded-3xl shadow-2xl shadow-black/20 max-w-md w-full relative z-10 overflow-hidden">
+          <div className="antigravity-login-card bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/30 max-w-md w-full relative z-10 overflow-hidden border border-teal-500/20">
             <div className="p-8 sm:p-10 space-y-7">
               {/* Header & Branding */}
               <div className="text-center space-y-2">
@@ -1040,7 +1055,7 @@ export default function GalloTrackSystem() {
               <div className="flex items-center space-x-3">
                 <span className="md:hidden font-black text-slate-900 text-lg tracking-tight bg-gradient-to-r from-slate-900 to-emerald-700 bg-clip-text text-transparent">GALLOTRACK</span>
                 
-                <div className="bg-emerald-50/80 border border-emerald-200/60 text-emerald-800 px-3 py-1.5 rounded-full flex items-center space-x-2 text-[10px] sm:text-xs font-mono font-bold shadow-2xs">
+                <div className="antigravity-badge bg-emerald-50/80 border border-emerald-200/60 text-emerald-800 px-3 py-1.5 rounded-full flex items-center space-x-2 text-[10px] sm:text-xs font-mono font-bold shadow-2xs">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -1052,7 +1067,7 @@ export default function GalloTrackSystem() {
 
               {/* RIGHT: Campus Metadata Tag & Mobile Session Exit */}
               <div className="flex items-center space-x-2.5">
-                <div className="bg-slate-100/90 border border-slate-200/80 text-slate-600 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold flex items-center space-x-1.5 shadow-2xs">
+                <div className="antigravity-badge bg-slate-100/90 border border-slate-200/80 text-slate-600 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold flex items-center space-x-1.5 shadow-2xs" style={{ animationDelay: '1.2s' }}>
                   <span className="text-slate-400">📍</span>
                   <span>Dingle Campus Cluster</span>
                 </div>
@@ -1078,7 +1093,7 @@ export default function GalloTrackSystem() {
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* HEADER CARDS */}
-                <div className="bg-white/90 backdrop-blur-md p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="antigravity-hover bg-white/90 backdrop-blur-md p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Enterprise Analytics Dashboard</h1>
                     <p className="text-xs sm:text-sm text-slate-400 font-semibold mt-1">Cross-strain performance vectors, empirical win probabilities, and active inventory metrics</p>
@@ -1087,7 +1102,7 @@ export default function GalloTrackSystem() {
                     type="button"
                     onClick={fetchDatabaseResources}
                     disabled={loading}
-                    className="self-start md:self-auto bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
+                    className="antigravity-badge self-start md:self-auto bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
                   >
                     <span>{loading ? '↻ Syncing...' : '↻ Refresh Cluster'}</span>
                   </button>
@@ -1095,34 +1110,34 @@ export default function GalloTrackSystem() {
 
                 {/* METRIC BADGE GRID */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div className="bg-gradient-to-br from-emerald-600 to-teal-700 p-5 sm:p-6 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20">
+                  <div className="antigravity-card bg-gradient-to-br from-emerald-600 to-teal-700 p-5 sm:p-6 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20" style={{ animationDelay: '0s' }}>
                     <span className="text-[10px] uppercase font-black tracking-widest opacity-80">Active Gamefowl</span>
                     <div className="text-3xl sm:text-4xl font-black tracking-tight">{activeFowls.length}</div>
                     <span className="text-[10px] font-mono opacity-90 block">ENCODED</span>
                   </div>
-                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '0.8s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Archived Records</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{archivedFowls.length}</div>
                     <span className="text-[10px] font-mono text-amber-700 font-bold block">LOG</span>
                   </div>
-                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-rose-200/60 shadow-sm space-y-2">
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-rose-200/60 shadow-sm space-y-2" style={{ animationDelay: '1.6s' }}>
                     <span className="text-[10px] text-rose-500 uppercase font-black tracking-widest">Deceased Records</span>
                     <div className="text-3xl sm:text-4xl font-black text-rose-700 tracking-tight">{deceasedFowls.length}</div>
                     <span className="text-[10px] font-mono text-rose-600 font-bold block">MORTALITY AUDIT</span>
                   </div>
-                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '2.4s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Total Matches</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
                     <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED</span>
                   </div>
-                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '3.2s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Win Rate</span>
                     <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">
                       {matchHistory.length > 0 ? `${Math.round((matchHistory.filter(m => m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%` : '0%'}
                     </div>
                     <span className="text-[10px] font-mono text-slate-500 font-bold block">EMPIRICAL SUCCESS INDEX</span>
                   </div>
-                  <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '4.0s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Mortality Rate</span>
                     <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
                       {fowls.length > 0 ? `${Math.round((deceasedFowls.length / fowls.length) * 100)}%` : '0%'}
@@ -1133,7 +1148,7 @@ export default function GalloTrackSystem() {
 
                 {/* CHARTS CONTAINER GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]">
+                  <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]" style={{ animationDelay: '0.4s' }}>
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100">Cross-Breed Win Ratios</h3>
                     <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
                       <Doughnut 
@@ -1149,7 +1164,7 @@ export default function GalloTrackSystem() {
                       />
                     </div>
                   </div>
-                  <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-[350px]">
+                  <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-[350px]" style={{ animationDelay: '1.4s' }}>
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest border-b pb-3 text-center border-slate-100">Lineage Cohort Success Rate (%)</h3>
                     <div className="w-full h-44 sm:h-48 my-auto">
                       <Bar 
@@ -1166,7 +1181,7 @@ export default function GalloTrackSystem() {
                       />
                     </div>
                   </div>
-                  <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]">
+                  <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]" style={{ animationDelay: '2.4s' }}>
                     <h3 className="text-xs font-black text-rose-700 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100 flex items-center justify-center space-x-1">
                       <span>💀</span> <span>Deceased Mortality Breakdown</span>
                     </h3>
@@ -1187,7 +1202,7 @@ export default function GalloTrackSystem() {
                 </div>
 
                 {/* MATCH LOGS TABLE */}
-                <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
+                <div className="antigravity-hover bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
                   <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Historical Analytics Match Logs</h3>
                     <span className="text-[9px] font-mono bg-slate-200/80 text-slate-700 font-black px-3 py-1 rounded-full">D4 ANALYTICS DB</span>
@@ -1241,7 +1256,7 @@ export default function GalloTrackSystem() {
             {/* PROFILING & LINEAGE MODULE */}
             {currentPage === 'profiling' && (
               <div className="space-y-5 animate-fadeIn">
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col gap-4">
+                <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col gap-4">
                   <div>
                     <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Profiling & Lineage Core Matrix</h1>
                     <p className="text-xs text-slate-400 font-semibold mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
@@ -1260,7 +1275,7 @@ export default function GalloTrackSystem() {
                 {/* ENCODE NODE FORM */}
                 {profilingSubTab === 'form' && (
                   <form onSubmit={handleAddFowl} className="space-y-5 animate-fadeIn">
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
                       <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
                         <span>🏷️</span> <span>Step 1: Core Identifiers</span>
                       </h3>
@@ -1305,7 +1320,7 @@ export default function GalloTrackSystem() {
                       </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
                       <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
                         <span>🧬</span> <span>Step 2: Physical Parameters</span>
                       </h3>
@@ -1339,7 +1354,7 @@ export default function GalloTrackSystem() {
                       </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
                       <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
                         <span>🌳</span> <span>Step 3: Ancestry Roots & Photo</span>
                       </h3>
@@ -1399,18 +1414,18 @@ export default function GalloTrackSystem() {
                           ➕ Encode First Fowl Node
                         </button>
                       </div>
-                    ) : activeFowls.map(fowl => {
+                    ) : activeFowls.map((fowl, index) => {
                       const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
                       return (
-                        <div key={fowl.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center">
-                          <div className="w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                        <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                          <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
                             {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                           </div>
                           <div className="flex-1 w-full space-y-3">
-                            <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
+                            <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
-                              <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
+                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                               <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -1461,25 +1476,25 @@ export default function GalloTrackSystem() {
                         <h3 className="text-base font-extrabold text-slate-800">Archived Registry Empty</h3>
                         <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl records have been shifted to the relational archive log.</p>
                       </div>
-                    ) : archivedFowls.map(fowl => {
+                    ) : archivedFowls.map((fowl, index) => {
                       const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
                       return (
-                        <div key={fowl.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50">
-                          <div className="w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                        <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                          <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
                             {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
                           </div>
                           <div className="flex-1 w-full space-y-3">
                             {(() => {
                               const badge = getArchiveBadgeStyle(fowl.archive_reason);
                               return (
-                                <span className={`absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 ${badge.bg} rounded-bl-xl tracking-widest shadow-2xs`}>
+                                <span className={`antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 ${badge.bg} rounded-bl-xl tracking-widest shadow-2xs`}>
                                   {badge.label}
                                 </span>
                               );
                             })()}
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-black text-slate-700">{fowl.name}</h4>
-                              <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
+                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
                               <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -1520,18 +1535,18 @@ export default function GalloTrackSystem() {
                         <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl nodes recorded under mortality logs.</p>
                       </div>
                     ) : (
-                      deceasedFowls.map(fowl => {
+                      deceasedFowls.map((fowl, index) => {
                         return (
-                          <div key={fowl.id} className="bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center">
-                            <div className="w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
+                          <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                            <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
                               {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                             </div>
                             <div className="flex-1 w-full space-y-3">
-                              <span className="absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-xl tracking-widest shadow-2xs">● DECEASED</span>
+                              <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-xl tracking-widest shadow-2xs">● DECEASED</span>
                               <div className="flex items-center space-x-2">
                                 <h4 className="text-base font-black text-slate-900 line-through opacity-75">{fowl.name}</h4>
-                                <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
-                                <span className="text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-slate-600 bg-slate-100 border-slate-200">Reason: {fowl.death_reason || 'Illness'}</span>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-slate-600 bg-slate-100 border-slate-200">Reason: {fowl.death_reason || 'Illness'}</span>
                               </div>
                               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                                 <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -1561,7 +1576,7 @@ export default function GalloTrackSystem() {
 
                 {/* MATCH LOG FORM */}
                 {profilingSubTab === 'matchForm' && (
-                  <form onSubmit={handleAddMatchRecord} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fadeIn">
+                  <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fadeIn">
                     <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
                       <span>⚔️</span> <span>Record Fight Performance Log</span>
                     </h3>
@@ -1674,13 +1689,13 @@ export default function GalloTrackSystem() {
                       <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No active gamefowl strains match your search query.</p>
                     </div>
                   ) : (
-                    fowls.filter(item => item.status === 'Active' && item.breed.toLowerCase().includes(search.toLowerCase())).map(item => (
-                      <div key={item.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex flex-col sm:flex-row gap-4 items-start">
-                        <span className="absolute top-0 right-0 bg-emerald-50 border-l border-b border-emerald-200 text-emerald-700 text-[8px] font-black px-3 py-1 rounded-bl-2xl uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                    fowls.filter(item => item.status === 'Active' && item.breed.toLowerCase().includes(search.toLowerCase())).map((item, index) => (
+                      <div key={item.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 items-start" style={{ animationDelay: `${(index % 4) * 0.9}s` }}>
+                        <span className="antigravity-badge absolute top-0 right-0 bg-emerald-50 border-l border-b border-emerald-200 text-emerald-700 text-[8px] font-black px-3 py-1 rounded-bl-2xl uppercase tracking-wider flex items-center gap-1 shadow-2xs">
                           <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                           Verified Pedigree
                         </span>
-                        <div className="w-20 h-20 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center font-mono text-slate-300 text-[8px] relative shadow-inner">
+                        <div className="antigravity-avatar w-20 h-20 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center font-mono text-slate-300 text-[8px] relative shadow-inner">
                           {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : (
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                           )}
