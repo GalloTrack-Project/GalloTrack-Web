@@ -1,3 +1,13 @@
 {
-  "rootDirectory": "gallotrack-next"
+  "version": 2,
+  "rootDirectory": "gallotrack-next",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/" },
+    { "source": "/profiling", "destination": "/" },
+    { "source": "/marketplace", "destination": "/" },
+    { "source": "/((?!api|_next/static|_next/image|favicon.ico|profile|settings).*)", "destination": "/" }
+  ]
 }

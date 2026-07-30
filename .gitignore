@@ -62,3 +62,6 @@ htmlcov/
 # Logs
 *.log
 logs/
+
+.vercel
+.env*

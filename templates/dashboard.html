@@ -8,6 +8,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Chart.js para sa totoong Visual Charts at Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-8px) rotate(0.35deg); } }
+      @keyframes float-slow { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-11px) rotate(-0.4deg); } }
+      @keyframes float-subtle { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4.5px); } }
+      .antigravity-card { animation: float 6.5s ease-in-out infinite; transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease; will-change: transform, box-shadow; backface-visibility: hidden; }
+      .antigravity-card:hover { animation-play-state: paused; transform: translateY(-9px) scale(1.014); box-shadow: 0 26px 42px -10px rgba(13, 148, 136, 0.32), 0 14px 24px -8px rgba(0, 0, 0, 0.14); border-color: rgba(13, 148, 136, 0.45) !important; }
+      .antigravity-badge { animation: float-subtle 4.8s ease-in-out infinite; transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease; will-change: transform, box-shadow; backface-visibility: hidden; }
+      .antigravity-badge:hover { animation-play-state: paused; transform: translateY(-3.5px) scale(1.045); box-shadow: 0 12px 22px -4px rgba(20, 184, 166, 0.38); }
+      .antigravity-hover { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease; will-change: transform, box-shadow; backface-visibility: hidden; }
+      .antigravity-hover:hover { transform: translateY(-7px) scale(1.01); box-shadow: 0 22px 34px -10px rgba(13, 148, 136, 0.25), 0 12px 18px -5px rgba(0, 0, 0, 0.1); border-color: rgba(13, 148, 136, 0.35) !important; }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -34,7 +45,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <!-- Chart 1: Individual Bird Win Rate (Pie/Doughnut Chart) -->
-            <div class="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
+            <div class="antigravity-card bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
                 <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Overall Match Win/Loss/Draw Ratio</h3>
                 <div class="w-64 h-64">
                     <canvas id="winRateChart"></canvas>
@@ -42,7 +53,7 @@
             </div>
 
             <!-- Chart 2: Bloodline Performance Trends (Bar Chart) -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="antigravity-card bg-white p-6 rounded-lg shadow-md" style="animation-delay: 1s;">
                 <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Bloodline Performance Trends (By Breed)</h3>
                 <div class="w-full h-64">
                     <canvas id="bloodlineChart"></canvas>
@@ -52,7 +63,7 @@
         </div>
 
         <!-- MATCH HISTORY TIMELINE SECTION -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="antigravity-hover bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Match History Timeline</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">

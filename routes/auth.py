@@ -43,19 +43,24 @@ def register():
 
     form = RegistrationForm()
     if form.validate_on_submit():
-        # Create new user
-        user = User(
-            username=form.username.data,
-            email=form.email.data
-        )
-        user.set_password(form.password.data)
+        try:
+            # Create new user
+            user = User(
+                username=form.username.data,
+                email=form.email.data
+            )
+            user.set_password(form.password.data)
 
-        # Add user to database
-        db.session.add(user)
-        db.session.commit()
+            # Add user to database
+            db.session.add(user)
+            db.session.commit()
 
-        flash(f'Account created successfully for {form.username.data}! You can now log in.', 'success')
-        return redirect(url_for('auth.login'))
+            flash(f'Account created successfully for {form.username.data}! You can now log in.', 'success')
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while creating your account. Please try again.', 'danger')
+            return redirect(url_for('auth.register'))
 
     return render_template('auth/register.html', form=form)
 

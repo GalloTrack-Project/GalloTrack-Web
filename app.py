@@ -147,11 +147,25 @@ def create_app(config_name=None):
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
+        app.logger.warning(f"404 Page Not Found: {request.path}")
         return render_template('errors/404.html'), 404
 
     @app.errorhandler(500)
     def server_error(error):
-        db.session.rollback()
+        app.logger.error(f"500 Internal Server Error encountered on {request.path}: {error}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception as e:
+            app.logger.error(f"Failed to rollback DB session: {e}")
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(Exception)
+    def handle_unhandled_exception(error):
+        app.logger.error(f"Unhandled Exception on {request.path}: {error}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return render_template('errors/500.html'), 500
 
     return app

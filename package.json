@@ -1,5 +1,10 @@
 {
-  "dependencies": {
-    "@supabase/supabase-js": "^2.107.0"
+  "name": "gallotrack-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix gallotrack-next run dev",
+    "build": "npm --prefix gallotrack-next run build",
+    "start": "npm --prefix gallotrack-next run start"
   }
 }
