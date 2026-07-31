@@ -144,6 +144,9 @@ export default function GalloTrackSystem() {
   const [editSirePct, setEditSirePct] = useState<number | string>(100);
   const [editDamPct, setEditDamPct] = useState<number | string>(100);
 
+  const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
+  const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain'>('individual');
+
   const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -1172,18 +1175,40 @@ export default function GalloTrackSystem() {
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
                     <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED</span>
                   </div>
-                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '3.2s' }}>
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Win Rate</span>
+                  <div 
+                    onClick={() => setShowPerFowlBreakdownModal(true)}
+                    className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-emerald-500/80 transition-all hover:shadow-md hover:scale-[1.01] group relative" 
+                    style={{ animationDelay: '3.2s' }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Win Rate</span>
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        🔍 Breakdown
+                      </span>
+                    </div>
+
                     {matchHistory.length > 0 ? (
-                      <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">
-                        {`${Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%`}
+                      <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight flex items-baseline gap-2">
+                        <span>{`${Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%`}</span>
+                        <span className="text-xs text-slate-400 font-semibold font-mono">({matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length}W - {matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length}L)</span>
                       </div>
                     ) : (
                       <div className="text-xs sm:text-sm font-extrabold text-slate-400 py-1.5">
                         No data available
                       </div>
                     )}
-                    <span className="text-[10px] font-mono text-slate-500 font-bold block">EMPIRICAL SUCCESS INDEX</span>
+
+                    <div className="pt-1 flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-500 font-bold block">EMPIRICAL SUCCESS INDEX</span>
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.stopPropagation(); setShowPerFowlBreakdownModal(true); }} 
+                        className="text-[10px] font-extrabold text-emerald-700 hover:text-emerald-800 underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>View Per-Fowl Breakdown</span>
+                        <span>→</span>
+                      </button>
+                    </div>
                   </div>
                   <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '4.0s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Mortality Rate</span>
@@ -2362,6 +2387,237 @@ export default function GalloTrackSystem() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* PER-FOWL & STRAIN BREAKDOWN MODAL */}
+      {showPerFowlBreakdownModal && (
+        <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex justify-between items-center border-b border-slate-700">
+              <div>
+                <h3 className="text-base font-black flex items-center gap-2 text-emerald-400">
+                  <span>📊</span> <span>Global Analytics: Per-Fowl & Strain Breakdown</span>
+                </h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  Individual gamefowl contributions and cross-breed combat metrics
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowPerFowlBreakdownModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center gap-3 flex-wrap">
+              <div className="flex bg-slate-200/80 p-1 rounded-xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setBreakdownTab('individual')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${breakdownTab === 'individual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  🐔 Individual Fowl Breakdown ({fowls.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBreakdownTab('strain')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${breakdownTab === 'strain' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  🧬 Strain / Breed Aggregates
+                </button>
+              </div>
+
+              <span className="text-[10px] font-mono text-slate-500 font-bold hidden sm:inline-block">
+                MATCH LOG PARITY: {matchHistory.length} ENTRIES
+              </span>
+            </div>
+
+            {/* Modal Content Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {breakdownTab === 'individual' && (
+                <div>
+                  {fowls.length === 0 ? (
+                    <div className="text-center py-12 space-y-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                      <div className="w-14 h-14 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-2xl mx-auto">🐔</div>
+                      <h4 className="text-sm font-extrabold text-slate-700">No Gamefowl Registered</h4>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">Add gamefowl entries to your registry to view individual combat win rates.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+                      <table className="w-full text-left text-xs border-collapse min-w-[650px]">
+                        <thead>
+                          <tr className="bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-wider">
+                            <th className="p-3 pl-4">Gamefowl Name</th>
+                            <th className="p-3">Strain / Breed</th>
+                            <th className="p-3 text-center">Total Fights</th>
+                            <th className="p-3 text-center">Wins 🏆</th>
+                            <th className="p-3 text-center">Losses 💀</th>
+                            <th className="p-3 text-center">Win Rate %</th>
+                            <th className="p-3 text-center">Status</th>
+                            <th className="p-3 text-center pr-4">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                          {fowls.map((fowl) => {
+                            const fowlMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
+                            const totalFights = fowlMatches.length;
+                            const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+                            const losses = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+                            const decided = wins + losses;
+                            const winRate = decided > 0 ? Math.round((wins / decided) * 100) : (totalFights > 0 ? Math.round((wins / totalFights) * 100) : 0);
+
+                            return (
+                              <tr key={fowl.id} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="p-3 pl-4 font-black text-slate-900 flex items-center gap-2">
+                                  {fowl.image_url ? (
+                                    <img src={fowl.image_url} alt={fowl.name} className="w-7 h-7 rounded-lg object-cover border border-slate-200" />
+                                  ) : (
+                                    <div className="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400 font-mono">🐓</div>
+                                  )}
+                                  <span>{fowl.name}</span>
+                                </td>
+                                <td className="p-3">
+                                  <span className="bg-emerald-50 text-emerald-700 font-extrabold px-2 py-0.5 rounded border border-emerald-200 text-[10px] uppercase">
+                                    {fowl.breed}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-center font-mono font-bold">{totalFights}</td>
+                                <td className="p-3 text-center font-mono font-extrabold text-emerald-600">{wins}</td>
+                                <td className="p-3 text-center font-mono font-extrabold text-rose-600">{losses}</td>
+                                <td className="p-3 text-center font-mono">
+                                  {totalFights > 0 ? (
+                                    <span className={`px-2 py-0.5 rounded-full font-black text-[10px] ${winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                      {winRate}%
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400 font-normal">0%</span>
+                                  )}
+                                </td>
+                                <td className="p-3 text-center">
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${fowl.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : fowl.status === 'Archived' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                                    {fowl.status || 'Active'}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-center pr-4">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setShowPerFowlBreakdownModal(false);
+                                      setSelectedFowlForDetails(fowl);
+                                    }}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-black px-2.5 py-1 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                                  >
+                                    🔍 Details
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {breakdownTab === 'strain' && (
+                <div>
+                  {(() => {
+                    const strainMap: Record<string, { fowlsCount: number; totalFights: number; wins: number; losses: number }> = {};
+
+                    fowls.forEach(fowl => {
+                      const breed = fowl.breed || 'Unspecified';
+                      if (!strainMap[breed]) {
+                        strainMap[breed] = { fowlsCount: 0, totalFights: 0, wins: 0, losses: 0 };
+                      }
+                      strainMap[breed].fowlsCount += 1;
+
+                      const fowlMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
+                      strainMap[breed].totalFights += fowlMatches.length;
+                      strainMap[breed].wins += fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+                      strainMap[breed].losses += fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+                    });
+
+                    const strainKeys = Object.keys(strainMap);
+
+                    if (strainKeys.length === 0) {
+                      return (
+                        <div className="text-center py-12 space-y-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                          <div className="w-14 h-14 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-2xl mx-auto">🧬</div>
+                          <h4 className="text-sm font-extrabold text-slate-700">No Strains Identified</h4>
+                          <p className="text-xs text-slate-400 max-w-sm mx-auto">No gamefowl breeds exist in your registry yet.</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+                        <table className="w-full text-left text-xs border-collapse min-w-[550px]">
+                          <thead>
+                            <tr className="bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-wider">
+                              <th className="p-3 pl-4">Strain / Breed Name</th>
+                              <th className="p-3 text-center">Enrolled Fowls</th>
+                              <th className="p-3 text-center">Total Strain Fights</th>
+                              <th className="p-3 text-center">Strain Wins 🏆</th>
+                              <th className="p-3 text-center">Strain Losses 💀</th>
+                              <th className="p-3 text-center pr-4">Aggregate Win Rate %</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                            {strainKeys.map(breed => {
+                              const stats = strainMap[breed];
+                              const decided = stats.wins + stats.losses;
+                              const winRate = decided > 0 ? Math.round((stats.wins / decided) * 100) : (stats.totalFights > 0 ? Math.round((stats.wins / stats.totalFights) * 100) : 0);
+
+                              return (
+                                <tr key={breed} className="hover:bg-slate-50/80 transition-colors">
+                                  <td className="p-3 pl-4 font-black text-slate-900">
+                                    <span className="bg-emerald-50 text-emerald-800 font-extrabold px-2.5 py-1 rounded-lg border border-emerald-200 text-xs">
+                                      {breed}
+                                    </span>
+                                  </td>
+                                  <td className="p-3 text-center font-mono font-bold">{stats.fowlsCount}</td>
+                                  <td className="p-3 text-center font-mono font-bold">{stats.totalFights}</td>
+                                  <td className="p-3 text-center font-mono font-extrabold text-emerald-600">{stats.wins}</td>
+                                  <td className="p-3 text-center font-mono font-extrabold text-rose-600">{stats.losses}</td>
+                                  <td className="p-3 text-center pr-4 font-mono">
+                                    {stats.totalFights > 0 ? (
+                                      <span className={`px-2.5 py-1 rounded-full font-black text-xs ${winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                        {winRate}%
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400 font-normal">0%</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs">
+              <span className="text-slate-400 font-mono font-semibold">GalloTrack Analytics Engine</span>
+              <button
+                type="button"
+                onClick={() => setShowPerFowlBreakdownModal(false)}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-5 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                Close Matrix
+              </button>
+            </div>
           </div>
         </div>
       )}
