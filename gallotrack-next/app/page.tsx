@@ -1159,87 +1159,50 @@ export default function GalloTrackSystem() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div 
                     onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('registry'); }}
-                    className="antigravity-card bg-gradient-to-br from-emerald-600 to-teal-700 p-4 sm:p-5 rounded-3xl text-white shadow-md shadow-emerald-900/10 flex flex-col justify-between border border-emerald-500/20 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all group space-y-3" 
+                    className="antigravity-card bg-gradient-to-br from-emerald-600 to-teal-700 p-5 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all" 
                     style={{ animationDelay: '0s' }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] uppercase font-black tracking-wider opacity-90 truncate">Active Gamefowl</span>
-                      <span className="text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full text-white shrink-0 group-hover:bg-white group-hover:text-emerald-800 transition-colors">
-                        View Roster
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-black tracking-tight">{activeFowls.length}</div>
-                    <div className="pt-2 border-t border-white/20 flex items-center justify-between text-[10px] font-extrabold opacity-90 group-hover:opacity-100">
-                      <span className="font-mono">ENCODED CLUSTER</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                    <span className="text-[10px] uppercase font-black tracking-widest opacity-80 block">Active Gamefowl</span>
+                    <div className="text-3xl sm:text-4xl font-black tracking-tight">{activeFowls.length}</div>
+                    <span className="text-[10px] font-mono opacity-90 block">ENCODED</span>
                   </div>
 
                   <div 
                     onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('archived'); }}
-                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-amber-500/80 hover:scale-[1.02] hover:shadow-md transition-all group space-y-3" 
+                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-amber-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
                     style={{ animationDelay: '0.8s' }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Archived Records</span>
-                      <span className="text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        Archive Log
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">{archivedFowls.length}</div>
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-amber-700 font-extrabold group-hover:text-amber-800">
-                      <span>View Archive</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Archived Records</span>
+                    <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{archivedFowls.length}</div>
+                    <span className="text-[10px] font-mono text-amber-700 font-bold block">LOG</span>
                   </div>
 
                   <div 
                     onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('deceased'); }}
-                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-rose-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-rose-500/80 hover:scale-[1.02] hover:shadow-md transition-all group space-y-3" 
+                    className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/60 shadow-sm space-y-2 cursor-pointer hover:border-rose-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
                     style={{ animationDelay: '1.6s' }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-rose-500 uppercase font-black tracking-wider truncate">Deceased Records</span>
-                      <span className="text-[9px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors">
-                        Mortality
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-black text-rose-700 tracking-tight">{deceasedFowls.length}</div>
-                    <div className="pt-2 border-t border-rose-100 flex items-center justify-between text-[10px] text-rose-700 font-extrabold group-hover:text-rose-800">
-                      <span>Mortality Audit</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                    <span className="text-[10px] text-rose-500 uppercase font-black tracking-widest block">Deceased Records</span>
+                    <div className="text-3xl sm:text-4xl font-black text-rose-700 tracking-tight">{deceasedFowls.length}</div>
+                    <span className="text-[10px] font-mono text-rose-600 font-bold block">MORTALITY AUDIT</span>
                   </div>
 
                   <div 
                     onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('registry'); }}
-                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-blue-500/80 hover:scale-[1.02] hover:shadow-md transition-all group space-y-3" 
+                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-blue-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
                     style={{ animationDelay: '2.4s' }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Total Matches</span>
-                      <span className="text-[9px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        Match History
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-blue-700 font-extrabold group-hover:text-blue-800">
-                      <span>View Derby Logs</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Total Matches</span>
+                    <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
+                    <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED</span>
                   </div>
 
                   <div 
                     onClick={() => setShowPerFowlBreakdownModal(true)}
-                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-emerald-500/80 hover:scale-[1.02] hover:shadow-md transition-all group space-y-3" 
+                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-emerald-500/80 hover:scale-[1.02] hover:shadow-md transition-all group" 
                     style={{ animationDelay: '3.2s' }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Global Win Rate</span>
-                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
-                        🔍 Breakdown
-                      </span>
-                    </div>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Global Win Rate</span>
 
                     {matchHistory.length > 0 ? (
                       <div className="space-y-1">
@@ -1258,25 +1221,19 @@ export default function GalloTrackSystem() {
                       </div>
                     )}
 
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-emerald-700 font-extrabold group-hover:text-emerald-800">
-                      <span>View Breakdown</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                    <span className="text-[10px] font-mono text-emerald-700 font-extrabold block group-hover:underline">
+                      VIEW BREAKDOWN 🔍
+                    </span>
                   </div>
 
                   <div 
                     onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('deceased'); }}
-                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-rose-500/80 hover:scale-[1.02] hover:shadow-md transition-all group space-y-3" 
+                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-rose-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
                     style={{ animationDelay: '4.0s' }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Mortality Rate</span>
-                      <span className="text-[9px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors">
-                        Audit
-                      </span>
-                    </div>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Mortality Rate</span>
                     {fowls.length > 0 ? (
-                      <div className="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">
+                      <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
                         {`${Math.round((deceasedFowls.length / fowls.length) * 100)}%`}
                       </div>
                     ) : (
@@ -1284,10 +1241,7 @@ export default function GalloTrackSystem() {
                         No data available
                       </div>
                     )}
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-rose-700 font-extrabold group-hover:text-rose-800">
-                      <span>Deceased Breakdown</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                    <span className="text-[10px] font-mono text-rose-500 font-bold block">DECEASED BREAKDOWN</span>
                   </div>
                 </div>
 
