@@ -502,8 +502,7 @@ export default function GalloTrackSystem() {
       const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 100 : Number(damPct);
       const calculatedBloodline = (sPct + dPct) / 2;
       
-      const { data: { user } } = await supabase.auth.getUser();
-      const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
+      const activeUserId = (await supabase.auth.getUser()).data.user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
       if (!activeUserId) {
         showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
@@ -511,7 +510,7 @@ export default function GalloTrackSystem() {
       }
 
       const payload = {
-        user_id: activeUserId,
+        user_id: (await supabase.auth.getUser()).data.user?.id || activeUserId,
         name: newName,
         breed: newBreed || 'Unspecified Strain',
         gender: newGender || 'Rooster',
@@ -583,8 +582,7 @@ export default function GalloTrackSystem() {
         setUploadingVideo(false);
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
+      const activeUserId = (await supabase.auth.getUser()).data.user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
       if (!activeUserId) {
         showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
@@ -592,7 +590,7 @@ export default function GalloTrackSystem() {
       }
 
       const payload = {
-        user_id: activeUserId,
+        user_id: (await supabase.auth.getUser()).data.user?.id || activeUserId,
         date: matchDate || new Date().toISOString().split('T')[0],
         entry_name: selectedFowlForMatch,
         breed: fowlBreed,
