@@ -228,61 +228,39 @@ export default function GalloTrackSystem() {
       const { data: { user } } = await supabase.auth.getUser();
       const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
-      let fowlData: FowlRecord[] | null = null;
-      if (activeUserId) {
-        const { data, error } = await supabase
-          .from('fowl')
-          .select('*')
-          .eq('user_id', activeUserId)
-          .order('id', { ascending: false });
-        if (!error && data) {
-          fowlData = data;
-        } else {
-          const { data: allFowl } = await supabase
-            .from('fowl')
-            .select('*')
-            .order('id', { ascending: false });
-          if (allFowl) {
-            fowlData = allFowl.filter((f: any) => String(f.user_id) === String(activeUserId));
-          }
-        }
-      } else {
-        const { data: allFowl } = await supabase
-          .from('fowl')
-          .select('*')
-          .order('id', { ascending: false });
-        fowlData = allFowl || [];
+      if (!activeUserId) {
+        setFowls([]);
+        setMatchHistory([]);
+        return;
       }
-      setFowls(fowlData || []);
 
-      let matchData: MatchRecord[] | null = null;
-      if (activeUserId) {
-        const { data, error } = await supabase
-          .from('match')
-          .select('*')
-          .eq('user_id', activeUserId)
-          .order('id', { ascending: false });
-        if (!error && data) {
-          matchData = data;
-        } else {
-          const { data: allMatch } = await supabase
-            .from('match')
-            .select('*')
-            .order('id', { ascending: false });
-          if (allMatch) {
-            matchData = allMatch.filter((m: any) => String(m.user_id) === String(activeUserId));
-          }
-        }
+      const { data: fowlData, error: fowlErr } = await supabase
+        .from('fowl')
+        .select('*')
+        .eq('user_id', activeUserId)
+        .order('id', { ascending: false });
+
+      if (!fowlErr && fowlData) {
+        setFowls(fowlData);
       } else {
-        const { data: allMatch } = await supabase
-          .from('match')
-          .select('*')
-          .order('id', { ascending: false });
-        matchData = allMatch || [];
+        setFowls([]);
       }
-      setMatchHistory(matchData || []);
+
+      const { data: matchData, error: matchErr } = await supabase
+        .from('match')
+        .select('*')
+        .eq('user_id', activeUserId)
+        .order('id', { ascending: false });
+
+      if (!matchErr && matchData) {
+        setMatchHistory(matchData);
+      } else {
+        setMatchHistory([]);
+      }
     } catch (err) {
       console.error(err);
+      setFowls([]);
+      setMatchHistory([]);
     } finally {
       setLoading(false);
     }
@@ -527,6 +505,11 @@ export default function GalloTrackSystem() {
       const { data: { user } } = await supabase.auth.getUser();
       const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
+      if (!activeUserId) {
+        showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
+        return;
+      }
+
       const payload = {
         user_id: activeUserId,
         name: newName,
@@ -602,6 +585,11 @@ export default function GalloTrackSystem() {
 
       const { data: { user } } = await supabase.auth.getUser();
       const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
+
+      if (!activeUserId) {
+        showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
+        return;
+      }
 
       const payload = {
         user_id: activeUserId,
