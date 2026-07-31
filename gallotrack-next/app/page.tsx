@@ -1177,37 +1177,36 @@ export default function GalloTrackSystem() {
                   </div>
                   <div 
                     onClick={() => setShowPerFowlBreakdownModal(true)}
-                    className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-emerald-500/80 transition-all hover:shadow-md hover:scale-[1.01] group relative" 
+                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-emerald-500/80 transition-all hover:shadow-md hover:scale-[1.01] group relative space-y-3" 
                     style={{ animationDelay: '3.2s' }}
                   >
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Win Rate</span>
-                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Global Win Rate</span>
+                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
                         🔍 Breakdown
                       </span>
                     </div>
 
                     {matchHistory.length > 0 ? (
-                      <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight flex items-baseline gap-2">
-                        <span>{`${Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%`}</span>
-                        <span className="text-xs text-slate-400 font-semibold font-mono">({matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length}W - {matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length}L)</span>
+                      <div className="space-y-1">
+                        <div className="flex items-baseline justify-between gap-1 flex-wrap">
+                          <span className="text-2xl sm:text-3xl font-black text-emerald-600 tracking-tight">
+                            {`${Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%`}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/70 shrink-0">
+                            {matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length}W · {matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length}L
+                          </span>
+                        </div>
                       </div>
                     ) : (
-                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 py-1.5">
+                      <div className="text-xs font-extrabold text-slate-400 py-1">
                         No data available
                       </div>
                     )}
 
-                    <div className="pt-1 flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-slate-500 font-bold block">EMPIRICAL SUCCESS INDEX</span>
-                      <button 
-                        type="button" 
-                        onClick={(e) => { e.stopPropagation(); setShowPerFowlBreakdownModal(true); }} 
-                        className="text-[10px] font-extrabold text-emerald-700 hover:text-emerald-800 underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>View Per-Fowl Breakdown</span>
-                        <span>→</span>
-                      </button>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-emerald-700 font-extrabold group-hover:text-emerald-800">
+                      <span>View Breakdown</span>
+                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
                     </div>
                   </div>
                   <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '4.0s' }}>
