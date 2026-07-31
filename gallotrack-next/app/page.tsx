@@ -146,8 +146,6 @@ export default function GalloTrackSystem() {
 
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain'>('individual');
-  const [registryViewMode, setRegistryViewMode] = useState<'table' | 'cards'>('table');
-  const [fowlDetailTab, setFowlDetailTab] = useState<'analytics' | 'ancestry' | 'physical'>('analytics');
 
   const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
@@ -1157,52 +1155,37 @@ export default function GalloTrackSystem() {
 
                 {/* METRIC BADGE GRID */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div 
-                    onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('registry'); }}
-                    className="antigravity-card bg-gradient-to-br from-emerald-600 to-teal-700 p-5 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20 cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all" 
-                    style={{ animationDelay: '0s' }}
-                  >
-                    <span className="text-[10px] uppercase font-black tracking-widest opacity-80 block">Active Gamefowl</span>
+                  <div className="antigravity-card bg-gradient-to-br from-emerald-600 to-teal-700 p-5 sm:p-6 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20" style={{ animationDelay: '0s' }}>
+                    <span className="text-[10px] uppercase font-black tracking-widest opacity-80">Active Gamefowl</span>
                     <div className="text-3xl sm:text-4xl font-black tracking-tight">{activeFowls.length}</div>
                     <span className="text-[10px] font-mono opacity-90 block">ENCODED</span>
                   </div>
-
-                  <div 
-                    onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('archived'); }}
-                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-amber-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
-                    style={{ animationDelay: '0.8s' }}
-                  >
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Archived Records</span>
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '0.8s' }}>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Archived Records</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{archivedFowls.length}</div>
                     <span className="text-[10px] font-mono text-amber-700 font-bold block">LOG</span>
                   </div>
-
-                  <div 
-                    onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('deceased'); }}
-                    className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/60 shadow-sm space-y-2 cursor-pointer hover:border-rose-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
-                    style={{ animationDelay: '1.6s' }}
-                  >
-                    <span className="text-[10px] text-rose-500 uppercase font-black tracking-widest block">Deceased Records</span>
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-rose-200/60 shadow-sm space-y-2" style={{ animationDelay: '1.6s' }}>
+                    <span className="text-[10px] text-rose-500 uppercase font-black tracking-widest">Deceased Records</span>
                     <div className="text-3xl sm:text-4xl font-black text-rose-700 tracking-tight">{deceasedFowls.length}</div>
                     <span className="text-[10px] font-mono text-rose-600 font-bold block">MORTALITY AUDIT</span>
                   </div>
-
-                  <div 
-                    onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('registry'); }}
-                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-blue-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
-                    style={{ animationDelay: '2.4s' }}
-                  >
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Total Matches</span>
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '2.4s' }}>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Total Matches</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
                     <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED</span>
                   </div>
-
                   <div 
                     onClick={() => setShowPerFowlBreakdownModal(true)}
-                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-emerald-500/80 hover:scale-[1.02] hover:shadow-md transition-all group" 
+                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-emerald-500/80 transition-all hover:shadow-md hover:scale-[1.01] group relative space-y-3" 
                     style={{ animationDelay: '3.2s' }}
                   >
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Global Win Rate</span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Global Win Rate</span>
+                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
+                        🔍 Breakdown
+                      </span>
+                    </div>
 
                     {matchHistory.length > 0 ? (
                       <div className="space-y-1">
@@ -1221,23 +1204,19 @@ export default function GalloTrackSystem() {
                       </div>
                     )}
 
-                    <span className="text-[10px] font-mono text-emerald-700 font-extrabold block group-hover:underline">
-                      VIEW BREAKDOWN 🔍
-                    </span>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-emerald-700 font-extrabold group-hover:text-emerald-800">
+                      <span>View Breakdown</span>
+                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
                   </div>
-
-                  <div 
-                    onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('deceased'); }}
-                    className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 cursor-pointer hover:border-rose-500/80 hover:scale-[1.02] hover:shadow-md transition-all" 
-                    style={{ animationDelay: '4.0s' }}
-                  >
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block">Mortality Rate</span>
+                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '4.0s' }}>
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Mortality Rate</span>
                     {fowls.length > 0 ? (
                       <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
                         {`${Math.round((deceasedFowls.length / fowls.length) * 100)}%`}
                       </div>
                     ) : (
-                      <div className="text-xs font-extrabold text-slate-400 py-1">
+                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 py-1.5">
                         No data available
                       </div>
                     )}
@@ -1326,42 +1305,40 @@ export default function GalloTrackSystem() {
 
                 {/* MATCH LOGS TABLE */}
                 <div className="antigravity-hover bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
-                  <div className="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Historical Analytics Match Logs</h3>
-                    <span className="text-[9px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 font-black px-3 py-1 rounded-full">
-                      MATCH LOG PARITY ({matchHistory.length})
-                    </span>
+                  <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Historical Analytics Match Logs</h3>
+                    <span className="text-[9px] font-mono bg-slate-200/80 text-slate-700 font-black px-3 py-1 rounded-full">D4 ANALYTICS DB</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-[11px] border-collapse min-w-[550px]">
                       <thead>
-                        <tr className="bg-slate-900 text-white font-extrabold uppercase text-[10px] tracking-wider">
-                          <th className="p-3.5 pl-6">Match Date</th>
-                          <th className="p-3.5">Entry Identifier</th>
-                          <th className="p-3.5">Match Type</th>
-                          <th className="p-3.5">Arena Location</th>
-                          <th className="p-3.5 text-center">Outcome</th>
-                          <th className="p-3.5 text-center">Video</th>
+                        <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/80">
+                          <th className="p-4 pl-6">Match Date</th>
+                          <th className="p-4">Entry Identifier</th>
+                          <th className="p-4">Config Structure</th>
+                          <th className="p-4">Arena Location</th>
+                          <th className="p-4 text-center">Outcome Status</th>
+                          <th className="p-4 text-center">Video</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                         {matchHistory.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="p-8 text-center text-slate-400 text-xs font-semibold">
-                              No match logs available
+                              No data available
                             </td>
                           </tr>
                         ) : (
-                          matchHistory.map((log, idx) => (
-                            <tr key={log.id} className={`hover:bg-emerald-50/40 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}`}>
-                              <td className="p-3.5 pl-6 font-mono text-slate-500">{log.date}</td>
-                              <td className="p-3.5 font-bold text-slate-900">{log.entry_name} <span className="text-[10px] bg-emerald-50 text-emerald-700 font-extrabold px-2 py-0.5 rounded border border-emerald-200 ml-1.5 uppercase">{log.breed}</span></td>
-                              <td className="p-3.5 text-slate-700">{log.type}</td>
-                              <td className="p-3.5 text-slate-600 font-normal">{log.location}</td>
-                              <td className="p-3.5 text-center">
-                                <span className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome === 'Win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome === 'Loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>{log.outcome}</span>
+                          matchHistory.map((log) => (
+                            <tr key={log.id} className="hover:bg-slate-50/80 transition-colors duration-150">
+                              <td className="p-4 pl-6 font-mono text-slate-400">{log.date}</td>
+                              <td className="p-4 font-bold text-slate-900">{log.entry_name} <span className="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded border border-slate-200/60 ml-1.5">{log.breed}</span></td>
+                              <td className="p-4 text-slate-600">{log.type}</td>
+                              <td className="p-4 text-slate-500 font-normal">{log.location}</td>
+                              <td className="p-4 text-center">
+                                <span className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome === 'Win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome === 'Loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome}</span>
                               </td>
-                              <td className="p-3.5 text-center">
+                              <td className="p-4 text-center">
                                 {log.video_url ? (
                                   <a href={log.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 underline underline-offset-2">▶ PLAY</a>
                                 ) : (
@@ -1394,40 +1371,6 @@ export default function GalloTrackSystem() {
                     <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>📦 Archived ({archivedFowls.length})</button>
                     <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-white text-rose-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>💀 Deceased ({deceasedFowls.length})</button>
                     <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>⚔️ Match Logs</button>
-                  </div>
-
-                  {/* SEARCH & VIEW MODE TOOLBAR */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
-                    <div className="relative w-full sm:w-80">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
-                      <input 
-                        type="text" 
-                        value={search} 
-                        onChange={(e) => setSearch(e.target.value)} 
-                        placeholder="Instant search fowl, strain, sire..." 
-                        className="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-semibold bg-slate-50 focus:bg-white focus:border-emerald-500 outline-none transition-all" 
-                      />
-                      {search && (
-                        <button type="button" onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer">✕</button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 self-end sm:self-auto">
-                      <button
-                        type="button"
-                        onClick={() => setRegistryViewMode('table')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${registryViewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'}`}
-                      >
-                        📋 Structured Table
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRegistryViewMode('cards')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${registryViewMode === 'cards' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'}`}
-                      >
-                        🎴 Card Grid
-                      </button>
-                    </div>
                   </div>
                 </div>
 
@@ -1562,24 +1505,10 @@ export default function GalloTrackSystem() {
                 )}
 
                 {/* ACTIVE REGISTRY LIST */}
-                {profilingSubTab === 'registry' && (() => {
-                  const filteredActiveFowls = activeFowls.filter(fowl => {
-                    if (!search.trim()) return true;
-                    const q = search.toLowerCase();
-                    return (
-                      fowl.name?.toLowerCase().includes(q) ||
-                      fowl.breed?.toLowerCase().includes(q) ||
-                      fowl.sire?.toLowerCase().includes(q) ||
-                      fowl.dam?.toLowerCase().includes(q) ||
-                      fowl.color?.toLowerCase().includes(q) ||
-                      fowl.behavior_trait?.toLowerCase().includes(q) ||
-                      fowl.growth_stage?.toLowerCase().includes(q)
-                    );
-                  });
-
-                  if (activeFowls.length === 0) {
-                    return (
-                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3 animate-fadeIn">
+                {profilingSubTab === 'registry' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    {activeFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
                         <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto">🧬</div>
                         <h3 className="text-base font-extrabold text-slate-800">No Active Gamefowl Encoded</h3>
                         <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">Your active farm cluster is currently empty. Encode a new fowl node to begin tracking lineage weights.</p>
@@ -1587,452 +1516,180 @@ export default function GalloTrackSystem() {
                           ➕ Encode First Fowl Node
                         </button>
                       </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-4 animate-fadeIn">
-                      {registryViewMode === 'table' ? (
-                        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-                          <div className="p-4 bg-slate-50 border-b border-slate-200/80 flex justify-between items-center">
-                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Active Gamefowl Registry Table ({filteredActiveFowls.length})</h3>
-                            <span className="text-[10px] font-mono text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                              STRUCTURED MATRIX
-                            </span>
+                    ) : activeFowls.map((fowl, index) => {
+                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
+                      return (
+                        <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                          <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
                           </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs border-collapse min-w-[750px]">
-                              <thead>
-                                <tr className="bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-wider">
-                                  <th className="p-3.5 pl-6">Fowl Node</th>
-                                  <th className="p-3.5">Strain / Breed</th>
-                                  <th className="p-3.5">Stage & Age</th>
-                                  <th className="p-3.5">Lineage Roots</th>
-                                  <th className="p-3.5">Color & Trait</th>
-                                  <th className="p-3.5 text-center">Win Rate %</th>
-                                  <th className="p-3.5 text-center">Status</th>
-                                  <th className="p-3.5 text-center pr-6">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                                {filteredActiveFowls.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={8} className="p-8 text-center text-slate-400 font-semibold">
-                                      No matching gamefowl found. Try clearing your search filter.
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  filteredActiveFowls.map((fowl, idx) => {
-                                    const fowlMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
-                                    const totalFights = fowlMatches.length;
-                                    const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
-                                    const losses = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
-                                    const decided = wins + losses;
-                                    const winRate = decided > 0 ? Math.round((wins / decided) * 100) : (totalFights > 0 ? Math.round((wins / totalFights) * 100) : 0);
-
-                                    return (
-                                      <tr key={fowl.id} className={`hover:bg-emerald-50/40 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}`}>
-                                        <td className="p-3.5 pl-6 font-black text-slate-900 flex items-center gap-3">
-                                          {fowl.image_url ? (
-                                            <img src={fowl.image_url} alt={fowl.name} className="w-8 h-8 rounded-xl object-cover border border-slate-200 shadow-2xs" />
-                                          ) : (
-                                            <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 font-mono">🐓</div>
-                                          )}
-                                          <span>{fowl.name}</span>
-                                        </td>
-                                        <td className="p-3.5">
-                                          <span className="bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-1 rounded-full border border-emerald-200 text-[10px] uppercase">
-                                            {fowl.breed}
-                                          </span>
-                                        </td>
-                                        <td className="p-3.5 text-slate-600">
-                                          <span className="font-bold text-slate-800 block">{fowl.growth_stage || 'Stag'}</span>
-                                          <span className="text-[10px] text-slate-400 font-mono block">{fowl.age || 'N/A'}</span>
-                                        </td>
-                                        <td className="p-3.5 text-slate-600 text-[11px]">
-                                          <div>♂ Sire: <strong className="text-slate-800">{fowl.sire || 'Foundation'}</strong></div>
-                                          <div>♀ Dam: <strong className="text-slate-800">{fowl.dam || 'Foundation'}</strong></div>
-                                        </td>
-                                        <td className="p-3.5 text-slate-600 text-[11px]">
-                                          <div className="font-bold text-slate-800">{fowl.color_category} ({fowl.color})</div>
-                                          <div className="text-[10px] text-emerald-700 font-semibold">{fowl.behavior_trait}</div>
-                                        </td>
-                                        <td className="p-3.5 text-center font-mono">
-                                          {totalFights > 0 ? (
-                                            <span className={`px-2.5 py-1 rounded-full font-black text-[10px] ${winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                                              {winRate}% ({wins}W-{losses}L)
-                                            </span>
-                                          ) : (
-                                            <span className="text-slate-400 font-normal text-[10px]">No fights</span>
-                                          )}
-                                        </td>
-                                        <td className="p-3.5 text-center">
-                                          <span className="px-2.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            ACTIVE
-                                          </span>
-                                        </td>
-                                        <td className="p-3.5 text-center pr-6">
-                                          <div className="flex items-center justify-center gap-1.5">
-                                            <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-black px-2 py-1 rounded-lg border border-slate-200 cursor-pointer">🔍 Details</button>
-                                            <button type="button" onClick={() => handleOpenEditModal(fowl)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-1 rounded-lg border border-emerald-200 cursor-pointer">✏️ Edit</button>
-                                            <button type="button" onClick={() => setSelectedFowlForArchive(fowl)} className="bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-1 rounded-lg border border-amber-200 cursor-pointer">🗎 Archive</button>
-                                            <button type="button" onClick={() => setSelectedFowlForDeceased(fowl)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-1 rounded-lg border border-rose-200 cursor-pointer">💀 Deceased</button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {filteredActiveFowls.map((fowl, index) => {
-                            const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
-                            return (
-                              <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-                                <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
-                                  {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
-                                </div>
-                                <div className="flex-1 w-full space-y-3">
-                                  <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
-                                  <div className="flex items-center space-x-2">
-                                    <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
-                                    <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
-                                    <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                                    <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                                    <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
-                                    <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
-                                    <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-                                      <span>Per-Fowl Win Rate:</span>
-                                      {(() => {
-                                        const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
-                                        const fWins = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
-                                        const fLosses = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
-                                        const fDecided = fWins + fLosses;
-                                        const fRate = fDecided > 0 ? Math.round((fWins / fDecided) * 100) : fMatches.length > 0 ? Math.round((fWins / fMatches.length) * 100) : 0;
-                                        return (
-                                          <strong className={fMatches.length > 0 ? "text-emerald-700 font-black" : "text-slate-400 font-semibold"}>
-                                            {fMatches.length > 0 ? `${fRate}% (${fWins}W - ${fLosses}L)` : 'No matches'}
-                                          </strong>
-                                        );
-                                      })()}
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
-                                    <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
-                                  </div>
-                                  
-                                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                                    <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
-                                    <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-800 text-[11px] font-extrabold py-2 rounded-xl border border-emerald-200/60 text-center cursor-pointer transition-all duration-150">✏️ Edit</button>
-                                    <button type="button" onClick={() => setSelectedFowlForArchive(fowl)} disabled={loading} className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-amber-50 hover:bg-amber-100 active:scale-[0.98] text-amber-800 border-amber-200/60">🗎 Archive</button>
-                                    <button type="button" onClick={() => setSelectedFowlForDeceased(fowl)} disabled={loading} className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-rose-50 hover:bg-rose-100 active:scale-[0.98] text-rose-700 border-rose-200/60">💀 Deceased</button>
-                                  </div>
-                                </div>
+                          <div className="flex-1 w-full space-y-3">
+                            <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
+                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
+                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span>Per-Fowl Win Rate:</span>
+                                {(() => {
+                                  const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
+                                  const fWins = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+                                  const fLosses = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+                                  const fDecided = fWins + fLosses;
+                                  const fRate = fDecided > 0 ? Math.round((fWins / fDecided) * 100) : fMatches.length > 0 ? Math.round((fWins / fMatches.length) * 100) : 0;
+                                  return (
+                                    <strong className={fMatches.length > 0 ? "text-emerald-700 font-black" : "text-slate-400 font-semibold"}>
+                                      {fMatches.length > 0 ? `${fRate}% (${fWins}W - ${fLosses}L)` : 'No matches'}
+                                    </strong>
+                                  );
+                                })()}
                               </div>
-                            );
-                          })}
+                            </div>
+                            
+                            <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
+                              <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
+                              <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-800 text-[11px] font-extrabold py-2 rounded-xl border border-emerald-200/60 text-center cursor-pointer transition-all duration-150">✏️ Edit</button>
+                              
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedFowlForArchive(fowl)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-amber-50 hover:bg-amber-100 active:scale-[0.98] text-amber-800 border-amber-200/60"
+                              >
+                                <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                              </button>
+
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedFowlForDeceased(fowl)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-rose-50 hover:bg-rose-100 active:scale-[0.98] text-rose-700 border-rose-200/60"
+                              >
+                                <span className="flex items-center justify-center gap-1">💀 Deceased</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* ARCHIVED REGISTRY LIST */}
-                {profilingSubTab === 'archived' && (() => {
-                  const filteredArchivedFowls = archivedFowls.filter(fowl => {
-                    if (!search.trim()) return true;
-                    const q = search.toLowerCase();
-                    return (
-                      fowl.name?.toLowerCase().includes(q) ||
-                      fowl.breed?.toLowerCase().includes(q) ||
-                      fowl.sire?.toLowerCase().includes(q) ||
-                      fowl.dam?.toLowerCase().includes(q) ||
-                      fowl.archive_reason?.toLowerCase().includes(q)
-                    );
-                  });
-
-                  if (archivedFowls.length === 0) {
-                    return (
-                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3 animate-fadeIn">
+                {profilingSubTab === 'archived' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    {archivedFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
                         <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
                         <h3 className="text-base font-extrabold text-slate-800">Archived Registry Empty</h3>
                         <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl records have been shifted to the relational archive log.</p>
                       </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-4 animate-fadeIn">
-                      {registryViewMode === 'table' ? (
-                        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-                          <div className="p-4 bg-slate-50 border-b border-slate-200/80 flex justify-between items-center">
-                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Archived Gamefowl Roster ({filteredArchivedFowls.length})</h3>
-                            <span className="text-[10px] font-mono text-amber-700 font-extrabold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                              ARCHIVED MATRIX
-                            </span>
+                    ) : archivedFowls.map((fowl, index) => {
+                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
+                      return (
+                        <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                          <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
                           </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs border-collapse min-w-[700px]">
-                              <thead>
-                                <tr className="bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-wider">
-                                  <th className="p-3.5 pl-6">Fowl Node</th>
-                                  <th className="p-3.5">Strain / Breed</th>
-                                  <th className="p-3.5">Archive Status</th>
-                                  <th className="p-3.5">Lineage Roots</th>
-                                  <th className="p-3.5">Color & Trait</th>
-                                  <th className="p-3.5 text-center pr-6">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                                {filteredArchivedFowls.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={6} className="p-8 text-center text-slate-400 font-semibold">
-                                      No matching archived fowl found.
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  filteredArchivedFowls.map((fowl, idx) => {
-                                    const badge = getArchiveBadgeStyle(fowl.archive_reason);
-                                    return (
-                                      <tr key={fowl.id} className={`hover:bg-amber-50/30 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}`}>
-                                        <td className="p-3.5 pl-6 font-black text-slate-800 flex items-center gap-3">
-                                          {fowl.image_url ? (
-                                            <img src={fowl.image_url} alt={fowl.name} className="w-8 h-8 rounded-xl object-cover border border-slate-200 grayscale opacity-80" />
-                                          ) : (
-                                            <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 font-mono">📦</div>
-                                          )}
-                                          <span>{fowl.name}</span>
-                                        </td>
-                                        <td className="p-3.5">
-                                          <span className="bg-amber-50 text-amber-800 font-extrabold px-2.5 py-1 rounded-full border border-amber-200 text-[10px] uppercase">
-                                            {fowl.breed}
-                                          </span>
-                                        </td>
-                                        <td className="p-3.5">
-                                          <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase ${badge.bg} border border-white/20`}>
-                                            {badge.label}
-                                          </span>
-                                        </td>
-                                        <td className="p-3.5 text-slate-600 text-[11px]">
-                                          <div>♂ Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                                          <div>♀ Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                                        </td>
-                                        <td className="p-3.5 text-slate-600 text-[11px]">
-                                          <div className="font-bold text-slate-800">{fowl.color_category} ({fowl.color})</div>
-                                          <div className="text-[10px] text-emerald-700 font-semibold">{fowl.behavior_trait}</div>
-                                        </td>
-                                        <td className="p-3.5 text-center pr-6">
-                                          <div className="flex items-center justify-center gap-1.5">
-                                            <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-black px-2.5 py-1 rounded-lg border border-slate-200 cursor-pointer">🔍 Details</button>
-                                            <button type="button" onClick={() => handleRestoreFowlOnly(fowl.id)} disabled={loading} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-lg border border-emerald-200 cursor-pointer">↺ Restore</button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })
-                                )}
-                              </tbody>
-                            </table>
+                          <div className="flex-1 w-full space-y-3">
+                            {(() => {
+                              const badge = getArchiveBadgeStyle(fowl.archive_reason);
+                              return (
+                                <span className={`antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 ${badge.bg} rounded-bl-xl tracking-widest shadow-2xs`}>
+                                  {badge.label}
+                                </span>
+                              );
+                            })()}
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-base font-black text-slate-700">{fowl.name}</h4>
+                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                            </div>
+                            
+                            <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
+                              <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[75px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
+                              <button 
+                                type="button" 
+                                onClick={() => handleRestoreFowlOnly(fowl.id)} 
+                                disabled={loading}
+                                className="flex-1 min-w-[95px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
+                              >
+                                <span>↺</span> <span>Restore Node</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {filteredArchivedFowls.map((fowl, index) => {
-                            const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
-                            return (
-                              <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-                                <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
-                                  {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
-                                </div>
-                                <div className="flex-1 w-full space-y-3">
-                                  {(() => {
-                                    const badge = getArchiveBadgeStyle(fowl.archive_reason);
-                                    return (
-                                      <span className={`antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 ${badge.bg} rounded-bl-xl tracking-widest shadow-2xs`}>
-                                        {badge.label}
-                                      </span>
-                                    );
-                                  })()}
-                                  <div className="flex items-center space-x-2">
-                                    <h4 className="text-base font-black text-slate-700">{fowl.name}</h4>
-                                    <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                    <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                                    <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                                    <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
-                                    <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
-                                  </div>
-                                  
-                                  <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
-                                    <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
-                                  </div>
-                                  
-                                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                                    <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[75px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
-                                    <button 
-                                      type="button" 
-                                      onClick={() => handleRestoreFowlOnly(fowl.id)} 
-                                      disabled={loading}
-                                      className="flex-1 min-w-[95px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
-                                    >
-                                      <span>↺</span> <span>Restore Node</span>
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* DECEASED ROSTER LIST */}
-                {profilingSubTab === 'deceased' && (() => {
-                  const filteredDeceasedFowls = deceasedFowls.filter(fowl => {
-                    if (!search.trim()) return true;
-                    const q = search.toLowerCase();
-                    return (
-                      fowl.name?.toLowerCase().includes(q) ||
-                      fowl.breed?.toLowerCase().includes(q) ||
-                      fowl.death_reason?.toLowerCase().includes(q) ||
-                      fowl.sire?.toLowerCase().includes(q) ||
-                      fowl.dam?.toLowerCase().includes(q)
-                    );
-                  });
-
-                  if (deceasedFowls.length === 0) {
-                    return (
-                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3 animate-fadeIn">
+                {profilingSubTab === 'deceased' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    {deceasedFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
                         <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto">💀</div>
                         <h3 className="text-base font-extrabold text-slate-800">No Mortality Records</h3>
                         <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl nodes recorded under mortality logs.</p>
                       </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-4 animate-fadeIn">
-                      {registryViewMode === 'table' ? (
-                        <div className="bg-white rounded-3xl border border-rose-200/80 shadow-sm overflow-hidden">
-                          <div className="p-4 bg-slate-50 border-b border-rose-200/80 flex justify-between items-center">
-                            <h3 className="text-xs font-black text-rose-900 uppercase tracking-wider">Mortality Log Table ({filteredDeceasedFowls.length})</h3>
-                            <span className="text-[10px] font-mono text-rose-700 font-extrabold bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
-                              DECEASED AUDIT
-                            </span>
-                          </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs border-collapse min-w-[700px]">
-                              <thead>
-                                <tr className="bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-wider">
-                                  <th className="p-3.5 pl-6">Fowl Node</th>
-                                  <th className="p-3.5">Strain / Breed</th>
-                                  <th className="p-3.5">Mortality Cause</th>
-                                  <th className="p-3.5">Stage & Age</th>
-                                  <th className="p-3.5">Lineage Roots</th>
-                                  <th className="p-3.5 text-center pr-6">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                                {filteredDeceasedFowls.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={6} className="p-8 text-center text-slate-400 font-semibold">
-                                      No matching mortality records found.
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  filteredDeceasedFowls.map((fowl, idx) => (
-                                    <tr key={fowl.id} className={`hover:bg-rose-50/30 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}`}>
-                                      <td className="p-3.5 pl-6 font-black text-slate-900 line-through opacity-75 flex items-center gap-3">
-                                        {fowl.image_url ? (
-                                          <img src={fowl.image_url} alt={fowl.name} className="w-8 h-8 rounded-xl object-cover border border-slate-200 grayscale" />
-                                        ) : (
-                                          <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 font-mono">💀</div>
-                                        )}
-                                        <span>{fowl.name}</span>
-                                      </td>
-                                      <td className="p-3.5">
-                                        <span className="bg-rose-50 text-rose-700 font-extrabold px-2.5 py-1 rounded-full border border-rose-200 text-[10px] uppercase">
-                                          {fowl.breed}
-                                        </span>
-                                      </td>
-                                      <td className="p-3.5">
-                                        <span className="bg-rose-900 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase">
-                                          {fowl.death_reason || 'Illness'}
-                                        </span>
-                                      </td>
-                                      <td className="p-3.5 text-slate-600">
-                                        <span className="font-bold text-slate-800 block">{fowl.growth_stage || 'Chick'}</span>
-                                        <span className="text-[10px] text-slate-400 font-mono block">{fowl.age || 'N/A'}</span>
-                                      </td>
-                                      <td className="p-3.5 text-slate-600 text-[11px]">
-                                        <div>♂ Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                                        <div>♀ Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                                      </td>
-                                      <td className="p-3.5 text-center pr-6">
-                                        <div className="flex items-center justify-center gap-1.5">
-                                          <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-black px-2 py-1 rounded-lg border border-slate-200 cursor-pointer">🔍 Details</button>
-                                          <button type="button" onClick={() => handleRestoreFowlOnly(fowl.id)} disabled={loading} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-1 rounded-lg border border-emerald-200 cursor-pointer">↺ Reactivate</button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {filteredDeceasedFowls.map((fowl, index) => {
-                            return (
-                              <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-                                <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
-                                  {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
-                                </div>
-                                <div className="flex-1 w-full space-y-3">
-                                  <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-xl tracking-widest shadow-2xs">● DECEASED</span>
-                                  <div className="flex items-center space-x-2">
-                                    <h4 className="text-base font-black text-slate-900 line-through opacity-75">{fowl.name}</h4>
-                                    <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
-                                    <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-slate-600 bg-slate-100 border-slate-200">Reason: {fowl.death_reason || 'Illness'}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
-                                    <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                                    <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                                    <div>Growth Stage: <strong className="text-slate-800">{fowl.growth_stage || 'Chick'}</strong></div>
-                                    <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
-                                  </div>
-                                  
-                                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                                    <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[95px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/60 text-[11px] font-extrabold py-2 rounded-xl text-center cursor-pointer transition-all duration-150">🔍 View Analytics & Match Logs</button>
-                                    <button 
-                                      type="button" 
-                                      onClick={() => handleRestoreFowlOnly(fowl.id)} 
-                                      disabled={loading}
-                                      className="flex-1 min-w-[95px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
-                                    >
-                                      <span>↺</span> <span>Reactivate Node</span>
-                                    </button>
-                                  </div>
-                                </div>
+                    ) : (
+                      deceasedFowls.map((fowl, index) => {
+                        return (
+                          <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                            <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
+                              {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+                            </div>
+                            <div className="flex-1 w-full space-y-3">
+                              <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-xl tracking-widest shadow-2xs">● DECEASED</span>
+                              <div className="flex items-center space-x-2">
+                                <h4 className="text-base font-black text-slate-900 line-through opacity-75">{fowl.name}</h4>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-slate-600 bg-slate-100 border-slate-200">Reason: {fowl.death_reason || 'Illness'}</span>
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
+                                <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                                <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                                <div>Growth Stage: <strong className="text-slate-800">{fowl.growth_stage || 'Chick'}</strong></div>
+                                <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                                <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[95px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/60 text-[11px] font-extrabold py-2 rounded-xl text-center cursor-pointer transition-all duration-150">🔍 View Analytics & Match Logs</button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRestoreFowlOnly(fowl.id)} 
+                                  disabled={loading}
+                                  className="flex-1 min-w-[95px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
+                                >
+                                  <span>↺</span> <span>Reactivate Node</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
 
                 {/* MATCH LOG FORM */}
                 {profilingSubTab === 'matchForm' && (
@@ -2216,21 +1873,20 @@ export default function GalloTrackSystem() {
       {/* INDIVIDUAL GAMEFOWL ANALYTICS & MATCH HISTORY MODAL */}
       {selectedFowlForDetails && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto relative">
             <button 
               onClick={() => setSelectedFowlForDetails(null)} 
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer z-10"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
             >
               ✕
             </button>
 
             <h3 className="text-base font-black text-slate-900 tracking-tight border-b pb-3 border-slate-100 flex items-center space-x-2">
-              <span>🧬</span> <span>Individual Gamefowl Profile & Analytics</span>
+              <span>🧬</span> <span>Individual Gamefowl Analytics & Match Logs</span>
             </h3>
 
-            {/* Profile Overview Card */}
             <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
-              <div className="w-20 h-20 bg-white border border-slate-200 rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner">
+              <div className="w-24 h-24 bg-white border border-slate-200 rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner">
                 {selectedFowlForDetails.image_url ? (
                   <img src={selectedFowlForDetails.image_url} alt={selectedFowlForDetails.name} className="w-full h-full object-cover" />
                 ) : (
@@ -2270,33 +1926,8 @@ export default function GalloTrackSystem() {
               </div>
             </div>
 
-            {/* Progressive Disclosure Navigation Tabs */}
-            <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
-              <button
-                type="button"
-                onClick={() => setFowlDetailTab('analytics')}
-                className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer text-center ${fowlDetailTab === 'analytics' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                ⚔️ Combat Analytics
-              </button>
-              <button
-                type="button"
-                onClick={() => setFowlDetailTab('ancestry')}
-                className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer text-center ${fowlDetailTab === 'ancestry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                🌳 Lineage Roots
-              </button>
-              <button
-                type="button"
-                onClick={() => setFowlDetailTab('physical')}
-                className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer text-center ${fowlDetailTab === 'physical' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                ⚖️ Physical Specs
-              </button>
-            </div>
-
-            {/* TAB 1: COMBAT ANALYTICS & LOGS */}
-            {fowlDetailTab === 'analytics' && (() => {
+            {/* COMBAT PERFORMANCE STATS VECTOR */}
+            {(() => {
               const fowlMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === selectedFowlForDetails.name?.trim().toLowerCase());
               const totalFights = fowlMatches.length;
               const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
@@ -2310,10 +1941,10 @@ export default function GalloTrackSystem() {
                 : 0;
 
               return (
-                <div className="space-y-4 animate-fadeIn">
+                <div className="space-y-4">
                   <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl space-y-3 shadow-sm border border-slate-700/60">
                     <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-700/80">
-                      <span>⚔️ Performance Vectors</span>
+                      <span>⚔️ Combat Analytics & Performance Vectors</span>
                       <span className="font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">FOWL ID: #{selectedFowlForDetails.id}</span>
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
@@ -2334,22 +1965,23 @@ export default function GalloTrackSystem() {
                         <strong className="text-base text-amber-400 font-black">{draws} 🤝</strong>
                       </div>
                       <div className="bg-teal-950/40 p-2.5 rounded-xl border border-teal-700/40 col-span-2 sm:col-span-1">
-                        <span className="text-[9px] text-teal-300 font-bold uppercase block">Win Rate</span>
+                        <span className="text-[9px] text-teal-300 font-bold uppercase block">Per-Fowl Win Rate</span>
                         <strong className="text-base text-teal-300 font-black">{winRate}%</strong>
                         <span className="text-[8px] text-slate-300 block font-mono font-semibold">{wins}W - {losses}L</span>
                       </div>
                     </div>
                   </div>
 
+                  {/* DEDICATED INDIVIDUAL MATCH LOG TABLE */}
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
                     <div className="p-3 bg-slate-50 border-b border-slate-200/80 flex justify-between items-center">
                       <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-wider">Individual Fight History Logs ({totalFights})</h4>
-                      <span className="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">DERBY LOG PARITY</span>
+                      <span className="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">MATCH LOG PARITY</span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-[11px] border-collapse">
                         <thead>
-                          <tr className="bg-slate-900 text-white font-extrabold uppercase text-[9px] tracking-wider">
+                          <tr className="bg-slate-100/70 text-slate-500 font-extrabold uppercase border-b border-slate-200">
                             <th className="p-2.5 pl-4">Match Date</th>
                             <th className="p-2.5">Opponent Entry</th>
                             <th className="p-2.5">Arena Location</th>
@@ -2361,13 +1993,13 @@ export default function GalloTrackSystem() {
                         <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                           {fowlMatches.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="p-6 text-center text-slate-400 text-xs font-semibold">
+                              <td colSpan={6} className="p-6 text-center text-slate-400 text-xs">
                                 No derby performance logs recorded for this specific gamefowl node.
                               </td>
                             </tr>
                           ) : (
-                            fowlMatches.map((match, idx) => (
-                              <tr key={match.id} className={`hover:bg-emerald-50/40 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}`}>
+                            fowlMatches.map(match => (
+                              <tr key={match.id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="p-2.5 pl-4 font-mono text-[10px] text-slate-500">{match.date}</td>
                                 <td className="p-2.5 font-bold text-slate-800">{match.opponent}</td>
                                 <td className="p-2.5 text-slate-600">{match.location}</td>
@@ -2401,103 +2033,58 @@ export default function GalloTrackSystem() {
               );
             })()}
 
-            {/* TAB 2: LINEAGE & ANCESTRY ROOTS */}
-            {fowlDetailTab === 'ancestry' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                  <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-widest border-b pb-2 flex items-center justify-between">
-                    <span>🌳 Lineage Integration Balance</span>
-                    <span className="font-mono text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Bloodline Index: {selectedFowlForDetails.bloodline_pct ?? 100}%
-                    </span>
-                  </h4>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                      <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire || 'Foundation Stock'})</span>
-                      <span className="text-slate-800">{selectedFowlForDetails.sire_pct ?? 100}%</span>
-                    </div>
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-sky-500 h-full rounded-full transition-all" style={{ width: `${selectedFowlForDetails.sire_pct ?? 100}%` }}></div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 pt-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                      <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam || 'Foundation Stock'})</span>
-                      <span className="text-slate-800">{selectedFowlForDetails.dam_pct ?? 100}%</span>
-                    </div>
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-pink-500 h-full rounded-full transition-all" style={{ width: `${selectedFowlForDetails.dam_pct ?? 100}%` }}></div>
-                    </div>
-                  </div>
+            <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>
+              
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                  <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire})</span>
+                  <span className="text-slate-800">{selectedFowlForDetails.sire_pct ?? 100}%</span>
                 </div>
-
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                  <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Identified Direct Siblings</h4>
-                  {(() => {
-                    const siblings = getSiblingsForFowl(selectedFowlForDetails.sire, selectedFowlForDetails.dam, selectedFowlForDetails.id);
-                    if (siblings.length === 0) {
-                      return <p className="text-xs text-slate-400 font-medium">No registered siblings detected sharing both Sire and Dam.</p>;
-                    }
-                    return (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {siblings.map((sib, i) => (
-                          <span key={i} className="bg-white text-emerald-800 font-extrabold text-[11px] px-3 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                            🐓 {sib}
-                          </span>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div className="bg-sky-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.sire_pct ?? 100}%` }}></div>
                 </div>
               </div>
-            )}
 
-            {/* TAB 3: PHYSICAL & BEHAVIORAL PARAMETERS */}
-            {fowlDetailTab === 'physical' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Gender Spec</span>
-                    <strong className="text-slate-800 text-xs mt-0.5 block font-black">{selectedFowlForDetails.gender || 'Rooster'}</strong>
-                  </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Structural Weight</span>
-                    <strong className="text-slate-800 text-xs mt-0.5 block font-black">{selectedFowlForDetails.weight || 'N/A'}</strong>
-                  </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Height Dimension</span>
-                    <strong className="text-slate-800 text-xs mt-0.5 block font-black">{selectedFowlForDetails.height || 'N/A'}</strong>
-                  </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
-                    <strong className="text-slate-800 text-xs mt-0.5 block font-black">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
-                  </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Visual Color Range</span>
-                    <strong className="text-slate-800 text-xs mt-0.5 block font-black">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
-                  </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Birthdate Record</span>
-                    <strong className="text-slate-800 text-xs mt-0.5 block font-mono font-bold">{selectedFowlForDetails.birthdate || 'N/A'}</strong>
-                  </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 sm:col-span-3">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Behavioral Spec & Fighting Trait</span>
-                    <strong className="text-emerald-700 text-xs mt-0.5 block font-black">{selectedFowlForDetails.behavior_trait || 'Standard Tracker'}</strong>
-                  </div>
+              <div className="space-y-1 pt-1">
+                <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                  <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam})</span>
+                  <span className="text-slate-800">{selectedFowlForDetails.dam_pct ?? 100}%</span>
+                </div>
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div className="bg-pink-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.dam_pct ?? 100}%` }}></div>
                 </div>
               </div>
-            )}
 
-            <div className="pt-2 border-t border-slate-100 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedFowlForDetails(null)}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-5 py-2.5 rounded-xl cursor-pointer transition-all"
-              >
-                Close Profile Matrix
-              </button>
+              <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-[11px]">
+                <span className="font-extrabold text-slate-700">Combined Bloodline Index</span>
+                <span className="font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+                  {selectedFowlForDetails.bloodline_pct ?? 100}%
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Structural Weight</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.weight || 'N/A'}</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Height Dimension</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.height || 'N/A'}</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Visual Color Range</span>
+                <strong className="text-slate-800 text-xs mt-0.5 block">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 sm:col-span-2">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Behavioral Spec</span>
+                <strong className="text-emerald-700 text-xs mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
+              </div>
             </div>
           </div>
         </div>
