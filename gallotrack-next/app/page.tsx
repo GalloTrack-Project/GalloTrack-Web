@@ -17,6 +17,7 @@ const supabase = (supabaseUrl && supabaseAnonKey)
 
 interface FowlRecord {
   id: number;
+  user_id?: string | number;
   name: string;
   breed: string;
   gender: string;
@@ -42,6 +43,7 @@ interface FowlRecord {
 
 interface MatchRecord {
   id: number;
+  user_id?: string | number;
   date: string;
   entry_name: string;
   breed: string;
@@ -63,6 +65,8 @@ export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'deceased' | 'matchForm'>('form');
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' });
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
@@ -162,11 +166,17 @@ export default function GalloTrackSystem() {
         
         const { data: { session } } = await supabase.auth.getSession();
         if (session && session.user) {
+          setCurrentUserId(session.user.id);
+          localStorage.setItem('gallotrack_user_id', session.user.id);
           setUsername(session.user.email?.split('@')[0] || 'admin');
           setCurrentPage('dashboard');
         } else {
           const savedSession = localStorage.getItem('gallotrack_session');
           const savedUsername = localStorage.getItem('gallotrack_username');
+          const savedUserId = localStorage.getItem('gallotrack_user_id');
+          if (savedUserId) {
+            setCurrentUserId(savedUserId);
+          }
           if (savedRememberMe && savedSession === 'authenticated' && savedUsername) {
             setUsername(savedUsername);
             setCurrentPage('dashboard');
@@ -187,16 +197,13 @@ export default function GalloTrackSystem() {
 
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const isAdminProfile = localStorage.getItem('gallotrack_admin_id') === user.id;
           const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
           if (profile) {
-            if (isAdminProfile) {
-              setAdminName(profile.full_name || 'Hazel Dela Cruz');
-              setAvatarUrl(profile.avatar_url || '');
-              localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
-              localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url || '');
-              localStorage.setItem('gallotrack_admin_phone', profile.phone_number || '');
-            }
+            setAdminName(profile.full_name || 'Hazel Dela Cruz');
+            setAvatarUrl(profile.avatar_url || '');
+            localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
+            localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url || '');
+            localStorage.setItem('gallotrack_admin_phone', profile.phone_number || '');
           }
         }
       }
@@ -218,28 +225,62 @@ export default function GalloTrackSystem() {
   const fetchDatabaseResources = async () => {
     setLoading(true);
     try {
-      const { data: fowlData } = await supabase
-        .from('fowl')
-        .select('*')
-        .order('id', { ascending: false });
+      const { data: { user } } = await supabase.auth.getUser();
+      const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
-      const { data: matchData } = await supabase
-        .from('match')
-        .select('*')
-        .order('id', { ascending: false });
-
-      if (fowlData) setFowls(fowlData);
-      
-      if (matchData && matchData.length > 0) {
-        setMatchHistory(matchData);
+      let fowlData: FowlRecord[] | null = null;
+      if (activeUserId) {
+        const { data, error } = await supabase
+          .from('fowl')
+          .select('*')
+          .eq('user_id', activeUserId)
+          .order('id', { ascending: false });
+        if (!error && data) {
+          fowlData = data;
+        } else {
+          const { data: allFowl } = await supabase
+            .from('fowl')
+            .select('*')
+            .order('id', { ascending: false });
+          if (allFowl) {
+            fowlData = allFowl.filter((f: any) => String(f.user_id) === String(activeUserId));
+          }
+        }
       } else {
-        setMatchHistory([
-          { id: 101, date: '2026-05-12', entry_name: 'Red Thunder', breed: 'Sweater', opponent: 'Kelso Express', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', status: 'Verified' },
-          { id: 102, date: '2026-05-18', entry_name: 'Gold Blade', breed: 'Lemon', opponent: 'Hatch Dominator', location: 'Iloilo Exhibition Center', type: 'Hack Match', outcome: 'Win', status: 'Verified' },
-          { id: 103, date: '2026-05-25', entry_name: 'Red Thunder', breed: 'Sweater', opponent: 'Lemon Slasher', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Loss', status: 'Verified' },
-          { id: 104, date: '2026-06-02', entry_name: 'Red Thunder', breed: 'Sweater', opponent: 'Grey Warrior', location: 'Local Breeding Yard', type: 'Hack Match', outcome: 'Draw', status: 'Verified' }
-        ]);
+        const { data: allFowl } = await supabase
+          .from('fowl')
+          .select('*')
+          .order('id', { ascending: false });
+        fowlData = allFowl || [];
       }
+      setFowls(fowlData || []);
+
+      let matchData: MatchRecord[] | null = null;
+      if (activeUserId) {
+        const { data, error } = await supabase
+          .from('match')
+          .select('*')
+          .eq('user_id', activeUserId)
+          .order('id', { ascending: false });
+        if (!error && data) {
+          matchData = data;
+        } else {
+          const { data: allMatch } = await supabase
+            .from('match')
+            .select('*')
+            .order('id', { ascending: false });
+          if (allMatch) {
+            matchData = allMatch.filter((m: any) => String(m.user_id) === String(activeUserId));
+          }
+        }
+      } else {
+        const { data: allMatch } = await supabase
+          .from('match')
+          .select('*')
+          .order('id', { ascending: false });
+        matchData = allMatch || [];
+      }
+      setMatchHistory(matchData || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -316,8 +357,11 @@ export default function GalloTrackSystem() {
 
       if (authError) {
         if (username.trim() !== '' && password === 'cict123') {
+          const fallbackId = `local-${username.trim().toLowerCase()}`;
+          setCurrentUserId(fallbackId);
           setCurrentPage('dashboard');
           if (typeof window !== 'undefined') {
+            localStorage.setItem('gallotrack_user_id', fallbackId);
             if (rememberMe) {
               localStorage.setItem('gallotrack_rememberMe', 'true');
               localStorage.setItem('gallotrack_session', 'authenticated');
@@ -335,6 +379,13 @@ export default function GalloTrackSystem() {
         return;
       }
 
+      if (data.user) {
+        setCurrentUserId(data.user.id);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gallotrack_user_id', data.user.id);
+        }
+      }
+
       if (data.user && !data.user.email_confirmed_at) {
         await supabase.auth.signOut();
         setError('Please verify your email address before logging in. Check your inbox for the verification link.');
@@ -343,9 +394,6 @@ export default function GalloTrackSystem() {
 
       setCurrentPage('dashboard');
       if (typeof window !== 'undefined') {
-        if (!localStorage.getItem('gallotrack_admin_id')) {
-          localStorage.setItem('gallotrack_admin_id', data.user.id);
-        }
         if (rememberMe) {
           localStorage.setItem('gallotrack_rememberMe', 'true');
           localStorage.setItem('gallotrack_session', 'authenticated');
@@ -357,20 +405,17 @@ export default function GalloTrackSystem() {
         }
 
         let welcomeName = username;
-        const isAdminUser = localStorage.getItem('gallotrack_admin_id') === data.user.id;
         // Fetch or create profile row in the database
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
         if (profile) {
           if (profile.full_name) {
             welcomeName = profile.full_name.split(' ')[0];
-            if (isAdminUser) {
-              localStorage.setItem('gallotrack_admin_name', profile.full_name);
-            }
+            localStorage.setItem('gallotrack_admin_name', profile.full_name);
           }
-          if (profile.avatar_url && isAdminUser) {
+          if (profile.avatar_url) {
             localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url);
           }
-          if (profile.phone_number && isAdminUser) {
+          if (profile.phone_number) {
             localStorage.setItem('gallotrack_admin_phone', profile.phone_number);
           }
         } else {
@@ -383,9 +428,7 @@ export default function GalloTrackSystem() {
           }]);
           if (!insertErr) {
             welcomeName = fullNameMeta.split(' ')[0];
-            if (isAdminUser) {
-              localStorage.setItem('gallotrack_admin_name', fullNameMeta);
-            }
+            localStorage.setItem('gallotrack_admin_name', fullNameMeta);
           }
         }
         setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, ${welcomeName}!`, 'success'), 400);
@@ -435,6 +478,7 @@ export default function GalloTrackSystem() {
   };
 
   const handleLogout = async () => {
+    setCurrentUserId(null);
     setUsername('');
     setPassword('');
     setCurrentPage('login');
@@ -445,6 +489,7 @@ export default function GalloTrackSystem() {
       localStorage.removeItem('gallotrack_admin_name');
       localStorage.removeItem('gallotrack_admin_avatar');
       localStorage.removeItem('gallotrack_admin_phone');
+      localStorage.removeItem('gallotrack_user_id');
     }
     await supabase.auth.signOut();
     showToastMessage('System session terminated.', 'warning');
@@ -480,8 +525,10 @@ export default function GalloTrackSystem() {
       const calculatedBloodline = (sPct + dPct) / 2;
       
       const { data: { user } } = await supabase.auth.getUser();
+      const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
-      const payload: any = {
+      const payload = {
+        user_id: activeUserId,
         name: newName,
         breed: newBreed || 'Unspecified Strain',
         gender: newGender || 'Rooster',
@@ -502,7 +549,6 @@ export default function GalloTrackSystem() {
         status: 'Active',
         image_url: publicImageUrl
       };
-      if (user?.id) payload.user_id = user.id;
 
       const { error: insertErr } = await supabase.from('fowl').insert([payload]);
 
@@ -555,8 +601,10 @@ export default function GalloTrackSystem() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
+      const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
 
-      const payload: any = {
+      const payload = {
+        user_id: activeUserId,
         date: matchDate || new Date().toISOString().split('T')[0],
         entry_name: selectedFowlForMatch,
         breed: fowlBreed,
@@ -567,7 +615,6 @@ export default function GalloTrackSystem() {
         status: 'Verified',
         video_url: videoUrl || null
       };
-      if (user?.id) payload.user_id = user.id;
 
       const { error: insertErr } = await supabase.from('match').insert([payload]);
 
@@ -748,12 +795,12 @@ export default function GalloTrackSystem() {
     const breedStats: { [key: string]: { wins: number; total: number } } = {};
 
     matchHistory.forEach((match) => {
-      const breedKey = `${match.breed} Cross`;
+      const breedKey = `${match.breed || 'Unknown'} Cross`;
       if (!breedStats[breedKey]) {
         breedStats[breedKey] = { wins: 0, total: 0 };
       }
       breedStats[breedKey].total += 1;
-      if (match.outcome.toLowerCase() === 'win') {
+      if (match.outcome && match.outcome.toLowerCase() === 'win') {
         breedStats[breedKey].wins += 1;
       }
     });
@@ -764,30 +811,34 @@ export default function GalloTrackSystem() {
       return stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
     });
 
+    const hasData = labels.length > 0 && matchHistory.length > 0;
+
     return {
-      labels: labels.length > 0 ? labels : ['Roundhead Cross', 'Hatch Cross', 'Kelso Combos'],
-      data: data.length > 0 ? data : [65, 45, 58]
+      labels: hasData ? labels : [],
+      data: hasData ? data : [],
+      hasData
     };
   };
 
   const calculateCohortSuccessProbability = () => {
     const cohortScores: { [key: string]: number[] } = {};
 
-    fowls.filter(f => f.status === 'Active').forEach((fowl) => {
+    activeFowls.forEach((fowl) => {
       const breed = fowl.breed;
-      if (!cohortScores[breed]) {
-        cohortScores[breed] = [];
-      }
-
-      const fowlMatches = matchHistory.filter(m => m.entry_name.toLowerCase() === fowl.name.toLowerCase());
-      const wins = fowlMatches.filter(m => m.outcome.toLowerCase() === 'win').length;
+      const fowlMatches = matchHistory.filter(m => m.entry_name && m.entry_name.toLowerCase() === fowl.name.toLowerCase());
       
-      let dynamicScore = fowlMatches.length > 0 ? (wins / fowlMatches.length) * 100 : 50; 
+      if (fowlMatches.length > 0) {
+        if (!cohortScores[breed]) {
+          cohortScores[breed] = [];
+        }
+        const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+        let dynamicScore = (wins / fowlMatches.length) * 100;
 
-      if (fowl.sire && fowl.sire.trim() !== '') dynamicScore += 5;
-      if (fowl.dam && fowl.dam.trim() !== '') dynamicScore += 5;
+        if (fowl.sire && fowl.sire.trim() !== '' && fowl.sire !== 'Foundation Stock') dynamicScore += 5;
+        if (fowl.dam && fowl.dam.trim() !== '' && fowl.dam !== 'Foundation Stock') dynamicScore += 5;
 
-      cohortScores[breed].push(Math.min(dynamicScore, 100));
+        cohortScores[breed].push(Math.min(dynamicScore, 100));
+      }
     });
 
     const labels = Object.keys(cohortScores);
@@ -797,25 +848,28 @@ export default function GalloTrackSystem() {
       return Math.round(average);
     });
 
+    const hasData = labels.length > 0 && data.length > 0;
+
     return {
-      labels: labels.length > 0 ? labels : ['Roundhead', 'Sweater', 'Lemon', 'Kelso', 'Hatch'],
-      data: data.length > 0 ? data : [78, 70, 62, 68, 55]
+      labels: hasData ? labels : [],
+      data: hasData ? data : [],
+      hasData
     };
   };
 
   const calculateMortalityBreakdown = () => {
-    const counts: Record<string, number> = { Illness: 0, Injury: 0, Natural: 0, Culling: 0, Other: 0 };
+    const counts: Record<string, number> = {};
     deceasedFowls.forEach(f => {
       const r = f.death_reason || 'Illness';
-      if (counts[r] !== undefined) counts[r]++;
-      else counts['Other']++;
+      counts[r] = (counts[r] || 0) + 1;
     });
     const labels = Object.keys(counts);
     const data = Object.values(counts);
-    const hasData = data.some(v => v > 0);
+    const hasData = deceasedFowls.length > 0 && labels.length > 0 && data.some(v => v > 0);
     return {
-      labels: hasData ? labels : ['Illness', 'Injury', 'Natural', 'Culling', 'Other'],
-      data: hasData ? data : [2, 1, 1, 1, 0]
+      labels: hasData ? labels : [],
+      data: hasData ? data : [],
+      hasData
     };
   };
 
@@ -1134,16 +1188,28 @@ export default function GalloTrackSystem() {
                   </div>
                   <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '3.2s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Global Win Rate</span>
-                    <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">
-                      {matchHistory.length > 0 ? `${Math.round((matchHistory.filter(m => m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%` : '0%'}
-                    </div>
+                    {matchHistory.length > 0 ? (
+                      <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">
+                        {`${Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%`}
+                      </div>
+                    ) : (
+                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 py-1.5">
+                        No data available
+                      </div>
+                    )}
                     <span className="text-[10px] font-mono text-slate-500 font-bold block">EMPIRICAL SUCCESS INDEX</span>
                   </div>
                   <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '4.0s' }}>
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Mortality Rate</span>
-                    <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
-                      {fowls.length > 0 ? `${Math.round((deceasedFowls.length / fowls.length) * 100)}%` : '0%'}
-                    </div>
+                    {fowls.length > 0 ? (
+                      <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
+                        {`${Math.round((deceasedFowls.length / fowls.length) * 100)}%`}
+                      </div>
+                    ) : (
+                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 py-1.5">
+                        No data available
+                      </div>
+                    )}
                     <span className="text-[10px] font-mono text-rose-500 font-bold block">DECEASED BREAKDOWN</span>
                   </div>
                 </div>
@@ -1152,54 +1218,78 @@ export default function GalloTrackSystem() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]" style={{ animationDelay: '0.4s' }}>
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100">Cross-Breed Win Ratios</h3>
-                    <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
-                      <Doughnut 
-                        data={{ 
-                          labels: crossbreedChartData.labels, 
-                          datasets: [{ 
-                            data: crossbreedChartData.data, 
-                            backgroundColor: ['#059669', '#f43f5e', '#d97706', '#2563eb', '#7c3aed'], 
-                            borderWidth: 0 
-                          }] 
-                        }} 
-                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
-                      />
-                    </div>
+                    {crossbreedChartData.hasData ? (
+                      <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
+                        <Doughnut 
+                          data={{ 
+                            labels: crossbreedChartData.labels, 
+                            datasets: [{ 
+                              data: crossbreedChartData.data, 
+                              backgroundColor: ['#059669', '#f43f5e', '#d97706', '#2563eb', '#7c3aed'], 
+                              borderWidth: 0 
+                            }] 
+                          }} 
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
+                        />
+                      </div>
+                    ) : (
+                      <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl font-bold">📊</div>
+                        <p className="text-xs font-extrabold text-slate-500">No data available</p>
+                        <p className="text-[10px] text-slate-400 max-w-[200px]">Encode match records for your gamefowl to generate cross-breed win ratios.</p>
+                      </div>
+                    )}
                   </div>
                   <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-[350px]" style={{ animationDelay: '1.4s' }}>
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest border-b pb-3 text-center border-slate-100">Lineage Cohort Success Rate (%)</h3>
-                    <div className="w-full h-44 sm:h-48 my-auto">
-                      <Bar 
-                        data={{ 
-                          labels: cohortChartData.labels, 
-                          datasets: [{ 
-                            label: 'Success Rate %', 
-                            data: cohortChartData.data, 
-                            backgroundColor: '#059669', 
-                            borderRadius: 8 
-                          }] 
-                        }} 
-                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { font: { size: 10, weight: 'bold' } } }, x: { ticks: { font: { size: 10, weight: 'bold' } } } } }} 
-                      />
-                    </div>
+                    {cohortChartData.hasData ? (
+                      <div className="w-full h-44 sm:h-48 my-auto">
+                        <Bar 
+                          data={{ 
+                            labels: cohortChartData.labels, 
+                            datasets: [{ 
+                              label: 'Success Rate %', 
+                              data: cohortChartData.data, 
+                              backgroundColor: '#059669', 
+                              borderRadius: 8 
+                            }] 
+                          }} 
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { font: { size: 10, weight: 'bold' } } }, x: { ticks: { font: { size: 10, weight: 'bold' } } } } }} 
+                        />
+                      </div>
+                    ) : (
+                      <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl font-bold">🧬</div>
+                        <p className="text-xs font-extrabold text-slate-500">No data available</p>
+                        <p className="text-[10px] text-slate-400 max-w-[200px]">Add active fowl and record matches to evaluate lineage cohort success rates.</p>
+                      </div>
+                    )}
                   </div>
                   <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]" style={{ animationDelay: '2.4s' }}>
                     <h3 className="text-xs font-black text-rose-700 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100 flex items-center justify-center space-x-1">
                       <span>💀</span> <span>Deceased Mortality Breakdown</span>
                     </h3>
-                    <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
-                      <Doughnut 
-                        data={{ 
-                          labels: mortalityChartData.labels, 
-                          datasets: [{ 
-                            data: mortalityChartData.data, 
-                            backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#64748b', '#0d9488'], 
-                            borderWidth: 0 
-                          }] 
-                        }} 
-                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
-                      />
-                    </div>
+                    {mortalityChartData.hasData ? (
+                      <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
+                        <Doughnut 
+                          data={{ 
+                            labels: mortalityChartData.labels, 
+                            datasets: [{ 
+                              data: mortalityChartData.data, 
+                              backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#64748b', '#0d9488'], 
+                              borderWidth: 0 
+                            }] 
+                          }} 
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
+                        />
+                      </div>
+                    ) : (
+                      <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-400 text-xl font-bold">💀</div>
+                        <p className="text-xs font-extrabold text-slate-500">No data available</p>
+                        <p className="text-[10px] text-slate-400 max-w-[200px]">No deceased gamefowl recorded. Mortality breakdown will render when records exist.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1224,8 +1314,8 @@ export default function GalloTrackSystem() {
                       <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                         {matchHistory.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="p-8 text-center text-slate-400 text-xs">
-                              No match logs recorded.
+                            <td colSpan={6} className="p-8 text-center text-slate-400 text-xs font-semibold">
+                              No data available
                             </td>
                           </tr>
                         ) : (
@@ -1434,6 +1524,21 @@ export default function GalloTrackSystem() {
                               <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                               <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
                               <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span>Per-Fowl Win Rate:</span>
+                                {(() => {
+                                  const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
+                                  const fWins = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+                                  const fLosses = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+                                  const fDecided = fWins + fLosses;
+                                  const fRate = fDecided > 0 ? Math.round((fWins / fDecided) * 100) : fMatches.length > 0 ? Math.round((fWins / fMatches.length) * 100) : 0;
+                                  return (
+                                    <strong className={fMatches.length > 0 ? "text-emerald-700 font-black" : "text-slate-400 font-semibold"}>
+                                      {fMatches.length > 0 ? `${fRate}% (${fWins}W - ${fLosses}L)` : 'No matches'}
+                                    </strong>
+                                  );
+                                })()}
+                              </div>
                             </div>
                             
                             <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
@@ -1813,12 +1918,17 @@ export default function GalloTrackSystem() {
 
             {/* COMBAT PERFORMANCE STATS VECTOR */}
             {(() => {
-              const fowlMatches = matchHistory.filter(m => m.entry_name?.toLowerCase() === selectedFowlForDetails.name.toLowerCase());
+              const fowlMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === selectedFowlForDetails.name?.trim().toLowerCase());
               const totalFights = fowlMatches.length;
-              const wins = fowlMatches.filter(m => m.outcome.toLowerCase() === 'win').length;
-              const losses = fowlMatches.filter(m => m.outcome.toLowerCase() === 'loss').length;
-              const draws = fowlMatches.filter(m => m.outcome.toLowerCase() === 'draw').length;
-              const winRate = totalFights > 0 ? Math.round((wins / totalFights) * 100) : 0;
+              const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+              const losses = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+              const draws = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'draw').length;
+              const decidedFights = wins + losses;
+              const winRate = decidedFights > 0 
+                ? Math.round((wins / decidedFights) * 100) 
+                : totalFights > 0 
+                ? Math.round((wins / totalFights) * 100) 
+                : 0;
 
               return (
                 <div className="space-y-4">
@@ -1845,8 +1955,9 @@ export default function GalloTrackSystem() {
                         <strong className="text-base text-amber-400 font-black">{draws} 🤝</strong>
                       </div>
                       <div className="bg-teal-950/40 p-2.5 rounded-xl border border-teal-700/40 col-span-2 sm:col-span-1">
-                        <span className="text-[9px] text-teal-300 font-bold uppercase block">Win Rate</span>
+                        <span className="text-[9px] text-teal-300 font-bold uppercase block">Per-Fowl Win Rate</span>
                         <strong className="text-base text-teal-300 font-black">{winRate}%</strong>
+                        <span className="text-[8px] text-slate-300 block font-mono font-semibold">{wins}W - {losses}L</span>
                       </div>
                     </div>
                   </div>
