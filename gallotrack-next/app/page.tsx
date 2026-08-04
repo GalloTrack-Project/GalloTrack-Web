@@ -173,17 +173,6 @@ export default function GalloTrackSystem() {
           localStorage.setItem('gallotrack_user_id', session.user.id);
           setUsername(session.user.email?.split('@')[0] || 'admin');
           setCurrentPage('dashboard');
-        } else {
-          const savedSession = localStorage.getItem('gallotrack_session');
-          const savedUsername = localStorage.getItem('gallotrack_username');
-          const savedUserId = localStorage.getItem('gallotrack_user_id');
-          if (savedUserId) {
-            setCurrentUserId(savedUserId);
-          }
-          if (savedRememberMe && savedSession === 'authenticated' && savedUsername) {
-            setUsername(savedUsername);
-            setCurrentPage('dashboard');
-          }
         }
       }
     }
@@ -229,7 +218,7 @@ export default function GalloTrackSystem() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const activeUserId = user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
+      const activeUserId = user?.id;
 
       if (!activeUserId) {
         setFowls([]);
@@ -337,25 +326,6 @@ export default function GalloTrackSystem() {
       });
 
       if (authError) {
-        if (username.trim() !== '' && password === 'cict123') {
-          const fallbackId = `local-${username.trim().toLowerCase()}`;
-          setCurrentUserId(fallbackId);
-          setCurrentPage('dashboard');
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('gallotrack_user_id', fallbackId);
-            if (rememberMe) {
-              localStorage.setItem('gallotrack_rememberMe', 'true');
-              localStorage.setItem('gallotrack_session', 'authenticated');
-              localStorage.setItem('gallotrack_username', username);
-            } else {
-              localStorage.removeItem('gallotrack_rememberMe');
-              localStorage.removeItem('gallotrack_session');
-              localStorage.removeItem('gallotrack_username');
-            }
-          }
-          setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, Hazel!`, 'success'), 400);
-          return;
-        }
         setError(authError.message);
         return;
       }
@@ -505,7 +475,7 @@ export default function GalloTrackSystem() {
       const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 100 : Number(damPct);
       const calculatedBloodline = (sPct + dPct) / 2;
       
-      const activeUserId = (await supabase.auth.getUser()).data.user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
+      const activeUserId = (await supabase.auth.getUser()).data.user?.id;
 
       if (!activeUserId) {
         showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
@@ -585,7 +555,7 @@ export default function GalloTrackSystem() {
         setUploadingVideo(false);
       }
 
-      const activeUserId = (await supabase.auth.getUser()).data.user?.id || currentUserId || (typeof window !== 'undefined' ? localStorage.getItem('gallotrack_user_id') : null);
+      const activeUserId = (await supabase.auth.getUser()).data.user?.id;
 
       if (!activeUserId) {
         showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
