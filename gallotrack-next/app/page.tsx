@@ -1173,7 +1173,7 @@ export default function GalloTrackSystem() {
               </div>
             </div>
             <button onClick={handleLogout} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/40 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
-              <span>🚪 Terminate Core Session</span>
+              <span>🚪 Log Out</span>
             </button>
             <div className="text-center text-[9px] text-slate-500 font-mono tracking-widest uppercase">ISUFST DINGLE HUB</div>
           </div>
@@ -1213,7 +1213,7 @@ export default function GalloTrackSystem() {
                   type="button"
                   onClick={handleLogout}
                   className="md:hidden bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 p-1.5 px-3 rounded-full text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1 shadow-2xs"
-                  title="Terminate Core Session"
+                  title="Log Out"
                 >
                   <span>🚪 Exit</span>
                 </button>
