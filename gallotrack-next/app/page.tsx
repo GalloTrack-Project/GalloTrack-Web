@@ -1759,13 +1759,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
-                          <input type="number" value={sirePct} onChange={(e) => setSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
-                          <input type="number" value={damPct} onChange={(e) => setDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" />
                         </div>
                       </div>
                       <div>
