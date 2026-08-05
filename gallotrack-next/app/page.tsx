@@ -40,6 +40,9 @@ interface FowlRecord {
   archive_reason?: string;
   image_url?: string;
   created_at?: string;
+  body_condition?: string;
+  muscle_tone?: string;
+  leg_quality?: string;
 }
 
 interface MatchRecord {
@@ -100,6 +103,41 @@ const formatShortDate = (t: number) => {
   return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 };
 
+const STRAIN_LIST = ['Sweater', 'Hatch', 'Roundhead', 'Kelso', 'Lemon 84', 'Albany', 'Claret', 'Whitehackle', 'Black', 'Melsin', 'Bennie', 'Joe Madigin'];
+
+function HealthBadge({ options, value, onSelect }: { options: string[]; value: string; onSelect: (v: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => onSelect(opt)}
+          className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wide border transition-all cursor-pointer ${value === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-700/20' : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-400 hover:text-emerald-700'}`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
+  const toneCls = tone === 'green'
+    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+    : tone === 'amber'
+      ? 'bg-amber-50 text-amber-800 border-amber-200'
+      : 'bg-rose-50 text-rose-800 border-rose-200';
+  return (
+    <div className="bg-slate-50 rounded-xl border border-slate-200/70 p-3 min-w-0">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-tight">{icon && <span className="mr-1">{icon}</span>}{label}</span>
+        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border whitespace-nowrap shrink-0 ${toneCls}`}>{value}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
@@ -127,6 +165,13 @@ export default function GalloTrackSystem() {
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const [bodyCondition, setBodyCondition] = useState('Good');
+  const [muscleTone, setMuscleTone] = useState('Normal');
+  const [legQuality, setLegQuality] = useState('Strong');
+  const [imagePreview, setImagePreview] = useState('');
+  const [strainSelect, setStrainSelect] = useState('');
+  const [customStrain, setCustomStrain] = useState('');
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
@@ -543,7 +588,10 @@ export default function GalloTrackSystem() {
         dam_pct: dPct,
         bloodline_pct: calculatedBloodline,
         status: 'Active',
-        image_url: publicImageUrl
+        image_url: publicImageUrl,
+        body_condition: bodyCondition,
+        muscle_tone: muscleTone,
+        leg_quality: legQuality
       };
 
       const { error: insertErr } = await supabase.from('fowl').insert([payload]);
@@ -552,7 +600,7 @@ export default function GalloTrackSystem() {
         showToastMessage(`Database Error: ${insertErr.message}`, 'error');
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null);
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null); setStrainSelect(''); setCustomStrain(''); setImagePreview(''); setBodyCondition('Good'); setMuscleTone('Normal'); setLegQuality('Strong');
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -920,6 +968,12 @@ export default function GalloTrackSystem() {
     if (dateRangePreset === '3m') return `${formatShortDate(nowMs - 90 * DAY_MS)} - ${formatShortDate(nowMs)}`;
     return 'All Time';
   })();
+
+  const nextNodeId = `GT-${String(fowls.length + 1).padStart(4, '0')}`;
+  const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
+  const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
+  const validationPassed = newName.trim() !== '' && newBreed.trim() !== '' && newGender !== '' && age.trim() !== '';
+  const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct));
 
   const winRateSpark = (() => {
     let wins = 0;
@@ -1580,9 +1634,13 @@ export default function GalloTrackSystem() {
                 {profilingSubTab === 'form' && (
                   <form onSubmit={handleAddFowl} className="space-y-5 animate-fadeIn">
                     <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-                      <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
-                        <span>🏷️</span> <span>Step 1: Core Identifiers</span>
-                      </h3>
+                      <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100">
+                        <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2">
+                          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">1</span>
+                          <span>Step 1: Core Identifiers</span>
+                        </h3>
+                        <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-black shrink-0">ID: {nextNodeId}</span>
+                      </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Identifier Name</label>
                         <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
@@ -1590,28 +1648,28 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Genetic Strain</label>
-                          <input 
-                            list="genetic-strains" 
-                            value={newBreed} 
-                            onChange={(e) => setNewBreed(e.target.value)} 
-                            className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" 
-                            placeholder="Select or type strain..."
-                            required 
-                          />
-                          <datalist id="genetic-strains">
-                            <option value="Sweater" />
-                            <option value="Hatch" />
-                            <option value="Roundhead" />
-                            <option value="Kelso" />
-                            <option value="Lemon 84" />
-                            <option value="Albany" />
-                            <option value="Claret" />
-                            <option value="Whitehackle" />
-                            <option value="Black" />
-                            <option value="Melsin" />
-                            <option value="Bennie" />
-                            <option value="Joe Madigin" />
-                          </datalist>
+                          <select
+                            value={strainSelect}
+                            onChange={(e) => { const v = e.target.value; setStrainSelect(v); if (v !== '__other') { setNewBreed(v); setCustomStrain(''); } }}
+                            className={`w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold outline-none focus:border-emerald-500 transition-all cursor-pointer ${strainSelect ? 'text-slate-700' : 'text-slate-400 font-normal'}`}
+                            required
+                          >
+                            <option value="" disabled>Select Genetic Strain</option>
+                            {STRAIN_LIST.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                            <option value="__other">Other (custom strain)...</option>
+                          </select>
+                          {strainSelect === '__other' && (
+                            <input
+                              type="text"
+                              value={customStrain}
+                              onChange={(e) => { setCustomStrain(e.target.value); setNewBreed(e.target.value); }}
+                              className="mt-2 w-full p-3 border border-emerald-300/80 rounded-xl text-xs bg-emerald-50/40 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+                              placeholder="Type custom strain name..."
+                              required
+                            />
+                          )}
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
@@ -1624,9 +1682,10 @@ export default function GalloTrackSystem() {
                       </div>
                     </div>
 
-                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5">
                       <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
-                        <span>🧬</span> <span>Step 2: Physical Parameters</span>
+                        <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">2</span>
+                        <span>Step 2: Physical Parameters</span>
                       </h3>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
@@ -1634,18 +1693,20 @@ export default function GalloTrackSystem() {
                           <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none" placeholder="0" required />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Growth</label>
-                          <input 
-                            type="text" 
-                            value={newGrowthStage} 
-                            readOnly 
-                            placeholder="Awaiting age..." 
-                            className={`w-full p-3 border rounded-xl text-xs text-center font-extrabold shadow-2xs transition-all ${
-                              newGrowthStage 
-                                ? 'border-emerald-200/60 bg-emerald-50 text-emerald-800' 
-                                : 'border-slate-200/90 bg-slate-50/50 text-slate-400 font-medium'
-                            }`} 
-                          />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Growth Stage</label>
+                          <select
+                            value={newGrowthStage}
+                            onChange={(e) => setNewGrowthStage(e.target.value)}
+                            className={`w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold outline-none focus:border-emerald-500 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-800' : 'text-slate-400 font-normal'}`}
+                          >
+                            <option value="" disabled>Select stage...</option>
+                            <option value="Chick">Chick</option>
+                            <option value="Stag">Stag</option>
+                            <option value="Pullet">Pullet</option>
+                            <option value="Bull Stag">Bull Stag</option>
+                            <option value="Cock">Cock</option>
+                            <option value="Hen">Hen</option>
+                          </select>
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Height (cm)</label>
@@ -1656,11 +1717,28 @@ export default function GalloTrackSystem() {
                           <input type="number" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                         </div>
                       </div>
+
+                      {/* VISUAL HEALTH INDICATORS */}
+                      <div className="border-t border-slate-100 pt-4 space-y-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Body Condition</label>
+                          <HealthBadge options={['Poor', 'Fair', 'Good', 'Excellent']} value={bodyCondition} onSelect={setBodyCondition} />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Muscle Tone</label>
+                          <HealthBadge options={['Flabby', 'Normal', 'Toned']} value={muscleTone} onSelect={setMuscleTone} />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Leg Quality</label>
+                          <HealthBadge options={['Weak', 'Fair', 'Strong']} value={legQuality} onSelect={setLegQuality} />
+                        </div>
+                      </div>
                     </div>
 
                     <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
                       <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100">
-                        <span>🌳</span> <span>Step 3: Ancestry Roots & Photo</span>
+                        <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">3</span>
+                        <span>Step 3: Ancestry Roots & Photo</span>
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -1692,17 +1770,38 @@ export default function GalloTrackSystem() {
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Fowl Attachment Photo</label>
-                        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-slate-50/80 hover:bg-slate-100/70 transition-all">
-                          <span className="text-xs text-slate-600 font-bold">📷 {selectedImage ? selectedImage.name : 'Choose fowl image file'}</span>
-                          <input type="file" accept="image/*" onChange={(e) => e.target.files && setSelectedImage(e.target.files[0])} className="hidden" />
+                        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-slate-50/80 hover:bg-slate-100/70 transition-all overflow-hidden relative">
+                          {imagePreview ? (
+                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs text-slate-600 font-bold">📷 {selectedImage ? selectedImage.name : 'Choose fowl image file'}</span>
+                          )}
+                          <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" />
                         </label>
                       </div>
                     </div>
 
-                    <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold py-4 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
-                      {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                      <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Committing Node...' : 'Commit Node Objects'}</span>
-                    </button>
+                    {/* BOTTOM VALIDATION & COMMIT BAR */}
+                    <div className="bg-white rounded-3xl border-2 border-slate-900 shadow-sm p-5">
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Validation & Summary Panel</span>
+                        </div>
+                        <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">Node: {nextNodeId}</span>
+                      </div>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                        <StatusItem icon="🛡️" label="Data Integrity & Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
+                        <StatusItem icon="✅" label="Validation" value={validationPassed ? 'Passed' : 'Pending'} tone={validationPassed ? 'green' : 'amber'} />
+                        <StatusItem icon="🔗" label="Bloodline Consistency" value={bloodlineVerified ? 'Verified' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
+                        <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
+                      </div>
+                      <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-2xl text-xs shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
+                        {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                        <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Committing Node...' : 'Commit Node Objects'}</span>
+                      </button>
+                      <p className="text-center text-[9px] text-slate-400 font-semibold mt-2.5 tracking-wide">🔒 Verify lineage accuracy before committing node objects to the cluster registry.</p>
+                    </div>
                   </form>
                 )}
 
