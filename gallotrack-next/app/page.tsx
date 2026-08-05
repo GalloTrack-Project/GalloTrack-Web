@@ -206,6 +206,7 @@ export default function GalloTrackSystem() {
   const [editDamPct, setEditDamPct] = useState<number | string>(100);
 
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain'>('individual');
   const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
@@ -1172,7 +1173,7 @@ export default function GalloTrackSystem() {
                 <p className="text-[9px] text-slate-400 font-bold tracking-wider uppercase truncate">System Lead Admin</p>
               </div>
             </div>
-            <button onClick={handleLogout} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/40 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
+            <button type="button" onClick={() => setShowLogoutModal(true)} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/40 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
               <span>🚪 Log Out</span>
             </button>
             <div className="text-center text-[9px] text-slate-500 font-mono tracking-widest uppercase">ISUFST DINGLE HUB</div>
@@ -1211,7 +1212,7 @@ export default function GalloTrackSystem() {
 
                 <button 
                   type="button"
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="md:hidden bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/80 p-1.5 px-3 rounded-full text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1 shadow-2xs"
                   title="Log Out"
                 >
@@ -2875,6 +2876,58 @@ export default function GalloTrackSystem() {
               >
                 Close Matrix
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-200">
+            <div className="p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex justify-between items-center border-b border-slate-700">
+              <div>
+                <h3 className="text-base font-black flex items-center gap-2 text-rose-400">
+                  <span>🚪</span> <span>Log Out Confirmation</span>
+                </h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  End your secure GalloTrack session
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-lg shrink-0">⚠️</div>
+                <p className="text-sm text-slate-700 font-semibold leading-relaxed">
+                  Are you sure you want to log out?
+                </p>
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium mt-2 pl-13">
+                Your active session and local tokens will be securely terminated.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold px-5 py-3 rounded-xl text-xs transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowLogoutModal(false); handleLogout(); }}
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-md shadow-rose-700/20"
+                >
+                  Yes, Log Out
+                </button>
+              </div>
             </div>
           </div>
         </div>
