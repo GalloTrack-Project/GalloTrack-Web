@@ -49,10 +49,21 @@ function ConfirmCard() {
         } else {
           const { data } = await supabase.auth.getSession();
           confirmed = !!data.session;
+          if (!confirmed) throw new Error('This link is invalid or has already been used.');
         }
 
-        setStatus(confirmed ? 'success' : 'error');
-        if (!confirmed) setErrorMessage('This link is invalid or has already been used.');
+        // Confirmation must NOT leave the user signed in. Verifying the token
+        // above may have established a session, so explicitly sign out and
+        // clear any cached identity — the user must log in manually via the
+        // Login page instead of being dropped straight into the dashboard.
+        if (confirmed) {
+          await supabase.auth.signOut();
+          try { localStorage.removeItem('gallotrack_user_id'); } catch { /* ignore */ }
+          setStatus('success');
+        } else {
+          setStatus('error');
+          setErrorMessage('This link is invalid or has already been used.');
+        }
       } catch (err) {
         setStatus('error');
         setErrorMessage(err instanceof Error ? err.message : 'This link is invalid or has already been used.');
@@ -103,7 +114,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-teal-900 tracking-tight">Email Confirmed Successfully! 🎉</h2>
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                Your account is now verified. You can proceed to log in to GalloTrack.
+                Your account is now verified.
               </p>
               <Link
                 href="/"
