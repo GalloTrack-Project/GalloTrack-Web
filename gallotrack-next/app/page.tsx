@@ -40,9 +40,6 @@ interface FowlRecord {
   archive_reason?: string;
   image_url?: string;
   created_at?: string;
-  body_condition?: string;
-  muscle_tone?: string;
-  leg_quality?: string;
 }
 
 interface MatchRecord {
@@ -105,23 +102,6 @@ const formatShortDate = (t: number) => {
 
 const STRAIN_LIST = ['Sweater', 'Hatch', 'Roundhead', 'Kelso', 'Lemon 84', 'Albany', 'Claret', 'Whitehackle', 'Black', 'Melsin', 'Bennie', 'Joe Madigin'];
 
-function HealthBadge({ options, value, onSelect }: { options: string[]; value: string; onSelect: (v: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {options.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onSelect(opt)}
-          className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wide border transition-all cursor-pointer ${value === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-700/20' : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-400 hover:text-emerald-700'}`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
   const toneCls = tone === 'green'
     ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
@@ -166,10 +146,6 @@ export default function GalloTrackSystem() {
   const [regPassword, setRegPassword] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [bodyCondition, setBodyCondition] = useState('Good');
-  const [muscleTone, setMuscleTone] = useState('Normal');
-  const [legQuality, setLegQuality] = useState('Strong');
-  const [imagePreview, setImagePreview] = useState('');
   const [strainSelect, setStrainSelect] = useState('');
   const [customStrain, setCustomStrain] = useState('');
 
@@ -202,6 +178,7 @@ export default function GalloTrackSystem() {
   
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState('');
 
   const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
   const [matchDate, setMatchDate] = useState('');
@@ -589,9 +566,6 @@ export default function GalloTrackSystem() {
         bloodline_pct: calculatedBloodline,
         status: 'Active',
         image_url: publicImageUrl,
-        body_condition: bodyCondition,
-        muscle_tone: muscleTone,
-        leg_quality: legQuality
       };
 
       const { error: insertErr } = await supabase.from('fowl').insert([payload]);
@@ -600,7 +574,7 @@ export default function GalloTrackSystem() {
         showToastMessage(`Database Error: ${insertErr.message}`, 'error');
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null); setStrainSelect(''); setCustomStrain(''); setImagePreview(''); setBodyCondition('Good'); setMuscleTone('Normal'); setLegQuality('Strong');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null); setStrainSelect(''); setCustomStrain(''); setImagePreview('');
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -1715,22 +1689,6 @@ export default function GalloTrackSystem() {
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Weight (kg)</label>
                           <input type="number" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
-                        </div>
-                      </div>
-
-                      {/* VISUAL HEALTH INDICATORS */}
-                      <div className="border-t border-slate-100 pt-4 space-y-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Body Condition</label>
-                          <HealthBadge options={['Poor', 'Fair', 'Good', 'Excellent']} value={bodyCondition} onSelect={setBodyCondition} />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Muscle Tone</label>
-                          <HealthBadge options={['Flabby', 'Normal', 'Toned']} value={muscleTone} onSelect={setMuscleTone} />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider">Leg Quality</label>
-                          <HealthBadge options={['Weak', 'Fair', 'Strong']} value={legQuality} onSelect={setLegQuality} />
                         </div>
                       </div>
                     </div>
