@@ -1,13 +1,13 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Doughnut, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
 import { createClient } from '@supabase/supabase-js';
 import ProfilePage from '@/app/profile/page';
 import SettingsPage from '@/app/settings/page';
 import SplashScreen from '@/components/SplashScreen';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
 const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co';
 const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3'; 
@@ -39,6 +39,7 @@ interface FowlRecord {
   death_reason?: string;
   archive_reason?: string;
   image_url?: string;
+  created_at?: string;
 }
 
 interface MatchRecord {
@@ -60,6 +61,44 @@ interface ToastState {
   message: string;
   type: 'success' | 'error' | 'warning';
 }
+
+function TrendChip({ up, label }: { up: boolean; label: string }) {
+  if (!up) {
+    return <span className="text-[10px] font-bold text-slate-400">{label}</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
+      {label}
+    </span>
+  );
+}
+
+function TrendChipRose({ up, label }: { up: boolean; label: string }) {
+  if (!up) {
+    return <span className="text-[10px] font-bold text-slate-400">{label}</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-1 rounded-full">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+      {label}
+    </span>
+  );
+}
+
+const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[] = [
+  { id: '7d', label: 'Last 7 Days' },
+  { id: '30d', label: 'Last 30 Days' },
+  { id: 'month', label: 'This Month' },
+  { id: '3m', label: 'Last 3 Months' },
+  { id: 'all', label: 'All Time' },
+];
+
+const formatShortDate = (t: number) => {
+  const d = new Date(t);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
 
 export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
@@ -146,6 +185,8 @@ export default function GalloTrackSystem() {
 
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain'>('individual');
+  const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
+  const [dateRangeOpen, setDateRangeOpen] = useState(false);
 
   const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
@@ -854,6 +895,59 @@ export default function GalloTrackSystem() {
   const cohortChartData = calculateCohortSuccessProbability();
   const mortalityChartData = calculateMortalityBreakdown();
 
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const isWithinThisWeek = (value?: string) => {
+    if (!value) return false;
+    const t = new Date(value).getTime();
+    return !isNaN(t) && nowMs - t < WEEK_MS;
+  };
+  const activeNewThisWeek = activeFowls.filter(f => isWithinThisWeek(f.created_at)).length;
+  const deceasedNewThisWeek = deceasedFowls.filter(f => isWithinThisWeek(f.created_at)).length;
+  const matchesThisWeek = matchHistory.filter(m => isWithinThisWeek(m.date)).length;
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const dateRangeLabel = (() => {
+    const now = new Date(nowMs);
+    if (dateRangePreset === '7d') return `${formatShortDate(nowMs - 7 * DAY_MS)} - ${formatShortDate(nowMs)}`;
+    if (dateRangePreset === '30d') return `${formatShortDate(nowMs - 30 * DAY_MS)} - ${formatShortDate(nowMs)}`;
+    if (dateRangePreset === 'month') return `${formatShortDate(new Date(now.getFullYear(), now.getMonth(), 1).getTime())} - ${formatShortDate(nowMs)}`;
+    if (dateRangePreset === '3m') return `${formatShortDate(nowMs - 90 * DAY_MS)} - ${formatShortDate(nowMs)}`;
+    return 'All Time';
+  })();
+
+  const winRateSpark = (() => {
+    let wins = 0;
+    const series: number[] = [];
+    for (let i = 0; i < matchHistory.length; i++) {
+      if (matchHistory[i].outcome && matchHistory[i].outcome.toLowerCase() === 'win') wins++;
+      series.push(Math.round((wins / (i + 1)) * 100));
+    }
+    return series.length ? series : [0];
+  })();
+
+  const mortalitySpark = (() => {
+    let deceased = 0;
+    const series: number[] = [];
+    for (let i = 0; i < fowls.length; i++) {
+      if (fowls[i].status === 'Deceased') deceased++;
+      series.push(Math.round((deceased / (i + 1)) * 100));
+    }
+    return series.length ? series : [0];
+  })();
+
+  const winRatePct = matchHistory.length > 0
+    ? Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)
+    : 0;
+  const winsCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+  const lossesCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+  const mortalityRatePct = fowls.length > 0 ? Math.round((deceasedFowls.length / fowls.length) * 100) : 0;
+
   if (showSplash) {
     return <SplashScreen onFinished={() => setShowSplash(false)} />;
   }
@@ -1113,105 +1207,196 @@ export default function GalloTrackSystem() {
                     <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Enterprise Analytics Dashboard</h1>
                     <p className="text-xs sm:text-sm text-slate-400 font-semibold mt-1">Cross-strain performance vectors, empirical win probabilities, and active inventory metrics</p>
                   </div>
-                  <button 
-                    type="button"
-                    onClick={fetchDatabaseResources}
-                    disabled={loading}
-                    className="antigravity-badge self-start md:self-auto bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
-                  >
-                    <span>{loading ? '↻ Syncing...' : '↻ Refresh Cluster'}</span>
-                  </button>
+                  {/* DATE RANGE SELECTOR */}
+                  <div className="relative self-start md:self-auto">
+                    {dateRangeOpen && (
+                      <div className="fixed inset-0 z-40" onClick={() => setDateRangeOpen(false)} />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setDateRangeOpen(o => !o)}
+                      className="antigravity-badge bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
+                      <span>{dateRangeLabel}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dateRangeOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
+                    </button>
+                    {dateRangeOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200/80 shadow-xl z-50 p-1.5">
+                        {DATE_RANGES.map((r) => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => { setDateRangePreset(r.id); setDateRangeOpen(false); }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}
+                          >
+                            {r.label}
+                          </button>
+                        ))}
+                        <div className="h-px bg-slate-100 my-1.5"></div>
+                        <button
+                          type="button"
+                          onClick={() => { setDateRangeOpen(false); fetchDatabaseResources(); }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          {loading ? '↻ Syncing...' : '↻ Refresh Data'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* METRIC BADGE GRID */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div className="antigravity-card bg-gradient-to-br from-emerald-600 to-teal-700 p-5 sm:p-6 rounded-3xl text-white shadow-md shadow-emerald-900/10 space-y-2 border border-emerald-500/20" style={{ animationDelay: '0s' }}>
-                    <span className="text-[10px] uppercase font-black tracking-widest opacity-80">Active Gamefowl</span>
-                    <div className="text-3xl sm:text-4xl font-black tracking-tight">{activeFowls.length}</div>
-                    <span className="text-[10px] font-mono opacity-90 block">ENCODED</span>
+                {/* TOP METRICS ROW — 6 CARDS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+
+                  {/* ACTIVE GAMEFOWL */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-sm shrink-0">🐓</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Active Gamefowl</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">{activeFowls.length}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <TrendChip up={activeNewThisWeek > 0} label={activeNewThisWeek > 0 ? `${activeNewThisWeek} this week` : 'No change'} />
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full shrink-0">Encoded</span>
+                    </div>
                   </div>
-                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '0.8s' }}>
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Archived Records</span>
-                    <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{archivedFowls.length}</div>
-                    <span className="text-[10px] font-mono text-amber-700 font-bold block">LOG</span>
+
+                  {/* ARCHIVED RECORDS */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-sm shrink-0">🗂️</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Archived Records</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">{archivedFowls.length}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <TrendChip up={false} label="No change" />
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full shrink-0">Log</span>
+                    </div>
                   </div>
-                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-rose-200/60 shadow-sm space-y-2" style={{ animationDelay: '1.6s' }}>
-                    <span className="text-[10px] text-rose-500 uppercase font-black tracking-widest">Deceased Records</span>
-                    <div className="text-3xl sm:text-4xl font-black text-rose-700 tracking-tight">{deceasedFowls.length}</div>
-                    <span className="text-[10px] font-mono text-rose-600 font-bold block">MORTALITY AUDIT</span>
+
+                  {/* DECEASED RECORDS */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-sm shrink-0">💀</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Deceased Records</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">{deceasedFowls.length}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <TrendChipRose up={deceasedNewThisWeek > 0} label={deceasedNewThisWeek > 0 ? `${deceasedNewThisWeek} this week` : 'No change'} />
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-full shrink-0">Mortality</span>
+                    </div>
                   </div>
-                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '2.4s' }}>
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Total Matches</span>
-                    <div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{matchHistory.length}</div>
-                    <span className="text-[10px] font-mono text-slate-500 font-bold block">LOGGED</span>
+
+                  {/* TOTAL MATCHES */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-sm shrink-0">🏆</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Total Matches</span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">{matchHistory.length}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full shrink-0">Logged</span>
+                    </div>
                   </div>
-                  <div 
+
+                  {/* OVERALL WIN RATE */}
+                  <div
                     onClick={() => setShowPerFowlBreakdownModal(true)}
-                    className="antigravity-card bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-emerald-500/80 transition-all hover:shadow-md hover:scale-[1.01] group relative space-y-3" 
-                    style={{ animationDelay: '3.2s' }}
+                    className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col gap-2.5 cursor-pointer hover:border-emerald-400/70 hover:shadow-md transition-all"
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate">Global Win Rate</span>
-                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
-                        🔍 Breakdown
-                      </span>
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-sm shrink-0">💗</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Overall Win Rate</span>
+                      </div>
+                      <span className="text-[9px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">{winsCount}W • {lossesCount}L</span>
                     </div>
-
-                    {matchHistory.length > 0 ? (
-                      <div className="space-y-1">
-                        <div className="flex items-baseline justify-between gap-1 flex-wrap">
-                          <span className="text-2xl sm:text-3xl font-black text-emerald-600 tracking-tight">
-                            {`${Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)}%`}
-                          </span>
-                          <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/70 shrink-0">
-                            {matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length}W · {matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length}L
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-xs font-extrabold text-slate-400 py-1">
-                        No data available
-                      </div>
-                    )}
-
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-emerald-700 font-extrabold group-hover:text-emerald-800">
-                      <span>View Breakdown</span>
-                      <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
+                    <div className="text-3xl font-black text-emerald-600 tracking-tight">
+                      {matchHistory.length > 0 ? `${winRatePct}%` : '—'}
+                    </div>
+                    <div className="h-9">
+                      {matchHistory.length > 0 ? (
+                        <Line
+                          data={{
+                            labels: winRateSpark.map((_, i) => i + 1),
+                            datasets: [{ data: winRateSpark, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.08)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
+                          }}
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } } }}
+                        />
+                      ) : (
+                        <div className="text-[10px] font-bold text-slate-300 pt-1">No matches logged yet</div>
+                      )}
+                    </div>
+                    <div className="text-[10px] font-extrabold text-emerald-700 pt-0.5 flex items-center justify-between border-t border-slate-100">
+                      <span>Win trend</span>
+                      <span>🔍 Breakdown</span>
                     </div>
                   </div>
-                  <div className="antigravity-card bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-2" style={{ animationDelay: '4.0s' }}>
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Mortality Rate</span>
-                    {fowls.length > 0 ? (
-                      <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
-                        {`${Math.round((deceasedFowls.length / fowls.length) * 100)}%`}
-                      </div>
-                    ) : (
-                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 py-1.5">
-                        No data available
-                      </div>
-                    )}
-                    <span className="text-[10px] font-mono text-rose-500 font-bold block">DECEASED BREAKDOWN</span>
+
+                  {/* MORTALITY RATE */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-sm shrink-0">📊</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Mortality Rate</span>
+                    </div>
+                    <div className="text-3xl font-black text-rose-600 tracking-tight">
+                      {fowls.length > 0 ? `${mortalityRatePct}%` : '—'}
+                    </div>
+                    <div className="h-9">
+                      {fowls.length > 0 ? (
+                        <Line
+                          data={{
+                            labels: mortalitySpark.map((_, i) => i + 1),
+                            datasets: [{ data: mortalitySpark, borderColor: '#e11d48', backgroundColor: 'rgba(225,29,72,0.08)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
+                          }}
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } } }}
+                        />
+                      ) : (
+                        <div className="text-[10px] font-bold text-slate-300 pt-1">No records yet</div>
+                      )}
+                    </div>
+                    <div className="text-[10px] font-extrabold text-rose-500 pt-0.5 flex items-center justify-between border-t border-slate-100">
+                      <span>Mortality audit</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                    </div>
                   </div>
                 </div>
 
-                {/* CHARTS CONTAINER GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]" style={{ animationDelay: '0.4s' }}>
-                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100">Cross-Breed Win Ratios</h3>
+                {/* MIDDLE CHARTS ROW — 3 CLEAN CARDS */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                  {/* CROSS-BREED WIN RATIOS */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
+                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest text-center w-full border-b border-slate-100 pb-3">Cross-Breed Win Ratios</h3>
                     {crossbreedChartData.hasData ? (
-                      <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
-                        <Doughnut 
-                          data={{ 
-                            labels: crossbreedChartData.labels, 
-                            datasets: [{ 
-                              data: crossbreedChartData.data, 
-                              backgroundColor: ['#059669', '#f43f5e', '#d97706', '#2563eb', '#7c3aed'], 
-                              borderWidth: 0 
-                            }] 
-                          }} 
-                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
-                        />
-                      </div>
+                      <>
+                        <div className="w-44 h-44 sm:w-48 sm:h-48 mx-auto my-3 flex items-center justify-center">
+                          <Doughnut
+                            data={{
+                              labels: crossbreedChartData.labels.map((l, i) => `${l} ${crossbreedChartData.data[i]}%`),
+                              datasets: [{
+                                data: crossbreedChartData.data,
+                                backgroundColor: ['#059669', '#f43f5e', '#d97706', '#2563eb', '#7c3aed'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
+                                hoverOffset: 6,
+                              }],
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              cutout: '68%',
+                              plugins: {
+                                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10, weight: 'bold' }, color: '#334155' } },
+                                tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}` } },
+                              },
+                            }}
+                          />
+                        </div>
+                        <p className="text-center text-[10px] text-slate-400 font-semibold pb-1">Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'}</p>
+                      </>
                     ) : (
                       <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl font-bold">📊</div>
@@ -1220,23 +1405,37 @@ export default function GalloTrackSystem() {
                       </div>
                     )}
                   </div>
-                  <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-[350px]" style={{ animationDelay: '1.4s' }}>
-                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest border-b pb-3 text-center border-slate-100">Lineage Cohort Success Rate (%)</h3>
+
+                  {/* LINEAGE COHORT SUCCESS RATE */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
+                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest text-center w-full border-b border-slate-100 pb-3">Lineage Cohort Success Rate (%)</h3>
                     {cohortChartData.hasData ? (
-                      <div className="w-full h-44 sm:h-48 my-auto">
-                        <Bar 
-                          data={{ 
-                            labels: cohortChartData.labels, 
-                            datasets: [{ 
-                              label: 'Success Rate %', 
-                              data: cohortChartData.data, 
-                              backgroundColor: '#059669', 
-                              borderRadius: 8 
-                            }] 
-                          }} 
-                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { font: { size: 10, weight: 'bold' } } }, x: { ticks: { font: { size: 10, weight: 'bold' } } } } }} 
-                        />
-                      </div>
+                      <>
+                        <div className="w-full h-44 sm:h-48 my-3">
+                          <Bar
+                            data={{
+                              labels: cohortChartData.labels.map((l, i) => `${l} ${cohortChartData.data[i]}%`),
+                              datasets: [{
+                                label: 'Success Rate %',
+                                data: cohortChartData.data,
+                                backgroundColor: '#059669',
+                                borderRadius: 8,
+                                maxBarThickness: 30,
+                              }],
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              plugins: { legend: { display: false } },
+                              scales: {
+                                y: { min: 0, max: 100, grid: { color: 'rgba(148,163,184,0.15)' }, ticks: { font: { size: 10, weight: 'bold' }, color: '#64748b' } },
+                                x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' }, color: '#334155' } },
+                              },
+                            }}
+                          />
+                        </div>
+                        <p className="text-center text-[10px] text-slate-400 font-semibold pb-1">Success rate per primary lineage cohort</p>
+                      </>
                     ) : (
                       <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl font-bold">🧬</div>
@@ -1245,24 +1444,39 @@ export default function GalloTrackSystem() {
                       </div>
                     )}
                   </div>
-                  <div className="antigravity-card bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col items-center justify-between min-h-[350px]" style={{ animationDelay: '2.4s' }}>
-                    <h3 className="text-xs font-black text-rose-700 uppercase tracking-widest text-center w-full border-b pb-3 border-slate-100 flex items-center justify-center space-x-1">
+
+                  {/* DECEASED MORTALITY BREAKDOWN */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
+                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest text-center w-full border-b border-slate-100 pb-3 flex items-center justify-center space-x-1">
                       <span>💀</span> <span>Deceased Mortality Breakdown</span>
                     </h3>
                     {mortalityChartData.hasData ? (
-                      <div className="w-44 h-44 sm:w-48 sm:h-48 my-auto flex items-center justify-center">
-                        <Doughnut 
-                          data={{ 
-                            labels: mortalityChartData.labels, 
-                            datasets: [{ 
-                              data: mortalityChartData.data, 
-                              backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#64748b', '#0d9488'], 
-                              borderWidth: 0 
-                            }] 
-                          }} 
-                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } } }} 
-                        />
-                      </div>
+                      <>
+                        <div className="w-44 h-44 sm:w-48 sm:h-48 mx-auto my-3 flex items-center justify-center">
+                          <Doughnut
+                            data={{
+                              labels: mortalityChartData.labels,
+                              datasets: [{
+                                data: mortalityChartData.data,
+                                backgroundColor: ['#e11d48', '#f59e0b', '#8b5cf6', '#64748b', '#0d9488'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
+                                hoverOffset: 6,
+                              }],
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              cutout: '68%',
+                              plugins: {
+                                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10, weight: 'bold' }, color: '#334155' } },
+                                tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.parsed} record(s)` } },
+                              },
+                            }}
+                          />
+                        </div>
+                        <p className="text-center text-[10px] text-slate-400 font-semibold pb-1">Based on {deceasedFowls.length} deceased {deceasedFowls.length === 1 ? 'record' : 'records'}</p>
+                      </>
                     ) : (
                       <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
                         <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-400 text-xl font-bold">💀</div>
@@ -1273,19 +1487,29 @@ export default function GalloTrackSystem() {
                   </div>
                 </div>
 
-                {/* MATCH LOGS TABLE */}
-                <div className="antigravity-hover bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
-                  <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                  <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3">
                     <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Historical Analytics Match Logs</h3>
-                    <span className="text-[9px] font-mono bg-slate-200/80 text-slate-700 font-black px-3 py-1 rounded-full">D4 ANALYTICS DB</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] font-mono bg-slate-200/80 text-slate-700 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
+                      <button
+                        type="button"
+                        onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('registry'); }}
+                        className="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[10px] font-black px-3.5 py-2 rounded-lg shadow-sm shadow-emerald-700/20 transition-all cursor-pointer"
+                      >
+                        View All Records →
+                      </button>
+                    </div>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] border-collapse min-w-[550px]">
+                    <table className="w-full text-left text-[11px] border-collapse min-w-[760px]">
                       <thead>
                         <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/80">
                           <th className="p-4 pl-6">Match Date</th>
                           <th className="p-4">Entry Identifier</th>
-                          <th className="p-4">Config Structure</th>
+                          <th className="p-4">Bloodline</th>
+                          <th className="p-4">Match Type</th>
                           <th className="p-4">Arena Location</th>
                           <th className="p-4 text-center">Outcome Status</th>
                           <th className="p-4 text-center">Video</th>
@@ -1294,19 +1518,27 @@ export default function GalloTrackSystem() {
                       <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                         {matchHistory.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="p-8 text-center text-slate-400 text-xs font-semibold">
+                            <td colSpan={7} className="p-8 text-center text-slate-400 text-xs font-semibold">
                               No data available
                             </td>
                           </tr>
                         ) : (
                           matchHistory.map((log) => (
                             <tr key={log.id} className="hover:bg-slate-50/80 transition-colors duration-150">
-                              <td className="p-4 pl-6 font-mono text-slate-400">{log.date}</td>
-                              <td className="p-4 font-bold text-slate-900">{log.entry_name} <span className="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded border border-slate-200/60 ml-1.5">{log.breed}</span></td>
+                              <td className="p-4 pl-6 font-mono text-slate-400 whitespace-nowrap">{log.date}</td>
+                              <td className="p-4">
+                                <div className="flex items-center space-x-2.5">
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-100 to-emerald-100 border border-teal-200/70 flex items-center justify-center text-sm shrink-0">🐓</div>
+                                  <span className="font-bold text-slate-900">{log.entry_name}</span>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
+                              </td>
                               <td className="p-4 text-slate-600">{log.type}</td>
                               <td className="p-4 text-slate-500 font-normal">{log.location}</td>
                               <td className="p-4 text-center">
-                                <span className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome === 'Win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome === 'Loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome}</span>
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome || '—'}</span>
                               </td>
                               <td className="p-4 text-center">
                                 {log.video_url ? (
