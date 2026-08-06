@@ -1591,21 +1591,21 @@ export default function GalloTrackSystem() {
                           <select
                             value={strainSelect}
                             onChange={(e) => { const v = e.target.value; setStrainSelect(v); if (v !== '__other') { setNewBreed(v); setCustomStrain(''); } }}
-                            className={`w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold outline-none focus:border-emerald-500 transition-all cursor-pointer ${strainSelect ? 'text-slate-700' : 'text-slate-400 font-normal'}`}
+                            className={`w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${strainSelect ? 'text-white' : 'text-neutral-400 font-normal'}`}
                             required
                           >
-                            <option value="" disabled>Select Genetic Strain</option>
+                            <option value="" disabled className="bg-neutral-900 text-neutral-400">Select Genetic Strain</option>
                             {STRAIN_LIST.map((s) => (
-                              <option key={s} value={s}>{s}</option>
+                              <option key={s} value={s} className="bg-neutral-900 text-white">{s}</option>
                             ))}
-                            <option value="__other">Other (custom strain)...</option>
+                            <option value="__other" className="bg-neutral-900 text-white">Other (custom strain)...</option>
                           </select>
                           {strainSelect === '__other' && (
                             <input
                               type="text"
                               value={customStrain}
                               onChange={(e) => { setCustomStrain(e.target.value); setNewBreed(e.target.value); }}
-                              className="mt-2 w-full p-3 border border-emerald-300/80 rounded-xl text-xs bg-emerald-50/40 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+                              className="mt-2 w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 text-white placeholder:text-neutral-500 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
                               placeholder="Type custom strain name..."
                               required
                             />
@@ -1613,10 +1613,10 @@ export default function GalloTrackSystem() {
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
-                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold outline-none focus:border-emerald-500 transition-all cursor-pointer ${newGender ? 'text-slate-700' : 'text-slate-400 font-normal'}`} required>
-                            <option value="" disabled>Select Gender Class</option>
-                            <option value="Rooster">Rooster (Cock)</option>
-                            <option value="Hen">Hen (Pullet)</option>
+                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-white' : 'text-neutral-400 font-normal'}`} required>
+                            <option value="" disabled className="bg-neutral-900 text-neutral-400">Select Gender Class</option>
+                            <option value="Rooster" className="bg-neutral-900 text-white">Rooster (Cock)</option>
+                            <option value="Hen" className="bg-neutral-900 text-white">Hen (Pullet)</option>
                           </select>
                         </div>
                       </div>
@@ -1637,15 +1637,15 @@ export default function GalloTrackSystem() {
                           <select
                             value={newGrowthStage}
                             onChange={(e) => setNewGrowthStage(e.target.value)}
-                            className={`w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-extrabold outline-none focus:border-emerald-500 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-800' : 'text-slate-400 font-normal'}`}
+                            className={`w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-300' : 'text-neutral-400 font-normal'}`}
                           >
-                            <option value="" disabled>Select stage...</option>
-                            <option value="Chick">Chick</option>
-                            <option value="Stag">Stag</option>
-                            <option value="Pullet">Pullet</option>
-                            <option value="Bull Stag">Bull Stag</option>
-                            <option value="Cock">Cock</option>
-                            <option value="Hen">Hen</option>
+                            <option value="" disabled className="bg-neutral-900 text-neutral-400">Select stage...</option>
+                            <option value="Chick" className="bg-neutral-900 text-white">Chick</option>
+                            <option value="Stag" className="bg-neutral-900 text-white">Stag</option>
+                            <option value="Pullet" className="bg-neutral-900 text-white">Pullet</option>
+                            <option value="Bull Stag" className="bg-neutral-900 text-white">Bull Stag</option>
+                            <option value="Cock" className="bg-neutral-900 text-white">Cock</option>
+                            <option value="Hen" className="bg-neutral-900 text-white">Hen</option>
                           </select>
                         </div>
                         <div>
