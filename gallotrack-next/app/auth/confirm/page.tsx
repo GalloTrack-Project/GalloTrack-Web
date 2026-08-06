@@ -57,11 +57,6 @@ function ConfirmCard() {
         // clear any cached identity — the user must log in manually via the
         // Login page instead of being dropped straight into the dashboard.
         if (confirmed) {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const confirmedEmail = sessionData.session?.user?.email ?? null;
-          if (confirmedEmail) {
-            try { localStorage.setItem('gallotrack_prefill_email', confirmedEmail); } catch { /* ignore */ }
-          }
           await supabase.auth.signOut();
           try { localStorage.removeItem('gallotrack_user_id'); } catch { /* ignore */ }
           setStatus('success');
