@@ -4,6 +4,6 @@
     { "source": "/dashboard", "destination": "/" },
     { "source": "/profiling", "destination": "/" },
     { "source": "/marketplace", "destination": "/" },
-    { "source": "/((?!api|_next/static|_next/image|favicon.ico|profile|settings|auth/confirm).*)", "destination": "/" }
+    { "source": "/((?!api|_next/static|_next/image|favicon.ico|profile|settings|auth/confirm|auth/update-password).*)", "destination": "/" }
   ]
 }
