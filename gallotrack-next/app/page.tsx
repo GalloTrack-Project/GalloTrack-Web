@@ -1643,7 +1643,7 @@ export default function GalloTrackSystem() {
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Identifier Name</label>
-                        <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
+                        <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -1729,13 +1729,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional / foundation stock)</span>
                           </label>
-                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g. Foundation Stock or Sire Name" />
+                          <input type="text" value={sireName} onChange={(e) => setSireName(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g. Foundation Stock or Sire Name" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional / foundation stock)</span>
                           </label>
-                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g. Foundation Stock or Dam Name" />
+                          <input type="text" value={damName} onChange={(e) => setDamName(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g. Foundation Stock or Dam Name" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -1743,13 +1743,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="100" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none font-bold placeholder:font-normal" placeholder="100" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="100" />
                         </div>
                       </div>
                       <div>
@@ -2000,7 +2000,7 @@ export default function GalloTrackSystem() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Opponent Entry Identity</label>
-                        <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
+                        <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Arena Location Hub</label>
@@ -2008,7 +2008,7 @@ export default function GalloTrackSystem() {
                           list="arena-locations" 
                           value={matchLocation} 
                           onChange={(e) => setMatchLocation(e.target.value)} 
-                          className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" 
+className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
                           placeholder="Select or type arena..." 
                           required 
                         />
