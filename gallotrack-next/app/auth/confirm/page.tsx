@@ -90,35 +90,35 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="antigravity-login-card bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/30 max-w-md w-full relative z-10 overflow-hidden border border-teal-500/20">
+      <div className="bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-slate-700/60">
         <div className="p-8 sm:p-10 space-y-7 text-center">
           <div className="text-center space-y-2">
-            <span className="text-[9px] font-bold tracking-[0.2em] text-teal-700 uppercase block">ISUFST CICT Capstone Project</span>
-            <h1 className="text-3xl sm:text-4xl font-black text-teal-900 tracking-tight leading-none">GALLOTRACK</h1>
+            <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none">GALLOTRACK</h1>
             <p className="text-[10px] text-slate-400 font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-teal-200 to-transparent"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
 
           {status === 'loading' && (
             <div className="py-10 flex flex-col items-center space-y-4">
-              <div className="w-12 h-12 rounded-full border-4 border-teal-100 border-t-teal-700 animate-spin"></div>
-              <p className="text-sm font-bold text-teal-800 uppercase tracking-widest">Verifying your email link…</p>
+              <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
+              <p className="text-sm font-bold text-emerald-400 uppercase tracking-widest">Verifying your email link…</p>
             </div>
           )}
 
           {status === 'success' && (
             <div className="py-6 flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-teal-900 tracking-tight">Email Confirmed Successfully! 🎉</h2>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Email Confirmed Successfully! 🎉</h2>
+              <p className="text-xs text-slate-400 font-semibold leading-relaxed">
                 Your account is now verified.
               </p>
               <Link
                 href="/"
-                className="inline-block w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-teal-900/30 cursor-pointer mt-2"
+                className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">PROCEED TO LOGIN</span>
               </Link>
@@ -127,14 +127,14 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
 
           {status === 'error' && (
             <div className="py-6 flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#be123c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
+              <div className="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-rose-800 tracking-tight">Confirmation Link Invalid</h2>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed">{errorMessage}</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight">Confirmation Link Invalid</h2>
+              <p className="text-xs text-slate-400 font-semibold leading-relaxed">{errorMessage}</p>
               <Link
                 href="/"
-                className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-black/30 cursor-pointer mt-2"
+                className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">BACK TO LOGIN</span>
               </Link>

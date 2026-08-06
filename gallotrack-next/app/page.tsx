@@ -1002,42 +1002,42 @@ export default function GalloTrackSystem() {
           <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="antigravity-login-card bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/30 max-w-md w-full relative z-10 overflow-hidden border border-teal-500/20">
+          <div className="bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-slate-700/60">
             <div className="p-8 sm:p-10 space-y-7">
               {/* Header & Branding */}
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-600 to-teal-800 shadow-lg shadow-teal-900/40 border border-teal-500/30 flex items-center justify-center text-3xl">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-lg shadow-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-3xl">
                   🐓
                 </div>
-                <span className="block text-[9px] font-black tracking-[0.25em] text-teal-700 uppercase">ISUFST CICT CAPSTONE PROJECT</span>
-                <h1 className="text-3xl sm:text-4xl font-black text-teal-900 tracking-tight leading-none">GALLOTRACK</h1>
+                <span className="block text-[9px] font-black tracking-[0.25em] text-emerald-400/90 uppercase">ISUFST CICT CAPSTONE PROJECT</span>
+                <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none">GALLOTRACK</h1>
                 <p className="text-[10px] text-slate-400 font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
               </div>
 
-              <div className="h-px bg-gradient-to-r from-transparent via-teal-200 to-transparent"></div>
+              <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
 
               {!isSignUp ? (
                 <form onSubmit={handleLogin} className="space-y-5">
                   {/* ADMINISTRATIVE IDENTITY */}
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">ADMINISTRATIVE IDENTITY</label>
+                    <label className="block text-[10px] font-black text-emerald-400 mb-2 uppercase tracking-widest">ADMINISTRATIVE IDENTITY</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal-500 pointer-events-none">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                       </span>
-                      <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter email address" required />
+                      <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter email address" required />
                     </div>
                   </div>
 
                   {/* SYSTEM PASSWORD */}
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">SYSTEM PASSWORD</label>
+                    <label className="block text-[10px] font-black text-emerald-400 mb-2 uppercase tracking-widest">SYSTEM PASSWORD</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal-500 pointer-events-none">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </span>
-                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="••••••••••••" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="••••••••••••" required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         ) : (
@@ -1052,24 +1052,24 @@ export default function GalloTrackSystem() {
                     <label className="flex items-center space-x-2.5 cursor-pointer select-none group">
                       <div className="relative">
                         <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="sr-only peer" />
-                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-700 shadow-inner"></div>
+                        <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-teal-700 transition-colors">Remember Me</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Remember Me</span>
                     </label>
                   </div>
 
-                  {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl">{error}</div>}
-                  {successMessage && <div className="text-xs text-emerald-700 font-bold text-center bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-xl leading-relaxed">{successMessage}</div>}
+                  {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>}
+                  {successMessage && <div className="text-xs text-emerald-300 font-bold text-center bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-xl leading-relaxed">{successMessage}</div>}
 
                   {/* SUBMIT BUTTON */}
-                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-teal-900/30 cursor-pointer overflow-hidden">
+                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer overflow-hidden">
                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative flex items-center justify-center gap-3">
                       <span className="w-6 h-6 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/><path d="m9 12 2 2 4-4"/></svg>
                       </span>
                       <span className="text-sm tracking-widest">LOG IN</span>
-                      <span className="text-[9px] font-bold text-teal-200/80 tracking-wide flex items-center gap-1">
+                      <span className="text-[9px] font-bold text-emerald-100/80 tracking-wide flex items-center gap-1">
                         Secure Access
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                       </span>
@@ -1079,31 +1079,31 @@ export default function GalloTrackSystem() {
                   {/* FOOTER LINKS */}
                   <div className="space-y-4 pt-1">
                     <div className="flex items-center justify-center gap-4">
-                      <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-[10px] font-bold text-slate-400 hover:text-teal-700 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-200 hover:decoration-teal-300">Forgot Password?</button>
-                      <span className="text-slate-200 text-[8px]">|</span>
-                      <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-teal-700 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-200 hover:decoration-teal-300">Create Account</button>
+                      <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-600 hover:decoration-emerald-400">Forgot Password?</button>
+                      <span className="text-slate-700 text-[8px]">|</span>
+                      <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-600 hover:decoration-emerald-400">Create Account</button>
                     </div>
-                    <p className="text-[9px] text-slate-300 font-semibold text-center tracking-wide">Powered by Advanced Gamefowl Analytics</p>
+                    <p className="text-[9px] text-slate-500 font-semibold text-center tracking-wide">Powered by Advanced Gamefowl Analytics</p>
                   </div>
                 </form>
               ) : (
                 <form onSubmit={handleRegister} className="space-y-5">
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Owner Full Name</label>
-                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter your full name" required />
+                    <label className="block text-[10px] font-black text-emerald-400 mb-2 uppercase tracking-widest">Owner Full Name</label>
+                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter your full name" required />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Email Address</label>
-                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter email address" required />
+                    <label className="block text-[10px] font-black text-emerald-400 mb-2 uppercase tracking-widest">Email Address</label>
+                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter email address" required />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Password</label>
+                    <label className="block text-[10px] font-black text-emerald-400 mb-2 uppercase tracking-widest">Password</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </span>
-                      <input type={showPassword ? 'text' : 'password'} value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full pl-10 pr-11 py-3.5 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Create secure password" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
+                      <input type={showPassword ? 'text' : 'password'} value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full pl-10 pr-11 py-3.5 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Create secure password" required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         ) : (
@@ -1113,16 +1113,16 @@ export default function GalloTrackSystem() {
                     </div>
                   </div>
 
-                  {error && <div className="text-xs text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3.5 rounded-xl">{error}</div>}
+                  {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>}
 
-                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-teal-900/30 cursor-pointer flex items-center justify-center space-x-2">
+                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer flex items-center justify-center space-x-2">
                     {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                     <span className="tracking-widest">{loading ? 'Creating Account...' : 'Register Owner'}</span>
                   </button>
 
                   <div className="pt-1">
-                    <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-teal-700 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-200 hover:decoration-teal-300 w-full text-center block">Already have an account? Log In</button>
-                    <p className="text-[9px] text-slate-300 font-semibold text-center tracking-wide mt-4">Powered by Advanced Gamefowl Analytics</p>
+                    <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-600 hover:decoration-emerald-400 w-full text-center block">Already have an account? Log In</button>
+                    <p className="text-[9px] text-slate-500 font-semibold text-center tracking-wide mt-4">Powered by Advanced Gamefowl Analytics</p>
                   </div>
                 </form>
               )}
