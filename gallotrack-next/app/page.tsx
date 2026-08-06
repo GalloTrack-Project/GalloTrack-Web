@@ -1005,8 +1005,11 @@ export default function GalloTrackSystem() {
           <div className="antigravity-login-card bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/30 max-w-md w-full relative z-10 overflow-hidden border border-teal-500/20">
             <div className="p-8 sm:p-10 space-y-7">
               {/* Header & Branding */}
-              <div className="text-center space-y-2">
-                <span className="text-[9px] font-bold tracking-[0.2em] text-teal-700 uppercase block">ISUFST CICT Capstone Project</span>
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-600 to-teal-800 shadow-lg shadow-teal-900/40 border border-teal-500/30 flex items-center justify-center text-3xl">
+                  🐓
+                </div>
+                <span className="block text-[9px] font-black tracking-[0.25em] text-teal-700 uppercase">ISUFST CICT CAPSTONE PROJECT</span>
                 <h1 className="text-3xl sm:text-4xl font-black text-teal-900 tracking-tight leading-none">GALLOTRACK</h1>
                 <p className="text-[10px] text-slate-400 font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
               </div>
@@ -1017,9 +1020,9 @@ export default function GalloTrackSystem() {
                 <form onSubmit={handleLogin} className="space-y-5">
                   {/* ADMINISTRATIVE IDENTITY */}
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">Administrative Identity</label>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">ADMINISTRATIVE IDENTITY</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                       </span>
                       <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="Enter email address" required />
@@ -1028,9 +1031,9 @@ export default function GalloTrackSystem() {
 
                   {/* SYSTEM PASSWORD */}
                   <div>
-                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">System Password</label>
+                    <label className="block text-[10px] font-black text-teal-800 mb-2 uppercase tracking-widest">SYSTEM PASSWORD</label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </span>
                       <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold outline-none" placeholder="••••••••••••" required />
@@ -1062,6 +1065,9 @@ export default function GalloTrackSystem() {
                   <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-br from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-teal-900/30 cursor-pointer overflow-hidden">
                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative flex items-center justify-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/><path d="m9 12 2 2 4-4"/></svg>
+                      </span>
                       <span className="text-sm tracking-widest">LOG IN</span>
                       <span className="text-[9px] font-bold text-teal-200/80 tracking-wide flex items-center gap-1">
                         Secure Access
