@@ -13,9 +13,20 @@ type Status = 'loading' | 'ready' | 'success' | 'error';
 
 export default function UpdatePasswordPage() {
   return (
-    <Suspense fallback={<UpdateCard />}>
+    <Suspense fallback={<LoadingCard />}>
       <UpdateCard />
     </Suspense>
+  );
+}
+
+function LoadingCard() {
+  return (
+    <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328]">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/30 max-w-md w-full p-8 flex flex-col items-center space-y-4">
+        <div className="w-12 h-12 rounded-full border-4 border-teal-100 border-t-teal-700 animate-spin"></div>
+        <p className="text-sm font-bold text-teal-800 uppercase tracking-widest">Verifying recovery link…</p>
+      </div>
+    </div>
   );
 }
 
