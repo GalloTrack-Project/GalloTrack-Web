@@ -255,6 +255,12 @@ export default function GalloTrackSystem() {
           localStorage.setItem('gallotrack_user_id', session.user.id);
           setUsername(session.user.email?.split('@')[0] || 'admin');
           setCurrentPage('dashboard');
+        } else {
+          const prefillEmail = localStorage.getItem('gallotrack_prefill_email');
+          if (prefillEmail) {
+            setUsername(prefillEmail);
+            localStorage.removeItem('gallotrack_prefill_email');
+          }
         }
       }
     }
