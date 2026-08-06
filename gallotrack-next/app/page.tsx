@@ -1690,7 +1690,7 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Age (Mos)</label>
-                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none" placeholder="0" required />
+                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs text-center font-extrabold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none" placeholder="0" required />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Growth Stage</label>
@@ -1710,11 +1710,11 @@ export default function GalloTrackSystem() {
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Height (cm)</label>
-                          <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none focus:border-emerald-500" placeholder="e.g. 45" />
+                          <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs text-center font-extrabold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 45" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Weight (kg)</label>
-                          <input type="number" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs text-center font-extrabold outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
+                          <input type="number" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs text-center font-extrabold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                         </div>
                       </div>
                     </div>
@@ -1994,7 +1994,7 @@ export default function GalloTrackSystem() {
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Match Date</label>
-                        <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-semibold outline-none focus:border-emerald-500" />
+                        <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-semibold outline-none focus:border-emerald-500" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2077,7 +2077,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     </span>
-                    <input type="text" placeholder="Search lineage strains..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-200/90 rounded-2xl bg-slate-50/50 text-xs outline-none focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold" />
+                    <input type="text" placeholder="Search lineage strains..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-300 rounded-2xl bg-white text-neutral-900 placeholder:text-neutral-400 text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" />
                   </div>
                 </div>
 
@@ -2527,7 +2527,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 </h4>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Identifier Name</label>
-                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none focus:border-emerald-500 font-medium" required />
+                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" required />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -2536,7 +2536,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                       list="edit-genetic-strains" 
                       value={editBreed} 
                       onChange={(e) => setEditBreed(e.target.value)} 
-                      className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none focus:border-emerald-500 font-medium" 
+                      className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" 
                       placeholder="Select or type strain"
                       required 
                     />
@@ -2599,7 +2599,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age (Mos)</label>
-                    <input type="number" value={editAge} onChange={(e) => handleEditAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold" required />
+                    <input type="number" value={editAge} onChange={(e) => handleEditAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs text-center font-bold bg-white text-neutral-900 placeholder:text-neutral-400" required />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Growth</label>
@@ -2617,11 +2617,11 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Height (cm)</label>
-                    <input type="number" step="0.1" value={editHeight} onChange={(e) => setEditHeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold outline-none focus:border-emerald-500" placeholder="e.g. 45" />
+                    <input type="number" step="0.1" value={editHeight} onChange={(e) => setEditHeight(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs text-center font-bold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 45" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Weight (kg)</label>
-                    <input type="number" step="0.01" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-center font-bold outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
+                    <input type="number" step="0.01" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs text-center font-bold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                   </div>
                 </div>
               </div>
@@ -2635,13 +2635,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <input type="text" value={editSire} onChange={(e) => setEditSire(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none font-medium" placeholder="Foundation Stock" />
+                    <input type="text" value={editSire} onChange={(e) => setEditSire(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-medium" placeholder="Foundation Stock" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <input type="text" value={editDam} onChange={(e) => setEditDam(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white outline-none font-medium" placeholder="Foundation Stock" />
+                    <input type="text" value={editDam} onChange={(e) => setEditDam(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-medium" placeholder="Foundation Stock" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -2649,13 +2649,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Sire Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
+                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="100" min="0" max="100" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Dam Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-bold placeholder:font-normal" placeholder="100" min="0" max="100" />
+                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="100" min="0" max="100" />
                   </div>
                 </div>
               </div>
