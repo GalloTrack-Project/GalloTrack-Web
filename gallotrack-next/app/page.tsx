@@ -8,6 +8,8 @@ import SettingsPage from '@/app/settings/page';
 import SplashScreen from '@/components/SplashScreen';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+import Link from 'next/link';
+import { ensureOwnerRecords } from '@/lib/registry';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -131,10 +133,6 @@ export default function GalloTrackSystem() {
   const [rememberMe, setRememberMe] = useState(false);
   const [adminName, setAdminName] = useState('Hazel Dela Cruz');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   const [strainSelect, setStrainSelect] = useState('');
@@ -467,47 +465,13 @@ export default function GalloTrackSystem() {
             localStorage.setItem('gallotrack_admin_name', fullNameMeta);
           }
         }
+        await ensureOwnerRecords(supabase, data.user);
         setTimeout(() => showToastMessage(`Access Authenticated. Welcome back, ${welcomeName}!`, 'success'), 400);
         window.dispatchEvent(new Event('admin-profile-update'));
       }
     } catch (err) {
       console.error(err);
       setError('System Error: Unable to authenticate.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMessage('');
-    setLoading(true);
-
-    try {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: regEmail,
-        password: regPassword,
-        options: {
-          data: {
-            full_name: regName
-          }
-        }
-      });
-
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-
-      setSuccessMessage('Owner registration initiated. Verification email sent, please check your inbox before logging in.');
-      setRegName('');
-      setRegEmail('');
-      setRegPassword('');
-      setIsSignUp(false);
-    } catch (err) {
-      console.error(err);
-      setError('System Error: Unable to complete registration.');
     } finally {
       setLoading(false);
     }
@@ -1027,8 +991,7 @@ export default function GalloTrackSystem() {
                 <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full mx-auto"></div>
               </div>
 
-              {!isSignUp ? (
-                <form onSubmit={handleLogin} className="space-y-5">
+              <form onSubmit={handleLogin} className="space-y-5">
                   {/* ADMIN ID */}
                   <div>
                     <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">ADMIN ID</label>
@@ -1090,7 +1053,7 @@ export default function GalloTrackSystem() {
                     <div className="flex items-center justify-center gap-4">
                       <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">Forgot Password?</button>
                       <span className="text-muted-foreground text-[8px]">|</span>
-                      <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">Create Account</button>
+                      <Link href="/register" className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">Create Account</Link>
                     </div>
                     <p className="text-[9px] text-muted-foreground font-semibold text-center tracking-wide flex items-center justify-center gap-1.5">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg>
@@ -1098,49 +1061,6 @@ export default function GalloTrackSystem() {
                     </p>
                   </div>
                 </form>
-              ) : (
-                <form onSubmit={handleRegister} className="space-y-5">
-                  <div>
-                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Owner Full Name</label>
-                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter your full name" required />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Email Address</label>
-                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter email address" required />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Password</label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      </span>
-                      <input type={showPassword ? 'text' : 'password'} value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full pl-10 pr-11 py-3.5 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Create secure password" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
-                        {showPassword ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>}
-
-                  <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer flex items-center justify-center space-x-2">
-                    {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                    <span className="tracking-widest">{loading ? 'Creating Account...' : 'Register Owner'}</span>
-                  </button>
-
-                  <div className="pt-1">
-                    <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">Already have an account? Log In</button>
-                    <p className="text-[9px] text-slate-500 font-semibold text-center tracking-wide mt-4 flex items-center justify-center gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg>
-                      Powered by Advanced Gamefowl Analytics
-                    </p>
-                  </div>
-                </form>
-              )}
             </div>
           </div>
         </div>
