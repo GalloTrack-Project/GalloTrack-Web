@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { supabase, ensureOwnerRecords } from '@/lib/registry';
@@ -26,6 +26,32 @@ function VerifyOtpCard() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendNotice, setResendNotice] = useState('');
+  const autoDispatched = useRef(false);
+
+  // Arriving here straight from registration: dispatch a guaranteed NUMERIC
+  // 6-digit OTP to the inbox (signInWithOtp always mails a numeric code,
+  // unlike the signUp confirmation email whose format is template-driven).
+  useEffect(() => {
+    if (!emailFromQuery || autoDispatched.current) return;
+    autoDispatched.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: emailFromQuery,
+          options: { shouldCreateUser: false },
+        });
+        if (!cancelled && !error) {
+          setResendNotice('Your 6-digit verification code has been sent to your Gmail. Check your inbox (and spam folder).');
+        }
+      } catch {
+        /* silent - Resend Code is the fallback */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [emailFromQuery]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,19 +68,39 @@ function VerifyOtpCard() {
 
     setLoading(true);
     try {
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      let verifiedUser = null;
+
+      // 1) Try confirming the signup code (confirms the email address).
+      const signup = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: token.trim(),
         type: 'signup',
       });
 
-      if (verifyError) {
-        setStatus('error');
-        setError(verifyError.message);
-        return;
+      if (signup.error) {
+        // 2) The code may be the numeric passwordless OTP (from the
+        //    signInWithOtp email above) instead of the signup confirmation
+        //    token - validate it as a sign-in OTP.
+        const signin = await supabase.auth.verifyOtp({
+          email: email.trim(),
+          token: token.trim(),
+          type: 'email',
+        });
+        if (signin.error) {
+          setStatus('error');
+          setError(signin.error.message);
+          return;
+        }
+        verifiedUser = signin.data.user ?? null;
+      } else {
+        verifiedUser = signup.data.user ?? null;
       }
 
-      await ensureOwnerRecords(supabase, data.user);
+      // Persist owner profile + farm rows from the signup metadata, then drop
+      // the session so the user must log in manually via the Login page.
+      await ensureOwnerRecords(supabase, verifiedUser);
+      await supabase.auth.signOut();
+      try { localStorage.removeItem('gallotrack_user_id'); } catch { /* ignore */ }
       setStatus('success');
     } catch (err) {
       console.error(err);
@@ -74,11 +120,11 @@ function VerifyOtpCard() {
     setError('');
     setResendNotice('');
     try {
-      // Sending a fresh signup confirmation generates a NEW 6-digit OTP
-      // token that replaces the previous one (only the latest token is valid).
-      const { error: resendError } = await supabase.auth.resend({
-        type: 'signup',
+      // Request a fresh 6-digit code. signInWithOtp always dispatches a
+      // numeric OTP, invalidating the previously issued code.
+      const { error: resendError } = await supabase.auth.signInWithOtp({
         email: email.trim(),
+        options: { shouldCreateUser: false },
       });
       if (resendError) {
         setError(resendError.message);
