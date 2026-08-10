@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import ProfilePage from '@/app/profile/page';
 import SettingsPage from '@/app/settings/page';
 import SplashScreen from '@/components/SplashScreen';
+import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -107,6 +109,7 @@ function StatusItem({ icon, label, value, tone }: { icon?: string; label: string
 }
 
 export default function GalloTrackSystem() {
+  const { theme, setTheme } = useTheme();
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'deceased' | 'matchForm'>('form');
@@ -970,23 +973,23 @@ export default function GalloTrackSystem() {
   }
 
   return (
-    <div className="bg-neutral-950 min-h-screen font-sans antialiased text-slate-200 flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative selection:bg-emerald-500 selection:text-white">
+    <div className="bg-background min-h-screen font-sans antialiased text-foreground flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative selection:bg-emerald-500 selection:text-white">
       
       {/* TOAST NOTIFICATION STACK */}
       {toast.show && (
-        <div className="fixed top-5 right-5 z-[9999] flex items-center p-4 px-5 max-w-sm rounded-2xl shadow-2xl border backdrop-blur-xl animate-fadeIn bg-neutral-900/95 border-neutral-700/80 space-x-3">
+        <div className="fixed top-5 right-5 z-[9999] flex items-center p-4 px-5 max-w-sm rounded-2xl shadow-2xl border backdrop-blur-xl animate-fadeIn bg-card/95 border-border space-x-3">
           <div className={`flex items-center justify-center w-8 h-8 rounded-xl shrink-0 font-black text-xs shadow-sm ${
             toast.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : toast.type === 'error' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
           }`}>
             {toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : '‼'}
           </div>
-          <div className="text-xs font-bold text-neutral-100 leading-snug">{toast.message}</div>
+          <div className="text-xs font-bold text-card-foreground leading-snug">{toast.message}</div>
         </div>
       )}
 
       {/* LOGIN VIEW */}
       {currentPage === 'login' && (
-        <div className="flex items-center justify-center min-h-screen w-full p-6 bg-neutral-950 overflow-hidden relative">
+        <div className="flex items-center justify-center min-h-screen w-full p-6 bg-background overflow-hidden relative">
           {/* Geometric wireframe pattern overlay */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -1002,7 +1005,7 @@ export default function GalloTrackSystem() {
           <div className="absolute top-1/4 -left-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="bg-slate-900 rounded-3xl shadow-[0_0_60px_-15px_rgba(16,185,129,0.3)] shadow-black/40 max-w-md w-full relative z-10 overflow-hidden border border-emerald-500/20">
+          <div className="bg-card rounded-3xl shadow-[0_0_60px_-15px_rgba(16,185,129,0.3)] shadow-black/40 max-w-md w-full relative z-10 overflow-hidden border border-emerald-500/20">
             <div className="p-8 sm:p-10 space-y-7">
               {/* Header & Branding */}
               <div className="text-center space-y-3">
@@ -1019,8 +1022,8 @@ export default function GalloTrackSystem() {
                   <span className="absolute inset-0 flex items-center justify-center text-2xl">🐓</span>
                 </div>
                 <span className="block text-[9px] font-black tracking-[0.25em] text-emerald-400/90 uppercase">ISUFST CICT CAPSTONE PROJECT</span>
-                <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none">GALLOTRACK</h1>
-                <p className="text-[10px] text-slate-400 font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
+                <p className="text-[10px] text-muted-foreground font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
                 <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full mx-auto"></div>
               </div>
 
@@ -1028,24 +1031,24 @@ export default function GalloTrackSystem() {
                 <form onSubmit={handleLogin} className="space-y-5">
                   {/* ADMIN ID */}
                   <div>
-                    <label className="block text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">ADMIN ID</label>
+                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">ADMIN ID</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                       </span>
-                      <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter admin ID" required />
+                      <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter admin ID" required />
                     </div>
                   </div>
 
                   {/* PASSWORD */}
                   <div>
-                    <label className="block text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">PASSWORD</label>
+                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">PASSWORD</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </span>
-                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter system password" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter system password" required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         ) : (
@@ -1060,11 +1063,11 @@ export default function GalloTrackSystem() {
                     <label className="flex items-center space-x-2.5 cursor-pointer select-none group">
                       <div className="relative">
                         <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="sr-only peer" />
-                        <div className="w-4 h-4 rounded-md border border-slate-600 bg-slate-800 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-colors flex items-center justify-center">
+                        <div className="w-4 h-4 rounded-md border border-input bg-muted peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-colors flex items-center justify-center">
                           <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Remember Me</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Remember Me</span>
                     </label>
                   </div>
 
@@ -1085,11 +1088,11 @@ export default function GalloTrackSystem() {
                   {/* FOOTER LINKS */}
                   <div className="space-y-4 pt-1">
                     <div className="flex items-center justify-center gap-4">
-                      <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-600 hover:decoration-emerald-400">Forgot Password?</button>
-                      <span className="text-slate-600 text-[8px]">|</span>
-                      <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-600 hover:decoration-emerald-400">Create Account</button>
+                      <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">Forgot Password?</button>
+                      <span className="text-muted-foreground text-[8px]">|</span>
+                      <button type="button" onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">Create Account</button>
                     </div>
-                    <p className="text-[9px] text-slate-500 font-semibold text-center tracking-wide flex items-center justify-center gap-1.5">
+                    <p className="text-[9px] text-muted-foreground font-semibold text-center tracking-wide flex items-center justify-center gap-1.5">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg>
                       Powered by Advanced Gamefowl Analytics
                     </p>
@@ -1098,21 +1101,21 @@ export default function GalloTrackSystem() {
               ) : (
                 <form onSubmit={handleRegister} className="space-y-5">
                   <div>
-                    <label className="block text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">Owner Full Name</label>
-                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter your full name" required />
+                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Owner Full Name</label>
+                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full p-3.5 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter your full name" required />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">Email Address</label>
-                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Enter email address" required />
+                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Email Address</label>
+                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full p-3.5 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter email address" required />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-slate-300 mb-2 uppercase tracking-widest">Password</label>
+                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Password</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </span>
-                      <input type={showPassword ? 'text' : 'password'} value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full pl-10 pr-11 py-3.5 border border-slate-700 rounded-xl text-xs bg-slate-800/60 focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-white placeholder:text-slate-500" placeholder="Create secure password" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
+                      <input type={showPassword ? 'text' : 'password'} value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full pl-10 pr-11 py-3.5 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Create secure password" required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer" title={showPassword ? 'Hide password' : 'Show password'}>
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         ) : (
@@ -1130,7 +1133,7 @@ export default function GalloTrackSystem() {
                   </button>
 
                   <div className="pt-1">
-                    <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-slate-600 hover:decoration-emerald-400 w-full text-center block">Already have an account? Log In</button>
+                    <button type="button" onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }} className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">Already have an account? Log In</button>
                     <p className="text-[9px] text-slate-500 font-semibold text-center tracking-wide mt-4 flex items-center justify-center gap-1.5">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg>
                       Powered by Advanced Gamefowl Analytics
@@ -1145,12 +1148,12 @@ export default function GalloTrackSystem() {
 
       {/* ENTERPRISE DESKTOP SIDEBAR NAVIGATION */}
       {currentPage !== 'login' && (
-        <aside className="hidden md:flex w-64 bg-slate-900 text-slate-200 flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-slate-800 shadow-2xl h-full justify-between">
+        <aside className="hidden md:flex w-64 bg-card text-card-foreground flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-border shadow-2xl h-full justify-between">
           <div>
-            <div className="p-6 border-b border-slate-800/80 bg-slate-950/60 flex items-center space-x-3">
+            <div className="p-6 border-b border-border bg-muted/40 flex items-center space-x-3">
               <div className="w-9 h-9 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-lg shadow-inner">🐓</div>
               <div>
-                <h2 className="text-xl font-black tracking-tight text-white">GALLO<span className="text-emerald-400">TRACK</span></h2>
+                <h2 className="text-xl font-black tracking-tight text-card-foreground">GALLO<span className="text-emerald-400">TRACK</span></h2>
                 <span className="text-[9px] font-mono font-bold text-emerald-400 tracking-widest uppercase block">v1.2.0 Enterprise</span>
               </div>
             </div>
@@ -1169,7 +1172,7 @@ export default function GalloTrackSystem() {
                   className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer ${
                     currentPage === menu.id 
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]' 
-                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   }`}
                 >
                   <span className="text-base">{menu.icon}</span>
@@ -1179,7 +1182,7 @@ export default function GalloTrackSystem() {
             </nav>
           </div>
           
-          <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-3">
+          <div className="p-4 border-t border-border bg-muted/40 space-y-3">
             <div className="flex items-center space-x-3 px-2 py-1 select-none">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Admin Avatar" className="w-8 h-8 rounded-lg object-cover border border-slate-700/60" />
@@ -1187,14 +1190,14 @@ export default function GalloTrackSystem() {
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shadow-inner">👤</div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-extrabold text-white truncate">{adminName}</p>
-                <p className="text-[9px] text-slate-400 font-bold tracking-wider uppercase truncate">System Lead Admin</p>
+                <p className="text-[11px] font-extrabold text-card-foreground truncate">{adminName}</p>
+                <p className="text-[9px] text-muted-foreground font-bold tracking-wider uppercase truncate">System Lead Admin</p>
               </div>
             </div>
-            <button type="button" onClick={() => setShowLogoutModal(true)} className="w-full bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-slate-700/50 hover:border-rose-900/40 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
+            <button type="button" onClick={() => setShowLogoutModal(true)} className="w-full bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 border border-border hover:border-rose-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
               <span>🚪 Log Out</span>
             </button>
-            <div className="text-center text-[9px] text-slate-500 font-mono tracking-widest uppercase">ISUFST DINGLE HUB</div>
+            <div className="text-center text-[9px] text-muted-foreground font-mono tracking-widest uppercase">ISUFST DINGLE HUB</div>
           </div>
         </aside>
       )}
@@ -1204,12 +1207,12 @@ export default function GalloTrackSystem() {
         <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-16 md:pb-0">
           
           {/* HEADER STRIP */}
-          <header className="bg-neutral-900/80 backdrop-blur-md border-b border-neutral-800 sticky top-0 z-40 shadow-xs shrink-0">
+          <header className="bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0">
             <div className="py-3.5 px-4 sm:px-6 md:px-8 flex justify-between items-center">
               
               {/* LEFT: Mobile Title & Supabase Status Badge */}
               <div className="flex items-center space-x-3">
-                <span className="md:hidden font-black text-white text-lg tracking-tight bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">GALLOTRACK</span>
+                <span className="md:hidden font-black text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground to-emerald-400 bg-clip-text text-transparent">GALLOTRACK</span>
                 
                 <div className="antigravity-badge bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-full flex items-center space-x-2 text-[10px] sm:text-xs font-mono font-bold shadow-2xs">
                   <span className="relative flex h-2 w-2">
@@ -1223,10 +1226,20 @@ export default function GalloTrackSystem() {
 
               {/* RIGHT: Campus Metadata Tag & Mobile Session Exit */}
               <div className="flex items-center space-x-2.5">
-                <div className="antigravity-badge bg-neutral-800 border border-neutral-700 text-neutral-300 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold flex items-center space-x-1.5 shadow-2xs" style={{ animationDelay: '1.2s' }}>
-                  <span className="text-neutral-500">📍</span>
+                <div className="antigravity-badge bg-muted border border-border text-muted-foreground px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold flex items-center space-x-1.5 shadow-2xs" style={{ animationDelay: '1.2s' }}>
+                  <span className="text-muted-foreground">📍</span>
                   <span>Dingle Campus Cluster</span>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer"
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
 
                 <button 
                   type="button"
@@ -1249,12 +1262,12 @@ export default function GalloTrackSystem() {
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* HEADER CARDS */}
-                <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">📊</div>
                     <div>
-                      <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">Enterprise Analytics Dashboard</h1>
-                      <p className="text-xs sm:text-sm text-neutral-400 font-semibold mt-1">Cross-strain performance vectors, empirical win probabilities, and active inventory metrics</p>
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Enterprise Analytics Dashboard</h1>
+                      <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Cross-strain performance vectors, empirical win probabilities, and active inventory metrics</p>
                     </div>
                   </div>
                   {/* DATE RANGE SELECTOR */}
@@ -1265,29 +1278,29 @@ export default function GalloTrackSystem() {
                     <button
                       type="button"
                       onClick={() => setDateRangeOpen(o => !o)}
-                      className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
+                      className="bg-muted hover:bg-muted/60 text-foreground border border-border px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
                       <span>{dateRangeLabel}</span>
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dateRangeOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
                     </button>
                     {dateRangeOpen && (
-                      <div className="absolute right-0 mt-2 w-56 bg-neutral-900 rounded-2xl border border-neutral-700 shadow-xl z-50 p-1.5">
+                      <div className="absolute right-0 mt-2 w-56 bg-popover rounded-2xl border border-border shadow-xl z-50 p-1.5">
                         {DATE_RANGES.map((r) => (
                           <button
                             key={r.id}
                             type="button"
                             onClick={() => { setDateRangePreset(r.id); setDateRangeOpen(false); }}
-                            className={`w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-emerald-300' : 'text-neutral-400 hover:bg-neutral-800'}`}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-emerald-300' : 'text-muted-foreground hover:bg-muted'}`}
                           >
                             {r.label}
                           </button>
                         ))}
-                        <div className="h-px bg-neutral-800 my-1.5"></div>
+                        <div className="h-px bg-border my-1.5"></div>
                         <button
                           type="button"
                           onClick={() => { setDateRangeOpen(false); fetchDatabaseResources(); }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold text-neutral-500 hover:bg-neutral-800 transition-colors cursor-pointer"
+                          className="w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
                         >
                           {loading ? '↻ Syncing...' : '↻ Refresh Data'}
                         </button>
@@ -1611,22 +1624,22 @@ export default function GalloTrackSystem() {
             {/* PROFILING & LINEAGE MODULE */}
             {currentPage === 'profiling' && (
               <div className="space-y-5 animate-fadeIn">
-                <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 backdrop-blur-md p-6 flex flex-col gap-4">
+                <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 flex flex-col gap-4">
                   <div className="flex items-start gap-4">
                     <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">🧬</div>
                     <div>
-                      <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">Profiling & Lineage Core Matrix</h1>
-                      <p className="text-xs text-neutral-400 font-semibold mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
+                      <h1 className="text-xl md:text-2xl font-black text-card-foreground tracking-tight">Profiling & Lineage Core Matrix</h1>
+                      <p className="text-xs text-muted-foreground font-semibold mt-0.5">Encode specific traits to track ancestry weights and biological specifications</p>
                     </div>
                   </div>
                   
                   {/* SUBTAB SWITCHER BAR */}
-                  <div className="bg-neutral-800/90 p-1 rounded-2xl flex flex-wrap sm:flex-nowrap w-full border border-neutral-700 mt-1 shrink-0 gap-1">
-                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>📝 Encode</button>
-                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>🌳 Active ({activeFowls.length})</button>
-                    <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>📦 Archived ({archivedFowls.length})</button>
-                    <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>💀 Deceased ({deceasedFowls.length})</button>
-                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>⚔️ Match Logs</button>
+                  <div className="bg-muted/80 p-1 rounded-2xl flex flex-wrap sm:flex-nowrap w-full border border-border mt-1 shrink-0 gap-1">
+                    <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>📝 Encode</button>
+                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🌳 Active ({activeFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>📦 Archived ({archivedFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>💀 Deceased ({deceasedFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>⚔️ Match Logs</button>
                   </div>
                 </div>
 
@@ -1651,21 +1664,21 @@ export default function GalloTrackSystem() {
                           <select
                             value={strainSelect}
                             onChange={(e) => { const v = e.target.value; setStrainSelect(v); if (v !== '__other') { setNewBreed(v); setCustomStrain(''); } }}
-                            className={`w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${strainSelect ? 'text-white' : 'text-neutral-400 font-normal'}`}
+                            className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${strainSelect ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
                             required
                           >
-                            <option value="" disabled className="bg-neutral-900 text-neutral-400">Select Genetic Strain</option>
+                            <option value="" disabled className="bg-popover text-muted-foreground">Select Genetic Strain</option>
                             {STRAIN_LIST.map((s) => (
-                              <option key={s} value={s} className="bg-neutral-900 text-white">{s}</option>
+                              <option key={s} value={s} className="bg-popover text-popover-foreground">{s}</option>
                             ))}
-                            <option value="__other" className="bg-neutral-900 text-white">Other (custom strain)...</option>
+                            <option value="__other" className="bg-popover text-popover-foreground">Other (custom strain)...</option>
                           </select>
                           {strainSelect === '__other' && (
                             <input
                               type="text"
                               value={customStrain}
                               onChange={(e) => { setCustomStrain(e.target.value); setNewBreed(e.target.value); }}
-                              className="mt-2 w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 text-white placeholder:text-neutral-500 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                              className="mt-2 w-full p-3 border border-input rounded-xl text-xs bg-muted text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
                               placeholder="Type custom strain name..."
                               required
                             />
@@ -1673,10 +1686,10 @@ export default function GalloTrackSystem() {
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
-                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-white' : 'text-neutral-400 font-normal'}`} required>
-                            <option value="" disabled className="bg-neutral-900 text-neutral-400">Select Gender Class</option>
-                            <option value="Rooster" className="bg-neutral-900 text-white">Rooster (Cock)</option>
-                            <option value="Hen" className="bg-neutral-900 text-white">Hen (Pullet)</option>
+                          <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStage(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required>
+                            <option value="" disabled className="bg-popover text-muted-foreground">Select Gender Class</option>
+                            <option value="Rooster" className="bg-popover text-popover-foreground">Rooster (Cock)</option>
+                            <option value="Hen" className="bg-popover text-popover-foreground">Hen (Pullet)</option>
                           </select>
                         </div>
                       </div>
@@ -1697,15 +1710,15 @@ export default function GalloTrackSystem() {
                           <select
                             value={newGrowthStage}
                             onChange={(e) => setNewGrowthStage(e.target.value)}
-                            className={`w-full p-3 border border-neutral-700 rounded-xl text-xs bg-neutral-900 font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-300' : 'text-neutral-400 font-normal'}`}
+                            className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-600' : 'text-muted-foreground font-normal'}`}
                           >
-                            <option value="" disabled className="bg-neutral-900 text-neutral-400">Select stage...</option>
-                            <option value="Chick" className="bg-neutral-900 text-white">Chick</option>
-                            <option value="Stag" className="bg-neutral-900 text-white">Stag</option>
-                            <option value="Pullet" className="bg-neutral-900 text-white">Pullet</option>
-                            <option value="Bull Stag" className="bg-neutral-900 text-white">Bull Stag</option>
-                            <option value="Cock" className="bg-neutral-900 text-white">Cock</option>
-                            <option value="Hen" className="bg-neutral-900 text-white">Hen</option>
+                            <option value="" disabled className="bg-popover text-muted-foreground">Select stage...</option>
+                            <option value="Chick" className="bg-popover text-popover-foreground">Chick</option>
+                            <option value="Stag" className="bg-popover text-popover-foreground">Stag</option>
+                            <option value="Pullet" className="bg-popover text-popover-foreground">Pullet</option>
+                            <option value="Bull Stag" className="bg-popover text-popover-foreground">Bull Stag</option>
+                            <option value="Cock" className="bg-popover text-popover-foreground">Cock</option>
+                            <option value="Hen" className="bg-popover text-popover-foreground">Hen</option>
                           </select>
                         </div>
                         <div>
