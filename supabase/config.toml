@@ -1,0 +1,22 @@
+# Supabase local development configuration
+# See https://supabase.com/docs/guides/local-development/cli/config
+#
+# NOTE: This file drives the LOCAL Supabase dev stack via `supabase start`.
+# For the managed cloud project (the one the app connects to), the equivalent
+# OTP length must be set to 6 through the Auth configuration — either via the
+# `mailer_otp_length` auth setting (Management API PATCH /config/auth) or the
+# SMTP/OTP settings in the dashboard.
+
+project_id = "gallotrack"
+
+[auth]
+enabled = true
+enable_signup = true
+enable_confirmations = true
+
+[auth.email]
+# Number of characters used in the email OTP. Valid values are 6, 8, or 10.
+# 6 -> standard 6-digit numeric verification code.
+otp_length = 6
+# Number of seconds before the email OTP expires (defaults to 1 hour).
+otp_expiry = 3600

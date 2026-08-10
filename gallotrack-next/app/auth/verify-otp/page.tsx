@@ -35,18 +35,16 @@ function VerifyOtpCard() {
       setError('Please enter your registered email address.');
       return;
     }
-    if (!/^\d{6,10}$/.test(token.trim())) {
-      setError('Please enter the verification code sent to your Gmail (6 to 10 digits).');
+    if (!/^\d{6}$/.test(token.trim())) {
+      setError('Please enter the 6-digit verification code sent to your Gmail.');
       return;
     }
 
     setLoading(true);
     try {
-      // The numeric code entered here is the exact OTP token issued by
-      // Supabase for the signup confirmation. It must be verified verbatim -
-      // truncating it would produce an invalid-token error, because Supabase
-      // validates the full token against the stored hash server-side. Its
-      // length is controlled by Supabase's MAILER_OTP_LENGTH (6, 8 or 10).
+      // The 6-digit code entered here is the numeric OTP issued by Supabase
+      // for the signup confirmation (`[auth.email] otp_length = 6`). It is
+      // verified verbatim against the token hash stored on the auth server.
       const { data, error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: token.trim(),
@@ -92,7 +90,7 @@ function VerifyOtpCard() {
       if (resendError) {
         setError(resendError.message);
       } else {
-        setResendNotice('A new verification code has been sent to your Gmail. Check your inbox (and spam folder) — the previous code is no longer valid.');
+        setResendNotice('A new 6-digit verification code has been sent to your Gmail. Check your inbox (and spam folder) — the previous code is no longer valid.');
         setStatus('verifying');
       }
     } catch (err) {
@@ -154,7 +152,7 @@ function VerifyOtpCard() {
               <div>
                 <h2 className="text-base font-black text-card-foreground tracking-tight">Email Verification</h2>
                 <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">
-                  Enter the <strong className="text-emerald-400 font-black">verification code</strong> sent to your Gmail address to activate your farm owner account.
+                  Enter the <strong className="text-emerald-400 font-black">6-digit code</strong> sent to your Gmail address to activate your farm owner account.
                 </p>
               </div>
 
@@ -169,7 +167,7 @@ function VerifyOtpCard() {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={10}
+                  maxLength={6}
                   value={token}
                   onChange={(e) => setToken(e.target.value.replace(/[^0-9]/g, ''))}
                   className="w-full py-3.5 border border-input rounded-xl text-center text-lg font-black tracking-[0.5em] bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-foreground placeholder:text-muted-foreground placeholder:tracking-widest placeholder:font-normal"
