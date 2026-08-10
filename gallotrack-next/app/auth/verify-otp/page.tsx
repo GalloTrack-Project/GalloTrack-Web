@@ -35,14 +35,14 @@ function VerifyOtpCard() {
       setError('Please enter your registered email address.');
       return;
     }
-    if (!/^\d{6}$/.test(token.trim())) {
-      setError('Please enter the 6-digit verification code sent to your Gmail.');
+    if (!/^\d{8}$/.test(token.trim())) {
+      setError('Please enter the 8-digit verification code sent to your Gmail.');
       return;
     }
 
     setLoading(true);
     try {
-      // The 6-digit code entered here is the numeric OTP sent by Supabase in
+      // The 8-digit code entered here is the numeric OTP sent by Supabase in
       // the signup confirmation email. Verify it against the registered email
       // to activate the farm owner account.
       const { data, error: verifyError } = await supabase.auth.verifyOtp({
@@ -90,7 +90,7 @@ function VerifyOtpCard() {
       if (resendError) {
         setError(resendError.message);
       } else {
-        setResendNotice('A new 6-digit verification code has been sent to your Gmail. Check your inbox (and spam folder) — the previous code is no longer valid.');
+        setResendNotice('A new 8-digit verification code has been sent to your Gmail. Check your inbox (and spam folder) — the previous code is no longer valid.');
         setStatus('verifying');
       }
     } catch (err) {
@@ -152,7 +152,7 @@ function VerifyOtpCard() {
               <div>
                 <h2 className="text-base font-black text-card-foreground tracking-tight">Email Verification</h2>
                 <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">
-                  Enter the <strong className="text-emerald-400 font-black">6-digit code</strong> sent to your Gmail address to activate your farm owner account.
+                  Enter the <strong className="text-emerald-400 font-black">8-digit code</strong> sent to your Gmail address to activate your farm owner account.
                 </p>
               </div>
 
@@ -167,11 +167,11 @@ function VerifyOtpCard() {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
+                  maxLength={8}
                   value={token}
                   onChange={(e) => setToken(e.target.value.replace(/[^0-9]/g, ''))}
                   className="w-full py-3.5 border border-input rounded-xl text-center text-lg font-black tracking-[0.5em] bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-foreground placeholder:text-muted-foreground placeholder:tracking-widest placeholder:font-normal"
-                  placeholder="—— ——"
+                  placeholder="—— —— —— ——"
                   required
                 />
                 <p className="text-[9px] text-muted-foreground font-mono font-semibold mt-1.5">Check your Gmail inbox (and spam folder) for the code.</p>
