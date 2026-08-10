@@ -110,7 +110,6 @@ export default function RegisterPage() {
             farm_name: farmName.trim(),
             contact_number: contactNumber.trim(),
           },
-          emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/auth/confirm' : undefined,
         },
       });
 

@@ -25,6 +25,7 @@ function VerifyOtpCard() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState('');
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,18 +72,18 @@ function VerifyOtpCard() {
     }
     setResending(true);
     setError('');
+    setResendNotice('');
     try {
+      // Sending a fresh signup confirmation generates a NEW 6-digit OTP
+      // token that replaces the previous one (only the latest token is valid).
       const { error: resendError } = await supabase.auth.resend({
         type: 'signup',
         email: email.trim(),
-        options: {
-          emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/auth/confirm' : undefined,
-        },
       });
       if (resendError) {
         setError(resendError.message);
       } else {
-        setError('');
+        setResendNotice('A new 6-digit verification code has been sent to your Gmail. Check your inbox (and spam folder) — the previous code is no longer valid.');
         setStatus('verifying');
       }
     } catch (err) {
@@ -170,6 +171,10 @@ function VerifyOtpCard() {
               </div>
 
               {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>}
+
+              {resendNotice && (
+                <div className="text-xs text-emerald-300 font-bold text-center bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-xl leading-relaxed">{resendNotice}</div>
+              )}
 
               <button
                 type="submit"
