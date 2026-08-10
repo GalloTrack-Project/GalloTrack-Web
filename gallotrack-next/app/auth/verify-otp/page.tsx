@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { supabase, ensureOwnerRecords } from '@/lib/registry';
@@ -26,6 +26,33 @@ function VerifyOtpCard() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendNotice, setResendNotice] = useState('');
+  const digitRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleDigitChange = (i: number, raw: string) => {
+    const digit = raw.replace(/[^0-9]/g, '').slice(-1);
+    const boxed = token.split('');
+    boxed[i] = digit;
+    setToken(boxed.join(''));
+    if (digit && i < 5) {
+      digitRefs.current[i + 1]?.focus();
+    }
+    setError('');
+  };
+
+  const handleDigitKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, i: number) => {
+    if (e.key === 'Backspace' && !token[i] && i > 0) {
+      e.preventDefault();
+      digitRefs.current[i - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+    setToken(pasted);
+    const target = Math.min(Math.max(pasted.length, 0), 5);
+    digitRefs.current[target]?.focus();
+  };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,18 +190,26 @@ function VerifyOtpCard() {
 
               <div>
                 <label className={labelClass}>Verification Code</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  value={token}
-                  onChange={(e) => setToken(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full py-3.5 border border-input rounded-xl text-center text-lg font-black tracking-[0.5em] bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-foreground placeholder:text-muted-foreground placeholder:tracking-widest placeholder:font-normal"
-                  placeholder="—— ——"
-                  required
-                />
-                <p className="text-[9px] text-muted-foreground font-mono font-semibold mt-1.5">Check your Gmail inbox (and spam folder) for the code.</p>
+                <div className="flex items-center justify-center gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { digitRefs.current[i] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={1}
+                      autoFocus={i === 0}
+                      value={token[i] || ''}
+                      onChange={(e) => handleDigitChange(i, e.target.value)}
+                      onKeyDown={(e) => handleDigitKeyDown(e, i)}
+                      onPaste={handlePaste}
+                      aria-label={`Digit ${i + 1} of 6`}
+                      className="w-10 h-12 sm:w-11 sm:h-12 border border-input rounded-xl text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-foreground"
+                    />
+                  ))}
+                </div>
+                <p className="text-[9px] text-muted-foreground font-mono font-semibold mt-1.5">6-digit code. Check your Gmail inbox (and spam folder).</p>
               </div>
 
               {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>}
