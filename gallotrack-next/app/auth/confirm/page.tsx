@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { ensureOwnerRecords } from '@/lib/registry';
 
 const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co';
 const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3';
@@ -37,18 +38,22 @@ function ConfirmCard() {
         const type = (searchParams.get('type') as OtpType) || 'email';
 
         let confirmed = false;
+        let confirmedUser = null;
 
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
           confirmed = true;
+          confirmedUser = data.session?.user ?? null;
         } else if (tokenHash) {
-          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+          const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
           if (error) throw error;
           confirmed = true;
+          confirmedUser = data.session?.user ?? null;
         } else {
           const { data } = await supabase.auth.getSession();
           confirmed = !!data.session;
+          confirmedUser = data.session?.user ?? null;
           if (!confirmed) throw new Error('This link is invalid or has already been used.');
         }
 
@@ -57,6 +62,9 @@ function ConfirmCard() {
         // clear any cached identity — the user must log in manually via the
         // Login page instead of being dropped straight into the dashboard.
         if (confirmed) {
+          // Persist owner profile + farm rows from the signup metadata before
+          // dropping the session (inserts require an authenticated uid).
+          await ensureOwnerRecords(supabase, confirmedUser);
           await supabase.auth.signOut();
           try { localStorage.removeItem('gallotrack_user_id'); } catch { /* ignore */ }
           setStatus('success');
@@ -76,7 +84,7 @@ function ConfirmCard() {
 
 function StatusCard({ status, errorMessage }: { status: Status; errorMessage: string }) {
   return (
-    <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328] overflow-hidden relative">
+    <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328] light:from-emerald-50 light:via-slate-50 light:to-teal-50 overflow-hidden relative">
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="wireframe" width="60" height="60" patternUnits="userSpaceOnUse">
@@ -90,12 +98,12 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-slate-700/60">
+      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
         <div className="p-8 sm:p-10 space-y-7 text-center">
           <div className="text-center space-y-2">
             <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none">GALLOTRACK</h1>
-            <p className="text-[10px] text-slate-400 font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
+            <p className="text-[10px] text-muted-foreground font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 
           <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
@@ -112,8 +120,8 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Email Confirmed Successfully! 🎉</h2>
-              <p className="text-xs text-slate-400 font-semibold leading-relaxed">
+              <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Email Confirmed Successfully! 🎉</h2>
+              <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
                 Your account is now verified.
               </p>
               <Link
@@ -131,7 +139,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight">Confirmation Link Invalid</h2>
-              <p className="text-xs text-slate-400 font-semibold leading-relaxed">{errorMessage}</p>
+              <p className="text-xs text-muted-foreground font-semibold leading-relaxed">{errorMessage}</p>
               <Link
                 href="/"
                 className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2"
