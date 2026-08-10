@@ -42,7 +42,9 @@ interface FowlRecord {
   bloodline_pct: number;
   status: string;
   death_reason?: string;
+  death_date?: string;
   archive_reason?: string;
+  archive_date?: string;
   image_url?: string;
   created_at?: string;
 }
@@ -850,17 +852,17 @@ export default function GalloTrackSystem() {
     const r = (reason || 'RETIRED').toUpperCase();
     switch (r) {
       case 'SOLD':
-        return { label: '● SOLD', bg: 'bg-emerald-700 text-white' };
-      case 'CULLED':
-        return { label: '● CULLED', bg: 'bg-purple-800 text-white' };
+        return { label: 'ARCHIVED · SOLD', bg: 'bg-emerald-700 text-white' };
+      case 'TRANSFERRED':
+        return { label: 'ARCHIVED · TRANSFERRED', bg: 'bg-sky-700 text-white' };
       case 'RETIRED':
-        return { label: '● RETIRED', bg: 'bg-amber-600 text-white' };
-      case 'DIED':
-        return { label: '● DIED', bg: 'bg-rose-900 text-white' };
+        return { label: 'ARCHIVED · RETIRED', bg: 'bg-amber-600 text-white' };
+      case 'INACTIVE':
+        return { label: 'ARCHIVED · INACTIVE', bg: 'bg-slate-600 text-white' };
       case 'OTHER':
-        return { label: '● OTHER', bg: 'bg-slate-700 text-white' };
+        return { label: 'ARCHIVED · OTHER', bg: 'bg-slate-700 text-white' };
       default:
-        return { label: `● ${r}`, bg: 'bg-amber-600 text-white' };
+        return { label: 'ARCHIVED', bg: 'bg-amber-600 text-white' };
     }
   };
 
@@ -1838,7 +1840,7 @@ export default function GalloTrackSystem() {
                       <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
                         <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
                         <h3 className="text-base font-extrabold text-slate-800">Archived Registry Empty</h3>
-                        <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl records have been shifted to the relational archive log.</p>
+                        <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl records have been archived. Archived fowl are non-mortality removals (sold, transferred, retired, inactive); deaths belong under 💀 Deceased.</p>
                       </div>
                     ) : archivedFowls.map((fowl, index) => {
                       const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
@@ -1858,6 +1860,7 @@ export default function GalloTrackSystem() {
                             })()}
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-black text-slate-700">{fowl.name}</h4>
+                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 bg-amber-50 border-amber-200">📦 Archived</span>
                               <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
@@ -1865,6 +1868,7 @@ export default function GalloTrackSystem() {
                               <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                               <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
                               <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div className="col-span-2">Archive Reason: <strong className="text-amber-800">{fowl.archive_reason || 'Unspecified'}</strong></div>
                             </div>
                             
                             <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
@@ -1910,7 +1914,7 @@ export default function GalloTrackSystem() {
                               <div className="flex items-center space-x-2">
                                 <h4 className="text-base font-black text-slate-900 line-through opacity-75">{fowl.name}</h4>
                                 <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
-                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-slate-600 bg-slate-100 border-slate-200">Reason: {fowl.death_reason || 'Illness'}</span>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">💀 Cause of Death: {fowl.death_reason || 'Unspecified'}{fowl.death_date ? ` · ${fowl.death_date}` : ''}</span>
                               </div>
                               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                                 <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -2145,18 +2149,18 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                   <h4 className="text-lg font-black text-slate-900">{selectedFowlForDetails.name}</h4>
                   <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
                   {(() => {
+                    if (selectedFowlForDetails.status === 'Deceased') {
+                      return (
+                        <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase bg-rose-900 text-white border border-rose-950 shadow-2xs">
+                          💀 DECEASED
+                        </span>
+                      );
+                    }
                     if (selectedFowlForDetails.archive_reason) {
                       const badge = getArchiveBadgeStyle(selectedFowlForDetails.archive_reason);
                       return (
                         <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase ${badge.bg} border border-white/20 shadow-2xs`}>
                           {badge.label}
-                        </span>
-                      );
-                    }
-                    if (selectedFowlForDetails.status === 'Deceased') {
-                      return (
-                        <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase bg-rose-900 text-white border border-rose-950 shadow-2xs">
-                          ● DECEASED ({selectedFowlForDetails.death_reason || 'Illness'})
                         </span>
                       );
                     }
@@ -2170,6 +2174,17 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 <p className="text-[11px] text-slate-500 font-medium">
                   Growth Stage: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.growth_stage || 'Chick'}</strong> | Dynamic Age: <strong className="text-emerald-700 font-bold">{selectedFowlForDetails.age || 'N/A'}</strong>
                 </p>
+                {selectedFowlForDetails.status === 'Deceased' && (
+                  <p className="text-[11px] font-bold text-rose-600">
+                    💀 Cause of Death: <strong className="text-rose-800">{selectedFowlForDetails.death_reason || 'Unspecified'}</strong>
+                    {selectedFowlForDetails.death_date ? ` · Recorded ${selectedFowlForDetails.death_date}` : ''}
+                  </p>
+                )}
+                {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.archive_reason && (
+                  <p className="text-[11px] font-bold text-amber-700">
+                    📦 Archive Reason: <strong className="text-amber-800">{selectedFowlForDetails.archive_reason}</strong> (Non-Mortality)
+                  </p>
+                )}
               </div>
             </div>
 
@@ -2351,18 +2366,18 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
             <div className="flex items-center space-x-3 text-rose-700 border-b pb-3 border-rose-100">
               <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-xl">💀</div>
               <div>
-                <h3 className="text-base font-black text-slate-900 tracking-tight">Record Mortality Audit</h3>
-                <p className="text-[11px] text-slate-500 font-semibold">Transition node to Deceased status</p>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">Record Mortality</h3>
+                <p className="text-[11px] text-slate-500 font-semibold">Transition node to Deceased status — cause of death required</p>
               </div>
             </div>
 
-            <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200/60 space-y-1">
+            <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200/60 space-y-2">
               <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
-              <p className="text-[10px] text-slate-500">This action records the mortality of this gamefowl node in system analytics.</p>
+              <p className="text-[10px] text-slate-500 leading-relaxed">Use this ONLY when the fowl has died. Mortality removes the fowl from the active registry. Non-mortality removals (sold, transferred, retired, inactive) belong under <strong className="text-amber-700">📦 Archive</strong> instead.</p>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Cause / Reason of Death</label>
+              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Cause of Death</label>
               <select 
                 value={deathReasonInput} 
                 onChange={(e) => setDeathReasonInput(e.target.value)} 
@@ -2413,27 +2428,27 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
               <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center text-xl">📦</div>
               <div>
                 <h3 className="text-base font-black text-slate-900 tracking-tight">Archive Gamefowl Node</h3>
-                <p className="text-[11px] text-slate-500 font-semibold">Select reason for inventory removal</p>
+                <p className="text-[11px] text-slate-500 font-semibold">Select a NON-MORTALITY reason for inventory removal</p>
               </div>
             </div>
 
-            <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/60 space-y-1">
+            <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/60 space-y-2">
               <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-amber-800 font-black">{selectedFowlForArchive.name}</strong> ({selectedFowlForArchive.breed})</p>
-              <p className="text-[10px] text-slate-500">This node will be shifted to the relational archive log with the specified reason badge.</p>
+              <p className="text-[10px] text-slate-500 leading-relaxed">Archiving records a non-death disposition (sold, transferred, retired, inactive). It does NOT imply mortality. If the fowl has died, use <strong className="text-rose-700">💀 Deceased</strong> instead.</p>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Select Archive Reason</label>
+              <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Select Archive Reason (Non-Mortality)</label>
               <select 
                 value={archiveReasonInput} 
                 onChange={(e) => setArchiveReasonInput(e.target.value)} 
                 className="w-full p-3 border border-slate-200 rounded-xl text-xs bg-slate-50 font-extrabold text-slate-800 outline-none focus:border-amber-500 cursor-pointer"
               >
-                <option value="SOLD">🏷️ SOLD (Transferred or Sold to Buyer)</option>
-                <option value="RETIRED">🌾 RETIRED (Retired from Circuit / Breeding)</option>
-                <option value="CULLED">✂️ CULLED (Selective Culling)</option>
-                <option value="DIED">💀 DIED (Passed Away / Fight Trauma)</option>
-                <option value="OTHER">📦 OTHER (Unspecified Reason)</option>
+                <option value="SOLD">🏷️ SOLD — Sold / Transferred to a Buyer</option>
+                <option value="TRANSFERRED">🤝 TRANSFERRED — Moved to Another Farm / Owner</option>
+                <option value="RETIRED">🌾 RETIRED — Retired from Circuit / Breeding</option>
+                <option value="INACTIVE">⏸️ INACTIVE — Discontinued / On Hold (Non-Mortality)</option>
+                <option value="OTHER">📦 OTHER — Other Non-Mortality Reason</option>
               </select>
             </div>
 
