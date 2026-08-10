@@ -10,6 +10,7 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { ensureOwnerRecords } from '@/lib/registry';
+import { isAdminProfile } from '@/lib/admin';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -114,6 +115,7 @@ export default function GalloTrackSystem() {
   const { theme, setTheme } = useTheme();
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'deceased' | 'matchForm'>('form');
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -256,6 +258,12 @@ export default function GalloTrackSystem() {
           localStorage.setItem('gallotrack_user_id', session.user.id);
           setUsername(session.user.email?.split('@')[0] || 'admin');
           setCurrentPage('dashboard');
+          try {
+            const { data: profile } = await supabase.from('profiles').select('id, is_admin, role').eq('id', session.user.id).maybeSingle();
+            setIsAdmin(isAdminProfile(profile));
+          } catch {
+            setIsAdmin(false);
+          }
         }
       }
     }
@@ -274,6 +282,7 @@ export default function GalloTrackSystem() {
         if (user) {
           const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
           if (profile) {
+            setIsAdmin(isAdminProfile(profile));
             setAdminName(profile.full_name || 'Hazel Dela Cruz');
             setAvatarUrl(profile.avatar_url || '');
             localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
@@ -442,6 +451,14 @@ export default function GalloTrackSystem() {
         // Fetch or create profile row in the database
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
         if (profile) {
+          if (profile.is_active === false) {
+            await supabase.auth.signOut();
+            setError('This account has been deactivated by the administrator. Contact system support to restore access.');
+            typeof window !== 'undefined' && localStorage.removeItem('gallotrack_user_id');
+            return;
+          }
+          setCurrentUserId(data.user.id);
+          setIsAdmin(isAdminProfile(profile));
           if (profile.full_name) {
             welcomeName = profile.full_name.split(' ')[0];
             localStorage.setItem('gallotrack_admin_name', profile.full_name);
@@ -453,6 +470,7 @@ export default function GalloTrackSystem() {
             localStorage.setItem('gallotrack_admin_phone', profile.phone_number);
           }
         } else {
+          setIsAdmin(false);
           const fullNameMeta = data.user.user_metadata?.full_name || username;
           const { error: insertErr } = await supabase.from('profiles').insert([{
             id: data.user.id,
@@ -1099,6 +1117,17 @@ export default function GalloTrackSystem() {
                   <span>{menu.label}</span>
                 </button>
               ))}
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer ${
+                    'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  }`}
+                >
+                  <span className="text-base">🛡️</span>
+                  <span>Admin Panel</span>
+                </Link>
+              )}
             </nav>
           </div>
           

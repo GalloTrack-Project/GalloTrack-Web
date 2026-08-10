@@ -49,6 +49,7 @@ export async function ensureOwnerRecords(supabaseClient: SupabaseClient, user: U
       await supabaseClient.from('profiles').insert({
         id: user.id,
         user_id: user.id,
+        email: user.email || '',
         first_name: meta.first_name || '',
         middle_name: meta.middle_name || '',
         last_name: meta.last_name || '',
