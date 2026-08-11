@@ -25,9 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="h-full overflow-hidden">
+      <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-          <div className="h-full w-full overflow-hidden flex flex-col">
+          <div className="min-h-full w-full flex flex-col">
             {children}
           </div>
         </ThemeProvider>
