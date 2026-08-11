@@ -168,6 +168,9 @@ export default function GalloTrackSystem() {
   const [rememberMe, setRememberMe] = useState(false);
   const [adminName, setAdminName] = useState('Hazel Dela Cruz');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [userRole, setUserRole] = useState<'admin' | 'owner'>('owner');
+  const [userHub, setUserHub] = useState('ISUFST DINGLE HUB');
+  const [userActive, setUserActive] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
 
   const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
@@ -296,8 +299,11 @@ export default function GalloTrackSystem() {
           setUsername(session.user.email?.split('@')[0] || 'admin');
           setCurrentPage('dashboard');
           try {
-            const { data: profile } = await supabase.from('profiles').select('id, is_admin, role').eq('id', session.user.id).maybeSingle();
+            const { data: profile } = await supabase.from('profiles').select('id, is_admin, role, farm_name, is_active').eq('id', session.user.id).maybeSingle();
             setIsAdmin(isAdminProfile(profile));
+            setUserRole(profile && (profile.is_admin || profile.role === 'admin') ? 'admin' : 'owner');
+            setUserHub((profile && (profile.farm_name || '').trim()) || 'ISUFST DINGLE HUB');
+            setUserActive(profile ? profile.is_active !== false : true);
           } catch {
             setIsAdmin(false);
           }
@@ -322,6 +328,9 @@ export default function GalloTrackSystem() {
             setIsAdmin(isAdminProfile(profile));
             setAdminName(profile.full_name || 'Hazel Dela Cruz');
             setAvatarUrl(profile.avatar_url || '');
+            setUserRole(profile.is_admin || profile.role === 'admin' ? 'admin' : 'owner');
+            setUserHub((profile.farm_name || '').trim() || 'ISUFST DINGLE HUB');
+            setUserActive(profile.is_active !== false);
             localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
             localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url || '');
             localStorage.setItem('gallotrack_admin_phone', profile.phone_number || '');
@@ -1362,13 +1371,26 @@ export default function GalloTrackSystem() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-extrabold text-card-foreground truncate">{adminName}</p>
-                <p className="text-[9px] text-muted-foreground font-bold tracking-wider uppercase truncate">System Lead Admin</p>
+                <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                  userRole === 'admin'
+                    ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                    : 'bg-sky-500/15 border-sky-500/30 text-sky-400'
+                }`}>
+                  {userRole === 'admin' ? 'System Lead Admin' : 'Farm Owner'}
+                </span>
               </div>
+            </div>
+            <div className="px-2 -mt-1 flex items-center justify-between gap-2">
+              <span className={`inline-flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest ${userActive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${userActive ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}></span>
+                {userActive ? 'Access Active' : 'Access Restricted'}
+              </span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider truncate">📍 {userHub}</span>
             </div>
             <button type="button" onClick={() => setShowLogoutModal(true)} className="w-full bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 border border-border hover:border-rose-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
               <span>🚪 Log Out</span>
             </button>
-            <div className="text-center text-[9px] text-muted-foreground font-mono tracking-widest uppercase">ISUFST DINGLE HUB</div>
+            <div className="text-center text-[9px] text-muted-foreground font-mono tracking-widest uppercase">{userHub}</div>
           </div>
         </aside>
       )}
