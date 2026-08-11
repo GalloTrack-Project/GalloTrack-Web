@@ -82,7 +82,7 @@ export default function AdminSettingsPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 pb-16 max-w-3xl mx-auto">
+      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 pb-32 max-w-3xl mx-auto">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center space-x-3">
