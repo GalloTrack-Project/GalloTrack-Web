@@ -82,7 +82,7 @@ export default function AdminSettingsPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 pb-28 max-w-3xl mx-auto">
+      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 pb-40 max-w-3xl mx-auto">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center space-x-3">
@@ -103,18 +103,18 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* FIXED BOTTOM FLOATING FOOTER — always-visible commit bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-card/90 backdrop-blur-xl border-t border-border/70 px-4 sm:px-8 py-3.5 shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.4)]">
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-black text-muted-foreground uppercase tracking-widest">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-card/90 backdrop-blur-xl border-t border-border/70 px-4 sm:px-6 py-2.5 shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.4)]">
+          <div className="hidden sm:flex items-center gap-2 text-[9px] font-mono font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Configuration Changes Pending
+            Pending Changes
           </div>
           <button
             type="submit"
             form="system-settings-form"
             disabled={saving}
-            className="flex-1 sm:flex-none w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.98] text-white font-black py-3.5 px-8 rounded-xl text-xs tracking-widest shadow-lg shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2.5"
+            className="flex-1 sm:flex-none w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.98] text-white font-black py-2.5 px-6 rounded-lg text-[11px] tracking-widest shadow-lg shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+            {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
             {saving ? 'SAVING...' : '💾 COMMIT CONFIGURATION CHANGES'}
           </button>
         </div>
