@@ -194,8 +194,8 @@ export default function GalloTrackSystem() {
   const [newBirthdate, setNewBirthdate] = useState('');
   const [sireName, setSireName] = useState('');
   const [damName, setDamName] = useState('');
-  const [sirePct, setSirePct] = useState<number | string>(100);
-  const [damPct, setDamPct] = useState<number | string>(100);
+  const [sirePct, setSirePct] = useState<number | string>('');
+  const [damPct, setDamPct] = useState<number | string>('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [newLegColor, setNewLegColor] = useState('');
@@ -641,8 +641,8 @@ export default function GalloTrackSystem() {
         publicImageUrl = data.publicUrl;
       }
 
-      const sPct = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 100 : Number(sirePct);
-      const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 100 : Number(damPct);
+      const sPct = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Number(sirePct);
+      const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Number(damPct);
       const calculatedBloodline = (sPct + dPct) / 2;
       
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
@@ -891,8 +891,8 @@ export default function GalloTrackSystem() {
     setLoading(true);
 
     try {
-      const sPct = editSirePct === '' || editSirePct === null || isNaN(Number(editSirePct)) ? 100 : Number(editSirePct);
-      const dPct = editDamPct === '' || editDamPct === null || isNaN(Number(editDamPct)) ? 100 : Number(editDamPct);
+      const sPct = editSirePct === '' || editSirePct === null || isNaN(Number(editSirePct)) ? 0 : Number(editSirePct);
+      const dPct = editDamPct === '' || editDamPct === null || isNaN(Number(editDamPct)) ? 0 : Number(editDamPct);
       const calculatedBloodline = (sPct + dPct) / 2;
       const editAutoParts = getAgeParts(editBirthdate);
       const payload = {
@@ -2059,13 +2059,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="100" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 50" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="100" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 50" />
                         </div>
                       </div>
                       <div>
@@ -3070,13 +3070,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Sire Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="100" min="0" max="100" />
+                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 50" min="0" max="100" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Dam Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="100" min="0" max="100" />
+                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 50" min="0" max="100" />
                   </div>
                 </div>
               </div>
