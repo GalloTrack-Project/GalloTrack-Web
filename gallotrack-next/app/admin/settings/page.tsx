@@ -94,12 +94,23 @@ export default function AdminSettingsPage() {
               <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Admin-Controlled Application Configuration</p>
             </div>
           </div>
-          <Link
-            href="/admin"
-            className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer w-fit"
-          >
-            ← Back to Admin
-          </Link>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="submit"
+              form="system-settings-form"
+              disabled={saving}
+              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-2"
+            >
+              {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+              {saving ? 'SAVING...' : '💾 COMMIT'}
+            </button>
+            <Link
+              href="/admin"
+              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 text-white shadow-md shadow-slate-500/30 transition-all cursor-pointer w-fit"
+            >
+              ← Back to Admin
+            </Link>
+          </div>
         </div>
 
         {message && (
@@ -204,14 +215,6 @@ export default function AdminSettingsPage() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-4 rounded-2xl text-xs tracking-widest shadow-lg shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2.5"
-          >
-            {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-            {saving ? 'SAVING...' : '💾 COMMIT CONFIGURATION CHANGES'}
-          </button>
         </form>
 
         <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
