@@ -102,6 +102,36 @@ export default function AdminSettingsPage() {
           </Link>
         </div>
 
+        {/* STICKY SAVE FOOTER + FLOATING ACTION */}
+        <div className="sticky top-3 z-40 mb-4 flex items-center justify-between gap-3 bg-card/90 backdrop-blur-xl border border-border/70 rounded-2xl shadow-2xs px-4 py-3">
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-black text-muted-foreground uppercase tracking-widest">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Configuration Changes Pending
+          </div>
+          <button
+            type="submit"
+            form="system-settings-form"
+            disabled={saving}
+            className="flex-1 sm:flex-none w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.98] text-white font-black py-3 px-6 rounded-xl text-xs tracking-widest shadow-lg shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2.5"
+          >
+            {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+            {saving ? 'SAVING...' : '💾 COMMIT CONFIGURATION CHANGES'}
+          </button>
+        </div>
+
+        {/* FLOATING ACTION BUTTON — top-right quick save */}
+        <button
+          type="submit"
+          form="system-settings-form"
+          disabled={saving}
+          title="Commit configuration changes"
+          aria-label="Commit configuration changes"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 active:scale-95 text-white shadow-2xl shadow-emerald-500/40 border border-emerald-400/40 flex items-center justify-center text-xl cursor-pointer disabled:opacity-60 transition-all duration-200"
+        >
+          {saving ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '💾'}
+        </button>
+
+
         {message && (
           <div
             className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
@@ -125,7 +155,7 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-5">
+        <form id="system-settings-form" onSubmit={handleSave} className="space-y-5 [scroll-behavior:smooth] scroll-pt-24">
           {/* GENERAL */}
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 border-b border-border pb-3">General Configuration</h2>
@@ -204,20 +234,11 @@ export default function AdminSettingsPage() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-4 rounded-2xl text-xs tracking-widest shadow-lg shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2.5"
-          >
-            {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-            {saving ? 'SAVING...' : 'SAVE SYSTEM CONFIGURATION'}
-          </button>
+          <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
+            ISUFST DINGLE HUB · Admin-only settings panel
+          </p>
         </form>
-
-        <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
-          ISUFST DINGLE HUB · Admin-only settings panel
-        </p>
-      </div>
+        </div>
     </div>
   );
 }
