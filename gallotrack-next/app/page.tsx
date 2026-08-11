@@ -54,6 +54,8 @@ type SiblingRelation = {
   id: number;
   name: string;
   relation: 'Full Sibling' | 'Half-Sibling (Shared Sire)' | 'Half-Sibling (Shared Dam)';
+  sharedSire: string;
+  sharedDam: string;
 };
 
 interface MatchRecord {
@@ -521,9 +523,11 @@ export default function GalloTrackSystem() {
         const fs = (f.sire || '').trim().toLowerCase();
         const fd = (f.dam || '').trim().toLowerCase();
         if (!fs || !fd || fs === 'foundation stock' || fd === 'foundation stock') return null;
-        if (fs === sire && fd === dam) return { id: f.id, name: f.name, relation: 'Full Sibling' as const };
-        if (fs === sire) return { id: f.id, name: f.name, relation: 'Half-Sibling (Shared Sire)' as const };
-        if (fd === dam) return { id: f.id, name: f.name, relation: 'Half-Sibling (Shared Dam)' as const };
+        const sharedSire = (f.sire || '').trim();
+        const sharedDam = (f.dam || '').trim();
+        if (fs === sire && fd === dam) return { id: f.id, name: f.name, relation: 'Full Sibling' as const, sharedSire, sharedDam };
+        if (fs === sire) return { id: f.id, name: f.name, relation: 'Half-Sibling (Shared Sire)' as const, sharedSire, sharedDam: '' };
+        if (fd === dam) return { id: f.id, name: f.name, relation: 'Half-Sibling (Shared Dam)' as const, sharedSire: '', sharedDam };
         return null;
       })
       .filter((r): r is SiblingRelation => r !== null);
@@ -2606,16 +2610,35 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
               const full = relations.filter(r => r.relation === 'Full Sibling');
               const halfSire = relations.filter(r => r.relation === 'Half-Sibling (Shared Sire)');
               const halfDam = relations.filter(r => r.relation === 'Half-Sibling (Shared Dam)');
-              const renderGroup = (icon: string, label: string, tone: string, items: SiblingRelation[]) => {
-                if (items.length === 0) return null;
+              const relationCard = (r: SiblingRelation) => {
+                const isFull = r.relation === 'Full Sibling';
+                const isSire = r.relation === 'Half-Sibling (Shared Sire)';
+                const tone = isFull
+                  ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
+                  : isSire
+                  ? 'text-amber-700 border-amber-200 bg-amber-50'
+                  : 'text-sky-700 border-sky-200 bg-sky-50';
+                const icon = isFull ? '👥' : isSire ? '🐓' : '🐔';
+                const badge = isFull ? 'Full Sibling' : 'Half-Sibling';
+                const context = isFull
+                  ? `Shared Sire: ${r.sharedSire} & Dam: ${r.sharedDam}`
+                  : isSire
+                  ? `Shared Sire: ${r.sharedSire}`
+                  : `Shared Dam: ${r.sharedDam}`;
                 return (
-                  <div className="mb-3 last:mb-0">
-                    <p className={`text-[9px] font-black uppercase tracking-widest ${tone} mb-1.5`}>{icon} {label} ({items.length})</p>
-                    <div className="flex flex-wrap gap-2">
-                      {items.map(r => (
-                        <span key={r.id} className={`text-[10px] font-bold px-2.5 py-1 rounded-full border bg-white ${tone}`}>{r.name}</span>
-                      ))}
+                  <div
+                    key={r.id}
+                    title={`${r.name} — ${badge}. ${context}.`}
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:border-slate-200 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-slate-800 truncate">{r.name}</p>
+                        <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider truncate">{context}</p>
+                      </div>
                     </div>
+                    <span className={`text-[8px] font-black uppercase px-2.5 py-1 rounded-full border shrink-0 ${tone}`}>{badge}</span>
                   </div>
                 );
               };
@@ -2633,10 +2656,24 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     </p>
                   ) : (
                     <>
-                      <p className="text-[10px] text-slate-500 font-semibold mb-3">Automatically matched from the ancestral database by shared parents.</p>
-                      {renderGroup('👥', 'Full Siblings', 'text-emerald-700 border-emerald-200', full)}
-                      {renderGroup('🐓', 'Half-Siblings · Shared Sire', 'text-amber-700 border-amber-200', halfSire)}
-                      {renderGroup('🐔', 'Half-Siblings · Shared Dam', 'text-sky-700 border-sky-200', halfDam)}
+                      <p className="text-[10px] text-slate-500 font-medium bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
+                        <span className="text-sm shrink-0">🧬</span>
+                        <span>
+                          <strong className="text-slate-700">How lineage is matched:</strong> birds sharing both the same{' '}
+                          <strong className="text-slate-700">Sire</strong> and <strong className="text-slate-700">Dam</strong> are <strong className="text-emerald-700">Full Siblings</strong>;
+                          sharing only one parent marks them as <strong className="text-amber-700">Half-Siblings</strong>. New encodes appear here instantly.
+                        </span>
+                      </p>
+                      <div className="space-y-2 mb-3">
+                        {relations.map(relationCard)}
+                      </div>
+                      {(full.length > 0 || halfSire.length > 0 || halfDam.length > 0) && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2.5 border-t border-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-emerald-700">👥 {full.length} Full</span>
+                          <span className="text-amber-700">🐓 {halfSire.length} Sire-side Half</span>
+                          <span className="text-sky-700">🐔 {halfDam.length} Dam-side Half</span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
