@@ -1859,7 +1859,7 @@ export default function GalloTrackSystem() {
                 {/* ENCODE NODE FORM */}
                 {profilingSubTab === 'form' && (
                   <form onSubmit={handleAddFowl} className="space-y-5 animate-fadeIn">
-                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 relative z-30">
                       <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100">
                         <h3 className="font-black text-xs text-emerald-700 uppercase tracking-wider flex items-center space-x-2">
                           <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">1</span>
