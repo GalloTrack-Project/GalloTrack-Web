@@ -518,10 +518,7 @@ export default function GalloTrackSystem() {
     setSuccessMessage('');
     setLoading(true);
 
-    let loginEmail = username;
-    if (!username.includes('@')) {
-      loginEmail = `${username}@gallotrack.com`;
-    }
+    const loginEmail = username.trim();
 
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -1241,14 +1238,14 @@ export default function GalloTrackSystem() {
               </div>
 
               <form onSubmit={handleLogin} className="space-y-5">
-                  {/* ADMIN ID */}
+                  {/* EMAIL ADDRESS */}
                   <div>
-                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">ADMIN ID</label>
+                    <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">EMAIL ADDRESS</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                       </span>
-                      <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter admin ID" required />
+                      <input type="email" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground" placeholder="Enter your email address" autoComplete="email" required />
                     </div>
                   </div>
 
