@@ -169,8 +169,9 @@ export default function GalloTrackSystem() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [strainSelect, setStrainSelect] = useState('');
-  const [customStrain, setCustomStrain] = useState('');
+  const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
+  const [strainQuery, setStrainQuery] = useState('');
+  const [strainOpen, setStrainOpen] = useState(false);
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
@@ -374,12 +375,57 @@ export default function GalloTrackSystem() {
       } else {
         setMatchHistory([]);
       }
+      fetchStrains();
     } catch (err) {
       console.error(err);
       setFowls([]);
       setMatchHistory([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStrains = async (): Promise<string[]> => {
+    let names: string[] = [];
+    try {
+      const { data, error } = await supabase
+        .from('strains')
+        .select('name')
+        .order('name', { ascending: true });
+      if (!error && data) {
+        names = data.map((row: { name: string }) => row.name);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    const merged = Array.from(new Set([...names, ...STRAIN_LIST]))
+      .sort((a, b) => a.localeCompare(b));
+    setAvailableStrains(merged);
+    return merged;
+  };
+
+  const saveCustomStrain = async (name?: string): Promise<void> => {
+    const cleaned = (name || '').trim();
+    if (!cleaned) return;
+    if (availableStrains.some((s) => s.toLowerCase() === cleaned.toLowerCase())) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('strains')
+        .insert({ name: cleaned, is_custom: true, created_by: user?.id || null });
+      if (error) {
+        if ((error.message || '').toLowerCase().includes('duplicate') || (error.code) === '23505') {
+          fetchStrains();
+        } else {
+          console.error(error);
+        }
+        return;
+      }
+      setAvailableStrains((prev) =>
+        Array.from(new Set([...prev, cleaned])).sort((a, b) => a.localeCompare(b))
+      );
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -638,7 +684,8 @@ export default function GalloTrackSystem() {
         showToastMessage(`Database Error: ${insertErr.message}`, 'error');
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainSelect(''); setCustomStrain(''); setImagePreview('');
+        saveCustomStrain(newBreed);
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setImagePreview('');
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -875,6 +922,7 @@ export default function GalloTrackSystem() {
       if (updateErr) throw updateErr;
 
       showToastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
+      saveCustomStrain(editBreed);
       setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: any) {
@@ -1826,28 +1874,70 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Genetic Strain</label>
-                          <select
-                            value={strainSelect}
-                            onChange={(e) => { const v = e.target.value; setStrainSelect(v); if (v !== '__other') { setNewBreed(v); setCustomStrain(''); } }}
-                            className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${strainSelect ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
-                            required
-                          >
-                            <option value="" disabled className="bg-popover text-muted-foreground">Select Genetic Strain</option>
-                            {STRAIN_LIST.map((s) => (
-                              <option key={s} value={s} className="bg-popover text-popover-foreground">{s}</option>
-                            ))}
-                            <option value="__other" className="bg-popover text-popover-foreground">Other (custom strain)...</option>
-                          </select>
-                          {strainSelect === '__other' && (
-                            <input
-                              type="text"
-                              value={customStrain}
-                              onChange={(e) => { setCustomStrain(e.target.value); setNewBreed(e.target.value); }}
-                              className="mt-2 w-full p-3 border border-input rounded-xl text-xs bg-muted text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
-                              placeholder="Type custom strain name..."
-                              required
-                            />
-                          )}
+                          <div className="relative">
+                            <div className="relative">
+                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🧬</span>
+                              <input
+                                type="text"
+                                value={strainQuery}
+                                onChange={(e) => { setStrainQuery(e.target.value); setNewBreed(e.target.value); setStrainOpen(true); }}
+                                onFocus={() => setStrainOpen(true)}
+                                onBlur={() => setTimeout(() => setStrainOpen(false), 150)}
+                                placeholder="Select or type a strain (e.g. Kelso, Hatch, or custom)..."
+                                className={`w-full pl-9 pr-9 p-3 border border-input rounded-xl text-xs bg-muted outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold ${strainQuery ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setStrainOpen((o) => !o)}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border border-slate-200 bg-white text-slate-400 text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
+                                aria-label="Toggle strain list"
+                              >
+                                ▾
+                              </button>
+                            </div>
+                            {strainOpen && (
+                              <div className="absolute z-20 mt-1.5 w-full bg-popover border border-border rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col">
+                                <div className="overflow-y-auto">
+                                  {(() => {
+                                    const q = strainQuery.trim().toLowerCase();
+                                    const matching = q
+                                      ? availableStrains.filter((s) => s.toLowerCase().includes(q)).slice(0, 8)
+                                      : availableStrains.slice(0, 8);
+                                    if (q && !availableStrains.some((s) => s.toLowerCase() === q)) {
+                                      return (
+                                        <>
+                                          <button
+                                            type="button"
+                                            onMouseDown={(e) => { e.preventDefault(); setStrainQuery(strainQuery.trim()); setNewBreed(strainQuery.trim()); setStrainOpen(false); }}
+                                            className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
+                                          >
+                                            <span className="text-xs font-black text-emerald-600">➕ Save &quot;{strainQuery.trim()}&quot; as new genetic strain</span>
+                                            <span className="text-[9px] font-mono text-emerald-500 uppercase shrink-0">Auto-saved</span>
+                                          </button>
+                                          {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Matching strains</div>}
+                                          {matching.map((s) => (
+                                            <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); setStrainQuery(s); setNewBreed(s); setStrainOpen(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
+                                              {s}
+                                            </button>
+                                          ))}
+                                        </>
+                                      );
+                                    }
+                                    return matching.map((s) => (
+                                      <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); setStrainQuery(s); setNewBreed(s); setStrainOpen(false); }} className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-muted transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : 'text-muted-foreground'}`}>
+                                        {s}
+                                      </button>
+                                    ));
+                                  })()}
+                                  {strainQuery.trim() === '' && availableStrains.length === 0 && (
+                                    <div className="px-4 py-3 text-[10px] text-muted-foreground font-semibold">No strains saved yet — type a name to create one.</div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Choose an existing strain or type a new one — new strains are saved automatically and available for future entries.</p>
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
@@ -2823,18 +2913,9 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                       required 
                     />
                     <datalist id="edit-genetic-strains">
-                      <option value="Sweater" />
-                      <option value="Hatch" />
-                      <option value="Roundhead" />
-                      <option value="Kelso" />
-                      <option value="Lemon 84" />
-                      <option value="Albany" />
-                      <option value="Claret" />
-                      <option value="Whitehackle" />
-                      <option value="Black" />
-                      <option value="Melsin" />
-                      <option value="Bennie" />
-                      <option value="Joe Madigin" />
+                      {availableStrains.map((s) => (
+                        <option key={s} value={s} />
+                      ))}
                     </datalist>
                   </div>
                   <div>
