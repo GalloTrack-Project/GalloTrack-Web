@@ -69,6 +69,36 @@ interface ToastState {
   type: 'success' | 'error' | 'warning';
 }
 
+interface AgeParts {
+  years: number;
+  months: number;
+  days: number;
+  totalDays: number;
+  totalWeeks: number;
+  totalMonths: number;
+}
+
+interface DevelopmentStage {
+  id: string;
+  stage: string;
+  fromMonths: number;
+  toMonths: number;
+  icon: string;
+  note: string;
+}
+
+interface RolledMilestoneStage extends DevelopmentStage {
+  date: Date;
+  daysUntil: number;
+}
+
+interface MilestoneInfo {
+  parts: AgeParts;
+  current: DevelopmentStage | null;
+  stages: DevelopmentStage[];
+  next: RolledMilestoneStage | null;
+}
+
 function TrendChip({ up, label }: { up: boolean; label: string }) {
   if (!up) {
     return <span className="text-[10px] font-bold text-slate-400">{label}</span>;
@@ -190,6 +220,7 @@ export default function GalloTrackSystem() {
   const [editBehaviorTrait, setEditBehaviorTrait] = useState('');
   const [editEyeVariant, setEditEyeVariant] = useState('');
   const [editAge, setEditAge] = useState('');
+  const [editBirthdate, setEditBirthdate] = useState('');
   const [editGrowthStage, setEditGrowthStage] = useState('');
   const [editWeight, setEditWeight] = useState('');
   const [editHeight, setEditHeight] = useState('');
@@ -395,6 +426,27 @@ export default function GalloTrackSystem() {
     }
   };
 
+  const handleNewBirthdateChange = (val: string) => {
+    setNewBirthdate(val);
+    const parts = getAgeParts(val);
+    if (parts) {
+      setAge(String(parts.totalMonths));
+      setNewGrowthStage(autoComputeGrowthStage(parts.totalMonths, newGender || 'Rooster'));
+    } else {
+      setAge('');
+      setNewGrowthStage('');
+    }
+  };
+
+  const handleEditBirthdateChange = (val: string) => {
+    setEditBirthdate(val);
+    const parts = getAgeParts(val);
+    if (parts) {
+      setEditAge(String(parts.totalMonths));
+      setEditGrowthStage(autoComputeGrowthStage(parts.totalMonths, editGender || 'Rooster'));
+    }
+  };
+
   const getSiblingsForFowl = (sire: string, dam: string, currentId: number) => {
     if (!sire || !dam || sire === 'Foundation Stock' || dam === 'Foundation Stock') return [];
     return fowls
@@ -551,6 +603,8 @@ export default function GalloTrackSystem() {
         return;
       }
 
+      const autoParts = getAgeParts(newBirthdate);
+
       const payload = {
         user_id: (await supabase.auth.getUser()).data.user?.id || activeUserId,
         name: newName,
@@ -558,11 +612,15 @@ export default function GalloTrackSystem() {
         gender: newGender || 'Rooster',
         color: newColor,
         color_category: newColorCategory,
-        growth_stage: newGrowthStage,
+        growth_stage: autoParts ? autoComputeGrowthStage(autoParts.totalMonths, newGender || 'Rooster') : newGrowthStage,
         behavior_trait: newBehaviorTrait,
         eye_variant: newEyeVariant,
-        birthdate: newBirthdate || '2026-01-01',
-        age: age ? `${age} Months` : 'N/A',
+        birthdate: newBirthdate || '',
+        age: autoParts
+          ? `${autoParts.totalMonths} Months`
+          : age && !isNaN(Number(age))
+          ? `${Number(age)} Months`
+          : 'N/A',
         weight: weight ? `${weight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
         height: height ? `${height.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
         sire: sireName.trim() ? sireName.trim() : 'Foundation Stock',
@@ -580,7 +638,7 @@ export default function GalloTrackSystem() {
         showToastMessage(`Database Error: ${insertErr.message}`, 'error');
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewGrowthStage(''); setSelectedImage(null); setStrainSelect(''); setCustomStrain(''); setImagePreview('');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainSelect(''); setCustomStrain(''); setImagePreview('');
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -765,6 +823,7 @@ export default function GalloTrackSystem() {
     setEditEyeVariant(fowl.eye_variant || 'Standard Eye');
     const parsedAge = fowl.age ? Number(fowl.age.replace(/[^0-9.]/g, '')) : 0;
     setEditAge(fowl.age ? fowl.age.replace(' Months', '') : '');
+    setEditBirthdate(fowl.birthdate || '');
     setEditGrowthStage(fowl.growth_stage || autoComputeGrowthStage(isNaN(parsedAge) ? 0 : parsedAge, fowl.gender));
     setEditWeight(fowl.weight ? fowl.weight.replace(' kg', '') : '');
     setEditHeight(fowl.height ? fowl.height.replace(' cm', '') : '');
@@ -783,16 +842,22 @@ export default function GalloTrackSystem() {
       const sPct = editSirePct === '' || editSirePct === null || isNaN(Number(editSirePct)) ? 100 : Number(editSirePct);
       const dPct = editDamPct === '' || editDamPct === null || isNaN(Number(editDamPct)) ? 100 : Number(editDamPct);
       const calculatedBloodline = (sPct + dPct) / 2;
+      const editAutoParts = getAgeParts(editBirthdate);
       const payload = {
         name: editName,
         breed: editBreed,
         gender: editGender,
         color: editColor,
         color_category: editColorCategory,
-        growth_stage: editGrowthStage,
+        growth_stage: editAutoParts ? autoComputeGrowthStage(editAutoParts.totalMonths, editGender || 'Rooster') : editGrowthStage,
         behavior_trait: editBehaviorTrait,
         eye_variant: editEyeVariant,
-        age: editAge ? `${editAge} Months` : 'N/A',
+        birthdate: editBirthdate || '',
+        age: editAutoParts
+          ? `${editAutoParts.totalMonths} Months`
+          : editAge && !isNaN(Number(editAge))
+          ? `${Number(editAge)} Months`
+          : 'N/A',
         weight: editWeight ? `${editWeight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
         height: editHeight ? `${editHeight.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
         sire: editSire.trim() ? editSire.trim() : 'Foundation Stock',
@@ -865,6 +930,107 @@ export default function GalloTrackSystem() {
         return { label: 'ARCHIVED', bg: 'bg-amber-600 text-white' };
     }
   };
+
+  // ============================================================
+  // BIRTH DATE → AUTO AGE & GROWTH MILESTONE CALCULATIONS
+  // ============================================================
+  const parseFowlDate = (value?: string | null): Date | null => {
+    if (!value) return null;
+    const numeric = String(value).replace(/[^0-9]/g, '').slice(0, 8);
+    if (numeric.length !== 8) return null;
+    const d = new Date(`${numeric.slice(0, 4)}-${numeric.slice(4, 6)}-${numeric.slice(6, 8)}T00:00:00`);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const zeroedToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const getAgeParts = (birthdate?: string | null, from?: Date): AgeParts | null => {
+    const birth = parseFowlDate(birthdate);
+    if (!birth) return null;
+    const now = from ? new Date(from) : zeroedToday();
+    now.setHours(0, 0, 0, 0);
+    let totalDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
+    if (totalDays < 0) totalDays = 0;
+    let years = now.getFullYear() - birth.getFullYear();
+    let months = now.getMonth() - birth.getMonth();
+    let days = now.getDate() - birth.getDate();
+    if (days < 0) {
+      months -= 1;
+      days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    const totalWeeks = Math.floor(totalDays / 7);
+    const totalMonths = Math.max(0, years * 12 + months);
+    return { years, months, days, totalDays, totalWeeks, totalMonths };
+  };
+
+  const getAgeLabel = (p: AgeParts): string => {
+    if (p.totalDays === 0) return '0 days';
+    if (p.years > 0) return `${p.years} yr ${p.months} mo`;
+    if (p.months > 0) return `${p.months} mo ${p.days} d`;
+    return `${p.days} d`;
+  };
+
+  const getAgeExact = (p: AgeParts): string => {
+    const y = p.years > 0 ? `${p.years} year${p.years === 1 ? '' : 's'}${p.months > 0 || p.days > 0 ? ', ' : ''}` : '';
+    const m = p.months > 0 ? `${p.months} month${p.months === 1 ? '' : 's'}${p.days > 0 ? ', ' : ''}` : '';
+    return `${y}${m}${p.days} day${p.days === 1 ? '' : 's'}`;
+  };
+
+  const getAgeMetrics = (p: AgeParts): string =>
+    `${p.totalMonths} months · ${p.totalWeeks} weeks · ${p.totalDays} days`;
+
+  const addMonthsToDate = (base: Date, months: number): Date => {
+    const d = new Date(base);
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + months);
+    if (d.getDate() < day) d.setDate(0);
+    return d;
+  };
+
+  const getDevelopmentStages = (gender?: string): DevelopmentStage[] => {
+    const female = gender === 'Hen' || gender === 'Pullet';
+    return female
+      ? [
+          { id: 'Chick', stage: 'Chick', fromMonths: 0, toMonths: 6, icon: '🐣', note: 'Brooding & starter feed phase' },
+          { id: 'Pullet', stage: 'Pullet', fromMonths: 6, toMonths: 12, icon: '🐤', note: 'Grower phase — feathering out' },
+          { id: 'Hen', stage: 'Hen', fromMonths: 12, toMonths: 24, icon: '🐔', note: 'Mature laying hen' },
+          { id: 'Senior Hen', stage: 'Hen', fromMonths: 24, toMonths: Infinity, icon: '🦅', note: 'Senior breeder / retired rotation' },
+        ]
+      : [
+          { id: 'Chick', stage: 'Chick', fromMonths: 0, toMonths: 6, icon: '🐣', note: 'Brooding & starter feed phase' },
+          { id: 'Stag', stage: 'Stag', fromMonths: 6, toMonths: 12, icon: '🐤', note: 'Grower phase — conditioning' },
+          { id: 'Bull Stag', stage: 'Bull Stag', fromMonths: 12, toMonths: 24, icon: '🐓', note: 'Training & fight preparation' },
+          { id: 'Cock', stage: 'Cock', fromMonths: 24, toMonths: Infinity, icon: '⚔️', note: 'Prime fighting cock / proven breeder' },
+        ];
+  };
+
+  const getMilestoneInfo = (birthdate?: string | null, gender?: string, from?: Date): MilestoneInfo | null => {
+    const birth = parseFowlDate(birthdate);
+    if (!birth) return null;
+    const parts = getAgeParts(birthdate, from);
+    if (!parts) return null;
+    const now = from ? new Date(from) : zeroedToday();
+    const stages = getDevelopmentStages(gender);
+    const current = stages.filter((s) => parts.totalMonths >= s.fromMonths && parts.totalMonths < s.toMonths).pop() || null;
+    const nextStage = stages.find((s) => parts.totalMonths < s.fromMonths) || null;
+    const next: RolledMilestoneStage | null = nextStage
+      ? { ...nextStage, date: addMonthsToDate(birth, nextStage.fromMonths), daysUntil: Math.ceil((addMonthsToDate(birth, nextStage.fromMonths).getTime() - now.getTime()) / 86400000) }
+      : null;
+    return { parts, current, stages, next };
+  };
+
+  const upcomingMilestones = activeFowls
+    .map((f) => ({ fowl: f, info: getMilestoneInfo(f.birthdate, f.gender) }))
+    .filter((x): x is { fowl: FowlRecord; info: MilestoneInfo } => !!x.info)
+    .sort((a, b) => (a.info.next?.daysUntil ?? 999999) - (b.info.next?.daysUntil ?? 999999));
 
   const crossbreedChartData = calculateCrossbreedWinRatios();
 
@@ -1370,6 +1536,54 @@ export default function GalloTrackSystem() {
                   </div>
                 </div>
 
+                {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
+                {upcomingMilestones.length > 0 && (
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">📅</span>
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900 tracking-tight">Development Calendar &amp; Upcoming Milestones</h3>
+                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Stage transitions predicted from each fowl&apos;s birth date — around the corner: {upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">AUTO-CALCULATED</span>
+                    </div>
+                    <div className="space-y-2">
+                      {upcomingMilestones.slice(0, 8).map(({ fowl, info }) => {
+                        const soon = info.next !== null && info.next.daysUntil >= 0 && info.next.daysUntil <= 30;
+                        const overdue = info.next !== null && info.next.daysUntil < 0;
+                        return (
+                          <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200' : overdue ? 'bg-rose-50/70 border-rose-200' : 'bg-slate-50/60 border-slate-100'}`}>
+                            <span className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-black text-slate-800 truncate">{fowl.name} <span className="text-[9px] font-bold text-slate-400 font-mono">#{fowl.id}</span></p>
+                              <p className="text-[10px] text-slate-400 font-semibold truncate">
+                                {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {info.next ? (
+                                <>
+                                  <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-700' : overdue ? 'text-rose-600' : 'text-amber-700'}`}>
+                                    {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
+                                  </p>
+                                  <p className="text-[9px] font-mono text-slate-400 font-bold">
+                                    {info.next.date.toLocaleDateString()} · {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
+                                  </p>
+                                </>
+                              ) : (
+                                <p className="text-[10px] font-black text-emerald-700 uppercase">Fully mature</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-3 text-[9px] text-slate-400 font-semibold text-right">Mirrors the 📅 Development Timeline on each fowl&apos;s analytics profile.</p>
+                  </div>
+                )}
+
                 {/* MIDDLE CHARTS ROW — 2 CARDS */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -1651,10 +1865,33 @@ export default function GalloTrackSystem() {
                         <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">2</span>
                         <span>Step 2: Physical Parameters</span>
                       </h3>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
+                          Birth Date <span className="text-emerald-600 font-black">· required — age is auto-calculated</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={newBirthdate}
+                          onChange={(e) => handleNewBirthdateChange(e.target.value)}
+                          max={new Date().toISOString().split('T')[0]}
+                          className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-semibold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+                          required
+                        />
+                        {(() => {
+                          const parts = getAgeParts(newBirthdate);
+                          return parts ? (
+                            <p className="mt-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
+                              📅 Auto Age: {getAgeLabel(parts)} &nbsp;·&nbsp; <span className="font-mono font-semibold">Exact {getAgeExact(parts)}</span>
+                            </p>
+                          ) : (
+                            <p className="mt-1.5 text-[10px] text-slate-400 font-semibold">Age, growth stage, and calendar milestones are derived automatically from this date.</p>
+                          );
+                        })()}
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Age (Mos)</label>
-                          <input type="number" value={age} onChange={(e) => handleAgeChange(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs text-center font-extrabold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none" placeholder="0" required />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && <span className="text-emerald-600 font-black">· auto</span>}</label>
+                          <input type="number" value={newBirthdate ? String((getAgeParts(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate} className="w-full p-3 border border-slate-300 rounded-xl text-xs text-center font-extrabold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none" placeholder="0" required />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Growth Stage</label>
@@ -1783,6 +2020,17 @@ export default function GalloTrackSystem() {
                               <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                               <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
                               <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span>📅 Age:</span>
+                                {(() => {
+                                  const p = getAgeParts(fowl.birthdate);
+                                  return p ? (
+                                    <strong className="text-emerald-700 font-black">{getAgeLabel(p)} <span className="font-mono font-semibold text-slate-400">· born {fowl.birthdate}</span></strong>
+                                  ) : (
+                                    <strong className="text-amber-700 font-bold">{fowl.age || 'No birth date'}</strong>
+                                  );
+                                })()}
+                              </div>
                               <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
                                 <span>Per-Fowl Win Rate:</span>
                                 {(() => {
@@ -2172,8 +2420,18 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                   })()}
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Growth Stage: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.growth_stage || 'Chick'}</strong> | Dynamic Age: <strong className="text-emerald-700 font-bold">{selectedFowlForDetails.age || 'N/A'}</strong>
+                  Growth Stage: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.growth_stage || 'Chick'}</strong> | Auto Age: <strong className="text-emerald-700 font-bold">{(() => { const p = getAgeParts(selectedFowlForDetails.birthdate); return p ? getAgeLabel(p) : selectedFowlForDetails.age || 'N/A'; })()}</strong>
                 </p>
+                {(() => {
+                  const p = getAgeParts(selectedFowlForDetails.birthdate);
+                  return p ? (
+                    <p className="text-[10px] font-mono text-slate-400 font-semibold">
+                      Born {selectedFowlForDetails.birthdate} · Exact {getAgeExact(p)} · {getAgeMetrics(p)}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-amber-600 font-bold">⚠️ No birth date recorded — use ✏️ Edit to set one for automatic age &amp; milestone tracking.</p>
+                  );
+                })()}
                 {selectedFowlForDetails.status === 'Deceased' && (
                   <p className="text-[11px] font-bold text-rose-600">
                     💀 Cause of Death: <strong className="text-rose-800">{selectedFowlForDetails.death_reason || 'Unspecified'}</strong>
@@ -2187,6 +2445,53 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 )}
               </div>
             </div>
+
+            {/* DEVELOPMENT TIMELINE & MILESTONES */}
+            {(() => {
+              const info = getMilestoneInfo(selectedFowlForDetails.birthdate, selectedFowlForDetails.gender);
+              if (!info) return null;
+              return (
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-5">
+                  <h4 className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-100 mb-3">
+                    <span>📅 Development Timeline &amp; Calendar Milestones</span>
+                    <span className="font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">CURRENT: {info.current?.stage || '—'}</span>
+                  </h4>
+                  <div className="space-y-2">
+                    {info.stages.map((s) => {
+                      const isCurrent = info.current?.id === s.id;
+                      const isPast = info.parts.totalMonths >= s.toMonths;
+                      const isNext = info.next !== null && info.next.id === s.id;
+                      return (
+                        <div key={s.id} className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${isCurrent ? 'bg-emerald-50 border-emerald-300 shadow-sm' : isPast ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-100'}`}>
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0 ${isCurrent ? 'bg-emerald-600' : isPast ? 'bg-slate-200' : 'bg-white border border-slate-200'}`}>{s.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-black ${isCurrent ? 'text-emerald-800' : isPast ? 'text-slate-500' : 'text-slate-700'}`}>
+                              {s.stage} <span className="font-mono text-[9px] text-slate-400">({s.fromMonths}–{isFinite(s.toMonths) ? s.toMonths : '∞'} mo)</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-medium truncate">{s.note}</p>
+                          </div>
+                          {isCurrent ? (
+                            <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full shrink-0">● Current</span>
+                          ) : isPast ? (
+                            <span className="text-[9px] font-bold text-slate-400 shrink-0">✓ Reached</span>
+                          ) : isNext && info.next ? (
+                            <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 border ${info.next.daysUntil >= 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-500 bg-slate-100 border-slate-200'}`}>
+                              {info.next.daysUntil >= 0 ? `Next · in ${info.next.daysUntil}d` : `Due · ${Math.abs(info.next.daysUntil)}d overdue`}
+                            </span>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {info.next && (
+                    <p className="mt-3 text-[10px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 font-semibold">
+                      🗓️ Next milestone: reach <span className="text-amber-700 font-black">{info.next.stage}</span> around <span className="text-slate-800 font-black">{info.next.date.toLocaleDateString()}</span>
+                      {info.next.daysUntil >= 0 ? ` — in ${info.next.daysUntil} day${info.next.daysUntil === 1 ? '' : 's'}.` : ` (already ${Math.abs(info.next.daysUntil)} days past due).`}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* COMBAT PERFORMANCE STATS VECTOR */}
             {(() => {
@@ -2573,10 +2878,22 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     </select>
                   </div>
                 </div>
+                <div className="mb-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Birth Date <span className="text-emerald-600 font-black">· auto age</span></label>
+                  <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-semibold outline-none focus:border-emerald-500" />
+                  {(() => {
+                    const parts = getAgeParts(editBirthdate);
+                    return parts ? (
+                      <p className="mt-1 text-[10px] font-bold text-emerald-700">📅 Auto Age: {getAgeLabel(parts)} · <span className="font-mono">{getAgeMetrics(parts)}</span></p>
+                    ) : (
+                      <p className="mt-1 text-[10px] text-slate-400 font-medium">Set a birth date for automatic age &amp; milestone tracking.</p>
+                    );
+                  })()}
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age (Mos)</label>
-                    <input type="number" value={editAge} onChange={(e) => handleEditAgeChange(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs text-center font-bold bg-white text-neutral-900 placeholder:text-neutral-400" required />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Age (Mos) {editBirthdate && <span className="text-emerald-600 font-black">· auto</span>}</label>
+                    <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs text-center font-bold bg-white text-neutral-900 placeholder:text-neutral-400" required />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Growth</label>
