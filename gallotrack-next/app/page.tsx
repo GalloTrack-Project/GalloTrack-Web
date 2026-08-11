@@ -50,6 +50,12 @@ interface FowlRecord {
   created_at?: string;
 }
 
+type SiblingRelation = {
+  id: number;
+  name: string;
+  relation: 'Full Sibling' | 'Half-Sibling (Shared Sire)' | 'Half-Sibling (Shared Dam)';
+};
+
 interface MatchRecord {
   id: number;
   user_id?: string | number;
@@ -505,11 +511,22 @@ export default function GalloTrackSystem() {
     }
   };
 
-  const getSiblingsForFowl = (sire: string, dam: string, currentId: number) => {
-    if (!sire || !dam || sire === 'Foundation Stock' || dam === 'Foundation Stock') return [];
+  const getSiblingRelations = (fowl: FowlRecord): SiblingRelation[] => {
+    const sire = (fowl.sire || '').trim().toLowerCase();
+    const dam = (fowl.dam || '').trim().toLowerCase();
+    if (!sire || !dam || sire === 'foundation stock' || dam === 'foundation stock') return [];
     return fowls
-      .filter(f => f.id !== currentId && f.sire?.toLowerCase() === sire.toLowerCase() && f.dam?.toLowerCase() === dam.toLowerCase())
-      .map(f => f.name);
+      .filter((f) => f.id !== fowl.id)
+      .map((f) => {
+        const fs = (f.sire || '').trim().toLowerCase();
+        const fd = (f.dam || '').trim().toLowerCase();
+        if (!fs || !fd || fs === 'foundation stock' || fd === 'foundation stock') return null;
+        if (fs === sire && fd === dam) return { id: f.id, name: f.name, relation: 'Full Sibling' as const };
+        if (fs === sire) return { id: f.id, name: f.name, relation: 'Half-Sibling (Shared Sire)' as const };
+        if (fd === dam) return { id: f.id, name: f.name, relation: 'Half-Sibling (Shared Dam)' as const };
+        return null;
+      })
+      .filter((r): r is SiblingRelation => r !== null);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -2137,7 +2154,7 @@ export default function GalloTrackSystem() {
                         </button>
                       </div>
                     ) : activeFowls.map((fowl, index) => {
-                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
+                      const siblings = getSiblingRelations(fowl).map(s => s.name);
                       return (
                         <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
                           <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
@@ -2226,7 +2243,7 @@ export default function GalloTrackSystem() {
                         <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No gamefowl records have been archived. Archived fowl are non-mortality removals (sold, transferred, retired, inactive); deaths belong under 💀 Deceased.</p>
                       </div>
                     ) : archivedFowls.map((fowl, index) => {
-                      const siblings = getSiblingsForFowl(fowl.sire, fowl.dam, fowl.id);
+                      const siblings = getSiblingRelations(fowl).map(s => s.name);
                       return (
                         <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
                           <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
@@ -2582,6 +2599,49 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 )}
               </div>
             </div>
+
+            {/* SIBLING MATCH / LINEAGE RELATIONS */}
+            {(() => {
+              const relations = getSiblingRelations(selectedFowlForDetails);
+              const full = relations.filter(r => r.relation === 'Full Sibling');
+              const halfSire = relations.filter(r => r.relation === 'Half-Sibling (Shared Sire)');
+              const halfDam = relations.filter(r => r.relation === 'Half-Sibling (Shared Dam)');
+              const renderGroup = (icon: string, label: string, tone: string, items: SiblingRelation[]) => {
+                if (items.length === 0) return null;
+                return (
+                  <div className="mb-3 last:mb-0">
+                    <p className={`text-[9px] font-black uppercase tracking-widest ${tone} mb-1.5`}>{icon} {label} ({items.length})</p>
+                    <div className="flex flex-wrap gap-2">
+                      {items.map(r => (
+                        <span key={r.id} className={`text-[10px] font-bold px-2.5 py-1 rounded-full border bg-white ${tone}`}>{r.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              };
+              return (
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-5">
+                  <h4 className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-100 mb-3">
+                    <span>🧬 Sibling Match &amp; Lineage Relations</span>
+                    <span className={`font-mono px-2 py-0.5 rounded border ${relations.length > 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-500 bg-slate-100 border-slate-200'}`}>
+                      {relations.length > 0 ? `${relations.length} DETECTED` : 'NO MATCHES'}
+                    </span>
+                  </h4>
+                  {relations.length === 0 ? (
+                    <p className="text-[10px] text-slate-400 font-semibold">
+                      No sibling records detected. Add another gamefowl sharing the same Sire and/or Dam to build the lineage tree.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-[10px] text-slate-500 font-semibold mb-3">Automatically matched from the ancestral database by shared parents.</p>
+                      {renderGroup('👥', 'Full Siblings', 'text-emerald-700 border-emerald-200', full)}
+                      {renderGroup('🐓', 'Half-Siblings · Shared Sire', 'text-amber-700 border-amber-200', halfSire)}
+                      {renderGroup('🐔', 'Half-Siblings · Shared Dam', 'text-sky-700 border-sky-200', halfDam)}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* DEVELOPMENT TIMELINE & MILESTONES */}
             {(() => {
