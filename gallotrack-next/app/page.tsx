@@ -155,7 +155,7 @@ function StatusItem({ icon, label, value, tone }: { icon?: string; label: string
 export default function GalloTrackSystem() {
   const { theme, setTheme } = useTheme();
   const [showSplash, setShowSplash] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'profile' | 'settings'>('login');
+  const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'lineage' | 'profile' | 'settings'>('login');
   const [isAdmin, setIsAdmin] = useState(false);
   const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'deceased' | 'matchForm'>('form');
 
@@ -1349,6 +1349,7 @@ export default function GalloTrackSystem() {
                 { id: 'dashboard', label: 'Dashboard Analytics', icon: '📊' },
                 { id: 'profiling', label: 'Profiling & Lineage', icon: '🧬' },
                 { id: 'marketplace', label: 'Breeding Catalog', icon: '🛒' },
+                { id: 'lineage', label: 'Family Lineage Directory', icon: '🌳' },
                 { id: 'profile', label: 'Profile Management', icon: '👤' },
                 { id: 'settings', label: 'System Settings', icon: '⚙️' },
               ].map((menu) => (
@@ -2495,6 +2496,194 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
               </div>
             )}
 
+            {currentPage === 'lineage' && (() => {
+              const linked = fowls.filter((f) => {
+                const s = (f.sire || '').trim().toLowerCase();
+                const d = (f.dam || '').trim().toLowerCase();
+                return s && d && s !== 'foundation stock' && d !== 'foundation stock';
+              });
+
+              const familyMap = new Map<string, FowlRecord[]>();
+              linked.forEach((f) => {
+                const key = `${(f.sire || '').trim().toLowerCase()}|||${(f.dam || '').trim().toLowerCase()}`;
+                const arr = familyMap.get(key) || [];
+                arr.push(f);
+                familyMap.set(key, arr);
+              });
+              const fullFamilies = Array.from(familyMap.values())
+                .filter((g) => g.length >= 2)
+                .sort((a, b) => b.length - a.length);
+
+              const groupBy = (pick: (f: FowlRecord) => string, distinct: (f: FowlRecord) => string) => {
+                const map = new Map<string, FowlRecord[]>();
+                linked.forEach((f) => {
+                  const k = pick(f).trim().toLowerCase();
+                  const arr = map.get(k) || [];
+                  arr.push(f);
+                  map.set(k, arr);
+                });
+                return Array.from(map.values())
+                  .filter((g) => g.length >= 2 && new Set(g.map((f) => distinct(f).trim().toLowerCase())).size >= 2)
+                  .sort((a, b) => b.length - a.length);
+              };
+              const sireGroups = groupBy((f) => f.sire, (f) => f.dam);
+              const damGroups = groupBy((f) => f.dam, (f) => f.sire);
+
+              const q = search.trim().toLowerCase();
+              const match = (g: FowlRecord[]) => {
+                if (!q) return true;
+                const first = g[0];
+                return `${first.sire} ${first.dam}`.toLowerCase().includes(q) || g.some((f) => f.name.toLowerCase().includes(q));
+              };
+
+              const fullFiltered = fullFamilies.filter(match);
+              const sireFiltered = sireGroups.filter(match);
+              const damFiltered = damGroups.filter(match);
+              const totalMembers = fullFiltered.reduce((n, g) => n + g.length, 0) + sireFiltered.reduce((n, g) => n + g.length, 0) + damFiltered.reduce((n, g) => n + g.length, 0);
+
+              const renderMembers = (g: FowlRecord[]) => (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {g.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setSelectedFowlForDetails(m)}
+                      className="group flex items-center gap-2 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl px-2.5 py-1.5 transition-all cursor-pointer"
+                    >
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${m.status === 'Active' ? 'bg-emerald-500' : m.status === 'Archived' ? 'bg-amber-400' : 'bg-slate-400'}`}></span>
+                      <span className="text-[11px] font-black text-slate-800 group-hover:text-emerald-700">{m.name}</span>
+                      <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wide">{m.status}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+
+              const renderGroupCard = (g: FowlRecord[], index: number, kind: 'full' | 'sire' | 'dam', badge: string) => (
+                <div key={`${kind}-${index}`} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col" style={{ animationDelay: `${(index % 4) * 0.9}s` }}>
+                  <span className="antigravity-badge absolute top-0 right-0 bg-emerald-50 border-l border-b border-emerald-200 text-emerald-700 text-[8px] font-black px-3 py-1 rounded-bl-2xl uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    {badge}
+                  </span>
+                  <div className="flex items-center justify-between pr-24">
+                    <h4 className="font-black text-slate-900 text-base">
+                      {kind === 'full' ? `Family ${index + 1}` : (g[0][kind === 'sire' ? 'sire' : 'dam'] || 'Unnamed')}
+                    </h4>
+                    <span className="text-[9px] font-mono font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">{g.length} birds</span>
+                  </div>
+                  {kind === 'full' ? (
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3">
+                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">🐓 Sire</p>
+                        <p className="text-[11px] font-black text-slate-800 mt-0.5 truncate">{g[0].sire}</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3">
+                        <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">🐔 Dam</p>
+                        <p className="text-[11px] font-black text-slate-800 mt-0.5 truncate">{g[0].dam}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-400 font-bold mt-1">Shared {kind === 'sire' ? 'Sire' : 'Dam'} • {new Set(g.map((f) => f[kind === 'sire' ? 'dam' : 'sire'].trim().toLowerCase())).size} partner {kind === 'sire' ? 'Dams' : 'Sires'}</p>
+                  )}
+                  {renderMembers(g)}
+                </div>
+              );
+
+              const EmptyState = ({ title, hint }: { title: string; hint: string }) => (
+                <div className="bg-white p-10 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+                  <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">🧬</div>
+                  <h3 className="text-sm font-extrabold text-slate-800">{title}</h3>
+                  <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">{hint}</p>
+                </div>
+              );
+
+              return (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Sibling &amp; Family Lineage Directory</h1>
+                      <p className="text-xs text-slate-400 font-semibold mt-0.5">Central bloodline index — full-sibling families and half-sibling groups grouped by shared parents</p>
+                    </div>
+                    <div className="relative w-full sm:w-72">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                      </span>
+                      <input type="text" placeholder="Search family, sire, dam or bird name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-slate-300 rounded-2xl bg-white text-neutral-900 placeholder:text-neutral-400 text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { label: 'Full-Sibling Families', value: fullFiltered.length, icon: '👥' },
+                      { label: 'Half-Sib Groups (Sire)', value: sireFiltered.length, icon: '🐓' },
+                      { label: 'Half-Sib Groups (Dam)', value: damFiltered.length, icon: '🐔' },
+                      { label: 'Matched Birds Listed', value: totalMembers, icon: '🧬' },
+                    ].map((s) => (
+                      <div key={s.label} className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 flex items-center gap-4">
+                        <div className="w-11 h-11 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center text-xl shrink-0">{s.icon}</div>
+                        <div className="min-w-0">
+                          <p className="text-2xl font-black text-slate-900 leading-none">{s.value}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">{s.label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-base">👥</div>
+                      <div>
+                        <h2 className="text-base font-black text-slate-900 tracking-tight">Full-Sibling Families</h2>
+                        <p className="text-[11px] text-slate-400 font-bold">Birds sharing the exact same Sire and Dam</p>
+                      </div>
+                    </div>
+                    {linked.length === 0 ? (
+                      <EmptyState title="No Lineage Data Yet" hint="Encode gamefowl with Sire and Dam to start grouping families automatically." />
+                    ) : fullFiltered.length === 0 ? (
+                      <EmptyState title="No Full-Sibling Families Found" hint="Birds need at least one sibling with the same Sire and Dam to form a family." />
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {fullFiltered.map((g, i) => renderGroupCard(g, i, 'full', 'Full Sibling Family'))}
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center text-base">🐓</div>
+                      <div>
+                        <h2 className="text-base font-black text-slate-900 tracking-tight">Half-Sibling Groups — Shared Sire</h2>
+                        <p className="text-[11px] text-slate-400 font-bold">Birds carrying the same Sire across different Dams</p>
+                      </div>
+                    </div>
+                    {sireFiltered.length === 0 ? (
+                      <EmptyState title="No Sire-Side Half-Sibling Groups" hint="Groups form when one Sire is paired with two or more different Dams." />
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {sireFiltered.map((g, i) => renderGroupCard(g, i, 'sire', 'Half-Sibling · Sire'))}
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-base">🐔</div>
+                      <div>
+                        <h2 className="text-base font-black text-slate-900 tracking-tight">Half-Sibling Groups — Shared Dam</h2>
+                        <p className="text-[11px] text-slate-400 font-bold">Birds carrying the same Dam across different Sires</p>
+                      </div>
+                    </div>
+                    {damFiltered.length === 0 ? (
+                      <EmptyState title="No Dam-Side Half-Sibling Groups" hint="Groups form when one Dam is paired with two or more different Sires." />
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {damFiltered.map((g, i) => renderGroupCard(g, i, 'dam', 'Half-Sibling · Dam'))}
+                      </div>
+                    )}
+                  </section>
+                </div>
+              );
+            })()}
+
             {currentPage === 'profile' && <div className="p-1 animate-fadeIn"><ProfilePage /></div>}
             {currentPage === 'settings' && <div className="p-1 animate-fadeIn"><SettingsPage /></div>}
           </main>
@@ -2506,6 +2695,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 { id: 'dashboard', label: 'Dashboard', icon: '📊' },
                 { id: 'profiling', label: 'Profiling', icon: '🧬' },
                 { id: 'marketplace', label: 'Catalog', icon: '🛒' },
+                { id: 'lineage', label: 'Lineage', icon: '🌳' },
                 { id: 'profile', label: 'Profile', icon: '👤' },
                 { id: 'settings', label: 'Settings', icon: '⚙️' },
               ].map((menu) => (
