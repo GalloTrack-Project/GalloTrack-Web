@@ -35,6 +35,7 @@ interface FowlRecord {
   age: string;
   weight: string;
   height: string;
+  leg_color: string;
   sire: string;
   dam: string;
   sire_pct: number;
@@ -197,6 +198,7 @@ export default function GalloTrackSystem() {
   const [damPct, setDamPct] = useState<number | string>(100);
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
+  const [newLegColor, setNewLegColor] = useState('');
   const [age, setAge] = useState(''); 
   const [search, setSearch] = useState('');
   
@@ -225,6 +227,7 @@ export default function GalloTrackSystem() {
   const [editGrowthStage, setEditGrowthStage] = useState('');
   const [editWeight, setEditWeight] = useState('');
   const [editHeight, setEditHeight] = useState('');
+  const [editLegColor, setEditLegColor] = useState('');
   const [editSire, setEditSire] = useState('');
   const [editDam, setEditDam] = useState('');
   const [editSirePct, setEditSirePct] = useState<number | string>(100);
@@ -669,6 +672,7 @@ export default function GalloTrackSystem() {
           : 'N/A',
         weight: weight ? `${weight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
         height: height ? `${height.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
+        leg_color: newLegColor.trim() ? newLegColor.trim() : 'N/A',
         sire: sireName.trim() ? sireName.trim() : 'Foundation Stock',
         dam: damName.trim() ? damName.trim() : 'Foundation Stock',
         sire_pct: sPct,
@@ -685,7 +689,7 @@ export default function GalloTrackSystem() {
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
         saveCustomStrain(newBreed);
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setImagePreview('');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setImagePreview('');
         fetchDatabaseResources();
         setProfilingSubTab('registry');
       }
@@ -874,6 +878,7 @@ export default function GalloTrackSystem() {
     setEditGrowthStage(fowl.growth_stage || autoComputeGrowthStage(isNaN(parsedAge) ? 0 : parsedAge, fowl.gender));
     setEditWeight(fowl.weight ? fowl.weight.replace(' kg', '') : '');
     setEditHeight(fowl.height ? fowl.height.replace(' cm', '') : '');
+    setEditLegColor(fowl.leg_color || 'N/A');
     setEditSire(fowl.sire || '');
     setEditDam(fowl.dam || '');
     setEditSirePct(fowl.sire_pct ?? 100);
@@ -907,6 +912,7 @@ export default function GalloTrackSystem() {
           : 'N/A',
         weight: editWeight ? `${editWeight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
         height: editHeight ? `${editHeight.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
+        leg_color: editLegColor.trim() ? editLegColor.trim() : 'N/A',
         sire: editSire.trim() ? editSire.trim() : 'Foundation Stock',
         dam: editDam.trim() ? editDam.trim() : 'Foundation Stock',
         sire_pct: sPct,
@@ -2008,6 +2014,25 @@ export default function GalloTrackSystem() {
                           <input type="number" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs text-center font-extrabold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Leg Color</label>
+                        <input
+                          type="text"
+                          list="leg-color-options"
+                          value={newLegColor}
+                          onChange={(e) => setNewLegColor(e.target.value)}
+                          className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold"
+                          placeholder="Select or type a leg color..."
+                        />
+                        <datalist id="leg-color-options">
+                          <option value="Yellow" />
+                          <option value="White" />
+                          <option value="Green / Slate" />
+                          <option value="Willow" />
+                          <option value="Black" />
+                        </datalist>
+                        <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Common choices: Yellow, White, Green / Slate, Willow, Black — or type a custom leg color.</p>
+                      </div>
                     </div>
 
                     <div className="antigravity-hover bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
@@ -2110,6 +2135,7 @@ export default function GalloTrackSystem() {
                               <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                               <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
                               <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
                               <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
                                 <span>📅 Age:</span>
                                 {(() => {
@@ -2206,6 +2232,7 @@ export default function GalloTrackSystem() {
                               <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                               <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
                               <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                              <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
                               <div className="col-span-2">Archive Reason: <strong className="text-amber-800">{fowl.archive_reason || 'Unspecified'}</strong></div>
                             </div>
                             
@@ -2259,6 +2286,7 @@ export default function GalloTrackSystem() {
                                 <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
                                 <div>Growth Stage: <strong className="text-slate-800">{fowl.growth_stage || 'Chick'}</strong></div>
                                 <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                                <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
                               </div>
                               
                               <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
@@ -2510,7 +2538,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                   })()}
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Growth Stage: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.growth_stage || 'Chick'}</strong> | Auto Age: <strong className="text-emerald-700 font-bold">{(() => { const p = getAgeParts(selectedFowlForDetails.birthdate); return p ? getAgeLabel(p) : selectedFowlForDetails.age || 'N/A'; })()}</strong>
+                  Growth Stage: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.growth_stage || 'Chick'}</strong> | Auto Age: <strong className="text-emerald-700 font-bold">{(() => { const p = getAgeParts(selectedFowlForDetails.birthdate); return p ? getAgeLabel(p) : selectedFowlForDetails.age || 'N/A'; })()}</strong> | Legs: <strong className="text-slate-800 font-bold">{selectedFowlForDetails.leg_color || 'N/A'}</strong>
                 </p>
                 {(() => {
                   const p = getAgeParts(selectedFowlForDetails.birthdate);
@@ -2998,6 +3026,24 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Weight (kg)</label>
                     <input type="number" step="0.01" value={editWeight} onChange={(e) => setEditWeight(e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs text-center font-bold bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 2.2" />
                   </div>
+                </div>
+                <div className="mt-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Leg Color</label>
+                  <input
+                    type="text"
+                    list="edit-leg-color-options"
+                    value={editLegColor}
+                    onChange={(e) => setEditLegColor(e.target.value)}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium"
+                    placeholder="Select or type a leg color..."
+                  />
+                  <datalist id="edit-leg-color-options">
+                    <option value="Yellow" />
+                    <option value="White" />
+                    <option value="Green / Slate" />
+                    <option value="Willow" />
+                    <option value="Black" />
+                  </datalist>
                 </div>
               </div>
 
