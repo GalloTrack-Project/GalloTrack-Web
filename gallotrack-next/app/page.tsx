@@ -298,6 +298,12 @@ export default function GalloTrackSystem() {
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
   const archivedFowls = fowls.filter(f => f.status === 'Archived');
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
+  const isMale = (g?: string) => !!g && ['rooster', 'cock', 'stag', 'male'].includes(g.trim().toLowerCase());
+  const isFemale = (g?: string) => !!g && ['hen', 'pullet', 'female'].includes(g.trim().toLowerCase());
+  const maleActiveFowls = activeFowls.filter(f => isMale(f.gender));
+  const femaleActiveFowls = activeFowls.filter(f => isFemale(f.gender));
+  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
+  const filteredActiveFowls = genderFilter === 'male' ? maleActiveFowls : genderFilter === 'female' ? femaleActiveFowls : activeFowls;
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -1664,6 +1670,22 @@ export default function GalloTrackSystem() {
                       <span className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-base shrink-0">🐓</span>
                     </div>
                     <div className="text-3xl font-black text-slate-900 tracking-tight">{activeFowls.length}</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2 bg-sky-50/80 border border-sky-100 rounded-xl px-2.5 py-1.5">
+                        <span className="text-sm">🐓</span>
+                        <div>
+                          <p className="text-base font-black text-sky-800 leading-none">{maleActiveFowls.length}</p>
+                          <p className="text-[8px] font-bold uppercase tracking-wide text-sky-500">Males</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-pink-50/80 border border-pink-100 rounded-xl px-2.5 py-1.5">
+                        <span className="text-sm">🐔</span>
+                        <div>
+                          <p className="text-base font-black text-pink-800 leading-none">{femaleActiveFowls.length}</p>
+                          <p className="text-[8px] font-bold uppercase tracking-wide text-pink-500">Females</p>
+                        </div>
+                      </div>
+                    </div>
                     <div className="h-12 -mx-1">
                       {activeFowls.length > 0 ? (
                         <Line
@@ -2282,6 +2304,23 @@ export default function GalloTrackSystem() {
                 {/* ACTIVE REGISTRY LIST */}
                 {profilingSubTab === 'registry' && (
                   <div className="space-y-4 animate-fadeIn">
+                    <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Gender Inventory Filter</h3>
+                        <span className="text-[10px] font-mono font-bold text-slate-400">{filteredActiveFowls.length} of {activeFowls.length} active</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button type="button" onClick={() => setGenderFilter('all')} className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 cursor-pointer border ${genderFilter === 'all' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-transparent shadow-md shadow-emerald-700/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
+                          <span>🧬</span> All / Both ({activeFowls.length})
+                        </button>
+                        <button type="button" onClick={() => setGenderFilter('male')} className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 cursor-pointer border ${genderFilter === 'male' ? 'bg-gradient-to-r from-sky-600 to-sky-700 text-white border-transparent shadow-md shadow-sky-700/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
+                          <span>🐓</span> Roosters / Cocks ({maleActiveFowls.length})
+                        </button>
+                        <button type="button" onClick={() => setGenderFilter('female')} className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 cursor-pointer border ${genderFilter === 'female' ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white border-transparent shadow-md shadow-rose-700/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
+                          <span>🐔</span> Hens / Pullets ({femaleActiveFowls.length})
+                        </button>
+                      </div>
+                    </div>
                     {activeFowls.length === 0 ? (
                       <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
                         <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto">🧬</div>
@@ -2291,7 +2330,16 @@ export default function GalloTrackSystem() {
                           ➕ Encode First Fowl Node
                         </button>
                       </div>
-                    ) : activeFowls.map((fowl, index) => {
+                    ) : filteredActiveFowls.length === 0 ? (
+                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+                        <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto">{genderFilter === 'male' ? '🐓' : '🐔'}</div>
+                        <h3 className="text-base font-extrabold text-slate-800">No {genderFilter === 'male' ? 'Male' : 'Female'} Birds in Active Registry</h3>
+                        <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">{genderFilter === 'male' ? 'No roosters / cocks / stags match this filter.' : 'No hens / pullets match this filter.'} Switch back to All / Both to see the full active inventory.</p>
+                        <button type="button" onClick={() => setGenderFilter('all')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">
+                          Show All Active Birds
+                        </button>
+                      </div>
+                    ) : filteredActiveFowls.map((fowl, index) => {
                       const siblings = getSiblingRelations(fowl).map(s => s.name);
                       return (
                         <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
@@ -2303,6 +2351,9 @@ export default function GalloTrackSystem() {
                             <div className="flex items-center space-x-2">
                               <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
                               <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
+                              <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${isMale(fowl.gender) ? 'text-sky-700 bg-sky-50 border-sky-200' : isFemale(fowl.gender) ? 'text-pink-700 bg-pink-50 border-pink-200' : 'text-slate-500 bg-slate-50 border-slate-200'}`}>
+                                {isMale(fowl.gender) ? '🐓 Male' : isFemale(fowl.gender) ? '🐔 Female' : (fowl.gender || 'Unset')}
+                              </span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                               <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
