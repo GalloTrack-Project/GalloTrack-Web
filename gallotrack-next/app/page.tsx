@@ -302,6 +302,10 @@ export default function GalloTrackSystem() {
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
   const isMale = (g?: string) => !!g && ['rooster', 'cock', 'stag', 'male'].includes(g.trim().toLowerCase());
   const isFemale = (g?: string) => !!g && ['hen', 'pullet', 'female'].includes(g.trim().toLowerCase());
+  const parentBloodlinePct = (f: FowlRecord) => {
+    const pct = typeof f.bloodline_pct === 'number' && !isNaN(f.bloodline_pct) && f.bloodline_pct > 0 ? f.bloodline_pct : 100;
+    return Math.min(pct, 100);
+  };
   const maleActiveFowls = activeFowls.filter(f => isMale(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemale(f.gender));
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
@@ -2248,13 +2252,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire (Father) <span className="text-slate-400 font-normal lowercase">(pick from registry or type custom)</span>
                           </label>
-                          <ParentSelector value={sireName} onChange={setSireName} onPick={(f) => setSirePct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
+                          <ParentSelector value={sireName} onChange={setSireName} onPick={(f) => setSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam (Mother) <span className="text-slate-400 font-normal lowercase">(pick from registry or type custom)</span>
                           </label>
-                          <ParentSelector value={damName} onChange={setDamName} onPick={(f) => setDamPct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
+                          <ParentSelector value={damName} onChange={setDamName} onPick={(f) => setDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -3612,13 +3616,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <ParentSelector value={editSire} onChange={setEditSire} onPick={(f) => setEditSirePct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
+                    <ParentSelector value={editSire} onChange={setEditSire} onPick={(f) => setEditSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <ParentSelector value={editDam} onChange={setEditDam} onPick={(f) => setEditDamPct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
+                    <ParentSelector value={editDam} onChange={setEditDam} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
