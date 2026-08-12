@@ -272,6 +272,8 @@ export default function GalloTrackSystem() {
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
   const [selectedFowlForArchive, setSelectedFowlForArchive] = useState<FowlRecord | null>(null);
+  const [pendingPermanentDelete, setPendingPermanentDelete] = useState<FowlRecord | null>(null);
+  const [permanentDeleting, setPermanentDeleting] = useState(false);
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
   const [archiveReasonInput, setArchiveReasonInput] = useState('SOLD');
   const [editingFowl, setEditingFowl] = useState<FowlRecord | null>(null);
@@ -970,6 +972,30 @@ export default function GalloTrackSystem() {
       showToastMessage(err.message || err, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!pendingPermanentDelete) return;
+    setPermanentDeleting(true);
+    try {
+      const { error: delErr } = await supabase
+        .from('fowl')
+        .delete()
+        .eq('id', pendingPermanentDelete.id);
+
+      if (delErr) {
+        showToastMessage(delErr.message, 'error');
+      } else {
+        showToastMessage(`${pendingPermanentDelete.name} permanently removed from the database.`, 'error');
+        if (selectedFowlForDetails?.id === pendingPermanentDelete.id) setSelectedFowlForDetails(null);
+        setPendingPermanentDelete(null);
+        fetchDatabaseResources();
+      }
+    } catch (err) {
+      showToastMessage(err instanceof Error ? err.message : String(err), 'error');
+    } finally {
+      setPermanentDeleting(false);
     }
   };
 
@@ -2389,14 +2415,21 @@ export default function GalloTrackSystem() {
                             </div>
                             
                             <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[75px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
+                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[75px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 View Profile</button>
                               <button 
                                 type="button" 
                                 onClick={() => handleRestoreFowlOnly(fowl.id)} 
                                 disabled={loading}
                                 className="flex-1 min-w-[95px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
                               >
-                                <span>↺</span> <span>Restore Node</span>
+                                <span>↺</span> <span>Restore</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingPermanentDelete(fowl)}
+                                className="flex-1 min-w-[75px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 text-[11px] font-black py-2 rounded-xl text-center cursor-pointer transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs"
+                              >
+                                <span>🗑</span> <span>Trash</span>
                               </button>
                             </div>
                           </div>
@@ -3304,6 +3337,52 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
               >
                 {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                 <span>Confirm Archive</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PERMANENT DELETE CONFIRMATION */}
+      {pendingPermanentDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl border border-rose-200 max-w-md w-full p-6 space-y-5 relative">
+            <button 
+              onClick={() => setPendingPermanentDelete(null)} 
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center space-x-3 text-rose-800 border-b pb-3 border-rose-100">
+              <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-xl">🗑️</div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">Move to Trash &amp; Permanently Delete?</h3>
+                <p className="text-[11px] text-slate-500 font-semibold">This action is IRREVERSIBLE</p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200/60 space-y-2">
+              <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-rose-800 font-black">{pendingPermanentDelete.name}</strong> ({pendingPermanentDelete.breed})</p>
+              <p className="text-[10px] text-slate-500 leading-relaxed">Permanently removes this record from the database, including its match history. This CANNOT be undone. Consider <strong className="text-emerald-700">↺ Restore</strong> or <strong className="text-amber-700">📦 Archive</strong> if you just want it out of the active registry.</p>
+            </div>
+
+            <div className="flex space-x-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setPendingPermanentDelete(null)} 
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handlePermanentDelete} 
+                disabled={permanentDeleting}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md"
+              >
+                {permanentDeleting && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>Delete Forever</span>
               </button>
             </div>
           </div>
