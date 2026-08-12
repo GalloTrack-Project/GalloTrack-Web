@@ -264,7 +264,7 @@ export default function GalloTrackSystem() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'profiling' | 'marketplace' | 'lineage' | 'profile' | 'settings'>('login');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'registry' | 'archived' | 'deceased' | 'matchForm'>('form');
+  const [profilingSubTab, setProfilingSubTab] = useState<'form' | 'males' | 'females' | 'archived' | 'deceased' | 'matchForm'>('form');
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -302,8 +302,6 @@ export default function GalloTrackSystem() {
   const isFemale = (g?: string) => !!g && ['hen', 'pullet', 'female'].includes(g.trim().toLowerCase());
   const maleActiveFowls = activeFowls.filter(f => isMale(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemale(f.gender));
-  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
-  const filteredActiveFowls = genderFilter === 'male' ? maleActiveFowls : genderFilter === 'female' ? femaleActiveFowls : activeFowls;
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -831,9 +829,10 @@ export default function GalloTrackSystem() {
       } else {
         showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
         saveCustomStrain(newBreed);
+        const createdGender = newGender || 'Rooster';
         setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setImagePreview('');
         fetchDatabaseResources();
-        setProfilingSubTab('registry');
+        setProfilingSubTab(isMale(createdGender) ? 'males' : 'females');
       }
     } catch (err: any) {
       showToastMessage(`Upload Cluster Failure: ${err.message || err}`, 'error');
@@ -903,7 +902,7 @@ export default function GalloTrackSystem() {
         showToastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setMatchLocation(''); setMatchVideoFile(null);
         fetchDatabaseResources();
-        setProfilingSubTab('registry');
+        setProfilingSubTab('males');
       }
     } catch (err: any) {
       showToastMessage(`Database Write Constraint Fault: ${err.message || err}`, 'error');
@@ -2051,7 +2050,8 @@ export default function GalloTrackSystem() {
                   {/* SUBTAB SWITCHER BAR */}
                   <div className="bg-muted/80 p-1 rounded-2xl flex flex-wrap sm:flex-nowrap w-full border border-border mt-1 shrink-0 gap-1">
                     <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'form' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>📝 Encode</button>
-                    <button type="button" onClick={() => setProfilingSubTab('registry')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'registry' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🌳 Active ({activeFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'males' ? 'bg-gradient-to-r from-sky-600 to-sky-700 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🐓 Roosters / Males ({maleActiveFowls.length})</button>
+                    <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'females' ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🐔 Hens / Females ({femaleActiveFowls.length})</button>
                     <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>📦 Archived ({archivedFowls.length})</button>
                     <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>💀 Deceased ({deceasedFowls.length})</button>
                     <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>⚔️ Match Logs</button>
@@ -2302,125 +2302,121 @@ export default function GalloTrackSystem() {
                 )}
 
                 {/* ACTIVE REGISTRY LIST */}
-                {profilingSubTab === 'registry' && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Gender Inventory Filter</h3>
-                        <span className="text-[10px] font-mono font-bold text-slate-400">{filteredActiveFowls.length} of {activeFowls.length} active</span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <button type="button" onClick={() => setGenderFilter('all')} className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 cursor-pointer border ${genderFilter === 'all' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-transparent shadow-md shadow-emerald-700/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
-                          <span>🧬</span> All / Both ({activeFowls.length})
-                        </button>
-                        <button type="button" onClick={() => setGenderFilter('male')} className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 cursor-pointer border ${genderFilter === 'male' ? 'bg-gradient-to-r from-sky-600 to-sky-700 text-white border-transparent shadow-md shadow-sky-700/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
-                          <span>🐓</span> Roosters / Cocks ({maleActiveFowls.length})
-                        </button>
-                        <button type="button" onClick={() => setGenderFilter('female')} className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 cursor-pointer border ${genderFilter === 'female' ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white border-transparent shadow-md shadow-rose-700/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
-                          <span>🐔</span> Hens / Pullets ({femaleActiveFowls.length})
-                        </button>
-                      </div>
-                    </div>
-                    {activeFowls.length === 0 ? (
-                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-                        <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto">🧬</div>
-                        <h3 className="text-base font-extrabold text-slate-800">No Active Gamefowl Encoded</h3>
-                        <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">Your active farm cluster is currently empty. Encode a new fowl node to begin tracking lineage weights.</p>
-                        <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">
-                          ➕ Encode First Fowl Node
-                        </button>
-                      </div>
-                    ) : filteredActiveFowls.length === 0 ? (
-                      <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-                        <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto">{genderFilter === 'male' ? '🐓' : '🐔'}</div>
-                        <h3 className="text-base font-extrabold text-slate-800">No {genderFilter === 'male' ? 'Male' : 'Female'} Birds in Active Registry</h3>
-                        <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">{genderFilter === 'male' ? 'No roosters / cocks / stags match this filter.' : 'No hens / pullets match this filter.'} Switch back to All / Both to see the full active inventory.</p>
-                        <button type="button" onClick={() => setGenderFilter('all')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">
-                          Show All Active Birds
-                        </button>
-                      </div>
-                    ) : filteredActiveFowls.map((fowl, index) => {
-                      const siblings = getSiblingRelations(fowl).map(s => s.name);
-                      return (
-                        <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-                          <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
-                            {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
-                          </div>
-                          <div className="flex-1 w-full space-y-3">
-                            <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
-                            <div className="flex items-center space-x-2">
-                              <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
-                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
-                              <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${isMale(fowl.gender) ? 'text-sky-700 bg-sky-50 border-sky-200' : isFemale(fowl.gender) ? 'text-pink-700 bg-pink-50 border-pink-200' : 'text-slate-500 bg-slate-50 border-slate-200'}`}>
-                                {isMale(fowl.gender) ? '🐓 Male' : isFemale(fowl.gender) ? '🐔 Female' : (fowl.gender || 'Unset')}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
-                              <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
-                              <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
-                              <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
-                              <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
-                              <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
-                              <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-                                <span>📅 Age:</span>
-                                {(() => {
-                                  const p = getAgeParts(fowl.birthdate);
-                                  return p ? (
-                                    <strong className="text-emerald-700 font-black">{getAgeLabel(p)} <span className="font-mono font-semibold text-slate-400">· born {fowl.birthdate}</span></strong>
-                                  ) : (
-                                    <strong className="text-amber-700 font-bold">{fowl.age || 'No birth date'}</strong>
-                                  );
-                                })()}
-                              </div>
-                              <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-                                <span>Per-Fowl Win Rate:</span>
-                                {(() => {
-                                  const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
-                                  const fWins = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
-                                  const fLosses = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
-                                  const fDecided = fWins + fLosses;
-                                  const fRate = fDecided > 0 ? Math.round((fWins / fDecided) * 100) : fMatches.length > 0 ? Math.round((fWins / fMatches.length) * 100) : 0;
-                                  return (
-                                    <strong className={fMatches.length > 0 ? "text-emerald-700 font-black" : "text-slate-400 font-semibold"}>
-                                      {fMatches.length > 0 ? `${fRate}% (${fWins}W - ${fLosses}L)` : 'No matches'}
-                                    </strong>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                            
-                            <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
-                              <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-                              <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
-                              <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-800 text-[11px] font-extrabold py-2 rounded-xl border border-emerald-200/60 text-center cursor-pointer transition-all duration-150">✏️ Edit</button>
-                              
-                              <button 
-                                type="button"
-                                onClick={() => setSelectedFowlForArchive(fowl)} 
-                                disabled={loading}
-                                className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-amber-50 hover:bg-amber-100 active:scale-[0.98] text-amber-800 border-amber-200/60"
-                              >
-                                <span className="flex items-center justify-center gap-1">🗎 Archive</span>
-                              </button>
-
-                              <button 
-                                type="button"
-                                onClick={() => setSelectedFowlForDeceased(fowl)} 
-                                disabled={loading}
-                                className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-rose-50 hover:bg-rose-100 active:scale-[0.98] text-rose-700 border-rose-200/60"
-                              >
-                                <span className="flex items-center justify-center gap-1">💀 Deceased</span>
-                              </button>
-                            </div>
+                {(profilingSubTab === 'males' || profilingSubTab === 'females') && (() => {
+                  const isMaleTab = profilingSubTab === 'males';
+                  const birds = isMaleTab ? maleActiveFowls : femaleActiveFowls;
+                  const tabIcon = isMaleTab ? '🐓' : '🐔';
+                  const tabLabel = isMaleTab ? 'Rooster / Male Housing' : 'Hen / Female Housing';
+                  const tabSub = isMaleTab ? 'Dedicated cock inventory space — stags, roosters, cocks' : 'Dedicated hen inventory space — pullets, hens';
+                  const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
+                  const accentSoft = isMaleTab ? 'bg-sky-50 border-sky-200' : 'bg-pink-50 border-pink-200';
+                  const accentText = isMaleTab ? 'text-sky-400' : 'text-pink-400';
+                  const emptyTitle = isMaleTab ? 'No Roosters / Males Encoded' : 'No Hens / Females Encoded';
+                  const emptyHint = isMaleTab ? 'No male gamefowl are registered in the active farm inventory yet. Encode your first rooster / stag / cock to begin populating this housing space.' : 'No female gamefowl are registered in the active farm inventory yet. Encode your first hen / pullet to begin populating this housing space.';
+                  return (
+                    <div className="space-y-4 animate-fadeIn">
+                      <div className={`bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between gap-4 ${isMaleTab ? 'border-l-4 border-l-sky-500' : 'border-l-4 border-l-pink-500'}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 ${accentSoft}`}>{tabIcon}</div>
+                          <div>
+                            <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">{tabLabel}</h2>
+                            <p className="text-[10px] text-slate-400 font-semibold">{tabSub}</p>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        <span className={`shrink-0 text-[10px] font-black text-white px-3 py-1.5 rounded-full ${accentBg}`}>{birds.length} Registered</span>
+                      </div>
+                      {birds.length === 0 ? (
+                        <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+                          <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto ${isMaleTab ? 'bg-sky-50' : 'bg-pink-50'} ${accentText}`}>{tabIcon}</div>
+                          <h3 className="text-base font-extrabold text-slate-800">{emptyTitle}</h3>
+                          <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">{emptyHint}</p>
+                          <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">
+                            ➕ Encode First {isMaleTab ? 'Rooster' : 'Hen'}
+                          </button>
+                        </div>
+                      ) : birds.map((fowl, index) => {
+                        const siblings = getSiblingRelations(fowl).map(s => s.name);
+                        return (
+                          <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+                            <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
+                              {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
+                            </div>
+                            <div className="flex-1 w-full space-y-3">
+                              <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
+                              <div className="flex items-center space-x-2">
+                                <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
+                                <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${isMaleTab ? 'text-sky-700 bg-sky-50 border-sky-200' : 'text-pink-700 bg-pink-50 border-pink-200'}`}>
+                                  {isMaleTab ? '🐓 Male' : '🐔 Female'}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
+                                <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
+                                <div>Dam: <strong className="text-slate-800">{fowl.dam || 'N/A'}</strong></div>
+                                <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
+                                <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+                                <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
+                                <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                  <span>📅 Age:</span>
+                                  {(() => {
+                                    const p = getAgeParts(fowl.birthdate);
+                                    return p ? (
+                                      <strong className="text-emerald-700 font-black">{getAgeLabel(p)} <span className="font-mono font-semibold text-slate-400">· born {fowl.birthdate}</span></strong>
+                                    ) : (
+                                      <strong className="text-amber-700 font-bold">{fowl.age || 'No birth date'}</strong>
+                                    );
+                                  })()}
+                                </div>
+                                <div className="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                  <span>Per-Fowl Win Rate:</span>
+                                  {(() => {
+                                    const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === fowl.name?.trim().toLowerCase());
+                                    const fWins = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
+                                    const fLosses = fMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+                                    const fDecided = fWins + fLosses;
+                                    const fRate = fDecided > 0 ? Math.round((fWins / fDecided) * 100) : fMatches.length > 0 ? Math.round((fWins / fMatches.length) * 100) : 0;
+                                    return (
+                                      <strong className={fMatches.length > 0 ? "text-emerald-700 font-black" : "text-slate-400 font-semibold"}>
+                                        {fMatches.length > 0 ? `${fRate}% (${fWins}W - ${fLosses}L)` : 'No matches'}
+                                      </strong>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                              
+                              <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
+                                <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                                <button type="button" onClick={() => setSelectedFowlForDetails(fowl)} className="flex-1 min-w-[70px] bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 text-[11px] font-extrabold py-2 rounded-xl border border-slate-200/60 text-center cursor-pointer transition-all duration-150">🔍 Details</button>
+                                <button type="button" onClick={() => handleOpenEditModal(fowl)} className="flex-1 min-w-[70px] bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-800 text-[11px] font-extrabold py-2 rounded-xl border border-emerald-200/60 text-center cursor-pointer transition-all duration-150">✏️ Edit</button>
+                                
+                                <button 
+                                  type="button"
+                                  onClick={() => setSelectedFowlForArchive(fowl)} 
+                                  disabled={loading}
+                                  className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-amber-50 hover:bg-amber-100 active:scale-[0.98] text-amber-800 border-amber-200/60"
+                                >
+                                  <span className="flex items-center justify-center gap-1">🗎 Archive</span>
+                                </button>
+
+                                <button 
+                                  type="button"
+                                  onClick={() => setSelectedFowlForDeceased(fowl)} 
+                                  disabled={loading}
+                                  className="flex-1 min-w-[70px] text-[11px] font-extrabold py-2 rounded-xl border text-center cursor-pointer transition-all duration-150 bg-rose-50 hover:bg-rose-100 active:scale-[0.98] text-rose-700 border-rose-200/60"
+                                >
+                                  <span className="flex items-center justify-center gap-1">💀 Deceased</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 {/* ARCHIVED REGISTRY LIST */}
                 {profilingSubTab === 'archived' && (
