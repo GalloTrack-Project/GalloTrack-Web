@@ -302,10 +302,12 @@ export default function GalloTrackSystem() {
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
   const isMale = (g?: string) => !!g && ['rooster', 'cock', 'stag', 'male'].includes(g.trim().toLowerCase());
   const isFemale = (g?: string) => !!g && ['hen', 'pullet', 'female'].includes(g.trim().toLowerCase());
-  const parentBloodlinePct = (f: FowlRecord) => {
-    const pct = typeof f.bloodline_pct === 'number' && !isNaN(f.bloodline_pct) && f.bloodline_pct > 0 ? f.bloodline_pct : 100;
-    return Math.min(pct, 100);
+  const cleanPct = (v: unknown): number => {
+    const n = Number(v);
+    return !isNaN(n) && n > 0 ? Math.min(n, 100) : 0;
   };
+  const parentBloodlinePct = (f: FowlRecord) => cleanPct(f.bloodline_pct);
+  const bloodlineOf = (f: FowlRecord) => Math.round(((cleanPct(f.sire_pct) + cleanPct(f.dam_pct)) / 2) * 10) / 10;
   const maleActiveFowls = activeFowls.filter(f => isMale(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemale(f.gender));
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
@@ -1052,8 +1054,8 @@ export default function GalloTrackSystem() {
     setEditLegColor(fowl.leg_color || 'N/A');
     setEditSire(fowl.sire || '');
     setEditDam(fowl.dam || '');
-    setEditSirePct(fowl.sire_pct ?? 100);
-    setEditDamPct(fowl.dam_pct ?? 100);
+    setEditSirePct(fowl.sire_pct ?? 0);
+    setEditDamPct(fowl.dam_pct ?? 0);
   };
 
   const handleUpdateFowl = async (e: React.FormEvent) => {
@@ -1288,7 +1290,7 @@ export default function GalloTrackSystem() {
   const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
   const validationPassed = newName.trim() !== '' && newBreed.trim() !== '' && newGender !== '' && age.trim() !== '';
-  const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct));
+  const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct)) && Number(sirePct) > 0 && Number(damPct) > 0;
   const sirePctVal = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Math.min(Number(sirePct), 100);
   const damPctVal = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Math.min(Number(damPct), 100);
   const sireInheritedShare = Math.round(sirePctVal * 0.5 * 10) / 10;
@@ -3252,27 +3254,27 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] font-bold text-slate-500">
                   <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire})</span>
-                  <span className="text-slate-800">{selectedFowlForDetails.sire_pct ?? 100}%</span>
+                  <span className="text-slate-800">{cleanPct(selectedFowlForDetails.sire_pct)}%</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div className="bg-sky-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.sire_pct ?? 100}%` }}></div>
+                  <div className="bg-sky-500 h-full rounded-full" style={{ width: `${cleanPct(selectedFowlForDetails.sire_pct)}%` }}></div>
                 </div>
               </div>
 
               <div className="space-y-1 pt-1">
                 <div className="flex justify-between text-[10px] font-bold text-slate-500">
                   <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam})</span>
-                  <span className="text-slate-800">{selectedFowlForDetails.dam_pct ?? 100}%</span>
+                  <span className="text-slate-800">{cleanPct(selectedFowlForDetails.dam_pct)}%</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div className="bg-pink-500 h-full rounded-full" style={{ width: `${selectedFowlForDetails.dam_pct ?? 100}%` }}></div>
+                  <div className="bg-pink-500 h-full rounded-full" style={{ width: `${cleanPct(selectedFowlForDetails.dam_pct)}%` }}></div>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-[11px]">
                 <span className="font-extrabold text-slate-700">Combined Bloodline Index</span>
                 <span className="font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
-                  {selectedFowlForDetails.bloodline_pct ?? 100}%
+                  {bloodlineOf(selectedFowlForDetails)}%
                 </span>
               </div>
             </div>
