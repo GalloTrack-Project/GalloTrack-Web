@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function ProfilePage() {
             setFullName(profile.full_name || 'Hazel Dato-on')
             setPhoneNumber(profile.phone_number || '09123456789')
             setAvatarUrl(profile.avatar_url || '')
+            setIsAdmin(profile.is_admin === true || profile.role === 'admin')
           }
         }
       }
@@ -178,7 +180,11 @@ export default function ProfilePage() {
           </div>
           <div className="space-y-1.5">
             <h3 className="text-lg font-extrabold text-slate-900">{fullName}</h3>
-            <span className="antigravity-badge text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60 inline-block uppercase tracking-wider">System Lead Admin</span>
+            <span className={`antigravity-badge text-[10px] font-mono font-black px-3 py-1 rounded-full border inline-block uppercase tracking-wider ${
+              isAdmin ? 'text-amber-700 bg-amber-50 border-amber-200/60' : 'text-sky-700 bg-sky-50 border-sky-200/60'
+            }`}>
+              {isAdmin ? 'Admin' : 'Farm Owner'}
+            </span>
           </div>
           <div className="w-full border-t border-slate-100 pt-4 space-y-2.5 text-[11px] text-slate-500 font-mono">
             <div className="flex items-center justify-between px-1">

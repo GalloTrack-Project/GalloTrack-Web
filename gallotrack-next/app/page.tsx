@@ -1528,7 +1528,7 @@ export default function GalloTrackSystem() {
                     ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
                     : 'bg-sky-500/15 border-sky-500/30 text-sky-400'
                 }`}>
-                  {userRole === 'admin' ? 'System Lead Admin' : 'Farm Owner'}
+                  {userRole === 'admin' ? 'Admin' : 'Farm Owner'}
                 </span>
               </div>
             </div>
