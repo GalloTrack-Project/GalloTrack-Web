@@ -1,6 +1,7 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import Cropper, { type Area, type Point } from 'react-easy-crop'
 
 const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co'
 const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3'
@@ -14,6 +15,12 @@ export default function ProfilePage() {
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [cropping, setCropping] = useState(false)
+  const [cropError, setCropError] = useState('')
 
   useEffect(() => {
     async function loadProfile() {
@@ -83,23 +90,88 @@ export default function ProfilePage() {
     fileInputRef.current?.click()
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setCropError('Please select a valid image file (JPG, PNG, WebP).')
+      return
+    }
+    e.target.value = ''
+    setCropError('')
+    if (imageSrc) URL.revokeObjectURL(imageSrc)
+    setImageSrc(URL.createObjectURL(file))
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCroppedAreaPixels(null)
+  }
 
-    setLoading(true)
+  const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
+
+  const closeCropper = () => {
+    if (imageSrc) URL.revokeObjectURL(imageSrc)
+    setImageSrc(null)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCroppedAreaPixels(null)
+    setCropError('')
+  }
+
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', (error) => reject(error))
+      image.src = url
+    })
+
+  const getCroppedImg = async (src: string, pixelCrop: Area, outputSize = 512): Promise<Blob> => {
+    const image = await createImage(src)
+    const canvas = document.createElement('canvas')
+    const scaleX = image.naturalWidth / image.width
+    const scaleY = image.naturalHeight / image.height
+    const maxDim = Math.max(pixelCrop.width * scaleX, pixelCrop.height * scaleY)
+    const size = Math.max(256, Math.min(outputSize, Math.floor(maxDim)))
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas is not supported')
+    ctx.drawImage(
+      image,
+      pixelCrop.x * scaleX,
+      pixelCrop.y * scaleY,
+      pixelCrop.width * scaleX,
+      pixelCrop.height * scaleY,
+      0,
+      0,
+      size,
+      size
+    )
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Canvas is empty'))), 'image/jpeg', 0.92)
+    })
+  }
+
+  const saveCroppedImage = async () => {
+    if (!imageSrc || !croppedAreaPixels) return
+    setCropping(true)
+    setCropError('')
     try {
+      const blob = await getCroppedImg(imageSrc, croppedAreaPixels, 512)
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const fileName = `${user.id}-${Date.now()}.jpg`
       const filePath = `profiles/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('fowl-images')
-        .upload(filePath, file, {
+        .upload(filePath, blob, {
           cacheControl: '3600',
+          contentType: 'image/jpeg',
           upsert: true
         })
 
@@ -126,10 +198,13 @@ export default function ProfilePage() {
         localStorage.setItem('gallotrack_admin_avatar', publicImageUrl)
         window.dispatchEvent(new Event('admin-profile-update'))
       }
+
+      closeCropper()
     } catch (err) {
       console.error(err)
+      setCropError('Failed to upload cropped image. Please try again.')
     } finally {
-      setLoading(false)
+      setCropping(false)
     }
   }
 
@@ -176,7 +251,7 @@ export default function ProfilePage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
               <span>Change Photo</span>
             </div>
-            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+            <input type="file" ref={fileInputRef} onChange={onFileSelected} accept="image/*" className="hidden" />
           </div>
           <div className="space-y-1.5">
             <h3 className="text-lg font-extrabold text-slate-900">{fullName}</h3>
@@ -186,6 +261,14 @@ export default function ProfilePage() {
               {isAdmin ? 'Admin' : 'Farm Owner'}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={triggerFileInput}
+            className="group w-full flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 active:scale-[0.99] text-white text-[11px] font-black py-2.5 rounded-xl transition-all duration-200 cursor-pointer shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            Change Profile Picture
+          </button>
           <div className="w-full border-t border-slate-100 pt-4 space-y-2.5 text-[11px] text-slate-500 font-mono">
             <div className="flex items-center justify-between px-1">
               <span className="text-slate-400 font-bold tracking-wide">HUB LOCATION</span>
@@ -252,6 +335,61 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
+
+      {/* IMAGE CROPPER MODAL */}
+      {imageSrc && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-5">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">Crop Profile Picture</h3>
+                <p className="text-[11px] text-slate-500 font-semibold">Drag to pan, use the slider to zoom, then save</p>
+              </div>
+              <button onClick={closeCropper} className="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
+            </div>
+
+            <div className="relative w-full h-72 bg-slate-900 rounded-2xl overflow-hidden">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+
+            <div className="flex items-center space-x-3 px-1">
+              <span className="text-base">🔍</span>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.01}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-teal-600 cursor-pointer"
+              />
+              <span className="text-base">🔎</span>
+            </div>
+
+            {cropError && <p className="text-xs font-bold text-rose-600 text-center">{cropError}</p>}
+
+            <div className="flex space-x-3">
+              <button type="button" onClick={closeCropper} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer">
+                Cancel
+              </button>
+              <button type="button" onClick={saveCroppedImage} disabled={cropping} className="flex-1 bg-teal-700 hover:bg-teal-800 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md disabled:opacity-50">
+                {cropping && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>{cropping ? 'Uploading...' : 'Crop & Save'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
