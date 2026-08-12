@@ -53,6 +53,7 @@ interface FowlRecord {
 type ParentSelectorProps = {
   value: string;
   onChange: (v: string) => void;
+  onPick?: (fowl: FowlRecord) => void;
   fowls: FowlRecord[];
   preferredGender?: 'Male' | 'Female';
   placeholder?: string;
@@ -60,7 +61,7 @@ type ParentSelectorProps = {
   compact?: boolean;
 };
 
-function ParentSelector({ value, onChange, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
+function ParentSelector({ value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
@@ -121,6 +122,7 @@ function ParentSelector({ value, onChange, fowls, preferredGender, placeholder, 
                     e.preventDefault();
                     setText(f.name);
                     onChange(f.name);
+                    if (onPick) onPick(f);
                     setOpen(false);
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 border-b border-slate-50 text-left cursor-pointer"
@@ -1283,6 +1285,11 @@ export default function GalloTrackSystem() {
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
   const validationPassed = newName.trim() !== '' && newBreed.trim() !== '' && newGender !== '' && age.trim() !== '';
   const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct));
+  const computedBloodlinePct = (() => {
+    const s = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Number(sirePct);
+    const d = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Number(damPct);
+    return Math.round(((s + d) / 2) * 10) / 10;
+  })();
 
   const winRatePct = matchHistory.length > 0
     ? Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)
@@ -2241,13 +2248,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire (Father) <span className="text-slate-400 font-normal lowercase">(pick from registry or type custom)</span>
                           </label>
-                          <ParentSelector value={sireName} onChange={setSireName} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
+                          <ParentSelector value={sireName} onChange={setSireName} onPick={(f) => setSirePct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam (Mother) <span className="text-slate-400 font-normal lowercase">(pick from registry or type custom)</span>
                           </label>
-                          <ParentSelector value={damName} onChange={setDamName} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
+                          <ParentSelector value={damName} onChange={setDamName} onPick={(f) => setDamPct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -2262,6 +2269,17 @@ export default function GalloTrackSystem() {
                             Dam Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
                           <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 50" />
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-teal-700 uppercase tracking-widest">Combined Bloodline Index (Auto)</p>
+                          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Formula: Bloodline% = (Sire% + Dam%) ÷ 2</p>
+                          <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Selecting registered parents auto-fills their bloodline percentages.</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-2xl font-black text-teal-700">{computedBloodlinePct}%</span>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Sire/Dam%'}</p>
                         </div>
                       </div>
                       <div>
@@ -2289,7 +2307,7 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                         <StatusItem icon="🛡️" label="Data Integrity & Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
                         <StatusItem icon="✅" label="Validation" value={validationPassed ? 'Passed' : 'Pending'} tone={validationPassed ? 'green' : 'amber'} />
-                        <StatusItem icon="🔗" label="Bloodline Consistency" value={bloodlineVerified ? 'Verified' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
+                        <StatusItem icon="🔗" label="Bloodline Consistency" value={bloodlineVerified ? `${computedBloodlinePct}%` : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
                         <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
                       </div>
                       <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-2xl text-xs shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
@@ -3594,13 +3612,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <ParentSelector value={editSire} onChange={setEditSire} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
+                    <ParentSelector value={editSire} onChange={setEditSire} onPick={(f) => setEditSirePct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <ParentSelector value={editDam} onChange={setEditDam} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
+                    <ParentSelector value={editDam} onChange={setEditDam} onPick={(f) => setEditDamPct(f.bloodline_pct ?? 100)} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
