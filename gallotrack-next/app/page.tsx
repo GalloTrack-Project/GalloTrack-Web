@@ -1559,13 +1559,13 @@ export default function GalloTrackSystem() {
               <div className="flex items-center space-x-3">
                 <span className="md:hidden font-black text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground to-emerald-400 bg-clip-text text-transparent">GALLOTRACK</span>
                 
-                <div className="antigravity-badge bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-full flex items-center space-x-2 text-[10px] sm:text-xs font-mono font-bold shadow-2xs">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <div className="flex items-center space-x-2 select-none" title="Supabase PostgreSQL link: Online">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-500/40"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500/80"></span>
                   </span>
-                  <span className="hidden sm:inline">SUPABASE POSTGRESQL LINK: ONLINE</span>
-                  <span className="sm:hidden font-extrabold uppercase tracking-wide">DB ONLINE</span>
+                  <span className="hidden sm:inline text-[10px] font-medium text-muted-foreground/70 tracking-wide">PostgreSQL Connected</span>
+                  <span className="sm:hidden text-[9px] font-semibold text-muted-foreground/70 tracking-wide">DB</span>
                 </div>
               </div>
 
