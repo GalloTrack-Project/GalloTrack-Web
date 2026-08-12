@@ -1289,11 +1289,11 @@ export default function GalloTrackSystem() {
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
   const validationPassed = newName.trim() !== '' && newBreed.trim() !== '' && newGender !== '' && age.trim() !== '';
   const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct));
-  const computedBloodlinePct = (() => {
-    const s = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Number(sirePct);
-    const d = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Number(damPct);
-    return Math.round(((s + d) / 2) * 10) / 10;
-  })();
+  const sirePctVal = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Math.min(Number(sirePct), 100);
+  const damPctVal = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Math.min(Number(damPct), 100);
+  const sireInheritedShare = Math.round(sirePctVal * 0.5 * 10) / 10;
+  const damInheritedShare = Math.round(damPctVal * 0.5 * 10) / 10;
+  const computedBloodlinePct = Math.round(((sirePctVal + damPctVal) / 2) * 10) / 10;
 
   const winRatePct = matchHistory.length > 0
     ? Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)
@@ -2264,27 +2264,41 @@ export default function GalloTrackSystem() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
-                            Sire Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                            Sire Purity (%) <span className="text-slate-400 font-normal lowercase">(parent&apos;s own bloodline — 100 = pure)</span>
                           </label>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 50" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 100" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
-                            Dam Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                            Dam Purity (%) <span className="text-slate-400 font-normal lowercase">(parent&apos;s own bloodline — 100 = pure)</span>
                           </label>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 50" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 100" />
                         </div>
                       </div>
-                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-black text-teal-700 uppercase tracking-widest">Combined Bloodline Index (Auto)</p>
-                          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Formula: Bloodline% = (Sire% + Dam%) ÷ 2</p>
-                          <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Selecting registered parents auto-fills their bloodline percentages.</p>
+                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black text-teal-700 uppercase tracking-widest">Offspring Inheritance Breakdown</p>
+                            <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Each parent contributes a fixed 50% genetic share → inherited contribution = purity × 50%</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-2xl font-black text-teal-700">{computedBloodlinePct}%</span>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Sire/Dam Purity'}</p>
+                          </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <span className="text-2xl font-black text-teal-700">{computedBloodlinePct}%</span>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Sire/Dam%'}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-white/70 border border-sky-100 rounded-xl p-3">
+                            <p className="text-[9px] font-black text-sky-600 uppercase tracking-wider">🐓 Sire · Own Purity</p>
+                            <p className="text-sm font-black text-slate-800">{sirePctVal}%</p>
+                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">Inherited share: <span className="text-sky-700 font-black">{sireInheritedShare}%</span> of offspring</p>
+                          </div>
+                          <div className="bg-white/70 border border-pink-100 rounded-xl p-3">
+                            <p className="text-[9px] font-black text-pink-600 uppercase tracking-wider">🐔 Dam · Own Purity</p>
+                            <p className="text-sm font-black text-slate-800">{damPctVal}%</p>
+                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">Inherited share: <span className="text-pink-700 font-black">{damInheritedShare}%</span> of offspring</p>
+                          </div>
                         </div>
+                        <p className="text-[9px] text-slate-400 font-semibold">Formula: Offspring Bloodline% = Sire Purity% × 0.5 + Dam Purity% × 0.5 (equals (Sire + Dam) ÷ 2). Selecting registered parents auto-fills their recorded purity.</p>
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Fowl Attachment Photo</label>
@@ -3628,15 +3642,15 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Sire Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                      Sire Purity (%) <span className="text-slate-400 font-normal lowercase">(parent&apos;s own bloodline)</span>
                     </label>
-                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 50" min="0" max="100" />
+                    <input type="number" value={editSirePct} onChange={(e) => setEditSirePct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 100" min="0" max="100" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Dam Heritage Pct (%) <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                      Dam Purity (%) <span className="text-slate-400 font-normal lowercase">(parent&apos;s own bloodline)</span>
                     </label>
-                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 50" min="0" max="100" />
+                    <input type="number" value={editDamPct} onChange={(e) => setEditDamPct(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 100" min="0" max="100" />
                   </div>
                 </div>
               </div>
