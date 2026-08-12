@@ -306,7 +306,42 @@ export default function GalloTrackSystem() {
     const n = Number(v);
     return !isNaN(n) && n > 0 ? Math.min(n, 100) : 0;
   };
-  const parentBloodlinePct = (f: FowlRecord) => cleanPct(f.bloodline_pct);
+  const generationOfName = (name: string, memo: Map<string, number>, chain: Set<string>): number => {
+    const key = (name || '').trim().toLowerCase();
+    if (!key || key === 'foundation stock') return 0;
+    const cached = memo.get(key);
+    if (cached !== undefined) return cached;
+    if (chain.has(key)) return 0;
+    const match = fowls.find((f) => (f.name || '').trim().toLowerCase() === key);
+    if (!match) return 0;
+    const s = (match.sire || '').trim().toLowerCase();
+    const d = (match.dam || '').trim().toLowerCase();
+    const hasS = s !== '' && s !== 'foundation stock' && fowls.some((f) => (f.name || '').trim().toLowerCase() === s);
+    const hasD = d !== '' && d !== 'foundation stock' && fowls.some((f) => (f.name || '').trim().toLowerCase() === d);
+    if (!hasS && !hasD) { memo.set(key, 0); return 0; }
+    chain.add(key);
+    const gen = Math.max(hasS ? generationOfName(s, memo, chain) : 0, hasD ? generationOfName(d, memo, chain) : 0) + 1;
+    chain.delete(key);
+    memo.set(key, gen);
+    return gen;
+  };
+  const generationOf = (f: FowlRecord | null | undefined): number => {
+    if (!f) return 0;
+    return generationOfName(f.name, new Map<string, number>(), new Set<string>());
+  };
+  const generationPurity = (gen: number): number => {
+    if (gen <= 0) return 100;
+    return Math.round((100 * (1 - Math.pow(2, -gen))) * 100) / 100;
+  };
+  const generationInfo = (gen: number): { short: string; label: string; desc: string; tone: string } => {
+    if (gen <= 0) return { short: 'F0', label: 'Base Stock', desc: 'Foundation / Starting Stock', tone: 'emerald' };
+    if (gen === 1) return { short: 'F1', label: 'F1 · First Cross', desc: 'First Cross', tone: 'sky' };
+    if (gen === 2) return { short: 'F2', label: 'F2 · 1st Backcross', desc: '1st Backcross', tone: 'indigo' };
+    if (gen === 3) return { short: 'F3', label: 'F3 · 2nd Backcross', desc: '2nd Backcross', tone: 'violet' };
+    if (gen === 4) return { short: 'F4', label: 'F4 · 3rd Backcross', desc: '3rd Backcross', tone: 'amber' };
+    return { short: `F${gen}`, label: `F${gen} · Stabilized Line`, desc: 'Stabilized Line', tone: 'teal' };
+  };
+  const parentBloodlinePct = (f: FowlRecord) => generationPurity(generationOf(f));
   const bloodlineOf = (f: FowlRecord) => Math.round(((cleanPct(f.sire_pct) + cleanPct(f.dam_pct)) / 2) * 10) / 10;
   const maleActiveFowls = activeFowls.filter(f => isMale(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemale(f.gender));
@@ -791,7 +826,7 @@ export default function GalloTrackSystem() {
 
       const sPct = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Number(sirePct);
       const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Number(damPct);
-      const calculatedBloodline = (sPct + dPct) / 2;
+      const calculatedBloodline = computedBloodlinePct;
       
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
 
@@ -1066,7 +1101,10 @@ export default function GalloTrackSystem() {
     try {
       const sPct = editSirePct === '' || editSirePct === null || isNaN(Number(editSirePct)) ? 0 : Number(editSirePct);
       const dPct = editDamPct === '' || editDamPct === null || isNaN(Number(editDamPct)) ? 0 : Number(editDamPct);
-      const calculatedBloodline = (sPct + dPct) / 2;
+      const editSireGen = generationOfName(editSire, new Map<string, number>(), new Set<string>());
+      const editDamGen = generationOfName(editDam, new Map<string, number>(), new Set<string>());
+      const editHasAnyParent = editSire.trim() !== '' || editDam.trim() !== '';
+      const calculatedBloodline = generationPurity(editHasAnyParent ? Math.max(editSireGen, editDamGen) + 1 : 0);
       const editAutoParts = getAgeParts(editBirthdate);
       const payload = {
         name: editName,
@@ -1291,11 +1329,14 @@ export default function GalloTrackSystem() {
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
   const validationPassed = newName.trim() !== '' && newBreed.trim() !== '' && newGender !== '' && age.trim() !== '';
   const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct)) && Number(sirePct) > 0 && Number(damPct) > 0;
-  const sirePctVal = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Math.min(Number(sirePct), 100);
-  const damPctVal = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Math.min(Number(damPct), 100);
-  const sireInheritedShare = Math.round(sirePctVal * 0.5 * 10) / 10;
-  const damInheritedShare = Math.round(damPctVal * 0.5 * 10) / 10;
-  const computedBloodlinePct = Math.round(((sirePctVal + damPctVal) / 2) * 10) / 10;
+  const sireGen = generationOfName(sireName, new Map<string, number>(), new Set<string>());
+  const damGen = generationOfName(damName, new Map<string, number>(), new Set<string>());
+  const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
+  const offspringGen = hasAnyParent ? Math.max(sireGen, damGen) + 1 : 0;
+  const offspringGenInfo = generationInfo(offspringGen);
+  const sireGenInfo = generationInfo(sireGen);
+  const damGenInfo = generationInfo(damGen);
+  const computedBloodlinePct = generationPurity(offspringGen);
 
   const winRatePct = matchHistory.length > 0
     ? Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)
@@ -2280,27 +2321,28 @@ export default function GalloTrackSystem() {
                       <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-[10px] font-black text-teal-700 uppercase tracking-widest">Offspring Inheritance Breakdown</p>
-                            <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Each parent contributes a fixed 50% genetic share → inherited contribution = purity × 50%</p>
+                            <p className="text-[10px] font-black text-teal-700 uppercase tracking-widest">🧬 Generational Purity &amp; Backcrossing</p>
+                            <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="text-2xl font-black text-teal-700">{computedBloodlinePct}%</span>
-                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Sire/Dam Purity'}</p>
+                            <span className="inline-flex items-center gap-1.5 bg-teal-700 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{offspringGenInfo.short} · {offspringGenInfo.label}</span>
+                            <p className="text-2xl font-black text-teal-700 mt-1.5">{computedBloodlinePct}%</p>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Parents'}</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-white/70 border border-sky-100 rounded-xl p-3">
-                            <p className="text-[9px] font-black text-sky-600 uppercase tracking-wider">🐓 Sire · Own Purity</p>
-                            <p className="text-sm font-black text-slate-800">{sirePctVal}%</p>
-                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">Inherited share: <span className="text-sky-700 font-black">{sireInheritedShare}%</span> of offspring</p>
+                            <p className="text-[9px] font-black text-sky-600 uppercase tracking-wider">🐓 Sire Lineage</p>
+                            <p className="text-sm font-black text-slate-800 truncate">{sireName.trim() ? sireName : '—'}</p>
+                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">{sireGenInfo.label} · {generationPurity(sireGen)}% purity</p>
                           </div>
                           <div className="bg-white/70 border border-pink-100 rounded-xl p-3">
-                            <p className="text-[9px] font-black text-pink-600 uppercase tracking-wider">🐔 Dam · Own Purity</p>
-                            <p className="text-sm font-black text-slate-800">{damPctVal}%</p>
-                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">Inherited share: <span className="text-pink-700 font-black">{damInheritedShare}%</span> of offspring</p>
+                            <p className="text-[9px] font-black text-pink-600 uppercase tracking-wider">🐔 Dam Lineage</p>
+                            <p className="text-sm font-black text-slate-800 truncate">{damName.trim() ? damName : '—'}</p>
+                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">{damGenInfo.label} · {generationPurity(damGen)}% purity</p>
                           </div>
                         </div>
-                        <p className="text-[9px] text-slate-400 font-semibold">Formula: Offspring Bloodline% = Sire Purity% × 0.5 + Dam Purity% × 0.5 (equals (Sire + Dam) ÷ 2). Selecting registered parents auto-fills their recorded purity.</p>
+                        <p className="text-[9px] text-slate-400 font-semibold">Purity ladder: F1 (First Cross) = 50% · F2 (1st Backcross) = 75% · F3 (2nd Backcross) = 87.5% · F4+ (Stabilized) = 93.75%–96%+. Purity = 100 × (1 − 2⁻ᵍᵉⁿ) with foundation/base stock = 100%.</p>
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Fowl Attachment Photo</label>
@@ -2374,6 +2416,8 @@ export default function GalloTrackSystem() {
                         </div>
                       ) : birds.map((fowl, index) => {
                         const siblings = getSiblingRelations(fowl).map(s => s.name);
+                        const cardGen = generationOf(fowl);
+                        const cardGenInfo = generationInfo(cardGen);
                         return (
                           <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
                             <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
@@ -2387,6 +2431,7 @@ export default function GalloTrackSystem() {
                                 <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${isMaleTab ? 'text-sky-700 bg-sky-50 border-sky-200' : 'text-pink-700 bg-pink-50 border-pink-200'}`}>
                                   {isMaleTab ? '🐓 Male' : '🐔 Female'}
                                 </span>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 bg-teal-50 border-teal-200">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
                               </div>
                               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                                 <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -2467,6 +2512,8 @@ export default function GalloTrackSystem() {
                       </div>
                     ) : archivedFowls.map((fowl, index) => {
                       const siblings = getSiblingRelations(fowl).map(s => s.name);
+                      const cardGen = generationOf(fowl);
+                      const cardGenInfo = generationInfo(cardGen);
                       return (
                         <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
                           <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
@@ -2485,6 +2532,7 @@ export default function GalloTrackSystem() {
                               <h4 className="text-base font-black text-slate-700">{fowl.name}</h4>
                               <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 bg-amber-50 border-amber-200">📦 Archived</span>
                               <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 border-amber-200">{fowl.breed}</span>
+                              <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 bg-teal-50 border-teal-200">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
                             </div>
                             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
                               <div>Sire: <strong className="text-slate-800">{fowl.sire || 'N/A'}</strong></div>
@@ -2535,6 +2583,8 @@ export default function GalloTrackSystem() {
                       </div>
                     ) : (
                       deceasedFowls.map((fowl, index) => {
+                        const cardGen = generationOf(fowl);
+                        const cardGenInfo = generationInfo(cardGen);
                         return (
                           <div key={fowl.id} className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
                             <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
@@ -2545,6 +2595,7 @@ export default function GalloTrackSystem() {
                               <div className="flex items-center space-x-2">
                                 <h4 className="text-base font-black text-slate-900 line-through opacity-75">{fowl.name}</h4>
                                 <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">{fowl.breed}</span>
+                                <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 bg-teal-50 border-teal-200">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
                                 <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">💀 Cause of Death: {fowl.death_reason || 'Unspecified'}{fowl.death_date ? ` · ${fowl.death_date}` : ''}</span>
                               </div>
                               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
@@ -3250,6 +3301,23 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
 
             <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
               <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>
+              
+              {(() => {
+                const selGen = generationOf(selectedFowlForDetails);
+                const selInfo = generationInfo(selGen);
+                return (
+                  <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-xl px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black text-teal-700 uppercase tracking-wider">🧬 Breeding Generation</p>
+                      <p className="text-[10px] font-bold text-slate-500 truncate">{selInfo.label} · {selInfo.desc}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-lg font-black text-teal-700">{generationPurity(selGen)}%</span>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wide">Generational Purity</p>
+                    </div>
+                  </div>
+                );
+              })()}
               
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] font-bold text-slate-500">
