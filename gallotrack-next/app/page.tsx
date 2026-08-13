@@ -306,6 +306,7 @@ export default function GalloTrackSystem() {
     const n = Number(v);
     return !isNaN(n) && n > 0 ? Math.min(n, 100) : 0;
   };
+  const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
   const generationOfName = (name: string, memo: Map<string, number>, chain: Set<string>): number => {
     const key = (name || '').trim().toLowerCase();
     if (!key || key === 'foundation stock') return 0;
@@ -1089,8 +1090,8 @@ export default function GalloTrackSystem() {
     setEditLegColor(fowl.leg_color || 'N/A');
     setEditSire(fowl.sire || '');
     setEditDam(fowl.dam || '');
-    setEditSirePct(fowl.sire_pct ?? 0);
-    setEditDamPct(fowl.dam_pct ?? 0);
+    setEditSirePct(isFoundationStock(fowl.sire || '') ? 100 : (fowl.sire_pct ?? 0));
+    setEditDamPct(isFoundationStock(fowl.dam || '') ? 100 : (fowl.dam_pct ?? 0));
   };
 
   const handleUpdateFowl = async (e: React.FormEvent) => {
@@ -2295,13 +2296,13 @@ export default function GalloTrackSystem() {
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Sire (Father) <span className="text-slate-400 font-normal lowercase">(pick from registry or type custom)</span>
                           </label>
-                          <ParentSelector value={sireName} onChange={setSireName} onPick={(f) => setSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
+                          <ParentSelector value={sireName} onChange={(v) => { setSireName(v); if (isFoundationStock(v)) setSirePct(100); }} onPick={(f) => setSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
                             Dam (Mother) <span className="text-slate-400 font-normal lowercase">(pick from registry or type custom)</span>
                           </label>
-                          <ParentSelector value={damName} onChange={setDamName} onPick={(f) => setDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
+                          <ParentSelector value={damName} onChange={(v) => { setDamName(v); if (isFoundationStock(v)) setDamPct(100); }} onPick={(f) => setDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -3700,13 +3701,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Sire (Father) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <ParentSelector value={editSire} onChange={setEditSire} onPick={(f) => setEditSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
+                    <ParentSelector value={editSire} onChange={(v) => { setEditSire(v); if (isFoundationStock(v)) setEditSirePct(100); }} onPick={(f) => setEditSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Dam (Mother) <span className="text-slate-400 font-normal lowercase">(optional)</span>
                     </label>
-                    <ParentSelector value={editDam} onChange={setEditDam} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
+                    <ParentSelector value={editDam} onChange={(v) => { setEditDam(v); if (isFoundationStock(v)) setEditDamPct(100); }} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
