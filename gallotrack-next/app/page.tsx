@@ -287,7 +287,6 @@ export default function GalloTrackSystem() {
   const [rememberMe, setRememberMe] = useState(false);
   const [adminName, setAdminName] = useState('Hazel Dela Cruz');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [userRole, setUserRole] = useState<'admin' | 'owner'>('owner');
   const [userHub, setUserHub] = useState('ISUFST DINGLE HUB');
   const [userActive, setUserActive] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
@@ -466,7 +465,6 @@ export default function GalloTrackSystem() {
           try {
             const { data: profile } = await supabase.from('profiles').select('id, is_admin, role, farm_name, is_active').eq('id', session.user.id).maybeSingle();
             setIsAdmin(isAdminProfile(profile));
-            setUserRole(profile && (profile.is_admin || profile.role === 'admin') ? 'admin' : 'owner');
             setUserHub((profile && (profile.farm_name || '').trim()) || 'ISUFST DINGLE HUB');
             setUserActive(profile ? profile.is_active !== false : true);
           } catch {
@@ -493,7 +491,6 @@ export default function GalloTrackSystem() {
             setIsAdmin(isAdminProfile(profile));
             setAdminName(profile.full_name || 'Hazel Dela Cruz');
             setAvatarUrl(profile.avatar_url || '');
-            setUserRole(profile.is_admin || profile.role === 'admin' ? 'admin' : 'owner');
             setUserHub((profile.farm_name || '').trim() || 'ISUFST DINGLE HUB');
             setUserActive(profile.is_active !== false);
             localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
@@ -1584,11 +1581,11 @@ export default function GalloTrackSystem() {
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-extrabold text-card-foreground truncate">{adminName}</p>
                 <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                  userRole === 'admin'
+                  isAdmin
                     ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
                     : 'bg-sky-500/15 border-sky-500/30 text-sky-400'
                 }`}>
-                  {userRole === 'admin' ? 'ADMIN' : 'FARM OWNER'}
+                  {isAdmin ? 'ADMIN' : 'FARM OWNER'}
                 </span>
               </div>
             </div>
