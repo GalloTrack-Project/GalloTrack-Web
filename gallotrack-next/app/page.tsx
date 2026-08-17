@@ -167,6 +167,19 @@ type SiblingRelation = {
   sharedDam: string;
 };
 
+type PairingStats = {
+  key: string;
+  sire: string;
+  dam: string;
+  members: FowlRecord[];
+  totalFights: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  decided: number;
+  winRate: number;
+};
+
 interface MatchRecord {
   id: number;
   user_id?: string | number;
@@ -407,7 +420,7 @@ export default function GalloTrackSystem() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState('');
-  const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain'>('individual');
+  const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain' | 'pairing'>('individual');
   const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
 
@@ -1176,6 +1189,41 @@ export default function GalloTrackSystem() {
     };
   };
 
+  const calculatePairingStats = (): { all: Map<string, PairingStats>; ranked: PairingStats[] } => {
+    const map = new Map<string, PairingStats>();
+    fowls.forEach((f) => {
+      const sire = (f.sire || '').trim();
+      const dam = (f.dam || '').trim();
+      if (!sire || !dam || sire.toLowerCase() === 'foundation stock' || dam.toLowerCase() === 'foundation stock') return;
+      const key = `${sire.toLowerCase()}|||${dam.toLowerCase()}`;
+      let stat = map.get(key);
+      if (!stat) {
+        stat = { key, sire, dam, members: [], totalFights: 0, wins: 0, losses: 0, draws: 0, decided: 0, winRate: 0 };
+        map.set(key, stat);
+      }
+      stat.members.push(f);
+    });
+    map.forEach((stat) => {
+      stat.members.forEach((m) => {
+        const fowlMatches = matchHistory.filter((match) => match.entry_name?.trim().toLowerCase() === m.name?.trim().toLowerCase());
+        stat.totalFights += fowlMatches.length;
+        stat.wins += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'win').length;
+        stat.losses += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'loss').length;
+        stat.draws += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'draw').length;
+      });
+      stat.decided = stat.wins + stat.losses;
+      stat.winRate = stat.decided > 0
+        ? Math.round((stat.wins / stat.decided) * 100)
+        : stat.totalFights > 0
+        ? Math.round((stat.wins / stat.totalFights) * 100)
+        : 0;
+    });
+    const ranked = Array.from(map.values())
+      .filter((s) => s.totalFights > 0)
+      .sort((a, b) => b.winRate - a.winRate || b.decided - a.decided || b.members.length - a.members.length);
+    return { all: map, ranked };
+  };
+
   const getArchiveBadgeStyle = (reason?: string) => {
     const r = (reason || 'RETIRED').toUpperCase();
     switch (r) {
@@ -1296,6 +1344,7 @@ export default function GalloTrackSystem() {
     .sort((a, b) => (a.info.next?.daysUntil ?? 999999) - (b.info.next?.daysUntil ?? 999999));
 
   const crossbreedChartData = calculateCrossbreedWinRatios();
+  const pairingAnalytics = calculatePairingStats();
 
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
@@ -2013,6 +2062,87 @@ export default function GalloTrackSystem() {
                     )}
                   </div>
                 </div>
+
+                {/* BREEDING PAIR PERFORMANCE ANALYTICS */}
+                {pairingAnalytics.ranked.length > 0 && (
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">🔗</span>
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900 tracking-tight">Breeding Pair Performance Analytics</h3>
+                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-[11px] border-collapse min-w-[860px]">
+                        <thead>
+                          <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/80">
+                            <th className="p-4 pl-6">Rank</th>
+                            <th className="p-4">Sire × Dam Cross</th>
+                            <th className="p-4 text-center">Offspring</th>
+                            <th className="p-4 text-center">Fights</th>
+                            <th className="p-4 text-center">Wins 🏆</th>
+                            <th className="p-4 text-center">Losses 💀</th>
+                            <th className="p-4 text-center">Win Rate</th>
+                            <th className="p-4 text-center pr-6">Breeding Verdict</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
+                          {pairingAnalytics.ranked.map((p, i) => {
+                            const elite = p.decided >= 3 && p.winRate >= 70;
+                            const solid = p.winRate >= 50;
+                            const weak = p.decided >= 3 && p.winRate < 50;
+                            return (
+                              <tr key={p.key} className={`hover:bg-slate-50/80 transition-colors ${weak ? 'bg-rose-50/30' : elite ? 'bg-emerald-50/30' : ''}`}>
+                                <td className="p-4 pl-6 whitespace-nowrap">
+                                  {i === 0 ? <span className="text-sm">🥇</span> : i === 1 ? <span className="text-sm">🥈</span> : i === 2 ? <span className="text-sm">🥉</span> : <span className="font-mono font-black text-slate-400">#{i + 1}</span>}
+                                </td>
+                                <td className="p-4">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center text-sm shrink-0">🔗</div>
+                                    <div className="min-w-0">
+                                      <p className="font-bold text-slate-900">{p.sire} <span className="text-slate-300 font-black">×</span> {p.dam}</p>
+                                      <p className="text-[9px] font-semibold text-slate-400 truncate">{p.members.map((m) => m.name).join(', ')}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="p-4 text-center font-mono font-bold">{p.members.length}</td>
+                                <td className="p-4 text-center font-mono font-bold">{p.totalFights}</td>
+                                <td className="p-4 text-center font-mono font-extrabold text-emerald-600">{p.wins}</td>
+                                <td className="p-4 text-center font-mono font-extrabold text-rose-600">{p.losses}</td>
+                                <td className="p-4 text-center font-mono">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                    {p.winRate}%
+                                  </span>
+                                </td>
+                                <td className="p-4 text-center pr-6">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
+                                    elite ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                    : solid ? 'bg-sky-50 text-sky-700 border-sky-200'
+                                    : weak ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200'
+                                  }`}>
+                                    {elite ? '🏆 Elite — Repeat Cross' : solid ? '✅ Solid Pairing' : weak ? '⚠️ Under-Performing' : '🔎 Inconclusive'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-x-5 gap-y-1 text-[9px] font-bold text-slate-400">
+                      <span>Verdict logic:</span>
+                      <span className="text-emerald-700">🏆 Elite = ≥70% win rate with 3+ decided fights</span>
+                      <span className="text-sky-700">✅ Solid = ≥50%</span>
+                      <span className="text-rose-700">⚠️ Avoid = below 50% with 3+ decided fights</span>
+                      <span className="ml-auto">Focus future breeding cycles strictly on high-performing bloodlines.</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
@@ -2809,6 +2939,19 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 return `${first.sire} ${first.dam}`.toLowerCase().includes(q) || g.some((f) => f.name.toLowerCase().includes(q));
               };
 
+              const aggregateProgenyStats = (g: FowlRecord[]) => {
+                let total = 0, wins = 0, losses = 0;
+                g.forEach((m) => {
+                  const fMatches = matchHistory.filter((x) => x.entry_name?.trim().toLowerCase() === m.name?.trim().toLowerCase());
+                  total += fMatches.length;
+                  wins += fMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'win').length;
+                  losses += fMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'loss').length;
+                });
+                const decided = wins + losses;
+                const winRate = decided > 0 ? Math.round((wins / decided) * 100) : (total > 0 ? Math.round((wins / total) * 100) : 0);
+                return { total, wins, losses, decided, winRate };
+              };
+
               const fullFiltered = fullFamilies.filter(match);
               const sireFiltered = sireGroups.filter(match);
               const damFiltered = damGroups.filter(match);
@@ -2858,6 +3001,36 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     <p className="text-[11px] text-slate-400 font-bold mt-1">Shared {kind === 'sire' ? 'Sire' : 'Dam'} • {new Set(g.map((f) => f[kind === 'sire' ? 'dam' : 'sire'].trim().toLowerCase())).size} partner {kind === 'sire' ? 'Dams' : 'Sires'}</p>
                   )}
                   {renderMembers(g)}
+                  {(() => {
+                    if (kind === 'full') {
+                      const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
+                      return (
+                        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">🔗 Pairing Win Rate</span>
+                          {ps && ps.totalFights > 0 ? (
+                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                              {ps.winRate}% · {ps.wins}W-{ps.losses}L
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-slate-400">No match data yet</span>
+                          )}
+                        </div>
+                      );
+                    }
+                    const ps = aggregateProgenyStats(g);
+                    return (
+                      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">🧬 Progeny Win Rate</span>
+                        {ps.total > 0 ? (
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${ps.winRate >= 50 ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                            {ps.winRate}% · {ps.wins}W-{ps.losses}L
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-400">No match data yet</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
 
@@ -2906,7 +3079,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                       <div className="w-9 h-9 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-base">👥</div>
                       <div>
                         <h2 className="text-base font-black text-slate-900 tracking-tight">Full-Sibling Families</h2>
-                        <p className="text-[11px] text-slate-400 font-bold">Birds sharing the exact same Sire and Dam</p>
+                        <p className="text-[11px] text-slate-400 font-bold">Birds sharing the exact same Sire and Dam — iisang tatay at iisang nanay</p>
                       </div>
                     </div>
                     {linked.length === 0 ? (
@@ -2925,7 +3098,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                       <div className="w-9 h-9 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center text-base">🐓</div>
                       <div>
                         <h2 className="text-base font-black text-slate-900 tracking-tight">Half-Sibling Groups — Shared Sire</h2>
-                        <p className="text-[11px] text-slate-400 font-bold">Birds carrying the same Sire across different Dams</p>
+                        <p className="text-[11px] text-slate-400 font-bold">Same Sire across different Dams — magkaiba ang nanay, iisang tatay</p>
                       </div>
                     </div>
                     {sireFiltered.length === 0 ? (
@@ -2942,7 +3115,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                       <div className="w-9 h-9 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-base">🐔</div>
                       <div>
                         <h2 className="text-base font-black text-slate-900 tracking-tight">Half-Sibling Groups — Shared Dam</h2>
-                        <p className="text-[11px] text-slate-400 font-bold">Birds carrying the same Dam across different Sires</p>
+                        <p className="text-[11px] text-slate-400 font-bold">Same Dam across different Sires — magkaiba ang tatay, iisang nanay</p>
                       </div>
                     </div>
                     {damFiltered.length === 0 ? (
@@ -3123,8 +3296,10 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                         <span className="text-sm shrink-0">🧬</span>
                         <span>
                           <strong className="text-slate-700">How lineage is matched:</strong> birds sharing both the same{' '}
-                          <strong className="text-slate-700">Sire</strong> and <strong className="text-slate-700">Dam</strong> are <strong className="text-emerald-700">Full Siblings</strong>;
-                          sharing only one parent marks them as <strong className="text-amber-700">Half-Siblings</strong>. New encodes appear here instantly.
+                          <strong className="text-slate-700">Sire</strong> and <strong className="text-slate-700">Dam</strong> are <strong className="text-emerald-700">Full Siblings</strong> (iisang tatay at iisang nanay);
+                          sharing only the <strong className="text-slate-700">Sire</strong> marks them <strong className="text-amber-700">Half-Siblings (Shared Sire)</strong> — magkaiba ang nanay, iisang tatay;
+                          sharing only the <strong className="text-slate-700">Dam</strong> marks them <strong className="text-sky-700">Half-Siblings (Shared Dam)</strong> — magkaiba ang tatay, iisang nanay.
+                          New encodes appear here instantly.
                         </span>
                       </p>
                       <div className="space-y-2 mb-3">
@@ -3343,6 +3518,19 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                   {bloodlineOf(selectedFowlForDetails)}%
                 </span>
               </div>
+
+              {(() => {
+                const ps = pairingAnalytics.all.get(`${(selectedFowlForDetails.sire || '').trim().toLowerCase()}|||${(selectedFowlForDetails.dam || '').trim().toLowerCase()}`);
+                if (!ps) return null;
+                return (
+                  <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-[11px] gap-2">
+                    <span className="font-extrabold text-slate-700 min-w-0 truncate">🔗 Pairing Performance ({ps.sire} × {ps.dam})</span>
+                    <span className={`font-mono font-black px-2.5 py-0.5 rounded-full border shrink-0 ${ps.totalFights > 0 ? (ps.winRate >= 50 ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60' : 'bg-rose-50 text-rose-700 border-rose-200/60') : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                      {ps.totalFights > 0 ? `${ps.winRate}% · ${ps.wins}W-${ps.losses}L` : 'No match data'}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -3778,6 +3966,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                 >
                   🧬 Strain / Breed Aggregates
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setBreakdownTab('pairing')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${breakdownTab === 'pairing' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  🔗 Pairing Crosses ({pairingAnalytics.ranked.length})
+                </button>
               </div>
 
               <span className="text-[10px] font-mono text-slate-500 font-bold hidden sm:inline-block">
@@ -3950,6 +4145,84 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                       </div>
                     );
                   })()}
+                </div>
+              )}
+
+              {breakdownTab === 'pairing' && (
+                <div>
+                  {pairingAnalytics.ranked.length === 0 ? (
+                    <div className="text-center py-12 space-y-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                      <div className="w-14 h-14 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-2xl mx-auto">🔗</div>
+                      <h4 className="text-sm font-extrabold text-slate-700">No Pairing Analytics Yet</h4>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">Pairings appear when offspring share the same Sire × Dam cross and at least one of them has logged match results.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                        {[
+                          { label: 'Pairings Analyzed', value: pairingAnalytics.ranked.length, icon: '🔗' },
+                          { label: 'Elite Crosses (≥70%)', value: pairingAnalytics.ranked.filter((p) => p.decided >= 3 && p.winRate >= 70).length, icon: '🏆' },
+                          { label: 'Solid Crosses (≥50%)', value: pairingAnalytics.ranked.filter((p) => p.winRate >= 50 && !(p.decided >= 3 && p.winRate >= 70)).length, icon: '✅' },
+                          { label: 'Under-Performers', value: pairingAnalytics.ranked.filter((p) => p.decided >= 3 && p.winRate < 50).length, icon: '⚠️' },
+                        ].map((s) => (
+                          <div key={s.label} className="bg-slate-50 rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
+                            <div className="w-9 h-9 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-base shrink-0">{s.icon}</div>
+                            <div className="min-w-0">
+                              <p className="text-xl font-black text-slate-900 leading-none">{s.value}</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-1">{s.label}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+                        <table className="w-full text-left text-xs border-collapse min-w-[760px]">
+                          <thead>
+                            <tr className="bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-wider">
+                              <th className="p-3 pl-4">Rank</th>
+                              <th className="p-3">Sire × Dam Cross</th>
+                              <th className="p-3 text-center">Offspring</th>
+                              <th className="p-3 text-center">Fights</th>
+                              <th className="p-3 text-center">Wins 🏆</th>
+                              <th className="p-3 text-center">Losses 💀</th>
+                              <th className="p-3 text-center">Win Rate %</th>
+                              <th className="p-3 text-center pr-4">Breeding Verdict</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                            {pairingAnalytics.ranked.map((p, i) => {
+                              const elite = p.decided >= 3 && p.winRate >= 70;
+                              const solid = p.winRate >= 50;
+                              const weak = p.decided >= 3 && p.winRate < 50;
+                              return (
+                                <tr key={p.key} className={`hover:bg-slate-50/80 transition-colors ${weak ? 'bg-rose-50/40' : elite ? 'bg-emerald-50/40' : ''}`}>
+                                  <td className="p-3 pl-4">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td>
+                                  <td className="p-3">
+                                    <p className="font-black text-slate-900">{p.sire} <span className="text-slate-300">×</span> {p.dam}</p>
+                                    <p className="text-[10px] text-slate-400 font-semibold">{p.members.map((m) => m.name).join(', ')}</p>
+                                  </td>
+                                  <td className="p-3 text-center font-mono font-bold">{p.members.length}</td>
+                                  <td className="p-3 text-center font-mono font-bold">{p.totalFights}</td>
+                                  <td className="p-3 text-center font-mono font-extrabold text-emerald-600">{p.wins}</td>
+                                  <td className="p-3 text-center font-mono font-extrabold text-rose-600">{p.losses}</td>
+                                  <td className="p-3 text-center font-mono">
+                                    <span className={`px-2 py-0.5 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>{p.winRate}%</span>
+                                  </td>
+                                  <td className="p-3 text-center pr-4">
+                                    <span className={`inline-block px-2.5 py-1 rounded-full font-black text-[9px] uppercase border whitespace-nowrap ${
+                                      elite ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : solid ? 'bg-sky-50 text-sky-700 border-sky-200' : weak ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-100 text-slate-500 border-slate-200'
+                                    }`}>
+                                      {elite ? '🏆 Elite — Repeat' : solid ? '✅ Solid' : weak ? '⚠️ Avoid' : '🔎 Inconclusive'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="mt-3 text-[10px] text-slate-400 font-semibold">Verdict logic: <strong className="text-emerald-700">Elite</strong> = ≥70% win rate with 3+ decided fights · <strong className="text-sky-700">Solid</strong> = ≥50% · <strong className="text-rose-700">Avoid</strong> = below 50% with 3+ decided fights — focus future breeding cycles strictly on the top-performing crosses.</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
