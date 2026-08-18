@@ -178,6 +178,10 @@ type PairingStats = {
   draws: number;
   decided: number;
   winRate: number;
+  resilienceScore: number;
+  resilienceSample: number;
+  casualties: number;
+  critical: number;
 };
 
 interface MatchRecord {
@@ -192,6 +196,7 @@ interface MatchRecord {
   outcome: string;
   status: string;
   video_url?: string;
+  post_fight_condition?: string;
 }
 
 interface ToastState {
@@ -241,6 +246,24 @@ function TrendChip({ up, label }: { up: boolean; label: string }) {
     </span>
   );
 }
+
+const POST_FIGHT_CONDITIONS = [
+  { value: 'Fit / Recovered', icon: '🟢', short: 'FIT', desc: 'Pulled through cleanly' },
+  { value: 'Severely Injured / Critical', icon: '🟠', short: 'CRITICAL', desc: 'Badly hurt after the fight' },
+  { value: 'Deceased (Died from injuries)', icon: '💀', short: 'DECEASED', desc: 'Died from fight injuries' },
+] as const;
+
+const matchSurvivability = (m: MatchRecord): number | null => {
+  const cond = (m.post_fight_condition || '').toLowerCase();
+  if (cond.includes('deceased')) return 0;
+  if (cond.includes('critical') || cond.includes('severely')) return 40;
+  if (cond.includes('fit') || cond.includes('recovered')) return 100;
+  const outcome = (m.outcome || '').toLowerCase();
+  if (outcome === 'win') return 90;
+  if (outcome === 'loss') return 70;
+  if (outcome === 'draw') return 80;
+  return null;
+};
 
 const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[] = [
   { id: '7d', label: 'Last 7 Days' },
@@ -392,6 +415,7 @@ export default function GalloTrackSystem() {
   const [matchLocation, setMatchLocation] = useState('');
   const [matchType, setMatchType] = useState('Derby Match');
   const [matchOutcome, setMatchOutcome] = useState('Win');
+  const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
   const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
@@ -945,6 +969,7 @@ export default function GalloTrackSystem() {
         type: matchType,
         outcome: matchOutcome,
         status: 'Verified',
+        post_fight_condition: matchPostFight,
         video_url: videoUrl || null
       };
 
@@ -954,7 +979,7 @@ export default function GalloTrackSystem() {
         throw insertErr;
       } else {
         showToastMessage('Performance match vector successfully computed and logged.', 'success');
-        setOpponentName(''); setMatchLocation(''); setMatchVideoFile(null);
+        setOpponentName(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
         fetchDatabaseResources();
         setProfilingSubTab('males');
       }
@@ -1198,24 +1223,34 @@ export default function GalloTrackSystem() {
       const key = `${sire.toLowerCase()}|||${dam.toLowerCase()}`;
       let stat = map.get(key);
       if (!stat) {
-        stat = { key, sire, dam, members: [], totalFights: 0, wins: 0, losses: 0, draws: 0, decided: 0, winRate: 0 };
+        stat = { key, sire, dam, members: [], totalFights: 0, wins: 0, losses: 0, draws: 0, decided: 0, winRate: 0, resilienceScore: 0, resilienceSample: 0, casualties: 0, critical: 0 };
         map.set(key, stat);
       }
       stat.members.push(f);
     });
     map.forEach((stat) => {
+      let survivalSum = 0;
       stat.members.forEach((m) => {
         const fowlMatches = matchHistory.filter((match) => match.entry_name?.trim().toLowerCase() === m.name?.trim().toLowerCase());
         stat.totalFights += fowlMatches.length;
         stat.wins += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'win').length;
         stat.losses += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'loss').length;
         stat.draws += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'draw').length;
+        stat.casualties += fowlMatches.filter((x) => (x.post_fight_condition || '').toLowerCase().includes('deceased')).length;
+        stat.critical += fowlMatches.filter((x) => (x.post_fight_condition || '').toLowerCase().includes('critical') || (x.post_fight_condition || '').toLowerCase().includes('severely')).length;
+        fowlMatches.forEach((x) => {
+          const s = matchSurvivability(x);
+          if (s !== null) { survivalSum += s; stat.resilienceSample++; }
+        });
       });
       stat.decided = stat.wins + stat.losses;
       stat.winRate = stat.decided > 0
         ? Math.round((stat.wins / stat.decided) * 100)
         : stat.totalFights > 0
         ? Math.round((stat.wins / stat.totalFights) * 100)
+        : 0;
+      stat.resilienceScore = stat.resilienceSample > 0
+        ? Math.round(survivalSum / stat.resilienceSample)
         : 0;
     });
     const ranked = Array.from(map.values())
@@ -2087,6 +2122,7 @@ export default function GalloTrackSystem() {
                             <th className="p-4 text-center">Wins 🏆</th>
                             <th className="p-4 text-center">Losses 💀</th>
                             <th className="p-4 text-center">Win Rate</th>
+                            <th className="p-4 text-center">🩺 Survivability</th>
                             <th className="p-4 text-center pr-6">Breeding Verdict</th>
                           </tr>
                         </thead>
@@ -2118,6 +2154,16 @@ export default function GalloTrackSystem() {
                                     {p.winRate}%
                                   </span>
                                 </td>
+                                <td className="p-4 text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-100 text-teal-800' : p.resilienceScore >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
+                                      🩺 {p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
+                                    </span>
+                                    {p.casualties > 0 && (
+                                      <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 whitespace-nowrap">💀 {p.casualties}</span>
+                                    )}
+                                  </div>
+                                </td>
                                 <td className="p-4 text-center pr-6">
                                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
                                     elite ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
@@ -2139,7 +2185,8 @@ export default function GalloTrackSystem() {
                       <span className="text-emerald-700">🏆 Elite = ≥70% win rate with 3+ decided fights</span>
                       <span className="text-sky-700">✅ Solid = ≥50%</span>
                       <span className="text-rose-700">⚠️ Avoid = below 50% with 3+ decided fights</span>
-                      <span className="ml-auto">Focus future breeding cycles strictly on high-performing bloodlines.</span>
+                      <span className="text-teal-700">🩺 Survivability = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties drag a bloodline down even on wins</span>
+                      <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
                     </div>
                   </div>
                 )}
@@ -2171,13 +2218,14 @@ export default function GalloTrackSystem() {
                           <th className="p-4">Bloodline</th>
                           <th className="p-4">Arena Location</th>
                           <th className="p-4 text-center">Outcome</th>
+                          <th className="p-4 text-center">🩺 Post-Fight Condition</th>
                           <th className="p-4 text-center">Video</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                         {matchHistory.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="p-8 text-center text-slate-400 text-xs font-semibold">
+                            <td colSpan={7} className="p-8 text-center text-slate-400 text-xs font-semibold">
                               No data available
                             </td>
                           </tr>
@@ -2197,6 +2245,21 @@ export default function GalloTrackSystem() {
                               <td className="p-4 text-slate-500 font-normal">{log.location || '—'}</td>
                               <td className="p-4 text-center">
                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome || '—'}</span>
+                              </td>
+                              <td className="p-4 text-center">
+                                {log.post_fight_condition ? (
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
+                                    (log.post_fight_condition || '').toLowerCase().includes('deceased')
+                                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                      : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely')
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                      : 'bg-teal-50 text-teal-700 border-teal-200'
+                                  }`}>
+                                    {(log.post_fight_condition || '').toLowerCase().includes('deceased') ? '💀 ' : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely') ? '🟠 ' : '🟢 '}{log.post_fight_condition}
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] text-slate-300 font-bold">—</span>
+                                )}
                               </td>
                               <td className="p-4 text-center">
                                 {log.video_url ? (
@@ -2825,6 +2888,17 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                         </select>
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">🩺 Post-Fight Condition / Health Status</label>
+                        <select value={matchPostFight} onChange={(e) => setMatchPostFight(e.target.value)} className="w-full p-3 border border-slate-200/90 rounded-xl text-xs bg-slate-50 font-bold text-slate-700 outline-none cursor-pointer focus:border-emerald-500 transition-all">
+                          {POST_FIGHT_CONDITIONS.map((c) => (
+                            <option key={c.value} value={c.value}>{c.icon} {c.value} — {c.desc}</option>
+                          ))}
+                        </select>
+                        <p className="mt-1.5 text-[9px] text-slate-400 font-semibold leading-relaxed">Drives the bloodline <strong className="text-slate-600">Survivability / Health Resilience</strong> score — a win that ends in death or critical injury lowers the cross&apos;s toughness rating even if the record shows a victory.</p>
+                      </div>
+                    </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Video Evidence Upload</label>
                       <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-slate-50/80 hover:bg-slate-100/70 transition-all">
@@ -3426,13 +3500,14 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                             <th className="p-2.5">Arena Location</th>
                             <th className="p-2.5">Match Type</th>
                             <th className="p-2.5 text-center">Outcome</th>
+                            <th className="p-2.5 text-center">🩺 Post-Fight</th>
                             <th className="p-2.5 text-center">Video</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                           {fowlMatches.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="p-6 text-center text-slate-400 text-xs">
+                              <td colSpan={7} className="p-6 text-center text-slate-400 text-xs">
                                 No derby performance logs recorded for this specific gamefowl node.
                               </td>
                             </tr>
@@ -3453,6 +3528,21 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                                   }`}>
                                     {match.outcome}
                                   </span>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  {match.post_fight_condition ? (
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase border whitespace-nowrap ${
+                                      (match.post_fight_condition || '').toLowerCase().includes('deceased')
+                                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                        : (match.post_fight_condition || '').toLowerCase().includes('critical') || (match.post_fight_condition || '').toLowerCase().includes('severely')
+                                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                        : 'bg-teal-50 text-teal-700 border-teal-200'
+                                    }`}>
+                                      {(match.post_fight_condition || '').toLowerCase().includes('deceased') ? '💀 ' : (match.post_fight_condition || '').toLowerCase().includes('critical') || (match.post_fight_condition || '').toLowerCase().includes('severely') ? '🟠 ' : '🟢 '}{match.post_fight_condition}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] text-slate-300 font-bold">—</span>
+                                  )}
                                 </td>
                                 <td className="p-2.5 text-center">
                                   {match.video_url ? (
@@ -4158,12 +4248,13 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
                         {[
                           { label: 'Pairings Analyzed', value: pairingAnalytics.ranked.length, icon: '🔗' },
                           { label: 'Elite Crosses (≥70%)', value: pairingAnalytics.ranked.filter((p) => p.decided >= 3 && p.winRate >= 70).length, icon: '🏆' },
                           { label: 'Solid Crosses (≥50%)', value: pairingAnalytics.ranked.filter((p) => p.winRate >= 50 && !(p.decided >= 3 && p.winRate >= 70)).length, icon: '✅' },
                           { label: 'Under-Performers', value: pairingAnalytics.ranked.filter((p) => p.decided >= 3 && p.winRate < 50).length, icon: '⚠️' },
+                          { label: 'Resilient Crosses (🩺≥80%)', value: pairingAnalytics.ranked.filter((p) => p.resilienceSample > 0 && p.resilienceScore >= 80).length, icon: '🩺' },
                         ].map((s) => (
                           <div key={s.label} className="bg-slate-50 rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
                             <div className="w-9 h-9 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-base shrink-0">{s.icon}</div>
@@ -4185,6 +4276,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                               <th className="p-3 text-center">Wins 🏆</th>
                               <th className="p-3 text-center">Losses 💀</th>
                               <th className="p-3 text-center">Win Rate %</th>
+                              <th className="p-3 text-center">🩺 Survivability</th>
                               <th className="p-3 text-center pr-4">Breeding Verdict</th>
                             </tr>
                           </thead>
@@ -4207,6 +4299,16 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                                   <td className="p-3 text-center font-mono">
                                     <span className={`px-2 py-0.5 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>{p.winRate}%</span>
                                   </td>
+                                  <td className="p-3 text-center">
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <span className={`px-2 py-0.5 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-100 text-teal-800' : p.resilienceScore >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
+                                        🩺 {p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
+                                      </span>
+                                      {p.casualties > 0 && (
+                                        <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">💀 {p.casualties}</span>
+                                      )}
+                                    </div>
+                                  </td>
                                   <td className="p-3 text-center pr-4">
                                     <span className={`inline-block px-2.5 py-1 rounded-full font-black text-[9px] uppercase border whitespace-nowrap ${
                                       elite ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : solid ? 'bg-sky-50 text-sky-700 border-sky-200' : weak ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-slate-100 text-slate-500 border-slate-200'
@@ -4220,7 +4322,7 @@ className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-n
                           </tbody>
                         </table>
                       </div>
-                      <p className="mt-3 text-[10px] text-slate-400 font-semibold">Verdict logic: <strong className="text-emerald-700">Elite</strong> = ≥70% win rate with 3+ decided fights · <strong className="text-sky-700">Solid</strong> = ≥50% · <strong className="text-rose-700">Avoid</strong> = below 50% with 3+ decided fights — focus future breeding cycles strictly on the top-performing crosses.</p>
+                      <p className="mt-3 text-[10px] text-slate-400 font-semibold">Verdict logic: <strong className="text-emerald-700">Elite</strong> = ≥70% win rate with 3+ decided fights · <strong className="text-sky-700">Solid</strong> = ≥50% · <strong className="text-rose-700">Avoid</strong> = below 50% with 3+ decided fights · <strong className="text-teal-700">Survivability</strong> = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties lower a bloodline&apos;s toughness even on wins, so focus future breeding strictly on winning <em>and</em> resilient crosses.</p>
                     </>
                   )}
                 </div>
