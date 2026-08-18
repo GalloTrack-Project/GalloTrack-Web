@@ -60,6 +60,9 @@ class Gamefowl(db.Model):
     sire_id = db.Column(db.Integer, db.ForeignKey('gamefowl.id'), nullable=True)
     dam_id = db.Column(db.Integer, db.ForeignKey('gamefowl.id'), nullable=True)
 
+    # Bloodline Purity (recursive formula: (Sire% + Dam%) / 2; foundation stock = 100)
+    bloodline_pct = db.Column(db.Float, default=100.0, nullable=False)
+
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -131,6 +134,11 @@ class Match(db.Model):
     result = db.Column(db.String(20), nullable=False)  # WIN, LOSS, DRAW (from perspective of gamefowl1)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     notes = db.Column(db.Text)
+
+    # Post-Fight Health / Condition Status
+    post_fight_condition = db.Column(db.String(60), default='Fit / Recovered')
+    # Video Evidence Upload URL (mock MP4/MOV paths allowed)
+    video_url = db.Column(db.String(255))
 
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
