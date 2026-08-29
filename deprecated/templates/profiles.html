@@ -23,7 +23,7 @@
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold tracking-wide">GALLOTRACK</h1>
             <div class="space-x-4 flex items-center">
-                <a href="/" class="hover:underline opacity-80">Dashboard</a>
+                <a href="/dashboard" class="hover:underline opacity-80">Dashboard</a>
                 <a href="/profiles" class="hover:underline font-semibold">Gamefowl Profiles</a>
                 {% if current_user.is_authenticated %}
                     <span class="text-sm">{{ current_user.username }}</span>

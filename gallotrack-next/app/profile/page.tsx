@@ -1,19 +1,16 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
-
-const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co'
-const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3'
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { supabase } from '@/lib/registry'
 
 export default function ProfilePage() {
-  const [fullName, setFullName] = useState('Hazel Dato-on')
-  const [phoneNumber, setPhoneNumber] = useState('09123456789')
+  const [fullName, setFullName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [farmName, setFarmName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
@@ -34,10 +31,11 @@ export default function ProfilePage() {
             .single()
             
           if (profile) {
-            setFullName(profile.full_name || 'Hazel Dato-on')
-            setPhoneNumber(profile.phone_number || '09123456789')
+            setFullName(profile.full_name || '')
+            setPhoneNumber(profile.phone_number || '')
             setAvatarUrl(profile.avatar_url || '')
             setIsAdmin(profile.is_admin === true || profile.role === 'admin')
+            setFarmName(profile.farm_name || '')
           }
         }
       }
@@ -272,11 +270,11 @@ export default function ProfilePage() {
           <div className="w-full border-t border-slate-100 pt-4 space-y-2.5 text-[11px] text-slate-500 font-mono">
             <div className="flex items-center justify-between px-1">
               <span className="text-slate-400 font-bold tracking-wide">HUB LOCATION</span>
-              <span className="text-slate-800 font-black">ISUFST-DINGLE</span>
+              <span className="text-slate-800 font-black">{farmName || 'Not Set'}</span>
             </div>
             <div className="flex items-center justify-between px-1">
-              <span className="text-slate-400 font-bold tracking-wide">CLUSTER NODE</span>
-              <span className="text-slate-800 font-black">NODE-ALPHA</span>
+              <span className="text-slate-400 font-bold tracking-wide">ROLE</span>
+              <span className="text-slate-800 font-black">{isAdmin ? 'Admin' : 'Farm Owner'}</span>
             </div>
             <div className="flex items-center justify-between px-1">
               <span className="text-slate-400 font-bold tracking-wide">GLOBAL ACCESS</span>

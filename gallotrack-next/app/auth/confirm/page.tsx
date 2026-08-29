@@ -3,12 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
-import { ensureOwnerRecords } from '@/lib/registry';
-
-const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co';
-const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase, ensureOwnerRecords } from '@/lib/registry';
 
 type OtpType = 'email' | 'signup' | 'magiclink' | 'recovery' | 'invite';
 type Status = 'loading' | 'success' | 'error';

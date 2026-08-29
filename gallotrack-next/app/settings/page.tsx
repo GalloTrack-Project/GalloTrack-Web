@@ -1,22 +1,105 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/registry'
+import { fetchSystemSettings, updateSystemSettings, type AdminSettings } from '@/lib/admin'
 
 export default function SettingsPage() {
-  const [defaultStrain, setDefaultStrain] = useState('Sweater')
-  const [cloudLogs, setCloudLogs] = useState(true)
-  const [eventAlerts, setEventAlerts] = useState(true)
+  const [settings, setSettings] = useState<AdminSettings>({
+    default_strain: 'Sweater',
+    cloud_logs: true,
+    event_alerts: true,
+  })
   const [loading, setLoading] = useState(false)
   const [savedNotice, setSavedNotice] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
-  function handleSaveSettings(e: React.FormEvent) {
+  const [clearingMatches, setClearingMatches] = useState(false)
+  const [clearingFowls, setClearingFowls] = useState(false)
+  const [clearingAll, setClearingAll] = useState(false)
+  const [clearNotice, setClearNotice] = useState('')
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const s = await fetchSystemSettings()
+        setSettings(s)
+      } catch (err: unknown) {
+        setLoadError(err instanceof Error ? err.message : 'Failed to load settings')
+      }
+    }
+    load()
+  }, [])
+
+  async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setSavedNotice(false)
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      await updateSystemSettings(settings)
       setSavedNotice(true)
       setTimeout(() => setSavedNotice(false), 4000)
-    }, 500)
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to save settings')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleClearMatches() {
+    setClearingMatches(true)
+    setClearNotice('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setClearNotice('Not authenticated.'); return }
+      const { error } = await supabase.from('match').delete().eq('user_id', user.id)
+      if (error) throw error
+      setClearNotice('All match records deleted successfully.')
+      window.dispatchEvent(new Event('admin-profile-update'))
+    } catch (err: unknown) {
+      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setClearingMatches(false)
+      setTimeout(() => setClearNotice(''), 5000)
+    }
+  }
+
+  async function handleClearFowls() {
+    setClearingFowls(true)
+    setClearNotice('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setClearNotice('Not authenticated.'); return }
+      const { error } = await supabase.from('fowl').delete().eq('user_id', user.id)
+      if (error) throw error
+      setClearNotice('All fowl records deleted successfully.')
+      window.dispatchEvent(new Event('admin-profile-update'))
+    } catch (err: unknown) {
+      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setClearingFowls(false)
+      setTimeout(() => setClearNotice(''), 5000)
+    }
+  }
+
+  async function handleClearAll() {
+    if (!confirm('Are you sure you want to delete ALL your fowl and match records? This cannot be undone.')) return
+    setClearingAll(true)
+    setClearNotice('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setClearNotice('Not authenticated.'); return }
+      const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
+      if (matchErr) throw matchErr
+      const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
+      if (fowlErr) throw fowlErr
+      setClearNotice('All fowl and match records deleted. Dashboard is now clean.')
+      window.dispatchEvent(new Event('admin-profile-update'))
+    } catch (err: unknown) {
+      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setClearingAll(false)
+      setTimeout(() => setClearNotice(''), 5000)
+    }
   }
 
   return (
@@ -31,6 +114,13 @@ export default function SettingsPage() {
           ● Config Synchronized
         </span>
       </div>
+
+      {loadError && (
+        <div className="bg-rose-50/90 border border-rose-200 text-rose-800 p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fadeIn">
+          <span>{loadError}</span>
+          <button onClick={() => setLoadError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer">✕</button>
+        </div>
+      )}
 
       {savedNotice && (
         <div className="bg-emerald-50/90 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fadeIn">
@@ -56,8 +146,8 @@ export default function SettingsPage() {
               <span className="text-[11px] text-slate-400 font-medium block">Pre-selected classification value inside the profiling matrix encoder</span>
             </div>
             <select 
-              value={defaultStrain} 
-              onChange={(e) => setDefaultStrain(e.target.value)}
+              value={settings.default_strain || 'Sweater'} 
+              onChange={(e) => setSettings(prev => ({ ...prev, default_strain: e.target.value }))}
               className="p-2.5 px-3 border border-slate-200/90 rounded-xl text-xs bg-white font-extrabold text-slate-700 outline-none focus:border-emerald-500 transition-all shadow-sm cursor-pointer"
             >
               <option value="Sweater">Sweater</option>
@@ -76,7 +166,6 @@ export default function SettingsPage() {
           </h3>
           
           <div className="space-y-3">
-            {/* TOGGLE 1 */}
             <label className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex justify-between items-center px-5 cursor-pointer hover:bg-slate-50 transition-all">
               <div className="space-y-0.5">
                 <span className="block text-xs font-extrabold text-slate-800">Real-time Cloud Auditing Logs</span>
@@ -84,13 +173,12 @@ export default function SettingsPage() {
               </div>
               <input 
                 type="checkbox" 
-                checked={cloudLogs} 
-                onChange={(e) => setCloudLogs(e.target.checked)}
+                checked={settings.cloud_logs !== false} 
+                onChange={(e) => setSettings(prev => ({ ...prev, cloud_logs: e.target.checked }))}
                 className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
               />
             </label>
 
-            {/* TOGGLE 2 */}
             <label className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex justify-between items-center px-5 cursor-pointer hover:bg-slate-50 transition-all">
               <div className="space-y-0.5">
                 <span className="block text-xs font-extrabold text-slate-800">System Event Pop-up Alerts</span>
@@ -98,11 +186,75 @@ export default function SettingsPage() {
               </div>
               <input 
                 type="checkbox" 
-                checked={eventAlerts} 
-                onChange={(e) => setEventAlerts(e.target.checked)}
+                checked={settings.event_alerts !== false} 
+                onChange={(e) => setSettings(prev => ({ ...prev, event_alerts: e.target.checked }))}
                 className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
               />
             </label>
+          </div>
+        </div>
+
+        {/* SECTION 3: DATA CLEANUP */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center space-x-2">
+            <span>🗑️</span> <span>Data Cleanup</span>
+          </h3>
+          <p className="text-[11px] text-slate-400 font-medium">Remove orphaned or test data from your registry. This action is irreversible.</p>
+
+          {clearNotice && (
+            <div className={`p-3 rounded-xl text-xs font-bold ${clearNotice.startsWith('Error') ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+              {clearNotice}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-slate-50 transition-all">
+              <div className="space-y-0.5">
+                <span className="block text-xs font-extrabold text-slate-800">Clear All Match Records</span>
+                <span className="text-[11px] text-slate-400 font-medium block">Deletes all logged match history. Fowl profiles are kept.</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearMatches}
+                disabled={clearingMatches}
+                className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer shrink-0 flex items-center space-x-1.5"
+              >
+                {clearingMatches && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>{clearingMatches ? 'Clearing...' : 'Clear Matches'}</span>
+              </button>
+            </div>
+
+            <div className="antigravity-hover bg-slate-50/80 p-4.5 rounded-2xl border border-slate-200/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-slate-50 transition-all">
+              <div className="space-y-0.5">
+                <span className="block text-xs font-extrabold text-slate-800">Clear All Fowl Profiles</span>
+                <span className="text-[11px] text-slate-400 font-medium block">Deletes all registered gamefowl. Match history is kept (may show broken references).</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearFowls}
+                disabled={clearingFowls}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer shrink-0 flex items-center space-x-1.5"
+              >
+                {clearingFowls && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>{clearingFowls ? 'Clearing...' : 'Clear Fowls'}</span>
+              </button>
+            </div>
+
+            <div className="antigravity-hover bg-rose-50/80 p-4.5 rounded-2xl border border-rose-200/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-rose-50 transition-all">
+              <div className="space-y-0.5">
+                <span className="block text-xs font-extrabold text-rose-800">Clear ALL Data</span>
+                <span className="text-[11px] text-rose-400 font-medium block">Deletes all fowl profiles AND match records. Fresh start.</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                disabled={clearingAll}
+                className="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer shrink-0 flex items-center space-x-1.5"
+              >
+                {clearingAll && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                <span>{clearingAll ? 'Clearing...' : 'Clear Everything'}</span>
+              </button>
+            </div>
           </div>
         </div>
 

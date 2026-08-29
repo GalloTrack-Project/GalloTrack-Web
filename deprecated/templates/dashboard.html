@@ -108,7 +108,7 @@
             data: {
                 labels: ['Wins', 'Losses', 'Draws'],
                 datasets: [{
-                    data: [12, 4, 2], // Lalagyan natin ng variables mula sa Python mamaya
+                    data: [{{ wins }}, {{ losses }}, {{ draws }}],
                     backgroundColor: ['#10b981', '#f43f5e', '#6b7280'],
                     borderWidth: 1
                 }]
@@ -124,10 +124,10 @@
         new Chart(ctxBlood, {
             type: 'bar',
             data: {
-                labels: ['Sweater', 'Lemon', 'Hatch', 'Kelso', 'Grey'], // Mga breeds/rasa
+                labels: [{% for breed in breed_labels %}'{{ breed }}'{% if not loop.last %}, {% endif %}{% endfor %}],
                 datasets: [{
                     label: 'Total Wins Secured',
-                    data: [8, 5, 4, 2, 1], // Bilang ng panalo kada breed
+                    data: [{% for count in breed_data %}{{ count }}{% if not loop.last %}, {% endif %}{% endfor %}],
                     backgroundColor: '#047857',
                     borderRadius: 4
                 }]

@@ -294,8 +294,16 @@ export default function AdminPanelPage() {
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Farm Owner?</h3>
             <p className="text-center text-[11px] text-muted-foreground font-semibold leading-relaxed">
               This permanently removes <span className="text-rose-400 font-black">{profileDisplayName(pendingDelete)}</span> and all
-              associated fowl, match, and farm records from the registry. The authentication account remains; the user can no longer
-              access the system.
+              associated data:
+            </p>
+            <ul className="text-center text-[10px] text-muted-foreground font-medium space-y-1 list-disc list-inside">
+              <li>All fowl profiles and lineage records</li>
+              <li>All match history and video evidence</li>
+              <li>Farm registration data</li>
+              <li>Profile and account information</li>
+            </ul>
+            <p className="text-center text-[10px] text-rose-400 font-bold">
+              This action cannot be undone. The authentication account remains but access will be revoked.
             </p>
             <div className="flex gap-2.5 pt-1">
               <button

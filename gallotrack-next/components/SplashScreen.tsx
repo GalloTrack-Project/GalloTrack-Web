@@ -1,6 +1,9 @@
+'use client';
 import React, { useEffect } from 'react';
 
-export default function SplashScreen({ onFinished }) {
+type Props = { onFinished: () => void };
+
+export default function SplashScreen({ onFinished }: Props) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onFinished();
@@ -10,7 +13,6 @@ export default function SplashScreen({ onFinished }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-gradient-to-br from-[#04120e] via-[#091727] to-[#042f24] p-8 text-white font-sans overflow-hidden">
-      {/* Top ambient glow */}
       <div className="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -26,7 +28,7 @@ export default function SplashScreen({ onFinished }) {
             GALLO<span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">TRACK</span>
           </h1>
           <p className="text-xs text-slate-400 font-semibold tracking-wide max-w-xs mx-auto">
-            Advanced Gamefowl Lineage Analytics & Structural Trace Registry Framework
+            Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry Framework
           </p>
         </div>
       </div>

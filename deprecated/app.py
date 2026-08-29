@@ -1,3 +1,9 @@
+"""
+DEPRECATED: This Flask backend is no longer the active frontend.
+See FLASK_DEPRECATED.md for migration details.
+
+The active application is the Next.js frontend in gallotrack-next/.
+"""
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
@@ -30,6 +36,7 @@ def create_app(config_name=None):
 
     # Routes
     @app.route('/')
+    @app.route('/dashboard')
     def dashboard():
         """Dashboard view - shows overview statistics."""
         if not current_user.is_authenticated:
@@ -46,10 +53,34 @@ def create_app(config_name=None):
         else:
             avg_winning_rate = 0.0
 
+        # Calculate win/loss/draw counts for charts
+        user_matches = Match.query.filter_by(user_id=current_user.id).all()
+        wins = sum(1 for m in user_matches if m.result == 'WIN')
+        losses = sum(1 for m in user_matches if m.result == 'LOSS')
+        draws = sum(1 for m in user_matches if m.result == 'DRAW')
+
+        # Calculate wins by breed for bar chart
+        breed_wins = {}
+        for match in user_matches:
+            bird1 = Gamefowl.query.get(match.gamefowl1_id)
+            if bird1 and match.result == 'WIN':
+                breed = bird1.breed
+                breed_wins[breed] = breed_wins.get(breed, 0) + 1
+
+        # Sort by wins descending and take top 5
+        top_breeds = sorted(breed_wins.items(), key=lambda x: x[1], reverse=True)[:5]
+        breed_labels = [b[0] for b in top_breeds] if top_breeds else ['No Data']
+        breed_data = [b[1] for b in top_breeds] if top_breeds else [0]
+
         return render_template('dashboard.html',
                              gamefowl_count=gamefowl_count,
                              matches_count=matches_count,
-                             avg_winning_rate=round(avg_winning_rate, 1))
+                             avg_winning_rate=round(avg_winning_rate, 1),
+                             wins=wins,
+                             losses=losses,
+                             draws=draws,
+                             breed_labels=breed_labels,
+                             breed_data=breed_data)
 
     @app.route('/profiles')
     @login_required

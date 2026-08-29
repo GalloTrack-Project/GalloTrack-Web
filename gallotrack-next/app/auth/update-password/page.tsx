@@ -3,11 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://mjvsbzayumcxmjcokwki.supabase.co';
-const supabaseAnonKey = 'sb_publishable_MpufdSUihyXde5KmWAun_w_j0GSCTa3';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/lib/registry';
 
 type Status = 'loading' | 'ready' | 'success' | 'error';
 
