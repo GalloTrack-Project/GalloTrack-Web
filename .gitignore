@@ -23,6 +23,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+!gallotrack-next/lib/
 parts/
 sdist/
 var/
