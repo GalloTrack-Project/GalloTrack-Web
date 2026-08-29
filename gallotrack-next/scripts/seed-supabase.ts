@@ -240,8 +240,37 @@ async function main() {
 
   // ─── 3. Insert foundation sires ─────────────────────────────────────────
   console.log('\n3️⃣  Inserting foundation sires...');
-  const fowlRows: any[] = [];
-  const birdMap = new Map<string, any>();
+
+  interface SeedFowlRow {
+    user_id: string;
+    name: string;
+    breed: string;
+    gender: string;
+    color: string;
+    color_category: string;
+    growth_stage: string;
+    behavior_trait: string;
+    eye_variant: string;
+    birthdate: string;
+    age: string;
+    weight: string;
+    height: string;
+    leg_color: string;
+    sire: string;
+    dam: string;
+    sire_pct: number;
+    dam_pct: number;
+    bloodline_pct: number;
+    status: string;
+    image_url: string;
+    archive_reason?: string;
+    archive_date?: string;
+    death_reason?: string;
+    death_date?: string;
+  }
+
+  const fowlRows: SeedFowlRow[] = [];
+  const birdMap = new Map<string, SeedFowlRow>();
 
   for (const s of FOUNDATION_SIRES) {
     const row = {

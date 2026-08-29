@@ -185,7 +185,7 @@ export function generateColorReport(
   damColorCategory: string | undefined
 ): ColorReport {
   const legTrait = getLegColorTrait(legColor);
-  const plumageTrait = getPlumageTrait(colorCategory);
+  const _plumageTrait = getPlumageTrait(colorCategory);
 
   const inheritance = (sireLegColor || sireColorCategory) && (damLegColor || damColorCategory)
     ? predictColorInheritance(

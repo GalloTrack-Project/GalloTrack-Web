@@ -157,7 +157,7 @@ function calculateInbreedingCoefficient(
   damStrain: string,
   sire: FowlRecord | undefined,
   dam: FowlRecord | undefined,
-  fowls: FowlRecord[]
+  _fowls: FowlRecord[]
 ): number {
   if (sireStrain === 'unknown' || damStrain === 'unknown') return 0;
 
@@ -230,7 +230,7 @@ function calculateHeritability(
   sire: FowlRecord | undefined,
   dam: FowlRecord | undefined,
   generation: number,
-  fowls: FowlRecord[]
+  _fowls: FowlRecord[]
 ): HeritabilityScore {
   const factors: string[] = [];
   let score = 50;

@@ -2,6 +2,16 @@
 import React, { useState } from 'react';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
 
+function EmptyState({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="bg-white p-10 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
+      <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">🧬</div>
+      <h3 className="text-sm font-extrabold text-slate-800">{title}</h3>
+      <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">{hint}</p>
+    </div>
+  );
+}
+
 interface LineageDirectoryProps {
   fowls: FowlRecord[];
   matchHistory: MatchRecord[];
@@ -136,14 +146,6 @@ export default function LineageDirectory({
     });
     return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
   };
-
-  const EmptyState = ({ title, hint }: { title: string; hint: string }) => (
-    <div className="bg-white p-10 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-2">
-      <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">🧬</div>
-      <h3 className="text-sm font-extrabold text-slate-800">{title}</h3>
-      <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">{hint}</p>
-    </div>
-  );
 
   const renderChildRow = (child: FowlRecord, bestId: number | null) => {
     const stats = getChildMatchStats(child.name);

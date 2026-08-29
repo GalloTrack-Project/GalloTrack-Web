@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     checkSession();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -175,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (profile.is_active === false) {
             await supabase.auth.signOut();
             setError('This account has been deactivated by the administrator. Contact system support to restore access.');
-            typeof window !== 'undefined' && localStorage.removeItem('gallotrack_user_id');
+            if (typeof window !== 'undefined') localStorage.removeItem('gallotrack_user_id');
             return;
           }
           setCurrentUserId(data.user.id);

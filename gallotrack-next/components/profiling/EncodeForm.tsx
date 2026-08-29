@@ -1,8 +1,7 @@
 'use client';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { FowlRecord } from '@/lib/types';
-import { POST_FIGHT_CONDITIONS } from '@/lib/helpers';
 import ParentSelector from '@/components/modals/ParentSelector';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
@@ -86,16 +85,15 @@ type Props = {
 export default function EncodeForm({
   fowls,
   newName, setNewName,
-  newBreed, setNewBreed,
+  setNewBreed,
   newGender, setNewGender,
   newBirthdate, handleNewBirthdateChange,
   age, handleAgeChange,
   newGrowthStage, setNewGrowthStage,
   height, setHeight,
   weight, setWeight,
-  newLegColor, setNewLegColor,
+  setNewLegColor,
   availableLegColors,
-  customLegColorNames,
   deleteCustomLegColor,
   legColorQuery, setLegColorQuery,
   legColorOpen, setLegColorOpen,
@@ -108,7 +106,6 @@ export default function EncodeForm({
   strainQuery, setStrainQuery,
   strainOpen, setStrainOpen,
   availableStrains,
-  customStrainNames,
   deleteCustomStrain,
   loading, uploadingImage,
   nextNodeId, dataCompleteness,

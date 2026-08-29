@@ -228,10 +228,6 @@ export default function FowlDetailsModal({
             stats: getMatchStats(r.name),
           }));
 
-          const full = siblingData.filter((r) => r.relation === 'Full Sibling');
-          const halfSire = siblingData.filter((r) => r.relation === 'Half-Sibling (Shared Sire)');
-          const halfDam = siblingData.filter((r) => r.relation === 'Half-Sibling (Shared Dam)');
-
           const bestSibling = siblingData
             .filter((s) => s.stats.decided > 0)
             .sort((a, b) => b.stats.winRate - a.stats.winRate || b.stats.wins - a.stats.wins)[0];

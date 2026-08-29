@@ -146,24 +146,21 @@ const PAGE_SIZE = 10;
 
 export default function FowlLists({
   tab,
-  fowls,
   maleActiveFowls,
   femaleActiveFowls,
   archivedFowls,
   deceasedFowls,
-  matchHistory: _matchHistory,
-  loading,
   setProfilingSubTab,
-  handleOpenEditModal,
-  handleRestoreFowlOnly,
-  setSelectedFowlForDetails,
-  setSelectedFowlForArchive,
-  setSelectedFowlForDeceased,
   setPendingPermanentDelete,
 }: Props) {
   const [page, setPage] = useState(1);
-
-  React.useEffect(() => { setPage(1); }, [tab]);
+  const prevTabRef = React.useRef(tab);
+  React.useEffect(() => {
+    if (prevTabRef.current !== tab) {
+      prevTabRef.current = tab;
+      setPage(1);
+    }
+  }, [tab]);
 
   const paginatedBirds = useMemo(() => {
     const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : deceasedFowls;

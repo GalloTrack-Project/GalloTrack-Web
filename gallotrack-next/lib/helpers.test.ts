@@ -8,8 +8,6 @@ import {
   generationPurity,
   generationInfo,
   getAgeParts,
-  getAgeLabel,
-  getAgeExact,
 } from './helpers';
 import type { FowlRecord } from './types';
 

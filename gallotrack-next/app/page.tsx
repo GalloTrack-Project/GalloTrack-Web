@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGaloTrack } from '@/lib/context';
@@ -13,7 +13,6 @@ export default function LoginPage() {
     handleLogin,
     loading,
     error,
-    setError,
     username,
     setUsername,
     password,
@@ -33,8 +32,6 @@ export default function LoginPage() {
     setForgotError,
     forgotLoading,
     handleSendResetLink,
-    showSplash,
-    setShowSplash,
   } = store;
 
   useEffect(() => {

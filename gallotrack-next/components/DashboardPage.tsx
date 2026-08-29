@@ -2,8 +2,8 @@
 import React from 'react';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
-import type { FowlRecord, MatchRecord, PairingStats, AgeParts, MilestoneInfo, RolledMilestoneStage } from '@/lib/types';
-import { formatShortDate, getAgeLabel, getMilestoneInfo, generationOf, generationPurity, generationInfo, bloodlineOf, cleanPct } from '@/lib/helpers';
+import type { FowlRecord, MatchRecord, PairingStats, MilestoneInfo } from '@/lib/types';
+import { getAgeLabel } from '@/lib/helpers';
 import FarmBloodlineSummary from '@/components/FarmBloodlineSummary';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
@@ -37,7 +37,6 @@ type Props = {
   femaleActiveFowls: FowlRecord[];
   monthLabels: string[];
   matchesByMonth: number[];
-  winsByMonth: number[];
   activeSpark: number[];
   trendWinRate: number[];
   upcomingMilestones: { fowl: FowlRecord; info: MilestoneInfo }[];
@@ -46,33 +45,31 @@ type Props = {
   winsCount: number;
   lossesCount: number;
   setShowPerFowlBreakdownModal: (v: boolean) => void;
-  setCurrentPage: (v: any) => void;
-  setProfilingSubTab: (v: any) => void;
-  setBreakdownTab: (v: any) => void;
+  setCurrentPage: (v: string) => void;
+  setProfilingSubTab: (v: string) => void;
   breakdownTab: string;
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
   dateRangeLabel: string;
   dateRangeOpen: boolean;
   setDateRangeOpen: (v: boolean | ((o: boolean) => boolean)) => void;
   dateRangePreset: string;
-  setDateRangePreset: (v: any) => void;
+  setDateRangePreset: (v: '7d' | '30d' | 'month' | '3m' | 'all') => void;
   fetchDatabaseResources: () => void;
   loading: boolean;
-  getAgeParts: (bd?: string | null) => AgeParts | null;
 };
 
 export default function DashboardPage({
   fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
-  monthLabels, matchesByMonth, winsByMonth, activeSpark, trendWinRate,
+  monthLabels, matchesByMonth, activeSpark, trendWinRate,
   upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
-  setShowPerFowlBreakdownModal, setCurrentPage, setProfilingSubTab, setBreakdownTab,
-  breakdownTab, setSelectedFowlForDetails, dateRangeLabel, dateRangeOpen, setDateRangeOpen,
-  dateRangePreset, setDateRangePreset, fetchDatabaseResources, loading, getAgeParts,
+  setShowPerFowlBreakdownModal, setCurrentPage, setProfilingSubTab,
+  breakdownTab: _breakdownTab, dateRangeLabel, dateRangeOpen, setDateRangeOpen,
+  dateRangePreset, setDateRangePreset, fetchDatabaseResources, loading,
 }: Props) {
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
   const isWithinThisWeek = (value?: string) => {
     if (!value) return false;
     const t = new Date(value).getTime();
+    // eslint-disable-next-line react-hooks/purity -- Date.now() is acceptable for relative time display
     return !isNaN(t) && Date.now() - t < WEEK_MS;
   };
   const activeNewThisWeek = activeFowls.filter(f => isWithinThisWeek(f.created_at)).length;

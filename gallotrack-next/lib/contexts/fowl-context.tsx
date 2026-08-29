@@ -1,8 +1,7 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/registry';
 import { useDebounce } from '@/lib/use-debounce';
-import { useAuth } from './auth-context';
 import { useUI } from './ui-context';
 import {
   STRAIN_LIST,
@@ -208,7 +207,6 @@ export function useFowl(): FowlContextValue {
 }
 
 export function FowlProvider({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
   const ui = useUI();
 
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
@@ -318,7 +316,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     setAvailableStrains(merged);
     setCustomStrainNames(new Set(merged));
     return merged;
-  }, []);
+  }, [setAvailableStrains, setCustomStrainNames]);
 
   const saveCustomStrain = useCallback(async (name?: string): Promise<void> => {
     const cleaned = (name || '').trim();
@@ -339,7 +337,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         Array.from(new Set([...prev, cleaned])).sort((a, b) => a.localeCompare(b))
       );
     } catch { /* non-critical, fowl still saves */ }
-  }, [availableStrains, fetchStrains]);
+  }, [availableStrains, fetchStrains, setAvailableStrains]);
 
   const deleteCustomStrain = useCallback(async (name: string): Promise<void> => {
     const cleaned = name.trim();
@@ -356,7 +354,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         ui.showToastMessage(`Strain "${cleaned}" deleted.`, 'success');
       }
     } catch { /* non-critical */ }
-  }, [ui]);
+  }, [ui, setAvailableStrains, setCustomStrainNames]);
 
   const fetchLegColors = useCallback(async (): Promise<string[]> => {
     let names: string[] = [];
@@ -387,28 +385,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     setAvailableLegColors(merged);
     setCustomLegColorNames(new Set(merged));
     return merged;
-  }, []);
-
-  const saveCustomLegColor = useCallback(async (name?: string): Promise<void> => {
-    const cleaned = (name || '').trim();
-    if (!cleaned) return;
-    if (availableLegColors.some((s) => s.toLowerCase() === cleaned.toLowerCase())) return;
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('leg_colors')
-        .insert({ name: cleaned, is_custom: true, created_by: user?.id || null });
-      if (error) {
-        if ((error.message || '').toLowerCase().includes('duplicate') || error.code === '23505') {
-          fetchLegColors();
-        }
-        return;
-      }
-      setAvailableLegColors((prev) =>
-        Array.from(new Set([...prev, cleaned])).sort((a, b) => a.localeCompare(b))
-      );
-    } catch { /* non-critical */ }
-  }, [availableLegColors, fetchLegColors]);
+  }, [setAvailableLegColors, setCustomLegColorNames]);
 
   const deleteCustomLegColor = useCallback(async (name: string): Promise<void> => {
     const cleaned = name.trim();
@@ -425,7 +402,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         ui.showToastMessage(`Leg color "${cleaned}" deleted.`, 'success');
       }
     } catch { /* non-critical */ }
-  }, [ui]);
+  }, [ui, setAvailableLegColors, setCustomLegColorNames]);
 
   const fetchDatabaseResources = useCallback(async () => {
     setLoading(true);
@@ -471,13 +448,55 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [fetchStrains, fetchLegColors]);
+  }, [fetchStrains, fetchLegColors, setLoading, setFowls, setMatchHistory]);
 
   useEffect(() => {
     if (ui.currentPage !== 'login') {
-      fetchDatabaseResources();
+      const controller = new AbortController();
+      (async () => {
+        setLoading(true);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          const activeUserId = user?.id;
+
+          if (!activeUserId || controller.signal.aborted) {
+            setFowls([]);
+            setMatchHistory([]);
+            return;
+          }
+
+          const { data: fowlData, error: fowlErr } = await supabase
+            .from('fowl')
+            .select('*')
+            .eq('user_id', activeUserId)
+            .order('id', { ascending: false });
+
+          if (!fowlErr && fowlData) setFowls(fowlData);
+          else setFowls([]);
+
+          const { data: matchData, error: matchErr } = await supabase
+            .from('match')
+            .select('*')
+            .eq('user_id', activeUserId)
+            .order('id', { ascending: false });
+
+          if (!matchErr && matchData) setMatchHistory(matchData);
+          else setMatchHistory([]);
+
+          fetchStrains();
+          fetchLegColors();
+        } catch (err) {
+          console.error('Failed to fetch database resources:', err);
+          setFowls([]);
+          setMatchHistory([]);
+        } finally {
+          setLoading(false);
+        }
+      })();
+      return () => controller.abort();
     }
-  }, [ui.currentPage, fetchDatabaseResources]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ui.currentPage]);
 
   const nextNodeId = `GT-${String(Math.max(0, ...fowls.map(f => f.id)) + 1).padStart(4, '0')}`;
   const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
@@ -500,7 +519,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } else {
       setNewGrowthStage(autoComputeGrowthStage(Number(val), genderVal || newGender));
     }
-  }, [newGender]);
+  }, [newGender, setAge, setNewGrowthStage]);
 
   const handleEditAgeChange = useCallback((val: string, genderVal: string = '') => {
     setEditAge(val);
@@ -509,7 +528,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } else {
       setEditGrowthStage(autoComputeGrowthStage(Number(val), genderVal || editGender));
     }
-  }, [editGender]);
+  }, [editGender, setEditAge, setEditGrowthStage]);
 
   const handleNewBirthdateChange = useCallback((val: string) => {
     setNewBirthdate(val);
@@ -521,7 +540,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setAge('');
       setNewGrowthStage('');
     }
-  }, [newGender]);
+  }, [newGender, setNewBirthdate, setAge, setNewGrowthStage]);
 
   const handleEditBirthdateChange = useCallback((val: string) => {
     setEditBirthdate(val);
@@ -530,7 +549,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setEditAge(String(parts.totalMonths));
       setEditGrowthStage(autoComputeGrowthStage(parts.totalMonths, editGender || 'Rooster'));
     }
-  }, [editGender]);
+  }, [editGender, setEditBirthdate, setEditAge, setEditGrowthStage]);
 
   const sanitizeInput = useCallback((value: string): string => {
     return value.replace(/[<>&"'/]/g, '').trim();
@@ -620,7 +639,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, sanitizeInput, saveCustomStrain, fetchDatabaseResources, ui]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, sanitizeInput, saveCustomStrain, fetchDatabaseResources, ui, setLoading, setUploadingImage, setNewName, setNewBreed, setNewGender, setSireName, setDamName, setWeight, setHeight, setNewLegColor, setAge, setNewBirthdate, setNewGrowthStage, setSelectedImage, setStrainQuery, setStrainOpen, setImagePreview]);
 
   const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -691,7 +710,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, sanitizeInput, fetchDatabaseResources, ui]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, sanitizeInput, fetchDatabaseResources, ui, setLoading, setUploadingVideo, setOpponentName, setMatchLocation, setMatchVideoFile, setMatchPostFight]);
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;
@@ -715,7 +734,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [ui.selectedFowlForArchive, ui.selectedFowlForDetails, archiveReasonInput, fetchDatabaseResources, ui]);
+  }, [archiveReasonInput, fetchDatabaseResources, ui, setLoading]);
 
   const handleArchiveFowlOnly = useCallback(async (id: number) => {
     setLoading(true);
@@ -737,7 +756,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [ui.selectedFowlForDetails, fetchDatabaseResources, ui]);
+  }, [fetchDatabaseResources, ui, setLoading]);
 
   const handleRestoreFowlOnly = useCallback(async (id: number) => {
     setLoading(true);
@@ -759,7 +778,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [ui.selectedFowlForDetails, fetchDatabaseResources, ui]);
+  }, [fetchDatabaseResources, ui, setLoading]);
 
   const handlePermanentDelete = useCallback(async () => {
     if (!ui.pendingPermanentDelete) return;
@@ -783,7 +802,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       ui.setPermanentDeleting(false);
     }
-  }, [ui.pendingPermanentDelete, ui.selectedFowlForDetails, fetchDatabaseResources, ui]);
+  }, [fetchDatabaseResources, ui]);
 
   const handleMarkFowlDeceased = useCallback(async () => {
     if (!ui.selectedFowlForDeceased) return;
@@ -807,7 +826,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [ui.selectedFowlForDeceased, ui.selectedFowlForDetails, deathReasonInput, fetchDatabaseResources, ui]);
+  }, [deathReasonInput, fetchDatabaseResources, ui, setLoading]);
 
   const handleOpenEditModal = useCallback((fowl: FowlRecord) => {
     ui.setEditingFowl(fowl);
@@ -829,7 +848,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     setEditDam(fowl.dam || '');
     setEditSirePct(isFoundationStock(fowl.sire || '') ? 100 : (fowl.sire_pct ?? 0));
     setEditDamPct(isFoundationStock(fowl.dam || '') ? 100 : (fowl.dam_pct ?? 0));
-  }, [ui]);
+  }, [ui, setEditName, setEditBreed, setEditGender, setEditColorCategory, setEditColor, setEditBehaviorTrait, setEditEyeVariant, setEditAge, setEditBirthdate, setEditGrowthStage, setEditWeight, setEditHeight, setEditLegColor, setEditSire, setEditDam, setEditSirePct, setEditDamPct]);
 
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -885,7 +904,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [ui.editingFowl, editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, fowls, sanitizeInput, saveCustomStrain, fetchDatabaseResources, ui]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, fowls, sanitizeInput, saveCustomStrain, fetchDatabaseResources, ui, setLoading]);
 
   const calculateCrossbreedWinRatios = useCallback(() => {
     const breedStats: { [key: string]: { wins: number; total: number } } = {};

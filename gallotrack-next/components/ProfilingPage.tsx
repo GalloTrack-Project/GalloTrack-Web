@@ -102,7 +102,6 @@ import { generationPurity } from '@/lib/helpers';
 
 export default function ProfilingPage({
   fowls,
-  activeFowls: _activeFowls,
   maleActiveFowls,
   femaleActiveFowls,
   archivedFowls,

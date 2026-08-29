@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/registry';
 
 type Status = 'loading' | 'ready' | 'success' | 'error';
@@ -27,7 +27,6 @@ function LoadingCard() {
 }
 
 function UpdateCard() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status>('loading');
   const [errorMessage, setErrorMessage] = useState('This link is invalid or has already been used.');

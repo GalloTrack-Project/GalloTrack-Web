@@ -34,7 +34,6 @@ export function DashboardPageWrapper() {
           femaleActiveFowls={store.femaleActiveFowls}
           monthLabels={store.monthLabels}
           matchesByMonth={store.matchesByMonth}
-          winsByMonth={store.winsByMonth}
           activeSpark={store.activeSpark}
           trendWinRate={store.trendWinRate}
           upcomingMilestones={store.upcomingMilestones}
@@ -45,9 +44,7 @@ export function DashboardPageWrapper() {
           setShowPerFowlBreakdownModal={store.setShowPerFowlBreakdownModal}
           setCurrentPage={(v: string) => navigate(v)}
           setProfilingSubTab={(v: string) => store.setProfilingSubTab(v as never)}
-          setBreakdownTab={store.setBreakdownTab}
           breakdownTab={store.breakdownTab}
-          setSelectedFowlForDetails={store.setSelectedFowlForDetails}
           dateRangeLabel={store.dateRangeLabel}
           dateRangeOpen={store.dateRangeOpen}
           setDateRangeOpen={store.setDateRangeOpen}
@@ -55,7 +52,6 @@ export function DashboardPageWrapper() {
           setDateRangePreset={store.setDateRangePreset}
           fetchDatabaseResources={store.fetchDatabaseResources}
           loading={store.loading}
-          getAgeParts={store.getAgeParts}
         />
       )}
     </NavWrapper>
