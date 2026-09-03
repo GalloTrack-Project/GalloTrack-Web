@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -22,6 +22,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { theme, setTheme } = useTheme();
   const ui = useUI();
   const auth = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="bg-background min-h-screen font-sans antialiased text-foreground flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative selection:bg-emerald-500 selection:text-white">
@@ -123,15 +126,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span className="text-muted-foreground">📍</span>
                 <span>{auth.userHub || 'Dingle Campus Cluster'}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer"
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
+              {mounted && (
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer"
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => ui.setShowLogoutModal(true)}
