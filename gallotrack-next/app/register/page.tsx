@@ -33,6 +33,9 @@ const ICONS = {
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </>
   ),
+  check: <path d="M20 6 9 17l-5-5" />,
+  chevronRight: <path d="m9 18 6-6-6-6" />,
+  chevronLeft: <path d="m15 18-6-6 6-6" />,
 };
 
 function FieldIcon({ which }: { which: keyof typeof ICONS }) {
@@ -45,17 +48,15 @@ function FieldIcon({ which }: { which: keyof typeof ICONS }) {
   );
 }
 
-function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-      <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">{icon}</span>
-      {title}
-    </h2>
-  );
-}
+const STEPS = [
+  { id: 1, label: 'Personal', icon: 'user' as const },
+  { id: 2, label: 'Farm', icon: 'home' as const },
+  { id: 3, label: 'Account', icon: 'lock' as const },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [step, setStep] = useState(1);
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -69,30 +70,53 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
+  const validateStep1 = () => {
     if (!firstName.trim() || !lastName.trim()) {
       setError('First Name and Last Name are required.');
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const validateStep2 = () => {
     if (!farmName.trim()) {
       setError('Farm / Yard Name is required.');
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const validateStep3 = () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError('Please enter a valid email address (e.g., owner@gmail.com).');
-      return;
+      setError('Please enter a valid email address.');
+      return false;
     }
     if (password.length < 6) {
       setError('Password must be at least 6 characters long.');
-      return;
+      return false;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match. Please re-enter your password.');
-      return;
+      setError('Passwords do not match.');
+      return false;
     }
+    return true;
+  };
+
+  const handleNext = () => {
+    setError('');
+    if (step === 1 && validateStep1()) setStep(2);
+    else if (step === 2 && validateStep2()) setStep(3);
+  };
+
+  const handleBack = () => {
+    setError('');
+    setStep(step - 1);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!validateStep3()) return;
 
     setLoading(true);
     try {
@@ -147,123 +171,190 @@ export default function RegisterPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-lg w-full relative z-10 overflow-hidden border border-border my-4">
-        <div className="p-6 sm:p-8 space-y-5 max-h-[92vh] overflow-y-auto">
+      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border my-4">
+        <div className="p-6 sm:p-8 space-y-5">
+          {/* Header */}
           <div className="text-center space-y-2">
             <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
             <h1 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
-            <h1 className="text-xl sm:text-2xl font-black text-emerald-400 tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
+            <h1 className="text-lg sm:text-xl font-black text-emerald-400 tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
             <p className="text-[10px] text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
-            <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full mx-auto"></div>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center gap-2 pt-2">
+            {STEPS.map((s, i) => (
+              <div key={s.id} className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-1.5">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all duration-300 ${
+                      step > s.id
+                        ? 'bg-emerald-500 text-white'
+                        : step === s.id
+                        ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400'
+                        : 'bg-muted border border-border text-muted-foreground'
+                    }`}
+                  >
+                    {step > s.id ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">{ICONS.check}</svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS[s.icon]}</svg>
+                    )}
+                  </div>
+                  <span className={`text-[9px] font-bold tracking-wider ${step === s.id ? 'text-emerald-400' : 'text-muted-foreground'}`}>{s.label}</span>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div className={`w-12 h-0.5 rounded-full mb-5 transition-all duration-300 ${step > s.id ? 'bg-emerald-500' : 'bg-border'}`}></div>
+                )}
+              </div>
+            ))}
           </div>
 
           {error && (
-            <div className="text-xs text-rose-300 light:text-rose-600 font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>
+            <div className="text-xs text-rose-300 light:text-rose-600 font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl">{error}</div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-5">
-            {/* PERSONAL INFORMATION */}
-            <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
-              <SectionTitle icon={<>👤</>} title="Personal Information" />
-              <div>
-                <label className={labelClass}>First Name <span className="text-rose-400">*</span></label>
-                <div className="relative">
-                  <FieldIcon which="user" />
-                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputIcon} required />
+          <form onSubmit={step === 3 ? handleRegister : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
+            {/* Step 1: Personal Information */}
+            {step === 1 && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+                  <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">👤</span>
+                    Personal Information
+                  </h2>
+                  <div>
+                    <label className={labelClass}>First Name <span className="text-rose-400">*</span></label>
+                    <div className="relative">
+                      <FieldIcon which="user" />
+                      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputIcon} required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Middle Name <span className="text-muted-foreground/60">(Optional)</span></label>
+                    <div className="relative">
+                      <FieldIcon which="user" />
+                      <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className={inputIcon} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Last Name <span className="text-rose-400">*</span></label>
+                    <div className="relative">
+                      <FieldIcon which="user" />
+                      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputIcon} required />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className={labelClass}>Middle Name <span className="text-muted-foreground/60">(Optional)</span></label>
-                <div className="relative">
-                  <FieldIcon which="user" />
-                  <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className={inputIcon} />
-                </div>
-              </div>
-              <div>
-                <label className={labelClass}>Last Name <span className="text-rose-400">*</span></label>
-                <div className="relative">
-                  <FieldIcon which="user" />
-                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputIcon} required />
-                </div>
-              </div>
-            </div>
+            )}
 
-            {/* FARM / BUSINESS INFORMATION */}
-            <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
-              <SectionTitle icon={<>🏡</>} title="Farm / Business Information" />
-              <div>
-                <label className={labelClass}>Farm / Yard Name <span className="text-rose-400">*</span></label>
-                <div className="relative">
-                  <FieldIcon which="home" />
-                  <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputIcon} required />
+            {/* Step 2: Farm / Business Information */}
+            {step === 2 && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+                  <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🏡</span>
+                    Farm / Business Information
+                  </h2>
+                  <div>
+                    <label className={labelClass}>Farm / Yard Name <span className="text-rose-400">*</span></label>
+                    <div className="relative">
+                      <FieldIcon which="home" />
+                      <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputIcon} required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Contact Number</label>
+                    <div className="relative">
+                      <FieldIcon which="phone" />
+                      <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className={inputIcon} />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className={labelClass}>Contact Number</label>
-                <div className="relative">
-                  <FieldIcon which="phone" />
-                  <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className={inputIcon} />
-                </div>
-              </div>
-            </div>
+            )}
 
-            {/* ACCOUNT SECURITY */}
-            <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
-              <SectionTitle icon={<>🔒</>} title="Account Security" />
-              <div>
-                <label className={labelClass}>Email Address <span className="text-rose-400">*</span></label>
-                <div className="relative">
-                  <FieldIcon which="mail" />
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputIcon} placeholder="owner@gmail.com" required />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest pointer-events-none">Gmail</span>
+            {/* Step 3: Account Security */}
+            {step === 3 && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+                  <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🔒</span>
+                    Account Security
+                  </h2>
+                  <div>
+                    <label className={labelClass}>Email Address <span className="text-rose-400">*</span></label>
+                    <div className="relative">
+                      <FieldIcon which="mail" />
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputIcon} required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Password <span className="text-rose-400">*</span></label>
+                    <div className="relative">
+                      <FieldIcon which="lock" />
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputIcon} pr-11`} required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer">
+                        {showPassword ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Confirm Password <span className="text-rose-400">*</span></label>
+                    <div className="relative">
+                      <FieldIcon which="lock" />
+                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputIcon} required />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className={labelClass}>Password <span className="text-rose-400">*</span></label>
-                <div className="relative">
-                  <FieldIcon which="lock" />
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputIcon} pr-11`} placeholder="Minimum 6 characters" required />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer">
-                    {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className={labelClass}>Confirm Password <span className="text-rose-400">*</span></label>
-                <div className="relative">
-                  <FieldIcon which="lock" />
-                  <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputIcon} placeholder="Re-enter your password" required />
-                </div>
-              </div>
-            </div>
+            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-4 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <span className="relative flex items-center justify-center gap-3">
-                {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                <span className="text-sm tracking-widest">{loading ? 'Creating Farm Owner...' : 'REGISTER FARM OWNER'}</span>
-                {!loading && (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                )}
-              </span>
-            </button>
+            {/* Navigation Buttons */}
+            <div className="flex gap-3 pt-2">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border border-border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-card-foreground text-xs font-bold transition-all cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS.chevronLeft}</svg>
+                  Back
+                </button>
+              )}
+              <button
+                type={step === 3 ? 'submit' : 'button'}
+                onClick={step < 3 ? handleNext : undefined}
+                disabled={loading}
+                className="group flex-1 relative bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span className="relative flex items-center justify-center gap-2">
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  ) : step < 3 ? (
+                    <>
+                      <span className="text-xs tracking-widest">NEXT</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS.chevronRight}</svg>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs tracking-widest">{loading ? 'Creating Account...' : 'REGISTER'}</span>
+                      {!loading && <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>}
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
 
             <div className="pt-1">
               <Link href="/" className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
                 Already have an account? Log In
               </Link>
-              <p className="text-[9px] text-muted-foreground font-semibold text-center tracking-wide mt-4 flex items-center justify-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z" /></svg>
-                Powered by Advanced Gamefowl Analytics
-              </p>
             </div>
           </form>
         </div>
