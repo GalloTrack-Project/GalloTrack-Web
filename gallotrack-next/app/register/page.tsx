@@ -169,21 +169,21 @@ export default function RegisterPage() {
                 <label className={labelClass}>First Name <span className="text-rose-400">*</span></label>
                 <div className="relative">
                   <FieldIcon which="user" />
-                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputIcon} placeholder="e.g., Juan" required />
+                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputIcon} required />
                 </div>
               </div>
               <div>
                 <label className={labelClass}>Middle Name <span className="text-muted-foreground/60">(Optional)</span></label>
                 <div className="relative">
                   <FieldIcon which="user" />
-                  <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className={inputIcon} placeholder="e.g., Santos" />
+                  <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className={inputIcon} />
                 </div>
               </div>
               <div>
                 <label className={labelClass}>Last Name <span className="text-rose-400">*</span></label>
                 <div className="relative">
                   <FieldIcon which="user" />
-                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputIcon} placeholder="e.g., Dela Cruz" required />
+                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputIcon} required />
                 </div>
               </div>
             </div>
@@ -195,14 +195,14 @@ export default function RegisterPage() {
                 <label className={labelClass}>Farm / Yard Name <span className="text-rose-400">*</span></label>
                 <div className="relative">
                   <FieldIcon which="home" />
-                  <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputIcon} placeholder="e.g., Dela Cruz Fighting Stables" required />
+                  <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputIcon} required />
                 </div>
               </div>
               <div>
                 <label className={labelClass}>Contact Number</label>
                 <div className="relative">
                   <FieldIcon which="phone" />
-                  <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className={inputIcon} placeholder="e.g., 0917 123 4567" />
+                  <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className={inputIcon} />
                 </div>
               </div>
             </div>
