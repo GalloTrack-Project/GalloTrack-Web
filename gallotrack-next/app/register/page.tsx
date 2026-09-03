@@ -286,14 +286,14 @@ export default function RegisterPage() {
                     <label className={labelClass}>Email Address <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="mail" />
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputIcon} required />
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputIcon} autoComplete="off" required />
                     </div>
                   </div>
                   <div>
                     <label className={labelClass}>Password <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
-                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputIcon} pr-11`} required />
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputIcon} pr-11`} autoComplete="new-password" required />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer">
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -307,7 +307,7 @@ export default function RegisterPage() {
                     <label className={labelClass}>Confirm Password <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
-                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputIcon} required />
+                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputIcon} autoComplete="new-password" required />
                     </div>
                   </div>
                 </div>
