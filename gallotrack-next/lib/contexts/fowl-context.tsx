@@ -434,7 +434,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
       setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
       setCustomStrainNames((prev) => new Set([...prev, trimmed]));
-      strainService.saveCustomStrain(trimmed, availableStrains).then((saved) => {
+      strainService.saveCustomStrain(trimmed).then((saved) => {
         if (!saved) ui.showToastMessage(`Strain "${trimmed}" saved locally only.`, 'warning');
       }).catch(() => {});
     }
@@ -505,7 +505,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       } else {
         ui.showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
         for (const s of selectedStrains) {
-          await strainService.saveCustomStrain(s, availableStrains);
+          await strainService.saveCustomStrain(s);
         }
         const createdGender = newGender || 'Rooster';
         setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview('');
@@ -715,7 +715,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       if (result.error) throw new Error(result.error);
 
       ui.showToastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
-      await strainService.saveCustomStrain(editBreed, availableStrains);
+      await strainService.saveCustomStrain(editBreed);
       ui.setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: unknown) {
