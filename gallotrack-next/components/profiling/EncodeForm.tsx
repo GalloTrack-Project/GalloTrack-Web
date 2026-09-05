@@ -122,6 +122,7 @@ export default function EncodeForm({
 }: Props) {
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
+  const strainInputElRef = useRef<HTMLInputElement>(null);
   const legColorInputRef = useRef<HTMLDivElement>(null);
   const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -193,6 +194,7 @@ export default function EncodeForm({
           <div className="relative" ref={strainInputRef}>
             <div className="relative">
               <input
+                ref={strainInputElRef}
                 type="text"
                 value={strainQuery}
                 onChange={(e) => { setStrainQuery(e.target.value); setNewBreed(e.target.value); setStrainOpen(true); }}
@@ -230,7 +232,7 @@ export default function EncodeForm({
                         <>
                           <button
                             type="button"
-                            onMouseDown={(e) => { e.preventDefault(); addStrain(strainQuery.trim()); setStrainOpen(false); }}
+                            onMouseDown={(e) => { e.preventDefault(); addStrain(strainQuery.trim()); setStrainOpen(false); strainInputElRef.current?.blur(); }}
                             className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-slate-200 flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
                           >
                             <span className="text-xs font-black text-emerald-600">➕ Add &quot;{strainQuery.trim()}&quot; as new strain</span>
@@ -239,7 +241,7 @@ export default function EncodeForm({
                           {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Matching strains</div>}
                           {matching.map((s) => (
                             <div key={s} className="flex items-center w-full group">
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-emerald-600' : 'text-slate-600'}`}>
+                              <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-emerald-600' : 'text-slate-600'}`}>
                                 {s} {selectedStrains.includes(s) && <span className="text-[9px] text-emerald-500 ml-1">✓ added</span>}
                               </button>
                               <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
@@ -250,7 +252,7 @@ export default function EncodeForm({
                     }
                     return matching.map((s) => (
                         <div key={s} className="flex items-center w-full group">
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : selectedStrains.includes(s) ? 'text-emerald-600' : 'text-slate-600'}`}>
+                          <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : selectedStrains.includes(s) ? 'text-emerald-600' : 'text-slate-600'}`}>
                             {s} {selectedStrains.includes(s) && <span className="text-[9px] text-emerald-500 ml-1">✓ added</span>}
                           </button>
                           <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
