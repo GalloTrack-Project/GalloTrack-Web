@@ -286,6 +286,8 @@ export function ModalsWrapper() {
       setEditDamPct={store.setEditDamPct}
       handleEditBirthdateChange={store.handleEditBirthdateChange}
       handleEditAgeChange={store.handleEditAgeChange}
+      showPerFowlBreakdownModal={store.showPerFowlBreakdownModal}
+      setShowPerFowlBreakdownModal={store.setShowPerFowlBreakdownModal}
     />
   );
 }

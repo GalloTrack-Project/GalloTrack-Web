@@ -16,6 +16,7 @@ import PermanentDeleteModal from './modals/PermanentDeleteModal';
 import EditFowlModal from './modals/EditFowlModal';
 import LogoutModal from './modals/LogoutModal';
 import ForgotPasswordModal from './modals/ForgotPasswordModal';
+import PerFowlBreakdownModal from './modals/PerFowlBreakdownModal';
 
 type ModalsProps = {
   selectedFowlForDetails: FowlRecord | null;
@@ -118,6 +119,9 @@ type ModalsProps = {
 
   handleEditBirthdateChange: (val: string) => void;
   handleEditAgeChange: (val: string) => void;
+
+  showPerFowlBreakdownModal: boolean;
+  setShowPerFowlBreakdownModal: (v: boolean) => void;
 };
 
 export default function Modals(props: ModalsProps) {
@@ -238,6 +242,13 @@ export default function Modals(props: ModalsProps) {
         forgotLoading={props.forgotLoading}
         forgotSent={props.forgotSent}
         forgotError={props.forgotError}
+      />
+
+      <PerFowlBreakdownModal
+        show={props.showPerFowlBreakdownModal}
+        onClose={() => props.setShowPerFowlBreakdownModal(false)}
+        fowls={props.fowls}
+        matchHistory={props.matchHistory}
       />
     </>
   );
