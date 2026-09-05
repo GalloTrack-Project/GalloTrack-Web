@@ -85,8 +85,8 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
     .filter((f) => {
       const name = (f.name || '').trim().toLowerCase();
       if (!name || name === 'foundation stock' || !name.includes(q)) return false;
-      if (preferredGender === 'Male' && f.gender !== 'Male') return false;
-      if (preferredGender === 'Female' && f.gender !== 'Female') return false;
+      if (preferredGender === 'Male' && f.gender !== 'Rooster' && f.gender !== 'Male') return false;
+      if (preferredGender === 'Female' && f.gender !== 'Hen' && f.gender !== 'Female') return false;
       return true;
     })
     .sort((a, b) => a.name.localeCompare(b.name))
