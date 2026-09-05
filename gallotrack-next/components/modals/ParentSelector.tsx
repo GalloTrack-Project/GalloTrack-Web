@@ -84,13 +84,12 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
   const candidates = fowls
     .filter((f) => {
       const name = (f.name || '').trim().toLowerCase();
-      return name && name !== 'foundation stock' && name.includes(q);
+      if (!name || name === 'foundation stock' || !name.includes(q)) return false;
+      if (preferredGender === 'Male' && f.gender !== 'Male') return false;
+      if (preferredGender === 'Female' && f.gender !== 'Female') return false;
+      return true;
     })
-    .sort((a, b) => {
-      if (preferredGender === 'Male') return (a.gender === 'Male' ? 0 : 1) - (b.gender === 'Male' ? 0 : 1);
-      if (preferredGender === 'Female') return (a.gender === 'Female' ? 0 : 1) - (b.gender === 'Female' ? 0 : 1);
-      return 0;
-    })
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 6);
 
   const accentBg = accent === 'emerald' ? 'bg-emerald-600' : 'bg-amber-500';
