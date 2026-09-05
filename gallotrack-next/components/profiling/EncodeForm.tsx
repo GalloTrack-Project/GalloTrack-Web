@@ -217,10 +217,13 @@ export default function EncodeForm({
                     if (trimmed) {
                       addStrain(trimmed);
                       setStrainOpen(false);
+                    } else {
+                      setStrainOpen(true);
+                      const input = strainInputRef.current?.querySelector('input');
+                      if (input) input.focus();
                     }
                   }}
-                  disabled={!strainQuery.trim()}
-                  className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+                  className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
                 >
                   <span>+</span>
                   <span>Add</span>
