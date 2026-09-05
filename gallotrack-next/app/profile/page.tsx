@@ -325,7 +325,7 @@ export default function ProfilePage() {
             >
               <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              <span className="relative tracking-widest">{loading ? 'Updating Credentials...' : 'Commit Account Updates'}</span>
+              <span className="relative tracking-widest">{loading ? 'Saving...' : 'Save Changes'}</span>
               {!loading && (
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               )}
