@@ -120,23 +120,38 @@ export default function EncodeForm({
   generationPurity,
   handleAddFowl,
 }: Props) {
+  const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
   const legColorInputRef = useRef<HTMLDivElement>(null);
   const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
-    if (strainOpen && strainInputRef.current) {
-      const r = strainInputRef.current.getBoundingClientRect();
-      setStrainDropdownPos({ top: r.bottom + 6, left: r.left, width: r.width });
-    }
+    if (!strainOpen) return;
+    const update = () => {
+      if (strainInputRef.current) {
+        const r = strainInputRef.current.getBoundingClientRect();
+        setStrainDropdownPos({ top: r.bottom + 6, left: r.left, width: r.width });
+      }
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
   }, [strainOpen]);
 
   useEffect(() => {
-    if (legColorOpen && legColorInputRef.current) {
-      const r = legColorInputRef.current.getBoundingClientRect();
-      setLegColorDropdownPos({ top: r.bottom + 6, left: r.left, width: r.width });
-    }
+    if (!legColorOpen) return;
+    const update = () => {
+      if (legColorInputRef.current) {
+        const r = legColorInputRef.current.getBoundingClientRect();
+        setLegColorDropdownPos({ top: r.bottom + 6, left: r.left, width: r.width });
+      }
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
   }, [legColorOpen]);
 
   return (
@@ -472,8 +487,14 @@ export default function EncodeForm({
               <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history</p>
             </div>
             <div className="text-right shrink-0">
-              <span className="inline-flex items-center gap-1.5 bg-teal-700 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{offspringGenInfo.short} · {offspringGenInfo.label}</span>
-              <p className="text-2xl font-black text-teal-700 mt-1.5">{computedBloodlinePct}%</p>
+              {hasAnyParent ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5 bg-teal-700 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{offspringGenInfo.short} · {offspringGenInfo.label}</span>
+                  <p className="text-2xl font-black text-teal-700 mt-1.5">{computedBloodlinePct}%</p>
+                </>
+              ) : (
+                <p className="text-2xl font-black text-slate-300 mt-1.5">—</p>
+              )}
               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Parents'}</p>
             </div>
           </div>
@@ -481,12 +502,12 @@ export default function EncodeForm({
             <div className="bg-white/70 border border-sky-100 rounded-xl p-3">
               <p className="text-[9px] font-black text-sky-600 uppercase tracking-wider">🐓 Sire Lineage</p>
               <p className="text-sm font-black text-slate-800 truncate">{sireName.trim() ? sireName : '—'}</p>
-              <p className="text-[9px] font-bold text-slate-400 mt-0.5">{sireGenInfo.label} · {generationPurity(sireGen)}% purity</p>
+              <p className="text-[9px] font-bold text-slate-400 mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% purity` : '—'}</p>
             </div>
             <div className="bg-white/70 border border-pink-100 rounded-xl p-3">
               <p className="text-[9px] font-black text-pink-600 uppercase tracking-wider">🐔 Dam Lineage</p>
               <p className="text-sm font-black text-slate-800 truncate">{damName.trim() ? damName : '—'}</p>
-              <p className="text-[9px] font-bold text-slate-400 mt-0.5">{damGenInfo.label} · {generationPurity(damGen)}% purity</p>
+              <p className="text-[9px] font-bold text-slate-400 mt-0.5">{damName.trim() ? `${damGenInfo.label} · ${generationPurity(damGen)}% purity` : '—'}</p>
             </div>
           </div>
           <p className="text-[9px] text-slate-400 font-semibold">Purity ladder: F1 (First Cross) = 50% · F2 (1st Backcross) = 75% · F3 (2nd Backcross) = 87.5% · F4+ (Stabilized) = 93.75%–96%+. Purity = 100 × (1 − 2⁻ᵍᵉⁿ) with foundation/base stock = 100%.</p>
