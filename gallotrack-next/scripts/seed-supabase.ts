@@ -55,6 +55,9 @@ const FOUNDATION_HENS = [
   { name: 'Sunrise Queen', breed: 'Sweater', gender: 'Hen', birthdate: '2023-10-05', weight: '1.6', height: '44', leg_color: 'Willow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Alert', eye_variant: 'Beanie' },
   { name: 'Mountain Rose', breed: 'Hatch', gender: 'Hen', birthdate: '2023-11-12', weight: '1.8', height: '47', leg_color: 'Black', color: 'Dark Cornish', color_category: 'Dark', behavior_trait: 'Broody', eye_variant: 'Pearl' },
   { name: 'Silver Princess', breed: 'Sweater', gender: 'Hen', birthdate: '2024-01-20', weight: '1.5', height: '43', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
+  { name: 'Alta daw', breed: 'Roundhead', gender: 'Hen', birthdate: '2023-12-01', weight: '1.6', height: '45', leg_color: 'Yellow', color: 'Red', color_category: 'Red', behavior_trait: 'Calm', eye_variant: 'Pearl' },
+  { name: 'Crimson Belle', breed: 'Hatch', gender: 'Hen', birthdate: '2024-02-14', weight: '1.7', height: '46', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Alert', eye_variant: 'Sta. Cruz' },
+  { name: 'White Flame', breed: 'Whitehackle', gender: 'Hen', birthdate: '2024-01-10', weight: '1.5', height: '44', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
 ];
 
 // ─── OFFSPRING ──────────────────────────────────────────────────────────────
@@ -68,49 +71,103 @@ type OffspringDef = {
 };
 
 const OFFSPRING: OffspringDef[] = [
-  // ═══ FULL-SIBLING FAMILY A (Iron Lemon × Golden Pearl) ═══════════════════
-  // Same sire AND same dam = full siblings
+  // ═══ FULL-SIBLING FAMILY A (Iron Lemon × Golden Pearl) — 5 FULL SIBLINGS ═══
+  // Same sire AND same dam = full siblings (5 roosters/hens from same parents)
   { name: 'Lemon Storm', gender: 'Rooster', birthdate: '2024-03-10', sire: 'Iron Lemon', dam: 'Golden Pearl', breed: 'Lemon', weight: '2.0', height: '52', leg_color: 'Yellow', color: 'Black-Breasted Red', color_category: 'Red', behavior_trait: 'Aggressive', eye_variant: 'Pearl' },
   { name: 'Lemon Blaze', gender: 'Rooster', birthdate: '2024-03-10', sire: 'Iron Lemon', dam: 'Golden Pearl', breed: 'Lemon', weight: '2.1', height: '53', leg_color: 'Yellow', color: 'Black-Breasted Red', color_category: 'Red', behavior_trait: 'Smart Fighter', eye_variant: 'Pearl' },
   { name: 'Lemon Grace', gender: 'Hen', birthdate: '2024-03-10', sire: 'Iron Lemon', dam: 'Golden Pearl', breed: 'Lemon', weight: '1.6', height: '45', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Calm', eye_variant: 'Pearl' },
   { name: 'Lemon Duke', gender: 'Rooster', birthdate: '2024-03-10', sire: 'Iron Lemon', dam: 'Golden Pearl', breed: 'Lemon', weight: '2.2', height: '54', leg_color: 'Yellow', color: 'Black-Breasted Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Pearl' },
+  { name: 'Lemon Pearl', gender: 'Hen', birthdate: '2024-03-10', sire: 'Iron Lemon', dam: 'Golden Pearl', breed: 'Lemon', weight: '1.5', height: '44', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Alert', eye_variant: 'Pearl' },
 
-  // ═══ FULL-SIBLING FAMILY B (Titan Sweater × Sunrise Queen) ════════════════
+  // ═══ FULL-SIBLING FAMILY B (Titan Sweater × Sunrise Queen) — 4 FULL SIBLINGS ══
   { name: 'Sweater Flash', gender: 'Rooster', birthdate: '2024-04-15', sire: 'Titan Sweater', dam: 'Sunrise Queen', breed: 'Sweater', weight: '1.9', height: '51', leg_color: 'White', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Fast', eye_variant: 'Beanie' },
   { name: 'Sweater Bolt', gender: 'Rooster', birthdate: '2024-04-15', sire: 'Titan Sweater', dam: 'Sunrise Queen', breed: 'Sweater', weight: '2.0', height: '52', leg_color: 'White', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Aggressive', eye_variant: 'Beanie' },
   { name: 'Sweater Angel', gender: 'Hen', birthdate: '2024-04-15', sire: 'Titan Sweater', dam: 'Sunrise Queen', breed: 'Sweater', weight: '1.5', height: '44', leg_color: 'White', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Alert', eye_variant: 'Beanie' },
+  { name: 'Sweater Queen', gender: 'Hen', birthdate: '2024-04-15', sire: 'Titan Sweater', dam: 'Sunrise Queen', breed: 'Sweater', weight: '1.6', height: '45', leg_color: 'White', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Calm', eye_variant: 'Beanie' },
 
-  // ═══ FULL-SIBLING FAMILY C (True Hatch × Mountain Rose) ═══════════════════
+  // ═══ FULL-SIBLING FAMILY C (True Hatch × Mountain Rose) — 4 FULL SIBLINGS ═══
   { name: 'Hatch Thunder', gender: 'Rooster', birthdate: '2024-05-20', sire: 'True Hatch', dam: 'Mountain Rose', breed: 'Hatch', weight: '2.3', height: '55', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
   { name: 'Hatch Storm', gender: 'Rooster', birthdate: '2024-05-20', sire: 'True Hatch', dam: 'Mountain Rose', breed: 'Hatch', weight: '2.2', height: '54', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Smart Fighter', eye_variant: 'Sta. Cruz' },
   { name: 'Hatch Rose', gender: 'Hen', birthdate: '2024-05-20', sire: 'True Hatch', dam: 'Mountain Rose', breed: 'Hatch', weight: '1.7', height: '46', leg_color: 'Black', color: 'Dark Cornish', color_category: 'Dark', behavior_trait: 'Broody', eye_variant: 'Pearl' },
+  { name: 'Hatch Mountain', gender: 'Rooster', birthdate: '2024-05-20', sire: 'True Hatch', dam: 'Mountain Rose', breed: 'Hatch', weight: '2.1', height: '53', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Aggressive', eye_variant: 'Sta. Cruz' },
 
-  // ═══ HALF-SIBLINGS VIA SIRE: Iron Lemon × different dams ═══════════════════
-  // Same sire (Iron Lemon), different dams = half-siblings from father's side
+  // ═══ FULL-SIBLING FAMILY D (True Hatch × Silver Princess) — 3 FULL SIBLINGS ═══
+  { name: 'Hatch Silver', gender: 'Rooster', birthdate: '2024-06-01', sire: 'True Hatch', dam: 'Silver Princess', breed: 'Hatch', weight: '2.0', height: '52', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Fast', eye_variant: 'Beanie' },
+  { name: 'Hatch Princess', gender: 'Hen', birthdate: '2024-06-01', sire: 'True Hatch', dam: 'Silver Princess', breed: 'Hatch', weight: '1.5', height: '43', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
+  { name: 'Hatch Crown', gender: 'Rooster', birthdate: '2024-06-01', sire: 'True Hatch', dam: 'Silver Princess', breed: 'Hatch', weight: '2.1', height: '53', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Smart Fighter', eye_variant: 'Beanie' },
+
+  // ═══ FULL-SIBLING FAMILY E (Iron Lemon × Alta daw) — 3 FULL SIBLINGS ═══
+  { name: 'Lemon Roundhead King', gender: 'Rooster', birthdate: '2024-06-15', sire: 'Iron Lemon', dam: 'Alta daw', breed: 'Lemon', weight: '2.0', height: '52', leg_color: 'Yellow', color: 'Red', color_category: 'Red', behavior_trait: 'Aggressive', eye_variant: 'Pearl' },
+  { name: 'Lemon Roundhead Queen', gender: 'Hen', birthdate: '2024-06-15', sire: 'Iron Lemon', dam: 'Alta daw', breed: 'Lemon', weight: '1.6', height: '45', leg_color: 'Yellow', color: 'Red', color_category: 'Red', behavior_trait: 'Calm', eye_variant: 'Pearl' },
+  { name: 'Lemon Duke II', gender: 'Rooster', birthdate: '2024-06-15', sire: 'Iron Lemon', dam: 'Alta daw', breed: 'Lemon', weight: '2.2', height: '54', leg_color: 'Yellow', color: 'Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Pearl' },
+
+  // ═══ FULL-SIBLING FAMILY F (Titan Sweater × Crimson Belle) — 3 FULL SIBLINGS ═══
+  { name: 'Sweater Crimson', gender: 'Rooster', birthdate: '2024-07-01', sire: 'Titan Sweater', dam: 'Crimson Belle', breed: 'Sweater', weight: '2.1', height: '53', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
+  { name: 'Sweater Crimson Belle', gender: 'Hen', birthdate: '2024-07-01', sire: 'Titan Sweater', dam: 'Crimson Belle', breed: 'Sweater', weight: '1.6', height: '45', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Alert', eye_variant: 'Sta. Cruz' },
+  { name: 'Sweater Red Storm', gender: 'Rooster', birthdate: '2024-07-01', sire: 'Titan Sweater', dam: 'Crimson Belle', breed: 'Sweater', weight: '2.0', height: '52', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Fast', eye_variant: 'Sta. Cruz' },
+
+  // ═══ FULL-SIBLING FAMILY G (Iron Lemon × White Flame) — 3 FULL SIBLINGS ═══
+  { name: 'Lemon White Flame', gender: 'Rooster', birthdate: '2024-07-15', sire: 'Iron Lemon', dam: 'White Flame', breed: 'Lemon', weight: '1.9', height: '51', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Smart Fighter', eye_variant: 'Beanie' },
+  { name: 'Lemon White Angel', gender: 'Hen', birthdate: '2024-07-15', sire: 'Iron Lemon', dam: 'White Flame', breed: 'Lemon', weight: '1.5', height: '44', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Calm', eye_variant: 'Beanie' },
+  { name: 'Lemon White Duke', gender: 'Rooster', birthdate: '2024-07-15', sire: 'Iron Lemon', dam: 'White Flame', breed: 'Lemon', weight: '2.0', height: '52', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Aggressive', eye_variant: 'Beanie' },
+
+  // ═══ HALF-SIBLINGS VIA SIRE ONLY: Iron Lemon × different dams ═════════════════
+  // Same sire (Iron Lemon), different dams = half-siblings from FATHER's side only
   { name: 'Lemon-Sweater Cross', gender: 'Rooster', birthdate: '2024-04-01', sire: 'Iron Lemon', dam: 'Sunrise Queen', breed: 'Lemon', weight: '1.9', height: '50', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Fast', eye_variant: 'Beanie' },
   { name: 'Lemon Silver', gender: 'Hen', birthdate: '2024-04-01', sire: 'Iron Lemon', dam: 'Silver Princess', breed: 'Lemon', weight: '1.5', height: '43', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
+  { name: 'Lemon Crimson', gender: 'Rooster', birthdate: '2024-05-15', sire: 'Iron Lemon', dam: 'Crimson Belle', breed: 'Lemon', weight: '2.0', height: '51', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
 
-  // ═══ HALF-SIBLINGS VIA SIRE: Titan Sweater × different dams ════════════════
+  // ═══ HALF-SIBLINGS VIA SIRE ONLY: Titan Sweater × different dams ══════════════
   { name: 'Sweater Gold', gender: 'Rooster', birthdate: '2024-05-01', sire: 'Titan Sweater', dam: 'Golden Pearl', breed: 'Sweater', weight: '1.8', height: '49', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Smart Fighter', eye_variant: 'Pearl' },
   { name: 'Sweater Mountain', gender: 'Rooster', birthdate: '2024-06-01', sire: 'Titan Sweater', dam: 'Mountain Rose', breed: 'Sweater', weight: '2.0', height: '51', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
+  { name: 'Sweater White', gender: 'Hen', birthdate: '2024-06-15', sire: 'Titan Sweater', dam: 'White Flame', breed: 'Sweater', weight: '1.5', height: '44', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
 
-  // ═══ HALF-SIBLINGS VIA DAM: Golden Pearl × different sires ═════════════════
-  // Same dam (Golden Pearl), different sires = half-siblings from mother's side
+  // ═══ HALF-SIBLINGS VIA SIRE ONLY: True Hatch × different dams ══════════════════
+  { name: 'Hatch Golden', gender: 'Rooster', birthdate: '2024-05-15', sire: 'True Hatch', dam: 'Golden Pearl', breed: 'Hatch', weight: '2.2', height: '54', leg_color: 'Yellow', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Smart Fighter', eye_variant: 'Pearl' },
+  { name: 'Hatch Sunrise', gender: 'Hen', birthdate: '2024-06-10', sire: 'True Hatch', dam: 'Sunrise Queen', breed: 'Hatch', weight: '1.6', height: '45', leg_color: 'Willow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Alert', eye_variant: 'Beanie' },
+
+  // ═══ HALF-SIBLINGS VIA DAM ONLY: Golden Pearl × different sires ═══════════════
+  // Same dam (Golden Pearl), different sires = half-siblings from MOTHER's side only
   { name: 'Sweater-Lemon Blend', gender: 'Rooster', birthdate: '2024-04-20', sire: 'Titan Sweater', dam: 'Golden Pearl', breed: 'Sweater', weight: '1.9', height: '50', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Aggressive', eye_variant: 'Pearl' },
   { name: 'Hatch-Lemon Mix', gender: 'Hen', birthdate: '2024-05-15', sire: 'True Hatch', dam: 'Golden Pearl', breed: 'Hatch', weight: '1.6', height: '45', leg_color: 'Green / Slate', color: 'Dark Cornish', color_category: 'Dark', behavior_trait: 'Broody', eye_variant: 'Pearl' },
 
-  // ═══ HALF-SIBLINGS VIA DAM: Mountain Rose × different sires ════════════════
+  // ═══ HALF-SIBLINGS VIA DAM ONLY: Mountain Rose × different sires ══════════════
   { name: 'Lemon-Mountain', gender: 'Rooster', birthdate: '2024-06-10', sire: 'Iron Lemon', dam: 'Mountain Rose', breed: 'Lemon', weight: '2.1', height: '53', leg_color: 'Green / Slate', color: 'Black-Breasted Red', color_category: 'Red', behavior_trait: 'Aggressive', eye_variant: 'Sta. Cruz' },
   { name: 'Sweater-Mountain', gender: 'Rooster', birthdate: '2024-07-01', sire: 'Titan Sweater', dam: 'Mountain Rose', breed: 'Sweater', weight: '2.0', height: '52', leg_color: 'Green / Slate', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Fast', eye_variant: 'Sta. Cruz' },
 
+  // ═══ HALF-SIBLINGS VIA DAM ONLY: Sunrise Queen × different sires ═══════════════
+  { name: 'Hatch Sunrise King', gender: 'Rooster', birthdate: '2024-06-20', sire: 'True Hatch', dam: 'Sunrise Queen', breed: 'Hatch', weight: '2.2', height: '54', leg_color: 'Willow', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Beanie' },
+  { name: 'Lemon Sunrise', gender: 'Hen', birthdate: '2024-07-10', sire: 'Iron Lemon', dam: 'Sunrise Queen', breed: 'Lemon', weight: '1.5', height: '44', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Calm', eye_variant: 'Beanie' },
+
+  // ═══ HALF-SIBLINGS VIA DAM ONLY: Silver Princess × different sires ═════════════
+  { name: 'Lemon Princess', gender: 'Hen', birthdate: '2024-07-05', sire: 'Iron Lemon', dam: 'Silver Princess', breed: 'Lemon', weight: '1.4', height: '42', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
+  { name: 'Sweater Princess', gender: 'Hen', birthdate: '2024-07-20', sire: 'Titan Sweater', dam: 'Silver Princess', breed: 'Sweater', weight: '1.5', height: '43', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Alert', eye_variant: 'Beanie' },
+
+  // ═══ HALF-SIBLINGS VIA DAM ONLY: Crimson Belle × different sires ══════════════
+  { name: 'Hatch Crimson King', gender: 'Rooster', birthdate: '2024-07-25', sire: 'True Hatch', dam: 'Crimson Belle', breed: 'Hatch', weight: '2.3', height: '55', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
+  { name: 'Lemon Crimson Belle', gender: 'Hen', birthdate: '2024-08-01', sire: 'Iron Lemon', dam: 'Crimson Belle', breed: 'Lemon', weight: '1.6', height: '45', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Calm', eye_variant: 'Sta. Cruz' },
+
+  // ═══ HALF-SIBLINGS VIA DAM ONLY: White Flame × different sires ════════════════
+  { name: 'Sweater White Flame', gender: 'Rooster', birthdate: '2024-08-10', sire: 'Titan Sweater', dam: 'White Flame', breed: 'Sweater', weight: '1.9', height: '51', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Fast', eye_variant: 'Beanie' },
+  { name: 'Hatch White Flame', gender: 'Hen', birthdate: '2024-08-15', sire: 'True Hatch', dam: 'White Flame', breed: 'Hatch', weight: '1.6', height: '45', leg_color: 'White', color: 'White', color_category: 'White', behavior_trait: 'Active', eye_variant: 'Beanie' },
+
   // ═══ 2ND GENERATION (grandchildren) ════════════════════════════════════════
-  // Lemon Storm (from Family A) × Sweater Angel (from Family B) = cross-family
+  // Lemon Storm × Sweater Angel = cross-family 2nd gen
   { name: 'Elite Thunder', gender: 'Rooster', birthdate: '2024-09-01', sire: 'Lemon Storm', dam: 'Sweater Angel', breed: 'Lemon', weight: '1.8', height: '49', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Smart Fighter', eye_variant: 'Pearl' },
   { name: 'Elite Flash', gender: 'Rooster', birthdate: '2024-09-01', sire: 'Lemon Storm', dam: 'Sweater Angel', breed: 'Lemon', weight: '1.7', height: '48', leg_color: 'White', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Fast', eye_variant: 'Beanie' },
+  { name: 'Elite Grace', gender: 'Hen', birthdate: '2024-09-01', sire: 'Lemon Storm', dam: 'Sweater Angel', breed: 'Lemon', weight: '1.4', height: '43', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Calm', eye_variant: 'Pearl' },
 
   // Hatch Thunder × Lemon Grace = cross-breed 2nd gen
   { name: 'Storm Warrior', gender: 'Rooster', birthdate: '2024-10-15', sire: 'Hatch Thunder', dam: 'Lemon Grace', breed: 'Hatch', weight: '2.0', height: '51', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
   { name: 'Storm Queen', gender: 'Hen', birthdate: '2024-10-15', sire: 'Hatch Thunder', dam: 'Lemon Grace', breed: 'Hatch', weight: '1.6', height: '44', leg_color: 'Yellow', color: 'Wheaten', color_category: 'Wheaten', behavior_trait: 'Alert', eye_variant: 'Pearl' },
+
+  // Sweater Flash × Hatch Rose = cross-breed 2nd gen
+  { name: 'Flash Hatch King', gender: 'Rooster', birthdate: '2024-11-01', sire: 'Sweater Flash', dam: 'Hatch Rose', breed: 'Sweater', weight: '2.0', height: '52', leg_color: 'Green / Slate', color: 'Dark Red', color_category: 'Red', behavior_trait: 'Aggressive', eye_variant: 'Sta. Cruz' },
+  { name: 'Flash Hatch Queen', gender: 'Hen', birthdate: '2024-11-01', sire: 'Sweater Flash', dam: 'Hatch Rose', breed: 'Sweater', weight: '1.5', height: '44', leg_color: 'Black', color: 'Dark Cornish', color_category: 'Dark', behavior_trait: 'Broody', eye_variant: 'Pearl' },
+
+  // Lemon Roundhead King × Sweater Crimson Belle = cross 2nd gen
+  { name: 'Royal Crimson', gender: 'Rooster', birthdate: '2024-11-15', sire: 'Lemon Roundhead King', dam: 'Sweater Crimson Belle', breed: 'Lemon', weight: '2.1', height: '53', leg_color: 'Green / Slate', color: 'Red', color_category: 'Red', behavior_trait: 'Powerful', eye_variant: 'Sta. Cruz' },
+  { name: 'Royal Crimson Belle', gender: 'Hen', birthdate: '2024-11-15', sire: 'Lemon Roundhead King', dam: 'Sweater Crimson Belle', breed: 'Lemon', weight: '1.6', height: '45', leg_color: 'Green / Slate', color: 'Red', color_category: 'Red', behavior_trait: 'Alert', eye_variant: 'Sta. Cruz' },
 
   // ═══ ARCHIVED & DECEASED EXAMPLES ═════════════════════════════════════════
   { name: 'Retired Champion', gender: 'Rooster', birthdate: '2023-01-15', sire: 'Iron Lemon', dam: 'Golden Pearl', breed: 'Lemon', weight: '2.5', height: '58', leg_color: 'Yellow', color: 'Black-Breasted Red', color_category: 'Red', behavior_trait: 'Calm', eye_variant: 'Pearl' },
