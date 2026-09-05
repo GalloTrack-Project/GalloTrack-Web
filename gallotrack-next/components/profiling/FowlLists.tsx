@@ -86,7 +86,7 @@ function FowlCard({ fowl, index, gender, onArchive, onDeceased }: { fowl: FowlRe
   );
 }
 
-function ArchivedCard({ fowl, index }: { fowl: FowlRecord; index: number }) {
+function ArchivedCard({ fowl, index, onRestore }: { fowl: FowlRecord; index: number; onRestore: (id: number) => void }) {
   const cardGen = generationOf(fowl, []);
   const cardGenInfo = generationInfo(cardGen);
   return (
@@ -117,12 +117,18 @@ function ArchivedCard({ fowl, index }: { fowl: FowlRecord; index: number }) {
           <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
           <div className="col-span-2">Archive Reason: <strong className="text-amber-800">{fowl.archive_reason || 'Unspecified'}</strong></div>
         </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button type="button" onClick={() => onRestore(fowl.id)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Restore
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function DeceasedCard({ fowl, index }: { fowl: FowlRecord; index: number }) {
+function DeceasedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void }) {
   const cardGen = generationOf(fowl, []);
   const cardGenInfo = generationInfo(cardGen);
   return (
@@ -144,6 +150,12 @@ function DeceasedCard({ fowl, index }: { fowl: FowlRecord; index: number }) {
           <div>Growth Stage: <strong className="text-slate-800">{fowl.growth_stage || 'Chick'}</strong></div>
           <div>Color: <strong className="text-slate-800">{fowl.color_category} ({fowl.color})</strong></div>
           <div>Legs: <strong className="text-slate-800">{fowl.leg_color || 'N/A'}</strong></div>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button type="button" onClick={() => onDelete(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Delete
+          </button>
         </div>
       </div>
     </div>
@@ -240,7 +252,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <ArchivedCard key={fowl.id} fowl={fowl} index={index} />
+              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onRestore={handleRestoreFowlOnly} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -284,7 +296,7 @@ export default function FowlLists({
       ) : (
         <>
           {deceasedPagedList.map((fowl, index) => (
-            <DeceasedCard key={fowl.id} fowl={fowl} index={index} />
+            <DeceasedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} />
           ))}
           <Pagination currentPage={page} totalPages={deceasedTotalPages} onPageChange={setPage} />
         </>
