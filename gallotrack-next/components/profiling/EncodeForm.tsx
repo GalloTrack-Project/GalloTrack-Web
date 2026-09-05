@@ -195,11 +195,10 @@ export default function EncodeForm({
                 </div>
                 <button
                   type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={async () => {
                     const trimmed = strainQuery.trim();
                     if (trimmed) {
-                      addStrain(trimmed);
+                      await addStrain(trimmed);
                       setStrainOpen(false);
                     }
                   }}
@@ -234,7 +233,7 @@ export default function EncodeForm({
                           <>
                             <button
                               type="button"
-                              onMouseDown={(e) => { e.preventDefault(); addStrain(strainQuery.trim()); setStrainOpen(false); }}
+                              onClick={async () => { await addStrain(strainQuery.trim()); setStrainOpen(false); }}
                               className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
                             >
                               <span className="text-xs font-black text-emerald-600">➕ Add &quot;{strainQuery.trim()}&quot; as new genetic strain</span>
@@ -243,10 +242,10 @@ export default function EncodeForm({
                             {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Matching strains</div>}
                             {matching.map((s) => (
                                 <div key={s} className="flex items-center w-full group">
-                                  <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
+                                  <button type="button" onClick={async () => { await addStrain(s); setStrainOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
                                     {s}
                                   </button>
-                                  <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                                 </div>
                             ))}
                           </>
@@ -254,10 +253,10 @@ export default function EncodeForm({
                       }
                       return matching.map((s) => (
                           <div key={s} className="flex items-center w-full group">
-                            <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-muted transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : 'text-muted-foreground'}`}>
+                            <button type="button" onClick={async () => { await addStrain(s); setStrainOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-muted transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : 'text-muted-foreground'}`}>
                               {s}
                             </button>
-                            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                           </div>
                       ));
                     })()}
