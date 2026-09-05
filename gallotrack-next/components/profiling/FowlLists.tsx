@@ -31,22 +31,17 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onDelete, onArchive, onDeceased }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onDelete: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void }) {
+function FowlCard({ fowl, index, gender, onArchive, onDeceased }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void }) {
   const siblings = getSiblingRelations(fowl, []).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, []);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
-        <button type="button" onClick={() => onArchive(fowl)} title="Archive this fowl" className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 text-amber-500 hover:bg-amber-500 hover:text-white hover:border-amber-500 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">📦</button>
-        <button type="button" onClick={() => onDeceased(fowl)} title="Mark as deceased" className="w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">💀</button>
-        <button type="button" onClick={() => onDelete(fowl)} title="Delete permanently" className="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 text-slate-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
-      </div>
+      <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
       <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
       </div>
       <div className="flex-1 w-full space-y-3">
-        <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900">{fowl.name}</h4>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 border-emerald-200">{fowl.breed}</span>
@@ -76,17 +71,26 @@ function FowlCard({ fowl, index, gender, onDelete, onArchive, onDeceased }: { fo
         <div className="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-2.5 px-3.5 rounded-xl border border-slate-100">
           <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
         </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 8-2-2H5l-2 2"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M10 12h4"/></svg>
+            Archive
+          </button>
+          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+            Deceased
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function ArchivedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void }) {
+function ArchivedCard({ fowl, index }: { fowl: FowlRecord; index: number }) {
   const cardGen = generationOf(fowl, []);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-      <button type="button" onClick={() => onDelete(fowl)} title="Delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
       <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
       </div>
@@ -118,12 +122,11 @@ function ArchivedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: numb
   );
 }
 
-function DeceasedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void }) {
+function DeceasedCard({ fowl, index }: { fowl: FowlRecord; index: number }) {
   const cardGen = generationOf(fowl, []);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-      <button type="button" onClick={() => onDelete(fowl)} title="Delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
       <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
       </div>
@@ -215,7 +218,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onDelete={setPendingPermanentDelete} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -237,7 +240,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} />
+              <ArchivedCard key={fowl.id} fowl={fowl} index={index} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -281,7 +284,7 @@ export default function FowlLists({
       ) : (
         <>
           {deceasedPagedList.map((fowl, index) => (
-            <DeceasedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} />
+            <DeceasedCard key={fowl.id} fowl={fowl} index={index} />
           ))}
           <Pagination currentPage={page} totalPages={deceasedTotalPages} onPageChange={setPage} />
         </>
