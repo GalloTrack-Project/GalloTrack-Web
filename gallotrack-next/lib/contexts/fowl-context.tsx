@@ -79,6 +79,7 @@ interface FowlContextValue {
   selectedFowlForMatch: string; setSelectedFowlForMatch: (v: string) => void;
   matchDate: string; setMatchDate: (v: string) => void;
   opponentName: string; setOpponentName: (v: string) => void;
+  opponentBreed: string; setOpponentBreed: (v: string) => void;
   matchLocation: string; setMatchLocation: (v: string) => void;
   matchType: string; setMatchType: (v: string) => void;
   matchOutcome: string; setMatchOutcome: (v: string) => void;
@@ -246,6 +247,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
   const [matchDate, setMatchDate] = useState('');
   const [opponentName, setOpponentName] = useState('');
+  const [opponentBreed, setOpponentBreed] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
   const [matchType, setMatchType] = useState('Derby Match');
   const [matchOutcome, setMatchOutcome] = useState('Win');
@@ -686,6 +688,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         entry_name: selectedFowlForMatch,
         breed: fowlBreed,
         opponent: sanitizeInput(opponentName) || 'Anonymous Opponent',
+        opponent_breed: sanitizeInput(opponentBreed) || '',
         location: sanitizeInput(matchLocation) || 'Local Breeding Yard',
         type: matchType,
         outcome: matchOutcome,
@@ -700,7 +703,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         throw insertErr;
       } else {
         ui.showToastMessage('Performance match vector successfully computed and logged.', 'success');
-        setOpponentName(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
+        setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
         fetchDatabaseResources();
         ui.setProfilingSubTab('males');
       }
@@ -710,7 +713,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, sanitizeInput, fetchDatabaseResources, ui, setLoading, setUploadingVideo, setOpponentName, setMatchLocation, setMatchVideoFile, setMatchPostFight]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, sanitizeInput, fetchDatabaseResources, ui, setLoading, setUploadingVideo, setOpponentName, setOpponentBreed, setMatchLocation, setMatchVideoFile, setMatchPostFight]);
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;
@@ -1029,7 +1032,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
     selectedFowlForMatch, setSelectedFowlForMatch,
-    matchDate, setMatchDate, opponentName, setOpponentName,
+    matchDate, setMatchDate, opponentName, setOpponentName, opponentBreed, setOpponentBreed,
     matchLocation, setMatchLocation, matchType, setMatchType,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,

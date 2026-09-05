@@ -119,79 +119,79 @@ const OFFSPRING: OffspringDef[] = [
 
 // ─── MATCH RECORDS ──────────────────────────────────────────────────────────
 type MatchDef = {
-  entry_name: string; opponent: string; location: string;
+  entry_name: string; opponent: string; opponent_breed: string; location: string;
   type: string; outcome: string; date: string;
   post_fight_condition: string;
 };
 
 const MATCHES: MatchDef[] = [
   // ═══ LEMON STORM (Full Sib Family A) — 4 fights ═══════════════════════════
-  { entry_name: 'Lemon Storm', opponent: 'Rival Kelso Express', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-01-15', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon Storm', opponent: 'Rival Roundhead King', location: 'Iloilo Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2025-02-20', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon Storm', opponent: 'Rival Hatch Warrior', location: 'Passi Sports Complex', type: 'Derby Match', outcome: 'Win', date: '2025-04-10', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon Storm', opponent: 'Rival Sweater Blaze', location: 'Janiuay Cockpit Arena', type: 'Special Championship', outcome: 'Loss', date: '2025-06-05', post_fight_condition: 'Severely Injured / Critical' },
+  { entry_name: 'Lemon Storm', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-01-15', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Storm', opponent: 'Rival Roundhead King', opponent_breed: 'Roundhead', location: 'Iloilo Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2025-02-20', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Storm', opponent: 'Rival Hatch Warrior', opponent_breed: 'Hatch', location: 'Passi Sports Complex', type: 'Derby Match', outcome: 'Win', date: '2025-04-10', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Storm', opponent: 'Rival Sweater Blaze', opponent_breed: 'Sweater', location: 'Janiuay Cockpit Arena', type: 'Special Championship', outcome: 'Loss', date: '2025-06-05', post_fight_condition: 'Severely Injured / Critical' },
 
   // ═══ LEMON BLAZE (Full Sib Family A) — 3 fights ═══════════════════════════
-  { entry_name: 'Lemon Blaze', opponent: 'Rival Whitehackle Pro', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-02-10', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon Blaze', opponent: 'Rival Kelso Express', location: 'Pototan Coliseum', type: '2-Cock Derby', outcome: 'Loss', date: '2025-03-25', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon Blaze', opponent: 'Rival Hatch Dominator', location: 'Santa Barbara Sports Complex', type: 'Derby Match', outcome: 'Win', date: '2025-05-18', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Blaze', opponent: 'Rival Whitehackle Pro', opponent_breed: 'Whitehackle', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-02-10', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Blaze', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Pototan Coliseum', type: '2-Cock Derby', outcome: 'Loss', date: '2025-03-25', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Blaze', opponent: 'Rival Hatch Dominator', opponent_breed: 'Hatch', location: 'Santa Barbara Sports Complex', type: 'Derby Match', outcome: 'Win', date: '2025-05-18', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ LEMON DUKE (Full Sib Family A) — 2 fights ════════════════════════════
-  { entry_name: 'Lemon Duke', opponent: 'Rival Roundhead King', location: 'Dumangas Cockpit Arena', type: 'Derby Match', outcome: 'Loss', date: '2025-03-10', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon Duke', opponent: 'Rival Sweater Blaze', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-05-01', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Duke', opponent: 'Rival Roundhead King', opponent_breed: 'Roundhead', location: 'Dumangas Cockpit Arena', type: 'Derby Match', outcome: 'Loss', date: '2025-03-10', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon Duke', opponent: 'Rival Sweater Blaze', opponent_breed: 'Sweater', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-05-01', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ SWEATER FLASH (Full Sib Family B) — 3 fights ═════════════════════════
-  { entry_name: 'Sweater Flash', opponent: 'Rival Lemon Fighter', location: 'Iloilo Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2025-01-28', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Sweater Flash', opponent: 'Rival Hatch Storm', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-03-15', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Sweater Flash', opponent: 'Rival Kelso Express', location: 'San Enrique Arena', type: 'Special Championship', outcome: 'Loss', date: '2025-05-20', post_fight_condition: 'Deceased (Died from injuries)' },
+  { entry_name: 'Sweater Flash', opponent: 'Rival Lemon Fighter', opponent_breed: 'Lemon', location: 'Iloilo Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2025-01-28', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater Flash', opponent: 'Rival Hatch Storm', opponent_breed: 'Hatch', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-03-15', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater Flash', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'San Enrique Arena', type: 'Special Championship', outcome: 'Loss', date: '2025-05-20', post_fight_condition: 'Deceased (Died from injuries)' },
 
   // ═══ SWEATER BOLT (Full Sib Family B) — 3 fights ══════════════════════════
-  { entry_name: 'Sweater Bolt', opponent: 'Rival Whitehackle Pro', location: 'Passi Sports Complex', type: 'Derby Match', outcome: 'Win', date: '2025-02-05', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Sweater Bolt', opponent: 'Rival Hatch Dominator', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-04-02', post_fight_condition: 'Severely Injured / Critical' },
-  { entry_name: 'Sweater Bolt', opponent: 'Rival Roundhead King', location: 'Janiuay Cockpit Arena', type: '2-Cock Derby', outcome: 'Win', date: '2025-06-12', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater Bolt', opponent: 'Rival Whitehackle Pro', opponent_breed: 'Whitehackle', location: 'Passi Sports Complex', type: 'Derby Match', outcome: 'Win', date: '2025-02-05', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater Bolt', opponent: 'Rival Hatch Dominator', opponent_breed: 'Hatch', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-04-02', post_fight_condition: 'Severely Injured / Critical' },
+  { entry_name: 'Sweater Bolt', opponent: 'Rival Roundhead King', opponent_breed: 'Roundhead', location: 'Janiuay Cockpit Arena', type: '2-Cock Derby', outcome: 'Win', date: '2025-06-12', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ HATCH THUNDER (Full Sib Family C) — 3 fights ═════════════════════════
-  { entry_name: 'Hatch Thunder', opponent: 'Rival Kelso Express', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-02-18', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Hatch Thunder', opponent: 'Rival Sweater Blaze', location: 'Pototan Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2025-04-22', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Hatch Thunder', opponent: 'Rival Whitehackle Pro', location: 'Iloilo Coliseum', type: 'Special Championship', outcome: 'Loss', date: '2025-06-01', post_fight_condition: 'Severely Injured / Critical' },
+  { entry_name: 'Hatch Thunder', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-02-18', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Hatch Thunder', opponent: 'Rival Sweater Blaze', opponent_breed: 'Sweater', location: 'Pototan Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2025-04-22', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Hatch Thunder', opponent: 'Rival Whitehackle Pro', opponent_breed: 'Whitehackle', location: 'Iloilo Coliseum', type: 'Special Championship', outcome: 'Loss', date: '2025-06-01', post_fight_condition: 'Severely Injured / Critical' },
 
   // ═══ HATCH STORM (Full Sib Family C) — 2 fights ════════════════════════════
-  { entry_name: 'Hatch Storm', opponent: 'Rival Lemon Fighter', location: 'Dumangas Cockpit Arena', type: 'Derby Match', outcome: 'Win', date: '2025-03-08', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Hatch Storm', opponent: 'Rival Roundhead King', location: 'Santa Barbara Sports Complex', type: 'Hack Match', outcome: 'Loss', date: '2025-05-15', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Hatch Storm', opponent: 'Rival Lemon Fighter', opponent_breed: 'Lemon', location: 'Dumangas Cockpit Arena', type: 'Derby Match', outcome: 'Win', date: '2025-03-08', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Hatch Storm', opponent: 'Rival Roundhead King', opponent_breed: 'Roundhead', location: 'Santa Barbara Sports Complex', type: 'Hack Match', outcome: 'Loss', date: '2025-05-15', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ HALF-SIBS VIA SIRE: Lemon-Sweater Cross (Iron Lemon × Sunrise Queen) ═
-  { entry_name: 'Lemon-Sweater Cross', opponent: 'Rival Hatch Warrior', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-02-25', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon-Sweater Cross', opponent: 'Rival Kelso Express', location: 'Passi Sports Complex', type: '2-Cock Derby', outcome: 'Win', date: '2025-04-15', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon-Sweater Cross', opponent: 'Rival Hatch Warrior', opponent_breed: 'Hatch', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-02-25', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon-Sweater Cross', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Passi Sports Complex', type: '2-Cock Derby', outcome: 'Win', date: '2025-04-15', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ HALF-SIBS VIA SIRE: Sweater Gold (Titan Sweater × Golden Pearl) ═══════
-  { entry_name: 'Sweater Gold', opponent: 'Rival Whitehackle Pro', location: 'Janiuay Cockpit Arena', type: 'Derby Match', outcome: 'Loss', date: '2025-03-20', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Sweater Gold', opponent: 'Rival Lemon Fighter', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-05-10', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater Gold', opponent: 'Rival Whitehackle Pro', opponent_breed: 'Whitehackle', location: 'Janiuay Cockpit Arena', type: 'Derby Match', outcome: 'Loss', date: '2025-03-20', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater Gold', opponent: 'Rival Lemon Fighter', opponent_breed: 'Lemon', location: 'Dingle Breeding Arena', type: 'Hack Match', outcome: 'Win', date: '2025-05-10', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ HALF-SIBS VIA DAM: Sweater-Lemon Blend (Titan Sweater × Golden Pearl) ═
-  { entry_name: 'Sweater-Lemon Blend', opponent: 'Rival Hatch Dominator', location: 'San Enrique Arena', type: 'Derby Match', outcome: 'Win', date: '2025-03-05', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Sweater-Lemon Blend', opponent: 'Rival Roundhead King', location: 'Dingle Breeding Arena', type: '3-Cock Derby', outcome: 'Loss', date: '2025-05-25', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater-Lemon Blend', opponent: 'Rival Hatch Dominator', opponent_breed: 'Hatch', location: 'San Enrique Arena', type: 'Derby Match', outcome: 'Win', date: '2025-03-05', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Sweater-Lemon Blend', opponent: 'Rival Roundhead King', opponent_breed: 'Roundhead', location: 'Dingle Breeding Arena', type: '3-Cock Derby', outcome: 'Loss', date: '2025-05-25', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ HALF-SIBS VIA DAM: Lemon-Mountain (Iron Lemon × Mountain Rose) ════════
-  { entry_name: 'Lemon-Mountain', opponent: 'Rival Sweater Blaze', location: 'Iloilo Coliseum', type: 'Derby Match', outcome: 'Win', date: '2025-04-08', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Lemon-Mountain', opponent: 'Rival Kelso Express', location: 'Dingle Breeding Arena', type: 'Special Championship', outcome: 'Win', date: '2025-06-15', post_fight_condition: 'Deceased (Died from injuries)' },
+  { entry_name: 'Lemon-Mountain', opponent: 'Rival Sweater Blaze', opponent_breed: 'Sweater', location: 'Iloilo Coliseum', type: 'Derby Match', outcome: 'Win', date: '2025-04-08', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Lemon-Mountain', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Dingle Breeding Arena', type: 'Special Championship', outcome: 'Win', date: '2025-06-15', post_fight_condition: 'Deceased (Died from injuries)' },
 
   // ═══ 2ND GEN: Elite Thunder (Lemon Storm × Sweater Angel) ══════════════════
-  { entry_name: 'Elite Thunder', opponent: 'Rival Hatch Storm', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-05-05', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Elite Thunder', opponent: 'Rival Whitehackle Pro', location: 'Pototan Coliseum', type: 'Hack Match', outcome: 'Win', date: '2025-06-20', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Elite Thunder', opponent: 'Rival Hatch Storm', opponent_breed: 'Hatch', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2025-05-05', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Elite Thunder', opponent: 'Rival Whitehackle Pro', opponent_breed: 'Whitehackle', location: 'Pototan Coliseum', type: 'Hack Match', outcome: 'Win', date: '2025-06-20', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ 2ND GEN: Storm Warrior (Hatch Thunder × Lemon Grace) ══════════════════
-  { entry_name: 'Storm Warrior', opponent: 'Rival Lemon Fighter', location: 'Dumangas Cockpit Arena', type: 'Derby Match', outcome: 'Win', date: '2025-05-12', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Storm Warrior', opponent: 'Rival Kelso Express', location: 'Santa Barbara Sports Complex', type: '3-Cock Derby', outcome: 'Loss', date: '2025-06-18', post_fight_condition: 'Severely Injured / Critical' },
+  { entry_name: 'Storm Warrior', opponent: 'Rival Lemon Fighter', opponent_breed: 'Lemon', location: 'Dumangas Cockpit Arena', type: 'Derby Match', outcome: 'Win', date: '2025-05-12', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Storm Warrior', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Santa Barbara Sports Complex', type: '3-Cock Derby', outcome: 'Loss', date: '2025-06-18', post_fight_condition: 'Severely Injured / Critical' },
 
   // ═══ RETIRED CHAMPION — old fights ═════════════════════════════════════════
-  { entry_name: 'Retired Champion', opponent: 'Rival Old Guard', location: 'Local Farm Pit', type: 'Main Event / Solo', outcome: 'Win', date: '2024-06-10', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Retired Champion', opponent: 'Rival Old Guard', location: 'Local Farm Pit', type: 'Main Event / Solo', outcome: 'Win', date: '2024-09-15', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Retired Champion', opponent: 'Rival Old Guard', location: 'Local Farm Pit', type: 'Main Event / Solo', outcome: 'Win', date: '2025-01-05', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Retired Champion', opponent: 'Rival Old Guard', opponent_breed: 'Sweater', location: 'Local Farm Pit', type: 'Main Event / Solo', outcome: 'Win', date: '2024-06-10', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Retired Champion', opponent: 'Rival Old Guard', opponent_breed: 'Sweater', location: 'Local Farm Pit', type: 'Main Event / Solo', outcome: 'Win', date: '2024-09-15', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Retired Champion', opponent: 'Rival Old Guard', opponent_breed: 'Sweater', location: 'Local Farm Pit', type: 'Main Event / Solo', outcome: 'Win', date: '2025-01-05', post_fight_condition: 'Fit / Recovered' },
 
   // ═══ FALLEN HERO — fights before deceased ══════════════════════════════════
-  { entry_name: 'Fallen Hero', opponent: 'Rival Hatch Warrior', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2024-07-20', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Fallen Hero', opponent: 'Rival Kelso Express', location: 'Iloilo Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2024-11-10', post_fight_condition: 'Fit / Recovered' },
-  { entry_name: 'Fallen Hero', opponent: 'Rival Whitehackle Pro', location: 'Passi Sports Complex', type: 'Special Championship', outcome: 'Win', date: '2025-02-28', post_fight_condition: 'Deceased (Died from injuries)' },
+  { entry_name: 'Fallen Hero', opponent: 'Rival Hatch Warrior', opponent_breed: 'Hatch', location: 'Dingle Breeding Arena', type: 'Derby Match', outcome: 'Win', date: '2024-07-20', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Fallen Hero', opponent: 'Rival Kelso Express', opponent_breed: 'Kelso', location: 'Iloilo Coliseum', type: '3-Cock Derby', outcome: 'Win', date: '2024-11-10', post_fight_condition: 'Fit / Recovered' },
+  { entry_name: 'Fallen Hero', opponent: 'Rival Whitehackle Pro', opponent_breed: 'Whitehackle', location: 'Passi Sports Complex', type: 'Special Championship', outcome: 'Win', date: '2025-02-28', post_fight_condition: 'Deceased (Died from injuries)' },
 ];
 
 async function main() {
@@ -394,6 +394,7 @@ async function main() {
     entry_name: m.entry_name,
     breed: birdMap.get(m.entry_name)?.breed || 'Unknown',
     opponent: m.opponent,
+    opponent_breed: m.opponent_breed || '',
     location: m.location,
     type: m.type,
     outcome: m.outcome,

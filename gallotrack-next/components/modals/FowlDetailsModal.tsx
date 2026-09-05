@@ -435,6 +435,7 @@ export default function FowlDetailsModal({
                       <tr className="bg-slate-100/70 text-slate-500 font-extrabold uppercase border-b border-slate-200">
                         <th className="p-2.5 pl-4">Match Date</th>
                         <th className="p-2.5">Opponent Entry</th>
+                        <th className="p-2.5">Rasa</th>
                         <th className="p-2.5">Arena Location</th>
                         <th className="p-2.5">Match Type</th>
                         <th className="p-2.5 text-center">Outcome</th>
@@ -445,7 +446,7 @@ export default function FowlDetailsModal({
                     <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
                       {fowlMatches.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="p-6 text-center text-slate-400 text-xs">
+                          <td colSpan={8} className="p-6 text-center text-slate-400 text-xs">
                             No derby performance logs recorded for this specific gamefowl node.
                           </td>
                         </tr>
@@ -454,6 +455,7 @@ export default function FowlDetailsModal({
                           <tr key={match.id} className="hover:bg-slate-50/80 transition-colors">
                             <td className="p-2.5 pl-4 font-mono text-[10px] text-slate-500">{match.date}</td>
                             <td className="p-2.5 font-bold text-slate-800">{match.opponent}</td>
+                            <td className="p-2.5 text-slate-600 font-semibold">{match.opponent_breed || '—'}</td>
                             <td className="p-2.5 text-slate-600">{match.location}</td>
                             <td className="p-2.5"><span className="bg-slate-100 border border-slate-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded-full">{match.type}</span></td>
                             <td className="p-2.5 text-center">

@@ -136,6 +136,8 @@ export function ProfilingPageWrapper() {
           setMatchDate={store.setMatchDate}
           opponentName={store.opponentName}
           setOpponentName={store.setOpponentName}
+          opponentBreed={store.opponentBreed}
+          setOpponentBreed={store.setOpponentBreed}
           matchLocation={store.matchLocation}
           setMatchLocation={store.setMatchLocation}
           matchType={store.matchType}

@@ -78,6 +78,8 @@ type Props = {
   setMatchDate: (v: string) => void;
   opponentName: string;
   setOpponentName: (v: string) => void;
+  opponentBreed: string;
+  setOpponentBreed: (v: string) => void;
   matchLocation: string;
   setMatchLocation: (v: string) => void;
   matchType: string;
@@ -145,6 +147,7 @@ export default function ProfilingPage({
   selectedFowlForMatch, setSelectedFowlForMatch,
   matchDate, setMatchDate,
   opponentName, setOpponentName,
+  opponentBreed, setOpponentBreed,
   matchLocation, setMatchLocation,
   matchType, setMatchType,
   matchOutcome, setMatchOutcome,
@@ -247,6 +250,7 @@ export default function ProfilingPage({
           selectedFowlForMatch={selectedFowlForMatch} setSelectedFowlForMatch={setSelectedFowlForMatch}
           matchDate={matchDate} setMatchDate={setMatchDate}
           opponentName={opponentName} setOpponentName={setOpponentName}
+          opponentBreed={opponentBreed} setOpponentBreed={setOpponentBreed}
           matchLocation={matchLocation} setMatchLocation={setMatchLocation}
           matchType={matchType} setMatchType={setMatchType}
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}

@@ -60,6 +60,7 @@ export interface MatchRecord {
   entry_name: string;
   breed: string;
   opponent: string;
+  opponent_breed?: string;
   location: string;
   type: string;
   outcome: string;

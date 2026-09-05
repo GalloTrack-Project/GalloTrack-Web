@@ -13,6 +13,8 @@ type Props = {
   setMatchDate: (v: string) => void;
   opponentName: string;
   setOpponentName: (v: string) => void;
+  opponentBreed: string;
+  setOpponentBreed: (v: string) => void;
   matchLocation: string;
   setMatchLocation: (v: string) => void;
   matchType: string;
@@ -33,6 +35,7 @@ export default function MatchForm({
   selectedFowlForMatch, setSelectedFowlForMatch,
   matchDate, setMatchDate,
   opponentName, setOpponentName,
+  opponentBreed, setOpponentBreed,
   matchLocation, setMatchLocation,
   matchType, setMatchType,
   matchOutcome, setMatchOutcome,
@@ -60,10 +63,14 @@ export default function MatchForm({
           <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-semibold outline-none focus:border-emerald-500" />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Opponent Entry Identity</label>
           <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Opponent Breed / Rasa</label>
+          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Arena Location Hub</label>
