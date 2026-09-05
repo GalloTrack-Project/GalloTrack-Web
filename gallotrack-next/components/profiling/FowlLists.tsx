@@ -13,16 +13,15 @@ import {
 import Pagination from '@/components/Pagination';
 
 type Props = {
-  tab: 'males' | 'females' | 'archived' | 'deceased' | 'deleted';
+  tab: 'males' | 'females' | 'archived' | 'deceased';
   fowls: FowlRecord[];
   maleActiveFowls: FowlRecord[];
   femaleActiveFowls: FowlRecord[];
   archivedFowls: FowlRecord[];
   deceasedFowls: FowlRecord[];
-  deletedFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   loading: boolean;
-  setProfilingSubTab: (tab: 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'deleted' | 'matchForm') => void;
+  setProfilingSubTab: (tab: 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'matchForm') => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleRestoreFowlOnly: (id: number) => void;
   setSelectedFowlForDetails: (fowl: FowlRecord) => void;
@@ -170,7 +169,6 @@ export default function FowlLists({
   femaleActiveFowls,
   archivedFowls,
   deceasedFowls,
-  deletedFowls,
   setProfilingSubTab,
   setPendingPermanentDelete,
   handleRestoreFowlOnly,
@@ -187,7 +185,7 @@ export default function FowlLists({
   }, [tab]);
 
   const paginatedBirds = useMemo(() => {
-    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : tab === 'deleted' ? deletedFowls : deceasedFowls;
+    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : deceasedFowls;
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
   }, [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, page]);
@@ -261,28 +259,6 @@ export default function FowlLists({
     );
   }
 
-  if (tab === 'deleted') {
-    const { pagedList, totalPages } = paginatedBirds;
-    return (
-      <div className="space-y-4 animate-fadeIn">
-        {paginatedBirds.list.length === 0 ? (
-          <div className="bg-white p-12 text-center rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto">🗑️</div>
-            <h3 className="text-base font-extrabold text-slate-800">Trash is Empty</h3>
-            <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">No soft-deleted fowl records. Deleted fowl are moved here and can be restored anytime.</p>
-          </div>
-        ) : (
-          <>
-            {pagedList.map((fowl, index) => (
-              <DeletedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} onRestore={handleRestoreFowlOnly} />
-            ))}
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </>
-        )}
-      </div>
-    );
-  }
-
   // deceased
   const { pagedList: deceasedPagedList, totalPages: deceasedTotalPages } = paginatedBirds;
   return (
@@ -301,33 +277,6 @@ export default function FowlLists({
           <Pagination currentPage={page} totalPages={deceasedTotalPages} onPageChange={setPage} />
         </>
       )}
-    </div>
-  );
-}
-
-function DeletedCard({ fowl, index, onDelete, onRestore }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void; onRestore: (id: number) => void }) {
-  return (
-    <div className="antigravity-hover bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm flex items-center gap-4 group animate-slideUp" style={{ animationDelay: `${index * 30}ms` }}>
-      <div className="w-14 h-14 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200/80 flex items-center justify-center relative shadow-inner">
-        {fowl.image_url ? (
-          <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-xl">{fowl.gender === 'Male' ? '🐓' : '🐔'}</span>
-        )}
-        <span className="absolute top-1 left-1 text-[8px] bg-slate-800 text-white px-1.5 py-0.5 rounded-full font-bold">🗑️</span>
-      </div>
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-extrabold text-slate-800 truncate">{fowl.name}</h4>
-          <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase">{fowl.breed}</span>
-          <span className="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full uppercase">🗑️ Trashed</span>
-        </div>
-        <p className="text-[10px] text-slate-400 font-semibold">Moved to trash — soft deleted. Can be restored anytime.</p>
-      </div>
-      <div className="flex gap-2 shrink-0">
-        <button type="button" onClick={() => onRestore(fowl.id)} title="Restore this fowl" className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">↺</button>
-        <button type="button" onClick={() => onDelete(fowl)} title="Delete permanently" className="w-8 h-8 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
-      </div>
     </div>
   );
 }

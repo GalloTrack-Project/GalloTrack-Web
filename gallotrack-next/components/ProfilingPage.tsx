@@ -13,7 +13,7 @@ export default function ProfilingPage() {
   const router = useRouter();
 
   const {
-    fowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, deletedFowls,
+    fowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
     matchHistory,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newBirthdate, handleNewBirthdateChange,
@@ -62,7 +62,6 @@ export default function ProfilingPage() {
           <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'females' ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🐔 Hen (Pullet) ({femaleActiveFowls.length})</button>
           <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>📦 Archived ({archivedFowls.length})</button>
           <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>💀 Deceased ({deceasedFowls.length})</button>
-          <button type="button" onClick={() => setProfilingSubTab('deleted')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deleted' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🗑️ Trash ({deletedFowls.length})</button>
           <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>⚔️ Match Logs</button>
         </div>
       </div>
@@ -106,7 +105,7 @@ export default function ProfilingPage() {
         />
       )}
 
-      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'deleted') && (
+      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased') && (
         <FowlLists
           tab={profilingSubTab}
           fowls={fowls}
@@ -114,7 +113,6 @@ export default function ProfilingPage() {
           femaleActiveFowls={femaleActiveFowls}
           archivedFowls={archivedFowls}
           deceasedFowls={deceasedFowls}
-          deletedFowls={deletedFowls}
           matchHistory={matchHistory}
           loading={loading}
           setProfilingSubTab={setProfilingSubTab}

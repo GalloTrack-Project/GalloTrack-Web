@@ -31,7 +31,7 @@ export async function updateFowl(id: number, payload: Record<string, unknown>): 
 }
 
 export async function deleteFowl(id: number): Promise<{ error?: string }> {
-  const { error } = await supabase.from('fowl').update({ status: 'Deleted', archive_reason: 'Moved to trash' }).eq('id', id);
+  const { error } = await supabase.from('fowl').delete().eq('id', id);
   if (error) return { error: error.message };
   return {};
 }

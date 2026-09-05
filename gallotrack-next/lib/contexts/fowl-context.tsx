@@ -51,7 +51,6 @@ interface FowlContextValue {
   femaleActiveFowls: FowlRecord[];
   archivedFowls: FowlRecord[];
   deceasedFowls: FowlRecord[];
-  deletedFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   setMatchHistory: React.Dispatch<React.SetStateAction<MatchRecord[]>>;
   loading: boolean;
@@ -227,7 +226,6 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
   const archivedFowls = fowls.filter(f => f.status === 'Archived');
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
-  const deletedFowls = fowls.filter(f => f.status === 'Deleted');
   const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemaleHelper(f.gender));
 
@@ -599,13 +597,13 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     if (result.error) {
       ui.showToastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage(`${ui.pendingPermanentDelete.name} moved to trash.`, 'success');
+      ui.showToastMessage(`${ui.pendingPermanentDelete.name} permanently deleted.`, 'success');
       if (ui.selectedFowlForDetails?.id === ui.pendingPermanentDelete.id) ui.setSelectedFowlForDetails(null);
       ui.setPendingPermanentDelete(null);
-      fetchDatabaseResources();
+      setFowls(prev => prev.filter(f => f.id !== ui.pendingPermanentDelete!.id));
     }
     ui.setPermanentDeleting(false);
-  }, [fetchDatabaseResources, ui]);
+  }, [ui, setFowls]);
 
   const handleMarkFowlDeceased = useCallback(async () => {
     if (!ui.selectedFowlForDeceased) return;
@@ -703,7 +701,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const getSiblingRelationsLocal = useCallback((f: FowlRecord) => getSiblingRelationsHelper(f, fowls), [fowls]);
 
   const value: FowlContextValue = {
-    fowls, setFowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, deletedFowls,
+    fowls, setFowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
     matchHistory, setMatchHistory, loading, setLoading,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newColor, setNewColor, newColorCategory, setNewColorCategory,

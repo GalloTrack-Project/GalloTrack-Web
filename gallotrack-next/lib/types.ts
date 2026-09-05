@@ -106,7 +106,7 @@ export interface PairingAnalytics {
 
 export type PageId = 'login' | 'dashboard' | 'profiling' | 'marketplace' | 'lineage' | 'profile' | 'settings';
 
-export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'deleted' | 'match' | 'matchForm';
+export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'match' | 'matchForm';
 
 export type ToastState = {
   show: boolean;
