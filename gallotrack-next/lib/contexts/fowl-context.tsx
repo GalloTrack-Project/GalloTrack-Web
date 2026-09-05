@@ -505,7 +505,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
           await strainService.saveCustomStrain(s, availableStrains);
         }
         const createdGender = newGender || 'Rooster';
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview('');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview('');
         fetchDatabaseResources();
         ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
       }
