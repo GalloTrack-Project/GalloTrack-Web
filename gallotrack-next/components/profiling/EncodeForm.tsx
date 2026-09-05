@@ -195,7 +195,8 @@ export default function EncodeForm({
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     const trimmed = strainQuery.trim();
                     if (trimmed) {
                       addStrain(trimmed);
