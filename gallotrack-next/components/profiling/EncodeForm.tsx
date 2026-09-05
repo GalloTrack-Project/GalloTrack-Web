@@ -211,11 +211,12 @@ export default function EncodeForm({
                 </button>
               </div>
               {selectedStrains.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2.5">
                   {selectedStrains.map((s, i) => (
-                    <span key={`${s}-${i}`} className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      🧬 {s}
-                      <button type="button" onClick={() => removeStrain(i)} className="ml-0.5 w-4 h-4 rounded-full bg-emerald-200 hover:bg-rose-500 hover:text-white text-emerald-700 flex items-center justify-center text-[8px] font-black transition-all cursor-pointer">✕</button>
+                    <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white border border-slate-200 shadow-sm text-slate-700 text-[11px] font-semibold px-3 py-1.5 rounded-lg group hover:border-emerald-300 transition-all">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                      {s}
+                      <button type="button" onClick={() => removeStrain(i)} className="ml-0.5 w-5 h-5 rounded-md bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-400 hover:text-white flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
                     </span>
                   ))}
                 </div>
@@ -268,7 +269,7 @@ export default function EncodeForm({
                 document.body
               )}
             </div>
-            <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Choose an existing strain or type a new one, then click <strong>Add</strong> — you can add multiple genetic strains.</p>
+            <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Select a strain from the list or type a custom name, then click <strong className="text-emerald-600">Add</strong>. You can add multiple genetic strains.</p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
