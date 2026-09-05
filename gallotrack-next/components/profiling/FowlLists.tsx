@@ -31,13 +31,17 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onDelete }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onDelete: (f: FowlRecord) => void }) {
+function FowlCard({ fowl, index, gender, onDelete, onArchive, onDeceased }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onDelete: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void }) {
   const siblings = getSiblingRelations(fowl, []).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, []);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-      <button type="button" onClick={() => onDelete(fowl)} title="Delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
+        <button type="button" onClick={() => onArchive(fowl)} title="Archive this fowl" className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 text-amber-500 hover:bg-amber-500 hover:text-white hover:border-amber-500 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">📦</button>
+        <button type="button" onClick={() => onDeceased(fowl)} title="Mark as deceased" className="w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">💀</button>
+        <button type="button" onClick={() => onDelete(fowl)} title="Delete permanently" className="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 text-slate-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
+      </div>
       <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
       </div>
@@ -155,6 +159,8 @@ export default function FowlLists({
   setProfilingSubTab,
   setPendingPermanentDelete,
   handleRestoreFowlOnly,
+  setSelectedFowlForArchive,
+  setSelectedFowlForDeceased,
 }: Props) {
   const [page, setPage] = useState(1);
   const prevTabRef = React.useRef(tab);
@@ -209,7 +215,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onDelete={setPendingPermanentDelete} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onDelete={setPendingPermanentDelete} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
