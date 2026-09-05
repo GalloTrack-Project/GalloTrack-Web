@@ -24,7 +24,7 @@ export async function fetchStrains(): Promise<string[]> {
   if (missing.length > 0) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('strains').insert(missing.map((name) => ({ name, is_custom: false, created_by: user?.id || null })));
+      await supabase.from('strains').insert(missing.map((name) => ({ name, is_custom: false })));
       names = [...names, ...missing];
     } catch { /* non-critical */ }
   }
@@ -37,10 +37,9 @@ export async function saveCustomStrain(name: string, existing: string[]): Promis
   if (!cleaned) return false;
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from('strains')
-      .insert({ name: cleaned, is_custom: true, created_by: user?.id || null })
+      .insert({ name: cleaned, is_custom: true })
       .select();
     if (error) {
       if ((error.message || '').toLowerCase().includes('duplicate') || error.code === '23505') {
@@ -91,7 +90,7 @@ export async function fetchLegColors(): Promise<string[]> {
   if (missing.length > 0) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('leg_colors').insert(missing.map((name) => ({ name, is_custom: false, created_by: user?.id || null })));
+      await supabase.from('leg_colors').insert(missing.map((name) => ({ name, is_custom: false })));
       names = [...names, ...missing];
     } catch { /* non-critical */ }
   }
