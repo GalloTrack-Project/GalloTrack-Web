@@ -493,7 +493,9 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         ui.showToastMessage(`Database Error: ${result.error}`, 'error');
       } else {
         ui.showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        await strainService.saveCustomStrain(newBreed, availableStrains);
+        for (const s of selectedStrains) {
+          await strainService.saveCustomStrain(s, availableStrains);
+        }
         const createdGender = newGender || 'Rooster';
         setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview('');
         fetchDatabaseResources();
