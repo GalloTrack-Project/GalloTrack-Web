@@ -405,10 +405,13 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
 
   // ── Strain/leg-color CRUD ──
   const deleteCustomStrain = useCallback(async (name: string): Promise<void> => {
+    setAvailableStrains((prev) => prev.filter((s) => s !== name));
+    setCustomStrainNames((prev) => { const n = new Set(prev); n.delete(name); return n; });
+    setSelectedStrains((prev) => prev.filter((s) => s !== name));
     const result = await strainService.deleteStrain(name);
-    if (!result.error) {
-      setAvailableStrains((prev) => prev.filter((s) => s !== name));
-      setCustomStrainNames((prev) => { const n = new Set(prev); n.delete(name); return n; });
+    if (result.error) {
+      ui.showToastMessage(`Failed to delete "${name}" from database.`, 'error');
+    } else {
       ui.showToastMessage(`Strain "${name}" deleted.`, 'success');
     }
   }, [ui]);
