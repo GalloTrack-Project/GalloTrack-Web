@@ -490,9 +490,9 @@ export default function EncodeForm({
         </div>
         <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-2xl text-xs shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-          <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Committing Node...' : 'Commit Node Objects'}</span>
+          <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Registering...' : 'REGISTER'}</span>
         </button>
-        <p className="text-center text-[9px] text-slate-400 font-semibold mt-2.5 tracking-wide">🔒 Verify lineage accuracy before committing node objects to the cluster registry.</p>
+        <p className="text-center text-[9px] text-slate-400 font-semibold mt-2.5 tracking-wide">🔒 Verify lineage accuracy before registering to the cluster registry.</p>
       </div>
     </form>
   );
