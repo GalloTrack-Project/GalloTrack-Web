@@ -609,8 +609,8 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
           : age && !isNaN(Number(age))
           ? `${Number(age)} Months`
           : 'N/A',
-        weight: weight ? `${weight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
-        height: height ? `${height.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
+        weight: weight ? `${Math.round(Number(weight.toString().replace(/[^0-9.]/g, '')) * 10) / 10} kg` : 'N/A',
+        height: height ? `${Math.round(Number(height.toString().replace(/[^0-9.]/g, '')) * 10) / 10} cm` : 'N/A',
         leg_color: newLegColor.trim() ? newLegColor.trim() : 'N/A',
         sire: sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock',
         dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
@@ -878,8 +878,8 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
           : editAge && !isNaN(Number(editAge))
           ? `${Number(editAge)} Months`
           : 'N/A',
-        weight: editWeight ? `${editWeight.toString().replace(/[^0-9.]/g, '')} kg` : 'N/A',
-        height: editHeight ? `${editHeight.toString().replace(/[^0-9.]/g, '')} cm` : 'N/A',
+        weight: editWeight ? `${Math.round(Number(editWeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10} kg` : 'N/A',
+        height: editHeight ? `${Math.round(Number(editHeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10} cm` : 'N/A',
         leg_color: editLegColor.trim() ? editLegColor.trim() : 'N/A',
         sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
         dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',
