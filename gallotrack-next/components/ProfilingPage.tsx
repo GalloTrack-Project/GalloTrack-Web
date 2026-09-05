@@ -106,7 +106,7 @@ export default function ProfilingPage() {
         />
       )}
 
-      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased') && (
+      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'deleted') && (
         <FowlLists
           tab={profilingSubTab}
           fowls={fowls}
@@ -114,6 +114,7 @@ export default function ProfilingPage() {
           femaleActiveFowls={femaleActiveFowls}
           archivedFowls={archivedFowls}
           deceasedFowls={deceasedFowls}
+          deletedFowls={deletedFowls}
           matchHistory={matchHistory}
           loading={loading}
           setProfilingSubTab={setProfilingSubTab}
