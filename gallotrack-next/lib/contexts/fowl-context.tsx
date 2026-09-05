@@ -434,11 +434,13 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
       setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
       setCustomStrainNames((prev) => new Set([...prev, trimmed]));
-      strainService.saveCustomStrain(trimmed, availableStrains).catch(() => {});
+      strainService.saveCustomStrain(trimmed, availableStrains).then((saved) => {
+        if (!saved) ui.showToastMessage(`Strain "${trimmed}" saved locally only.`, 'warning');
+      }).catch(() => {});
     }
     setStrainQuery('');
     setNewBreed('');
-  }, [selectedStrains, availableStrains, setNewBreed]);
+  }, [selectedStrains, availableStrains, setNewBreed, ui]);
 
   const removeStrain = useCallback((index: number) => {
     setSelectedStrains((prev) => prev.filter((_, i) => i !== index));

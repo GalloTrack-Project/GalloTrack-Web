@@ -35,21 +35,23 @@ export async function fetchStrains(): Promise<string[]> {
 export async function saveCustomStrain(name: string, existing: string[]): Promise<boolean> {
   const cleaned = name.trim();
   if (!cleaned) return false;
-  if (existing.some((s) => s.toLowerCase() === cleaned.toLowerCase())) return false;
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('strains')
-      .insert({ name: cleaned, is_custom: true, created_by: user?.id || null });
+      .insert({ name: cleaned, is_custom: true, created_by: user?.id || null })
+      .select();
     if (error) {
       if ((error.message || '').toLowerCase().includes('duplicate') || error.code === '23505') {
-        return false;
+        return true;
       }
+      console.error('Failed to save strain:', error.message, error.code);
       return false;
     }
     return true;
-  } catch {
+  } catch (err) {
+    console.error('Failed to save strain:', err);
     return false;
   }
 }
