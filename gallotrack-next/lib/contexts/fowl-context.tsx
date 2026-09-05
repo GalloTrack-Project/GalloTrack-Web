@@ -319,10 +319,10 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
   const validationPassed = newName.trim() !== '' && (selectedStrains.length > 0 || newBreed.trim() !== '') && newGender !== '' && age.trim() !== '';
-  const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct)) && Number(sirePct) > 0 && Number(damPct) > 0;
   const sireGen = generationOfNameHelper(sireName, fowls, new Map<string, number>(), new Set<string>());
   const damGen = generationOfNameHelper(damName, fowls, new Map<string, number>(), new Set<string>());
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
+  const bloodlineVerified = hasAnyParent && sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct)) && Number(sirePct) > 0 && Number(damPct) > 0;
   const offspringGen = hasAnyParent ? Math.max(sireGen, damGen) + 1 : 0;
   const offspringGenInfo = generationInfo(offspringGen);
   const sireGenInfo = generationInfo(sireGen);
