@@ -25,12 +25,15 @@ import {
   getMilestoneInfo as getMilestoneInfoHelper,
   getArchiveBadgeStyle,
   matchSurvivability,
-  calculatePairingStats,
   cleanPct as cleanPctHelper,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
 import { generateColorReport } from '@/lib/color-genetics';
 import { generateBreedCompliance } from '@/lib/breed-standards';
+import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
+import * as fowlService from '@/lib/services/fowl-service';
+import * as matchService from '@/lib/services/match-service';
+import * as strainService from '@/lib/services/strain-service';
 import type { BloodlineReport } from '@/lib/bloodlines';
 import type {
   FowlRecord,
@@ -48,6 +51,7 @@ interface FowlContextValue {
   femaleActiveFowls: FowlRecord[];
   archivedFowls: FowlRecord[];
   deceasedFowls: FowlRecord[];
+  deletedFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   setMatchHistory: React.Dispatch<React.SetStateAction<MatchRecord[]>>;
   loading: boolean;
@@ -207,19 +211,27 @@ export function useFowl(): FowlContextValue {
   return ctx;
 }
 
+function sanitizeInput(value: string): string {
+  return value.replace(/[<>&"'/]/g, '').trim();
+}
+
 export function FowlProvider({ children }: { children: React.ReactNode }) {
   const ui = useUI();
 
+  // ── Core data state ──
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
-  const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
-  const archivedFowls = fowls.filter(f => f.status === 'Archived');
-  const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
-  const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
-  const femaleActiveFowls = activeFowls.filter(f => isFemaleHelper(f.gender));
-
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // ── Derived lists ──
+  const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
+  const archivedFowls = fowls.filter(f => f.status === 'Archived');
+  const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
+  const deletedFowls = fowls.filter(f => f.status === 'Deleted');
+  const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
+  const femaleActiveFowls = activeFowls.filter(f => isFemaleHelper(f.gender));
+
+  // ── New fowl form state ──
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('');
   const [newGender, setNewGender] = useState('');
@@ -239,11 +251,11 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const [age, setAge] = useState('');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
-
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
 
+  // ── Match form state ──
   const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
   const [matchDate, setMatchDate] = useState('');
   const [opponentName, setOpponentName] = useState('');
@@ -255,6 +267,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
+  // ── Edit form state ──
   const [editName, setEditName] = useState('');
   const [editBreed, setEditBreed] = useState('');
   const [editGender, setEditGender] = useState('');
@@ -273,233 +286,33 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const [editSirePct, setEditSirePct] = useState<number | string>(100);
   const [editDamPct, setEditDamPct] = useState<number | string>(100);
 
+  // ── Dynamic dropdowns ──
   const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
   const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
   const [strainQuery, setStrainQuery] = useState('');
   const [strainOpen, setStrainOpen] = useState(false);
-
   const [availableLegColors, setAvailableLegColors] = useState<string[]>(LEG_COLOR_LIST);
   const [customLegColorNames, setCustomLegColorNames] = useState<Set<string>>(new Set());
   const [legColorQuery, setLegColorQuery] = useState('');
   const [legColorOpen, setLegColorOpen] = useState(false);
 
+  // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
   const [archiveReasonInput, setArchiveReasonInput] = useState('SOLD');
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain' | 'pairing'>('individual');
   const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
-
-  const fetchStrains = useCallback(async (): Promise<string[]> => {
-    let names: string[] = [];
-    let allNames: string[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('strains')
-        .select('name')
-        .is('deleted_at', null)
-        .order('name', { ascending: true });
-      if (!error && data) {
-        names = data.map((row: { name: string }) => row.name);
-      }
-      const { data: allData } = await supabase.from('strains').select('name');
-      if (allData) allNames = allData.map((r: { name: string }) => r.name);
-    } catch (err) {
-      console.error('Failed to fetch strains:', err);
-    }
-    const missing = STRAIN_LIST.filter((d) => !allNames.some((n) => n.toLowerCase() === d.toLowerCase()));
-    if (missing.length > 0) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        await supabase.from('strains').insert(missing.map((name) => ({ name, is_custom: false, created_by: user?.id || null })));
-        names = [...names, ...missing];
-      } catch { /* non-critical */ }
-    }
-    const merged = Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
-    setAvailableStrains(merged);
-    setCustomStrainNames(new Set(merged));
-    return merged;
-  }, [setAvailableStrains, setCustomStrainNames]);
-
-  const saveCustomStrain = useCallback(async (name?: string): Promise<void> => {
-    const cleaned = (name || '').trim();
-    if (!cleaned) return;
-    if (availableStrains.some((s) => s.toLowerCase() === cleaned.toLowerCase())) return;
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('strains')
-        .insert({ name: cleaned, is_custom: true, created_by: user?.id || null });
-      if (error) {
-        if ((error.message || '').toLowerCase().includes('duplicate') || error.code === '23505') {
-          fetchStrains();
-        }
-        return;
-      }
-      setAvailableStrains((prev) =>
-        Array.from(new Set([...prev, cleaned])).sort((a, b) => a.localeCompare(b))
-      );
-    } catch { /* non-critical, fowl still saves */ }
-  }, [availableStrains, fetchStrains, setAvailableStrains]);
-
-  const deleteCustomStrain = useCallback(async (name: string): Promise<void> => {
-    const cleaned = name.trim();
-    if (!cleaned) return;
-    try {
-      const { error } = await supabase
-        .from('strains')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('name', cleaned)
-        .is('deleted_at', null);
-      if (!error) {
-        setAvailableStrains((prev) => prev.filter((s) => s !== cleaned));
-        setCustomStrainNames((prev) => { const n = new Set(prev); n.delete(cleaned); return n; });
-        ui.showToastMessage(`Strain "${cleaned}" deleted.`, 'success');
-      }
-    } catch { /* non-critical */ }
-  }, [ui, setAvailableStrains, setCustomStrainNames]);
-
-  const fetchLegColors = useCallback(async (): Promise<string[]> => {
-    let names: string[] = [];
-    let allNames: string[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('leg_colors')
-        .select('name')
-        .is('deleted_at', null)
-        .order('name', { ascending: true });
-      if (!error && data) {
-        names = data.map((row: { name: string }) => row.name);
-      }
-      const { data: allData } = await supabase.from('leg_colors').select('name');
-      if (allData) allNames = allData.map((r: { name: string }) => r.name);
-    } catch (err) {
-      console.error('Failed to fetch leg colors:', err);
-    }
-    const missing = LEG_COLOR_LIST.filter((d) => !allNames.some((n) => n.toLowerCase() === d.toLowerCase()));
-    if (missing.length > 0) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        await supabase.from('leg_colors').insert(missing.map((name) => ({ name, is_custom: false, created_by: user?.id || null })));
-        names = [...names, ...missing];
-      } catch { /* non-critical */ }
-    }
-    const merged = Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
-    setAvailableLegColors(merged);
-    setCustomLegColorNames(new Set(merged));
-    return merged;
-  }, [setAvailableLegColors, setCustomLegColorNames]);
-
-  const deleteCustomLegColor = useCallback(async (name: string): Promise<void> => {
-    const cleaned = name.trim();
-    if (!cleaned) return;
-    try {
-      const { error } = await supabase
-        .from('leg_colors')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('name', cleaned)
-        .is('deleted_at', null);
-      if (!error) {
-        setAvailableLegColors((prev) => prev.filter((s) => s !== cleaned));
-        setCustomLegColorNames((prev) => { const n = new Set(prev); n.delete(cleaned); return n; });
-        ui.showToastMessage(`Leg color "${cleaned}" deleted.`, 'success');
-      }
-    } catch { /* non-critical */ }
-  }, [ui, setAvailableLegColors, setCustomLegColorNames]);
-
-  const fetchDatabaseResources = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const activeUserId = user?.id;
-
-      if (!activeUserId) {
-        setFowls([]);
-        setMatchHistory([]);
-        return;
-      }
-
-      const { data: fowlData, error: fowlErr } = await supabase
-        .from('fowl')
-        .select('*')
-        .eq('user_id', activeUserId)
-        .order('id', { ascending: false });
-
-      if (!fowlErr && fowlData) {
-        setFowls(fowlData);
-      } else {
-        setFowls([]);
-      }
-
-      const { data: matchData, error: matchErr } = await supabase
-        .from('match')
-        .select('*')
-        .eq('user_id', activeUserId)
-        .order('id', { ascending: false });
-
-      if (!matchErr && matchData) {
-        setMatchHistory(matchData);
-      } else {
-        setMatchHistory([]);
-      }
-      fetchStrains();
-      fetchLegColors();
-    } catch (err) {
-      console.error('Failed to fetch database resources:', err);
-      setFowls([]);
-      setMatchHistory([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchStrains, fetchLegColors, setLoading, setFowls, setMatchHistory]);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
-    if (ui.currentPage !== 'login') {
-      const controller = new AbortController();
-      (async () => {
-        setLoading(true);
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          const activeUserId = user?.id;
+    const id = setInterval(() => setNowMs(Date.now()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
-          if (!activeUserId || controller.signal.aborted) {
-            setFowls([]);
-            setMatchHistory([]);
-            return;
-          }
+  // ── Analytics (memoized) ──
+  const analytics = useFowlAnalytics(fowls, matchHistory, dateRangePreset, nowMs, activeFowls);
 
-          const { data: fowlData, error: fowlErr } = await supabase
-            .from('fowl')
-            .select('*')
-            .eq('user_id', activeUserId)
-            .order('id', { ascending: false });
-
-          if (!fowlErr && fowlData) setFowls(fowlData);
-          else setFowls([]);
-
-          const { data: matchData, error: matchErr } = await supabase
-            .from('match')
-            .select('*')
-            .eq('user_id', activeUserId)
-            .order('id', { ascending: false });
-
-          if (!matchErr && matchData) setMatchHistory(matchData);
-          else setMatchHistory([]);
-
-          fetchStrains();
-          fetchLegColors();
-        } catch (err) {
-          console.error('Failed to fetch database resources:', err);
-          setFowls([]);
-          setMatchHistory([]);
-        } finally {
-          setLoading(false);
-        }
-      })();
-      return () => controller.abort();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ui.currentPage]);
-
+  // ── Generation helpers for new fowl form ──
   const nextNodeId = `GT-${String(Math.max(0, ...fowls.map(f => f.id)) + 1).padStart(4, '0')}`;
   const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
@@ -514,6 +327,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const damGenInfo = generationInfo(damGen);
   const computedBloodlinePct = generationPurity(offspringGen);
 
+  // ── Age/birthdate handlers ──
   const handleAgeChange = useCallback((val: string, genderVal: string = '') => {
     setAge(val);
     if (val.trim() === '' || isNaN(Number(val))) {
@@ -521,7 +335,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } else {
       setNewGrowthStage(autoComputeGrowthStage(Number(val), genderVal || newGender));
     }
-  }, [newGender, setAge, setNewGrowthStage]);
+  }, [newGender]);
 
   const handleEditAgeChange = useCallback((val: string, genderVal: string = '') => {
     setEditAge(val);
@@ -530,7 +344,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } else {
       setEditGrowthStage(autoComputeGrowthStage(Number(val), genderVal || editGender));
     }
-  }, [editGender, setEditAge, setEditGrowthStage]);
+  }, [editGender]);
 
   const handleNewBirthdateChange = useCallback((val: string) => {
     setNewBirthdate(val);
@@ -542,7 +356,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setAge('');
       setNewGrowthStage('');
     }
-  }, [newGender, setNewBirthdate, setAge, setNewGrowthStage]);
+  }, [newGender]);
 
   const handleEditBirthdateChange = useCallback((val: string) => {
     setEditBirthdate(val);
@@ -551,12 +365,62 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setEditAge(String(parts.totalMonths));
       setEditGrowthStage(autoComputeGrowthStage(parts.totalMonths, editGender || 'Rooster'));
     }
-  }, [editGender, setEditBirthdate, setEditAge, setEditGrowthStage]);
+  }, [editGender]);
 
-  const sanitizeInput = useCallback((value: string): string => {
-    return value.replace(/[<>&"'/]/g, '').trim();
+  // ── Data fetching ──
+  const fetchDatabaseResources = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [fowlData, matchData, strainNames, legColorNames] = await Promise.all([
+        fowlService.fetchFowls(),
+        matchService.fetchMatches(),
+        strainService.fetchStrains(),
+        strainService.fetchLegColors(),
+      ]);
+      setFowls(fowlData);
+      setMatchHistory(matchData);
+      setAvailableStrains(strainNames);
+      setCustomStrainNames(new Set(strainNames));
+      setAvailableLegColors(legColorNames);
+      setCustomLegColorNames(new Set(legColorNames));
+    } catch (err) {
+      console.error('Failed to fetch database resources:', err);
+      setFowls([]);
+      setMatchHistory([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    if (ui.currentPage !== 'login') {
+      const controller = new AbortController();
+      fetchDatabaseResources();
+      return () => controller.abort();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ui.currentPage]);
+
+  // ── Strain/leg-color CRUD ──
+  const deleteCustomStrain = useCallback(async (name: string): Promise<void> => {
+    const result = await strainService.deleteStrain(name);
+    if (!result.error) {
+      setAvailableStrains((prev) => prev.filter((s) => s !== name));
+      setCustomStrainNames((prev) => { const n = new Set(prev); n.delete(name); return n; });
+      ui.showToastMessage(`Strain "${name}" deleted.`, 'success');
+    }
+  }, [ui]);
+
+  const deleteCustomLegColor = useCallback(async (name: string): Promise<void> => {
+    const result = await strainService.deleteLegColor(name);
+    if (!result.error) {
+      setAvailableLegColors((prev) => prev.filter((s) => s !== name));
+      setCustomLegColorNames((prev) => { const n = new Set(prev); n.delete(name); return n; });
+      ui.showToastMessage(`Leg color "${name}" deleted.`, 'success');
+    }
+  }, [ui]);
+
+  // ── Fowl CRUD ──
   const handleAddFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -565,29 +429,15 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     try {
       if (selectedImage) {
         setUploadingImage(true);
-        const fileExt = selectedImage.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `fowl/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('fowl-images')
-          .upload(filePath, selectedImage);
-
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage
-          .from('fowl-images')
-          .getPublicUrl(filePath);
-
-        publicImageUrl = data.publicUrl;
+        const result = await fowlService.uploadFowlImage(selectedImage);
+        if (result.error) throw new Error(result.error);
+        publicImageUrl = result.url || '';
       }
 
       const sPct = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Number(sirePct);
       const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Number(damPct);
-      const calculatedBloodline = computedBloodlinePct;
 
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
-
       if (!activeUserId) {
         ui.showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
         return;
@@ -618,18 +468,17 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
         sire_pct: sPct,
         dam_pct: dPct,
-        bloodline_pct: calculatedBloodline,
+        bloodline_pct: computedBloodlinePct,
         status: 'Active',
         image_url: publicImageUrl,
       };
 
-      const { error: insertErr } = await supabase.from('fowl').insert([payload]);
-
-      if (insertErr) {
-        ui.showToastMessage(`Database Error: ${insertErr.message}`, 'error');
+      const result = await fowlService.insertFowl(payload);
+      if (result.error) {
+        ui.showToastMessage(`Database Error: ${result.error}`, 'error');
       } else {
         ui.showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
-        saveCustomStrain(newBreed);
+        await strainService.saveCustomStrain(newBreed, availableStrains);
         const createdGender = newGender || 'Rooster';
         setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setImagePreview('');
         fetchDatabaseResources();
@@ -641,7 +490,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, sanitizeInput, saveCustomStrain, fetchDatabaseResources, ui, setLoading, setUploadingImage, setNewName, setNewBreed, setNewGender, setSireName, setDamName, setWeight, setHeight, setNewLegColor, setAge, setNewBirthdate, setNewGrowthStage, setSelectedImage, setStrainQuery, setStrainOpen, setImagePreview]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, availableStrains, fetchDatabaseResources, ui]);
 
   const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -658,25 +507,13 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       let videoUrl = '';
       if (matchVideoFile) {
         setUploadingVideo(true);
-        const fileExt = matchVideoFile.name.split('.').pop();
-        const fileName = `match-videos/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('match-videos')
-          .upload(fileName, matchVideoFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data } = await supabase.storage
-          .from('match-videos')
-          .getPublicUrl(fileName);
-
-        videoUrl = data.publicUrl;
+        const result = await matchService.uploadMatchVideo(matchVideoFile);
+        if (result.error) throw new Error(result.error);
+        videoUrl = result.url || '';
         setUploadingVideo(false);
       }
 
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
-
       if (!activeUserId) {
         ui.showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
         return;
@@ -697,10 +534,9 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         video_url: videoUrl || null
       };
 
-      const { error: insertErr } = await supabase.from('match').insert([payload]);
-
-      if (insertErr) {
-        throw insertErr;
+      const result = await matchService.insertMatch(payload);
+      if (result.error) {
+        throw new Error(result.error);
       } else {
         ui.showToastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
@@ -713,123 +549,78 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, sanitizeInput, fetchDatabaseResources, ui, setLoading, setUploadingVideo, setOpponentName, setOpponentBreed, setMatchLocation, setMatchVideoFile, setMatchPostFight]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, fetchDatabaseResources, ui]);
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;
     setLoading(true);
-    try {
-      const { error: updateErr } = await supabase
-        .from('fowl')
-        .update({ status: 'Archived', archive_reason: archiveReasonInput })
-        .eq('id', ui.selectedFowlForArchive!.id);
-
-      if (updateErr) {
-        ui.showToastMessage(updateErr.message, 'error');
-      } else {
-        ui.showToastMessage(`Gamefowl archived under ${archiveReasonInput} status log.`, 'warning');
-        if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
-        ui.setSelectedFowlForArchive(null);
-        fetchDatabaseResources();
-      }
-    } catch (err: unknown) {
-      ui.showToastMessage(err instanceof Error ? err.message : String(err), 'error');
-    } finally {
-      setLoading(false);
+    const result = await fowlService.archiveFowl(ui.selectedFowlForArchive.id, archiveReasonInput);
+    if (result.error) {
+      ui.showToastMessage(result.error, 'error');
+    } else {
+      ui.showToastMessage(`Gamefowl archived under ${archiveReasonInput} status log.`, 'warning');
+      if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
+      ui.setSelectedFowlForArchive(null);
+      fetchDatabaseResources();
     }
-  }, [archiveReasonInput, fetchDatabaseResources, ui, setLoading]);
+    setLoading(false);
+  }, [archiveReasonInput, fetchDatabaseResources, ui]);
 
   const handleArchiveFowlOnly = useCallback(async (id: number) => {
     setLoading(true);
-    try {
-      const { error: updateErr } = await supabase
-        .from('fowl')
-        .update({ status: 'Archived' })
-        .eq('id', id);
-
-      if (updateErr) {
-        ui.showToastMessage(updateErr.message, 'error');
-      } else {
-        ui.showToastMessage('Gamefowl archived successfully.', 'warning');
-        if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
-        fetchDatabaseResources();
-      }
-    } catch (err: unknown) {
-      ui.showToastMessage(err instanceof Error ? err.message : String(err), 'error');
-    } finally {
-      setLoading(false);
+    const result = await fowlService.archiveFowl(id);
+    if (result.error) {
+      ui.showToastMessage(result.error, 'error');
+    } else {
+      ui.showToastMessage('Gamefowl archived successfully.', 'warning');
+      if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
+      fetchDatabaseResources();
     }
-  }, [fetchDatabaseResources, ui, setLoading]);
+    setLoading(false);
+  }, [fetchDatabaseResources, ui]);
 
   const handleRestoreFowlOnly = useCallback(async (id: number) => {
     setLoading(true);
-    try {
-      const { error: updateErr } = await supabase
-        .from('fowl')
-        .update({ status: 'Active' })
-        .eq('id', id);
-
-      if (updateErr) {
-        ui.showToastMessage(updateErr.message, 'error');
-      } else {
-        ui.showToastMessage('Node successfully restored to active family registry.', 'success');
-        if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
-        fetchDatabaseResources();
-      }
-    } catch (err: unknown) {
-      ui.showToastMessage(err instanceof Error ? err.message : String(err), 'error');
-    } finally {
-      setLoading(false);
+    const result = await fowlService.restoreFowl(id);
+    if (result.error) {
+      ui.showToastMessage(result.error, 'error');
+    } else {
+      ui.showToastMessage('Node successfully restored to active family registry.', 'success');
+      if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
+      fetchDatabaseResources();
     }
-  }, [fetchDatabaseResources, ui, setLoading]);
+    setLoading(false);
+  }, [fetchDatabaseResources, ui]);
 
   const handlePermanentDelete = useCallback(async () => {
     if (!ui.pendingPermanentDelete) return;
     ui.setPermanentDeleting(true);
-    try {
-      const { error: delErr } = await supabase
-        .from('fowl')
-        .delete()
-        .eq('id', ui.pendingPermanentDelete.id);
-
-      if (delErr) {
-        ui.showToastMessage(delErr.message, 'error');
-      } else {
-        ui.showToastMessage(`${ui.pendingPermanentDelete.name} permanently removed from the database.`, 'error');
-        if (ui.selectedFowlForDetails?.id === ui.pendingPermanentDelete.id) ui.setSelectedFowlForDetails(null);
-        ui.setPendingPermanentDelete(null);
-        fetchDatabaseResources();
-      }
-    } catch (err) {
-      ui.showToastMessage(err instanceof Error ? err.message : String(err), 'error');
-    } finally {
-      ui.setPermanentDeleting(false);
+    const result = await fowlService.deleteFowl(ui.pendingPermanentDelete.id);
+    if (result.error) {
+      ui.showToastMessage(result.error, 'error');
+    } else {
+      ui.showToastMessage(`${ui.pendingPermanentDelete.name} moved to trash.`, 'success');
+      if (ui.selectedFowlForDetails?.id === ui.pendingPermanentDelete.id) ui.setSelectedFowlForDetails(null);
+      ui.setPendingPermanentDelete(null);
+      fetchDatabaseResources();
     }
+    ui.setPermanentDeleting(false);
   }, [fetchDatabaseResources, ui]);
 
   const handleMarkFowlDeceased = useCallback(async () => {
     if (!ui.selectedFowlForDeceased) return;
     setLoading(true);
-    try {
-      const { error: updateErr } = await supabase
-        .from('fowl')
-        .update({ status: 'Deceased', death_reason: deathReasonInput, death_date: new Date().toISOString().split('T')[0] })
-        .eq('id', ui.selectedFowlForDeceased.id);
-
-      if (updateErr) {
-        ui.showToastMessage(updateErr.message, 'error');
-      } else {
-        ui.showToastMessage('Gamefowl node recorded under mortality archive log.', 'error');
-        if (ui.selectedFowlForDetails?.id === ui.selectedFowlForDeceased.id) ui.setSelectedFowlForDetails(null);
-        ui.setSelectedFowlForDeceased(null);
-        fetchDatabaseResources();
-      }
-    } catch (err: unknown) {
-      ui.showToastMessage(err instanceof Error ? err.message : String(err), 'error');
-    } finally {
-      setLoading(false);
+    const result = await fowlService.markFowlDeceased(ui.selectedFowlForDeceased.id, deathReasonInput);
+    if (result.error) {
+      ui.showToastMessage(result.error, 'error');
+    } else {
+      ui.showToastMessage('Gamefowl node recorded under mortality archive log.', 'error');
+      if (ui.selectedFowlForDetails?.id === ui.selectedFowlForDeceased.id) ui.setSelectedFowlForDetails(null);
+      ui.setSelectedFowlForDeceased(null);
+      fetchDatabaseResources();
     }
-  }, [deathReasonInput, fetchDatabaseResources, ui, setLoading]);
+    setLoading(false);
+  }, [deathReasonInput, fetchDatabaseResources, ui]);
 
   const handleOpenEditModal = useCallback((fowl: FowlRecord) => {
     ui.setEditingFowl(fowl);
@@ -851,7 +642,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     setEditDam(fowl.dam || '');
     setEditSirePct(isFoundationStock(fowl.sire || '') ? 100 : (fowl.sire_pct ?? 0));
     setEditDamPct(isFoundationStock(fowl.dam || '') ? 100 : (fowl.dam_pct ?? 0));
-  }, [ui, setEditName, setEditBreed, setEditGender, setEditColorCategory, setEditColor, setEditBehaviorTrait, setEditEyeVariant, setEditAge, setEditBirthdate, setEditGrowthStage, setEditWeight, setEditHeight, setEditLegColor, setEditSire, setEditDam, setEditSirePct, setEditDamPct]);
+  }, [ui]);
 
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -866,6 +657,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       const editHasAnyParent = editSire.trim() !== '' || editDam.trim() !== '';
       const calculatedBloodline = generationPurity(editHasAnyParent ? Math.max(editSireGen, editDamGen) + 1 : 0);
       const editAutoParts = getAgePartsHelper(editBirthdate);
+
       const payload = {
         name: sanitizeInput(editName),
         breed: sanitizeInput(editBreed),
@@ -891,15 +683,11 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         bloodline_pct: calculatedBloodline
       };
 
-      const { error: updateErr } = await supabase
-        .from('fowl')
-        .update(payload)
-        .eq('id', ui.editingFowl.id);
-
-      if (updateErr) throw updateErr;
+      const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
+      if (result.error) throw new Error(result.error);
 
       ui.showToastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
-      saveCustomStrain(editBreed);
+      await strainService.saveCustomStrain(editBreed, availableStrains);
       ui.setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: unknown) {
@@ -907,119 +695,15 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, fowls, sanitizeInput, saveCustomStrain, fetchDatabaseResources, ui, setLoading]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, fowls, availableStrains, fetchDatabaseResources, ui]);
 
-  const calculateCrossbreedWinRatios = useCallback(() => {
-    const breedStats: { [key: string]: { wins: number; total: number } } = {};
-
-    matchHistory.forEach((match) => {
-      const breedKey = `${match.breed || 'Unknown'} Cross`;
-      if (!breedStats[breedKey]) {
-        breedStats[breedKey] = { wins: 0, total: 0 };
-      }
-      breedStats[breedKey].total += 1;
-      if (match.outcome && match.outcome.toLowerCase() === 'win') {
-        breedStats[breedKey].wins += 1;
-      }
-    });
-
-    const labels = Object.keys(breedStats);
-    const data = labels.map(label => {
-      const stats = breedStats[label];
-      return stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
-    });
-
-    const hasData = labels.length > 0 && matchHistory.length > 0;
-
-    return {
-      labels: hasData ? labels : [],
-      data: hasData ? data : [],
-      hasData
-    };
-  }, [matchHistory]);
-
-  const pairingAnalytics = calculatePairingStats(fowls, matchHistory);
-  const crossbreedChartData = calculateCrossbreedWinRatios();
-
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNowMs(Date.now()), 60 * 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  const dateRangeLabel = (() => {
-    const now = new Date(nowMs);
-    if (dateRangePreset === '7d') return `${formatShortDate(nowMs - 7 * DAY_MS)} - ${formatShortDate(nowMs)}`;
-    if (dateRangePreset === '30d') return `${formatShortDate(nowMs - 30 * DAY_MS)} - ${formatShortDate(nowMs)}`;
-    if (dateRangePreset === 'month') return `${formatShortDate(new Date(now.getFullYear(), now.getMonth(), 1).getTime())} - ${formatShortDate(nowMs)}`;
-    if (dateRangePreset === '3m') return `${formatShortDate(nowMs - 90 * DAY_MS)} - ${formatShortDate(nowMs)}`;
-    return 'All Time';
-  })();
-
-  const winRatePct = matchHistory.length > 0
-    ? Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)
-    : 0;
-  const winsCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
-  const lossesCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
-
-  const monthLabels = (() => {
-    const now = new Date();
-    const out: string[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      out.push(d.toLocaleString('en-US', { month: 'short' }));
-    }
-    return out;
-  })();
-
-  const monthIndex = (s?: string) => {
-    if (!s) return -1;
-    const d = new Date(s);
-    if (isNaN(d.getTime())) return -1;
-    const now = new Date();
-    const diff = (now.getFullYear() * 12 + now.getMonth()) - (d.getFullYear() * 12 + d.getMonth());
-    const idx = 5 - diff;
-    return (idx >= 0 && idx < 6) ? idx : -1;
-  };
-
-  const matchesByMonth = (() => {
-    const arr = new Array(6).fill(0);
-    matchHistory.forEach(m => { const i = monthIndex(m.date); if (i >= 0) arr[i]++; });
-    return arr;
-  })();
-
-  const winsByMonth = (() => {
-    const arr = new Array(6).fill(0);
-    matchHistory.forEach(m => { const i = monthIndex(m.date); if (i >= 0 && m.outcome && m.outcome.toLowerCase() === 'win') arr[i]++; });
-    return arr;
-  })();
-
-  const activeSpark = (() => {
-    const arr = new Array(6).fill(0);
-    fowls.forEach(f => {
-      if (f.status === 'Active' || !f.status || f.status === 'active') {
-        const i = monthIndex(f.created_at);
-        if (i >= 0) arr[i]++;
-      }
-    });
-    for (let i = 1; i < 6; i++) arr[i] += arr[i - 1];
-    return arr;
-  })();
-
-  const trendWinRate = monthLabels.map((_, i) => matchesByMonth[i] > 0 ? Math.round((winsByMonth[i] / matchesByMonth[i]) * 100) : 0);
-
-  const upcomingMilestones = activeFowls
-    .map((f) => ({ fowl: f, info: getMilestoneInfoHelper(f.birthdate, f.gender) }))
-    .filter((x): x is { fowl: FowlRecord; info: NonNullable<ReturnType<typeof getMilestoneInfoHelper>> } => !!x.info)
-    .sort((a, b) => (a.info.next?.daysUntil ?? 999999) - (b.info.next?.daysUntil ?? 999999));
-
+  // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);
   const parentBloodlinePctLocal = useCallback((f: FowlRecord) => parentBloodlinePctHelper(f, fowls), [fowls]);
   const getSiblingRelationsLocal = useCallback((f: FowlRecord) => getSiblingRelationsHelper(f, fowls), [fowls]);
 
   const value: FowlContextValue = {
-    fowls, setFowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
+    fowls, setFowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, deletedFowls,
     matchHistory, setMatchHistory, loading, setLoading,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newColor, setNewColor, newColorCategory, setNewColorCategory,
@@ -1049,10 +733,19 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     availableLegColors, setAvailableLegColors, customLegColorNames, deleteCustomLegColor,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
-    pairingAnalytics, crossbreedChartData,
-    winRatePct, winsCount, lossesCount,
-    monthLabels, matchesByMonth, winsByMonth, activeSpark, trendWinRate,
-    upcomingMilestones, dateRangeLabel, nextNodeId,
+    pairingAnalytics: analytics.pairingAnalytics,
+    crossbreedChartData: analytics.crossbreedChartData,
+    winRatePct: analytics.winRatePct,
+    winsCount: analytics.winsCount,
+    lossesCount: analytics.lossesCount,
+    monthLabels: analytics.monthLabels,
+    matchesByMonth: analytics.matchesByMonth,
+    winsByMonth: analytics.winsByMonth,
+    activeSpark: analytics.activeSpark,
+    trendWinRate: analytics.trendWinRate,
+    upcomingMilestones: analytics.upcomingMilestones,
+    dateRangeLabel: analytics.dateRangeLabel,
+    nextNodeId,
     dataCompleteness, validationPassed, bloodlineVerified, computedBloodlinePct,
     offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
     handleAddFowl, handleAddMatchRecord, handleUpdateFowl,

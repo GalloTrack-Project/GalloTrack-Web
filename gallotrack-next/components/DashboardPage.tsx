@@ -1,9 +1,11 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
-import type { FowlRecord, MatchRecord, PairingStats, MilestoneInfo } from '@/lib/types';
 import { getAgeLabel } from '@/lib/helpers';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
 import FarmBloodlineSummary from '@/components/FarmBloodlineSummary';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
@@ -28,43 +30,24 @@ function TrendChip({ up, label }: { up: boolean; label: string }) {
   );
 }
 
-type Props = {
-  fowls: FowlRecord[];
-  matchHistory: MatchRecord[];
-  pairingAnalytics: { all: Map<string, PairingStats>; ranked: PairingStats[] };
-  activeFowls: FowlRecord[];
-  maleActiveFowls: FowlRecord[];
-  femaleActiveFowls: FowlRecord[];
-  monthLabels: string[];
-  matchesByMonth: number[];
-  activeSpark: number[];
-  trendWinRate: number[];
-  upcomingMilestones: { fowl: FowlRecord; info: MilestoneInfo }[];
-  crossbreedChartData: { labels: string[]; data: number[]; hasData: boolean };
-  winRatePct: number;
-  winsCount: number;
-  lossesCount: number;
-  setShowPerFowlBreakdownModal: (v: boolean) => void;
-  setCurrentPage: (v: string) => void;
-  setProfilingSubTab: (v: string) => void;
-  breakdownTab: string;
-  dateRangeLabel: string;
-  dateRangeOpen: boolean;
-  setDateRangeOpen: (v: boolean | ((o: boolean) => boolean)) => void;
-  dateRangePreset: string;
-  setDateRangePreset: (v: '7d' | '30d' | 'month' | '3m' | 'all') => void;
-  fetchDatabaseResources: () => void;
-  loading: boolean;
-};
+export default function DashboardPage() {
+  const fowl = useFowl();
+  const ui = useUI();
+  const router = useRouter();
 
-export default function DashboardPage({
-  fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
-  monthLabels, matchesByMonth, activeSpark, trendWinRate,
-  upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
-  setShowPerFowlBreakdownModal, setCurrentPage, setProfilingSubTab,
-  breakdownTab: _breakdownTab, dateRangeLabel, dateRangeOpen, setDateRangeOpen,
-  dateRangePreset, setDateRangePreset, fetchDatabaseResources, loading,
-}: Props) {
+  const {
+    fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
+    monthLabels, matchesByMonth, activeSpark, trendWinRate,
+    upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
+    dateRangeLabel, dateRangeOpen, setDateRangeOpen,
+    dateRangePreset, setDateRangePreset, fetchDatabaseResources, loading,
+  } = fowl;
+
+  const navigate = (page: string, subTab?: string) => {
+    if (subTab) ui.setProfilingSubTab(subTab as never);
+    router.push(`/${page}`);
+  };
+
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
   const isWithinThisWeek = (value?: string) => {
     if (!value) return false;
@@ -199,7 +182,7 @@ export default function DashboardPage({
 
         {/* OVERALL WIN RATE */}
         <div
-          onClick={() => setShowPerFowlBreakdownModal(true)}
+          onClick={() => ui.setShowPerFowlBreakdownModal(true)}
           className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 cursor-pointer hover:border-emerald-400/70 hover:shadow-md transition-all"
         >
           <div className="flex items-center justify-between gap-2 min-w-0">
@@ -236,14 +219,14 @@ export default function DashboardPage({
           </div>
           <div className="space-y-2">
             <button
-              onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }}
+              onClick={() => navigate('profiling', 'form')}
               className="w-full text-left bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl px-3 py-2.5 transition-all cursor-pointer"
             >
               <p className="text-[11px] font-extrabold text-emerald-800">+ Register New Fowl</p>
               <p className="text-[9px] text-emerald-500 font-semibold">Add to your roster</p>
             </button>
             <button
-              onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('matchForm'); }}
+              onClick={() => navigate('profiling', 'matchForm')}
               className="w-full text-left bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 rounded-xl px-3 py-2.5 transition-all cursor-pointer"
             >
               <p className="text-[11px] font-extrabold text-indigo-800">+ Log Match Result</p>
@@ -539,7 +522,7 @@ export default function DashboardPage({
             <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
             <button
               type="button"
-              onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('matchForm'); }}
+              onClick={() => navigate('profiling', 'matchForm')}
               className="bg-slate-900 hover:bg-emerald-700 active:scale-[0.98] text-white text-[10px] font-black px-4 py-2 rounded-lg shadow-sm transition-all cursor-pointer"
             >
               View All →

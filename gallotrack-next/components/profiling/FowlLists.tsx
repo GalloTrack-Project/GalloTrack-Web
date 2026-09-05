@@ -81,7 +81,7 @@ function ArchivedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: numb
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-      <button type="button" onClick={() => onDelete(fowl)} title="Permanently delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
+      <button type="button" onClick={() => onDelete(fowl)} title="Delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
       <div className="antigravity-avatar w-24 h-24 bg-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover grayscale opacity-80" /> : 'NO PHOTO'}
       </div>
@@ -118,7 +118,7 @@ function DeceasedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: numb
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
-      <button type="button" onClick={() => onDelete(fowl)} title="Permanently delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
+      <button type="button" onClick={() => onDelete(fowl)} title="Delete this fowl" className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer shadow-sm">🗑️</button>
       <div className="antigravity-avatar w-24 h-24 bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 text-[9px] font-mono shadow-inner relative grayscale">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
       </div>

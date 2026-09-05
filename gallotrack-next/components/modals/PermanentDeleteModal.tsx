@@ -30,14 +30,14 @@ export default function PermanentDeleteModal({
         <div className="flex items-center space-x-3 text-rose-800 border-b pb-3 border-rose-100">
           <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-xl">🗑️</div>
           <div>
-            <h3 className="text-base font-black text-slate-900 tracking-tight">Move to Trash &amp; Permanently Delete?</h3>
-            <p className="text-[11px] text-slate-500 font-semibold">This action is IRREVERSIBLE</p>
+            <h3 className="text-base font-black text-slate-900 tracking-tight">Move to Trash?</h3>
+            <p className="text-[11px] text-slate-500 font-semibold">This is a soft delete — you can restore it later</p>
           </div>
         </div>
 
         <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200/60 space-y-2">
           <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-rose-800 font-black">{pendingPermanentDelete.name}</strong> ({pendingPermanentDelete.breed})</p>
-          <p className="text-[10px] text-slate-500 leading-relaxed">Permanently removes this record from the database, including its match history. This CANNOT be undone. Consider <strong className="text-emerald-700">↺ Restore</strong> or <strong className="text-amber-700">📦 Archive</strong> if you just want it out of the active registry.</p>
+          <p className="text-[10px] text-slate-500 leading-relaxed">This fowl will be moved to the trash and hidden from your active registry. You can <strong className="text-emerald-700">↺ Restore</strong> it anytime from the trash list. Consider <strong className="text-amber-700">📦 Archive</strong> if you just want it out of the active list but still visible.</p>
         </div>
 
         <div className="flex space-x-3 pt-2">
@@ -55,7 +55,7 @@ export default function PermanentDeleteModal({
             className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md"
           >
             {permanentDeleting && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-            <span>Delete Forever</span>
+            <span>Move to Trash</span>
           </button>
         </div>
       </div>

@@ -1,167 +1,50 @@
 'use client';
 import React from 'react';
-import type { FowlRecord, MatchRecord, ProfilingSubTab } from '@/lib/types';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
+import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
 import FowlLists from '@/components/profiling/FowlLists';
 import MatchForm from '@/components/profiling/MatchForm';
 
-type Props = {
-  fowls: FowlRecord[];
-  activeFowls: FowlRecord[];
-  maleActiveFowls: FowlRecord[];
-  femaleActiveFowls: FowlRecord[];
-  archivedFowls: FowlRecord[];
-  deceasedFowls: FowlRecord[];
-  matchHistory: MatchRecord[];
-  profilingSubTab: ProfilingSubTab;
-  setProfilingSubTab: (tab: ProfilingSubTab) => void;
-  newName: string;
-  setNewName: (v: string) => void;
-  newBreed: string;
-  setNewBreed: (v: string) => void;
-  newGender: string;
-  setNewGender: (v: string) => void;
-  newBirthdate: string;
-  handleNewBirthdateChange: (val: string) => void;
-  age: string;
-  handleAgeChange: (val: string) => void;
-  newGrowthStage: string;
-  setNewGrowthStage: (v: string) => void;
-  height: string;
-  setHeight: (v: string) => void;
-  weight: string;
-  setWeight: (v: string) => void;
-  newLegColor: string;
-  setNewLegColor: (v: string) => void;
-  availableLegColors: string[];
-  customLegColorNames: Set<string>;
-  deleteCustomLegColor: (name: string) => Promise<void>;
-  legColorQuery: string;
-  setLegColorQuery: (v: string) => void;
-  legColorOpen: boolean;
-  setLegColorOpen: (v: boolean | ((o: boolean) => boolean)) => void;
-  sireName: string;
-  setSireName: (v: string) => void;
-  damName: string;
-  setDamName: (v: string) => void;
-  sirePct: number | string;
-  setSirePct: (v: number | string) => void;
-  damPct: number | string;
-  setDamPct: (v: number | string) => void;
-  selectedImage: File | null;
-  setSelectedImage: (f: File | null) => void;
-  imagePreview: string;
-  setImagePreview: (v: string) => void;
-  strainQuery: string;
-  setStrainQuery: (v: string) => void;
-  strainOpen: boolean;
-  setStrainOpen: (v: boolean | ((o: boolean) => boolean)) => void;
-  availableStrains: string[];
-  customStrainNames: Set<string>;
-  deleteCustomStrain: (name: string) => Promise<void>;
-  loading: boolean;
-  uploadingImage: boolean;
-  uploadingVideo: boolean;
-  nextNodeId: string;
-  dataCompleteness: number;
-  validationPassed: boolean;
-  bloodlineVerified: boolean;
-  computedBloodlinePct: number;
-  offspringGenInfo: { short: string; label: string };
-  sireGenInfo: { short: string; label: string };
-  damGenInfo: { short: string; label: string };
-  sireGen: number;
-  damGen: number;
-  selectedFowlForMatch: string;
-  setSelectedFowlForMatch: (v: string) => void;
-  matchDate: string;
-  setMatchDate: (v: string) => void;
-  opponentName: string;
-  setOpponentName: (v: string) => void;
-  opponentBreed: string;
-  setOpponentBreed: (v: string) => void;
-  matchLocation: string;
-  setMatchLocation: (v: string) => void;
-  matchType: string;
-  setMatchType: (v: string) => void;
-  matchOutcome: string;
-  setMatchOutcome: (v: string) => void;
-  matchPostFight: string;
-  setMatchPostFight: (v: string) => void;
-  matchVideoFile: File | null;
-  setMatchVideoFile: (f: File | null) => void;
-  handleAddFowl: (e: React.FormEvent) => void;
-  handleAddMatchRecord: (e: React.FormEvent) => void;
-  handleOpenEditModal: (fowl: FowlRecord) => void;
-  handleRestoreFowlOnly: (id: number) => void;
-  setSelectedFowlForDetails: (fowl: FowlRecord) => void;
-  setSelectedFowlForArchive: (fowl: FowlRecord) => void;
-  setSelectedFowlForDeceased: (fowl: FowlRecord) => void;
-  setPendingPermanentDelete: (fowl: FowlRecord) => void;
-};
+export default function ProfilingPage() {
+  const fowl = useFowl();
+  const ui = useUI();
+  const router = useRouter();
 
-import { generationPurity } from '@/lib/helpers';
+  const {
+    fowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, deletedFowls,
+    matchHistory,
+    newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
+    newBirthdate, handleNewBirthdateChange,
+    age, handleAgeChange,
+    newGrowthStage, setNewGrowthStage,
+    height, setHeight, weight, setWeight,
+    newLegColor, setNewLegColor,
+    availableLegColors, customLegColorNames, deleteCustomLegColor,
+    legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
+    sireName, setSireName, damName, setDamName,
+    sirePct, setSirePct, damPct, setDamPct,
+    selectedImage, setSelectedImage, imagePreview, setImagePreview,
+    strainQuery, setStrainQuery, strainOpen, setStrainOpen,
+    availableStrains, customStrainNames, deleteCustomStrain,
+    loading, uploadingImage, uploadingVideo,
+    nextNodeId, dataCompleteness, validationPassed, bloodlineVerified,
+    computedBloodlinePct, offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
+    selectedFowlForMatch, setSelectedFowlForMatch,
+    matchDate, setMatchDate,
+    opponentName, setOpponentName, opponentBreed, setOpponentBreed,
+    matchLocation, setMatchLocation, matchType, setMatchType,
+    matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
+    matchVideoFile, setMatchVideoFile,
+    handleAddFowl, handleAddMatchRecord,
+    handleOpenEditModal, handleRestoreFowlOnly,
+    generationPurity,
+  } = fowl;
 
-export default function ProfilingPage({
-  fowls,
-  maleActiveFowls,
-  femaleActiveFowls,
-  archivedFowls,
-  deceasedFowls,
-  matchHistory,
-  profilingSubTab,
-  setProfilingSubTab,
-  newName, setNewName,
-  newBreed, setNewBreed,
-  newGender, setNewGender,
-  newBirthdate, handleNewBirthdateChange,
-  age, handleAgeChange,
-  newGrowthStage, setNewGrowthStage,
-  height, setHeight,
-  weight, setWeight,
-  newLegColor, setNewLegColor,
-  availableLegColors,
-  customLegColorNames,
-  deleteCustomLegColor,
-  legColorQuery, setLegColorQuery,
-  legColorOpen, setLegColorOpen,
-  sireName, setSireName,
-  damName, setDamName,
-  sirePct, setSirePct,
-  damPct, setDamPct,
-  selectedImage, setSelectedImage,
-  imagePreview, setImagePreview,
-  strainQuery, setStrainQuery,
-  strainOpen, setStrainOpen,
-  availableStrains,
-  customStrainNames,
-  deleteCustomStrain,
-  loading,
-  uploadingImage,
-  uploadingVideo,
-  nextNodeId, dataCompleteness,
-  validationPassed, bloodlineVerified,
-  computedBloodlinePct, offspringGenInfo,
-  sireGenInfo, damGenInfo,
-  sireGen, damGen,
-  selectedFowlForMatch, setSelectedFowlForMatch,
-  matchDate, setMatchDate,
-  opponentName, setOpponentName,
-  opponentBreed, setOpponentBreed,
-  matchLocation, setMatchLocation,
-  matchType, setMatchType,
-  matchOutcome, setMatchOutcome,
-  matchPostFight, setMatchPostFight,
-  matchVideoFile, setMatchVideoFile,
-  handleAddFowl,
-  handleAddMatchRecord,
-  handleOpenEditModal,
-  handleRestoreFowlOnly,
-  setSelectedFowlForDetails,
-  setSelectedFowlForArchive,
-  setSelectedFowlForDeceased,
-  setPendingPermanentDelete,
-}: Props) {
+  const profilingSubTab = ui.profilingSubTab;
+  const setProfilingSubTab = ui.setProfilingSubTab;
+
   return (
     <div className="space-y-5 animate-fadeIn">
       <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 flex flex-col gap-4">
@@ -179,6 +62,7 @@ export default function ProfilingPage({
           <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'females' ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🐔 Hen (Pullet) ({femaleActiveFowls.length})</button>
           <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'archived' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>📦 Archived ({archivedFowls.length})</button>
           <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>💀 Deceased ({deceasedFowls.length})</button>
+          <button type="button" onClick={() => setProfilingSubTab('deleted')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'deleted' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>🗑️ Trash ({deletedFowls.length})</button>
           <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex-1 min-w-[80px] py-2.5 text-[10px] sm:text-xs font-black rounded-xl transition-all duration-200 text-center cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>⚔️ Match Logs</button>
         </div>
       </div>
@@ -235,10 +119,10 @@ export default function ProfilingPage({
           setProfilingSubTab={setProfilingSubTab}
           handleOpenEditModal={handleOpenEditModal}
           handleRestoreFowlOnly={handleRestoreFowlOnly}
-          setSelectedFowlForDetails={setSelectedFowlForDetails}
-          setSelectedFowlForArchive={setSelectedFowlForArchive}
-          setSelectedFowlForDeceased={setSelectedFowlForDeceased}
-          setPendingPermanentDelete={setPendingPermanentDelete}
+          setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
+          setSelectedFowlForArchive={ui.setSelectedFowlForArchive}
+          setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}
+          setPendingPermanentDelete={ui.setPendingPermanentDelete}
         />
       )}
 

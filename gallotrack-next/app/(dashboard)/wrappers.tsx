@@ -1,234 +1,94 @@
 'use client';
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useGaloTrack } from '@/lib/context';
 import DashboardPage from '@/components/DashboardPage';
 import ProfilingPage from '@/components/ProfilingPage';
 import MarketplacePage from '@/components/MarketplacePage';
 import LineageDirectory from '@/components/LineageDirectory';
 import Modals from '@/components/Modals';
-
-function NavWrapper({ children }: { children: (navigate: (page: string, subTab?: string) => void) => React.ReactNode }) {
-  const store = useGaloTrack();
-  const router = useRouter();
-
-  const navigate = (page: string, subTab?: string) => {
-    if (subTab) store.setProfilingSubTab(subTab as never);
-    router.push(`/${page}`);
-  };
-
-  return <>{children(navigate)}</>;
-}
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
+import { useRouter } from 'next/navigation';
 
 export function DashboardPageWrapper() {
-  const store = useGaloTrack();
-  return (
-    <NavWrapper>
-      {(navigate) => (
-        <DashboardPage
-          fowls={store.fowls}
-          matchHistory={store.matchHistory}
-          pairingAnalytics={store.pairingAnalytics}
-          activeFowls={store.activeFowls}
-          maleActiveFowls={store.maleActiveFowls}
-          femaleActiveFowls={store.femaleActiveFowls}
-          monthLabels={store.monthLabels}
-          matchesByMonth={store.matchesByMonth}
-          activeSpark={store.activeSpark}
-          trendWinRate={store.trendWinRate}
-          upcomingMilestones={store.upcomingMilestones}
-          crossbreedChartData={store.crossbreedChartData}
-          winRatePct={store.winRatePct}
-          winsCount={store.winsCount}
-          lossesCount={store.lossesCount}
-          setShowPerFowlBreakdownModal={store.setShowPerFowlBreakdownModal}
-          setCurrentPage={(v: string) => navigate(v)}
-          setProfilingSubTab={(v: string) => store.setProfilingSubTab(v as never)}
-          breakdownTab={store.breakdownTab}
-          dateRangeLabel={store.dateRangeLabel}
-          dateRangeOpen={store.dateRangeOpen}
-          setDateRangeOpen={store.setDateRangeOpen}
-          dateRangePreset={store.dateRangePreset}
-          setDateRangePreset={store.setDateRangePreset}
-          fetchDatabaseResources={store.fetchDatabaseResources}
-          loading={store.loading}
-        />
-      )}
-    </NavWrapper>
-  );
+  return <DashboardPage />;
 }
 
 export function ProfilingPageWrapper() {
-  const store = useGaloTrack();
-  return (
-    <NavWrapper>
-      {() => (
-        <ProfilingPage
-          fowls={store.fowls}
-          activeFowls={store.activeFowls}
-          maleActiveFowls={store.maleActiveFowls}
-          femaleActiveFowls={store.femaleActiveFowls}
-          archivedFowls={store.archivedFowls}
-          deceasedFowls={store.deceasedFowls}
-          matchHistory={store.matchHistory}
-          profilingSubTab={store.profilingSubTab}
-          setProfilingSubTab={store.setProfilingSubTab}
-          newName={store.newName}
-          setNewName={store.setNewName}
-          newBreed={store.newBreed}
-          setNewBreed={store.setNewBreed}
-          newGender={store.newGender}
-          setNewGender={store.setNewGender}
-          newBirthdate={store.newBirthdate}
-          handleNewBirthdateChange={store.handleNewBirthdateChange}
-          age={store.age}
-          handleAgeChange={store.handleAgeChange}
-          newGrowthStage={store.newGrowthStage}
-          setNewGrowthStage={store.setNewGrowthStage}
-          height={store.height}
-          setHeight={store.setHeight}
-          weight={store.weight}
-          setWeight={store.setWeight}
-          newLegColor={store.newLegColor}
-          setNewLegColor={store.setNewLegColor}
-          availableLegColors={store.availableLegColors}
-          customLegColorNames={store.customLegColorNames}
-          deleteCustomLegColor={store.deleteCustomLegColor}
-          legColorQuery={store.legColorQuery}
-          setLegColorQuery={store.setLegColorQuery}
-          legColorOpen={store.legColorOpen}
-          setLegColorOpen={store.setLegColorOpen}
-          sireName={store.sireName}
-          setSireName={store.setSireName}
-          damName={store.damName}
-          setDamName={store.setDamName}
-          sirePct={store.sirePct}
-          setSirePct={store.setSirePct}
-          damPct={store.damPct}
-          setDamPct={store.setDamPct}
-          selectedImage={store.selectedImage}
-          setSelectedImage={store.setSelectedImage}
-          imagePreview={store.imagePreview}
-          setImagePreview={store.setImagePreview}
-          strainQuery={store.strainQuery}
-          setStrainQuery={store.setStrainQuery}
-          strainOpen={store.strainOpen}
-          setStrainOpen={store.setStrainOpen}
-          availableStrains={store.availableStrains}
-          customStrainNames={store.customStrainNames}
-          deleteCustomStrain={store.deleteCustomStrain}
-          loading={store.loading}
-          uploadingImage={store.uploadingImage}
-          uploadingVideo={store.uploadingVideo}
-          nextNodeId={store.nextNodeId}
-          dataCompleteness={store.dataCompleteness}
-          validationPassed={store.validationPassed}
-          bloodlineVerified={store.bloodlineVerified}
-          computedBloodlinePct={store.computedBloodlinePct}
-          offspringGenInfo={store.offspringGenInfo}
-          sireGenInfo={store.sireGenInfo}
-          damGenInfo={store.damGenInfo}
-          sireGen={store.sireGen}
-          damGen={store.damGen}
-          selectedFowlForMatch={store.selectedFowlForMatch}
-          setSelectedFowlForMatch={store.setSelectedFowlForMatch}
-          matchDate={store.matchDate}
-          setMatchDate={store.setMatchDate}
-          opponentName={store.opponentName}
-          setOpponentName={store.setOpponentName}
-          opponentBreed={store.opponentBreed}
-          setOpponentBreed={store.setOpponentBreed}
-          matchLocation={store.matchLocation}
-          setMatchLocation={store.setMatchLocation}
-          matchType={store.matchType}
-          setMatchType={store.setMatchType}
-          matchOutcome={store.matchOutcome}
-          setMatchOutcome={store.setMatchOutcome}
-          matchPostFight={store.matchPostFight}
-          setMatchPostFight={store.setMatchPostFight}
-          matchVideoFile={store.matchVideoFile}
-          setMatchVideoFile={store.setMatchVideoFile}
-          handleAddFowl={store.handleAddFowl}
-          handleAddMatchRecord={store.handleAddMatchRecord}
-          handleOpenEditModal={store.handleOpenEditModal}
-          handleRestoreFowlOnly={store.handleRestoreFowlOnly}
-          setSelectedFowlForDetails={store.setSelectedFowlForDetails}
-          setSelectedFowlForArchive={store.setSelectedFowlForArchive}
-          setSelectedFowlForDeceased={store.setSelectedFowlForDeceased}
-          setPendingPermanentDelete={store.setPendingPermanentDelete}
-        />
-      )}
-    </NavWrapper>
-  );
+  return <ProfilingPage />;
 }
 
 export function MarketplacePageWrapper() {
-  const store = useGaloTrack();
+  const fowl = useFowl();
+  const ui = useUI();
+  const router = useRouter();
+
+  const navigate = (page: string, subTab?: string) => {
+    if (subTab) ui.setProfilingSubTab(subTab as never);
+    router.push(`/${page}`);
+  };
+
   return (
-    <NavWrapper>
-      {(navigate) => (
-        <MarketplacePage
-          fowls={store.fowls}
-          search={store.search}
-          setSearch={store.setSearch}
-          debouncedSearch={store.debouncedSearch}
-          setCurrentPage={(v: string) => navigate(v)}
-          setProfilingSubTab={(v: string) => store.setProfilingSubTab(v as never)}
-        />
-      )}
-    </NavWrapper>
+    <MarketplacePage
+      fowls={fowl.fowls}
+      search={fowl.search}
+      setSearch={fowl.setSearch}
+      debouncedSearch={fowl.debouncedSearch}
+      setCurrentPage={(v: string) => navigate(v)}
+      setProfilingSubTab={(v: string) => ui.setProfilingSubTab(v as never)}
+    />
   );
 }
 
 export function LineageDirectoryWrapper() {
-  const store = useGaloTrack();
+  const fowl = useFowl();
   return (
     <LineageDirectory
-      fowls={store.fowls}
-      matchHistory={store.matchHistory}
-      pairingAnalytics={store.pairingAnalytics}
-      search={store.search}
-      setSearch={store.setSearch}
-      debouncedSearch={store.debouncedSearch}
-      setSelectedFowlForDetails={store.setSelectedFowlForDetails}
+      fowls={fowl.fowls}
+      matchHistory={fowl.matchHistory}
+      pairingAnalytics={fowl.pairingAnalytics}
+      search={fowl.search}
+      setSearch={fowl.setSearch}
+      debouncedSearch={fowl.debouncedSearch}
+      setSelectedFowlForDetails={(f) => {}}
     />
   );
 }
 
 export function ModalsWrapper() {
-  const store = useGaloTrack();
+  const store = useFowl();
+  const ui = useUI();
   return (
     <Modals
-      selectedFowlForDetails={store.selectedFowlForDetails}
-      setSelectedFowlForDetails={store.setSelectedFowlForDetails}
-      selectedFowlForDeceased={store.selectedFowlForDeceased}
-      setSelectedFowlForDeceased={store.setSelectedFowlForDeceased}
+      selectedFowlForDetails={ui.selectedFowlForDetails}
+      setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
+      selectedFowlForDeceased={ui.selectedFowlForDeceased}
+      setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}
       handleMarkFowlDeceased={store.handleMarkFowlDeceased}
       deathReasonInput={store.deathReasonInput}
       setDeathReasonInput={store.setDeathReasonInput}
-      selectedFowlForArchive={store.selectedFowlForArchive}
-      setSelectedFowlForArchive={store.setSelectedFowlForArchive}
+      selectedFowlForArchive={ui.selectedFowlForArchive}
+      setSelectedFowlForArchive={ui.setSelectedFowlForArchive}
       handleArchiveFowlWithReason={store.handleArchiveFowlWithReason}
       archiveReasonInput={store.archiveReasonInput}
       setArchiveReasonInput={store.setArchiveReasonInput}
-      pendingPermanentDelete={store.pendingPermanentDelete}
-      setPendingPermanentDelete={store.setPendingPermanentDelete}
+      pendingPermanentDelete={ui.pendingPermanentDelete}
+      setPendingPermanentDelete={ui.setPendingPermanentDelete}
       handlePermanentDelete={store.handlePermanentDelete}
-      permanentDeleting={store.permanentDeleting}
-      editingFowl={store.editingFowl}
-      setEditingFowl={store.setEditingFowl}
+      permanentDeleting={ui.permanentDeleting}
+      editingFowl={ui.editingFowl}
+      setEditingFowl={ui.setEditingFowl}
       handleUpdateFowl={store.handleUpdateFowl}
-      showLogoutModal={store.showLogoutModal}
-      setShowLogoutModal={store.setShowLogoutModal}
-      handleLogout={store.handleLogout}
-      showForgotPasswordModal={store.showForgotPasswordModal}
-      setShowForgotPasswordModal={store.setShowForgotPasswordModal}
-      handleSendResetLink={store.handleSendResetLink}
-      forgotEmail={store.forgotEmail}
-      setForgotEmail={store.setForgotEmail}
-      forgotLoading={store.forgotLoading}
-      forgotSent={store.forgotSent}
-      forgotError={store.forgotError}
+      showLogoutModal={ui.showLogoutModal}
+      setShowLogoutModal={ui.setShowLogoutModal}
+      handleLogout={() => {}}
+      showForgotPasswordModal={ui.showForgotPasswordModal}
+      setShowForgotPasswordModal={ui.setShowForgotPasswordModal}
+      handleSendResetLink={() => {}}
+      forgotEmail=""
+      setForgotEmail={() => {}}
+      forgotLoading={false}
+      forgotSent={false}
+      forgotError=""
       matchHistory={store.matchHistory}
       loading={store.loading}
       getAgeParts={store.getAgeParts}
@@ -288,8 +148,8 @@ export function ModalsWrapper() {
       setEditDamPct={store.setEditDamPct}
       handleEditBirthdateChange={store.handleEditBirthdateChange}
       handleEditAgeChange={store.handleEditAgeChange}
-      showPerFowlBreakdownModal={store.showPerFowlBreakdownModal}
-      setShowPerFowlBreakdownModal={store.setShowPerFowlBreakdownModal}
+      showPerFowlBreakdownModal={ui.showPerFowlBreakdownModal}
+      setShowPerFowlBreakdownModal={ui.setShowPerFowlBreakdownModal}
     />
   );
 }
