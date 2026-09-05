@@ -429,12 +429,9 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       setSelectedStrains((prev) => [...prev, trimmed]);
     }
     if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-      strainService.saveCustomStrain(trimmed, availableStrains).then((saved) => {
-        if (saved) {
-          setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
-          setCustomStrainNames((prev) => new Set([...prev, trimmed]));
-        }
-      });
+      setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
+      setCustomStrainNames((prev) => new Set([...prev, trimmed]));
+      strainService.saveCustomStrain(trimmed, availableStrains).catch(() => {});
     }
     setStrainQuery('');
     setNewBreed('');
