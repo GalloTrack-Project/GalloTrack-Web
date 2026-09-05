@@ -422,18 +422,19 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     }
   }, [ui]);
 
-  const addStrain = useCallback(async (strain: string) => {
+  const addStrain = useCallback((strain: string) => {
     const trimmed = strain.trim();
     if (!trimmed) return;
     if (!selectedStrains.includes(trimmed)) {
       setSelectedStrains((prev) => [...prev, trimmed]);
     }
     if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-      const saved = await strainService.saveCustomStrain(trimmed, availableStrains);
-      if (saved) {
-        setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
-        setCustomStrainNames((prev) => new Set([...prev, trimmed]));
-      }
+      strainService.saveCustomStrain(trimmed, availableStrains).then((saved) => {
+        if (saved) {
+          setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
+          setCustomStrainNames((prev) => new Set([...prev, trimmed]));
+        }
+      });
     }
     setStrainQuery('');
     setNewBreed('');
