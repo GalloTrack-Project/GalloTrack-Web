@@ -139,7 +139,7 @@ export default function MatchForm({
       </div>
       <button type="submit" disabled={loading || uploadingVideo} className="w-full bg-slate-900 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 flex items-center justify-center space-x-2">
         {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-        <span>{loading ? 'Committing Log...' : 'Commit Performance Outcome Entry'}</span>
+        <span>{loading ? 'Recording...' : 'RECORD MATCH'}</span>
       </button>
     </form>
   );
