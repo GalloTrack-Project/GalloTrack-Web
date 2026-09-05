@@ -131,6 +131,7 @@ export default function Modals(props: ModalsProps) {
         selectedFowlForDetails={props.selectedFowlForDetails}
         setSelectedFowlForDetails={props.setSelectedFowlForDetails}
         matchHistory={props.matchHistory}
+        fowls={props.fowls}
         getAgeParts={props.getAgeParts}
         getAgeLabel={props.getAgeLabel}
         getAgeExact={props.getAgeExact}

@@ -15,6 +15,7 @@ type FowlDetailsModalProps = {
   selectedFowlForDetails: FowlRecord | null;
   setSelectedFowlForDetails: (f: FowlRecord | null) => void;
   matchHistory: MatchRecord[];
+  fowls: FowlRecord[];
   getAgeParts: (birthdate: string) => AgeParts | null;
   getAgeLabel: (parts: AgeParts) => string;
   getAgeExact: (parts: AgeParts) => string;
@@ -34,6 +35,7 @@ export default function FowlDetailsModal({
   selectedFowlForDetails,
   setSelectedFowlForDetails,
   matchHistory,
+  fowls,
   getAgeParts,
   getAgeLabel,
   getAgeExact,
@@ -519,9 +521,22 @@ export default function FowlDetailsModal({
           })()}
           
           <div className="space-y-1">
-            <div className="flex justify-between text-[10px] font-bold text-slate-500">
-              <span>♂ Sire Heritage Weight ({selectedFowlForDetails.sire})</span>
-              <span className="text-slate-800">{cleanPct(selectedFowlForDetails.sire_pct)}%</span>
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <span>♂ Sire Heritage Weight</span>
+                {(() => {
+                  const sireName = (selectedFowlForDetails.sire || '').trim();
+                  const sireLower = sireName.toLowerCase();
+                  const isFoundation = sireLower === 'foundation stock' || !sireLower;
+                  const isRegistered = !isFoundation && fowls.some((f) => f.name.trim().toLowerCase() === sireLower);
+                  return (
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase ${isRegistered ? 'bg-sky-100 text-sky-700 border border-sky-200' : isFoundation ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                      {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
+                    </span>
+                  );
+                })()}
+              </span>
+              <span className="text-slate-800">{cleanPct(selectedFowlForDetails.sire_pct)}% · <span className="text-slate-600">{selectedFowlForDetails.sire || '—'}</span></span>
             </div>
             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
               <div className="bg-sky-500 h-full rounded-full" style={{ width: `${cleanPct(selectedFowlForDetails.sire_pct)}%` }}></div>
@@ -529,9 +544,22 @@ export default function FowlDetailsModal({
           </div>
 
           <div className="space-y-1 pt-1">
-            <div className="flex justify-between text-[10px] font-bold text-slate-500">
-              <span>♀ Dam Heritage Weight ({selectedFowlForDetails.dam})</span>
-              <span className="text-slate-800">{cleanPct(selectedFowlForDetails.dam_pct)}%</span>
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <span>♀ Dam Heritage Weight</span>
+                {(() => {
+                  const damName = (selectedFowlForDetails.dam || '').trim();
+                  const damLower = damName.toLowerCase();
+                  const isFoundation = damLower === 'foundation stock' || !damLower;
+                  const isRegistered = !isFoundation && fowls.some((f) => f.name.trim().toLowerCase() === damLower);
+                  return (
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase ${isRegistered ? 'bg-pink-100 text-pink-700 border border-pink-200' : isFoundation ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                      {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
+                    </span>
+                  );
+                })()}
+              </span>
+              <span className="text-slate-800">{cleanPct(selectedFowlForDetails.dam_pct)}% · <span className="text-slate-600">{selectedFowlForDetails.dam || '—'}</span></span>
             </div>
             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
               <div className="bg-pink-500 h-full rounded-full" style={{ width: `${cleanPct(selectedFowlForDetails.dam_pct)}%` }}></div>

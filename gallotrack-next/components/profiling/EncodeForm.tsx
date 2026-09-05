@@ -422,15 +422,17 @@ export default function EncodeForm({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
-              Sire Purity (%) <span className="text-slate-400 font-normal lowercase">(parent&apos;s own bloodline — 100 = pure)</span>
+              Sire Purity (%) <span className="text-slate-400 font-normal lowercase">(auto-complements dam %)</span>
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setSirePct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 100" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); setDamPct(''); } else { const n = Math.min(Number(v), 100); setSirePct(n); setDamPct(100 - n); } }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 60" />
+            <p className="text-[9px] text-slate-400 mt-1 font-semibold">If sire = 60%, dam auto = 40%</p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
-              Dam Purity (%) <span className="text-slate-400 font-normal lowercase">(parent&apos;s own bloodline — 100 = pure)</span>
+              Dam Purity (%) <span className="text-slate-400 font-normal lowercase">(auto-complements sire %)</span>
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setDamPct(v === '' ? '' : Math.min(Number(v), 100)); }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 100" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); setDamPct(''); } else { const n = Math.min(Number(v), 100); setDamPct(n); setSirePct(100 - n); } }} className="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none font-bold placeholder:font-normal" placeholder="e.g. 40" />
+            <p className="text-[9px] text-slate-400 mt-1 font-semibold">If dam = 40%, sire auto = 60%</p>
           </div>
         </div>
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4 space-y-3">
