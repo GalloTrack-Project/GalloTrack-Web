@@ -423,6 +423,59 @@ export default function FowlDetailsModal({
                 </div>
               </div>
 
+              {/* PER-RASA INDIVIDUAL BREAKDOWN */}
+              {(() => {
+                const breedMap = new Map<string, { fights: number; wins: number; losses: number; draws: number }>();
+                fowlMatches.forEach(m => {
+                  const breed = (m.opponent_breed || '').trim() || 'Unknown';
+                  if (!breedMap.has(breed)) breedMap.set(breed, { fights: 0, wins: 0, losses: 0, draws: 0 });
+                  const b = breedMap.get(breed)!;
+                  b.fights++;
+                  const o = (m.outcome || '').toLowerCase();
+                  if (o === 'win') b.wins++;
+                  else if (o === 'loss') b.losses++;
+                  else if (o === 'draw') b.draws++;
+                });
+                const breeds = Array.from(breedMap.entries()).sort((a, b) => b[1].fights - a[1].fights);
+                if (breeds.length === 0) return null;
+                return (
+                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+                    <div className="p-3 bg-slate-50 border-b border-slate-200/80">
+                      <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-wider">🏆 Individual Per-Rasa Performance ({breeds.length} breed{breeds.length > 1 ? 's' : ''} faced)</h4>
+                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Win / Loss breakdown against each opponent breed — specific to this fowl only.</p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 divide-x divide-y divide-slate-100">
+                      {breeds.map(([breed, stats]) => {
+                        const decided = stats.wins + stats.losses;
+                        const wr = decided > 0 ? Math.round((stats.wins / decided) * 100) : 0;
+                        const tone = wr >= 70 ? 'emerald' : wr >= 40 ? 'amber' : 'rose';
+                        return (
+                          <div key={breed} className="p-3 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black text-slate-800 uppercase">{breed}</span>
+                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                                tone === 'emerald' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : tone === 'amber' ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              }`}>{wr}%</span>
+                            </div>
+                            <div className="flex gap-2 text-[9px] font-bold">
+                              <span className="text-emerald-600">{stats.wins}W</span>
+                              <span className="text-rose-600">{stats.losses}L</span>
+                              {stats.draws > 0 && <span className="text-amber-600">{stats.draws}D</span>}
+                              <span className="text-slate-400">{stats.fights} total</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
+                              {decided > 0 && <div className={`h-full ${tone === 'emerald' ? 'bg-emerald-500' : tone === 'amber' ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${wr}%` }} />}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* DEDICATED INDIVIDUAL MATCH LOG TABLE */}
               <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
                 <div className="p-3 bg-slate-50 border-b border-slate-200/80 flex justify-between items-center">
