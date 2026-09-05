@@ -384,6 +384,41 @@ export default function EncodeForm({
             <ParentSelector value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
           </div>
         </div>
+        {(sireName.trim() || damName.trim()) && (() => {
+          const sireChildren = sireName.trim() ? fowls.filter((f) => (f.sire || '').trim().toLowerCase() === sireName.trim().toLowerCase()) : [];
+          const damChildren = damName.trim() ? fowls.filter((f) => (f.dam || '').trim().toLowerCase() === damName.trim().toLowerCase()) : [];
+          const sireFullSibs = sireChildren.filter((c) => (c.dam || '').trim().toLowerCase() === (damName.trim().toLowerCase()));
+          const hasData = sireChildren.length > 0 || damChildren.length > 0;
+          if (!hasData) return null;
+          return (
+            <div className="bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 rounded-2xl p-4 space-y-2">
+              <p className="text-[10px] font-black text-sky-700 uppercase tracking-widest">👤 Existing Offspring &amp; Siblings</p>
+              <div className="grid grid-cols-2 gap-3">
+                {sireChildren.length > 0 && (
+                  <div className="bg-white/70 border border-sky-100 rounded-xl p-3">
+                    <p className="text-[9px] font-black text-sky-600 uppercase">🐓 {sireName.trim()} Offspring</p>
+                    <p className="text-lg font-black text-slate-800">{sireChildren.length}</p>
+                    <p className="text-[9px] text-slate-400 font-semibold">
+                      {sireChildren.filter((c) => c.gender === 'Male').length} cock(s) · {sireChildren.filter((c) => c.gender === 'Female').length} hen(s)
+                    </p>
+                    {sireFullSibs.length > 0 && (
+                      <p className="text-[9px] font-bold text-emerald-600 mt-1">✓ {sireFullSibs.length} full sibling(s) with current dam</p>
+                    )}
+                  </div>
+                )}
+                {damChildren.length > 0 && (
+                  <div className="bg-white/70 border border-pink-100 rounded-xl p-3">
+                    <p className="text-[9px] font-black text-pink-600 uppercase">🐔 {damName.trim()} Offspring</p>
+                    <p className="text-lg font-black text-slate-800">{damChildren.length}</p>
+                    <p className="text-[9px] text-slate-400 font-semibold">
+                      {damChildren.filter((c) => c.gender === 'Male').length} cock(s) · {damChildren.filter((c) => c.gender === 'Female').length} hen(s)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">
