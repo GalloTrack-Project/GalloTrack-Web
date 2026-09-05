@@ -114,6 +114,9 @@ interface FowlContextValue {
   deleteCustomStrain: (name: string) => Promise<void>;
   strainQuery: string; setStrainQuery: (v: string) => void;
   strainOpen: boolean; setStrainOpen: (v: boolean | ((o: boolean) => boolean)) => void;
+  selectedStrains: string[];
+  addStrain: (strain: string) => void;
+  removeStrain: (index: number) => void;
 
   availableLegColors: string[];
   setAvailableLegColors: React.Dispatch<React.SetStateAction<string[]>>;
@@ -289,6 +292,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
   const [strainQuery, setStrainQuery] = useState('');
   const [strainOpen, setStrainOpen] = useState(false);
+  const [selectedStrains, setSelectedStrains] = useState<string[]>([]);
   const [availableLegColors, setAvailableLegColors] = useState<string[]>(LEG_COLOR_LIST);
   const [customLegColorNames, setCustomLegColorNames] = useState<Set<string>>(new Set());
   const [legColorQuery, setLegColorQuery] = useState('');
@@ -314,7 +318,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   const nextNodeId = `GT-${String(Math.max(0, ...fowls.map(f => f.id)) + 1).padStart(4, '0')}`;
   const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
-  const validationPassed = newName.trim() !== '' && newBreed.trim() !== '' && newGender !== '' && age.trim() !== '';
+  const validationPassed = newName.trim() !== '' && (selectedStrains.length > 0 || newBreed.trim() !== '') && newGender !== '' && age.trim() !== '';
   const bloodlineVerified = sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct)) && Number(sirePct) > 0 && Number(damPct) > 0;
   const sireGen = generationOfNameHelper(sireName, fowls, new Map<string, number>(), new Set<string>());
   const damGen = generationOfNameHelper(damName, fowls, new Map<string, number>(), new Set<string>());
@@ -418,6 +422,19 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     }
   }, [ui]);
 
+  const addStrain = useCallback((strain: string) => {
+    const trimmed = strain.trim();
+    if (trimmed && !selectedStrains.includes(trimmed)) {
+      setSelectedStrains((prev) => [...prev, trimmed]);
+      setStrainQuery('');
+      setNewBreed('');
+    }
+  }, [selectedStrains, setNewBreed]);
+
+  const removeStrain = useCallback((index: number) => {
+    setSelectedStrains((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   // ── Fowl CRUD ──
   const handleAddFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -446,7 +463,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
       const payload = {
         user_id: activeUserId,
         name: sanitizeInput(newName),
-        breed: sanitizeInput(newBreed) || 'Unspecified Strain',
+        breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : sanitizeInput(newBreed) || 'Unspecified Strain',
         gender: newGender || 'Rooster',
         color: newColor,
         color_category: newColorCategory,
@@ -478,7 +495,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
         ui.showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
         await strainService.saveCustomStrain(newBreed, availableStrains);
         const createdGender = newGender || 'Rooster';
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setImagePreview('');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setWeight(''); setHeight(''); setNewLegColor(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview('');
         fetchDatabaseResources();
         ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
       }
@@ -729,6 +746,7 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
     editDamPct, setEditDamPct,
     availableStrains, setAvailableStrains, customStrainNames, deleteCustomStrain,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
+    selectedStrains, addStrain, removeStrain,
     availableLegColors, setAvailableLegColors, customLegColorNames, deleteCustomLegColor,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     pairingAnalytics: analytics.pairingAnalytics,

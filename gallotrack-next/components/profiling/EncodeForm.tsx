@@ -66,6 +66,9 @@ type Props = {
   availableStrains: string[];
   customStrainNames: Set<string>;
   deleteCustomStrain: (name: string) => Promise<void>;
+  selectedStrains: string[];
+  addStrain: (strain: string) => void;
+  removeStrain: (index: number) => void;
   loading: boolean;
   uploadingImage: boolean;
   nextNodeId: string;
@@ -107,6 +110,7 @@ export default function EncodeForm({
   strainOpen, setStrainOpen,
   availableStrains,
   deleteCustomStrain,
+  selectedStrains, addStrain, removeStrain,
   loading, uploadingImage,
   nextNodeId, dataCompleteness,
   validationPassed, bloodlineVerified,
@@ -153,27 +157,53 @@ export default function EncodeForm({
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Genetic Strain</label>
             <div className="relative" ref={strainInputRef}>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🧬</span>
-                <input
-                  type="text"
-                  value={strainQuery}
-                  onChange={(e) => { setStrainQuery(e.target.value); setNewBreed(e.target.value); setStrainOpen(true); }}
-                  onFocus={() => setStrainOpen(true)}
-                  onBlur={() => setTimeout(() => setStrainOpen(false), 150)}
-                  placeholder="Select or type a strain (e.g. Kelso, Hatch, or custom)..."
-                  className={`w-full pl-9 pr-9 p-3 border border-input rounded-xl text-xs bg-muted outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold ${strainQuery ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
-                  required
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🧬</span>
+                  <input
+                    type="text"
+                    value={strainQuery}
+                    onChange={(e) => { setStrainQuery(e.target.value); setNewBreed(e.target.value); setStrainOpen(true); }}
+                    onFocus={() => setStrainOpen(true)}
+                    onBlur={() => setTimeout(() => setStrainOpen(false), 150)}
+                    placeholder="Select or type a strain (e.g. Kelso, Hatch, or custom)..."
+                    className={`w-full pl-9 pr-9 p-3 border border-input rounded-xl text-xs bg-muted outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold ${strainQuery ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setStrainOpen((o) => !o)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border border-slate-200 bg-white text-slate-400 text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
+                    aria-label="Toggle strain list"
+                  >
+                    ▾
+                  </button>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setStrainOpen((o) => !o)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border border-slate-200 bg-white text-slate-400 text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
-                  aria-label="Toggle strain list"
+                  onClick={() => {
+                    const trimmed = strainQuery.trim();
+                    if (trimmed) {
+                      addStrain(trimmed);
+                      setStrainOpen(false);
+                    }
+                  }}
+                  disabled={!strainQuery.trim()}
+                  className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
                 >
-                  ▾
+                  <span>+</span>
+                  <span>Add</span>
                 </button>
               </div>
+              {selectedStrains.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {selectedStrains.map((s, i) => (
+                    <span key={`${s}-${i}`} className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                      🧬 {s}
+                      <button type="button" onClick={() => removeStrain(i)} className="ml-0.5 w-4 h-4 rounded-full bg-emerald-200 hover:bg-rose-500 hover:text-white text-emerald-700 flex items-center justify-center text-[8px] font-black transition-all cursor-pointer">✕</button>
+                    </span>
+                  ))}
+                </div>
+              )}
               {strainOpen && strainDropdownPos && createPortal(
                 <div className="fixed z-[9999] bg-popover border border-border rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}>
                   <div className="overflow-y-auto">
@@ -187,16 +217,16 @@ export default function EncodeForm({
                           <>
                             <button
                               type="button"
-                              onMouseDown={(e) => { e.preventDefault(); setStrainQuery(strainQuery.trim()); setNewBreed(strainQuery.trim()); setStrainOpen(false); }}
+                              onMouseDown={(e) => { e.preventDefault(); addStrain(strainQuery.trim()); setStrainOpen(false); }}
                               className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
                             >
-                              <span className="text-xs font-black text-emerald-600">➕ Save &quot;{strainQuery.trim()}&quot; as new genetic strain</span>
+                              <span className="text-xs font-black text-emerald-600">➕ Add &quot;{strainQuery.trim()}&quot; as new genetic strain</span>
                               <span className="text-[9px] font-mono text-emerald-500 uppercase shrink-0">Auto-saved</span>
                             </button>
                             {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Matching strains</div>}
                             {matching.map((s) => (
                                 <div key={s} className="flex items-center w-full group">
-                                  <button type="button" onMouseDown={(e) => { e.preventDefault(); setStrainQuery(s); setNewBreed(s); setStrainOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
+                                  <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
                                     {s}
                                   </button>
                                   <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
@@ -207,7 +237,7 @@ export default function EncodeForm({
                       }
                       return matching.map((s) => (
                           <div key={s} className="flex items-center w-full group">
-                            <button type="button" onMouseDown={(e) => { e.preventDefault(); setStrainQuery(s); setNewBreed(s); setStrainOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-muted transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : 'text-muted-foreground'}`}>
+                            <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-muted transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : 'text-muted-foreground'}`}>
                               {s}
                             </button>
                             <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomStrain(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
@@ -222,7 +252,7 @@ export default function EncodeForm({
                 document.body
               )}
             </div>
-            <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Choose an existing strain or type a new one — new strains are saved automatically and available for future entries.</p>
+            <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Choose an existing strain or type a new one, then click <strong>Add</strong> — you can add multiple genetic strains.</p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>

@@ -28,6 +28,7 @@ export default function ProfilingPage() {
     selectedImage, setSelectedImage, imagePreview, setImagePreview,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     availableStrains, customStrainNames, deleteCustomStrain,
+    selectedStrains, addStrain, removeStrain,
     loading, uploadingImage, uploadingVideo,
     nextNodeId, dataCompleteness, validationPassed, bloodlineVerified,
     computedBloodlinePct, offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
@@ -94,6 +95,9 @@ export default function ProfilingPage() {
           availableStrains={availableStrains}
           customStrainNames={customStrainNames}
           deleteCustomStrain={deleteCustomStrain}
+          selectedStrains={selectedStrains}
+          addStrain={addStrain}
+          removeStrain={removeStrain}
           loading={loading} uploadingImage={uploadingImage}
           nextNodeId={nextNodeId} dataCompleteness={dataCompleteness}
           validationPassed={validationPassed} bloodlineVerified={bloodlineVerified}
