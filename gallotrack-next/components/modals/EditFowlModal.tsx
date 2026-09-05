@@ -288,17 +288,17 @@ export default function EditFowlModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                  Sire Purity (%) <span className="text-slate-400 font-normal lowercase">(auto-complements dam %)</span>
+                  Sire Purity (%)
                 </label>
-                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); setEditDamPct(''); } else { const n = Math.min(Number(e.target.value), 100); setEditSirePct(n); setEditDamPct(100 - n); } }} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" />
-                <p className="text-[9px] text-slate-400 mt-1 font-semibold">Sire + Dam = 100%</p>
+                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" />
+                <p className="text-[9px] text-slate-400 mt-1 font-semibold">Independent — set freely</p>
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                  Dam Purity (%) <span className="text-slate-400 font-normal lowercase">(auto-complements sire %)</span>
+                  Dam Purity (%)
                 </label>
-                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); setEditDamPct(''); } else { const n = Math.min(Number(e.target.value), 100); setEditDamPct(n); setEditSirePct(100 - n); } }} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" />
-                <p className="text-[9px] text-slate-400 mt-1 font-semibold">Sire + Dam = 100%</p>
+                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" />
+                <p className="text-[9px] text-slate-400 mt-1 font-semibold">Independent — set freely</p>
               </div>
             </div>
           </div>
