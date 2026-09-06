@@ -17,6 +17,14 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'System Settings', icon: '⚙️' },
 ];
 
+const MOBILE_NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/profiling', label: 'Profiling', icon: '🧬' },
+  { href: '/marketplace', label: 'Breeding', icon: '🛒' },
+  { href: '/lineage', label: 'Family', icon: '🌳' },
+  { href: '/profile', label: 'Profile', icon: '👤' },
+];
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -112,17 +120,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="py-3.5 px-4 sm:px-6 md:px-8 flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <span className="md:hidden font-black text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground to-emerald-400 bg-clip-text text-transparent">GALLOTRACK</span>
-              <div className="flex items-center space-x-2 select-none" title="Supabase PostgreSQL link: Online">
+              <div className="hidden md:flex items-center space-x-2 select-none" title="Supabase PostgreSQL link: Online">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-500/40"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500/80"></span>
                 </span>
-                <span className="hidden sm:inline text-[10px] font-medium text-muted-foreground/70 tracking-wide">PostgreSQL Connected</span>
-                <span className="sm:hidden text-[9px] font-semibold text-muted-foreground/70 tracking-wide">DB</span>
+                <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">PostgreSQL Connected</span>
               </div>
             </div>
             <div className="flex items-center space-x-2.5">
-              <div className="antigravity-badge bg-muted border border-border text-muted-foreground px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold flex items-center space-x-1.5 shadow-2xs" style={{ animationDelay: '1.2s' }}>
+              {auth.avatarUrl ? (
+                <img src={auth.avatarUrl} alt="Profile" className="md:hidden w-8 h-8 rounded-full object-cover border border-slate-700/60" />
+              ) : (
+                <div className="md:hidden w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm">👤</div>
+              )}
+              <div className="hidden md:flex items-center space-x-2 select-none" title="Supabase PostgreSQL link: Online">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-500/40"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500/80"></span>
+                </span>
+                <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">PostgreSQL Connected</span>
+              </div>
+              <div className="antigravity-badge hidden sm:flex bg-muted border border-border text-muted-foreground px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold items-center space-x-1.5 shadow-2xs" style={{ animationDelay: '1.2s' }}>
                 <span className="text-muted-foreground">📍</span>
                 <span>{auth.userHub || 'Dingle Campus Cluster'}</span>
               </div>
@@ -143,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="md:hidden bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 border border-rose-500/30 p-1.5 px-3 rounded-full text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1 shadow-2xs"
                 title="Log Out"
               >
-                <span>🚪 Exit</span>
+                <span>🚪</span>
               </button>
             </div>
           </div>
@@ -157,7 +176,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-2xl md:hidden pb-[env(safe-area-inset-bottom,0px)]">
           <div className="flex justify-around items-center h-16 px-1">
-            {NAV_ITEMS.map((item) => (
+            {MOBILE_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -166,7 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }`}
               >
                 <span className="text-xl leading-none">{item.icon}</span>
-                <span className="text-[10px] mt-1 tracking-tight">{item.label.split(' ')[0]}</span>
+                <span className="text-[10px] mt-1 tracking-tight">{item.label}</span>
               </Link>
             ))}
           </div>
