@@ -102,6 +102,17 @@ export default function RegisterPage() {
     return true;
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (step === 3) {
+        handleRegister(e as unknown as React.FormEvent);
+      } else {
+        handleNext();
+      }
+    }
+  };
+
   const handleNext = () => {
     setError('');
     if (step === 1 && validateStep1()) setStep(2);
@@ -227,21 +238,21 @@ export default function RegisterPage() {
                     <label className={labelClass}>First Name <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
-                      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputIcon} required />
+                      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
                     </div>
                   </div>
                   <div>
                     <label className={labelClass}>Middle Name <span className="text-muted-foreground/60">(Optional)</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
-                      <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className={inputIcon} />
+                      <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} />
                     </div>
                   </div>
                   <div>
                     <label className={labelClass}>Last Name <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
-                      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputIcon} required />
+                      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
                     </div>
                   </div>
                 </div>
@@ -260,14 +271,14 @@ export default function RegisterPage() {
                     <label className={labelClass}>Farm / Yard Name <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="home" />
-                      <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputIcon} required />
+                      <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
                     </div>
                   </div>
                   <div>
                     <label className={labelClass}>Contact Number</label>
                     <div className="relative">
                       <FieldIcon which="phone" />
-                      <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className={inputIcon} />
+                      <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} />
                     </div>
                   </div>
                 </div>
@@ -286,14 +297,14 @@ export default function RegisterPage() {
                     <label className={labelClass}>Email Address <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="mail" />
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputIcon} autoComplete="off" required />
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="off" required />
                     </div>
                   </div>
                   <div>
                     <label className={labelClass}>Password <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
-                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputIcon} pr-11`} autoComplete="new-password" required />
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={handleKeyDown} className={`${inputIcon} pr-11`} autoComplete="new-password" required />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer">
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -307,7 +318,7 @@ export default function RegisterPage() {
                     <label className={labelClass}>Confirm Password <span className="text-rose-400">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
-                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputIcon} autoComplete="new-password" required />
+                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="new-password" required />
                     </div>
                   </div>
                 </div>
