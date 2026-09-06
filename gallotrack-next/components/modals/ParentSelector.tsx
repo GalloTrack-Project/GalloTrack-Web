@@ -90,7 +90,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
       return true;
     })
     .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 6);
+    .slice(0, 5);
 
   const accentBg = accent === 'emerald' ? 'bg-emerald-600' : 'bg-amber-500';
   const genderIcon = preferredGender === 'Male' ? '🐓' : preferredGender === 'Female' ? '🐔' : '🐣';
