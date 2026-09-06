@@ -113,25 +113,26 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* ACTIVE FOWL REGISTRY */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3">
+        <div className="group relative bg-gradient-to-br from-white via-white to-emerald-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Active Fowl Registry</span>
-            <span className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-base shrink-0">🐓</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Active Fowl Registry</span>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-base shrink-0 shadow-md shadow-emerald-500/20">🐓</div>
           </div>
-          <div className="text-3xl font-black text-slate-900 tracking-tight">{activeFowls.length}</div>
+          <div className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-1">{activeFowls.length}</div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 bg-sky-50/80 border border-sky-100 rounded-xl px-2.5 py-1.5">
+            <div className="flex items-center gap-2 bg-gradient-to-br from-sky-50 to-sky-100/60 border border-sky-200/60 rounded-xl px-2.5 py-2">
               <span className="text-sm">🐓</span>
               <div>
                 <p className="text-base font-black text-sky-800 leading-none">{maleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wide text-sky-500">Males</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-sky-500 mt-0.5">Males</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-pink-50/80 border border-pink-100 rounded-xl px-2.5 py-1.5">
+            <div className="flex items-center gap-2 bg-gradient-to-br from-pink-50 to-pink-100/60 border border-pink-200/60 rounded-xl px-2.5 py-2">
               <span className="text-sm">🐔</span>
               <div>
                 <p className="text-base font-black text-pink-800 leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wide text-pink-500">Females</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-pink-500 mt-0.5">Females</p>
               </div>
             </div>
           </div>
@@ -150,23 +151,24 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
             <TrendChip up={activeNewThisWeek > 0} label={activeNewThisWeek > 0 ? `${activeNewThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full shrink-0">Registered</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">Registered</span>
           </div>
         </div>
 
         {/* TOTAL MATCHES LOGGED */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3">
+        <div className="group relative bg-gradient-to-br from-white via-white to-indigo-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Total Matches Logged</span>
-            <span className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-base shrink-0">🏆</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Total Matches Logged</span>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-base shrink-0 shadow-md shadow-indigo-500/20">🏆</div>
           </div>
-          <div className="text-3xl font-black text-slate-900 tracking-tight">{matchHistory.length}</div>
+          <div className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-1">{matchHistory.length}</div>
           <div className="h-12 -mx-1">
             {matchHistory.length > 0 ? (
               <Bar
                 data={{
                   labels: monthLabels,
-                  datasets: [{ data: matchesByMonth, backgroundColor: '#059669', borderRadius: 4, maxBarThickness: 14 }],
+                  datasets: [{ data: matchesByMonth, backgroundColor: '#6366f1', borderRadius: 4, maxBarThickness: 14 }],
                 }}
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
@@ -176,20 +178,21 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
             <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full shrink-0">Logged</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full shrink-0">Logged</span>
           </div>
         </div>
 
         {/* OVERALL WIN RATE */}
         <div
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
-          className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 cursor-pointer hover:border-emerald-400/70 hover:shadow-md transition-all"
+          className="group relative bg-gradient-to-br from-white via-white to-emerald-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden"
         >
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Overall Win Rate</span>
-            <span className="text-[9px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">{winsCount}W • {lossesCount}L</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Overall Win Rate</span>
+            <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
           </div>
-          <div className="text-3xl font-black text-emerald-600 tracking-tight">
+          <div className="text-3xl font-black text-emerald-600 tracking-tight leading-none mt-1">
             {matchHistory.length > 0 ? `${winRatePct}%` : '—'}
           </div>
           <div className="h-12 -mx-1">
@@ -207,35 +210,36 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
             <span className="text-[10px] font-extrabold text-emerald-700">Win trend</span>
-            <span className="text-[9px] font-black text-slate-400">🔍 Breakdown</span>
+            <span className="text-[9px] font-black text-slate-400 group-hover:text-emerald-600 transition-colors">🔍 Breakdown</span>
           </div>
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3">
+        <div className="group relative bg-gradient-to-br from-white via-white to-violet-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Quick Actions</span>
-            <span className="w-8 h-8 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center text-base shrink-0">⚡</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Quick Actions</span>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center text-base shrink-0 shadow-md shadow-violet-500/20">⚡</div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 mt-1">
             <button
               onClick={() => navigate('profiling', 'form')}
-              className="w-full text-left bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl px-3 py-2.5 transition-all cursor-pointer"
+              className="w-full text-left bg-gradient-to-r from-emerald-50 to-emerald-100/60 hover:from-emerald-100 hover:to-emerald-150 border border-emerald-200/60 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-emerald-800">+ Register New Fowl</p>
-              <p className="text-[9px] text-emerald-500 font-semibold">Add to your roster</p>
+              <p className="text-[11px] font-extrabold text-emerald-800 group-hover/btn:text-emerald-900">+ Register New Fowl</p>
+              <p className="text-[9px] text-emerald-500 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
               onClick={() => navigate('profiling', 'matchForm')}
-              className="w-full text-left bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 rounded-xl px-3 py-2.5 transition-all cursor-pointer"
+              className="w-full text-left bg-gradient-to-r from-indigo-50 to-indigo-100/60 hover:from-indigo-100 hover:to-indigo-150 border border-indigo-200/60 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-indigo-800">+ Log Match Result</p>
-              <p className="text-[9px] text-indigo-500 font-semibold">Record fight outcome</p>
+              <p className="text-[11px] font-extrabold text-indigo-800 group-hover/btn:text-indigo-900">+ Log Match Result</p>
+              <p className="text-[9px] text-indigo-500 font-semibold mt-0.5">Record fight outcome</p>
             </button>
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
             <span className="text-[10px] font-extrabold text-slate-500">Start here</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full shrink-0">Actions</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full shrink-0">Actions</span>
           </div>
         </div>
       </div>
