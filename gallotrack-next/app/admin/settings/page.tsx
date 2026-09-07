@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { adminGuard } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
 
 export default function AdminSettingsPage() {
+  const router = useRouter();
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,6 +88,14 @@ export default function AdminSettingsPage() {
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="w-9 h-9 shrink-0 rounded-full bg-muted/50 border border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/50 flex items-center justify-center transition-all cursor-pointer"
+              title="Go Back"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
             <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-xl shadow-inner">⚙️</div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
