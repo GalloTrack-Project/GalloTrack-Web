@@ -1,9 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/registry'
 import { fetchSystemSettings, updateSystemSettings, type AdminSettings } from '@/lib/admin'
 
 export default function SettingsPage() {
+  const router = useRouter()
   const [settings, setSettings] = useState<AdminSettings>({
     default_strain: 'Sweater',
     cloud_logs: true,
@@ -106,9 +108,19 @@ export default function SettingsPage() {
     <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn text-slate-800">
       {/* HEADER CARD */}
       <div className="antigravity-hover bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>
-          <p className="text-xs text-slate-400 font-semibold mt-0.5">Configure global administrative rules, default parameters, and secure cloud behaviors</p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 flex items-center justify-center transition-all cursor-pointer"
+            title="Go Back"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-0.5">Configure global administrative rules, default parameters, and secure cloud behaviors</p>
+          </div>
         </div>
         <span className="antigravity-badge text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/60 uppercase self-start sm:self-auto shadow-sm">
           ● Config Synchronized
