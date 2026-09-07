@@ -9,6 +9,7 @@ export interface AdminSettings {
   event_alerts?: boolean;
   farm_name?: string;
   farm_location?: string;
+  farm_description?: string;
   contact_number?: string;
   default_match_type?: string;
   default_arena?: string;
@@ -17,6 +18,7 @@ export interface AdminSettings {
   milestone_alerts?: boolean;
   overdue_alerts?: boolean;
   auto_calculate_age?: boolean;
+  theme?: 'light' | 'dark' | 'system';
 }
 
 export interface AdminProfileRow {
