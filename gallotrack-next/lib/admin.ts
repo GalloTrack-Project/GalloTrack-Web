@@ -41,6 +41,8 @@ export interface AdminProfileRow {
   is_admin?: boolean | null;
   is_active?: boolean | null;
   created_at?: string | null;
+  email_confirmed_at?: string | null;
+  last_sign_in_at?: string | null;
 }
 
 export function isAdminProfile(profile: Pick<AdminProfileRow, 'is_admin' | 'role'> | null | undefined): boolean {

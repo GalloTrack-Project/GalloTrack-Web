@@ -11,8 +11,29 @@ import {
   setUserRole,
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
+import { supabase } from '@/lib/registry';
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
+
+interface FowlRecord {
+  id: string;
+  name: string;
+  breed: string;
+  gender: string;
+  growth_stage: string;
+  birthdate: string;
+  status: string;
+  created_at: string;
+  sire: string;
+  dam: string;
+  image_url: string;
+}
+
+interface SystemStats {
+  total_fowls: number;
+  total_matches: number;
+  total_users: number;
+}
 
 export default function AdminPanelPage() {
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
@@ -26,6 +47,10 @@ export default function AdminPanelPage() {
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'owner'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'deactivated'>('all');
   const [viewUser, setViewUser] = useState<AdminProfileRow | null>(null);
+  const [viewUserFowls, setViewUserFowls] = useState<FowlRecord[]>([]);
+  const [loadingFowls, setLoadingFowls] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -72,6 +97,50 @@ export default function AdminPanelPage() {
     }
   }, [showToast]);
 
+  const loadSystemStats = useCallback(async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) return;
+      const res = await fetch('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setSystemStats(await res.json());
+    } catch { /* non-critical */ }
+  }, []);
+
+  const loadUserFowls = useCallback(async (userId: string) => {
+    setLoadingFowls(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/admin/fowls?user_id=${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const { fowls } = await res.json();
+        setViewUserFowls(fowls);
+      }
+    } catch { /* non-critical */ } finally {
+      setLoadingFowls(false);
+    }
+  }, []);
+
+  const handleResetPassword = useCallback(async (email: string) => {
+    setResettingPassword(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) return;
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) showToast('success', `Password reset link sent to ${email}`);
+      else showToast('error', 'Failed to send reset link');
+    } catch { showToast('error', 'Failed to send reset link'); } finally {
+      setResettingPassword(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     (async () => {
       const profile = await adminGuard();
@@ -79,8 +148,9 @@ export default function AdminPanelPage() {
       setAdminProfile(profile);
       setLoading(false);
       await loadProfiles();
+      await loadSystemStats();
     })();
-  }, [loadProfiles]);
+  }, [loadProfiles, loadSystemStats]);
 
   const filteredProfiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -235,12 +305,19 @@ export default function AdminPanelPage() {
         )}
 
         {/* STATS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
           {statCard('Total Users', total, 'text-emerald-400', '👥')}
           {statCard('Active', active, 'text-sky-400', '✅')}
           {statCard('Deactivated', deactivated, 'text-rose-400', '🚫')}
           {statCard('Admins', admins, 'text-amber-400', '🛡️')}
         </div>
+        {systemStats && (
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+            {statCard('Total Fowls', systemStats.total_fowls, 'text-emerald-400', '🐓')}
+            {statCard('Total Matches', systemStats.total_matches, 'text-sky-400', '⚔️')}
+            {statCard('Profiles Created', systemStats.total_users, 'text-amber-400', '📋')}
+          </div>
+        )}
 
         {/* SEARCH & FILTERS */}
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
@@ -494,43 +571,116 @@ export default function AdminPanelPage() {
 
       {/* USER DETAIL MODAL */}
       {viewUser && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setViewUser(null)}>
-          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-fadeIn" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setViewUser(null); setViewUserFowls([]); }}>
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
               <h3 className="text-sm font-black text-card-foreground">User Details</h3>
-              <button type="button" onClick={() => setViewUser(null)} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer">✕</button>
+              <button type="button" onClick={() => { setViewUser(null); setViewUserFowls([]); }} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer">✕</button>
             </div>
-            <div className="flex items-center gap-3">
-              {viewUser.avatar_url ? (
-                <img src={viewUser.avatar_url} alt="avatar" className="w-12 h-12 rounded-xl object-cover border border-border" />
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-lg">👤</div>
-              )}
-              <div>
-                <p className="text-sm font-extrabold text-card-foreground">{profileDisplayName(viewUser)}</p>
-                <p className="text-[11px] text-muted-foreground font-medium">{viewUser.email || '—'}</p>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                {viewUser.avatar_url ? (
+                  <img src={viewUser.avatar_url} alt="avatar" className="w-14 h-14 rounded-xl object-cover border border-border" />
+                ) : (
+                  <div className="w-14 h-14 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-2xl">👤</div>
+                )}
+                <div>
+                  <p className="text-base font-extrabold text-card-foreground">{profileDisplayName(viewUser)}</p>
+                  <p className="text-[11px] text-muted-foreground font-medium">{viewUser.email || '—'}</p>
+                  <div className="flex gap-1.5 mt-1">
+                    {roleBadge(viewUser)}
+                    {statusBadge(viewUser)}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-[10px]">
-              <div className="bg-muted/25 rounded-xl p-3">
-                <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Farm</p>
-                <p className="font-bold text-card-foreground">{viewUser.farm_name || '—'}</p>
+
+              <div className="grid grid-cols-2 gap-3 text-[10px]">
+                <div className="bg-muted/25 rounded-xl p-3">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Farm</p>
+                  <p className="font-bold text-card-foreground">{viewUser.farm_name || '—'}</p>
+                </div>
+                <div className="bg-muted/25 rounded-xl p-3">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Contact</p>
+                  <p className="font-bold text-card-foreground">{viewUser.contact_number || viewUser.phone_number || '—'}</p>
+                </div>
+                <div className="bg-muted/25 rounded-xl p-3">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Joined</p>
+                  <p className="font-bold text-card-foreground">{viewUser.created_at ? new Date(viewUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</p>
+                </div>
+                <div className="bg-muted/25 rounded-xl p-3">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Email Status</p>
+                  <p className={`font-bold ${viewUser.email_confirmed_at ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {viewUser.email_confirmed_at ? '✓ Verified' : '✕ Unverified'}
+                  </p>
+                </div>
               </div>
-              <div className="bg-muted/25 rounded-xl p-3">
-                <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Contact</p>
-                <p className="font-bold text-card-foreground">{viewUser.contact_number || viewUser.phone_number || '—'}</p>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={actionId === viewUser.id}
+                  onClick={() => handleToggleActive(viewUser)}
+                  className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border transition-all cursor-pointer disabled:opacity-50 ${
+                    viewUser.is_active === false
+                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                      : 'bg-rose-500/10 border-rose-500/40 text-rose-400 hover:bg-rose-500/20'
+                  }`}
+                >
+                  {viewUser.is_active === false ? 'Activate' : 'Deactivate'}
+                </button>
+                <button
+                  type="button"
+                  disabled={actionId === viewUser.id || viewUser.id === adminProfile?.id}
+                  onClick={() => handleToggleRole(viewUser)}
+                  className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    viewUser.is_admin || viewUser.role === 'admin'
+                      ? 'bg-sky-500/10 border-sky-500/40 text-sky-400 hover:bg-sky-500/20'
+                      : 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
+                  }`}
+                >
+                  {viewUser.is_admin || viewUser.role === 'admin' ? 'Demote' : 'Promote'}
+                </button>
+                <button
+                  type="button"
+                  disabled={resettingPassword}
+                  onClick={() => handleResetPassword(viewUser.email || '')}
+                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {resettingPassword ? '...' : '🔑 Reset'}
+                </button>
               </div>
-              <div className="bg-muted/25 rounded-xl p-3">
-                <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Role</p>
-                {roleBadge(viewUser)}
-              </div>
-              <div className="bg-muted/25 rounded-xl p-3">
-                <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
-                {statusBadge(viewUser)}
-              </div>
-              <div className="bg-muted/25 rounded-xl p-3 col-span-2">
-                <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Joined</p>
-                <p className="font-bold text-card-foreground">{viewUser.created_at ? new Date(viewUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</p>
+
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registered Fowls</h4>
+                  {viewUserFowls.length === 0 && (
+                    <button type="button" onClick={() => loadUserFowls(viewUser.id)} className="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer">
+                      {loadingFowls ? 'Loading...' : 'Load fowls'}
+                    </button>
+                  )}
+                </div>
+                {loadingFowls && (
+                  <div className="flex items-center justify-center py-6">
+                    <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                {!loadingFowls && viewUserFowls.length > 0 && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {viewUserFowls.map((fowl) => (
+                      <div key={fowl.id} className="flex items-center gap-2.5 bg-muted/25 rounded-xl px-3 py-2">
+                        <span className="text-sm">{fowl.gender === 'Male' || fowl.gender === 'Rooster' ? '🐓' : '🐔'}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-bold text-card-foreground truncate">{fowl.name}</p>
+                          <p className="text-[9px] text-muted-foreground font-medium truncate">{fowl.breed} · {fowl.growth_stage || '—'}</p>
+                        </div>
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${fowl.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{fowl.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!loadingFowls && viewUserFowls.length === 0 && (
+                  <p className="text-[10px] text-muted-foreground text-center py-4">Click "Load fowls" to view their chickens.</p>
+                )}
               </div>
             </div>
           </div>
