@@ -8,27 +8,12 @@ import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { ModalsWrapper } from './wrappers';
 
-const NAV_SECTIONS = [
-  {
-    label: 'Overview',
-    items: [
-      { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
-    ],
-  },
-  {
-    label: 'Farm Management',
-    items: [
-      { href: '/profiling', label: 'Profiling & Lineage', icon: '🧬' },
-      { href: '/marketplace', label: 'Breeding Catalog', icon: '🥚' },
-      { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
-    ],
-  },
-  {
-    label: 'Account',
-    items: [
-      { href: '/profile', label: 'Profile Management', icon: '👤' },
-    ],
-  },
+const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
+  { href: '/profiling', label: 'Profiling & Lineage', icon: '🧬' },
+  { href: '/marketplace', label: 'Breeding Catalog', icon: '🥚' },
+  { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
+  { href: '/profile', label: 'Profile Management', icon: '👤' },
 ];
 
 const MOBILE_NAV_ITEMS = [
@@ -70,39 +55,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-[9px] font-mono font-bold text-emerald-400 tracking-widest uppercase block">v1.0.0</span>
             </div>
           </div>
-          <nav className="p-4 space-y-4 mt-2">
-            {NAV_SECTIONS.map((section) => (
-              <div key={section.label}>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 px-4 mb-2 select-none">{section.label}</p>
-                <div className="space-y-0.5">
-                  {section.items.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`w-full text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 ${
-                        pathname === item.href
-                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]'
-                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
-                      }`}
-                    >
-                      <span className="text-sm">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+          <nav className="p-4 space-y-1.5 mt-2">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 ${
+                  pathname === item.href
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]'
+                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                }`}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
             ))}
             {auth.isAdmin && (
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 px-4 mb-2 select-none">Administration</p>
-                <Link
-                  href="/admin"
-                  className="w-full text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                >
-                  <span className="text-sm">🛡️</span>
-                  <span>Admin Panel</span>
-                </Link>
-              </div>
+              <Link
+                href="/admin"
+                className="w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              >
+                <span className="text-base">🛡️</span>
+                <span>Admin Panel</span>
+              </Link>
             )}
           </nav>
         </div>
