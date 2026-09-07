@@ -7,6 +7,16 @@ export interface AdminSettings {
   default_strain?: string;
   cloud_logs?: boolean;
   event_alerts?: boolean;
+  farm_name?: string;
+  farm_location?: string;
+  contact_number?: string;
+  default_match_type?: string;
+  default_arena?: string;
+  weight_unit?: 'kg' | 'lbs';
+  height_unit?: 'cm' | 'inches';
+  milestone_alerts?: boolean;
+  overdue_alerts?: boolean;
+  auto_calculate_age?: boolean;
 }
 
 export interface AdminProfileRow {
