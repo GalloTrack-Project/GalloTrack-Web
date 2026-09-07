@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { href: '/marketplace', label: 'Breeding Catalog', icon: '🛒' },
   { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
   { href: '/profile', label: 'Profile Management', icon: '👤' },
-  { href: '/settings', label: 'System Settings', icon: '⚙️' },
 ];
 
 const MOBILE_NAV_ITEMS = [
