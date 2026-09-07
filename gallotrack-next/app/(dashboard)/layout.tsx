@@ -8,18 +8,33 @@ import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { ModalsWrapper } from './wrappers';
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
-  { href: '/profiling', label: 'Profiling & Lineage', icon: '🧬' },
-  { href: '/marketplace', label: 'Breeding Catalog', icon: '🧬' },
-  { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
-  { href: '/profile', label: 'Profile Management', icon: '👤' },
+const NAV_SECTIONS = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
+    ],
+  },
+  {
+    label: 'Farm Management',
+    items: [
+      { href: '/profiling', label: 'Profiling & Lineage', icon: '🧬' },
+      { href: '/marketplace', label: 'Breeding Catalog', icon: '🥚' },
+      { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { href: '/profile', label: 'Profile Management', icon: '👤' },
+    ],
+  },
 ];
 
 const MOBILE_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/profiling', label: 'Profiling', icon: '🧬' },
-  { href: '/marketplace', label: 'Breeding', icon: '🧬' },
+  { href: '/marketplace', label: 'Breeding', icon: '🥚' },
   { href: '/lineage', label: 'Family', icon: '🌳' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
@@ -55,29 +70,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-[9px] font-mono font-bold text-emerald-400 tracking-widest uppercase block">v1.0.0</span>
             </div>
           </div>
-          <nav className="p-4 space-y-1.5 mt-2">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 ${
-                  pathname === item.href
-                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]'
-                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
-                }`}
-              >
-                <span className="text-base">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
+          <nav className="p-4 space-y-4 mt-2">
+            {NAV_SECTIONS.map((section) => (
+              <div key={section.label}>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 px-4 mb-2 select-none">{section.label}</p>
+                <div className="space-y-0.5">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`w-full text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 ${
+                        pathname === item.href
+                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]'
+                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                      }`}
+                    >
+                      <span className="text-sm">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
             {auth.isAdmin && (
-              <Link
-                href="/admin"
-                className="w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-              >
-                <span className="text-base">🛡️</span>
-                <span>Admin Panel</span>
-              </Link>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 px-4 mb-2 select-none">Administration</p>
+                <Link
+                  href="/admin"
+                  className="w-full text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                >
+                  <span className="text-sm">🛡️</span>
+                  <span>Admin Panel</span>
+                </Link>
+              </div>
             )}
           </nav>
         </div>
@@ -180,14 +205,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <ModalsWrapper />
 
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-2xl md:hidden pb-[env(safe-area-inset-bottom,0px)]">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-2xl md:hidden pb-[env(safe-area-inset-bottom,0px)]">
           <div className="flex justify-around items-center h-16 px-1">
             {MOBILE_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-all duration-200 active:scale-95 ${
-                  pathname === item.href ? 'text-emerald-600 font-black scale-105' : 'text-slate-400 hover:text-slate-600 font-medium'
+                  pathname === item.href ? 'text-emerald-500 font-black scale-105' : 'text-muted-foreground hover:text-foreground font-medium'
                 }`}
               >
                 <span className="text-xl leading-none">{item.icon}</span>
