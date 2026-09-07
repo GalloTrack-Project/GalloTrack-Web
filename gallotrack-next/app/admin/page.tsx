@@ -29,12 +29,6 @@ interface FowlRecord {
   image_url: string;
 }
 
-interface SystemStats {
-  total_fowls: number;
-  total_matches: number;
-  total_users: number;
-}
-
 export default function AdminPanelPage() {
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
   const [profiles, setProfiles] = useState<AdminProfileRow[]>([]);
@@ -50,7 +44,6 @@ export default function AdminPanelPage() {
   const [viewUserFowls, setViewUserFowls] = useState<FowlRecord[]>([]);
   const [loadingFowls, setLoadingFowls] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
-  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -97,16 +90,6 @@ export default function AdminPanelPage() {
     }
   }, [showToast]);
 
-  const loadSystemStats = useCallback(async () => {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      if (!token) return;
-      const res = await fetch('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setSystemStats(await res.json());
-    } catch { /* non-critical */ }
-  }, []);
-
   const loadUserFowls = useCallback(async (userId: string) => {
     setLoadingFowls(true);
     try {
@@ -148,9 +131,8 @@ export default function AdminPanelPage() {
       setAdminProfile(profile);
       setLoading(false);
       await loadProfiles();
-      await loadSystemStats();
     })();
-  }, [loadProfiles, loadSystemStats]);
+  }, [loadProfiles]);
 
   const filteredProfiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -311,13 +293,6 @@ export default function AdminPanelPage() {
           {statCard('Deactivated', deactivated, 'text-rose-400', '🚫')}
           {statCard('Admins', admins, 'text-amber-400', '🛡️')}
         </div>
-        {systemStats && (
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-            {statCard('Total Fowls', systemStats.total_fowls, 'text-emerald-400', '🐓')}
-            {statCard('Total Matches', systemStats.total_matches, 'text-sky-400', '⚔️')}
-            {statCard('Profiles Created', systemStats.total_users, 'text-amber-400', '📋')}
-          </div>
-        )}
 
         {/* SEARCH & FILTERS */}
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
