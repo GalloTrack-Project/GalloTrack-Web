@@ -30,6 +30,7 @@ export function MarketplacePageWrapper() {
   return (
     <MarketplacePage
       fowls={fowl.fowls}
+      matchHistory={fowl.matchHistory}
       search={fowl.search}
       setSearch={fowl.setSearch}
       debouncedSearch={fowl.debouncedSearch}
