@@ -353,15 +353,6 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
     return result;
   }, [fowls, debouncedSearch, activeTab, sortKey, matchHistory]);
 
-  const totalActive = fowls.filter((f) => f.status === 'Active').length;
-  const breedingReady = fowls.filter((f) => f.status === 'Active' && (f.growth_stage === 'Mature' || f.growth_stage === 'Broodcock' || f.growth_stage === 'Broodhen')).length;
-  const avgWinRate = useMemo(() => {
-    const active = fowls.filter((f) => f.status === 'Active');
-    if (active.length === 0) return 0;
-    const rates = active.map((f) => getWinRate(f.name, matchHistory).winRate);
-    return Math.round(rates.reduce((a, b) => a + b, 0) / rates.length);
-  }, [fowls, matchHistory]);
-
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -386,24 +377,6 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             <span className="sm:hidden">Add</span>
           </button>
         </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { icon: '\uD83D\uDC13', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', value: totalActive, label: 'Active' },
-          { icon: '\uD83E\uDDEC', bg: 'bg-violet-500/15', border: 'border-violet-500/30', value: breedingReady, label: 'Breeding Ready' },
-          { icon: '\uD83D\uDCCA', bg: 'bg-sky-500/15', border: 'border-sky-500/30', value: `${avgWinRate}%`, label: 'Avg Win Rate' },
-          { icon: '\uD83D\uDC14', bg: 'bg-amber-500/15', border: 'border-amber-500/30', value: fowls.length, label: 'Total Birds' },
-        ].map((s) => (
-          <div key={s.label} className="bg-card rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3">
-            <div className={`w-11 h-11 ${s.bg} ${s.border} border rounded-xl flex items-center justify-center text-lg shrink-0`}>{s.icon}</div>
-            <div>
-              <p className="text-2xl font-black text-card-foreground leading-none">{s.value}</p>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{s.label}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* Filter Tabs + Sort */}
