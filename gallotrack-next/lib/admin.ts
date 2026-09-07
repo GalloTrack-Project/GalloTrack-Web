@@ -87,6 +87,11 @@ export async function fetchAllProfiles(): Promise<AdminProfileRow[]> {
 }
 
 export async function setUserActive(userId: string, active: boolean): Promise<void> {
+  const { data: existing } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+  if (!existing) {
+    await supabase.from('profiles').insert({ id: userId, user_id: userId, is_active: active, role: 'owner', updated_at: new Date().toISOString() });
+    return;
+  }
   const { error } = await supabase
     .from('profiles')
     .update({ is_active: active, updated_at: new Date().toISOString() })
@@ -95,6 +100,11 @@ export async function setUserActive(userId: string, active: boolean): Promise<vo
 }
 
 export async function setUserRole(userId: string, role: 'owner' | 'admin'): Promise<void> {
+  const { data: existing } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+  if (!existing) {
+    await supabase.from('profiles').insert({ id: userId, user_id: userId, role, is_admin: role === 'admin', updated_at: new Date().toISOString() });
+    return;
+  }
   const { error } = await supabase
     .from('profiles')
     .update({ role, is_admin: role === 'admin', updated_at: new Date().toISOString() })

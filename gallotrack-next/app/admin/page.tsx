@@ -36,6 +36,37 @@ export default function AdminPanelPage() {
     try {
       const rows = await fetchAllProfiles();
       setProfiles(rows);
+
+      const { data: sessionData } = await (await import('@/lib/registry')).supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (token) {
+        const res = await fetch('/api/admin/users', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const { users } = await res.json();
+          const merged: AdminProfileRow[] = users.map((u: { id: string; email: string; created_at: string; last_sign_in_at: string | null; email_confirmed_at: string | null; user_metadata: Record<string, string>; profile: AdminProfileRow | null }) => ({
+            id: u.id,
+            user_id: u.id,
+            email: u.email,
+            first_name: u.profile?.first_name || u.user_metadata?.first_name || '',
+            middle_name: u.profile?.middle_name || u.user_metadata?.middle_name || '',
+            last_name: u.profile?.last_name || u.user_metadata?.last_name || '',
+            full_name: u.profile?.full_name || u.user_metadata?.full_name || '',
+            farm_name: u.profile?.farm_name || u.user_metadata?.farm_name || '',
+            phone_number: u.profile?.phone_number || u.user_metadata?.contact_number || '',
+            contact_number: u.profile?.contact_number || u.user_metadata?.contact_number || '',
+            avatar_url: u.profile?.avatar_url || u.user_metadata?.avatar_url || '',
+            role: u.profile?.role || 'owner',
+            is_admin: u.profile?.is_admin || false,
+            is_active: u.profile?.is_active !== false,
+            created_at: u.created_at,
+            last_sign_in_at: u.last_sign_in_at,
+            email_confirmed_at: u.email_confirmed_at,
+          }));
+          setProfiles(merged);
+        }
+      }
     } catch (err) {
       showToast('error', `Failed to load farm owners: ${(err as Error).message}`);
     }
