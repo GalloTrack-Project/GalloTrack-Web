@@ -20,6 +20,10 @@ export default function AdminSettingsPage() {
   const [defaultStrain, setDefaultStrain] = useState('Sweater');
   const [cloudLogs, setCloudLogs] = useState(true);
   const [eventAlerts, setEventAlerts] = useState(true);
+  const [allowRegistrations, setAllowRegistrations] = useState(true);
+  const [autoApproveUsers, setAutoApproveUsers] = useState(true);
+  const [publicFowlData, setPublicFowlData] = useState(false);
+  const [defaultUserRole, setDefaultUserRole] = useState('owner');
 
   useEffect(() => {
     (async () => {
@@ -34,6 +38,10 @@ export default function AdminSettingsPage() {
         setDefaultStrain(settings.default_strain || 'Sweater');
         setCloudLogs(settings.cloud_logs !== false);
         setEventAlerts(settings.event_alerts !== false);
+        setAllowRegistrations(settings.allow_registrations !== false);
+        setAutoApproveUsers(settings.auto_approve_users !== false);
+        setPublicFowlData(settings.public_fowl_data === true);
+        setDefaultUserRole(settings.default_user_role || 'owner');
       } catch (err) {
         setMessage({ type: 'error', text: `Failed to load settings: ${(err as Error).message}` });
       } finally {
@@ -54,6 +62,10 @@ export default function AdminSettingsPage() {
         default_strain: defaultStrain,
         cloud_logs: cloudLogs,
         event_alerts: eventAlerts,
+        allow_registrations: allowRegistrations,
+        auto_approve_users: autoApproveUsers,
+        public_fowl_data: publicFowlData,
+        default_user_role: defaultUserRole,
       });
       setMessage({ type: 'success', text: 'System configuration saved successfully.' });
       window.setTimeout(() => setMessage(null), 3000);
@@ -199,6 +211,46 @@ export default function AdminSettingsPage() {
                   <option value="Brood">Brood</option>
                   <option value="Classic">Classic</option>
                   <option value="Hybrid">Hybrid</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* USER MANAGEMENT */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 border-b border-border pb-3">User Management</h2>
+
+            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+              <div>
+                <span className="block text-xs font-extrabold text-card-foreground">Allow New Registrations</span>
+                <span className="text-[11px] text-muted-foreground font-medium block">Enable or disable new farm owner sign-ups</span>
+              </div>
+              <input type="checkbox" checked={allowRegistrations} onChange={(e) => setAllowRegistrations(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+            </label>
+
+            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+              <div>
+                <span className="block text-xs font-extrabold text-card-foreground">Auto-Approve New Users</span>
+                <span className="text-[11px] text-muted-foreground font-medium block">Newly registered accounts are immediately active</span>
+              </div>
+              <input type="checkbox" checked={autoApproveUsers} onChange={(e) => setAutoApproveUsers(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+            </label>
+
+            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+              <div>
+                <span className="block text-xs font-extrabold text-card-foreground">Show Fowl Data in Public View</span>
+                <span className="text-[11px] text-muted-foreground font-medium block">Allow farm owners to see other users' fowl records</span>
+              </div>
+              <input type="checkbox" checked={publicFowlData} onChange={(e) => setPublicFowlData(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+            </label>
+
+            <div>
+              <label className={labelClass}>Default New User Role</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-xs">👤</span>
+                <select value={defaultUserRole} onChange={(e) => setDefaultUserRole(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
+                  <option value="owner">Farm Owner</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
             </div>

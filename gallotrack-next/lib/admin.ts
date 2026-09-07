@@ -7,6 +7,10 @@ export interface AdminSettings {
   default_strain?: string;
   cloud_logs?: boolean;
   event_alerts?: boolean;
+  allow_registrations?: boolean;
+  auto_approve_users?: boolean;
+  public_fowl_data?: boolean;
+  default_user_role?: string;
   farm_name?: string;
   farm_location?: string;
   farm_description?: string;
