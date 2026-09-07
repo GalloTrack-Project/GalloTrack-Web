@@ -7,6 +7,7 @@ import LineageDirectory from '@/components/LineageDirectory';
 import Modals from '@/components/Modals';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useAuth } from '@/lib/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPageWrapper() {
@@ -58,6 +59,7 @@ export function LineageDirectoryWrapper() {
 export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
+  const { handleLogout } = useAuth();
   return (
     <Modals
       selectedFowlForDetails={ui.selectedFowlForDetails}
@@ -81,7 +83,7 @@ export function ModalsWrapper() {
       handleUpdateFowl={store.handleUpdateFowl}
       showLogoutModal={ui.showLogoutModal}
       setShowLogoutModal={ui.setShowLogoutModal}
-      handleLogout={() => {}}
+      handleLogout={handleLogout}
       showForgotPasswordModal={ui.showForgotPasswordModal}
       setShowForgotPasswordModal={ui.setShowForgotPasswordModal}
       handleSendResetLink={() => {}}
