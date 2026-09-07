@@ -379,27 +379,14 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
         </div>
       </div>
 
-      {/* Filter Tabs + Sort */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1 bg-muted rounded-xl border border-border p-1 shadow-sm overflow-x-auto">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
-              {tab.label}
-              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase">Sort:</span>
-          <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} className="p-2 border border-border rounded-xl text-[11px] font-bold text-card-foreground bg-card outline-none focus:border-emerald-500 cursor-pointer shadow-sm">
-            <option value="name">Name</option>
-            <option value="age">Age</option>
-            <option value="strain">Strain</option>
-            <option value="weight">Weight</option>
-            <option value="winrate">Win Rate</option>
-          </select>
-          <span className="text-[11px] font-bold text-muted-foreground">{filteredFowls.length} bird{filteredFowls.length !== 1 ? 's' : ''}</span>
-        </div>
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-1 bg-muted rounded-xl border border-border p-1 shadow-sm overflow-x-auto">
+        {tabs.map((tab) => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
+            {tab.label}
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
+          </button>
+        ))}
       </div>
 
       {/* Grid */}
