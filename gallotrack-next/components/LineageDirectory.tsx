@@ -22,6 +22,118 @@ interface LineageDirectoryProps {
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }
 
+function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
+
+  let total = 0, wins = 0, losses = 0;
+  g.forEach((c) => { const s = getChildMatchStats(c.name); total += s.total; wins += s.wins; losses += s.losses; });
+  const decided = wins + losses;
+  const groupWinRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+
+  const ranked = [...g].sort((a, b) => {
+    const sa = getChildMatchStats(a.name);
+    const sb = getChildMatchStats(b.name);
+    if (sb.decided !== sa.decided) return sb.decided - sa.decided;
+    return sb.winRate - sa.winRate;
+  });
+  const bestId = ranked.length > 0 && ranked[0].id ? ranked[0].id : null;
+
+  const males = g.filter((c) => c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male').length;
+  const females = g.length - males;
+  const visible = expanded ? ranked : ranked.slice(0, 3);
+  const hasMore = ranked.length > 3;
+
+  return (
+    <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-center text-lg shrink-0">👨‍👩‍👧‍👦</div>
+          <div>
+            <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
+            <p className="text-[10px] text-muted-foreground font-semibold">{g.length} birds · {males} male · {females} female</p>
+          </div>
+        </div>
+        <span className="text-[8px] font-black bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider">Full Siblings</span>
+      </div>
+      <div className="px-5 pb-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-2xl p-3.5 text-center">
+            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1">🐓 Sire</p>
+            <p className="text-xs font-black text-card-foreground truncate">{g[0].sire}</p>
+          </div>
+          <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-2xl p-3.5 text-center">
+            <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1">🐔 Dam</p>
+            <p className="text-xs font-black text-card-foreground truncate">{g[0].dam}</p>
+          </div>
+        </div>
+      </div>
+      <div className="px-5 pb-4">
+        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Offspring</p>
+        <div className="space-y-1.5">
+          {visible.map((child, i) => {
+            const cs = getChildMatchStats(child.name);
+            const isBest = child.id === bestId;
+            return (
+              <button
+                key={child.id}
+                type="button"
+                onClick={() => setSelectedFowlForDetails(child)}
+                className="group w-full flex items-center justify-between gap-3 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-[10px] font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className="text-[11px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
+                      {isBest && cs.decided > 0 && (
+                        <span className="text-[6px] font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {cs.total > 0 ? (
+                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                      {cs.winRate}% · {cs.wins}W-{cs.losses}L
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-bold text-muted-foreground/50">No fights</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {hasMore && (
+          <button type="button" onClick={() => setExpanded(!expanded)} className="w-full mt-2 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:underline py-1 cursor-pointer">
+            {expanded ? 'Show less' : `View all ${ranked.length} offspring`}
+          </button>
+        )}
+      </div>
+      <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">🔗 Pairing Win Rate</span>
+          {decided > 0 && (
+            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${groupWinRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+              {wins}W-{losses}L
+            </span>
+          )}
+        </div>
+        {ps && ps.totalFights > 0 ? (
+          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+            {ps.winRate}%
+          </span>
+        ) : (
+          <span className="text-[10px] font-bold text-muted-foreground/50">No match data yet</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LineageDirectory({
   fowls,
   matchHistory,
@@ -313,47 +425,6 @@ export default function LineageDirectory({
     );
   };
 
-  const renderFullFamilyCard = (g: FowlRecord[], index: number) => {
-    const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
-    const ranked = rankByWinRate(g);
-    const bestId = ranked.length > 0 ? ranked[0].id : null;
-    return (
-      <div key={`full-${index}`} className="bg-card p-5 rounded-3xl border border-border shadow-sm relative overflow-hidden flex flex-col">
-        <span className="absolute top-0 right-0 bg-emerald-50 dark:bg-emerald-950/50 border-l border-b border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[8px] font-black px-3 py-1 rounded-bl-2xl uppercase tracking-wider flex items-center gap-1 shadow-2xs">
-          <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          Full Sibling Family
-        </span>
-        <div className="flex items-center justify-between pr-24">
-          <h4 className="font-black text-card-foreground text-base">Family {index + 1}</h4>
-          <span className="text-[9px] font-mono font-black text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">{g.length} birds</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          <div className="bg-muted/50 border border-border rounded-2xl p-3">
-            <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">🐓 Sire</p>
-            <p className="text-[11px] font-black text-card-foreground mt-0.5 truncate">{g[0].sire}</p>
-          </div>
-          <div className="bg-muted/50 border border-border rounded-2xl p-3">
-            <p className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">🐔 Dam</p>
-            <p className="text-[11px] font-black text-card-foreground mt-0.5 truncate">{g[0].dam}</p>
-          </div>
-        </div>
-        <div className="space-y-1.5 mt-3">
-          {ranked.map((m) => renderChildRow(m, bestId))}
-        </div>
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
-          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">🔗 Pairing Win Rate</span>
-          {ps && ps.totalFights > 0 ? (
-            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
-              {ps.winRate}% · {ps.wins}W-{ps.losses}L
-            </span>
-          ) : (
-            <span className="text-[10px] font-bold text-muted-foreground/50">No match data yet</span>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="bg-card p-6 sm:p-7 rounded-3xl border border-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -441,7 +512,7 @@ export default function LineageDirectory({
           <EmptyState title="No Full-Sibling Families Found" hint="Birds need at least one sibling with the same Sire and Dam to form a family." />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {fullFiltered.map((g, i) => renderFullFamilyCard(g, i))}
+            {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} />)}
           </div>
         )}
       </section>
