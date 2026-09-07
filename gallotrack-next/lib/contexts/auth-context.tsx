@@ -248,7 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('gallotrack_user_id');
     }
     await supabase.auth.signOut();
-    ui.showToastMessage('System session terminated.', 'warning');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   }, [ui]);
 
   const handleSendResetLink = useCallback(async (e: React.FormEvent) => {
