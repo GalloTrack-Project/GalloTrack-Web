@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./theme-provider";
 import { GalloTrackProvider } from "@/lib/context";
+import RootErrorBoundary from "@/components/RootErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +30,11 @@ export default function RootLayout({
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <GalloTrackProvider>
-            <div className="min-h-full w-full flex flex-col">
-              {children}
-            </div>
+            <RootErrorBoundary>
+              <div className="min-h-full w-full flex flex-col">
+                {children}
+              </div>
+            </RootErrorBoundary>
           </GalloTrackProvider>
         </ThemeProvider>
       </body>

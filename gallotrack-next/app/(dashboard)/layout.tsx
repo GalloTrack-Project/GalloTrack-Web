@@ -7,6 +7,7 @@ import { Sun, Moon } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { ModalsWrapper } from './wrappers';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
@@ -175,7 +176,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6">
-          {children}
+          <ErrorBoundary label="Dashboard Section">
+            {children}
+          </ErrorBoundary>
         </main>
 
         <ModalsWrapper />

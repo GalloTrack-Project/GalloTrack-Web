@@ -3,7 +3,7 @@ import React from 'react';
 import { useTheme } from 'next-themes';
 import { UIProvider, useUI } from './contexts/ui-context';
 import { AuthProvider, useAuth } from './contexts/auth-context';
-import { FowlProvider, useFowl } from './contexts/fowl-context';
+import { FowlProviderWrapper, useFowl } from './contexts/fowl-context';
 
 /**
  * Unified facade context that preserves backward compatibility.
@@ -31,9 +31,9 @@ export function GalloTrackProvider({
   return (
     <UIProvider theme={theme || 'dark'} setTheme={setTheme}>
       <AuthProvider>
-        <FowlProvider>
+        <FowlProviderWrapper>
           {children}
-        </FowlProvider>
+        </FowlProviderWrapper>
       </AuthProvider>
     </UIProvider>
   );

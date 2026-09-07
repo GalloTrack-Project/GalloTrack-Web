@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/registry';
 import { useDebounce } from '@/lib/use-debounce';
 import { useUI } from './ui-context';
+import { FowlFormStateProvider, useFowlFormState } from './fowl-form-context';
 import {
   STRAIN_LIST,
   LEG_COLOR_LIST,
@@ -15,7 +16,6 @@ import {
   generationInfo,
   parentBloodlinePct as parentBloodlinePctHelper,
   bloodlineOf,
-  formatShortDate,
   getAgeParts as getAgePartsHelper,
   getAgeLabel,
   getAgeExact,
@@ -31,6 +31,7 @@ import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/blo
 import { generateColorReport } from '@/lib/color-genetics';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
+import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
 import * as matchService from '@/lib/services/match-service';
 import * as strainService from '@/lib/services/strain-service';
@@ -210,14 +211,24 @@ const FowlContext = createContext<FowlContextValue | null>(null);
 export function useFowl(): FowlContextValue {
   const ctx = useContext(FowlContext);
   if (!ctx) throw new Error('useFowl must be used within FowlProvider');
-  return ctx;
+  const formState = useFowlFormState();
+  return { ...ctx, ...formState };
 }
 
 function sanitizeInput(value: string): string {
-  return value.replace(/[<>&"'/]/g, '').trim();
+  return value
+    .replace(/[<>]/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .replace(/\\/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+=/gi, '')
+    .trim();
 }
 
-export function FowlProvider({ children }: { children: React.ReactNode }) {
+export function FowlProviderInternal({ children }: { children: React.ReactNode }) {
   const ui = useUI();
 
   // ── Core data state ──
@@ -449,6 +460,21 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   // ── Fowl CRUD ──
   const handleAddFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = validateFowlForm({
+      name: newName,
+      breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
+      gender: newGender,
+      weight,
+      height,
+      sirePct,
+      damPct,
+    });
+    if (!validation.success) {
+      ui.showToastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
+      return;
+    }
+
     setLoading(true);
     let publicImageUrl = '';
 
@@ -522,10 +548,22 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
 
   const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFowlForMatch) {
-      ui.showToastMessage("Roster Cluster Selection Error: Select a registered fowl node.", "warning");
+
+    const validation = validateMatchForm({
+      selectedFowl: selectedFowlForMatch,
+      date: matchDate,
+      opponentName,
+      opponentBreed,
+      location: matchLocation,
+      type: matchType,
+      outcome: matchOutcome,
+      postFightCondition: matchPostFight,
+    });
+    if (!validation.success) {
+      ui.showToastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
       return;
     }
+
     setLoading(true);
 
     try {
@@ -828,4 +866,12 @@ export function FowlProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <FowlContext.Provider value={value}>{children}</FowlContext.Provider>;
+}
+
+export function FowlProviderWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <FowlFormStateProvider>
+      <FowlProviderInternal>{children}</FowlProviderInternal>
+    </FowlFormStateProvider>
+  );
 }
