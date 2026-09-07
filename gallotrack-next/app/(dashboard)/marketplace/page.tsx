@@ -1,6 +1,11 @@
 'use client';
-import { MarketplacePageWrapper } from '../wrappers';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function MarketplaceRoute() {
-  return <MarketplacePageWrapper />;
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/profiling');
+  }, [router]);
+  return null;
 }
