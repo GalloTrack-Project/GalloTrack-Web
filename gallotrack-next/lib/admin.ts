@@ -147,9 +147,6 @@ export async function fetchSystemSettings(): Promise<AdminSettings> {
 }
 
 export async function updateSystemSettings(settings: AdminSettings): Promise<void> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   const { error } = await supabase
     .from('system_settings')
     .upsert(
@@ -157,7 +154,6 @@ export async function updateSystemSettings(settings: AdminSettings): Promise<voi
         key: 'app',
         value: settings as unknown as Record<string, unknown>,
         updated_at: new Date().toISOString(),
-        updated_by: user?.id || null,
       },
       { onConflict: 'key' }
     );
