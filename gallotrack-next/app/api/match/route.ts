@@ -15,6 +15,18 @@ function getSupabase(request: NextRequest) {
   });
 }
 
+async function verifyActiveUser(supabaseClient: ReturnType<typeof createClient>) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return { error: 'Unauthorized' as const };
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_active')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (profile?.is_active === false) return { error: 'Account deactivated' as const };
+  return { user };
+}
+
 function sanitizeInput(value: string): string {
   return value.replace(/[<>&"'/]/g, '').trim();
 }
@@ -35,15 +47,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await verifyActiveUser(supabase);
+  if ('error' in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 });
   }
 
   const { data, error } = await supabase
     .from('match')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', auth.user.id)
     .order('id', { ascending: false });
 
   if (error) {
@@ -59,9 +71,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await verifyActiveUser(supabase);
+  if ('error' in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 });
   }
 
   try {
@@ -94,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = {
-      user_id: user.id,
+      user_id: auth.user.id,
       date: body.date || new Date().toISOString().split('T')[0],
       entry_name: sanitizeInput(String(body.entry_name)),
       breed: body.breed || 'Unknown',
