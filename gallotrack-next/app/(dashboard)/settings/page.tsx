@@ -424,8 +424,19 @@ export default function SettingsPage() {
       )}
 
       {savedNotice && (
-        <div className="bg-emerald-50/90 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-xs font-bold flex items-center shadow-sm mb-4 animate-fadeIn">
-          <span className="mr-2">✓</span> Settings saved successfully.
+        <div className="fixed top-4 right-4 z-50 animate-slideInRight">
+          <div className="bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center gap-3 border border-emerald-500">
+            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <p className="text-sm font-black">Settings saved!</p>
+              <p className="text-[10px] font-semibold text-emerald-100">Changes synced across devices</p>
+            </div>
+            <button onClick={() => setSavedNotice(false)} className="ml-2 text-emerald-200 hover:text-white cursor-pointer shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
         </div>
       )}
 
