@@ -467,7 +467,28 @@ async function main() {
   }
   console.log(`   ✅ Inserted ${matchRows.length} match records.`);
 
-  // ─── 7. Summary ────────────────────────────────────────────────────────
+  // ─── 7. Seed genetic strains ─────────────────────────────────────────────
+  console.log('\n5️⃣  Seeding genetic strains...');
+  const STRAIN_LIST = ['Sweater', 'Hatch', 'Roundhead', 'Kelso', 'Lemon 84', 'Albany', 'Claret', 'Whitehackle', 'Black', 'Melsin', 'Bennie', 'Joe Madigin'];
+  
+  const { data: existingStrains } = await supabase.from('strains').select('name');
+  const existingNames = existingStrains?.map((s: { name: string }) => s.name.toLowerCase()) || [];
+  const missingStrains = STRAIN_LIST.filter(s => !existingNames.includes(s.toLowerCase()));
+  
+  if (missingStrains.length > 0) {
+    const { error: strainErr } = await supabase.from('strains').insert(
+      missingStrains.map(name => ({ name, is_custom: false }))
+    );
+    if (strainErr) {
+      console.error('   ⚠️  Strain insert warning:', strainErr.message);
+    } else {
+      console.log(`   ✅ Inserted ${missingStrains.length} strains: ${missingStrains.join(', ')}`);
+    }
+  } else {
+    console.log('   ✅ All strains already exist.');
+  }
+
+  // ─── 8. Summary ────────────────────────────────────────────────────────
   const wins = MATCHES.filter((m) => m.outcome === 'Win').length;
   const losses = MATCHES.filter((m) => m.outcome === 'Loss').length;
   const deceased = MATCHES.filter((m) => m.post_fight_condition.includes('Deceased')).length;
