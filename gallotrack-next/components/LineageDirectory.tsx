@@ -134,6 +134,8 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
   );
 }
 
+type LineageTab = 'families' | 'sire' | 'dam';
+
 export default function LineageDirectory({
   fowls,
   matchHistory,
@@ -143,6 +145,7 @@ export default function LineageDirectory({
   debouncedSearch,
   setSelectedFowlForDetails,
 }: LineageDirectoryProps) {
+  const [activeTab, setActiveTab] = useState<LineageTab>('families');
   const [expandedSires, setExpandedSires] = useState<Set<string>>(new Set());
   const [expandedDams, setExpandedDams] = useState<Set<string>>(new Set());
   const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
@@ -427,16 +430,39 @@ export default function LineageDirectory({
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-card p-6 sm:p-7 rounded-3xl border border-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Sibling &amp; Family Lineage Directory</h1>
-          <p className="text-xs text-muted-foreground font-semibold mt-0.5">Tap any parent to expand their offspring tree — compare siblings, find the best performers per bloodline</p>
+      <div className="bg-card p-6 sm:p-7 rounded-3xl border border-border shadow-sm flex flex-col gap-5">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Family Lineage Directory</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-0.5">Track sibling groups, sire & dam offspring trees to compare performance per bloodline</p>
+          </div>
+          <div className="relative w-full sm:w-72 shrink-0">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input type="text" placeholder="Search family, sire, dam or bird name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
+          </div>
         </div>
-        <div className="relative w-full sm:w-72">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </span>
-          <input type="text" placeholder="Search family, sire, dam or bird name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
+
+        <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0">
+          <button type="button" onClick={() => setActiveTab('families')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'families' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <span className="text-sm">👥</span>
+            <span>Full Siblings &amp; Families</span>
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'families' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fullFiltered.length}</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('sire')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'sire' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <span className="text-sm">🐓</span>
+            <span>Sire Offspring Tree</span>
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'sire' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireEntries.length}</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('dam')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'dam' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <span className="text-sm">🐔</span>
+            <span>Dam Offspring Tree</span>
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'dam' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{damEntries.length}</span>
+          </button>
         </div>
       </div>
 
@@ -498,54 +524,60 @@ export default function LineageDirectory({
         );
       })()}
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center justify-center text-base">👥</div>
-          <div>
-            <h2 className="text-base font-black text-card-foreground tracking-tight">Full-Sibling Families</h2>
-            <p className="text-[11px] text-muted-foreground font-bold">Same Sire and same Dam — iisang tatay at iisang nanay. Ranked by win rate.</p>
+      {activeTab === 'families' && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center justify-center text-base">👥</div>
+            <div>
+              <h2 className="text-base font-black text-card-foreground tracking-tight">Full-Sibling Families</h2>
+              <p className="text-[11px] text-muted-foreground font-bold">Same Sire and same Dam — iisang tatay at iisang nanay. Ranked by win rate.</p>
+            </div>
           </div>
-        </div>
-        {linked.length === 0 ? (
-          <EmptyState title="No Lineage Data Yet" hint="Encode gamefowl with Sire and Dam to start grouping families automatically." />
-        ) : fullFiltered.length === 0 ? (
-          <EmptyState title="No Full-Sibling Families Found" hint="Birds need at least one sibling with the same Sire and Dam to form a family." />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} />)}
-          </div>
-        )}
-      </section>
+          {linked.length === 0 ? (
+            <EmptyState title="No Lineage Data Yet" hint="Encode gamefowl with Sire and Dam to start grouping families automatically." />
+          ) : fullFiltered.length === 0 ? (
+            <EmptyState title="No Full-Sibling Families Found" hint="Birds need at least one sibling with the same Sire and Dam to form a family." />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} />)}
+            </div>
+          )}
+        </section>
+      )}
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-xl flex items-center justify-center text-base">🐓</div>
-          <div>
-            <h2 className="text-base font-black text-card-foreground tracking-tight">Sire Offspring Tree</h2>
-            <p className="text-[11px] text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
+      {activeTab === 'sire' && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-xl flex items-center justify-center text-base">🐓</div>
+            <div>
+              <h2 className="text-base font-black text-card-foreground tracking-tight">Sire Offspring Tree</h2>
+              <p className="text-[11px] text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
+            </div>
           </div>
-        </div>
-        {sireEntries.length === 0 ? (
-          <EmptyState title="No Sire Offspring Yet" hint="Encode gamefowl with a Sire name to build the parent-to-offspring tree." />
-        ) : (
-          renderParentTree(sireEntries, expandedSires, toggleSire, 'sire', 'sky')
-        )}
-      </section>
+          {sireEntries.length === 0 ? (
+            <EmptyState title="No Sire Offspring Yet" hint="Encode gamefowl with a Sire name to build the parent-to-offspring tree." />
+          ) : (
+            renderParentTree(sireEntries, expandedSires, toggleSire, 'sire', 'sky')
+          )}
+        </section>
+      )}
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-xl flex items-center justify-center text-base">🐔</div>
-          <div>
-            <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
-            <p className="text-[11px] text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>
+      {activeTab === 'dam' && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-xl flex items-center justify-center text-base">🐔</div>
+            <div>
+              <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
+              <p className="text-[11px] text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>
+            </div>
           </div>
-        </div>
-        {damEntries.length === 0 ? (
-          <EmptyState title="No Dam Offspring Yet" hint="Encode gamefowl with a Dam name to build the parent-to-offspring tree." />
-        ) : (
-          renderParentTree(damEntries, expandedDams, toggleDam, 'dam', 'pink')
-        )}
-      </section>
+          {damEntries.length === 0 ? (
+            <EmptyState title="No Dam Offspring Yet" hint="Encode gamefowl with a Dam name to build the parent-to-offspring tree." />
+          ) : (
+            renderParentTree(damEntries, expandedDams, toggleDam, 'dam', 'pink')
+          )}
+        </section>
+      )}
     </div>
   );
 }
