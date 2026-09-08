@@ -49,7 +49,7 @@ export type HeritabilityScore = {
 
 export type StrainBenchmark = {
   strain: string;
-  avgWinRate: number;
+  avgWinRate: number | null;
   avgResilience: number;
   avgWeight: number;
   avgHeight: number;
@@ -294,7 +294,7 @@ function calculateStrainBenchmark(
 
   return {
     strain,
-    avgWinRate: total > 0 ? Math.round((wins / total) * 100) : (base?.avgWinRate || 0),
+    avgWinRate: total > 0 ? Math.round((wins / total) * 100) : null,
     avgResilience: base?.avgResilience || 70,
     avgWeight: Math.round(avgWeight * 10) / 10,
     avgHeight: Math.round(avgHeight),
@@ -399,7 +399,7 @@ export function generateFarmBloodlineSummary(
   avgHybridVigor: number;
   inbreedingRisk: number;
   totalFowls: number;
-  strainRankings: { strain: string; count: number; avgWinRate: number }[];
+  strainRankings: { strain: string; count: number; avgWinRate: number | null }[];
   topCrosses: { pattern: string; tier: string; vigor: number }[];
 } {
   const strainDistribution: Record<string, number> = {};
@@ -434,8 +434,8 @@ export function generateFarmBloodlineSummary(
 
   const strainRankings = Object.entries(strainDistribution)
     .map(([strain, count]) => {
-      const benchmark = STRAIN_BENCHMARKS[strain];
-      return { strain, count, avgWinRate: benchmark?.avgWinRate || 0 };
+      const benchmark = calculateStrainBenchmark(strain, fowls, matchHistory || []);
+      return { strain, count, avgWinRate: benchmark?.avgWinRate ?? null };
     })
     .sort((a, b) => b.count - a.count);
 

@@ -97,7 +97,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-[8px] font-bold text-slate-400">Win Rate</p>
-              <p className="text-[11px] font-black text-sky-700">{report.performanceBenchmark.avgWinRate}%</p>
+              <p className="text-[11px] font-black text-sky-700">{report.performanceBenchmark.avgWinRate !== null ? `${report.performanceBenchmark.avgWinRate}%` : 'N/A'}</p>
             </div>
             <div>
               <p className="text-[8px] font-bold text-slate-400">Fights Tracked</p>

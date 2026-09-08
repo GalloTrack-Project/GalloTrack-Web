@@ -192,7 +192,7 @@ interface FowlContextValue {
     avgHybridVigor: number;
     inbreedingRisk: number;
     totalFowls: number;
-    strainRankings: { strain: string; count: number; avgWinRate: number }[];
+    strainRankings: { strain: string; count: number; avgWinRate: number | null }[];
     topCrosses: { pattern: string; tier: string; vigor: number }[];
   };
 

@@ -65,7 +65,7 @@ export default function FarmBloodlineSummary() {
                   <span className="text-[10px] font-black text-slate-800">{s.strain}</span>
                   <span className="text-[8px] text-slate-400">({s.count} fowls)</span>
                 </div>
-                <span className="text-[9px] font-bold text-sky-600">{s.avgWinRate}% avg win rate</span>
+                <span className="text-[9px] font-bold text-sky-600">{s.avgWinRate !== null ? `${s.avgWinRate}% avg win rate` : 'No match data'}</span>
               </div>
             ))}
           </div>
