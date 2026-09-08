@@ -89,8 +89,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
       if (preferredGender === 'Female' && f.gender !== 'Hen' && f.gender !== 'Female') return false;
       return true;
     })
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 5);
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const accentBg = accent === 'emerald' ? 'bg-emerald-600' : 'bg-amber-500';
   const genderIcon = preferredGender === 'Male' ? '🐓' : preferredGender === 'Female' ? '🐔' : '🐣';
