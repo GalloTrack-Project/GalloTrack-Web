@@ -244,51 +244,117 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
+      {/* MILESTONES & BLOODLINE ROW — 2 CARDS */}
       {upcomingMilestones.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
-            <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">📅</span>
-              <div>
-                <h3 className="text-sm font-black text-slate-900 tracking-tight">Development Calendar &amp; Upcoming Milestones</h3>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Stage transitions predicted from each fowl&apos;s birth date — around the corner: {upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
-              </div>
-            </div>
-            <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">AUTO-CALCULATED</span>
-          </div>
-          <div className="space-y-2">
-            {upcomingMilestones.slice(0, 8).map(({ fowl, info }) => {
-              const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
-              const overdue = info.next !== null && info.next!.daysUntil < 0;
-              return (
-                <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200' : overdue ? 'bg-rose-50/70 border-rose-200' : 'bg-slate-50/60 border-slate-100'}`}>
-                  <span className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-slate-800 truncate">{fowl.name} <span className="text-[9px] font-bold text-slate-400 font-mono">#{fowl.id}</span></p>
-                    <p className="text-[10px] text-slate-400 font-semibold truncate">
-                      {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    {info.next ? (
-                      <>
-                        <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-700' : overdue ? 'text-rose-600' : 'text-amber-700'}`}>
-                          {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
-                        </p>
-                        <p className="text-[9px] font-mono text-slate-400 font-bold">
-                          {info.next.date.toLocaleDateString()} · {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-[10px] font-black text-emerald-700 uppercase">Fully mature</p>
-                    )}
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">📅</span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 tracking-tight">Upcoming Milestones</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
-              );
-            })}
+              </div>
+              <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">AUTO</span>
+            </div>
+            <div className="space-y-2 flex-1">
+              {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {
+                const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
+                const overdue = info.next !== null && info.next!.daysUntil < 0;
+                return (
+                  <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200' : overdue ? 'bg-rose-50/70 border-rose-200' : 'bg-slate-50/60 border-slate-100'}`}>
+                    <span className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black text-slate-800 truncate">{fowl.name} <span className="text-[9px] font-bold text-slate-400 font-mono">#{fowl.id}</span></p>
+                      <p className="text-[10px] text-slate-400 font-semibold truncate">
+                        {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {info.next ? (
+                        <>
+                          <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-700' : overdue ? 'text-rose-600' : 'text-amber-700'}`}>
+                            {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
+                          </p>
+                          <p className="text-[9px] font-mono text-slate-400 font-bold">
+                            {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-[10px] font-black text-emerald-700 uppercase">Fully mature</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/milestones')}
+              className="mt-3 w-full text-center text-[10px] font-bold text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 border border-emerald-200 rounded-xl py-2 transition-all cursor-pointer"
+            >
+              View All Milestones →
+            </button>
           </div>
-          <p className="mt-3 text-[9px] text-slate-400 font-semibold text-right">Mirrors the 📅 Development Timeline on each fowl&apos;s analytics profile.</p>
+
+          {/* BLOODLINE OVERVIEW */}
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-5 sm:p-6 flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-200/60 pb-4 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 flex items-center justify-center text-lg shrink-0">🧬</span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 tracking-tight">Bloodline Overview</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{activeFowls.length} active fowls across all strains</p>
+                </div>
+              </div>
+              <span className="text-[9px] font-mono font-black text-teal-700 bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-full">LIVE</span>
+            </div>
+            <div className="space-y-2 flex-1">
+              {(() => {
+                const strainMap = new Map<string, { count: number; males: number; females: number }>();
+                activeFowls.forEach((f) => {
+                  const strains = (f.breed || 'Unspecified').split(',').map(s => s.trim()).filter(Boolean);
+                  strains.forEach((strain) => {
+                    const existing = strainMap.get(strain) || { count: 0, males: 0, females: 0 };
+                    existing.count++;
+                    if (f.gender === 'Rooster' || f.gender === 'Male') existing.males++;
+                    else existing.females++;
+                    strainMap.set(strain, existing);
+                  });
+                });
+                const sorted = Array.from(strainMap.entries())
+                  .sort((a, b) => b[1].count - a[1].count)
+                  .slice(0, 5);
+                if (sorted.length === 0) return <p className="text-[10px] text-slate-400 font-semibold text-center py-4">No strain data yet.</p>;
+                const maxCount = sorted[0][1].count;
+                return sorted.map(([strain, data]) => (
+                  <div key={strain} className="bg-white/70 border border-teal-100 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-black text-slate-800">{strain}</span>
+                      <span className="text-[9px] font-bold text-teal-600">{data.count} fowl{data.count !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-teal-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <span className="text-[8px] font-bold text-sky-600">🐓 {data.males}</span>
+                      <span className="text-[8px] font-bold text-pink-600">🐔 {data.females}</span>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/lineage')}
+              className="mt-3 w-full text-center text-[10px] font-bold text-teal-600 hover:text-teal-800 hover:bg-teal-100 border border-teal-200 rounded-xl py-2 transition-all cursor-pointer"
+            >
+              View Full Lineage →
+            </button>
+          </div>
         </div>
       )}
 
