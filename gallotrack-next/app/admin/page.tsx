@@ -158,7 +158,7 @@ export default function AdminPanelPage() {
       setProfiles((prev) =>
         prev.map((p) => (p.id === user.id ? { ...p, is_active: !user.is_active } : p))
       );
-      showToast('success', `${user.is_active ? 'Deactivated' : 'Activated'} ${profileDisplayName(user)}`);
+      showToast('success', `Successfully ${user.is_active ? 'deactivated' : 'activated'} ${profileDisplayName(user)}`);
     } catch (err) {
       showToast('error', `Failed to update status: ${(err as Error).message}`);
     } finally {
@@ -178,7 +178,7 @@ export default function AdminPanelPage() {
       setProfiles((prev) =>
         prev.map((p) => (p.id === user.id ? { ...p, role: nextRole, is_admin: nextRole === 'admin' } : p))
       );
-      showToast('success', `${profileDisplayName(user)} is now ${nextRole === 'admin' ? 'an Admin' : 'a Farm Owner'}`);
+      showToast('success', `Successfully ${nextRole === 'admin' ? 'promoted' : 'demoted'} ${profileDisplayName(user)} to ${nextRole === 'admin' ? 'Admin' : 'Farm Owner'}`);
     } catch (err) {
       showToast('error', `Failed to update role: ${(err as Error).message}`);
     } finally {
@@ -192,7 +192,7 @@ export default function AdminPanelPage() {
     try {
       await deleteUserRecords(pendingDelete.id);
       setProfiles((prev) => prev.filter((p) => p.id !== pendingDelete.id));
-      showToast('success', `Removed ${profileDisplayName(pendingDelete)} from the registry`);
+      showToast('success', `Successfully deleted ${profileDisplayName(pendingDelete)} from the registry`);
       setPendingDelete(null);
     } catch (err) {
       showToast('error', `Failed to delete user: ${(err as Error).message}`);
