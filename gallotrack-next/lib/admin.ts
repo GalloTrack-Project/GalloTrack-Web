@@ -65,15 +65,20 @@ export function profileDisplayName(p: AdminProfileRow): string {
 export async function adminGuard(): Promise<AdminProfileRow | null> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
+    console.warn('[adminGuard] No session found, redirecting to /');
     if (typeof window !== 'undefined') window.location.replace('/');
     return null;
   }
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', session.user.id)
     .maybeSingle();
+  if (error) {
+    console.error('[adminGuard] Profile query error:', error.message);
+  }
   if (!isAdminProfile(profile)) {
+    console.warn('[adminGuard] Not admin:', { role: profile?.role, is_admin: profile?.is_admin, profileExists: !!profile });
     if (typeof window !== 'undefined') window.location.replace('/');
     return null;
   }
