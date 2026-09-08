@@ -267,54 +267,6 @@ export default function EncodeForm({
               document.body
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAddStrain((v) => !v)}
-            className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer"
-          >
-            <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">+</span>
-            {showAddStrain ? 'Close' : 'Add new genetic strain'}
-          </button>
-          {showAddStrain && (
-            <div className="mt-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">➕ Add New Genetic Strain</p>
-                <button type="button" onClick={() => { setShowAddStrain(false); setNewStrainName(''); }} className="w-5 h-5 rounded-full bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-400 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer">✕</button>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newStrainName}
-                  onChange={(e) => setNewStrainName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const trimmed = newStrainName.trim();
-                      if (trimmed) { addStrain(trimmed); setNewStrainName(''); setShowAddStrain(false); }
-                    }
-                  }}
-                  placeholder="e.g. Lemon, Sweater, Kelso..."
-                  className="flex-1 p-3 border border-emerald-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    const trimmed = newStrainName.trim();
-                    if (trimmed) { addStrain(trimmed); setNewStrainName(''); setShowAddStrain(false); }
-                  }}
-                  disabled={!newStrainName.trim()}
-                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0"
-                >
-                  Save
-                </button>
-              </div>
-              <p className="text-[9px] text-slate-400 font-semibold">Type the strain name then click <strong className="text-emerald-600">Save</strong> or press Enter.</p>
-            </div>
-          )}
-          <p className="mt-1.5 text-[9px] text-slate-400 font-semibold">Select from the dropdown or click <strong className="text-emerald-600">+ Add new genetic strain</strong> to create one.</p>
-        </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Gender Class</label>
             <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required>
