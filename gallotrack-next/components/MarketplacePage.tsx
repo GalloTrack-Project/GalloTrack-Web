@@ -320,8 +320,8 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
   const filteredFowls = useMemo(() => {
     let result = fowls;
 
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.toLowerCase();
+    const q = search.trim().toLowerCase();
+    if (q) {
       result = result.filter((f) =>
         f.name.toLowerCase().includes(q) ||
         f.breed.toLowerCase().includes(q) ||
@@ -351,7 +351,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
     });
 
     return result;
-  }, [fowls, debouncedSearch, activeTab, sortKey, matchHistory]);
+  }, [fowls, search, activeTab, sortKey, matchHistory]);
 
   return (
     <div className="space-y-6 animate-fadeIn">
