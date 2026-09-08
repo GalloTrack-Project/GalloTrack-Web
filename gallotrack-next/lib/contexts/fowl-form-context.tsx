@@ -63,15 +63,18 @@ interface FowlFormStateContextValue {
   availableStrains: string[];
   setAvailableStrains: React.Dispatch<React.SetStateAction<string[]>>;
   customStrainNames: Set<string>;
+  setCustomStrainNames: React.Dispatch<React.SetStateAction<Set<string>>>;
   strainQuery: string; setStrainQuery: (v: string) => void;
   strainOpen: boolean; setStrainOpen: (v: boolean | ((o: boolean) => boolean)) => void;
   selectedStrains: string[];
+  setSelectedStrains: React.Dispatch<React.SetStateAction<string[]>>;
   addStrain: (strain: string) => void;
   removeStrain: (index: number) => void;
 
   availableLegColors: string[];
   setAvailableLegColors: React.Dispatch<React.SetStateAction<string[]>>;
   customLegColorNames: Set<string>;
+  setCustomLegColorNames: React.Dispatch<React.SetStateAction<Set<string>>>;
   legColorQuery: string; setLegColorQuery: (v: string) => void;
   legColorOpen: boolean; setLegColorOpen: (v: boolean | ((o: boolean) => boolean)) => void;
 
@@ -148,7 +151,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [strainOpen, setStrainOpen] = useState(false);
   const [selectedStrains, setSelectedStrains] = useState<string[]>([]);
   const [availableLegColors, setAvailableLegColors] = useState<string[]>(LEG_COLOR_LIST);
-  const customLegColorNames = useState<Set<string>>(new Set())[0];
+  const [customLegColorNames, setCustomLegColorNames] = useState<Set<string>>(new Set());
   const [legColorQuery, setLegColorQuery] = useState('');
   const [legColorOpen, setLegColorOpen] = useState(false);
 
@@ -235,10 +238,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     editWeight, setEditWeight, editHeight, setEditHeight,
     editLegColor, setEditLegColor, editSire, setEditSire,
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
-    availableStrains, setAvailableStrains, customStrainNames,
+    availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
-    selectedStrains, addStrain, removeStrain,
-    availableLegColors, setAvailableLegColors, customLegColorNames,
+    selectedStrains, setSelectedStrains, addStrain, removeStrain,
+    availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
   };

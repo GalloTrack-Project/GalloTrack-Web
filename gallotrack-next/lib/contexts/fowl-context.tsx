@@ -1,12 +1,9 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/registry';
-import { useDebounce } from '@/lib/use-debounce';
 import { useUI } from './ui-context';
 import { FowlFormStateProvider, useFowlFormState } from './fowl-form-context';
 import {
-  STRAIN_LIST,
-  LEG_COLOR_LIST,
   isMale as isMaleHelper,
   isFemale as isFemaleHelper,
   isFoundationStock,
@@ -112,16 +109,19 @@ interface FowlContextValue {
   availableStrains: string[];
   setAvailableStrains: React.Dispatch<React.SetStateAction<string[]>>;
   customStrainNames: Set<string>;
+  setCustomStrainNames: React.Dispatch<React.SetStateAction<Set<string>>>;
   deleteCustomStrain: (name: string) => Promise<void>;
   strainQuery: string; setStrainQuery: (v: string) => void;
   strainOpen: boolean; setStrainOpen: (v: boolean | ((o: boolean) => boolean)) => void;
   selectedStrains: string[];
+  setSelectedStrains: React.Dispatch<React.SetStateAction<string[]>>;
   addStrain: (strain: string) => void;
   removeStrain: (index: number) => void;
 
   availableLegColors: string[];
   setAvailableLegColors: React.Dispatch<React.SetStateAction<string[]>>;
   customLegColorNames: Set<string>;
+  setCustomLegColorNames: React.Dispatch<React.SetStateAction<Set<string>>>;
   deleteCustomLegColor: (name: string) => Promise<void>;
   legColorQuery: string; setLegColorQuery: (v: string) => void;
   legColorOpen: boolean; setLegColorOpen: (v: boolean | ((o: boolean) => boolean)) => void;
@@ -230,6 +230,40 @@ function sanitizeInput(value: string): string {
 
 export function FowlProviderInternal({ children }: { children: React.ReactNode }) {
   const ui = useUI();
+  const formState = useFowlFormState();
+  const {
+    newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
+    newColor, newColorCategory,
+    newGrowthStage, setNewGrowthStage, newBehaviorTrait, newEyeVariant,
+    newBirthdate, setNewBirthdate,
+    sireName, setSireName, damName, setDamName,
+    sirePct, setSirePct, damPct, setDamPct,
+    weight, setWeight, height, setHeight,
+    newLegColor, setNewLegColor, age, setAge,
+    search, setSearch, debouncedSearch,
+    selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
+    imagePreview, setImagePreview,
+    selectedFowlForMatch, setSelectedFowlForMatch,
+    matchDate, setMatchDate, opponentName, setOpponentName,
+    opponentBreed, setOpponentBreed, matchLocation, setMatchLocation,
+    matchType, setMatchType, matchOutcome, setMatchOutcome,
+    matchPostFight, setMatchPostFight,
+    matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
+    editName, setEditName, editBreed, setEditBreed,
+    editGender, setEditGender, editColorCategory, setEditColorCategory,
+    editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,
+    editEyeVariant, setEditEyeVariant, editAge, setEditAge,
+    editBirthdate, setEditBirthdate, editGrowthStage, setEditGrowthStage,
+    editWeight, setEditWeight, editHeight, setEditHeight,
+    editLegColor, setEditLegColor, editSire, setEditSire,
+    editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
+    availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
+    strainQuery, setStrainQuery, strainOpen, setStrainOpen,
+    selectedStrains, setSelectedStrains,
+    availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
+    legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
+    handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
+  } = formState;
 
   // ── Core data state ──
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
@@ -242,72 +276,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
   const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemaleHelper(f.gender));
-
-  // ── New fowl form state ──
-  const [newName, setNewName] = useState('');
-  const [newBreed, setNewBreed] = useState('');
-  const [newGender, setNewGender] = useState('');
-  const [newColor, setNewColor] = useState('Bright Red');
-  const [newColorCategory, setNewColorCategory] = useState('Red');
-  const [newGrowthStage, setNewGrowthStage] = useState('');
-  const [newBehaviorTrait, setNewBehaviorTrait] = useState('Wave-Motion Tracker');
-  const [newEyeVariant, setNewEyeVariant] = useState('Standard Eye');
-  const [newBirthdate, setNewBirthdate] = useState('');
-  const [sireName, setSireName] = useState('');
-  const [damName, setDamName] = useState('');
-  const [sirePct, setSirePct] = useState<number | string>('');
-  const [damPct, setDamPct] = useState<number | string>('');
-  const [weight, setWeight] = useState('');
-  const [height, setHeight] = useState('');
-  const [newLegColor, setNewLegColor] = useState('');
-  const [age, setAge] = useState('');
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 300);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imagePreview, setImagePreview] = useState('');
-
-  // ── Match form state ──
-  const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
-  const [matchDate, setMatchDate] = useState('');
-  const [opponentName, setOpponentName] = useState('');
-  const [opponentBreed, setOpponentBreed] = useState('');
-  const [matchLocation, setMatchLocation] = useState('');
-  const [matchType, setMatchType] = useState('Derby Match');
-  const [matchOutcome, setMatchOutcome] = useState('Win');
-  const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
-  const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-
-  // ── Edit form state ──
-  const [editName, setEditName] = useState('');
-  const [editBreed, setEditBreed] = useState('');
-  const [editGender, setEditGender] = useState('');
-  const [editColorCategory, setEditColorCategory] = useState('');
-  const [editColor, setEditColor] = useState('');
-  const [editBehaviorTrait, setEditBehaviorTrait] = useState('');
-  const [editEyeVariant, setEditEyeVariant] = useState('');
-  const [editAge, setEditAge] = useState('');
-  const [editBirthdate, setEditBirthdate] = useState('');
-  const [editGrowthStage, setEditGrowthStage] = useState('');
-  const [editWeight, setEditWeight] = useState('');
-  const [editHeight, setEditHeight] = useState('');
-  const [editLegColor, setEditLegColor] = useState('');
-  const [editSire, setEditSire] = useState('');
-  const [editDam, setEditDam] = useState('');
-  const [editSirePct, setEditSirePct] = useState<number | string>(100);
-  const [editDamPct, setEditDamPct] = useState<number | string>(100);
-
-  // ── Dynamic dropdowns ──
-  const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
-  const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
-  const [strainQuery, setStrainQuery] = useState('');
-  const [strainOpen, setStrainOpen] = useState(false);
-  const [selectedStrains, setSelectedStrains] = useState<string[]>([]);
-  const [availableLegColors, setAvailableLegColors] = useState<string[]>(LEG_COLOR_LIST);
-  const [customLegColorNames, setCustomLegColorNames] = useState<Set<string>>(new Set());
-  const [legColorQuery, setLegColorQuery] = useState('');
-  const [legColorOpen, setLegColorOpen] = useState(false);
 
   // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
@@ -340,45 +308,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const damGenInfo = generationInfo(damGen);
   const computedBloodlinePct = generationPurity(offspringGen);
 
-  // ── Age/birthdate handlers ──
-  const handleAgeChange = useCallback((val: string, genderVal: string = '') => {
-    setAge(val);
-    if (val.trim() === '' || isNaN(Number(val))) {
-      setNewGrowthStage('');
-    } else {
-      setNewGrowthStage(autoComputeGrowthStage(Number(val), genderVal || newGender));
-    }
-  }, [newGender]);
-
-  const handleEditAgeChange = useCallback((val: string, genderVal: string = '') => {
-    setEditAge(val);
-    if (val.trim() === '' || isNaN(Number(val))) {
-      setEditGrowthStage('');
-    } else {
-      setEditGrowthStage(autoComputeGrowthStage(Number(val), genderVal || editGender));
-    }
-  }, [editGender]);
-
-  const handleNewBirthdateChange = useCallback((val: string) => {
-    setNewBirthdate(val);
-    const parts = getAgePartsHelper(val);
-    if (parts) {
-      setAge(String(parts.totalMonths));
-      setNewGrowthStage(autoComputeGrowthStage(parts.totalMonths, newGender || 'Rooster'));
-    } else {
-      setAge('');
-      setNewGrowthStage('');
-    }
-  }, [newGender]);
-
-  const handleEditBirthdateChange = useCallback((val: string) => {
-    setEditBirthdate(val);
-    const parts = getAgePartsHelper(val);
-    if (parts) {
-      setEditAge(String(parts.totalMonths));
-      setEditGrowthStage(autoComputeGrowthStage(parts.totalMonths, editGender || 'Rooster'));
-    }
-  }, [editGender]);
+  // ── Age/birthdate handlers (from formState) ──
 
   // ── Data fetching ──
   const fetchDatabaseResources = useCallback(async () => {
@@ -769,37 +699,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const getSiblingRelationsLocal = useCallback((f: FowlRecord) => getSiblingRelationsHelper(f, fowls), [fowls]);
 
   const value: FowlContextValue = {
+    ...formState,
+    deleteCustomStrain,
+    deleteCustomLegColor,
     fowls, setFowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
     matchHistory, setMatchHistory, loading, setLoading,
-    newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
-    newColor, setNewColor, newColorCategory, setNewColorCategory,
-    newGrowthStage, setNewGrowthStage, newBehaviorTrait, setNewBehaviorTrait,
-    newEyeVariant, setNewEyeVariant, newBirthdate, setNewBirthdate,
-    sireName, setSireName, damName, setDamName,
-    sirePct, setSirePct, damPct, setDamPct,
-    weight, setWeight, height, setHeight,
-    newLegColor, setNewLegColor, age, setAge, search, setSearch, debouncedSearch,
-    selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
-    imagePreview, setImagePreview,
-    selectedFowlForMatch, setSelectedFowlForMatch,
-    matchDate, setMatchDate, opponentName, setOpponentName, opponentBreed, setOpponentBreed,
-    matchLocation, setMatchLocation, matchType, setMatchType,
-    matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
-    matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
-    editName, setEditName, editBreed, setEditBreed,
-    editGender, setEditGender, editColorCategory, setEditColorCategory,
-    editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,
-    editEyeVariant, setEditEyeVariant, editAge, setEditAge,
-    editBirthdate, setEditBirthdate, editGrowthStage, setEditGrowthStage,
-    editWeight, setEditWeight, editHeight, setEditHeight,
-    editLegColor, setEditLegColor, editSire, setEditSire,
-    editDam, setEditDam, editSirePct, setEditSirePct,
-    editDamPct, setEditDamPct,
-    availableStrains, setAvailableStrains, customStrainNames, deleteCustomStrain,
-    strainQuery, setStrainQuery, strainOpen, setStrainOpen,
-    selectedStrains, addStrain, removeStrain,
-    availableLegColors, setAvailableLegColors, customLegColorNames, deleteCustomLegColor,
-    legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,
     winRatePct: analytics.winRatePct,
@@ -819,7 +723,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,
     handleRestoreFowlOnly, handlePermanentDelete, handleMarkFowlDeceased,
     fetchDatabaseResources,
-    handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
     generationOf: generationOfLocal,
     parentBloodlinePct: parentBloodlinePctLocal,
     getSiblingRelations: getSiblingRelationsLocal,
