@@ -126,8 +126,6 @@ export default function ProfilingPage() {
           strainQuery={strainQuery} setStrainQuery={setStrainQuery}
           strainOpen={strainOpen} setStrainOpen={setStrainOpen}
           availableStrains={availableStrains}
-          customStrainNames={customStrainNames}
-          deleteCustomStrain={deleteCustomStrain}
           selectedStrains={selectedStrains}
           addStrain={addStrain}
           removeStrain={removeStrain}
