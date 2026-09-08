@@ -53,10 +53,18 @@ export default function ProfilingPage() {
           <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Fowl Registry</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-0.5">Register and manage your gamefowl lineage, traits, and match records</p>
           </div>
+          <button
+            type="button"
+            onClick={() => router.push('/breeds')}
+            className="shrink-0 flex items-center gap-1.5 bg-muted hover:bg-emerald-50 border border-border hover:border-emerald-200 text-muted-foreground hover:text-emerald-700 text-[10px] font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
+          >
+            <span className="text-sm">🏷️</span>
+            <span className="hidden sm:inline">Manage Breeds</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0">

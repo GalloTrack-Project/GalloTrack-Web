@@ -12,7 +12,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
   { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
-  { href: '/breeds', label: 'Breed Registry', icon: '🏷️' },
   { href: '/marketplace', label: 'Breeding Catalog', icon: '🥚' },
   { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
   { href: '/profile', label: 'Profile Management', icon: '👤' },
@@ -21,7 +20,6 @@ const NAV_ITEMS = [
 const MOBILE_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/profiling', label: 'Registry', icon: '🧬' },
-  { href: '/breeds', label: 'Breeds', icon: '🏷️' },
   { href: '/lineage', label: 'Family', icon: '🌳' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
