@@ -46,7 +46,8 @@ export interface AdminProfileRow {
 }
 
 export function isAdminProfile(profile: Pick<AdminProfileRow, 'is_admin' | 'role'> | null | undefined): boolean {
-  return !!profile && (profile.is_admin === true || profile.role === 'admin');
+  if (!profile) return false;
+  return profile.role === 'admin' || profile.is_admin === true;
 }
 
 export function profileDisplayName(p: AdminProfileRow): string {
