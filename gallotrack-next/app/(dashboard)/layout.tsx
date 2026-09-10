@@ -15,7 +15,6 @@ const OWNER_NAV = [
   { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
   { href: '/catalog', label: 'Breeding Catalog', icon: '🥚' },
   { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile Management', icon: '👤' },
 ];
 
@@ -24,7 +23,6 @@ const OWNER_MOBILE = [
   { href: '/profiling', label: 'Registry', icon: '🧬' },
   { href: '/catalog', label: 'Catalog', icon: '🥚' },
   { href: '/lineage', label: 'Family', icon: '🌳' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
 
@@ -204,6 +202,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <img src={auth.avatarUrl} alt="Profile" className="md:hidden w-8 h-8 rounded-full object-cover border border-slate-700/60" />
               ) : (
                 <div className={`md:hidden w-8 h-8 rounded-full ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center text-sm`}>👤</div>
+              )}
+              {!isAdmin && (
+                <Link
+                  href="/settings"
+                  className={`w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer`}
+                  title="Settings"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                </Link>
               )}
               {mounted && (
                 <button
