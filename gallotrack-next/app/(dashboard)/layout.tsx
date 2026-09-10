@@ -6,10 +6,11 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
+import { supabase } from '@/lib/registry';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-const NAV_ITEMS = [
+const OWNER_NAV = [
   { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
   { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
   { href: '/marketplace', label: 'Breeding Catalog', icon: '🥚' },
@@ -17,10 +18,24 @@ const NAV_ITEMS = [
   { href: '/profile', label: 'Profile Management', icon: '👤' },
 ];
 
-const MOBILE_NAV_ITEMS = [
+const OWNER_MOBILE = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/profiling', label: 'Registry', icon: '🧬' },
   { href: '/lineage', label: 'Family', icon: '🌳' },
+  { href: '/profile', label: 'Profile', icon: '👤' },
+];
+
+const ADMIN_NAV = [
+  { href: '/dashboard', label: 'Farm Dashboard', icon: '📊' },
+  { href: '/admin', label: 'User Management', icon: '👥' },
+  { href: '/admin/settings', label: 'System Settings', icon: '⚙️' },
+  { href: '/profile', label: 'Profile Management', icon: '👤' },
+];
+
+const ADMIN_MOBILE = [
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/admin', label: 'Users', icon: '👥' },
+  { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
 
@@ -30,8 +45,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const ui = useUI();
   const auth = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState({ total_users: 0, total_fowls: 0, total_matches: 0 });
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!auth.isAdmin) return;
+    async function loadStats() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch('/api/admin/stats', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) setStats(await res.json());
+    }
+    loadStats();
+  }, [auth.isAdmin]);
+
+  const isAdmin = auth.isAdmin;
+  const navItems = isAdmin ? ADMIN_NAV : OWNER_NAV;
+  const mobileItems = isAdmin ? ADMIN_MOBILE : OWNER_MOBILE;
+  const accent = isAdmin ? 'amber' : 'emerald';
+
+  function isActive(href: string) {
+    if (href === '/admin') return pathname === '/admin';
+    if (href === '/dashboard') return pathname === '/dashboard';
+    return pathname.startsWith(href);
+  }
 
   return (
     <div className="bg-background min-h-screen font-sans antialiased text-foreground flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative selection:bg-emerald-500 selection:text-white">
@@ -46,23 +86,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
 
+      {/* SIDEBAR */}
       <aside className="hidden md:flex w-64 bg-card text-card-foreground flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-border shadow-2xl h-full justify-between">
         <div>
-          <div className="p-6 border-b border-border bg-muted/40 flex items-center space-x-3">
-            <div className="w-9 h-9 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-lg shadow-inner">🐓</div>
+          <div className={`p-6 border-b border-border bg-muted/40 flex items-center space-x-3`}>
+            <div className={`w-9 h-9 ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} rounded-xl flex items-center justify-center text-lg shadow-inner`}>
+              {isAdmin ? '🛡️' : '🐓'}
+            </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight text-card-foreground">GALLO<span className="text-emerald-400">TRACK</span></h2>
-              <span className="text-[9px] font-mono font-bold text-emerald-400 tracking-widest uppercase block">v1.0.0</span>
+              <h2 className="text-xl font-black tracking-tight text-card-foreground">GALLO<span className={isAdmin ? 'text-amber-400' : 'text-emerald-400'}>TRACK</span></h2>
+              <span className={`text-[9px] font-mono font-bold ${isAdmin ? 'text-amber-400' : 'text-emerald-400'} tracking-widest uppercase block`}>
+                {isAdmin ? 'ADMIN PANEL' : 'v1.0.0'}
+              </span>
             </div>
           </div>
           <nav className="p-4 space-y-1.5 mt-2">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 ${
-                  pathname === item.href
-                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]'
+                  isActive(item.href)
+                    ? isAdmin
+                      ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-md shadow-amber-700/30 font-black scale-[1.01]'
+                      : 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-700/30 font-black scale-[1.01]'
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`}
               >
@@ -76,44 +123,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-4 border-t border-border bg-muted/40 space-y-3">
           <div className="flex items-center space-x-3 px-2 py-1 select-none">
             {auth.avatarUrl ? (
-              <img src={auth.avatarUrl} alt="Admin Avatar" className="w-8 h-8 rounded-lg object-cover border border-slate-700/60" />
+              <img src={auth.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-lg object-cover border border-slate-700/60" />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shadow-inner">👤</div>
+              <div className={`w-8 h-8 rounded-lg ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center text-sm shadow-inner`}>👤</div>
             )}
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-extrabold text-card-foreground truncate">{auth.adminName}</p>
               <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                auth.isAdmin
+                isAdmin
                   ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
                   : 'bg-sky-500/15 border-sky-500/30 text-sky-400'
               }`}>
-                {auth.isAdmin ? 'ADMIN' : 'FARM OWNER'}
+                {isAdmin ? 'ADMIN' : 'FARM OWNER'}
               </span>
             </div>
           </div>
+
+          {isAdmin && (
+            <div className="px-2 -mt-1 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">System Overview</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <div className="bg-muted/50 rounded-lg p-1.5 text-center">
+                  <p className="text-[10px] font-black text-amber-400">{stats.total_users}</p>
+                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Users</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-1.5 text-center">
+                  <p className="text-[10px] font-black text-emerald-400">{stats.total_fowls}</p>
+                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Fowls</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-1.5 text-center">
+                  <p className="text-[10px] font-black text-sky-400">{stats.total_matches}</p>
+                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Matches</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="px-2 -mt-1 flex items-center justify-between gap-2">
             <span className={`inline-flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest ${auth.userActive ? 'text-emerald-400' : 'text-rose-400'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${auth.userActive ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}></span>
               {auth.userActive ? 'Access Active' : 'Access Restricted'}
             </span>
-            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider truncate">📍 {auth.userHub}</span>
+            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider truncate">{auth.userHub}</span>
           </div>
           <button type="button" onClick={() => ui.setShowLogoutModal(true)} className="w-full bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 border border-border hover:border-rose-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
             <span>🚪 Log Out</span>
           </button>
-          <div className="text-center text-[9px] text-muted-foreground font-mono tracking-widest uppercase">{auth.userHub}</div>
         </div>
       </aside>
 
+      {/* MAIN CONTENT */}
       <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-16 md:pb-0">
         <header className="bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0">
           <div className="py-3.5 px-4 sm:px-6 md:px-8 flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <span className="md:hidden font-black text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground to-emerald-400 bg-clip-text text-transparent">GALLOTRACK</span>
-              <div className="hidden md:flex items-center space-x-2 select-none" title="Supabase PostgreSQL link: Online">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-500/40"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500/80"></span>
+              <span className={`md:hidden font-black text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground ${isAdmin ? 'to-amber-400' : 'to-emerald-400'} bg-clip-text text-transparent`}>
+                {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'}
+              </span>
+              <div className="hidden md:flex items-center space-x-2 select-none">
+                <span className={`relative flex h-1.5 w-1.5`}>
+                  <span className={`animate-pulse absolute inline-flex h-full w-full rounded-full ${isAdmin ? 'bg-amber-500/40' : 'bg-emerald-500/40'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isAdmin ? 'bg-amber-500/80' : 'bg-emerald-500/80'}`}></span>
                 </span>
                 <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">PostgreSQL Connected</span>
               </div>
@@ -122,37 +194,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {auth.avatarUrl ? (
                 <img src={auth.avatarUrl} alt="Profile" className="md:hidden w-8 h-8 rounded-full object-cover border border-slate-700/60" />
               ) : (
-                <div className="md:hidden w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm">👤</div>
+                <div className={`md:hidden w-8 h-8 rounded-full ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center text-sm`}>👤</div>
               )}
-              <div className="hidden md:flex items-center space-x-2 select-none" title="Supabase PostgreSQL link: Online">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-500/40"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500/80"></span>
-                </span>
-                <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">PostgreSQL Connected</span>
-              </div>
-              <div className="antigravity-badge hidden sm:flex bg-muted border border-border text-muted-foreground px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-bold items-center space-x-1.5 shadow-2xs" style={{ animationDelay: '1.2s' }}>
-                <span className="text-muted-foreground">📍</span>
-                <span>{auth.userHub || 'Dingle Campus Cluster'}</span>
-              </div>
               {mounted && (
                 <button
                   type="button"
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer"
+                  className={`w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:${isAdmin ? 'text-amber-500 hover:border-amber-500/50' : 'text-emerald-500 hover:border-emerald-500/50'} hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer`}
                   title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                  aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               )}
-              <Link
-                href="/settings"
-                className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer"
-                title="System Settings"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              </Link>
               <button
                 type="button"
                 onClick={() => ui.setShowLogoutModal(true)}
@@ -173,14 +226,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <ModalsWrapper />
 
+        {/* MOBILE BOTTOM NAV */}
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-2xl md:hidden pb-[env(safe-area-inset-bottom,0px)]">
           <div className="flex justify-around items-center h-16 px-1">
-            {MOBILE_NAV_ITEMS.map((item) => (
+            {mobileItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-all duration-200 active:scale-95 ${
-                  pathname === item.href ? 'text-emerald-500 font-black scale-105' : 'text-muted-foreground hover:text-foreground font-medium'
+                  isActive(item.href)
+                    ? `${isAdmin ? 'text-amber-500' : 'text-emerald-500'} font-black scale-105`
+                    : 'text-muted-foreground hover:text-foreground font-medium'
                 }`}
               >
                 <span className="text-xl leading-none">{item.icon}</span>
