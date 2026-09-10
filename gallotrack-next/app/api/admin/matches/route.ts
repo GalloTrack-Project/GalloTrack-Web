@@ -26,28 +26,25 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('user_id');
 
-  // If user_id is provided, fetch fowls for that specific user
   if (userId) {
-    const { data: fowls, error } = await admin
-      .from('fowl')
-      .select('id, name, breed, gender, growth_stage, birthdate, status, created_at, sire, dam, image_url')
+    const { data: matches, error } = await admin
+      .from('match')
+      .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('id', { ascending: false });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ fowls: fowls || [] });
+    return NextResponse.json({ matches: matches || [] });
   }
 
-  // If no user_id, fetch ALL fowls (admin flock audit)
-  const { data: fowls, error } = await admin
-    .from('fowl')
-    .select('id, name, breed, gender, growth_stage, birthdate, status, created_at, sire, dam, image_url, user_id')
-    .order('created_at', { ascending: false });
+  const { data: matches, error } = await admin
+    .from('match')
+    .select('*')
+    .order('id', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Fetch owner names for each fowl
-  const userIds = [...new Set((fowls || []).map((f: { user_id: string }) => f.user_id))];
+  const userIds = [...new Set((matches || []).map((m: { user_id: string }) => m.user_id))];
   const { data: profiles } = await admin
     .from('profiles')
     .select('id, full_name, farm_name')
@@ -55,11 +52,11 @@ export async function GET(request: NextRequest) {
 
   const profileMap = new Map((profiles || []).map((p: { id: string; full_name?: string; farm_name?: string }) => [p.id, p]));
 
-  const enriched = (fowls || []).map((f: Record<string, unknown>) => ({
-    ...f,
-    owner_name: profileMap.get(f.user_id as string)?.full_name || 'Unknown',
-    farm_name: profileMap.get(f.user_id as string)?.farm_name || 'Unknown',
+  const enriched = (matches || []).map((m: Record<string, unknown>) => ({
+    ...m,
+    owner_name: profileMap.get(m.user_id as string)?.full_name || 'Unknown',
+    farm_name: profileMap.get(m.user_id as string)?.farm_name || 'Unknown',
   }));
 
-  return NextResponse.json({ fowls: enriched });
+  return NextResponse.json({ matches: enriched });
 }

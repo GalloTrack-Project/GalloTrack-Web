@@ -10,12 +10,18 @@ import { supabase } from '@/lib/registry';
 import { isAdminProfile } from '@/lib/admin';
 
 const ADMIN_NAV_ITEMS = [
+  { href: '/dashboard', label: 'Farm Dashboard', icon: '📊' },
   { href: '/admin', label: 'User Management', icon: '👥' },
+  { href: '/admin/flocks', label: 'Flock Audit', icon: '🐓' },
+  { href: '/admin/matches', label: 'Match Audit', icon: '⚔️' },
   { href: '/admin/settings', label: 'System Settings', icon: '⚙️' },
 ];
 
 const ADMIN_MOBILE_NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/admin', label: 'Users', icon: '👥' },
+  { href: '/admin/flocks', label: 'Flocks', icon: '🐓' },
+  { href: '/admin/matches', label: 'Matches', icon: '⚔️' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -135,10 +141,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <Link
-            href="/dashboard"
-            className="w-full bg-muted hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-400 border border-border hover:border-emerald-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all"
+            href="/profile"
+            className="w-full bg-muted hover:bg-amber-500/10 text-muted-foreground hover:text-amber-400 border border-border hover:border-amber-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all"
           >
-            <span>🏠 Farm Owner View</span>
+            <span>👤 Profile</span>
           </Link>
           <button type="button" onClick={() => ui.setShowLogoutModal(true)} className="w-full bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 border border-border hover:border-rose-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
             <span>🚪 Log Out</span>
