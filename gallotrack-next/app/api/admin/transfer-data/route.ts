@@ -33,14 +33,15 @@ export async function POST(request: NextRequest) {
 
     // Find target user by email using admin lookup
     const { data: targetUser, error: lookupError } = await admin.serviceClient.auth.admin.listUsers({
-      filters: { email: target_email },
+      page: 1,
+      perPage: 1000,
     });
 
     if (lookupError) {
       return NextResponse.json({ error: `Lookup failed: ${lookupError.message}` }, { status: 500 });
     }
 
-    const target = targetUser.users?.[0];
+    const target = targetUser.users?.find((u) => u.email === target_email);
     if (!target) {
       return NextResponse.json({ error: `No user found with email: ${target_email}` }, { status: 404 });
     }

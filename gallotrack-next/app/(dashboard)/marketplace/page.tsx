@@ -111,7 +111,7 @@ export default function MarketplacePage() {
   }, [myListings, search]);
 
   const handleSelectFowl = (fowlId: string) => {
-    const fowl = fowls.find((f) => f.id === fowlId);
+    const fowl = fowls.find((f) => String(f.id) === fowlId);
     if (!fowl) return;
     setForm((prev) => ({
       ...prev,

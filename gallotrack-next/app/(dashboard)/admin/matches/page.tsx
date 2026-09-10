@@ -23,7 +23,7 @@ type Match = {
   farm_name: string;
 };
 
-type Stats = { total: number; wins: number; losses: draws: number; deceased: number };
+type Stats = { total: number; wins: number; losses: number; draws: number; deceased: number };
 
 export default function AdminMatchAuditPage() {
   const [authorized, setAuthorized] = useState(false);
