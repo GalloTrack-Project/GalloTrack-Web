@@ -76,10 +76,18 @@ export async function adminGuard(): Promise<AdminProfileRow | null> {
     .maybeSingle();
   if (error) {
     console.error('[adminGuard] Profile query error:', error.message);
+    if (typeof window !== 'undefined') {
+      alert('Admin access failed: ' + error.message);
+      window.location.replace('/');
+    }
+    return null;
   }
   if (!isAdminProfile(profile)) {
     console.warn('[adminGuard] Not admin:', { role: profile?.role, is_admin: profile?.is_admin, profileExists: !!profile });
-    if (typeof window !== 'undefined') window.location.replace('/');
+    if (typeof window !== 'undefined') {
+      alert('You do not have admin privileges.');
+      window.location.replace('/');
+    }
     return null;
   }
   return profile as AdminProfileRow;
@@ -149,6 +157,22 @@ export async function fetchSystemSettings(): Promise<AdminSettings> {
     default_strain: raw.default_strain || 'Sweater',
     cloud_logs: raw.cloud_logs !== false,
     event_alerts: raw.event_alerts !== false,
+    allow_registrations: raw.allow_registrations !== false,
+    auto_approve_users: raw.auto_approve_users !== false,
+    public_fowl_data: raw.public_fowl_data === true,
+    default_user_role: raw.default_user_role || 'owner',
+    farm_name: raw.farm_name || '',
+    farm_location: raw.farm_location || '',
+    farm_description: raw.farm_description || '',
+    contact_number: raw.contact_number || '',
+    default_match_type: raw.default_match_type || '',
+    default_arena: raw.default_arena || '',
+    weight_unit: raw.weight_unit || 'kg',
+    height_unit: raw.height_unit || 'cm',
+    milestone_alerts: raw.milestone_alerts !== false,
+    overdue_alerts: raw.overdue_alerts !== false,
+    auto_calculate_age: raw.auto_calculate_age !== false,
+    theme: raw.theme || 'dark',
   };
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,14 +15,14 @@ function getSupabase(request: NextRequest) {
   });
 }
 
-async function verifyActiveUser(supabaseClient: ReturnType<typeof createClient>) {
+async function verifyActiveUser(supabaseClient: SupabaseClient) {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return { error: 'Unauthorized' as const };
   const { data: profile } = await supabaseClient
     .from('profiles')
     .select('is_active')
     .eq('id', user.id)
-    .maybeSingle();
+    .maybeSingle<{ is_active?: boolean | null }>();
   if (profile?.is_active === false) return { error: 'Account deactivated' as const };
   return { user };
 }
