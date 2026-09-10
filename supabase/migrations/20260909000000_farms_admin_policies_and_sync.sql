@@ -1,8 +1,11 @@
 -- ==============================================================================
--- GALLOTRACK: FARMS ADMIN POLICIES + CLEANUP (idempotent)
+-- GALLOTRACK: FARMS/STRAINS ADMIN POLICIES + CLEANUP (idempotent)
 -- ==============================================================================
 -- Adds admin read-all and delete-any policies to the `farms` table so that
 -- admin users can view and manage farm records for user deletion workflows.
+--
+-- Adds admin manage policies to `strains` table so admin can manage the
+-- shared genetic strain library.
 --
 -- Also consolidates the dual is_admin/role flags by adding a trigger that
 -- keeps them in sync automatically.
@@ -25,7 +28,24 @@ CREATE POLICY admin_delete_any_farms ON farms
   );
 
 -- ==============================================================================
--- 2. SYNC TRIGGER: keep is_admin and role columns in sync
+-- 2. STRAINS: admin update/delete policies for shared strain library
+-- ==============================================================================
+DROP POLICY IF EXISTS admin_update_any_strains ON strains;
+CREATE POLICY admin_update_any_strains ON strains
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM profiles adm WHERE adm.id::uuid = auth.uid() AND (adm.is_admin = true OR adm.role = 'admin'))
+  ) WITH CHECK (
+    EXISTS (SELECT 1 FROM profiles adm WHERE adm.id::uuid = auth.uid() AND (adm.is_admin = true OR adm.role = 'admin'))
+  );
+
+DROP POLICY IF EXISTS admin_delete_any_strains ON strains;
+CREATE POLICY admin_delete_any_strains ON strains
+  FOR DELETE USING (
+    EXISTS (SELECT 1 FROM profiles adm WHERE adm.id::uuid = auth.uid() AND (adm.is_admin = true OR adm.role = 'admin'))
+  );
+
+-- ==============================================================================
+-- 3. SYNC TRIGGER: keep is_admin and role columns in sync
 --    Prevents desync between the two parallel admin flags.
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION sync_admin_flags()
@@ -57,17 +77,19 @@ CREATE TRIGGER sync_admin_flags_trigger
   EXECUTE FUNCTION sync_admin_flags();
 
 -- ==============================================================================
--- 3. POST-RUN VERIFICATION
+-- 4. POST-RUN VERIFICATION
 -- ==============================================================================
 -- (1) Admin policies on farms:
 --     SELECT policyname FROM pg_policies
 --     WHERE schemaname = 'public' AND tablename = 'farms'
 --     ORDER BY policyname;
---     EXPECT: admin_delete_any_farms, admin_read_all_farms,
---             farms_owner_delete, farms_owner_insert,
---             farms_owner_select, farms_owner_update
 --
--- (2) Verify trigger exists:
+-- (2) Admin policies on strains:
+--     SELECT policyname FROM pg_policies
+--     WHERE schemaname = 'public' AND tablename = 'strains'
+--     ORDER BY policyname;
+--
+-- (3) Verify trigger exists:
 --     SELECT trigger_name FROM information_schema.triggers
 --     WHERE event_object_table = 'profiles' AND trigger_name = 'sync_admin_flags_trigger';
 -- ==============================================================================
