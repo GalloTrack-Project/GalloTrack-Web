@@ -27,8 +27,6 @@ const OWNER_MOBILE = [
 
 const ADMIN_NAV = [
   { href: '/dashboard', label: 'Farm Dashboard', icon: '📊' },
-  { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
-  { href: '/lineage', label: 'Family Lineage', icon: '🌳' },
   { href: '/admin', label: 'User Management', icon: '👥' },
   { href: '/admin/flocks', label: 'Flock Audit', icon: '🐓' },
   { href: '/admin/matches', label: 'Match Audit', icon: '⚔️' },
@@ -38,8 +36,6 @@ const ADMIN_NAV = [
 
 const ADMIN_MOBILE = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/profiling', label: 'Registry', icon: '🧬' },
-  { href: '/lineage', label: 'Lineage', icon: '🌳' },
   { href: '/admin', label: 'Users', icon: '👥' },
   { href: '/admin/flocks', label: 'Flocks', icon: '🐓' },
   { href: '/admin/matches', label: 'Matches', icon: '⚔️' },
