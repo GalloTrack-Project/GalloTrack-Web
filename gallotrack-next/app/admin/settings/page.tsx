@@ -22,6 +22,11 @@ export default function AdminSettingsPage() {
   const [publicFowlData, setPublicFowlData] = useState(false);
   const [defaultUserRole, setDefaultUserRole] = useState('owner');
 
+  // Data Transfer state
+  const [transferEmail, setTransferEmail] = useState('');
+  const [transferring, setTransferring] = useState(false);
+  const [transferResult, setTransferResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   useEffect(() => {
     (async () => {
       const profile = await adminGuard();
@@ -70,6 +75,40 @@ export default function AdminSettingsPage() {
       setMessage({ type: 'error', text: `Save failed: ${(err as Error).message}` });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTransferData = async () => {
+    if (!transferEmail.trim()) {
+      setTransferResult({ type: 'error', text: 'Please enter the target farm owner email.' });
+      return;
+    }
+    setTransferring(true);
+    setTransferResult(null);
+    try {
+      const { supabase } = await import('@/lib/registry');
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        setTransferResult({ type: 'error', text: 'Not authenticated.' });
+        return;
+      }
+      const res = await fetch('/api/admin/transfer-data', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_email: transferEmail.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTransferResult({ type: 'success', text: `Transferred ${data.fowls_transferred} fowls and ${data.matches_transferred} matches to ${transferEmail}` });
+        setTransferEmail('');
+      } else {
+        setTransferResult({ type: 'error', text: data.error || 'Transfer failed' });
+      }
+    } catch {
+      setTransferResult({ type: 'error', text: 'Network error during transfer.' });
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -255,6 +294,48 @@ export default function AdminSettingsPage() {
               </div>
               <input type="checkbox" checked={eventAlerts} onChange={(e) => setEventAlerts(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
             </label>
+          </div>
+
+          {/* DATA TRANSFER */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Data Transfer</h2>
+            <p className="text-[11px] text-muted-foreground font-medium">
+              Transfer all fowl and match data from this admin account to a farm owner account. This moves your encoded chickens to the farm owner dashboard.
+            </p>
+
+            <div>
+              <label className={labelClass}>Target Farm Owner Email</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">📧</span>
+                <input
+                  type="email"
+                  value={transferEmail}
+                  onChange={(e) => setTransferEmail(e.target.value)}
+                  className={`${inputClass} pl-9`}
+                  placeholder="e.g., hazeldato-on@isufst.edu.ph"
+                />
+              </div>
+            </div>
+
+            {transferResult && (
+              <div className={`text-xs font-bold p-3 rounded-xl border ${
+                transferResult.type === 'success'
+                  ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                  : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
+              }`}>
+                {transferResult.text}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleTransferData}
+              disabled={transferring || !transferEmail.trim()}
+              className="w-full text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white shadow-md shadow-purple-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {transferring && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+              {transferring ? 'Transferring...' : 'Transfer Data to Farm Owner'}
+            </button>
           </div>
 
         </form>
