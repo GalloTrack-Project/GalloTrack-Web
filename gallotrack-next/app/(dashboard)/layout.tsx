@@ -70,15 +70,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span>{item.label}</span>
               </Link>
             ))}
-            {auth.isAdmin && (
-              <Link
-                href="/admin"
-                className="w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-              >
-                <span className="text-base">🛡️</span>
-                <span>Admin Panel</span>
-              </Link>
-            )}
           </nav>
         </div>
 

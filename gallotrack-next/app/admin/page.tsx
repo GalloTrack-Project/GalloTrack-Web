@@ -204,7 +204,7 @@ export default function AdminPanelPage() {
   if (loading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
-        <div className="w-10 h-10 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">Verifying admin access...</p>
       </div>
     );
@@ -243,34 +243,17 @@ export default function AdminPanelPage() {
 
   return (
     <div className="min-h-screen w-full bg-background relative overflow-hidden">
-      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-emerald-400/5 dark:bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/5 dark:bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-xl shadow-inner">🛡️</div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-                GALLO<span className="text-emerald-400">TRACK</span> <span className="text-emerald-400">ADMIN</span>
-              </h1>
-              <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">User Management &amp; Access Control</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin/settings"
-              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-card/95 backdrop-blur-xl border border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/40 transition-all cursor-pointer"
-            >
-              ⚙️ Settings
-            </Link>
-            <Link
-              href="/"
-              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer"
-            >
-              ← Back
-            </Link>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
+              User <span className="text-amber-400">Management</span>
+            </h1>
+            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Access Control &amp; Account Administration</p>
           </div>
         </div>
 
@@ -278,7 +261,7 @@ export default function AdminPanelPage() {
           <div
             className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
               toast.type === 'success'
-                ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
                 : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
             }`}
           >
@@ -288,10 +271,10 @@ export default function AdminPanelPage() {
 
         {/* STATS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Users', total, 'text-emerald-400', '👥')}
-          {statCard('Active', active, 'text-sky-400', '✅')}
+          {statCard('Total Users', total, 'text-amber-400', '👥')}
+          {statCard('Active', active, 'text-emerald-400', '✅')}
           {statCard('Deactivated', deactivated, 'text-rose-400', '🚫')}
-          {statCard('Admins', admins, 'text-amber-400', '🛡️')}
+          {statCard('Admins', admins, 'text-sky-400', '🛡️')}
         </div>
 
         {/* SEARCH & FILTERS */}
@@ -304,14 +287,14 @@ export default function AdminPanelPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, or farm..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-emerald-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value as 'all' | 'admin' | 'owner')}
-                className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-emerald-500 transition-all outline-none text-card-foreground cursor-pointer"
+                className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admins Only</option>
@@ -320,7 +303,7 @@ export default function AdminPanelPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'deactivated')}
-                className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-emerald-500 transition-all outline-none text-card-foreground cursor-pointer"
+                className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active Only</option>
@@ -343,7 +326,7 @@ export default function AdminPanelPage() {
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="avatar" className="w-10 h-10 rounded-xl object-cover border border-border shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-extrabold text-card-foreground truncate">{profileDisplayName(user)}</p>
@@ -437,7 +420,7 @@ export default function AdminPanelPage() {
                         {user.avatar_url ? (
                           <img src={user.avatar_url} alt="avatar" className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
                         )}
                         <div className="min-w-0">
                           <p className="text-xs font-extrabold text-card-foreground truncate">{profileDisplayName(user)}</p>
@@ -498,7 +481,7 @@ export default function AdminPanelPage() {
         </div>
 
         <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
-          ISUFST DINGLE HUB · Admin access is governed by RLS policies
+          Admin access is governed by RLS policies
         </p>
       </div>
 
@@ -557,7 +540,7 @@ export default function AdminPanelPage() {
                 {viewUser.avatar_url ? (
                   <img src={viewUser.avatar_url} alt="avatar" className="w-14 h-14 rounded-xl object-cover border border-border" />
                 ) : (
-                  <div className="w-14 h-14 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-2xl">👤</div>
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl">👤</div>
                 )}
                 <div>
                   <p className="text-base font-extrabold text-card-foreground">{profileDisplayName(viewUser)}</p>

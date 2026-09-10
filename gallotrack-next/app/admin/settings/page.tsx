@@ -1,14 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { adminGuard } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
 
 export default function AdminSettingsPage() {
-  const router = useRouter();
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -79,7 +76,7 @@ export default function AdminSettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
-        <div className="w-10 h-10 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">Loading system configuration...</p>
       </div>
     );
@@ -88,50 +85,33 @@ export default function AdminSettingsPage() {
   if (!adminProfile) return null;
 
   const inputClass =
-    'w-full p-3 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-emerald-500 transition-all font-semibold outline-none text-card-foreground';
+    'w-full p-3 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground';
   const labelClass = 'block text-[10px] font-black text-muted-foreground mt-2 uppercase tracking-widest';
 
   return (
     <div className="min-h-screen w-full bg-background relative overflow-hidden">
-      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-emerald-400/5 dark:bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/5 dark:bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 pb-64 max-w-3xl mx-auto">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex items-center space-x-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 flex items-center justify-center transition-all cursor-pointer"
-              title="Go Back"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-xl shadow-inner">⚙️</div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-                SYSTEM <span className="text-emerald-400">SETTINGS</span>
-              </h1>
-              <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Admin-Controlled Application Configuration</p>
-            </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
+              System <span className="text-amber-400">Settings</span>
+            </h1>
+            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Admin-Controlled Application Configuration</p>
           </div>
           <div className="flex items-center gap-2.5">
             <button
               type="submit"
               form="system-settings-form"
               disabled={saving}
-              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-2"
+              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
               {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              {saving ? 'SAVING...' : '💾 Save Changes'}
+              {saving ? 'SAVING...' : 'Save Changes'}
             </button>
-            <Link
-              href="/admin"
-              className="text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 text-white shadow-md shadow-slate-500/30 transition-all cursor-pointer w-fit"
-            >
-              ← Back to Admin
-            </Link>
           </div>
         </div>
 
@@ -139,7 +119,7 @@ export default function AdminSettingsPage() {
           <div
             className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
               message.type === 'success'
-                ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
                 : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
             }`}
           >
@@ -150,7 +130,7 @@ export default function AdminSettingsPage() {
         {/* IDENTITY */}
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-5 mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl">🛡️</div>
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl">🛡️</div>
             <div>
               <p className="text-sm font-extrabold text-card-foreground">{adminProfile.full_name || 'Administrator'}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">{adminProfile.email || ''} · Admin privileged session</p>
@@ -161,12 +141,12 @@ export default function AdminSettingsPage() {
         <form id="system-settings-form" onSubmit={handleSave} className="space-y-5 [scroll-behavior:smooth] scroll-pt-24">
           {/* GENERAL */}
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 border-b border-border pb-3">General Configuration</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">General Configuration</h2>
 
             <div>
               <label className={labelClass}>System Name</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-xs">🏷️</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">🏷️</span>
                 <input type="text" value={systemName} onChange={(e) => setSystemName(e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., GalloTrack" required />
               </div>
             </div>
@@ -174,7 +154,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>System Status</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-xs">🚦</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">🚦</span>
                 <select value={systemStatus} onChange={(e) => setSystemStatus(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                   <option value="Operational">Operational</option>
                   <option value="Maintenance">Maintenance</option>
@@ -186,7 +166,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Maintenance Message <span className="opacity-60">(optional)</span></label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-xs">📣</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">📣</span>
                 <input
                   type="text"
                   value={maintenanceMessage}
@@ -200,12 +180,12 @@ export default function AdminSettingsPage() {
 
           {/* PROFILING DEFAULTS */}
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 border-b border-border pb-3">Profiling &amp; Analytics Defaults</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Profiling &amp; Analytics Defaults</h2>
 
             <div>
               <label className={labelClass}>Default Ancestry Strain Classification</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-xs">🧬</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">🧬</span>
                 <select value={defaultStrain} onChange={(e) => setDefaultStrain(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                   <option value="Sweater">Sweater</option>
                   <option value="Brood">Brood</option>
@@ -218,36 +198,36 @@ export default function AdminSettingsPage() {
 
           {/* USER MANAGEMENT */}
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 border-b border-border pb-3">User Management</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">User Management</h2>
 
-            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
               <div>
                 <span className="block text-xs font-extrabold text-card-foreground">Allow New Registrations</span>
                 <span className="text-[11px] text-muted-foreground font-medium block">Enable or disable new farm owner sign-ups</span>
               </div>
-              <input type="checkbox" checked={allowRegistrations} onChange={(e) => setAllowRegistrations(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+              <input type="checkbox" checked={allowRegistrations} onChange={(e) => setAllowRegistrations(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
             </label>
 
-            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
               <div>
                 <span className="block text-xs font-extrabold text-card-foreground">Auto-Approve New Users</span>
                 <span className="text-[11px] text-muted-foreground font-medium block">Newly registered accounts are immediately active</span>
               </div>
-              <input type="checkbox" checked={autoApproveUsers} onChange={(e) => setAutoApproveUsers(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+              <input type="checkbox" checked={autoApproveUsers} onChange={(e) => setAutoApproveUsers(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
             </label>
 
-            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
               <div>
                 <span className="block text-xs font-extrabold text-card-foreground">Show Fowl Data in Public View</span>
                 <span className="text-[11px] text-muted-foreground font-medium block">Allow farm owners to see other users' fowl records</span>
               </div>
-              <input type="checkbox" checked={publicFowlData} onChange={(e) => setPublicFowlData(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+              <input type="checkbox" checked={publicFowlData} onChange={(e) => setPublicFowlData(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
             </label>
 
             <div>
               <label className={labelClass}>Default New User Role</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-xs">👤</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">👤</span>
                 <select value={defaultUserRole} onChange={(e) => setDefaultUserRole(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                   <option value="owner">Farm Owner</option>
                   <option value="admin">Admin</option>
@@ -258,29 +238,29 @@ export default function AdminSettingsPage() {
 
           {/* SECURE BEHAVIORS */}
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 border-b border-border pb-3">Secure Cloud Behaviors</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Secure Cloud Behaviors</h2>
 
-            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
               <div>
                 <span className="block text-xs font-extrabold text-card-foreground">Real-time Cloud Auditing Logs</span>
                 <span className="text-[11px] text-muted-foreground font-medium block">Record transaction updates to cluster node registries</span>
               </div>
-              <input type="checkbox" checked={cloudLogs} onChange={(e) => setCloudLogs(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+              <input type="checkbox" checked={cloudLogs} onChange={(e) => setCloudLogs(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
             </label>
 
-            <label className="bg-muted/25 border border-border hover:border-emerald-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
               <div>
                 <span className="block text-xs font-extrabold text-card-foreground">System Event Pop-up Alerts</span>
                 <span className="text-[11px] text-muted-foreground font-medium block">Enable dynamic pop-up notification frames</span>
               </div>
-              <input type="checkbox" checked={eventAlerts} onChange={(e) => setEventAlerts(e.target.checked)} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+              <input type="checkbox" checked={eventAlerts} onChange={(e) => setEventAlerts(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
             </label>
           </div>
 
         </form>
 
         <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
-          ISUFST DINGLE HUB · Admin-only settings panel
+          Admin-only settings panel
         </p>
         </div>
     </div>
