@@ -14,6 +14,7 @@ const ADMIN_NAV_ITEMS = [
   { href: '/admin', label: 'User Management', icon: '👥' },
   { href: '/admin/flocks', label: 'Flock Audit', icon: '🐓' },
   { href: '/admin/matches', label: 'Match Audit', icon: '⚔️' },
+  { href: '/admin/marketplace', label: 'Marketplace Control', icon: '🛒' },
   { href: '/admin/settings', label: 'System Settings', icon: '⚙️' },
 ];
 
@@ -22,6 +23,7 @@ const ADMIN_MOBILE_NAV_ITEMS = [
   { href: '/admin', label: 'Users', icon: '👥' },
   { href: '/admin/flocks', label: 'Flocks', icon: '🐓' },
   { href: '/admin/matches', label: 'Matches', icon: '⚔️' },
+  { href: '/admin/marketplace', label: 'Market', icon: '🛒' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
 

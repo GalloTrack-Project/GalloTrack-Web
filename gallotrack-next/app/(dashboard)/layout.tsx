@@ -13,7 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 const OWNER_NAV = [
   { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
   { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
-  { href: '/marketplace', label: 'Breeding Catalog', icon: '🥚' },
+  { href: '/marketplace', label: 'Marketplace', icon: '🥚' },
   { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
   { href: '/profile', label: 'Profile Management', icon: '👤' },
 ];
@@ -21,6 +21,7 @@ const OWNER_NAV = [
 const OWNER_MOBILE = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/profiling', label: 'Registry', icon: '🧬' },
+  { href: '/marketplace', label: 'Market', icon: '🥚' },
   { href: '/lineage', label: 'Family', icon: '🌳' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
@@ -30,6 +31,7 @@ const ADMIN_NAV = [
   { href: '/admin', label: 'User Management', icon: '👥' },
   { href: '/admin/flocks', label: 'Flock Audit', icon: '🐓' },
   { href: '/admin/matches', label: 'Match Audit', icon: '⚔️' },
+  { href: '/admin/marketplace', label: 'Marketplace Control', icon: '🛒' },
   { href: '/admin/settings', label: 'System Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile Management', icon: '👤' },
 ];
@@ -39,6 +41,7 @@ const ADMIN_MOBILE = [
   { href: '/admin', label: 'Users', icon: '👥' },
   { href: '/admin/flocks', label: 'Flocks', icon: '🐓' },
   { href: '/admin/matches', label: 'Matches', icon: '⚔️' },
+  { href: '/admin/marketplace', label: 'Market', icon: '🛒' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
