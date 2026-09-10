@@ -15,6 +15,7 @@ const OWNER_NAV = [
   { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
   { href: '/catalog', label: 'Breeding Catalog', icon: '🥚' },
   { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
+  { href: '/settings', label: 'Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile Management', icon: '👤' },
 ];
 
@@ -23,6 +24,7 @@ const OWNER_MOBILE = [
   { href: '/profiling', label: 'Registry', icon: '🧬' },
   { href: '/catalog', label: 'Catalog', icon: '🥚' },
   { href: '/lineage', label: 'Family', icon: '🌳' },
+  { href: '/settings', label: 'Settings', icon: '⚙️' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
 
