@@ -295,19 +295,21 @@ export default function AdminPanelPage() {
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value as 'all' | 'admin' | 'owner')}
                 className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
+                style={{ color: 'var(--card-foreground)', backgroundColor: 'var(--muted)' }}
               >
-                <option value="all">All Roles</option>
-                <option value="admin">Admins Only</option>
-                <option value="owner">Owners Only</option>
+                <option value="all" style={{ color: '#e2e8f0', backgroundColor: '#1e293b' }}>All Roles</option>
+                <option value="admin" style={{ color: '#e2e8f0', backgroundColor: '#1e293b' }}>Admins Only</option>
+                <option value="owner" style={{ color: '#e2e8f0', backgroundColor: '#1e293b' }}>Owners Only</option>
               </select>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'deactivated')}
                 className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
+                style={{ color: 'var(--card-foreground)', backgroundColor: 'var(--muted)' }}
               >
-                <option value="all">All Status</option>
-                <option value="active">Active Only</option>
-                <option value="deactivated">Deactivated Only</option>
+                <option value="all" style={{ color: '#e2e8f0', backgroundColor: '#1e293b' }}>All Status</option>
+                <option value="active" style={{ color: '#e2e8f0', backgroundColor: '#1e293b' }}>Active Only</option>
+                <option value="deactivated" style={{ color: '#e2e8f0', backgroundColor: '#1e293b' }}>Deactivated Only</option>
               </select>
             </div>
           </div>
