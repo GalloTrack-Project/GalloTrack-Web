@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/registry'
-import { fetchSystemSettings, updateSystemSettings, type AdminSettings } from '@/lib/admin'
+import type { AdminSettings } from '@/lib/admin'
 
 type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'data' | 'system'
 
@@ -98,12 +98,38 @@ export default function SettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [s, { data: { user } }] = await Promise.all([fetchSystemSettings(), supabase.auth.getUser()])
-        setSettings((prev) => ({ ...prev, ...s }))
+        const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           setUserEmail(user.email || '')
           setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
           setUserCreatedAt(new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle()
+
+          if (profile) {
+            setSettings((prev) => ({
+              ...prev,
+              farm_name: profile.farm_name || '',
+              farm_location: profile.farm_location || '',
+              contact_number: profile.contact_number || profile.phone_number || '',
+              farm_description: profile.farm_description || '',
+              default_match_type: profile.default_match_type || '',
+              default_arena: profile.default_arena || '',
+              default_strain: profile.default_strain || 'Sweater',
+              weight_unit: profile.weight_unit || 'kg',
+              height_unit: profile.height_unit || 'cm',
+              auto_calculate_age: profile.auto_calculate_age !== false,
+              milestone_alerts: profile.milestone_alerts !== false,
+              overdue_alerts: profile.overdue_alerts !== false,
+              event_alerts: profile.event_alerts !== false,
+              cloud_logs: profile.cloud_logs !== false,
+              theme: profile.theme || 'light',
+            }))
+          }
         }
       } catch (err: unknown) {
         setLoadError(err instanceof Error ? err.message : 'Failed to load settings')
@@ -116,8 +142,36 @@ export default function SettingsPage() {
     e.preventDefault()
     setLoading(true)
     setSavedNotice(false)
+    setLoadError('')
     try {
-      await updateSystemSettings(settings)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          farm_name: settings.farm_name || '',
+          farm_location: settings.farm_location || '',
+          contact_number: settings.contact_number || '',
+          farm_description: settings.farm_description || '',
+          default_match_type: settings.default_match_type || '',
+          default_arena: settings.default_arena || '',
+          default_strain: settings.default_strain || 'Sweater',
+          weight_unit: settings.weight_unit || 'kg',
+          height_unit: settings.height_unit || 'cm',
+          auto_calculate_age: settings.auto_calculate_age !== false,
+          milestone_alerts: settings.milestone_alerts !== false,
+          overdue_alerts: settings.overdue_alerts !== false,
+          event_alerts: settings.event_alerts !== false,
+          cloud_logs: settings.cloud_logs !== false,
+          theme: settings.theme || 'light',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      window.dispatchEvent(new Event('admin-profile-update'))
       setSavedNotice(true)
       setTimeout(() => setSavedNotice(false), 4000)
     } catch (err: unknown) {
