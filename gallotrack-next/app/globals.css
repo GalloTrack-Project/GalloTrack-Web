@@ -179,6 +179,12 @@ body {
   animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* Fix select option visibility in dark mode */
+.dark select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
 /* Hides the native up/down spinner arrows on number inputs (Height/Weight). */
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
