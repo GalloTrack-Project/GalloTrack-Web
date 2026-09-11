@@ -95,6 +95,24 @@ export default function SettingsPage() {
 
   const update = (key: keyof AdminSettings, value: unknown) => setSettings((prev) => ({ ...prev, [key]: value }))
 
+  const STORAGE_KEY = 'gallotrack_user_preferences'
+
+  function loadPrefsFromStorage() {
+    try {
+      if (typeof window === 'undefined') return {}
+      const raw = localStorage.getItem(STORAGE_KEY)
+      return raw ? JSON.parse(raw) : {}
+    } catch { return {} }
+  }
+
+  function savePrefsToStorage(prefs: Record<string, unknown>) {
+    try {
+      if (typeof window === 'undefined') return
+      const existing = loadPrefsFromStorage()
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...prefs }))
+    } catch { /* silent */ }
+  }
+
   useEffect(() => {
     async function load() {
       try {
@@ -110,24 +128,26 @@ export default function SettingsPage() {
             .eq('id', user.id)
             .maybeSingle()
 
+          const storedPrefs = loadPrefsFromStorage()
+
           if (profile) {
             setSettings((prev) => ({
               ...prev,
               farm_name: profile.farm_name || '',
-              farm_location: profile.farm_location || '',
-              contact_number: profile.contact_number || profile.phone_number || '',
-              farm_description: profile.farm_description || '',
-              default_match_type: profile.default_match_type || '',
-              default_arena: profile.default_arena || '',
-              default_strain: profile.default_strain || 'Sweater',
-              weight_unit: profile.weight_unit || 'kg',
-              height_unit: profile.height_unit || 'cm',
-              auto_calculate_age: profile.auto_calculate_age !== false,
-              milestone_alerts: profile.milestone_alerts !== false,
-              overdue_alerts: profile.overdue_alerts !== false,
-              event_alerts: profile.event_alerts !== false,
-              cloud_logs: profile.cloud_logs !== false,
-              theme: profile.theme || 'light',
+              farm_location: profile.farm_location || storedPrefs.farm_location || '',
+              contact_number: profile.phone_number || '',
+              farm_description: profile.farm_description || storedPrefs.farm_description || '',
+              default_match_type: storedPrefs.default_match_type || '',
+              default_arena: storedPrefs.default_arena || '',
+              default_strain: storedPrefs.default_strain || 'Sweater',
+              weight_unit: storedPrefs.weight_unit || 'kg',
+              height_unit: storedPrefs.height_unit || 'cm',
+              auto_calculate_age: storedPrefs.auto_calculate_age !== false,
+              milestone_alerts: storedPrefs.milestone_alerts !== false,
+              overdue_alerts: storedPrefs.overdue_alerts !== false,
+              event_alerts: storedPrefs.event_alerts !== false,
+              cloud_logs: storedPrefs.cloud_logs !== false,
+              theme: storedPrefs.theme || 'light',
             }))
           }
         }
@@ -151,25 +171,29 @@ export default function SettingsPage() {
         .from('profiles')
         .update({
           farm_name: settings.farm_name || '',
-          farm_location: settings.farm_location || '',
-          contact_number: settings.contact_number || '',
-          farm_description: settings.farm_description || '',
-          default_match_type: settings.default_match_type || '',
-          default_arena: settings.default_arena || '',
-          default_strain: settings.default_strain || 'Sweater',
-          weight_unit: settings.weight_unit || 'kg',
-          height_unit: settings.height_unit || 'cm',
-          auto_calculate_age: settings.auto_calculate_age !== false,
-          milestone_alerts: settings.milestone_alerts !== false,
-          overdue_alerts: settings.overdue_alerts !== false,
-          event_alerts: settings.event_alerts !== false,
-          cloud_logs: settings.cloud_logs !== false,
-          theme: settings.theme || 'light',
+          phone_number: settings.contact_number || '',
+          full_name: userName || undefined,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
 
       if (error) throw error
+
+      savePrefsToStorage({
+        farm_location: settings.farm_location || '',
+        farm_description: settings.farm_description || '',
+        default_match_type: settings.default_match_type || '',
+        default_arena: settings.default_arena || '',
+        default_strain: settings.default_strain || 'Sweater',
+        weight_unit: settings.weight_unit || 'kg',
+        height_unit: settings.height_unit || 'cm',
+        auto_calculate_age: settings.auto_calculate_age !== false,
+        milestone_alerts: settings.milestone_alerts !== false,
+        overdue_alerts: settings.overdue_alerts !== false,
+        event_alerts: settings.event_alerts !== false,
+        cloud_logs: settings.cloud_logs !== false,
+        theme: settings.theme || 'light',
+      })
 
       window.dispatchEvent(new Event('admin-profile-update'))
       setSavedNotice(true)
