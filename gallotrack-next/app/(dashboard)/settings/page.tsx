@@ -164,20 +164,24 @@ export default function SettingsPage() {
     setSavedNotice(false)
     setLoadError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
+      if (!token) throw new Error('Not authenticated')
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      const res = await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           farm_name: settings.farm_name || '',
           phone_number: settings.contact_number || '',
-          full_name: userName || undefined,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id)
+          full_name: userName || '',
+        }),
+      })
 
-      if (error) throw error
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to save')
+      }
 
       savePrefsToStorage({
         farm_location: settings.farm_location || '',
