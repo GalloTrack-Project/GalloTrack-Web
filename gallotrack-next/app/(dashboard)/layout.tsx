@@ -11,36 +11,36 @@ import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 const OWNER_NAV = [
-  { href: '/dashboard', label: 'Dashboard Analytics', icon: '📊' },
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
   { href: '/catalog', label: 'Breeding Catalog', icon: '🥚' },
-  { href: '/lineage', label: 'Family Lineage Directory', icon: '🌳' },
-  { href: '/profile', label: 'Profile Management', icon: '👤' },
+  { href: '/lineage', label: 'Lineage Directory', icon: '🌳' },
+  { href: '/profile', label: 'My Profile', icon: '👤' },
 ];
 
 const OWNER_MOBILE = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/profiling', label: 'Registry', icon: '🧬' },
   { href: '/catalog', label: 'Catalog', icon: '🥚' },
-  { href: '/lineage', label: 'Family', icon: '🌳' },
+  { href: '/lineage', label: 'Lineage', icon: '🌳' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
 
 const ADMIN_NAV = [
-  { href: '/dashboard', label: 'Farm Dashboard', icon: '📊' },
-  { href: '/admin', label: 'User Management', icon: '👥' },
-  { href: '/admin/flocks', label: 'Flock Audit', icon: '🐓' },
-  { href: '/admin/matches', label: 'Match Audit', icon: '⚔️' },
-  { href: '/admin/settings', label: 'System Settings', icon: '⚙️' },
-  { href: '/profile', label: 'Profile Management', icon: '👤' },
+  { href: '/dashboard', label: 'System Overview', icon: '📊' },
+  { href: '/admin', label: 'User Registry', icon: '👥' },
+  { href: '/admin/flocks', label: 'Fowl Registry', icon: '🐓' },
+  { href: '/admin/matches', label: 'Match Records', icon: '⚔️' },
+  { href: '/admin/settings', label: 'System Config', icon: '⚙️' },
+  { href: '/profile', label: 'My Profile', icon: '👤' },
 ];
 
 const ADMIN_MOBILE = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/dashboard', label: 'Overview', icon: '📊' },
   { href: '/admin', label: 'Users', icon: '👥' },
-  { href: '/admin/flocks', label: 'Flocks', icon: '🐓' },
+  { href: '/admin/flocks', label: 'Fowls', icon: '🐓' },
   { href: '/admin/matches', label: 'Matches', icon: '⚔️' },
-  { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/admin/settings', label: 'Config', icon: '⚙️' },
   { href: '/profile', label: 'Profile', icon: '👤' },
 ];
 
