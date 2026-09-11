@@ -185,7 +185,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (authError) {
-        setError(authError.message);
+        const msg = authError.message.toLowerCase();
+        if (msg.includes('invalid login credentials') || msg.includes('invalid') || msg.includes('wrong password') || msg.includes('user not found')) {
+          setError('The email address or password you entered is incorrect. Please try again.');
+        } else if (msg.includes('email not confirmed')) {
+          setError('Please verify your email address before logging in. Check your inbox for the verification link.');
+        } else if (msg.includes('too many')) {
+          setError('Too many login attempts. Please wait a moment and try again.');
+        } else {
+          setError('Unable to sign in. Please check your credentials and try again.');
+        }
         return;
       }
 
