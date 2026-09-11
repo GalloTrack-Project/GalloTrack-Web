@@ -133,10 +133,10 @@ export default function SettingsPage() {
           if (profile) {
             setSettings((prev) => ({
               ...prev,
-              farm_name: profile.farm_name || '',
-              farm_location: profile.farm_location || storedPrefs.farm_location || '',
-              contact_number: profile.phone_number || '',
-              farm_description: profile.farm_description || storedPrefs.farm_description || '',
+              farm_name: storedPrefs.farm_name || profile.farm_name || '',
+              farm_location: storedPrefs.farm_location || '',
+              contact_number: storedPrefs.contact_number || profile.phone_number || '',
+              farm_description: storedPrefs.farm_description || '',
               default_match_type: storedPrefs.default_match_type || '',
               default_arena: storedPrefs.default_arena || '',
               default_strain: storedPrefs.default_strain || 'Sweater',
@@ -164,27 +164,10 @@ export default function SettingsPage() {
     setSavedNotice(false)
     setLoadError('')
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      if (!token) throw new Error('Not authenticated')
-
-      const res = await fetch('/api/user/settings', {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          farm_name: settings.farm_name || '',
-          phone_number: settings.contact_number || '',
-          full_name: userName || '',
-        }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Failed to save')
-      }
-
       savePrefsToStorage({
+        farm_name: settings.farm_name || '',
         farm_location: settings.farm_location || '',
+        contact_number: settings.contact_number || '',
         farm_description: settings.farm_description || '',
         default_match_type: settings.default_match_type || '',
         default_arena: settings.default_arena || '',
