@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function PUT(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -22,24 +21,25 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { farm_name, phone_number, full_name } = body;
 
-  const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+  const updatePayload: Record<string, unknown> = {};
+  if (body.farm_name !== undefined) updatePayload.farm_name = body.farm_name;
+  if (body.phone_number !== undefined) updatePayload.phone_number = body.phone_number;
+  if (body.full_name !== undefined) updatePayload.full_name = body.full_name;
 
-  const updatePayload: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  };
-  if (farm_name !== undefined) updatePayload.farm_name = farm_name;
-  if (phone_number !== undefined) updatePayload.phone_number = phone_number;
-  if (full_name !== undefined) updatePayload.full_name = full_name;
+  if (Object.keys(updatePayload).length === 0) {
+    return NextResponse.json({ success: true });
+  }
 
-  const { error } = await serviceClient
+  updatePayload.updated_at = new Date().toISOString();
+
+  const { error } = await userClient
     .from('profiles')
     .update(updatePayload)
     .eq('id', user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, column_hints: error.details }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });
