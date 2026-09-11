@@ -29,13 +29,20 @@ export default function ProfilePage() {
             .select('*')
             .eq('id', user.id)
             .single()
+
+          const storedPrefs = (() => {
+            try {
+              const raw = localStorage.getItem('gallotrack_user_preferences')
+              return raw ? JSON.parse(raw) : {}
+            } catch { return {} }
+          })()
             
           if (profile) {
-            setFullName(profile.full_name || '')
-            setPhoneNumber(profile.phone_number || '')
+            setFullName(storedPrefs.full_name || profile.full_name || '')
+            setPhoneNumber(storedPrefs.contact_number || profile.phone_number || '')
             setAvatarUrl(profile.avatar_url || '')
             setIsAdmin(profile.is_admin === true || profile.role === 'admin')
-            setFarmName(profile.farm_name || '')
+            setFarmName(storedPrefs.farm_name || profile.farm_name || '')
           }
         }
       }
@@ -49,6 +56,17 @@ export default function ProfilePage() {
     setSavedSuccess(false)
 
     try {
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('gallotrack_user_preferences')
+        const existing = raw ? JSON.parse(raw) : {}
+        localStorage.setItem('gallotrack_user_preferences', JSON.stringify({
+          ...existing,
+          full_name: fullName,
+          contact_number: phoneNumber,
+          farm_name: farmName,
+        }))
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { error } = await supabase
