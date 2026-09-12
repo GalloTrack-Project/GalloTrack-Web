@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
+import { Dna, Search, Trash2, Lock, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -86,7 +87,7 @@ export default function BreedsPage() {
           </button>
           <div>
             <h1 className="text-lg font-black text-card-foreground tracking-tight flex items-center gap-2">
-              <span>🧬</span> Breed Registry
+              <Dna className="w-5 h-5" /> Breed Registry
             </h1>
             <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Create and manage genetic strains for your fowl registry</p>
           </div>
@@ -96,7 +97,7 @@ export default function BreedsPage() {
           onClick={() => setShowAddForm(!showAddForm)}
           className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer"
         >
-          <span className="text-base">{showAddForm ? '✕' : '+'}</span>
+          <span className="text-base">{showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}</span>
           {showAddForm ? 'Cancel' : 'Add New Breed'}
         </button>
       </div>
@@ -120,7 +121,7 @@ export default function BreedsPage() {
       {/* ADD FORM */}
       {showAddForm && (
         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 space-y-3">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">➕ Create New Breed</p>
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Create New Breed</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -153,14 +154,14 @@ export default function BreedsPage() {
           placeholder="Search breeds..."
           className="w-full p-3 pl-10 border border-border rounded-xl text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
         />
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
       </div>
 
       {/* BREED LIST */}
       <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
         {breeds.length === 0 ? (
           <div className="text-center py-12">
-            <span className="text-4xl block mb-3">🧬</span>
+            <Dna className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm font-bold text-muted-foreground">{search ? 'No breeds match your search.' : 'No breeds registered yet.'}</p>
           </div>
         ) : (
@@ -211,14 +212,14 @@ export default function BreedsPage() {
                           onClick={() => setConfirmDelete(breed)}
                           className="text-[9px] font-bold text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
                         >
-                          🗑 Delete
+                          <Trash2 className="w-3 h-3 inline mr-1" /> Delete
                         </button>
                       )}
                     </div>
                   )}
                   {!isCustom && (
                     <div className="mt-auto pt-2 border-t border-border">
-                      <span className="text-[9px] font-bold text-muted-foreground/50">🔒 Built-in</span>
+                      <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Built-in</span>
                     </div>
                   )}
                 </div>

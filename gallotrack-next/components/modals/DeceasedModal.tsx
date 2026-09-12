@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { Skull, Archive } from 'lucide-react';
 import type { FowlRecord } from '@/lib/types';
 
 type DeceasedModalProps = {
@@ -32,7 +33,7 @@ export default function DeceasedModal({
         </button>
 
         <div className="flex items-center space-x-3 text-rose-700 border-b pb-3 border-rose-100">
-          <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-xl">💀</div>
+          <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center"><Skull className="w-5 h-5 text-rose-600" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 tracking-tight">Record Mortality</h3>
             <p className="text-[11px] text-slate-500 font-semibold">Transition node to Deceased status — cause of death required</p>
@@ -41,7 +42,7 @@ export default function DeceasedModal({
 
         <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200/60 space-y-2">
           <p className="text-xs font-bold text-slate-800">Target Fowl: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
-          <p className="text-[10px] text-slate-500 leading-relaxed">Use this ONLY when the fowl has died. Mortality removes the fowl from the active registry. Non-mortality removals (sold, transferred, retired, inactive) belong under <strong className="text-amber-700">📦 Archive</strong> instead.</p>
+          <p className="text-[10px] text-slate-500 leading-relaxed">Use this ONLY when the fowl has died. Mortality removes the fowl from the active registry. Non-mortality removals (sold, transferred, retired, inactive) belong under <strong className="text-amber-700">Archive</strong> instead.</p>
         </div>
 
         <div className="space-y-2">

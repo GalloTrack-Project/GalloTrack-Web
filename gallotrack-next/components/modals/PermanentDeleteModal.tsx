@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { FowlRecord } from '@/lib/types';
 
 type PermanentDeleteModalProps = {
@@ -28,7 +29,7 @@ export default function PermanentDeleteModal({
         </button>
 
         <div className="flex items-center space-x-3 text-rose-800 border-b pb-3 border-rose-100">
-          <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-xl">⚠️</div>
+          <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center"><AlertTriangle className="w-5 h-5 text-rose-600" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 tracking-tight">Permanently Delete?</h3>
             <p className="text-[11px] text-slate-500 font-semibold">This action cannot be undone</p>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { BarChart3, Bird } from 'lucide-react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 type Props = {
@@ -91,7 +92,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
         <div className="p-6 pb-4 border-b border-slate-100 shrink-0">
           <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
           <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center space-x-2">
-            <span>📊</span>
+            <BarChart3 className="w-5 h-5" />
             <span>Per-Fowl Performance Breakdown</span>
           </h3>
           <p className="text-[10px] text-slate-400 font-semibold mt-1">Individual win rates and overall aggregate statistics</p>
@@ -187,7 +188,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                     <td className="py-2">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[9px] shrink-0">
-                          {s.fowl.gender === 'Male' ? '🐓' : s.fowl.gender === 'Female' ? '🐔' : '🐣'}
+                           <Bird className="w-3 h-3" />
                         </span>
                         <div>
                           <p className="font-black text-slate-800">{s.fowl.name}</p>

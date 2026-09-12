@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Swords, CheckCircle, XCircle, Handshake, Skull, Search, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
 
@@ -91,7 +92,7 @@ export default function AdminMatchAuditPage() {
     );
   }
 
-  const statCard = (label: string, value: number, accent: string, icon: string) => (
+  const statCard = (label: string, value: number, accent: string, icon: ReactNode) => (
     <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
@@ -142,17 +143,17 @@ export default function AdminMatchAuditPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Matches', stats.total, 'text-amber-400', '⚔️')}
-          {statCard('Wins', stats.wins, 'text-emerald-400', '✅')}
-          {statCard('Losses', stats.losses, 'text-rose-400', '❌')}
-          {statCard('Draws', stats.draws, 'text-sky-400', '🤝')}
-          {statCard('Deceased', stats.deceased, 'text-rose-300', '💀')}
+          {statCard('Total Matches', stats.total, 'text-amber-400', <Swords className="w-5 h-5" />)}
+          {statCard('Wins', stats.wins, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
+          {statCard('Losses', stats.losses, 'text-rose-400', <XCircle className="w-5 h-5" />)}
+          {statCard('Draws', stats.draws, 'text-sky-400', <Handshake className="w-5 h-5" />)}
+          {statCard('Deceased', stats.deceased, 'text-rose-300', <Skull className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
               <input
                 type="text"
                 value={search}
@@ -209,7 +210,7 @@ export default function AdminMatchAuditPage() {
                 <p>Owner: <span className="text-card-foreground font-bold">{match.owner_name}</span> · {match.farm_name}</p>
                 {match.date && <p>Date: {new Date(match.date).toLocaleDateString()}</p>}
                 {match.video_url && (
-                  <p><a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">Video Evidence ↗</a></p>
+                  <p><a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">Video Evidence <ArrowUpRight className="inline w-3 h-3" /></a></p>
                 )}
               </div>
             </div>
@@ -259,7 +260,7 @@ export default function AdminMatchAuditPage() {
                     <td className="px-4 py-3.5 text-[10px] text-muted-foreground font-semibold whitespace-nowrap">{match.date ? new Date(match.date).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3.5">
                       {match.video_url ? (
-                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-amber-400 hover:text-amber-300 underline">View ↗</a>
+                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-amber-400 hover:text-amber-300 underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
                       ) : (
                         <span className="text-[10px] text-muted-foreground">—</span>
                       )}

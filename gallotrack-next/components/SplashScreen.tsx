@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
+import { Bird } from 'lucide-react';
 
 type Props = { onFinished: () => void };
 
@@ -19,8 +20,8 @@ export default function SplashScreen({ onFinished }: Props) {
       <div className="h-10"></div>
       
       <div className="flex flex-col items-center space-y-5 text-center relative z-10">
-        <div className="w-24 h-24 bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 rounded-3xl border border-emerald-400/20 flex items-center justify-center text-5xl shadow-2xl shadow-emerald-500/10 animate-pulse">
-          🐓
+        <div className="w-24 h-24 bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 rounded-3xl border border-emerald-400/20 flex items-center justify-center shadow-2xl shadow-emerald-500/10 animate-pulse">
+          <Bird className="w-12 h-12 text-emerald-400" />
         </div>
         <div className="space-y-1.5">
           <span className="text-[10px] font-black tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full uppercase">ISUFST CICT Official Capstone</span>

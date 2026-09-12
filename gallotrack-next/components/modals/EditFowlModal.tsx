@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { Pencil, Tag, Ruler, Calendar, TreePine } from 'lucide-react';
 import type { FowlRecord, AgeParts } from '@/lib/types';
 import ParentSelector from './ParentSelector';
 
@@ -117,7 +118,7 @@ export default function EditFowlModal({
         
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div className="flex items-center space-x-2">
-            <span className="text-lg">✏️</span>
+            <Pencil className="w-5 h-5 text-slate-600" />
             <div>
               <h3 className="font-extrabold text-slate-900 text-base">Edit Node Registry</h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Update parameters for {editingFowl.name}</p>
@@ -136,7 +137,7 @@ export default function EditFowlModal({
           
           <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/40">
             <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
-              <span>🏷️</span> <span>Core Identity</span>
+              <Tag className="w-3.5 h-3.5" /> <span>Core Identity</span>
             </h4>
             <div>
               <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Identifier Name</label>
@@ -176,7 +177,7 @@ export default function EditFowlModal({
 
           <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/40">
             <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
-              <span>📐</span> <span>Physical Parameters</span>
+              <Ruler className="w-3.5 h-3.5" /> <span>Physical Parameters</span>
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -211,7 +212,7 @@ export default function EditFowlModal({
               {(() => {
                 const parts = getAgeParts(editBirthdate);
                 return parts ? (
-                  <p className="mt-1 text-[10px] font-bold text-emerald-700">📅 Auto Age: {getAgeLabel(parts)} · <span className="font-mono">{getAgeMetrics(parts)}</span></p>
+                  <p className="mt-1 text-[10px] font-bold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> Auto Age: {getAgeLabel(parts)} · <span className="font-mono">{getAgeMetrics(parts)}</span></p>
                 ) : (
                   <p className="mt-1 text-[10px] text-slate-400 font-medium">Set a birth date for automatic age &amp; milestone tracking.</p>
                 );
@@ -269,7 +270,7 @@ export default function EditFowlModal({
 
           <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/40">
             <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
-              <span>🌳</span> <span>Ancestry Heritage Roots</span>
+              <TreePine className="w-3.5 h-3.5" /> <span>Ancestry Heritage Roots</span>
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div>

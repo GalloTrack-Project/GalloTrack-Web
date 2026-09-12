@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Bird, CheckCircle, Dna, Users, Search } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
 
@@ -92,7 +93,7 @@ export default function AdminFlockAuditPage() {
     );
   }
 
-  const statCard = (label: string, value: number | string, accent: string, icon: string) => (
+  const statCard = (label: string, value: number | string, accent: string, icon: ReactNode) => (
     <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
@@ -126,16 +127,16 @@ export default function AdminFlockAuditPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Fowls', stats.total, 'text-amber-400', '🐓')}
-          {statCard('Active', stats.active, 'text-emerald-400', '✅')}
-          {statCard('Breeds', stats.breeds, 'text-sky-400', '🧬')}
-          {statCard('Owners', stats.owners, 'text-purple-400', '👥')}
+          {statCard('Total Fowls', stats.total, 'text-amber-400', <Bird className="w-5 h-5" />)}
+          {statCard('Active', stats.active, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
+          {statCard('Breeds', stats.breeds, 'text-sky-400', <Dna className="w-5 h-5" />)}
+          {statCard('Owners', stats.owners, 'text-purple-400', <Users className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
               <input
                 type="text"
                 value={search}
@@ -177,7 +178,7 @@ export default function AdminFlockAuditPage() {
                   <img src={fowl.image_url} alt={fowl.name} className="w-10 h-10 rounded-xl object-cover border border-border shrink-0" />
                 ) : (
                   <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
-                    {fowl.gender === 'Male' ? '🐓' : '🐔'}
+                    <Bird className="w-5 h-5" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -222,7 +223,7 @@ export default function AdminFlockAuditPage() {
                         {fowl.image_url ? (
                           <img src={fowl.image_url} alt={fowl.name} className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">{fowl.gender === 'Male' ? '🐓' : '🐔'}</div>
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><Bird className="w-5 h-5" /></div>
                         )}
                         <p className="text-xs font-extrabold text-card-foreground truncate">{fowl.name}</p>
                       </div>

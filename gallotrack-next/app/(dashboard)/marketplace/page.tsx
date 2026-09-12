@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Egg, Search, Clipboard, Pencil, Plus, Bird, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { useFowl } from '@/lib/contexts/fowl-context';
 
@@ -241,7 +242,7 @@ export default function MarketplacePage() {
       {/* HEADER */}
       <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">🥚</div>
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner"><Egg className="w-5 h-5" /></div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Marketplace</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Buy and sell gamefowl within the GalloTrack community</p>
@@ -252,9 +253,9 @@ export default function MarketplacePage() {
       {/* TABS */}
       <div className="flex gap-2 p-1 bg-muted/30 rounded-xl w-fit">
         {[
-          { id: 'browse' as const, label: 'Browse', icon: '🔍' },
-          { id: 'my' as const, label: 'My Listings', icon: '📋' },
-          { id: 'create' as const, label: editingId ? 'Edit Listing' : 'Create Listing', icon: editingId ? '✏️' : '➕' },
+          { id: 'browse' as const, label: 'Browse', icon: <Search className="w-4 h-4" /> },
+          { id: 'my' as const, label: 'My Listings', icon: <Clipboard className="w-4 h-4" /> },
+          { id: 'create' as const, label: editingId ? 'Edit Listing' : 'Create Listing', icon: editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" /> },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -274,7 +275,7 @@ export default function MarketplacePage() {
       {activeTab === 'browse' && (
         <div className="space-y-4">
           <div className="relative max-w-md">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
             <input
               type="text"
               value={search}
@@ -285,7 +286,7 @@ export default function MarketplacePage() {
           </div>
           {filteredListings.length === 0 ? (
             <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-12 text-center">
-              <span className="text-4xl mb-3 block">🥚</span>
+              <span className="text-4xl mb-3 block"><Egg className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings available</p>
               <p className="text-xs text-muted-foreground mt-1">Check back later or create your own listing!</p>
             </div>
@@ -297,7 +298,7 @@ export default function MarketplacePage() {
                     <img src={listing.image_url} alt={listing.title} className="w-full h-48 object-cover" />
                   ) : (
                     <div className="w-full h-48 bg-muted/30 flex items-center justify-center text-4xl">
-                      {listing.gender === 'Rooster' ? '🐓' : '🐔'}
+                      <Bird className="w-10 h-10 text-muted-foreground" />
                     </div>
                   )}
                   <div className="p-4 space-y-3">
@@ -334,12 +335,12 @@ export default function MarketplacePage() {
       {activeTab === 'my' && (
         <div className="space-y-4">
           <div className="relative max-w-md">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search your listings..." className={`${inputClass} pl-9`} />
           </div>
           {filteredMyListings.length === 0 ? (
             <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-12 text-center">
-              <span className="text-4xl mb-3 block">📋</span>
+              <span className="text-4xl mb-3 block"><Clipboard className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings yet</p>
               <p className="text-xs text-muted-foreground mt-1">Create your first listing to start selling!</p>
               <button type="button" onClick={() => setActiveTab('create')} className="mt-4 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer">+ Create Listing</button>
@@ -352,7 +353,7 @@ export default function MarketplacePage() {
                     <img src={listing.image_url} alt={listing.title} className="w-16 h-16 rounded-xl object-cover border border-border shrink-0" />
                   ) : (
                     <div className="w-16 h-16 rounded-xl bg-muted/30 flex items-center justify-center text-2xl shrink-0">
-                      {listing.gender === 'Rooster' ? '🐓' : '🐔'}
+                      <Bird className="w-8 h-8 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -449,7 +450,7 @@ export default function MarketplacePage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto">⚠️</div>
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto"><AlertTriangle className="w-6 h-6 text-rose-400" /></div>
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Listing?</h3>
             <p className="text-center text-[11px] text-muted-foreground font-semibold">This action cannot be undone.</p>
             <div className="flex gap-2.5 pt-1">

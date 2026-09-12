@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Clipboard, Clock, CheckCircle, Flag, Search, Bird } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
 
@@ -117,7 +118,7 @@ export default function AdminMarketplacePage() {
     );
   }
 
-  const statCard = (label: string, value: number, accent: string, icon: string) => (
+  const statCard = (label: string, value: number, accent: string, icon: ReactNode) => (
     <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
@@ -160,16 +161,16 @@ export default function AdminMarketplacePage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Listings', stats.total, 'text-amber-400', '📋')}
-          {statCard('Pending Review', stats.pending, 'text-amber-400', '⏳')}
-          {statCard('Approved', stats.approved, 'text-emerald-400', '✅')}
-          {statCard('Flagged', stats.flagged, 'text-rose-400', '🚩')}
+          {statCard('Total Listings', stats.total, 'text-amber-400', <Clipboard className="w-5 h-5" />)}
+          {statCard('Pending Review', stats.pending, 'text-amber-400', <Clock className="w-5 h-5" />)}
+          {statCard('Approved', stats.approved, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
+          {statCard('Flagged', stats.flagged, 'text-rose-400', <Flag className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title, breed, seller, or farm..." className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60" />
             </div>
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
@@ -197,7 +198,7 @@ export default function AdminMarketplacePage() {
                   <img src={listing.image_url} alt={listing.title} className="w-12 h-12 rounded-xl object-cover border border-border shrink-0" />
                 ) : (
                   <div className="w-12 h-12 rounded-xl bg-muted/30 flex items-center justify-center text-xl shrink-0">
-                    {listing.gender === 'Rooster' ? '🐓' : '🐔'}
+                    <Bird className="w-5 h-5" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -260,7 +261,7 @@ export default function AdminMarketplacePage() {
                         {listing.image_url ? (
                           <img src={listing.image_url} alt={listing.title} className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-muted/30 flex items-center justify-center text-sm shrink-0">{listing.gender === 'Rooster' ? '🐓' : '🐔'}</div>
+                          <div className="w-9 h-9 rounded-xl bg-muted/30 flex items-center justify-center text-sm shrink-0"><Bird className="w-5 h-5" /></div>
                         )}
                         <div>
                           <p className="text-xs font-extrabold text-card-foreground truncate">{listing.title}</p>

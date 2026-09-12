@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { LogOut } from 'lucide-react';
 
 type LogoutModalProps = {
   showLogoutModal: boolean;
@@ -23,7 +24,7 @@ export default function LogoutModal({
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl"></div>
           <div className="relative flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-lg shrink-0 backdrop-blur-sm">🚪</div>
+              <div className="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm"><LogOut className="w-5 h-5 text-white" /></div>
               <div>
                 <h3 className="text-sm font-black tracking-tight text-white">Log Out Confirmation</h3>
                 <p className="text-[9px] text-emerald-100/70 font-bold tracking-[0.15em] uppercase mt-0.5">Secure Session Termination</p>

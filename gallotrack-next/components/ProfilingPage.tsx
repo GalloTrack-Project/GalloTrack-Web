@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { Bird, Archive, Skull } from 'lucide-react';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useRouter } from 'next/navigation';
@@ -65,22 +66,22 @@ export default function ProfilingPage() {
             <span>Register</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'males' ? 'bg-sky-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">🐓</span>
+            <Bird className="w-4 h-4" />
             <span>Roosters</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'males' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{maleActiveFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'females' ? 'bg-pink-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">🐔</span>
+            <Bird className="w-4 h-4" />
             <span>Hens</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'females' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{femaleActiveFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'archived' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">📦</span>
+            <Archive className="w-4 h-4" />
             <span>Archived</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'archived' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{archivedFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-rose-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">💀</span>
+            <Skull className="w-4 h-4" />
             <span>Deceased</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'deceased' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{deceasedFowls.length}</span>
           </button>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { Bird, Eye } from 'lucide-react';
 import type { FowlRecord } from '@/lib/types';
 
 export type ParentSelectorProps = {
@@ -46,7 +47,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
       className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-emerald-50 text-left cursor-pointer border-b border-slate-50 last:border-b-0"
     >
       <span className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[9px] shrink-0">
-        {child.gender === 'Male' ? '🐓' : child.gender === 'Female' ? '🐔' : '🐣'}
+        <Bird className="w-3 h-3" />
       </span>
       <span className="flex-1 min-w-0">
         <span className="block text-[11px] font-bold text-slate-800 truncate">{child.name}</span>
@@ -92,7 +93,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const accentBg = accent === 'emerald' ? 'bg-emerald-600' : 'bg-amber-500';
-  const genderIcon = preferredGender === 'Male' ? '🐓' : preferredGender === 'Female' ? '🐔' : '🐣';
+  const genderIcon = <Bird className="w-3 h-3" />;
   const pad = compact ? 'p-2.5' : 'p-3';
   const parentGender = preferredGender === 'Male' ? 'sire' : 'dam';
   const expandedItem = parentGender === 'sire' ? expandedSire : expandedDam;
@@ -113,7 +114,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
           {candidates.length > 0 && (
             <>
               <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                Registered fowls — tap to select or tap 👁 to see children
+                Registered fowls — tap to select or tap to see children
               </div>
               {candidates.map((f) => {
                 const children = getChildrenOf(f.name, fowls, parentGender);
@@ -132,7 +133,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
                         }}
                         className="flex-1 flex items-center gap-2.5 min-w-0"
                       >
-                        <span className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] shrink-0">{f.gender === 'Male' ? '🐓' : f.gender === 'Female' ? '🐔' : '🐣'}</span>
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0"><Bird className="w-3 h-3 text-slate-500" /></span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-xs font-black text-slate-800 truncate">{f.name}</span>
                           <span className="block text-[9px] font-semibold text-slate-400 truncate">{f.breed} · {f.growth_stage || 'Stag'} · {f.gender || 'Unset'}</span>
@@ -153,7 +154,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
                           }`}
                           title={`View ${children.length} children of ${f.name}`}
                         >
-                          👁
+                           <Eye className="w-3.5 h-3.5" />
                         </button>
                       )}
                       <span className={`shrink-0 text-[8px] font-mono font-black px-1.5 py-0.5 rounded-full uppercase ${f.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>{f.status}</span>
