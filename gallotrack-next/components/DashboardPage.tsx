@@ -491,21 +491,21 @@ export default function DashboardPage() {
 
       {/* BREEDING PAIR PERFORMANCE ANALYTICS */}
       {pairingAnalytics.ranked.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-emerald-500" /></span>
+              <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-emerald-400" /></span>
               <div>
-                <h3 className="text-sm font-black text-slate-900 tracking-tight">Breeding Pair Performance Analytics</h3>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
+                <h3 className="text-sm font-black text-card-foreground tracking-tight">Breeding Pair Performance Analytics</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
               </div>
             </div>
-            <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
+            <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px] border-collapse min-w-[860px]">
               <thead>
-                <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/80">
+                <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
                   <th className="p-4 pl-6">Rank</th>
                   <th className="p-4">Sire × Dam Cross</th>
                   <th className="p-4 text-center">Offspring</th>
@@ -517,50 +517,50 @@ export default function DashboardPage() {
                   <th className="p-4 text-center pr-6">Breeding Verdict</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
+              <tbody className="divide-y divide-border text-muted-foreground font-semibold">
                 {pairingAnalytics.ranked.map((p, i) => {
                   const elite = p.decided >= 3 && p.winRate >= 70;
                   const solid = p.winRate >= 50;
                   const weak = p.decided >= 3 && p.winRate < 50;
                   return (
-                    <tr key={p.key} className={`hover:bg-slate-50/80 transition-colors ${weak ? 'bg-rose-50/30' : elite ? 'bg-emerald-50/30' : ''}`}>
+                    <tr key={p.key} className={`hover:bg-muted/30 transition-colors ${weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''}`}>
                       <td className="p-4 pl-6 whitespace-nowrap">
-                        {i === 0 ? <Medal className="w-4 h-4 text-amber-500" /> : i === 1 ? <Medal className="w-4 h-4 text-slate-400" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-slate-400">#{i + 1}</span>}
+                        {i === 0 ? <Medal className="w-4 h-4 text-amber-500" /> : i === 1 ? <Medal className="w-4 h-4 text-slate-400" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-emerald-500" /></div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-emerald-400" /></div>
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-900">{p.sire} <span className="text-slate-300 font-black">×</span> {p.dam}</p>
-                            <p className="text-[9px] font-semibold text-slate-400 truncate">{p.members.map((m) => m.name).join(', ')}</p>
+                            <p className="font-bold text-card-foreground">{p.sire} <span className="text-muted-foreground font-black">×</span> {p.dam}</p>
+                            <p className="text-[9px] font-semibold text-muted-foreground truncate">{p.members.map((m) => m.name).join(', ')}</p>
                           </div>
                         </div>
                       </td>
                       <td className="p-4 text-center font-mono font-bold">{p.members.length}</td>
                       <td className="p-4 text-center font-mono font-bold">{p.totalFights}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-emerald-600">{p.wins}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-rose-600">{p.losses}</td>
+                      <td className="p-4 text-center font-mono font-extrabold text-emerald-400">{p.wins}</td>
+                      <td className="p-4 text-center font-mono font-extrabold text-rose-400">{p.losses}</td>
                       <td className="p-4 text-center font-mono">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
                           {p.winRate}%
                         </span>
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-100 text-teal-800' : p.resilienceScore >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal-400' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-amber-400' : 'bg-rose-500/15 text-rose-400'}`}>
                             <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
                           </span>
                           {p.casualties > 0 && (
-                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
+                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
                           )}
                         </div>
                       </td>
                       <td className="p-4 text-center pr-6">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
-                          elite ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                          : solid ? 'bg-sky-50 text-sky-700 border-sky-200'
-                          : weak ? 'bg-rose-100 text-rose-800 border-rose-300'
-                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                          elite ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                          : solid ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
+                          : weak ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                          : 'bg-muted text-muted-foreground border-border'
                         }`}>
                           {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
                         </span>
@@ -571,30 +571,30 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-x-5 gap-y-1 text-[9px] font-bold text-slate-400">
+          <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-[9px] font-bold text-muted-foreground">
             <span>Verdict logic:</span>
-            <span className="text-emerald-700">Elite = ≥70% win rate with 3+ decided fights</span>
-            <span className="text-sky-700">Solid = ≥50%</span>
-            <span className="text-rose-700">Avoid = below 50% with 3+ decided fights</span>
-            <span className="text-teal-700">Survivability = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties drag a bloodline down even on wins</span>
+            <span className="text-emerald-400">Elite = ≥70% win rate with 3+ decided fights</span>
+            <span className="text-sky-400">Solid = ≥50%</span>
+            <span className="text-rose-400">Avoid = below 50% with 3+ decided fights</span>
+            <span className="text-teal-400">Survivability = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties drag a bloodline down even on wins</span>
             <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
           </div>
         </div>
       )}
 
       {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
           <div>
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">Historical Analytics Match Logs</h3>
-            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
+            <h3 className="text-sm font-black text-card-foreground tracking-tight">Historical Analytics Match Logs</h3>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
+            <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
             <button
               type="button"
               onClick={() => navigate('profiling', 'matchForm')}
-              className="bg-slate-900 hover:bg-emerald-700 active:scale-[0.98] text-white text-[10px] font-black px-4 py-2 rounded-lg shadow-sm transition-all cursor-pointer"
+              className="bg-card hover:bg-emerald-500/20 active:scale-[0.98] text-card-foreground text-[10px] font-black px-4 py-2 rounded-lg border border-border shadow-sm transition-all cursor-pointer"
             >
               View All →
             </button>
@@ -603,7 +603,7 @@ export default function DashboardPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11px] border-collapse min-w-[760px]">
             <thead>
-              <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/80">
+              <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
                 <th className="p-4 pl-6">Match Date</th>
                 <th className="p-4">Fowl Identifier</th>
                 <th className="p-4">Bloodline</th>
@@ -613,52 +613,52 @@ export default function DashboardPage() {
                 <th className="p-4 text-center">Video</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-600 font-semibold">
+            <tbody className="divide-y divide-border text-muted-foreground font-semibold">
               {matchHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 text-xs font-semibold">
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-xs font-semibold">
                     No data available
                   </td>
                 </tr>
               ) : (
                 matchHistory.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/80 transition-colors duration-150">
-                    <td className="p-4 pl-6 font-mono text-slate-400 whitespace-nowrap">{log.date}</td>
+                  <tr key={log.id} className="hover:bg-muted/30 transition-colors duration-150">
+                    <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">{log.date}</td>
                     <td className="p-4">
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center shrink-0"><Bird className="w-3.5 h-3.5 text-emerald-500" /></div>
-                        <span className="font-bold text-slate-900">{log.entry_name}</span>
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Bird className="w-3.5 h-3.5 text-emerald-400" /></div>
+                        <span className="font-bold text-card-foreground">{log.entry_name}</span>
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
                     </td>
-                    <td className="p-4 text-slate-500 font-normal">{log.location || '—'}</td>
+                    <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{log.outcome || '—'}</span>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-muted text-muted-foreground border-border'}`}>{log.outcome || '—'}</span>
                     </td>
                     <td className="p-4 text-center">
                       {log.post_fight_condition ? (
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
                           (log.post_fight_condition || '').toLowerCase().includes('deceased')
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                             : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely')
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-teal-50 text-teal-700 border-teal-200'
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            : 'bg-teal-500/10 text-teal-400 border-teal-500/20'
                         }`}>
-                          {(log.post_fight_condition || '').toLowerCase().includes('deceased') ? '' : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely') ? '' : ''}{log.post_fight_condition}
+                          {log.post_fight_condition}
                         </span>
                       ) : (
-                        <span className="text-[9px] text-slate-300 font-bold">—</span>
+                        <span className="text-[9px] text-muted-foreground font-bold">—</span>
                       )}
                     </td>
                     <td className="p-4 text-center">
                       {log.video_url ? (
-                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
+                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/40 transition-all cursor-pointer">
                           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
                         </a>
                       ) : (
-                        <span className="text-[9px] text-slate-300 font-bold">—</span>
+                        <span className="text-[9px] text-muted-foreground font-bold">—</span>
                       )}
                     </td>
                   </tr>

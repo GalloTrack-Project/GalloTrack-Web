@@ -166,26 +166,6 @@ export default function AdminPanelPage() {
     }
   };
 
-  const handleToggleRole = async (user: AdminProfileRow) => {
-    const nextRole = user.is_admin ? 'owner' : 'admin';
-    if (user.id === adminProfile?.id) {
-      showToast('error', 'You cannot change your own admin role.');
-      return;
-    }
-    setActionId(user.id);
-    try {
-      await setUserRole(user.id, nextRole as 'owner' | 'admin');
-      setProfiles((prev) =>
-        prev.map((p) => (p.id === user.id ? { ...p, role: nextRole, is_admin: nextRole === 'admin' } : p))
-      );
-      showToast('success', `Successfully ${nextRole === 'admin' ? 'promoted' : 'demoted'} ${profileDisplayName(user)} to ${nextRole === 'admin' ? 'Admin' : 'Farm Owner'}`);
-    } catch (err) {
-      showToast('error', `Failed to update role: ${(err as Error).message}`);
-    } finally {
-      setActionId(null);
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
@@ -364,22 +344,10 @@ export default function AdminPanelPage() {
                 <button
                   type="button"
                   disabled={actionId === user.id || user.id === adminProfile.id}
-                  onClick={() => handleToggleRole(user)}
-                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                    user.is_admin || user.role === 'admin'
-                      ? 'bg-sky-500/10 border-sky-500/40 text-sky-400 hover:bg-sky-500/20'
-                      : 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
-                  }`}
-                >
-                  {actionId === user.id ? '...' : user.is_admin || user.role === 'admin' ? 'Demote' : 'Promote'}
-                </button>
-                <button
-                  type="button"
-                  disabled={actionId === user.id || user.id === adminProfile.id}
                   onClick={() => setPendingDelete(user)}
                   className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  🗑️
+                  Delete
                 </button>
               </div>
             </div>
@@ -450,18 +418,6 @@ export default function AdminPanelPage() {
                           }`}
                         >
                           {actionId === user.id ? '...' : user.is_active === false ? 'Activate' : 'Deactivate'}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={actionId === user.id || user.id === adminProfile.id}
-                          onClick={() => handleToggleRole(user)}
-                          className={`text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                            user.is_admin || user.role === 'admin'
-                              ? 'bg-sky-500/10 border-sky-500/40 text-sky-400 hover:bg-sky-500/20'
-                              : 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
-                          }`}
-                        >
-                          {actionId === user.id ? '...' : user.is_admin || user.role === 'admin' ? 'Demote' : 'Promote'}
                         </button>
                         <button
                           type="button"
@@ -585,18 +541,6 @@ export default function AdminPanelPage() {
                   }`}
                 >
                   {viewUser.is_active === false ? 'Activate' : 'Deactivate'}
-                </button>
-                <button
-                  type="button"
-                  disabled={actionId === viewUser.id || viewUser.id === adminProfile?.id}
-                  onClick={() => handleToggleRole(viewUser)}
-                  className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                    viewUser.is_admin || viewUser.role === 'admin'
-                      ? 'bg-sky-500/10 border-sky-500/40 text-sky-400 hover:bg-sky-500/20'
-                      : 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
-                  }`}
-                >
-                  {viewUser.is_admin || viewUser.role === 'admin' ? 'Demote' : 'Promote'}
                 </button>
                 <button
                   type="button"
