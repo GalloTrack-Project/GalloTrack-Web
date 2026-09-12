@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAgeLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
+import { Calendar, CircleDot, Bird, Activity, Crown } from 'lucide-react';
 
 type Filter = 'all' | 'soon' | 'overdue' | 'mature';
 
@@ -43,7 +44,7 @@ export default function MilestonesPage() {
           </button>
           <div>
             <h1 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <span>📅</span> Development Calendar & Milestones
+              <Calendar size={18} /> Development Calendar & Milestones
             </h1>
             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Stage transitions predicted from each fowl&apos;s birth date · {activeFowls.length} active fowls tracked</p>
           </div>
@@ -72,7 +73,7 @@ export default function MilestonesPage() {
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
-            <span className="text-4xl block mb-3">📅</span>
+            <span className="block mb-3 text-slate-300"><Calendar size={36} /></span>
             <p className="text-sm font-bold text-slate-400">No milestones match this filter.</p>
           </div>
         ) : (
@@ -82,7 +83,7 @@ export default function MilestonesPage() {
               const overdue = info.next !== null && info.next!.daysUntil < 0;
               return (
                 <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200' : overdue ? 'bg-rose-50/70 border-rose-200' : 'bg-slate-50/60 border-slate-100'}`}>
-                  <span className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-lg shrink-0">{info.current?.icon || '🐤'}</span>
+                  <span className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-lg shrink-0">{info.current?.icon || <CircleDot size={20} />}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-black text-slate-800 truncate">{fowl.name} <span className="text-[9px] font-bold text-slate-400 font-mono">#{fowl.id}</span></p>
                     <p className="text-[10px] text-slate-400 font-semibold truncate">
@@ -115,22 +116,22 @@ export default function MilestonesPage() {
         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Development Stage Reference</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
-            <span className="text-lg block">🐤</span>
+            <span className="text-lg block"><CircleDot size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 mt-1">Chick</p>
             <p className="text-[8px] text-slate-400">0–6 months</p>
           </div>
           <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
-            <span className="text-lg block">🐓</span>
+            <span className="text-lg block"><Bird size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 mt-1">Stag / Pullet</p>
             <p className="text-[8px] text-slate-400">6–12 months</p>
           </div>
           <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
-            <span className="text-lg block">💪</span>
+            <span className="text-lg block"><Activity size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 mt-1">Bull Stag / Hen</p>
             <p className="text-[8px] text-slate-400">12–24 months</p>
           </div>
           <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
-            <span className="text-lg block">👑</span>
+            <span className="text-lg block"><Crown size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 mt-1">Cock / Senior Hen</p>
             <p className="text-[8px] text-slate-400">24+ months</p>
           </div>

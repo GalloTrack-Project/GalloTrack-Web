@@ -1,5 +1,6 @@
 'use client';
 import React, { Component, type ReactNode } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 type Props = { children: ReactNode; label?: string };
 type State = { hasError: boolean; error: Error | null };
@@ -18,7 +19,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center space-y-3">
-          <div className="w-12 h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center text-2xl mx-auto">⚠️</div>
+          <div className="w-12 h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto"><AlertTriangle className="w-6 h-6" /></div>
           <h3 className="text-sm font-extrabold text-rose-800">
             {this.props.label || 'Section'} Error
           </h3>

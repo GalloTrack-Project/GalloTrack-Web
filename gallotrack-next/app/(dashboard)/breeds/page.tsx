@@ -79,16 +79,16 @@ export default function BreedsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.push('/dashboard')}
-            className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-all cursor-pointer"
+            onClick={() => router.back()}
+            className="w-9 h-9 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer"
           >
             ←
           </button>
           <div>
-            <h1 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <h1 className="text-lg font-black text-card-foreground tracking-tight flex items-center gap-2">
               <span>🧬</span> Breed Registry
             </h1>
-            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Create and manage genetic strains for your fowl registry</p>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Create and manage genetic strains for your fowl registry</p>
           </div>
         </div>
         <button
@@ -103,24 +103,24 @@ export default function BreedsPage() {
 
       {/* STATS */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
-          <p className="text-2xl font-black text-slate-900">{availableStrains.length}</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Total Breeds</p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-4 text-center">
+          <p className="text-2xl font-black text-card-foreground">{availableStrains.length}</p>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Breeds</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
-          <p className="text-2xl font-black text-sky-700">{builtInCount}</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Built-in</p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-4 text-center">
+          <p className="text-2xl font-black text-sky-600">{builtInCount}</p>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Built-in</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 text-center">
-          <p className="text-2xl font-black text-emerald-700">{customCount}</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Custom</p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-4 text-center">
+          <p className="text-2xl font-black text-emerald-600">{customCount}</p>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Custom</p>
         </div>
       </div>
 
       {/* ADD FORM */}
       {showAddForm && (
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5 space-y-3">
-          <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">➕ Create New Breed</p>
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 space-y-3">
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">➕ Create New Breed</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -128,19 +128,19 @@ export default function BreedsPage() {
               onChange={(e) => setNewBreedName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
               placeholder="e.g. Roundhead, Kelso, Sweater..."
-              className="flex-1 p-3 border border-emerald-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+              className="flex-1 p-3 border border-emerald-500/30 rounded-xl text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
               autoFocus
             />
             <button
               type="button"
               onClick={handleAdd}
               disabled={!newBreedName.trim()}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0"
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0"
             >
               Save
             </button>
           </div>
-          <p className="text-[9px] text-slate-400 font-semibold">Type the breed name then click <strong className="text-emerald-600">Save</strong> or press Enter.</p>
+          <p className="text-[9px] text-muted-foreground font-semibold">Type the breed name then click <strong className="text-emerald-600">Save</strong> or press Enter.</p>
         </div>
       )}
 
@@ -151,17 +151,17 @@ export default function BreedsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search breeds..."
-          className="w-full p-3 pl-10 border border-slate-300 rounded-xl text-xs bg-white text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+          className="w-full p-3 pl-10 border border-border rounded-xl text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
         />
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
       </div>
 
       {/* BREED LIST */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
         {breeds.length === 0 ? (
           <div className="text-center py-12">
             <span className="text-4xl block mb-3">🧬</span>
-            <p className="text-sm font-bold text-slate-400">{search ? 'No breeds match your search.' : 'No breeds registered yet.'}</p>
+            <p className="text-sm font-bold text-muted-foreground">{search ? 'No breeds match your search.' : 'No breeds registered yet.'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -171,24 +171,24 @@ export default function BreedsPage() {
               const isConfirming = confirmDelete === breed;
               const isDeletingThis = deleting === breed;
               return (
-                <div key={breed} className={`relative flex flex-col p-4 rounded-xl border transition-all ${isCustom ? 'bg-emerald-50/50 border-emerald-200/60' : 'bg-slate-50/60 border-slate-100'}`}>
+                <div key={breed} className={`relative flex flex-col p-4 rounded-xl border transition-all ${isCustom ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-muted/50 border-border'}`}>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-slate-800 truncate">{breed}</p>
-                      <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 ${isCustom ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-sky-50 text-sky-600 border border-sky-200'}`}>
+                      <p className="text-xs font-black text-card-foreground truncate">{breed}</p>
+                      <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 ${isCustom ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700' : 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400 border border-sky-200 dark:border-sky-700'}`}>
                         {isCustom ? 'Custom' : 'Built-in'}
                       </span>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-lg font-black text-slate-800 leading-none">{count}</p>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5">fowl{count !== 1 ? 's' : ''}</p>
+                      <p className="text-lg font-black text-card-foreground leading-none">{count}</p>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">fowl{count !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
                   {isCustom && (
-                    <div className="mt-auto pt-2 border-t border-emerald-100">
+                    <div className="mt-auto pt-2 border-t border-emerald-500/20">
                       {isConfirming ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-rose-600">Delete?</span>
+                          <span className="text-[9px] font-bold text-rose-500">Delete?</span>
                           <button
                             type="button"
                             onClick={() => handleDelete(breed)}
@@ -200,7 +200,7 @@ export default function BreedsPage() {
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(null)}
-                            className="text-[9px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg hover:bg-slate-200 transition-all cursor-pointer"
+                            className="text-[9px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-lg hover:bg-muted/80 transition-all cursor-pointer"
                           >
                             No
                           </button>
@@ -217,8 +217,8 @@ export default function BreedsPage() {
                     </div>
                   )}
                   {!isCustom && (
-                    <div className="mt-auto pt-2 border-t border-slate-100">
-                      <span className="text-[9px] font-bold text-slate-300">🔒 Built-in</span>
+                    <div className="mt-auto pt-2 border-t border-border">
+                      <span className="text-[9px] font-bold text-muted-foreground/50">🔒 Built-in</span>
                     </div>
                   )}
                 </div>

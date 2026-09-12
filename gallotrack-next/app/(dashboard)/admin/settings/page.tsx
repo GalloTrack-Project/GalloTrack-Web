@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { adminGuard } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
+import { Shield, Tag, CircleDot, Megaphone, Dna, User, Mail } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
@@ -169,7 +170,7 @@ export default function AdminSettingsPage() {
         {/* IDENTITY */}
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-5 mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl">🛡️</div>
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl"><Shield size={20} /></div>
             <div>
               <p className="text-sm font-extrabold text-card-foreground">{adminProfile.full_name || 'Administrator'}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">{adminProfile.email || ''} · Admin privileged session</p>
@@ -185,7 +186,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>System Name</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">🏷️</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Tag size={14} /></span>
                 <input type="text" value={systemName} onChange={(e) => setSystemName(e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., GalloTrack" required />
               </div>
             </div>
@@ -193,7 +194,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>System Status</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">🚦</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><CircleDot size={14} /></span>
                 <select value={systemStatus} onChange={(e) => setSystemStatus(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                   <option value="Operational">Operational</option>
                   <option value="Maintenance">Maintenance</option>
@@ -205,7 +206,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Maintenance Message <span className="opacity-60">(optional)</span></label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">📣</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Megaphone size={14} /></span>
                 <input
                   type="text"
                   value={maintenanceMessage}
@@ -224,7 +225,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Default Ancestry Strain Classification</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">🧬</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Dna size={14} /></span>
                 <select value={defaultStrain} onChange={(e) => setDefaultStrain(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                   <option value="Sweater">Sweater</option>
                   <option value="Brood">Brood</option>
@@ -266,7 +267,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Default New User Role</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">👤</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><User size={14} /></span>
                 <select value={defaultUserRole} onChange={(e) => setDefaultUserRole(e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                   <option value="owner">Farm Owner</option>
                   <option value="admin">Admin</option>
@@ -306,7 +307,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Target Farm Owner Email</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs">📧</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Mail size={14} /></span>
                 <input
                   type="email"
                   value={transferEmail}

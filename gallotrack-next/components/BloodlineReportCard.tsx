@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { useGaloTrack } from '@/lib/context';
+import { Dna, BarChart3, Zap, Bird, Lightbulb } from 'lucide-react';
 
 type Props = { fowl: FowlRecord; compact?: boolean };
 
@@ -19,7 +20,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
     return (
       <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[9px] font-black text-teal-700 uppercase tracking-widest">🧬 Bloodline</span>
+          <span className="text-[9px] font-black text-teal-700 uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline</span>
           <div className="flex items-center gap-1.5">
             {report.crossPattern && <TierBadge tier={report.crossPattern.tier} />}
             <span className={`text-[8px] font-black px-2 py-0.5 rounded-full ${report.strainType === 'purebred' ? 'bg-sky-100 text-sky-700' : report.strainType === 'crossbred' ? 'bg-violet-100 text-violet-700' : report.strainType === 'linebred' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
@@ -43,7 +44,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black text-teal-700 uppercase tracking-widest">🧬 Bloodline Report</span>
+          <span className="text-[10px] font-black text-teal-700 uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline Report</span>
           {report.crossPattern && <TierBadge tier={report.crossPattern.tier} />}
         </div>
         <button onClick={() => setExpanded(!expanded)} className="text-[8px] font-bold text-teal-600 hover:text-teal-800 cursor-pointer">
@@ -93,7 +94,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       {/* Performance Benchmark */}
       {report.performanceBenchmark && report.performanceBenchmark.totalFights > 0 && (
         <div className="bg-white/70 border border-sky-200 rounded-xl p-3 space-y-2">
-          <p className="text-[9px] font-black text-sky-700 uppercase">📊 Strain Performance Benchmark</p>
+          <p className="text-[9px] font-black text-sky-700 uppercase"><BarChart3 className="w-3 h-3" /> Strain Performance Benchmark</p>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-[8px] font-bold text-slate-400">Win Rate</p>
@@ -117,7 +118,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       {/* Hybrid Vigor Bar */}
       <div className="bg-white/70 border border-emerald-200 rounded-xl p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] font-black text-emerald-700 uppercase">⚡ Hybrid Vigor</span>
+          <span className="text-[9px] font-black text-emerald-700 uppercase"><Zap className="w-3 h-3" /> Hybrid Vigor</span>
           <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
             report.hybridVigor.score >= 90 ? 'bg-amber-100 text-amber-700' :
             report.hybridVigor.score >= 80 ? 'bg-emerald-100 text-emerald-700' :
@@ -144,11 +145,11 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Sire / Dam Strains */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-sky-50 border border-sky-200 rounded-xl p-2">
-              <p className="text-[8px] font-black text-sky-600 uppercase">🐓 Sire Strain</p>
+              <p className="text-[8px] font-black text-sky-600 uppercase"><Bird className="w-3 h-3" /> Sire Strain</p>
               <p className="text-[10px] font-bold text-slate-800">{report.sireStrain}</p>
             </div>
             <div className="bg-pink-50 border border-pink-200 rounded-xl p-2">
-              <p className="text-[8px] font-black text-pink-600 uppercase">🐔 Dam Strain</p>
+              <p className="text-[8px] font-black text-pink-600 uppercase"><Bird className="w-3 h-3" /> Dam Strain</p>
               <p className="text-[10px] font-bold text-slate-800">{report.damStrain}</p>
             </div>
           </div>
@@ -166,7 +167,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Heritability */}
           <div className="bg-white/70 border border-indigo-200 rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black text-indigo-700 uppercase">🧮 Heritability</span>
+              <span className="text-[9px] font-black text-indigo-700 uppercase">Heritability</span>
               <span className="text-[9px] font-black text-indigo-700">{report.heritability.overall}/100 — {report.heritability.label}</span>
             </div>
             <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -184,7 +185,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Color Report */}
           {report.colorReport && (
             <div className="bg-white/70 border border-amber-200 rounded-xl p-3 space-y-2">
-              <p className="text-[9px] font-black text-amber-700 uppercase">🎨 Color Genetics</p>
+              <p className="text-[9px] font-black text-amber-700 uppercase">Color Genetics</p>
               <div className="grid grid-cols-3 gap-2 text-[8px]">
                 <div>
                   <p className="font-bold text-slate-400">Leg Color</p>
@@ -223,7 +224,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {report.breedCompliance && report.breedCompliance.matchedStandard && (
             <div className="bg-white/70 border border-sky-200 rounded-xl p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-[9px] font-black text-sky-700 uppercase">📏 Breed Compliance</p>
+                <p className="text-[9px] font-black text-sky-700 uppercase">Breed Compliance</p>
                 <div className="flex items-center gap-2">
                   <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
                     report.breedCompliance.complianceGrade.startsWith('A') ? 'bg-emerald-100 text-emerald-700' :
@@ -265,7 +266,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
               {report.breedCompliance.recommendations.length > 0 && (
                 <div className="space-y-0.5">
                   {report.breedCompliance.recommendations.map((r, i) => (
-                    <p key={i} className="text-[8px] text-amber-600">💡 {r}</p>
+                    <p key={i} className="text-[8px] text-amber-600"><Lightbulb className="w-3 h-3 inline" /> {r}</p>
                   ))}
                 </div>
               )}

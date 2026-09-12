@@ -1,11 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
+import { Dna, Users, Bird, Link2, Trophy, CheckCircle, AlertTriangle } from 'lucide-react';
 
 function EmptyState({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="bg-card p-10 text-center rounded-3xl border border-border shadow-sm space-y-2">
-      <div className="w-12 h-12 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-2xl mx-auto">🧬</div>
+      <div className="w-12 h-12 bg-muted text-muted-foreground rounded-full flex items-center justify-center mx-auto"><Dna className="w-6 h-6" /></div>
       <h3 className="text-sm font-extrabold text-card-foreground">{title}</h3>
       <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">{hint}</p>
     </div>
@@ -48,7 +49,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-center text-lg shrink-0">👨‍👩‍👧‍👦</div>
+          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-emerald-700 dark:text-emerald-400" /></div>
           <div>
             <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
             <p className="text-[10px] text-muted-foreground font-semibold">{g.length} birds · {males} male · {females} female</p>
@@ -59,11 +60,11 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
       <div className="px-5 pb-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-2xl p-3.5 text-center">
-            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1">🐓 Sire</p>
+            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1"><Bird className="w-3 h-3 inline" /> Sire</p>
             <p className="text-xs font-black text-card-foreground truncate">{g[0].sire}</p>
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-2xl p-3.5 text-center">
-            <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1">🐔 Dam</p>
+            <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1"><Bird className="w-3 h-3 inline" /> Dam</p>
             <p className="text-xs font-black text-card-foreground truncate">{g[0].dam}</p>
           </div>
         </div>
@@ -115,7 +116,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
       </div>
       <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">🔗 Pairing Win Rate</span>
+          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground"><Link2 className="w-3 h-3 inline" /> Pairing Win Rate</span>
           {decided > 0 && (
             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${groupWinRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
               {wins}W-{losses}L
@@ -309,7 +310,7 @@ export default function LineageDirectory({
     return (
       <div className="mt-3 pt-3 border-t border-border space-y-2">
         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-          {parentKind === 'sire' ? '🐔 Sibling Subgroups by Dam' : '🐓 Sibling Subgroups by Sire'}
+          {parentKind === 'sire' ? <><Bird className="w-3 h-3 inline" /> Sibling Subgroups by Dam</> : <><Bird className="w-3 h-3 inline" /> Sibling Subgroups by Sire</>}
         </p>
         {subgroups.map(([otherParent, members]) => {
           const sgKey = `${prefix}|||${parentName}|||${otherParent}`;
@@ -325,7 +326,7 @@ export default function LineageDirectory({
                 className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-muted/80 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs">{parentKind === 'sire' ? '🐔' : '🐓'}</span>
+                  <span className="text-xs">{parentKind === 'sire' ? <Bird className="w-4 h-4" /> : <Bird className="w-4 h-4" />}</span>
                   <span className="text-[10px] font-black text-card-foreground truncate">{otherParent}</span>
                   <span className="text-[8px] font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-full shrink-0">
                     {members.length} bird{members.length !== 1 ? 's' : ''}
@@ -362,8 +363,8 @@ export default function LineageDirectory({
     color: 'sky' | 'pink',
   ) => {
     const colorMap = {
-      sky: { bg: 'bg-sky-100 dark:bg-sky-950/50', border: 'border-sky-200 dark:border-sky-800', hoverBg: 'hover:bg-sky-50/50 dark:hover:bg-sky-950/20', icon: '🐓', text: 'text-sky-700 dark:text-sky-400' },
-      pink: { bg: 'bg-pink-100 dark:bg-pink-950/50', border: 'border-pink-200 dark:border-pink-800', hoverBg: 'hover:bg-pink-50/50 dark:hover:bg-pink-950/20', icon: '🐔', text: 'text-pink-700 dark:text-pink-400' },
+      sky: { bg: 'bg-sky-100 dark:bg-sky-950/50', border: 'border-sky-200 dark:border-sky-800', hoverBg: 'hover:bg-sky-50/50 dark:hover:bg-sky-950/20', icon: 'sire', text: 'text-sky-700 dark:text-sky-400' },
+      pink: { bg: 'bg-pink-100 dark:bg-pink-950/50', border: 'border-pink-200 dark:border-pink-800', hoverBg: 'hover:bg-pink-50/50 dark:hover:bg-pink-950/20', icon: 'dam', text: 'text-pink-700 dark:text-pink-400' },
     };
     const c = colorMap[color];
     const otherLabel = kind === 'sire' ? 'dam' : 'sire';
@@ -386,7 +387,7 @@ export default function LineageDirectory({
                 className={`w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-left ${c.hoverBg} transition-colors cursor-pointer`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.border} flex items-center justify-center text-lg shrink-0`}>{c.icon}</div>
+                  <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.border} flex items-center justify-center shrink-0`}>{c.icon === 'sire' ? <Bird className="w-5 h-5" /> : <Bird className="w-5 h-5" />}</div>
                   <div className="min-w-0">
                     <p className="text-sm font-black text-card-foreground truncate">{parentName}</p>
                     <p className="text-[10px] text-muted-foreground font-semibold">
@@ -413,7 +414,7 @@ export default function LineageDirectory({
                     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">All Offspring — Ranked by Performance</p>
                     {bestId && ranked[0] && getChildMatchStats(ranked[0].name).decided > 0 && (
                       <span className="text-[8px] font-black bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
-                        🏆 Top: {ranked[0].name}
+                        <Trophy className="w-3 h-3 inline" /> Top: {ranked[0].name}
                       </span>
                     )}
                   </div>
@@ -449,17 +450,17 @@ export default function LineageDirectory({
 
         <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0">
           <button type="button" onClick={() => setActiveTab('families')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'families' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">👥</span>
+            <span className="text-sm"><Users className="w-4 h-4" /></span>
             <span>Full Siblings &amp; Families</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'families' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fullFiltered.length}</span>
           </button>
           <button type="button" onClick={() => setActiveTab('sire')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'sire' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">🐓</span>
+            <span className="text-sm"><Bird className="w-4 h-4" /></span>
             <span>Sire Offspring Tree</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'sire' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireEntries.length}</span>
           </button>
           <button type="button" onClick={() => setActiveTab('dam')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'dam' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm">🐔</span>
+            <span className="text-sm"><Bird className="w-4 h-4" /></span>
             <span>Dam Offspring Tree</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'dam' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{damEntries.length}</span>
           </button>
@@ -468,13 +469,13 @@ export default function LineageDirectory({
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Full-Sibling Families', value: fullFiltered.length, icon: '👥' },
-          { label: 'Sire Offspring Groups', value: sireEntries.length, icon: '🐓' },
-          { label: 'Dam Offspring Groups', value: damEntries.length, icon: '🐔' },
-          { label: 'Total Birds Tracked', value: fowls.length, icon: '🧬' },
+          { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> },
+          { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <Bird className="w-5 h-5 text-sky-600 dark:text-sky-400" /> },
+          { label: 'Dam Offspring Groups', value: damEntries.length, icon: <Bird className="w-5 h-5 text-pink-600 dark:text-pink-400" /> },
+          { label: 'Total Birds Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-600 dark:text-teal-400" /> },
         ].map((s) => (
           <div key={s.label} className="bg-card rounded-3xl border border-border shadow-sm p-5 flex items-center gap-4">
-            <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 rounded-2xl flex items-center justify-center text-xl shrink-0">{s.icon}</div>
+            <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 rounded-2xl flex items-center justify-center shrink-0">{s.icon}</div>
             <div className="min-w-0">
               <p className="text-2xl font-black text-card-foreground leading-none">{s.value}</p>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mt-1">{s.label}</p>
@@ -493,7 +494,7 @@ export default function LineageDirectory({
         return (
           <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border border-emerald-200/60 dark:border-emerald-800/60 rounded-3xl p-5 sm:p-6 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-base">🏆</span>
+              <span className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center"><Trophy className="w-5 h-5" /></span>
               <div>
                 <h3 className="text-sm font-black text-card-foreground">Breeding Recommendation</h3>
                 <p className="text-[10px] text-muted-foreground font-semibold">Based on sibling and pairing performance data</p>
@@ -501,20 +502,20 @@ export default function LineageDirectory({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-2xl p-3">
-                <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">🏆 Best Cross</p>
+                <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest"><Trophy className="w-3 h-3 inline" /> Best Cross</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{best.sire} × {best.dam}</p>
                 <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{best.winRate}% win rate · {best.wins}W-{best.losses}L</p>
               </div>
               {eliteCount > 0 && (
                 <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-2xl p-3">
-                  <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">✅ Elite Crosses</p>
+                  <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest"><CheckCircle className="w-3 h-3 inline" /> Elite Crosses</p>
                   <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{eliteCount}</p>
                   <p className="text-[10px] font-bold text-muted-foreground">crosses with 70%+ win rate</p>
                 </div>
               )}
               {weakCount > 0 && (
                 <div className="bg-card/80 border border-rose-200/50 dark:border-rose-800/50 rounded-2xl p-3">
-                  <p className="text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">⚠️ Avoid</p>
+                  <p className="text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest"><AlertTriangle className="w-3 h-3 inline" /> Avoid</p>
                   <p className="text-xs font-black text-card-foreground mt-1">{worst.sire} × {worst.dam}</p>
                   <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400">{worst.winRate}% win rate · Consider different pairing</p>
                 </div>
@@ -527,7 +528,7 @@ export default function LineageDirectory({
       {activeTab === 'families' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center justify-center text-base">👥</div>
+            <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center justify-center"><Users className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Full-Sibling Families</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Same Sire and same Dam — iisang tatay at iisang nanay. Ranked by win rate.</p>
@@ -548,7 +549,7 @@ export default function LineageDirectory({
       {activeTab === 'sire' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-xl flex items-center justify-center text-base">🐓</div>
+            <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-xl flex items-center justify-center"><Bird className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Sire Offspring Tree</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
@@ -565,7 +566,7 @@ export default function LineageDirectory({
       {activeTab === 'dam' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-xl flex items-center justify-center text-base">🐔</div>
+            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-xl flex items-center justify-center"><Bird className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>

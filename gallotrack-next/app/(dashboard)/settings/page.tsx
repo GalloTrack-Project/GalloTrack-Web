@@ -3,16 +3,17 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/registry'
 import type { AdminSettings } from '@/lib/admin'
+import { User, Home, Settings, Bell, Database, Monitor, X } from 'lucide-react'
 
 type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'data' | 'system'
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'account', label: 'Account', icon: '👤' },
-  { id: 'farm', label: 'Farm Profile', icon: '🏡' },
-  { id: 'preferences', label: 'Preferences', icon: '⚙️' },
-  { id: 'notifications', label: 'Notifications', icon: '🔔' },
-  { id: 'data', label: 'Data Management', icon: '🗄️' },
-  { id: 'system', label: 'System Info', icon: '💻' },
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: 'account', label: 'Account', icon: <User size={14} /> },
+  { id: 'farm', label: 'Farm Profile', icon: <Home size={14} /> },
+  { id: 'preferences', label: 'Preferences', icon: <Settings size={14} /> },
+  { id: 'notifications', label: 'Notifications', icon: <Bell size={14} /> },
+  { id: 'data', label: 'Data Management', icon: <Database size={14} /> },
+  { id: 'system', label: 'System Info', icon: <Monitor size={14} /> },
 ]
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -484,7 +485,7 @@ export default function SettingsPage() {
       {loadError && (
         <div className="bg-rose-50/90 border border-rose-200 text-rose-800 p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm mb-4">
           <span>{loadError}</span>
-          <button onClick={() => setLoadError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer">✕</button>
+          <button onClick={() => setLoadError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer"><X size={14} /></button>
         </div>
       )}
 
