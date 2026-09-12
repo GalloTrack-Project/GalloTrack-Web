@@ -8,7 +8,6 @@ import {
   fetchAllProfiles,
   profileDisplayName,
   setUserActive,
-  setUserRole,
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
