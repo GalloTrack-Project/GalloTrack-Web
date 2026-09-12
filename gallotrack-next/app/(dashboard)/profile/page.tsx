@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
 import { supabase } from '@/lib/registry'
+import { ZoomIn, ZoomOut, X } from 'lucide-react'
 
 export default function ProfilePage() {
   const [fullName, setFullName] = useState('')
@@ -191,7 +192,10 @@ export default function ProfilePage() {
           upsert: true
         })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError)
+        throw new Error(`Upload failed: ${uploadError.message}`)
+      }
 
       const { data } = supabase.storage
         .from('fowl-images')
@@ -208,7 +212,10 @@ export default function ProfilePage() {
         })
         .eq('id', user.id)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        throw new Error(`Failed to save profile: ${updateError.message}`)
+      }
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('gallotrack_admin_avatar', publicImageUrl)
@@ -218,7 +225,8 @@ export default function ProfilePage() {
       closeCropper()
     } catch (err) {
       console.error(err)
-      setCropError('Failed to upload cropped image. Please try again.')
+      const message = err instanceof Error ? err.message : 'Failed to upload cropped image. Please try again.'
+      setCropError(message)
     } finally {
       setCropping(false)
     }
@@ -361,7 +369,7 @@ export default function ProfilePage() {
                 <h3 className="text-base font-black tracking-tight">Crop Profile Picture</h3>
                 <p className="text-[11px] text-muted-foreground font-semibold">Drag to pan, use the slider to zoom, then save</p>
               </div>
-              <button onClick={closeCropper} className="text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
+              <button onClick={closeCropper} className="text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"><X size={14} /></button>
             </div>
 
             <div className="relative w-full h-72 bg-slate-900 rounded-2xl overflow-hidden">
@@ -379,7 +387,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center space-x-3 px-1">
-              <span className="text-base">🔍</span>
+              <ZoomIn size={18} className="text-slate-400" />
               <input
                 type="range"
                 min={1}
@@ -389,7 +397,7 @@ export default function ProfilePage() {
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="w-full accent-teal-600 cursor-pointer"
               />
-              <span className="text-base">🔎</span>
+              <ZoomOut size={18} className="text-slate-400" />
             </div>
 
             {cropError && <p className="text-xs font-bold text-rose-600 text-center">{cropError}</p>}

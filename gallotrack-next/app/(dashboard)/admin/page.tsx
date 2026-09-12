@@ -11,6 +11,7 @@ import {
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
+import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, Key, Bird, X } from 'lucide-react';
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
 
@@ -196,7 +197,7 @@ export default function AdminPanelPage() {
   const deactivated = total - active;
   const admins = profiles.filter((p) => p.is_admin || p.role === 'admin').length;
 
-  const statCard = (label: string, value: number, accent: string, icon: string) => (
+  const statCard = (label: string, value: number, accent: string, icon: React.ReactNode) => (
     <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
@@ -250,17 +251,17 @@ export default function AdminPanelPage() {
 
         {/* STATS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Users', total, 'text-amber-400', '👥')}
-          {statCard('Active', active, 'text-emerald-400', '✅')}
-          {statCard('Deactivated', deactivated, 'text-rose-400', '🚫')}
-          {statCard('Admins', admins, 'text-sky-400', '🛡️')}
+          {statCard('Total Users', total, 'text-amber-400', <Users size={20} />)}
+          {statCard('Active', active, 'text-emerald-400', <CheckCircle size={20} />)}
+          {statCard('Deactivated', deactivated, 'text-rose-400', <Ban size={20} />)}
+          {statCard('Admins', admins, 'text-sky-400', <Shield size={20} />)}
         </div>
 
         {/* SEARCH & FILTERS */}
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
               <input
                 type="text"
                 value={searchQuery}
@@ -305,7 +306,7 @@ export default function AdminPanelPage() {
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="avatar" className="w-10 h-10 rounded-xl object-cover border border-border shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><User size={16} /></div>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-extrabold text-card-foreground truncate">{profileDisplayName(user)}</p>
@@ -387,7 +388,7 @@ export default function AdminPanelPage() {
                         {user.avatar_url ? (
                           <img src={user.avatar_url} alt="avatar" className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><User size={14} /></div>
                         )}
                         <div className="min-w-0">
                           <p className="text-xs font-extrabold text-card-foreground truncate">{profileDisplayName(user)}</p>
@@ -444,7 +445,7 @@ export default function AdminPanelPage() {
       {pendingDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto">⚠️</div>
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Farm Owner?</h3>
             <p className="text-center text-[11px] text-muted-foreground font-semibold leading-relaxed">
               This permanently removes <span className="text-rose-400 font-black">{profileDisplayName(pendingDelete)}</span> and all
@@ -488,14 +489,14 @@ export default function AdminPanelPage() {
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
               <h3 className="text-sm font-black text-card-foreground">User Details</h3>
-              <button type="button" onClick={() => { setViewUser(null); setViewUserFowls([]); }} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer">✕</button>
+              <button type="button" onClick={() => { setViewUser(null); setViewUserFowls([]); }} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer"><X size={14} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-3">
                 {viewUser.avatar_url ? (
                   <img src={viewUser.avatar_url} alt="avatar" className="w-14 h-14 rounded-xl object-cover border border-border" />
                 ) : (
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl">👤</div>
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl"><User size={20} /></div>
                 )}
                 <div>
                   <p className="text-base font-extrabold text-card-foreground">{profileDisplayName(viewUser)}</p>
@@ -547,7 +548,7 @@ export default function AdminPanelPage() {
                   onClick={() => handleResetPassword(viewUser.email || '')}
                   className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {resettingPassword ? '...' : '🔑 Reset'}
+                  {resettingPassword ? '...' : <><Key size={12} /> Reset</>}
                 </button>
               </div>
 
@@ -569,7 +570,7 @@ export default function AdminPanelPage() {
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {viewUserFowls.map((fowl) => (
                       <div key={fowl.id} className="flex items-center gap-2.5 bg-muted/25 rounded-xl px-3 py-2">
-                        <span className="text-sm">{fowl.gender === 'Male' || fowl.gender === 'Rooster' ? '🐓' : '🐔'}</span>
+                        <span className="text-sm">{fowl.gender === 'Male' || fowl.gender === 'Rooster' ? <Bird size={14} /> : <Bird size={14} />}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-bold text-card-foreground truncate">{fowl.name}</p>
                           <p className="text-[9px] text-muted-foreground font-medium truncate">{fowl.breed} · {fowl.growth_stage || '—'}</p>
