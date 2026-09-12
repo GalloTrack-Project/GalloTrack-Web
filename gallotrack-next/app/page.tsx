@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGaloTrack } from '@/lib/context';
 import ForgotPasswordModal from '@/components/modals/ForgotPasswordModal';
+import { Dna, Swords, BarChart3, Building2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,8 +63,8 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
           {/* Top — Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
-              🐓
+            <div className="w-11 h-11 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
             </div>
             <div>
               <h2 className="text-xl font-black text-white tracking-tight">GALLO<span className="text-emerald-200">TRACK</span></h2>
@@ -87,13 +88,13 @@ export default function LoginPage() {
             {/* Feature cards */}
             <div className="grid grid-cols-2 gap-3 max-w-lg">
               {[
-                { icon: '🧬', title: 'Lineage Tracking', desc: 'Deep ancestry mapping' },
-                { icon: '⚔️', title: 'Match Analytics', desc: 'Performance insights' },
-                { icon: '📊', title: 'Flock Dashboard', desc: 'Real-time overview' },
-                { icon: '🏟️', title: 'Farm Registry', desc: 'Multi-farm support' },
+                { icon: Dna, title: 'Lineage Tracking', desc: 'Deep ancestry mapping' },
+                { icon: Swords, title: 'Match Analytics', desc: 'Performance insights' },
+                { icon: BarChart3, title: 'Flock Dashboard', desc: 'Real-time overview' },
+                { icon: Building2, title: 'Farm Registry', desc: 'Multi-farm support' },
               ].map((f) => (
                 <div key={f.title} className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 space-y-1.5 hover:bg-white/15 transition-colors">
-                  <span className="text-lg">{f.icon}</span>
+                  <f.icon className="w-5 h-5 text-emerald-300" />
                   <p className="text-xs font-bold text-white">{f.title}</p>
                   <p className="text-[10px] text-emerald-200/60 font-medium">{f.desc}</p>
                 </div>
@@ -135,7 +136,9 @@ export default function LoginPage() {
                 </defs>
                 <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" fill="url(#shieldGrad)" stroke="rgba(52,211,153,0.55)" strokeWidth="0.8"/>
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-2xl">🐓</span>
+              <span className="absolute inset-0 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
+              </span>
             </div>
             <h1 className="text-2xl font-black text-card-foreground tracking-tight">GALLOTRACK</h1>
           </div>

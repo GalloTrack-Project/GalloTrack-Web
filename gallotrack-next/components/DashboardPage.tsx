@@ -21,10 +21,10 @@ const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[
 
 function TrendChip({ up, label }: { up: boolean; label: string }) {
   if (!up) {
-    return <span className="text-[10px] font-bold text-slate-400">{label}</span>;
+    return <span className="text-[10px] font-bold text-muted-foreground">{label}</span>;
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
       {label}
     </span>
@@ -114,26 +114,26 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* ACTIVE FOWL REGISTRY */}
-        <div className="group relative bg-gradient-to-br from-white via-white to-emerald-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Active Fowl Registry</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Fowl Registry</span>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><Bird className="w-4 h-4 text-white" /></div>
           </div>
-          <div className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-1">{activeFowls.length}</div>
+          <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 bg-gradient-to-br from-sky-50 to-sky-100/60 border border-sky-200/60 rounded-xl px-2.5 py-2">
-              <span className="text-sm"><Bird className="w-4 h-4 text-sky-500" /></span>
+            <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-xl px-2.5 py-2">
+              <span className="text-sm"><Bird className="w-4 h-4 text-sky-400" /></span>
               <div>
-                <p className="text-base font-black text-sky-800 leading-none">{maleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-sky-500 mt-0.5">Males</p>
+                <p className="text-base font-black text-sky-400 leading-none">{maleActiveFowls.length}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-sky-400 mt-0.5">Males</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-gradient-to-br from-pink-50 to-pink-100/60 border border-pink-200/60 rounded-xl px-2.5 py-2">
-              <span className="text-sm"><Bird className="w-4 h-4 text-pink-500" /></span>
+            <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-xl px-2.5 py-2">
+              <span className="text-sm"><Bird className="w-4 h-4 text-pink-400" /></span>
               <div>
-                <p className="text-base font-black text-pink-800 leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-pink-500 mt-0.5">Females</p>
+                <p className="text-base font-black text-pink-400 leading-none">{femaleActiveFowls.length}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-pink-400 mt-0.5">Females</p>
               </div>
             </div>
           </div>
@@ -147,23 +147,23 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
             ) : (
-              <div className="text-[10px] font-bold text-slate-300 pt-2">No active fowl yet</div>
+              <div className="text-[10px] font-bold text-muted-foreground pt-2">No active fowl yet</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={activeNewThisWeek > 0} label={activeNewThisWeek > 0 ? `${activeNewThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">Registered</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">Registered</span>
           </div>
         </div>
 
         {/* TOTAL MATCHES LOGGED */}
-        <div className="group relative bg-gradient-to-br from-white via-white to-indigo-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Total Matches Logged</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Total Matches Logged</span>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
           </div>
-          <div className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-1">{matchHistory.length}</div>
+          <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{matchHistory.length}</div>
           <div className="h-12 -mx-1">
             {matchHistory.length > 0 ? (
               <Bar
@@ -174,26 +174,26 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
             ) : (
-              <div className="text-[10px] font-bold text-slate-300 pt-2">No matches logged yet</div>
+              <div className="text-[10px] font-bold text-muted-foreground pt-2">No matches logged yet</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full shrink-0">Logged</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
           </div>
         </div>
 
         {/* OVERALL WIN RATE */}
         <div
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
-          className="group relative bg-gradient-to-br from-white via-white to-emerald-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden"
+          className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Overall Win Rate</span>
-            <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
+            <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
           </div>
-          <div className="text-3xl font-black text-emerald-600 tracking-tight leading-none mt-1">
+          <div className="text-3xl font-black text-emerald-400 tracking-tight leading-none mt-1">
             {matchHistory.length > 0 ? `${winRatePct}%` : '—'}
           </div>
           <div className="h-12 -mx-1">
@@ -206,41 +206,41 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } } }}
               />
             ) : (
-              <div className="text-[10px] font-bold text-slate-300 pt-2">No matches logged yet</div>
+              <div className="text-[10px] font-bold text-muted-foreground pt-2">No matches logged yet</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
-            <span className="text-[10px] font-extrabold text-emerald-700">Win trend</span>
-            <span className="text-[9px] font-black text-slate-400 group-hover:text-emerald-600 transition-colors">🔍 Breakdown</span>
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
+            <span className="text-[10px] font-extrabold text-emerald-400">Win trend</span>
+            <span className="text-[9px] font-black text-muted-foreground group-hover:text-emerald-400 transition-colors flex items-center gap-1"><Search className="w-3 h-3" /> Breakdown</span>
           </div>
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="group relative bg-gradient-to-br from-white via-white to-violet-50/50 rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Quick Actions</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Quick Actions</span>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
           </div>
           <div className="space-y-2 mt-1">
             <button
               onClick={() => navigate('profiling', 'form')}
-              className="w-full text-left bg-gradient-to-r from-emerald-50 to-emerald-100/60 hover:from-emerald-100 hover:to-emerald-150 border border-emerald-200/60 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-emerald-800 group-hover/btn:text-emerald-900">+ Register New Fowl</p>
-              <p className="text-[9px] text-emerald-500 font-semibold mt-0.5">Add to your roster</p>
+              <p className="text-[11px] font-extrabold text-emerald-400 group-hover/btn:text-emerald-300">+ Register New Fowl</p>
+              <p className="text-[9px] text-emerald-400/70 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
               onClick={() => navigate('profiling', 'matchForm')}
-              className="w-full text-left bg-gradient-to-r from-indigo-50 to-indigo-100/60 hover:from-indigo-100 hover:to-indigo-150 border border-indigo-200/60 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-indigo-800 group-hover/btn:text-indigo-900">+ Log Match Result</p>
-              <p className="text-[9px] text-indigo-500 font-semibold mt-0.5">Record fight outcome</p>
+              <p className="text-[11px] font-extrabold text-indigo-400 group-hover/btn:text-indigo-300">+ Log Match Result</p>
+              <p className="text-[9px] text-indigo-400/70 font-semibold mt-0.5">Record fight outcome</p>
             </button>
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
-            <span className="text-[10px] font-extrabold text-slate-500">Start here</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full shrink-0">Actions</span>
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
+            <span className="text-[10px] font-extrabold text-muted-foreground">Start here</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
           </div>
         </div>
       </div>
@@ -250,42 +250,42 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-500" /></span>
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-400" /></span>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 tracking-tight">Upcoming Milestones</h3>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
+                  <h3 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h3>
+                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
               </div>
-              <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">AUTO</span>
+              <span className="text-[9px] font-mono font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">AUTO</span>
             </div>
             <div className="space-y-2 flex-1">
               {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {
                 const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
                 const overdue = info.next !== null && info.next!.daysUntil < 0;
                 return (
-                  <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200' : overdue ? 'bg-rose-50/70 border-rose-200' : 'bg-slate-50/60 border-slate-100'}`}>
-                    <span className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
+                  <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
+                    <span className="w-9 h-9 rounded-lg border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-slate-800 truncate">{fowl.name} <span className="text-[9px] font-bold text-slate-400 font-mono">#{fowl.id}</span></p>
-                      <p className="text-[10px] text-slate-400 font-semibold truncate">
+                      <p className="text-xs font-black text-card-foreground truncate">{fowl.name} <span className="text-[9px] font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
+                      <p className="text-[10px] text-muted-foreground font-semibold truncate">
                         {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       {info.next ? (
                         <>
-                          <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-700' : overdue ? 'text-rose-600' : 'text-amber-700'}`}>
+                          <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-400' : overdue ? 'text-rose-400' : 'text-amber-400'}`}>
                             {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
                           </p>
-                          <p className="text-[9px] font-mono text-slate-400 font-bold">
+                          <p className="text-[9px] font-mono text-muted-foreground font-bold">
                             {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
                           </p>
                         </>
                       ) : (
-                        <p className="text-[10px] font-black text-emerald-700 uppercase">Fully mature</p>
+                        <p className="text-[10px] font-black text-emerald-400 uppercase">Fully mature</p>
                       )}
                     </div>
                   </div>
@@ -295,23 +295,23 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/milestones')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 border border-emerald-200 rounded-xl py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 transition-all cursor-pointer"
             >
               View All Milestones →
             </button>
           </div>
 
           {/* BLOODLINE OVERVIEW */}
-          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-5 sm:p-6 flex flex-col">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-200/60 pb-4 mb-4">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-500" /></span>
+                <span className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-400" /></span>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 tracking-tight">Bloodline Overview</h3>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{activeFowls.length} active fowls across all strains</p>
+                  <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
+                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active fowls across all strains</p>
                 </div>
               </div>
-              <span className="text-[9px] font-mono font-black text-teal-700 bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-full">LIVE</span>
+              <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
             </div>
             <div className="space-y-2 flex-1">
               {(() => {
@@ -329,20 +329,20 @@ export default function DashboardPage() {
                 const sorted = Array.from(strainMap.entries())
                   .sort((a, b) => b[1].count - a[1].count)
                   .slice(0, 5);
-                if (sorted.length === 0) return <p className="text-[10px] text-slate-400 font-semibold text-center py-4">No strain data yet.</p>;
+                if (sorted.length === 0) return <p className="text-[10px] text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
                 const maxCount = sorted[0][1].count;
                 return sorted.map(([strain, data]) => (
-                  <div key={strain} className="bg-white/70 border border-teal-100 rounded-xl px-3 py-2.5">
+                  <div key={strain} className="bg-muted/50 border border-border rounded-xl px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-black text-slate-800">{strain}</span>
-                      <span className="text-[9px] font-bold text-teal-600">{data.count} fowl{data.count !== 1 ? 's' : ''}</span>
+                      <span className="text-[11px] font-black text-card-foreground">{strain}</span>
+                      <span className="text-[9px] font-bold text-teal-400">{data.count} fowl{data.count !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="w-full h-1.5 bg-teal-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-[8px] font-bold text-sky-600 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.males}</span>
-                      <span className="text-[8px] font-bold text-pink-600 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.females}</span>
+                      <span className="text-[8px] font-bold text-sky-400 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.males}</span>
+                      <span className="text-[8px] font-bold text-pink-400 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.females}</span>
                     </div>
                   </div>
                 ));
@@ -351,7 +351,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/lineage')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-teal-600 hover:text-teal-800 hover:bg-teal-100 border border-teal-200 rounded-xl py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 border border-teal-500/20 rounded-xl py-2 transition-all cursor-pointer"
             >
               View Full Lineage →
             </button>
@@ -363,14 +363,14 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* GAMEFOWL POPULATION & PERFORMANCE TRENDS */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Gamefowl Population & Performance Trends (Q3 2026)</h3>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
+              <h3 className="text-sm font-black text-card-foreground tracking-tight">Gamefowl Population & Performance Trends (Q3 2026)</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
             </div>
-            <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-700"></span>Population</span>
+            <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Population</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded bg-emerald-400 border-t-2 border-dashed border-emerald-400 bg-transparent"></span>Win Rate %</span>
             </div>
           </div>
@@ -422,8 +422,8 @@ export default function DashboardPage() {
                     },
                   },
                   scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#64748b' } },
-                    y: { min: 0, grid: { color: 'rgba(148,163,184,0.15)' }, ticks: { font: { size: 10, weight: 'bold' }, color: '#64748b' }, title: { display: true, text: 'Population', font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' } },
+                    y: { min: 0, grid: { color: 'rgba(148,163,184,0.15)' }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }, title: { display: true, text: 'Population', font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
                     y1: { min: 0, max: 100, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#34d399', callback: (v) => `${v}%` }, title: { display: true, text: 'Win Rate', font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
                   },
                 }}
@@ -431,22 +431,22 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="my-auto flex flex-col items-center justify-center text-center p-10 space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl font-bold">📈</div>
-              <p className="text-xs font-extrabold text-slate-500">No data available</p>
-              <p className="text-[10px] text-slate-400 max-w-[220px]">Encode fowl and log matches to visualize population and performance trends.</p>
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"><TrendingUp className="w-5 h-5" /></div>
+              <p className="text-xs font-extrabold text-muted-foreground">No data available</p>
+              <p className="text-[10px] text-muted-foreground max-w-[220px]">Encode fowl and log matches to visualize population and performance trends.</p>
             </div>
           )}
         </div>
 
         {/* BLOODLINE WIN RATIOS */}
         <FarmBloodlineSummary />
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
-          <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+          <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
             <div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Bloodline Win Ratios</h3>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Win share by primary genetic strain</p>
+              <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Win Ratios</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Win share by primary genetic strain</p>
             </div>
-            <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
+            <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
           </div>
           {crossbreedChartData.hasData ? (
             <>
@@ -458,7 +458,7 @@ export default function DashboardPage() {
                       data: crossbreedChartData.data,
                       backgroundColor: ['#059669', '#10b981', '#34d399', '#047857', '#065f46', '#6ee7b7'],
                       borderWidth: 3,
-                      borderColor: '#ffffff',
+                      borderColor: 'var(--card)',
                       hoverOffset: 6,
                     }],
                   }}
@@ -467,23 +467,23 @@ export default function DashboardPage() {
                     maintainAspectRatio: false,
                     cutout: '68%',
                     plugins: {
-                      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 10, weight: 'bold' }, color: '#334155' } },
+                      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 10, weight: 'bold' }, color: '#94a3b8' } },
                       tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}` }, backgroundColor: '#0f172a', padding: 10, cornerRadius: 8 },
                     },
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-emerald-700">{winRatePct}%</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Win Rate</span>
+                  <span className="text-2xl font-black text-emerald-400">{winRatePct}%</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Win Rate</span>
                 </div>
               </div>
-              <p className="text-center text-[10px] text-slate-400 font-semibold pb-1">Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'}</p>
+              <p className="text-center text-[10px] text-muted-foreground font-semibold pb-1">Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'}</p>
             </>
           ) : (
             <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl font-bold">🍩</div>
-              <p className="text-xs font-extrabold text-slate-500">No data available</p>
-              <p className="text-[10px] text-slate-400 max-w-[200px]">Log match records to generate bloodline win ratio breakdowns.</p>
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"><PieChart className="w-5 h-5" /></div>
+              <p className="text-xs font-extrabold text-muted-foreground">No data available</p>
+              <p className="text-[10px] text-muted-foreground max-w-[200px]">Log match records to generate bloodline win ratio breakdowns.</p>
             </div>
           )}
         </div>
@@ -494,7 +494,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">🔗</span>
+              <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-emerald-500" /></span>
               <div>
                 <h3 className="text-sm font-black text-slate-900 tracking-tight">Breeding Pair Performance Analytics</h3>
                 <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
@@ -510,10 +510,10 @@ export default function DashboardPage() {
                   <th className="p-4">Sire × Dam Cross</th>
                   <th className="p-4 text-center">Offspring</th>
                   <th className="p-4 text-center">Fights</th>
-                  <th className="p-4 text-center">Wins 🏆</th>
-                  <th className="p-4 text-center">Losses 💀</th>
+                  <th className="p-4 text-center">Wins</th>
+                  <th className="p-4 text-center">Losses</th>
                   <th className="p-4 text-center">Win Rate</th>
-                  <th className="p-4 text-center">🩺 Survivability</th>
+                  <th className="p-4 text-center">Survivability</th>
                   <th className="p-4 text-center pr-6">Breeding Verdict</th>
                 </tr>
               </thead>
@@ -525,11 +525,11 @@ export default function DashboardPage() {
                   return (
                     <tr key={p.key} className={`hover:bg-slate-50/80 transition-colors ${weak ? 'bg-rose-50/30' : elite ? 'bg-emerald-50/30' : ''}`}>
                       <td className="p-4 pl-6 whitespace-nowrap">
-                        {i === 0 ? <span className="text-sm">🥇</span> : i === 1 ? <span className="text-sm">🥈</span> : i === 2 ? <span className="text-sm">🥉</span> : <span className="font-mono font-black text-slate-400">#{i + 1}</span>}
+                        {i === 0 ? <Medal className="w-4 h-4 text-amber-500" /> : i === 1 ? <Medal className="w-4 h-4 text-slate-400" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-slate-400">#{i + 1}</span>}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center text-sm shrink-0">🔗</div>
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-emerald-500" /></div>
                           <div className="min-w-0">
                             <p className="font-bold text-slate-900">{p.sire} <span className="text-slate-300 font-black">×</span> {p.dam}</p>
                             <p className="text-[9px] font-semibold text-slate-400 truncate">{p.members.map((m) => m.name).join(', ')}</p>
@@ -548,10 +548,10 @@ export default function DashboardPage() {
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-100 text-teal-800' : p.resilienceScore >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
-                            🩺 {p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
+                            <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
                           </span>
                           {p.casualties > 0 && (
-                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 whitespace-nowrap">💀 {p.casualties}</span>
+                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-500 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
                           )}
                         </div>
                       </td>
@@ -562,7 +562,7 @@ export default function DashboardPage() {
                           : weak ? 'bg-rose-100 text-rose-800 border-rose-300'
                           : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
-                          {elite ? '🏆 Elite — Repeat Cross' : solid ? '✅ Solid Pairing' : weak ? '⚠️ Under-Performing' : '🔎 Inconclusive'}
+                          {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
                         </span>
                       </td>
                     </tr>
@@ -573,10 +573,10 @@ export default function DashboardPage() {
           </div>
           <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-x-5 gap-y-1 text-[9px] font-bold text-slate-400">
             <span>Verdict logic:</span>
-            <span className="text-emerald-700">🏆 Elite = ≥70% win rate with 3+ decided fights</span>
-            <span className="text-sky-700">✅ Solid = ≥50%</span>
-            <span className="text-rose-700">⚠️ Avoid = below 50% with 3+ decided fights</span>
-            <span className="text-teal-700">🩺 Survivability = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties drag a bloodline down even on wins</span>
+            <span className="text-emerald-700">Elite = ≥70% win rate with 3+ decided fights</span>
+            <span className="text-sky-700">Solid = ≥50%</span>
+            <span className="text-rose-700">Avoid = below 50% with 3+ decided fights</span>
+            <span className="text-teal-700">Survivability = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties drag a bloodline down even on wins</span>
             <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
           </div>
         </div>
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                 <th className="p-4">Bloodline</th>
                 <th className="p-4">Arena Location</th>
                 <th className="p-4 text-center">Outcome</th>
-                <th className="p-4 text-center">🩺 Post-Fight Condition</th>
+                <th className="p-4 text-center">Post-Fight Condition</th>
                 <th className="p-4 text-center">Video</th>
               </tr>
             </thead>
@@ -626,7 +626,7 @@ export default function DashboardPage() {
                     <td className="p-4 pl-6 font-mono text-slate-400 whitespace-nowrap">{log.date}</td>
                     <td className="p-4">
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center text-sm shrink-0">🐓</div>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200/70 flex items-center justify-center shrink-0"><Bird className="w-3.5 h-3.5 text-emerald-500" /></div>
                         <span className="font-bold text-slate-900">{log.entry_name}</span>
                       </div>
                     </td>
@@ -646,7 +646,7 @@ export default function DashboardPage() {
                             ? 'bg-amber-50 text-amber-700 border-amber-200'
                             : 'bg-teal-50 text-teal-700 border-teal-200'
                         }`}>
-                          {(log.post_fight_condition || '').toLowerCase().includes('deceased') ? '💀 ' : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely') ? '🟠 ' : '🟢 '}{log.post_fight_condition}
+                          {(log.post_fight_condition || '').toLowerCase().includes('deceased') ? '' : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely') ? '' : ''}{log.post_fight_condition}
                         </span>
                       ) : (
                         <span className="text-[9px] text-slate-300 font-bold">—</span>

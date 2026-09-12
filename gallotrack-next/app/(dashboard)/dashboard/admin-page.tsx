@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, ReactNode } from 'react';
+import { Shield, Users, Bird, Swords, TrendingUp, Dna, Medal, Search, ArrowUpRight, ArrowDownRight, User, Trash2, AlertTriangle, Key, CircleDot } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
@@ -161,8 +162,8 @@ export default function AdminDashboardPage() {
         <div className="relative p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/10">
-                🛡️
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
+                <Shield className="w-6 h-6 text-amber-400" />
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">
@@ -189,7 +190,7 @@ export default function AdminDashboardPage() {
         <StatCard
           label="Total Users"
           value={stats.total_users}
-          icon="👥"
+          icon={<Users className="w-4 h-4" />}
           accent="amber"
           subtitle={`${stats.active_users} active · ${userActiveRate}%`}
           trend={stats.active_users > 0 ? 'up' : undefined}
@@ -197,7 +198,7 @@ export default function AdminDashboardPage() {
         <StatCard
           label="Registered Fowls"
           value={stats.total_fowls}
-          icon="🐓"
+          icon={<Bird className="w-4 h-4" />}
           accent="emerald"
           subtitle={`${stats.active_fowls} alive · ${fowlActiveRate}%`}
           trend={stats.active_fowls > 0 ? 'up' : undefined}
@@ -205,7 +206,7 @@ export default function AdminDashboardPage() {
         <StatCard
           label="Total Matches"
           value={stats.total_matches}
-          icon="⚔️"
+          icon={<Swords className="w-4 h-4" />}
           accent="sky"
           subtitle={`${stats.wins}W · ${stats.losses}L · ${stats.draws}D`}
           trend={stats.total_matches > 0 ? 'up' : undefined}
@@ -213,7 +214,7 @@ export default function AdminDashboardPage() {
         <StatCard
           label="Win Rate"
           value={stats.wins + stats.losses > 0 ? `${winRate}%` : 'N/A'}
-          icon="📈"
+          icon={<TrendingUp className="w-4 h-4" />}
           accent="purple"
           subtitle={`${stats.wins} wins out of ${stats.wins + stats.losses}`}
           trend={winRate >= 50 ? 'up' : winRate > 0 ? 'down' : undefined}
@@ -238,7 +239,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : (
             <div className="h-52 flex flex-col items-center justify-center text-muted-foreground">
-              <span className="text-3xl mb-2 opacity-40">⚔️</span>
+              <span className="mb-2 opacity-40"><Swords className="w-8 h-8" /></span>
               <p className="text-xs font-semibold">No match data yet</p>
             </div>
           )}
@@ -260,7 +261,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : (
             <div className="h-52 flex flex-col items-center justify-center text-muted-foreground">
-              <span className="text-3xl mb-2 opacity-40">🐓</span>
+              <span className="mb-2 opacity-40"><Bird className="w-8 h-8" /></span>
               <p className="text-xs font-semibold">No fowl data yet</p>
             </div>
           )}
@@ -289,7 +290,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : (
             <div className="h-52 flex flex-col items-center justify-center text-muted-foreground">
-              <span className="text-3xl mb-2 opacity-40">🧬</span>
+              <span className="mb-2 opacity-40"><Dna className="w-8 h-8" /></span>
               <p className="text-xs font-semibold">No breed data yet</p>
             </div>
           )}
@@ -308,13 +309,12 @@ export default function AdminDashboardPage() {
           {topOwners.length > 0 ? (
             <div className="space-y-3">
               {topOwners.map(([farm, count], i) => {
-                const rankIcons = ['🥇', '🥈', '🥉'];
                 const rankColors = ['text-amber-400', 'text-slate-300', 'text-amber-600'];
                 return (
                   <div key={farm} className="group">
                     <div className="flex items-center gap-3">
                       <span className={`text-sm w-6 text-center shrink-0 ${i < 3 ? '' : 'text-muted-foreground'}`}>
-                        {i < 3 ? rankIcons[i] : <span className="text-[10px] font-black">#{i + 1}</span>}
+                        {i < 3 ? <Medal className={`w-4 h-4 ${rankColors[i]}`} /> : <span className="text-[10px] font-black">#{i + 1}</span>}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1.5">
@@ -341,7 +341,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-              <span className="text-3xl mb-2 opacity-40">🏟️</span>
+              <span className="mb-2 opacity-40"><User className="w-8 h-8" /></span>
               <p className="text-xs font-semibold">No farm data yet</p>
             </div>
           )}
@@ -370,7 +370,7 @@ export default function AdminDashboardPage() {
 function StatCard({ label, value, icon, accent, subtitle, trend }: {
   label: string;
   value: number | string;
-  icon: string;
+  icon: ReactNode;
   accent: string;
   subtitle?: string;
   trend?: 'up' | 'down';
@@ -392,7 +392,7 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
         </div>
         {trend && (
           <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${trend === 'up' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
-            {trend === 'up' ? '↗ Active' : '↘ Low'}
+            {trend === 'up' ? <><ArrowUpRight className="w-3 h-3" /> Active</> : <><ArrowDownRight className="w-3 h-3" /> Low</>}
           </span>
         )}
       </div>
