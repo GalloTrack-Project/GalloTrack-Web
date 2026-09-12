@@ -7,6 +7,7 @@ import { getAgeLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import FarmBloodlineSummary from '@/components/FarmBloodlineSummary';
+import { LayoutDashboard, Bird, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, ShieldCheck, AlertTriangle, Stethoscope, CircleDot, Skull, Medal } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -64,7 +65,7 @@ export default function DashboardPage() {
       {/* HEADER CARDS */}
       <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">📊</div>
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-emerald-500" /></div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Enterprise Analytics Dashboard</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Cross-strain performance vectors, empirical win probabilities, and active inventory metrics</p>
@@ -117,19 +118,19 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Active Fowl Registry</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-base shrink-0 shadow-md shadow-emerald-500/20">🐓</div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><Bird className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-1">{activeFowls.length}</div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-2 bg-gradient-to-br from-sky-50 to-sky-100/60 border border-sky-200/60 rounded-xl px-2.5 py-2">
-              <span className="text-sm">🐓</span>
+              <span className="text-sm"><Bird className="w-4 h-4 text-sky-500" /></span>
               <div>
                 <p className="text-base font-black text-sky-800 leading-none">{maleActiveFowls.length}</p>
                 <p className="text-[8px] font-bold uppercase tracking-wider text-sky-500 mt-0.5">Males</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-gradient-to-br from-pink-50 to-pink-100/60 border border-pink-200/60 rounded-xl px-2.5 py-2">
-              <span className="text-sm">🐔</span>
+              <span className="text-sm"><Bird className="w-4 h-4 text-pink-500" /></span>
               <div>
                 <p className="text-base font-black text-pink-800 leading-none">{femaleActiveFowls.length}</p>
                 <p className="text-[8px] font-bold uppercase tracking-wider text-pink-500 mt-0.5">Females</p>
@@ -160,7 +161,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Total Matches Logged</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-base shrink-0 shadow-md shadow-indigo-500/20">🏆</div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-slate-900 tracking-tight leading-none mt-1">{matchHistory.length}</div>
           <div className="h-12 -mx-1">
@@ -219,7 +220,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Quick Actions</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center text-base shrink-0 shadow-md shadow-violet-500/20">⚡</div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
           </div>
           <div className="space-y-2 mt-1">
             <button
@@ -252,7 +253,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">📅</span>
+                <span className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-500" /></span>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 tracking-tight">Upcoming Milestones</h3>
                   <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
@@ -304,7 +305,7 @@ export default function DashboardPage() {
           <div className="bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-200/60 pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 flex items-center justify-center text-lg shrink-0">🧬</span>
+                <span className="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-500" /></span>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 tracking-tight">Bloodline Overview</h3>
                   <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{activeFowls.length} active fowls across all strains</p>
@@ -340,8 +341,8 @@ export default function DashboardPage() {
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-[8px] font-bold text-sky-600">🐓 {data.males}</span>
-                      <span className="text-[8px] font-bold text-pink-600">🐔 {data.females}</span>
+                      <span className="text-[8px] font-bold text-sky-600 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.males}</span>
+                      <span className="text-[8px] font-bold text-pink-600 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.females}</span>
                     </div>
                   </div>
                 ));

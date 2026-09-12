@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, User, Users, Bird, Swords, Settings, Shield, LogOut } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { supabase } from '@/lib/registry';
@@ -11,37 +11,37 @@ import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 const OWNER_NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/profiling', label: 'Fowl Registry', icon: '🧬' },
-  { href: '/catalog', label: 'Breeding Catalog', icon: '🥚' },
-  { href: '/lineage', label: 'Lineage Directory', icon: '🌳' },
-  { href: '/profile', label: 'My Profile', icon: '👤' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/profiling', label: 'Fowl Registry', icon: Dna },
+  { href: '/catalog', label: 'Breeding Catalog', icon: Egg },
+  { href: '/lineage', label: 'Lineage Directory', icon: TreePine },
+  { href: '/profile', label: 'My Profile', icon: User },
 ];
 
 const OWNER_MOBILE = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/profiling', label: 'Registry', icon: '🧬' },
-  { href: '/catalog', label: 'Catalog', icon: '🥚' },
-  { href: '/lineage', label: 'Lineage', icon: '🌳' },
-  { href: '/profile', label: 'Profile', icon: '👤' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/profiling', label: 'Registry', icon: Dna },
+  { href: '/catalog', label: 'Catalog', icon: Egg },
+  { href: '/lineage', label: 'Lineage', icon: TreePine },
+  { href: '/profile', label: 'Profile', icon: User },
 ];
 
 const ADMIN_NAV = [
-  { href: '/dashboard', label: 'System Overview', icon: '📊' },
-  { href: '/admin', label: 'User Registry', icon: '👥' },
-  { href: '/admin/flocks', label: 'Fowl Registry', icon: '🐓' },
-  { href: '/admin/matches', label: 'Match Records', icon: '⚔️' },
-  { href: '/admin/settings', label: 'System Config', icon: '⚙️' },
-  { href: '/profile', label: 'My Profile', icon: '👤' },
+  { href: '/dashboard', label: 'System Overview', icon: LayoutDashboard },
+  { href: '/admin', label: 'User Registry', icon: Users },
+  { href: '/admin/flocks', label: 'Fowl Registry', icon: Bird },
+  { href: '/admin/matches', label: 'Match Records', icon: Swords },
+  { href: '/admin/settings', label: 'System Config', icon: Settings },
+  { href: '/profile', label: 'My Profile', icon: User },
 ];
 
 const ADMIN_MOBILE = [
-  { href: '/dashboard', label: 'Overview', icon: '📊' },
-  { href: '/admin', label: 'Users', icon: '👥' },
-  { href: '/admin/flocks', label: 'Fowls', icon: '🐓' },
-  { href: '/admin/matches', label: 'Matches', icon: '⚔️' },
-  { href: '/admin/settings', label: 'Config', icon: '⚙️' },
-  { href: '/profile', label: 'Profile', icon: '👤' },
+  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin', label: 'Users', icon: Users },
+  { href: '/admin/flocks', label: 'Fowls', icon: Bird },
+  { href: '/admin/matches', label: 'Matches', icon: Swords },
+  { href: '/admin/settings', label: 'Config', icon: Settings },
+  { href: '/profile', label: 'Profile', icon: User },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -95,8 +95,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="hidden md:flex w-64 bg-card text-card-foreground flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-border shadow-2xl h-full justify-between">
         <div>
           <div className={`p-6 border-b border-border bg-muted/40 flex items-center space-x-3`}>
-            <div className={`w-9 h-9 ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} rounded-xl flex items-center justify-center text-lg shadow-inner`}>
-              {isAdmin ? '🛡️' : '🐓'}
+            <div className={`w-9 h-9 ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} rounded-xl flex items-center justify-center shadow-inner`}>
+              {isAdmin ? <Shield className="w-4 h-4 text-amber-400" /> : <Bird className="w-4 h-4 text-emerald-400" />}
             </div>
             <div>
               <h2 className="text-xl font-black tracking-tight text-card-foreground">GALLO<span className={isAdmin ? 'text-amber-400' : 'text-emerald-400'}>TRACK</span></h2>
@@ -118,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`}
               >
-                <span className="text-base">{item.icon}</span>
+                <span className="text-base">{React.createElement(item.icon, { className: 'w-4 h-4' })}</span>
                 <span>{item.label}</span>
               </Link>
             ))}
@@ -130,7 +130,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {auth.avatarUrl ? (
               <img src={auth.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-lg object-cover border border-slate-700/60" />
             ) : (
-              <div className={`w-8 h-8 rounded-lg ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center text-sm shadow-inner`}>👤</div>
+              <div className={`w-8 h-8 rounded-lg ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center shadow-inner`}><User className="w-4 h-4 text-muted-foreground" /></div>
             )}
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-extrabold text-card-foreground truncate">{auth.adminName}</p>
@@ -174,7 +174,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider truncate">{auth.userHub}</span>
           </div>
           <button type="button" onClick={() => ui.setShowLogoutModal(true)} className="w-full bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 border border-border hover:border-rose-500/30 text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
-            <span>🚪 Log Out</span>
+            <span className="flex items-center gap-2"><LogOut className="w-3.5 h-3.5" /> Log Out</span>
           </button>
         </div>
       </aside>
@@ -199,7 +199,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {auth.avatarUrl ? (
                 <img src={auth.avatarUrl} alt="Profile" className="md:hidden w-8 h-8 rounded-full object-cover border border-slate-700/60" />
               ) : (
-                <div className={`md:hidden w-8 h-8 rounded-full ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center text-sm`}>👤</div>
+                <div className={`md:hidden w-8 h-8 rounded-full ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} flex items-center justify-center`}><User className="w-4 h-4 text-muted-foreground" /></div>
               )}
               {!isAdmin && (
                 <Link
@@ -226,7 +226,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="md:hidden bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 border border-rose-500/30 p-1.5 px-3 rounded-full text-[10px] font-black cursor-pointer transition-all flex items-center space-x-1 shadow-2xs"
                 title="Log Out"
               >
-                <span>🚪</span>
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     : 'text-muted-foreground hover:text-foreground font-medium'
                 }`}
               >
-                <span className="text-xl leading-none">{item.icon}</span>
+                <span className="text-xl leading-none">{React.createElement(item.icon, { className: 'w-5 h-5' })}</span>
                 <span className="text-[10px] mt-1 tracking-tight">{item.label}</span>
               </Link>
             ))}
