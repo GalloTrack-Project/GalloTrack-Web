@@ -57,14 +57,6 @@ export default function ProfilingPage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Fowl Registry</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-0.5">Register and manage your gamefowl lineage, traits, and match records</p>
           </div>
-          <button
-            type="button"
-            onClick={() => router.push('/breeds')}
-            className="shrink-0 flex items-center gap-1.5 bg-muted hover:bg-emerald-50 border border-border hover:border-emerald-200 text-muted-foreground hover:text-emerald-700 text-[10px] font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
-          >
-            <span className="text-sm">🏷️</span>
-            <span className="hidden sm:inline">Manage Breeds</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0">
