@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Bird, Archive, Skull } from 'lucide-react';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
 import FowlLists from '@/components/profiling/FowlLists';
 import MatchForm from '@/components/profiling/MatchForm';
-import { findMatchingPartners, type PartnerSuggestion } from '@/lib/services/match-options-service';
 
 export default function ProfilingPage() {
   const fowl = useFowl();
@@ -40,9 +39,6 @@ export default function ProfilingPage() {
     matchLocation, setMatchLocation, matchType, setMatchType,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile,
-    matchOption, setMatchOption, betType, setBetType,
-    targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
-    suggestedPartners, setSuggestedPartners,
     handleAddFowl, handleAddMatchRecord,
     handleOpenEditModal, handleRestoreFowlOnly,
     generationPurity,
@@ -50,13 +46,6 @@ export default function ProfilingPage() {
 
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
-
-  const handleFindPartners = useCallback(async (target: number, type: string) => {
-    const { data: { user } } = await (await import('@/lib/registry')).supabase.auth.getUser();
-    if (!user) return;
-    const partners = await findMatchingPartners(target, type, user.id);
-    setSuggestedPartners(partners);
-  }, [setSuggestedPartners]);
 
   return (
     <div className="space-y-5 animate-fadeIn">
@@ -179,12 +168,6 @@ export default function ProfilingPage() {
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
           matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}
           handleAddMatchRecord={handleAddMatchRecord}
-          matchOption={matchOption} setMatchOption={setMatchOption}
-          betType={betType} setBetType={setBetType}
-          targetNumber={targetNumber} setTargetNumber={setTargetNumber}
-          partnerEntry={partnerEntry} setPartnerEntry={setPartnerEntry}
-          suggestedPartners={suggestedPartners} setSuggestedPartners={setSuggestedPartners}
-          onFindPartners={handleFindPartners}
         />
       )}
     </div>
