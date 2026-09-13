@@ -6,6 +6,7 @@ import {
 } from '@/lib/helpers';
 import { STRAIN_LIST, LEG_COLOR_LIST } from '@/lib/helpers';
 import { useDebounce } from '@/lib/use-debounce';
+import type { PartnerSuggestion } from '@/lib/services/match-options-service';
 
 interface FowlFormStateContextValue {
   newName: string; setNewName: (v: string) => void;
@@ -41,6 +42,12 @@ interface FowlFormStateContextValue {
   matchPostFight: string; setMatchPostFight: (v: string) => void;
   matchVideoFile: File | null; setMatchVideoFile: (f: File | null) => void;
   uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
+
+  matchOption: number; setMatchOption: (v: number) => void;
+  betType: string; setBetType: (v: string) => void;
+  targetNumber: number; setTargetNumber: (v: number) => void;
+  partnerEntry: string; setPartnerEntry: (v: string) => void;
+  suggestedPartners: PartnerSuggestion[]; setSuggestedPartners: (v: PartnerSuggestion[]) => void;
 
   editName: string; setEditName: (v: string) => void;
   editBreed: string; setEditBreed: (v: string) => void;
@@ -126,6 +133,12 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
   const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  const [matchOption, setMatchOption] = useState(1);
+  const [betType, setBetType] = useState('durbe');
+  const [targetNumber, setTargetNumber] = useState(1);
+  const [partnerEntry, setPartnerEntry] = useState('');
+  const [suggestedPartners, setSuggestedPartners] = useState<PartnerSuggestion[]>([]);
 
   const [editName, setEditName] = useState('');
   const [editBreed, setEditBreed] = useState('');
@@ -230,6 +243,9 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     matchLocation, setMatchLocation, matchType, setMatchType,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
+    matchOption, setMatchOption, betType, setBetType,
+    targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
+    suggestedPartners, setSuggestedPartners,
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
     editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,

@@ -31,6 +31,8 @@ import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
 import * as matchService from '@/lib/services/match-service';
+import * as matchOptionsService from '@/lib/services/match-options-service';
+import type { PartnerSuggestion } from '@/lib/services/match-options-service';
 import * as strainService from '@/lib/services/strain-service';
 import type { BloodlineReport } from '@/lib/bloodlines';
 import type {
@@ -87,6 +89,12 @@ interface FowlContextValue {
   matchPostFight: string; setMatchPostFight: (v: string) => void;
   matchVideoFile: File | null; setMatchVideoFile: (f: File | null) => void;
   uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
+
+  matchOption: number; setMatchOption: (v: number) => void;
+  betType: string; setBetType: (v: string) => void;
+  targetNumber: number; setTargetNumber: (v: number) => void;
+  partnerEntry: string; setPartnerEntry: (v: string) => void;
+  suggestedPartners: PartnerSuggestion[]; setSuggestedPartners: (v: PartnerSuggestion[]) => void;
 
   editName: string; setEditName: (v: string) => void;
   editBreed: string; setEditBreed: (v: string) => void;
@@ -249,6 +257,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     matchType, setMatchType, matchOutcome, setMatchOutcome,
     matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
+    matchOption, setMatchOption, betType, setBetType,
+    targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
+    suggestedPartners, setSuggestedPartners,
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
     editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,
@@ -534,8 +545,19 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       if (result.error) {
         throw new Error(result.error);
       } else {
+        // Save betting/option data to match_options table
+        await matchOptionsService.insertMatchOption({
+          option_number: matchOption,
+          fowl_entry: selectedFowlForMatch,
+          partner_entry: partnerEntry || undefined,
+          bet_type: betType,
+          target_number: targetNumber,
+          status: partnerEntry ? 'matched' : 'pending',
+        });
+
         ui.showToastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
+        setPartnerEntry(''); setSuggestedPartners([]);
         fetchDatabaseResources();
         ui.setProfilingSubTab('males');
       }
@@ -545,7 +567,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, fetchDatabaseResources, ui]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;

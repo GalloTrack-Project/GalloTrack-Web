@@ -31,6 +31,10 @@ export const matchFormSchema = z.object({
   type: z.string().default('Derby Match'),
   outcome: z.enum(['Win', 'Loss', 'Draw']).default('Win'),
   postFightCondition: z.enum(['Fit / Recovered', 'Severely Injured / Critical', 'Deceased (Died from injuries)']).default('Fit / Recovered'),
+  optionNumber: z.number().min(1).max(5).default(1),
+  betType: z.enum(['durbe', 'lusok', 'contra', 'bulsay']).default('durbe'),
+  targetNumber: z.number().min(1).max(10).default(1),
+  partnerEntry: z.string().optional(),
 });
 
 export type MatchFormData = z.infer<typeof matchFormSchema>;
