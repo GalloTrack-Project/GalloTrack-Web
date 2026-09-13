@@ -32,7 +32,7 @@ function sanitizeInput(value: string): string {
 }
 
 const VALID_OUTCOMES = ['win', 'loss', 'draw', 'no contest'];
-const VALID_TYPES = ['Derby Match', 'Sweepstakes', 'Main Stage', 'Uncategorized'];
+const VALID_TYPES = ['Derby Match', 'Hack Match', '2-Cock Derby', '3-Cock Derby', '4-Cock Derby', '5-Cock Derby', 'Special Championship', 'Regional Circuit', 'Main Event / Solo'];
 const VALID_POST_FIGHT = [
   'Fit / Recovered',
   'Minor Injury',
