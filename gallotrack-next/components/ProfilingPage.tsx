@@ -59,6 +59,10 @@ export default function ProfilingPage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Fowl Registry</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-0.5">Register and manage your gamefowl lineage, traits, and match records</p>
           </div>
+          <button type="button" onClick={() => setProfilingSubTab(profilingSubTab === 'breeds' ? 'form' : 'breeds')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer shrink-0 ${profilingSubTab === 'breeds' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-muted border border-border text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/50'}`}>
+            <Dna className="w-4 h-4" />
+            <span>Breeds</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0">
@@ -85,10 +89,6 @@ export default function ProfilingPage() {
             <Skull className="w-4 h-4" />
             <span>Deceased</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'deceased' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{deceasedFowls.length}</span>
-          </button>
-          <button type="button" onClick={() => setProfilingSubTab('breeds')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'breeds' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <Dna className="w-4 h-4" />
-            <span>Breeds</span>
           </button>
           <div className="w-px h-6 bg-border shrink-0 mx-0.5"></div>
           <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
