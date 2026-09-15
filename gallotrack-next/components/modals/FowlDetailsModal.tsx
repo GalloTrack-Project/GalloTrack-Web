@@ -155,13 +155,13 @@ export default function FowlDetailsModal({
               <div
                 key={r.id}
                 title={`${r.name} — ${badge}. ${context}.`}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:border-slate-200 transition-colors"
+                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50 hover:border-slate-200 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
                   <div className="min-w-0">
-                    <p className="text-xs font-black text-slate-800 truncate">{r.name}</p>
-                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider truncate">{context}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-card-foreground truncate">{r.name}</p>
+                    <p className="text-[9px] font-semibold text-slate-400 dark:text-muted-foreground uppercase tracking-wider truncate">{context}</p>
                   </div>
                 </div>
                 <span className={`text-[8px] font-black uppercase px-2.5 py-1 rounded-full border shrink-0 ${tone}`}>{badge}</span>
@@ -239,7 +239,7 @@ export default function FowlDetailsModal({
             .sort((a, b) => a.stats.winRate - b.stats.winRate)[0];
 
           const formatStats = (s: { wins: number; losses: number; winRate: number; total: number; decided: number }) => {
-            if (s.total === 0) return <span className="text-[10px] text-slate-400 font-bold">No fights</span>;
+            if (s.total === 0) return <span className="text-[10px] text-slate-400 dark:text-muted-foreground font-bold">No fights</span>;
             return (
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${s.winRate >= 50 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
                 {s.winRate}% · {s.wins}W-{s.losses}L
@@ -357,7 +357,7 @@ export default function FowlDetailsModal({
                       {isCurrent ? (
                         <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full shrink-0">● Current</span>
                       ) : isPast ? (
-                        <span className="text-[9px] font-bold text-slate-400 shrink-0">✓ Reached</span>
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground shrink-0">✓ Reached</span>
                       ) : isNext && info.next ? (
                         <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 border ${info.next.daysUntil >= 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-500 bg-slate-100 border-slate-200'}`}>
                           {info.next.daysUntil >= 0 ? `Next · in ${info.next.daysUntil}d` : `Due · ${Math.abs(info.next.daysUntil)}d overdue`}
@@ -368,8 +368,8 @@ export default function FowlDetailsModal({
                 })}
               </div>
               {info.next && (
-                <p className="mt-3 text-[10px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 font-semibold">
-                  🗓️ Next milestone: reach <span className="text-amber-700 font-black">{info.next.stage}</span> around <span className="text-slate-800 font-black">{info.next.date.toLocaleDateString()}</span>
+                <p className="mt-3 text-[10px] text-slate-500 dark:text-muted-foreground bg-slate-50 dark:bg-muted/50 border border-slate-100 dark:border-border rounded-lg px-3 py-2 font-semibold">
+                  🗓️ Next milestone: reach <span className="text-amber-700 font-black">{info.next.stage}</span> around <span className="text-slate-800 dark:text-card-foreground font-black">{info.next.date.toLocaleDateString()}</span>
                   {info.next.daysUntil >= 0 ? ` — in ${info.next.daysUntil} day${info.next.daysUntil === 1 ? '' : 's'}.` : ` (already ${Math.abs(info.next.daysUntil)} days past due).`}
                 </p>
               )}
@@ -664,4 +664,7 @@ export default function FowlDetailsModal({
             <strong className="text-emerald-700 text-xs mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
           </div>
         </div>
-      </
+      </div>
+    </div>
+  );
+}

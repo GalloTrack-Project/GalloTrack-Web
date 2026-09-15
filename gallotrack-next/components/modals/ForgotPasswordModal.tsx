@@ -27,7 +27,7 @@ export default function ForgotPasswordModal({
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-[22px] max-w-sm w-full overflow-hidden shadow-2xl shadow-slate-900/20 ring-1 ring-slate-200/80">
+      <div className="bg-white dark:bg-card rounded-[22px] max-w-sm w-full overflow-hidden shadow-2xl shadow-slate-900/20 ring-1 ring-slate-200/80 dark:ring-border">
         <div className="p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white border-b border-white/10">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3">
@@ -49,7 +49,7 @@ export default function ForgotPasswordModal({
         <div className="p-6">
           {forgotSent ? (
             <div className="flex flex-col items-center text-center space-y-3 py-2">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4Z" /></svg>
               </div>
               <p className="text-sm font-extrabold text-slate-800 dark:text-card-foreground tracking-tight">Check your inbox</p>
@@ -67,7 +67,7 @@ export default function ForgotPasswordModal({
           ) : (
             <form onSubmit={handleSendResetLink} className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-emerald-600" /></div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-emerald-600" /></div>
                 <div>
                   <p className="text-sm text-slate-800 dark:text-card-foreground font-extrabold leading-relaxed tracking-tight">Enter your registered email</p>
                   <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium leading-relaxed mt-1">
@@ -87,7 +87,7 @@ export default function ForgotPasswordModal({
                 />
               </div>
               {forgotError && (
-                <div className="text-[11px] text-rose-600 font-bold text-center bg-rose-50 border border-rose-200/60 p-3 rounded-xl">{forgotError}</div>
+                <div className="text-[11px] text-rose-600 font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-xl">{forgotError}</div>
               )}
               <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                 <button

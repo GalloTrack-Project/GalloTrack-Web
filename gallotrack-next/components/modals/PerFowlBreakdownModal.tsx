@@ -127,20 +127,20 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
 
           {/* Tier Summary */}
           <div className="grid grid-cols-5 gap-2 mt-3">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 text-center">
-              <p className="text-lg font-black text-emerald-700">{eliteCount}</p>
+            <div className="bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border rounded-xl p-2 text-center">
+              <p className="text-lg font-black text-emerald-700 dark:text-card-foreground">{eliteCount}</p>
               <p className="text-[8px] font-bold text-emerald-600 uppercase">Elite 70%+</p>
             </div>
-            <div className="bg-sky-50 border border-sky-200 rounded-xl p-2 text-center">
-              <p className="text-lg font-black text-sky-700">{strongCount}</p>
+            <div className="bg-sky-50 dark:bg-muted/50 border border-sky-200 dark:border-border rounded-xl p-2 text-center">
+              <p className="text-lg font-black text-sky-700 dark:text-card-foreground">{strongCount}</p>
               <p className="text-[8px] font-bold text-sky-600 uppercase">Strong 50-69%</p>
             </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 text-center">
-              <p className="text-lg font-black text-amber-700">{avgCount}</p>
+            <div className="bg-amber-50 dark:bg-muted/50 border border-amber-200 dark:border-border rounded-xl p-2 text-center">
+              <p className="text-lg font-black text-amber-700 dark:text-card-foreground">{avgCount}</p>
               <p className="text-[8px] font-bold text-amber-600 uppercase">Average 30-49%</p>
             </div>
-            <div className="bg-rose-50 border border-rose-200 rounded-xl p-2 text-center">
-              <p className="text-lg font-black text-rose-700">{weakCount}</p>
+            <div className="bg-rose-50 dark:bg-muted/50 border border-rose-200 dark:border-border rounded-xl p-2 text-center">
+              <p className="text-lg font-black text-rose-700 dark:text-card-foreground">{weakCount}</p>
               <p className="text-[8px] font-bold text-rose-600 uppercase">Weak &lt;30%</p>
             </div>
             <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-xl p-2 text-center">
