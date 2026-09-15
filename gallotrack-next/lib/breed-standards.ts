@@ -194,9 +194,14 @@ function findMatchingStandards(strain: string): BreedStandard[] {
   return BREED_STANDARDS.filter(s => normalized.includes(s.strain));
 }
 
+function parseNumericValue(val: number | string): number {
+  if (typeof val === 'number') return val;
+  return Number(val.replace(/[^0-9.]/g, '')) || 0;
+}
+
 function checkWeightCompliance(weight: number | string, standard: BreedStandard | null): BreedCompliance['weightCompliance'] {
-  if (!standard) return { actual: Number(weight) || 0, expected: 'No standard', status: 'unknown', deviation: 0 };
-  const w = Number(weight) || 0;
+  if (!standard) return { actual: parseNumericValue(weight), expected: 'No standard', status: 'unknown', deviation: 0 };
+  const w = parseNumericValue(weight);
   if (w === 0) return { actual: 0, expected: `${standard.weightRange.min}–${standard.weightRange.max}kg (ideal: ${standard.weightRange.ideal}kg)`, status: 'unknown', deviation: 0 };
   const deviation = Math.round(((w - standard.weightRange.ideal) / standard.weightRange.ideal) * 100);
   if (w >= standard.weightRange.min && w <= standard.weightRange.max) {
@@ -211,8 +216,8 @@ function checkWeightCompliance(weight: number | string, standard: BreedStandard 
 }
 
 function checkHeightCompliance(height: number | string, standard: BreedStandard | null): BreedCompliance['heightCompliance'] {
-  if (!standard) return { actual: Number(height) || 0, expected: 'No standard', status: 'unknown', deviation: 0 };
-  const h = Number(height) || 0;
+  if (!standard) return { actual: parseNumericValue(height), expected: 'No standard', status: 'unknown', deviation: 0 };
+  const h = parseNumericValue(height);
   if (h === 0) return { actual: 0, expected: `${standard.heightRange.min}–${standard.heightRange.max}cm (ideal: ${standard.heightRange.ideal}cm)`, status: 'unknown', deviation: 0 };
   const deviation = Math.round(((h - standard.heightRange.ideal) / standard.heightRange.ideal) * 100);
   if (h >= standard.heightRange.min && h <= standard.heightRange.max) {
