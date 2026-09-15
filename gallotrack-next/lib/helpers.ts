@@ -216,12 +216,12 @@ export const getArchiveBadgeStyle = (reason?: string) => {
 export const matchSurvivability = (m: { post_fight_condition?: string; outcome?: string }): number | null => {
   const cond = (m.post_fight_condition || '').toLowerCase();
   if (cond.includes('deceased')) return 0;
-  if (cond.includes('critical') || cond.includes('severely')) return 40;
+  if (cond.includes('critical') || cond.includes('severely')) return 30;
   if (cond.includes('fit') || cond.includes('recovered')) return 100;
   const outcome = (m.outcome || '').toLowerCase();
-  if (outcome === 'win') return 90;
-  if (outcome === 'loss') return 70;
-  if (outcome === 'draw') return 80;
+  if (outcome === 'win') return 75;
+  if (outcome === 'loss') return 55;
+  if (outcome === 'draw') return 65;
   return null;
 };
 
@@ -234,7 +234,7 @@ export const calculatePairingStats = (fowls: FowlRecord[], matchHistory: { entry
     const key = `${sire.toLowerCase()}|||${dam.toLowerCase()}`;
     let stat = map.get(key);
     if (!stat) {
-      stat = { key, sire, dam, members: [], totalFights: 0, wins: 0, losses: 0, draws: 0, decided: 0, winRate: 0, resilienceScore: 0, resilienceSample: 0, casualties: 0, critical: 0 };
+      stat = { key, sire, dam, members: [], totalFights: 0, wins: 0, losses: 0, draws: 0, decided: 0, winRate: 0, resilienceScore: 0, resilienceSample: 0, casualties: 0, critical: 0, verdictConfidence: 'Low' };
       map.set(key, stat);
     }
     stat.members.push(f);
@@ -263,6 +263,7 @@ export const calculatePairingStats = (fowls: FowlRecord[], matchHistory: { entry
     stat.resilienceScore = stat.resilienceSample > 0
       ? Math.round(survivalSum / stat.resilienceSample)
       : 0;
+    stat.verdictConfidence = stat.decided >= 10 ? 'High' : stat.decided >= 5 ? 'Medium' : 'Low';
   });
   const ranked = Array.from(map.values())
     .filter((s) => s.totalFights > 0)

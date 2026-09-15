@@ -519,9 +519,9 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-border text-muted-foreground font-semibold">
                 {pairingAnalytics.ranked.map((p, i) => {
-                  const elite = p.decided >= 3 && p.winRate >= 70;
+                  const elite = p.decided >= 5 && p.winRate >= 70;
                   const solid = p.winRate >= 50;
-                  const weak = p.decided >= 3 && p.winRate < 50;
+                  const weak = p.decided >= 5 && p.winRate < 50;
                   return (
                     <tr key={p.key} className={`hover:bg-muted/30 transition-colors ${weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''}`}>
                       <td className="p-4 pl-6 whitespace-nowrap">
@@ -556,14 +556,23 @@ export default function DashboardPage() {
                         </div>
                       </td>
                       <td className="p-4 text-center pr-6">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
-                          elite ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                          : solid ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
-                          : weak ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                          : 'bg-muted text-muted-foreground border-border'
-                        }`}>
-                          {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
+                            elite ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                            : solid ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
+                            : weak ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                            : 'bg-muted text-muted-foreground border-border'
+                          }`}>
+                            {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
+                          </span>
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${
+                            p.verdictConfidence === 'High' ? 'bg-emerald-500/10 text-emerald-400' :
+                            p.verdictConfidence === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            {p.verdictConfidence} Confidence
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -573,10 +582,11 @@ export default function DashboardPage() {
           </div>
           <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-[9px] font-bold text-muted-foreground">
             <span>Verdict logic:</span>
-            <span className="text-emerald-400">Elite = ≥70% win rate with 3+ decided fights</span>
+            <span className="text-emerald-400">Elite = ≥70% win rate with 5+ decided fights</span>
             <span className="text-sky-400">Solid = ≥50%</span>
-            <span className="text-rose-400">Avoid = below 50% with 3+ decided fights</span>
-            <span className="text-teal-400">Survivability = post-fight condition resilience (Fit=100 · Critical=40 · Deceased=0) — casualties drag a bloodline down even on wins</span>
+            <span className="text-rose-400">Avoid = below 50% with 5+ decided fights</span>
+            <span className="text-teal-400">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
+            <span className="text-amber-400">Confidence = Low (&lt;5 fights) · Medium (5-9) · High (10+)</span>
             <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
           </div>
         </div>

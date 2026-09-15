@@ -51,6 +51,7 @@ export interface PairingStats {
   resilienceSample: number;
   casualties: number;
   critical: number;
+  verdictConfidence: 'Low' | 'Medium' | 'High';
 }
 
 export interface MatchRecord {
