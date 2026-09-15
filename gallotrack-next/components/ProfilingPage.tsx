@@ -1,12 +1,13 @@
 'use client';
 import React from 'react';
-import { Bird, Archive, Skull } from 'lucide-react';
+import { Bird, Archive, Skull, Dna } from 'lucide-react';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
 import FowlLists from '@/components/profiling/FowlLists';
 import MatchForm from '@/components/profiling/MatchForm';
+import BreedsPage from '@/app/(dashboard)/breeds/page';
 
 export default function ProfilingPage() {
   const fowl = useFowl();
@@ -86,6 +87,10 @@ export default function ProfilingPage() {
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'deceased' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{deceasedFowls.length}</span>
           </button>
           <div className="w-px h-6 bg-border shrink-0 mx-0.5"></div>
+          <button type="button" onClick={() => setProfilingSubTab('breeds')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'breeds' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <Dna className="w-4 h-4" />
+            <span>Breeds</span>
+          </button>
           <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
             <span>Match Logs</span>
@@ -169,6 +174,10 @@ export default function ProfilingPage() {
           matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}
           handleAddMatchRecord={handleAddMatchRecord}
         />
+      )}
+
+      {profilingSubTab === 'breeds' && (
+        <BreedsPage />
       )}
     </div>
   );
