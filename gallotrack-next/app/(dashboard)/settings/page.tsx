@@ -401,7 +401,7 @@ export default function SettingsPage() {
         return (
           <div className="space-y-4">
             {clearNotice && (
-              <div className={`p-3 rounded-xl text-xs font-bold ${clearNotice.startsWith('Error') || clearNotice.includes('failed') ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+              <div className={`p-3 rounded-xl text-xs font-bold ${clearNotice.startsWith('Error') || clearNotice.includes('failed') ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'}`}>
                 {clearNotice}
               </div>
             )}
@@ -440,7 +440,7 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <SectionCard title="System Information" description="GalloTrack platform details">
               <Field label="Application">
-                <span className="text-xs font-bold text-slate-800">GalloTrack-Web</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100">GalloTrack-Web</span>
               </Field>
               <Field label="Version">
                 <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">v1.0.0</span>
