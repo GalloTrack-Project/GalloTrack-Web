@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { adminGuard } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
-import { Shield, Tag, CircleDot, Megaphone, Dna, User, Mail } from 'lucide-react';
+import { Shield, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, FileJson } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
@@ -27,6 +27,10 @@ export default function AdminSettingsPage() {
   const [transferEmail, setTransferEmail] = useState('');
   const [transferring, setTransferring] = useState(false);
   const [transferResult, setTransferResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Backup state
+  const [backing, setBacking] = useState(false);
+  const [backupResult, setBackupResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -110,6 +114,57 @@ export default function AdminSettingsPage() {
       setTransferResult({ type: 'error', text: 'Network error during transfer.' });
     } finally {
       setTransferring(false);
+    }
+  };
+
+  const handleExportBackup = async () => {
+    setBacking(true);
+    setBackupResult(null);
+    try {
+      const { supabase } = await import('@/lib/registry');
+      const [fowlsRes, matchesRes, profilesRes, settingsRes] = await Promise.all([
+        supabase.from('fowls').select('*'),
+        supabase.from('match_history').select('*'),
+        supabase.from('profiles').select('*'),
+        fetchSystemSettings(),
+      ]);
+
+      if (fowlsRes.error) throw new Error(`Fowls: ${fowlsRes.error.message}`);
+      if (matchesRes.error) throw new Error(`Matches: ${matchesRes.error.message}`);
+      if (profilesRes.error) throw new Error(`Profiles: ${profilesRes.error.message}`);
+
+      const backup = {
+        export_date: new Date().toISOString(),
+        system_name: 'GalloTrack',
+        version: '1.0.0',
+        data: {
+          fowls: fowlsRes.data || [],
+          match_history: matchesRes.data || [],
+          profiles: profilesRes.data || [],
+          system_settings: settingsRes || {},
+        },
+        counts: {
+          fowls: (fowlsRes.data || []).length,
+          matches: (matchesRes.data || []).length,
+          profiles: (profilesRes.data || []).length,
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gallotrack-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setBackupResult({ type: 'success', text: `Backup exported: ${backup.counts.fowls} fowls, ${backup.counts.matches} matches, ${backup.counts.profiles} profiles.` });
+    } catch (err) {
+      setBackupResult({ type: 'error', text: `Export failed: ${(err as Error).message}` });
+    } finally {
+      setBacking(false);
     }
   };
 
@@ -337,6 +392,53 @@ export default function AdminSettingsPage() {
               {transferring && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
               {transferring ? 'Transferring...' : 'Transfer Data to Farm Owner'}
             </button>
+          </div>
+
+          {/* DATA BACKUP & EXPORT */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Data Backup &amp; Export</h2>
+            <p className="text-[11px] text-muted-foreground font-medium">
+              Download a complete JSON backup of all system data including fowl records, match history, user profiles, and system settings. Use this for administrative maintenance and data restoration.
+            </p>
+
+            {backupResult && (
+              <div className={`text-xs font-bold p-3 rounded-xl border ${
+                backupResult.type === 'success'
+                  ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                  : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
+              }`}>
+                {backupResult.text}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              disabled={backing}
+              className="w-full text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {backing && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+              {!backing && <Download size={14} />}
+              {backing ? 'Exporting...' : 'Download Full System Backup'}
+            </button>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
+                <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                <p className="text-[9px] font-black text-card-foreground">Fowl Records</p>
+                <p className="text-[8px] text-muted-foreground font-semibold">All breeds &amp; lineages</p>
+              </div>
+              <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
+                <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                <p className="text-[9px] font-black text-card-foreground">Match History</p>
+                <p className="text-[8px] text-muted-foreground font-semibold">All fight records</p>
+              </div>
+              <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
+                <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                <p className="text-[9px] font-black text-card-foreground">User Profiles</p>
+                <p className="text-[8px] text-muted-foreground font-semibold">All accounts</p>
+              </div>
+            </div>
           </div>
 
         </form>
