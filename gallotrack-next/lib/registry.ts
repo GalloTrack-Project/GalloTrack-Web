@@ -60,6 +60,19 @@ export async function ensureOwnerRecords(supabaseClient: SupabaseClient, user: U
         role: 'owner',
         updated_at: new Date().toISOString(),
       });
+    } else if (farmName) {
+      const { data: currentProfile } = await supabaseClient
+        .from('profiles')
+        .select('farm_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!currentProfile?.farm_name) {
+        await supabaseClient
+          .from('profiles')
+          .update({ farm_name: farmName, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+      }
     }
   } catch (err) {
     console.error('[registry] profile sync failed', err);

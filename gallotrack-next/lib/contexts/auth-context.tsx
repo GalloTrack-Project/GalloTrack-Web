@@ -153,11 +153,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const syncProfileFromUser = useCallback(async (user: { id: string; user_metadata?: Record<string, unknown>; email?: string }, fallbackName: string): Promise<string> => {
-    const meta = (user.user_metadata || {}) as { full_name?: string };
+    const meta = (user.user_metadata || {}) as { full_name?: string; farm_name?: string };
     const fullName = meta.full_name || fallbackName;
     const { error: insertErr } = await supabase.from('profiles').insert([{
       id: user.id,
       full_name: fullName,
+      farm_name: meta.farm_name || '',
       phone_number: '09123456789',
       avatar_url: ''
     }]);

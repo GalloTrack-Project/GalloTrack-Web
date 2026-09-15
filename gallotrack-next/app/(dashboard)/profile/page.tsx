@@ -76,12 +76,24 @@ export default function ProfilePage() {
             id: user.id,
             user_id: user.id,
             full_name: fullName,
+            farm_name: farmName,
             phone_number: phoneNumber,
             avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
 
         if (error) throw error
+
+        if (farmName) {
+          await supabase.from('farms').upsert(
+            {
+              owner_id: user.id,
+              farm_name: farmName,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'owner_id' }
+          )
+        }
 
         if (typeof window !== 'undefined') {
           localStorage.setItem('gallotrack_admin_name', fullName)
