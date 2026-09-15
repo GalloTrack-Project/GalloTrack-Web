@@ -36,8 +36,8 @@ async function verifyAdmin(request: NextRequest) {
   });
   const { data: { user } } = await userClient.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await userClient.from('profiles').select('role, is_active').eq('id', user.id).maybeSingle();
-  if (profile?.role !== 'admin' || profile?.is_active === false) return null;
+  const { data: profile } = await userClient.from('profiles').select('role, is_active, is_admin').eq('id', user.id).maybeSingle();
+  if (!profile?.is_admin && profile?.role !== 'admin') return null;
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 

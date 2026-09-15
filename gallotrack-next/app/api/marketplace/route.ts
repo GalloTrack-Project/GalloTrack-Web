@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 });
 
   const { data: listings, error } = await supabase
-    .from('marketplace_listing')
+    .from('marketplace_listings')
     .select('*')
     .eq('status', 'approved')
     .order('created_at', { ascending: false });
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     };
 
-    const { error: insertErr } = await supabase.from('marketplace_listing').insert([payload]);
+    const { error: insertErr } = await supabase.from('marketplace_listings').insert([payload]);
     if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
 
     return NextResponse.json({ success: true }, { status: 201 });

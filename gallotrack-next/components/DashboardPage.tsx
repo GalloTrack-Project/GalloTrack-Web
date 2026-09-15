@@ -6,8 +6,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { getAgeLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import FarmBloodlineSummary from '@/components/FarmBloodlineSummary';
-import { LayoutDashboard, Bird, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, ShieldCheck, AlertTriangle, Stethoscope, CircleDot, Skull, Medal } from 'lucide-react';
+import { LayoutDashboard, Bird, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -439,7 +438,6 @@ export default function DashboardPage() {
         </div>
 
         {/* BLOODLINE WIN RATIOS */}
-        <FarmBloodlineSummary />
         <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
           <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
             <div>

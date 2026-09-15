@@ -39,7 +39,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
 
   const { data: existing } = await supabase
-    .from('marketplace_listing')
+    .from('marketplace_listings')
     .select('user_id')
     .eq('id', id)
     .maybeSingle();
@@ -63,7 +63,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (body.title !== undefined) updates.title = sanitize(String(body.title));
     if (body.description !== undefined) updates.description = sanitize(String(body.description));
-    if (body.price !== undefined) updates.price = Number(body.price);
+    if (body.price !== undefined) {
+      if (typeof body.price !== 'number' || body.price < 0) {
+        return NextResponse.json({ error: 'Price must be a non-negative number' }, { status: 400 });
+      }
+      updates.price = body.price;
+    }
     if (body.breed !== undefined) updates.breed = sanitize(String(body.breed));
     if (body.gender !== undefined) updates.gender = body.gender;
     if (body.age !== undefined) updates.age = body.age;
@@ -74,7 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (isAdmin && body.admin_notes !== undefined) updates.admin_notes = body.admin_notes;
 
     const { error: updateErr } = await supabase
-      .from('marketplace_listing')
+      .from('marketplace_listings')
       .update(updates)
       .eq('id', id);
 
@@ -95,7 +100,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
 
   const { data: existing } = await supabase
-    .from('marketplace_listing')
+    .from('marketplace_listings')
     .select('user_id')
     .eq('id', id)
     .maybeSingle();
@@ -114,7 +119,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   }
 
   const { error: deleteErr } = await supabase
-    .from('marketplace_listing')
+    .from('marketplace_listings')
     .delete()
     .eq('id', id);
 

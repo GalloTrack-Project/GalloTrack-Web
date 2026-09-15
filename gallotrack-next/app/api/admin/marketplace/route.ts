@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { data: listings, error } = await admin
-    .from('marketplace_listing')
+    .from('marketplace_listings')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest) {
     if (admin_notes !== undefined) updates.admin_notes = admin_notes;
 
     const { error: updateErr } = await admin
-      .from('marketplace_listing')
+      .from('marketplace_listings')
       .update(updates)
       .eq('id', id);
 

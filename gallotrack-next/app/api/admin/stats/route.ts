@@ -23,15 +23,21 @@ export async function GET(request: NextRequest) {
   const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const [fowlsCount, matchesCount, profilesCount] = await Promise.all([
+  const [fowlsResult, matchesResult, profilesResult, activeProfilesResult] = await Promise.all([
     admin.from('fowl').select('id', { count: 'exact', head: true }),
     admin.from('match').select('id', { count: 'exact', head: true }),
     admin.from('profiles').select('id', { count: 'exact', head: true }),
+    admin.from('profiles').select('id', { count: 'exact', head: true }).eq('is_active', true),
   ]);
 
+  if (fowlsResult.error) return NextResponse.json({ error: fowlsResult.error.message }, { status: 500 });
+  if (matchesResult.error) return NextResponse.json({ error: matchesResult.error.message }, { status: 500 });
+  if (profilesResult.error) return NextResponse.json({ error: profilesResult.error.message }, { status: 500 });
+
   return NextResponse.json({
-    total_fowls: fowlsCount.count || 0,
-    total_matches: matchesCount.count || 0,
-    total_users: profilesCount.count || 0,
+    total_fowls: fowlsResult.count || 0,
+    total_matches: matchesResult.count || 0,
+    total_users: profilesResult.count || 0,
+    active_users: activeProfilesResult.count || 0,
   });
 }

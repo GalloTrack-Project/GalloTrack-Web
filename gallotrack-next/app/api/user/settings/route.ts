@@ -39,7 +39,7 @@ export async function PUT(request: NextRequest) {
     .eq('id', user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message, column_hints: error.details }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

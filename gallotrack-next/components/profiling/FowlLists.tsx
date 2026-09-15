@@ -30,9 +30,9 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onArchive, onDeceased }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void }) {
-  const siblings = getSiblingRelations(fowl, []).map((s: SiblingRelation) => s.name);
-  const cardGen = generationOf(fowl, []);
+function FowlCard({ fowl, index, gender, onArchive, onDeceased, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+  const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
+  const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
@@ -85,8 +85,8 @@ function FowlCard({ fowl, index, gender, onArchive, onDeceased }: { fowl: FowlRe
   );
 }
 
-function ArchivedCard({ fowl, index, onRestore }: { fowl: FowlRecord; index: number; onRestore: (id: number) => void }) {
-  const cardGen = generationOf(fowl, []);
+function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; index: number; onRestore: (id: number) => void; allFowls: FowlRecord[] }) {
+  const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center bg-slate-50/50 dark:bg-muted/50" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
@@ -127,8 +127,8 @@ function ArchivedCard({ fowl, index, onRestore }: { fowl: FowlRecord; index: num
   );
 }
 
-function DeceasedCard({ fowl, index, onDelete }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void }) {
-  const cardGen = generationOf(fowl, []);
+function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+  const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   return (
     <div className="antigravity-card bg-white dark:bg-card p-5 rounded-3xl border border-rose-200/80 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
@@ -165,6 +165,7 @@ const PAGE_SIZE = 10;
 
 export default function FowlLists({
   tab,
+  fowls,
   maleActiveFowls,
   femaleActiveFowls,
   archivedFowls,
@@ -228,7 +229,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -250,7 +251,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onRestore={handleRestoreFowlOnly} />
+              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -272,7 +273,7 @@ export default function FowlLists({
       ) : (
         <>
           {deceasedPagedList.map((fowl, index) => (
-            <DeceasedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} />
+            <DeceasedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} allFowls={fowls} />
           ))}
           <Pagination currentPage={page} totalPages={deceasedTotalPages} onPageChange={setPage} />
         </>
