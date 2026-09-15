@@ -454,8 +454,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           : age && !isNaN(Number(age))
           ? `${Number(age)} Months`
           : 'N/A',
-        weight: weight ? `${Math.round(Number(weight.toString().replace(/[^0-9.]/g, '')) * 10) / 10} kg` : 'N/A',
-        height: height ? `${Math.round(Number(height.toString().replace(/[^0-9.]/g, '')) * 10) / 10} cm` : 'N/A',
+        weight: weight ? `${Math.round(Number(weight.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
+        height: height ? `${Math.round(Number(height.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
         leg_color: newLegColor.trim() ? newLegColor.trim() : 'N/A',
         sire: sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock',
         dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
@@ -653,8 +653,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditAge(fowl.age ? fowl.age.replace(' Months', '') : '');
     setEditBirthdate(fowl.birthdate || '');
     setEditGrowthStage(fowl.growth_stage || autoComputeGrowthStage(isNaN(parsedAge) ? 0 : parsedAge, fowl.gender));
-    setEditWeight(fowl.weight ? fowl.weight.replace(' kg', '') : '');
-    setEditHeight(fowl.height ? fowl.height.replace(' cm', '') : '');
+    setEditWeight(fowl.weight ? fowl.weight.replace(/ kg$/, '') : '');
+    setEditHeight(fowl.height ? fowl.height.replace(/ cm$/, '') : '');
     setEditLegColor(fowl.leg_color || 'N/A');
     setEditSire(fowl.sire || '');
     setEditDam(fowl.dam || '');
@@ -691,8 +691,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           : editAge && !isNaN(Number(editAge))
           ? `${Number(editAge)} Months`
           : 'N/A',
-        weight: editWeight ? `${Math.round(Number(editWeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10} kg` : 'N/A',
-        height: editHeight ? `${Math.round(Number(editHeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10} cm` : 'N/A',
+        weight: editWeight ? `${Math.round(Number(editWeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
+        height: editHeight ? `${Math.round(Number(editHeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
         leg_color: editLegColor.trim() ? editLegColor.trim() : 'N/A',
         sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
         dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',

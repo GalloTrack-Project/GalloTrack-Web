@@ -126,7 +126,7 @@ function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: Match
         </div>
         <div className="bg-muted/50 rounded-xl py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Weight</p>
-          <p className="text-xs font-black text-card-foreground">{fowl.weight || '\u2014'}</p>
+          <p className="text-xs font-black text-card-foreground">{fowl.weight ? (fowl.weight.endsWith(' kg') ? fowl.weight : `${fowl.weight} kg`) : '\u2014'}</p>
         </div>
         <div className="bg-muted/50 rounded-xl py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Stage</p>
@@ -204,8 +204,8 @@ function FowlDetailModal({ fowl, matches, onClose }: { fowl: FowlRecord; matches
               <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-emerald-400">{fowl.behavior_trait || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{fowl.weight || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{fowl.height || '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{fowl.weight ? (fowl.weight.endsWith(' kg') ? fowl.weight : `${fowl.weight} kg`) : '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{fowl.height ? (fowl.height.endsWith(' cm') ? fowl.height : `${fowl.height} cm`) : '\u2014'}</span></div>
             </div>
           </div>
 

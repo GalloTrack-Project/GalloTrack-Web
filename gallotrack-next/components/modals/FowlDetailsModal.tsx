@@ -645,11 +645,11 @@ export default function FowlDetailsModal({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Structural Weight</span>
-            <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.weight || 'N/A'}</strong>
+            <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.weight ? (selectedFowlForDetails.weight.endsWith(' kg') ? selectedFowlForDetails.weight : `${selectedFowlForDetails.weight} kg`) : 'N/A'}</strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Height Dimension</span>
-            <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.height || 'N/A'}</strong>
+            <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.height ? (selectedFowlForDetails.height.endsWith(' cm') ? selectedFowlForDetails.height : `${selectedFowlForDetails.height} cm`) : 'N/A'}</strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
