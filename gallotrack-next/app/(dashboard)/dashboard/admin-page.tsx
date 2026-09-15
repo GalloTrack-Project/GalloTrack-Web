@@ -355,8 +355,8 @@ export default function AdminDashboardPage() {
           </div>
           <p className="text-[10px] text-muted-foreground mb-4">System status and key performance indicators</p>
           <div className="space-y-3">
-            <HealthRow label="User Registration" value={`${stats.active_users} / ${stats.total_users}`} rate={userActiveRate} color="emerald" />
-            <HealthRow label="Fowl Registry" value={`${stats.active_fowls} / ${stats.total_fowls}`} rate={fowlActiveRate} color="emerald" />
+            <HealthRow label="User Registration" value={`${stats.total_users} registered`} rate={userActiveRate} color="emerald" />
+            <HealthRow label="Fowl Registry" value={`${stats.total_fowls} registered`} rate={fowlActiveRate} color="emerald" />
             <HealthRow label="Match Activity" value={`${stats.total_matches} logged`} rate={stats.total_matches > 0 ? 100 : 0} color="sky" />
             <HealthRow label="Fowl Mortality" value={`${stats.deceased} deceased`} rate={deceasedRate} color="rose" />
             <HealthRow label="Active Farms" value={`${Object.keys(stats.owner_counts).length} registered`} rate={Object.keys(stats.owner_counts).length > 0 ? 100 : 0} color="amber" />
