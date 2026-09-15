@@ -134,7 +134,7 @@ export default function SettingsPage() {
           if (profile) {
             setSettings((prev) => ({
               ...prev,
-              farm_name: storedPrefs.farm_name || profile.farm_name || '',
+              farm_name: profile.farm_name || storedPrefs.farm_name || '',
               farm_location: storedPrefs.farm_location || '',
               contact_number: storedPrefs.contact_number || profile.phone_number || '',
               farm_description: storedPrefs.farm_description || '',
