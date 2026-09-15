@@ -123,8 +123,8 @@ export default function AdminSettingsPage() {
     try {
       const { supabase } = await import('@/lib/registry');
       const [fowlsRes, matchesRes, profilesRes, settingsRes] = await Promise.all([
-        supabase.from('fowls').select('*'),
-        supabase.from('match_history').select('*'),
+        supabase.from('fowl').select('*'),
+        supabase.from('match').select('*'),
         supabase.from('profiles').select('*'),
         fetchSystemSettings(),
       ]);

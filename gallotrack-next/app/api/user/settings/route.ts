@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sanitize } from '@/lib/sanitize';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -23,9 +24,9 @@ export async function PUT(request: NextRequest) {
   const body = await request.json();
 
   const updatePayload: Record<string, unknown> = {};
-  if (body.farm_name !== undefined) updatePayload.farm_name = body.farm_name;
-  if (body.phone_number !== undefined) updatePayload.phone_number = body.phone_number;
-  if (body.full_name !== undefined) updatePayload.full_name = body.full_name;
+  if (body.farm_name !== undefined) updatePayload.farm_name = sanitize(body.farm_name);
+  if (body.phone_number !== undefined) updatePayload.phone_number = sanitize(body.phone_number);
+  if (body.full_name !== undefined) updatePayload.full_name = sanitize(body.full_name);
 
   if (Object.keys(updatePayload).length === 0) {
     return NextResponse.json({ success: true });

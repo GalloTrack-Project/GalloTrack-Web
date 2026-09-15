@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { sanitize } from '@/lib/sanitize';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -25,10 +26,6 @@ async function verifyActiveUser(supabaseClient: SupabaseClient) {
     .maybeSingle<{ is_active?: boolean | null }>();
   if (profile?.is_active === false) return { error: 'Account deactivated' as const };
   return { user };
-}
-
-function sanitizeInput(value: string): string {
-  return value.replace(/[<>&"'/]/g, '').trim();
 }
 
 export async function GET(request: NextRequest) {
@@ -78,8 +75,8 @@ export async function POST(request: NextRequest) {
 
     const payload = {
       user_id: auth.user.id,
-      name: sanitizeInput(String(body.name)),
-      breed: sanitizeInput(String(body.breed)) || 'Unspecified Strain',
+      name: sanitize(String(body.name)),
+      breed: sanitize(String(body.breed)) || 'Unspecified Strain',
       gender: body.gender || 'Rooster',
       color: body.color || 'Bright Red',
       color_category: body.color_category || 'Red',
@@ -91,8 +88,8 @@ export async function POST(request: NextRequest) {
       weight: body.weight || 'N/A',
       height: body.height || 'N/A',
       leg_color: body.leg_color || 'N/A',
-      sire: body.sire ? sanitizeInput(String(body.sire)) : 'Foundation Stock',
-      dam: body.dam ? sanitizeInput(String(body.dam)) : 'Foundation Stock',
+      sire: body.sire ? sanitize(String(body.sire)) : 'Foundation Stock',
+      dam: body.dam ? sanitize(String(body.dam)) : 'Foundation Stock',
       sire_pct: Number(body.sire_pct) || 0,
       dam_pct: Number(body.dam_pct) || 0,
       bloodline_pct: Number(body.bloodline_pct) || 0,

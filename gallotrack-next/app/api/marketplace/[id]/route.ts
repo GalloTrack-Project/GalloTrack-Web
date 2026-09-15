@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { sanitize } from '@/lib/sanitize';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -23,10 +24,6 @@ async function verifyActiveUser(supabase: SupabaseClient) {
     .maybeSingle<{ is_active?: boolean | null }>();
   if (profile?.is_active === false) return { error: 'Account deactivated' as const };
   return { user };
-}
-
-function sanitize(value: string): string {
-  return value.replace(/[<>&"'/]/g, '').trim();
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

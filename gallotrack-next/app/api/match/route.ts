@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { sanitize } from '@/lib/sanitize';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -25,10 +26,6 @@ async function verifyActiveUser(supabaseClient: SupabaseClient) {
     .maybeSingle<{ is_active?: boolean | null }>();
   if (profile?.is_active === false) return { error: 'Account deactivated' as const };
   return { user };
-}
-
-function sanitizeInput(value: string): string {
-  return value.replace(/[<>&"'/]/g, '').trim();
 }
 
 const VALID_OUTCOMES = ['win', 'loss', 'draw', 'no contest'];
@@ -108,11 +105,11 @@ export async function POST(request: NextRequest) {
     const payload = {
       user_id: auth.user.id,
       date: body.date || new Date().toISOString().split('T')[0],
-      entry_name: sanitizeInput(String(body.entry_name)),
+      entry_name: sanitize(String(body.entry_name)),
       breed: body.breed || 'Unknown',
-      opponent: body.opponent ? sanitizeInput(String(body.opponent)) : 'Anonymous Opponent',
-      opponent_breed: body.opponent_breed ? sanitizeInput(String(body.opponent_breed)) : '',
-      location: body.location ? sanitizeInput(String(body.location)) : 'Local Breeding Yard',
+      opponent: body.opponent ? sanitize(String(body.opponent)) : 'Anonymous Opponent',
+      opponent_breed: body.opponent_breed ? sanitize(String(body.opponent_breed)) : '',
+      location: body.location ? sanitize(String(body.location)) : 'Local Breeding Yard',
       type: body.type || 'Derby Match',
       outcome: body.outcome || 'Win',
       status: 'Verified',
