@@ -419,15 +419,9 @@ function HealthRow({ label, value, rate, color }: {
 
   return (
     <div className="p-3 bg-muted/20 rounded-xl hover:bg-muted/30 transition-colors">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-card-foreground">{label}</span>
         <span className={`text-[10px] font-black ${c.text}`}>{value}</span>
-      </div>
-      <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${c.bar} rounded-full transition-all duration-700 ease-out`}
-          style={{ width: `${Math.min(rate, 100)}%` }}
-        ></div>
       </div>
     </div>
   );
