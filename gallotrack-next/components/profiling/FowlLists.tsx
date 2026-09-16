@@ -30,7 +30,7 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onArchive, onDeceased, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
@@ -71,6 +71,10 @@ function FowlCard({ fowl, index, gender, onArchive, onDeceased, allFowls }: { fo
           <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
+          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            Edit
+          </button>
           <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 8-2-2H5l-2 2"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M10 12h4"/></svg>
             Archive
@@ -175,6 +179,7 @@ export default function FowlLists({
   handleRestoreFowlOnly,
   setSelectedFowlForArchive,
   setSelectedFowlForDeceased,
+  handleOpenEditModal,
 }: Props) {
   const [page, setPage] = useState(1);
   const prevTabRef = React.useRef(tab);
@@ -229,7 +234,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
