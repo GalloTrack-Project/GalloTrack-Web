@@ -147,15 +147,9 @@ export default function EditFowlModal({
               <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Identifier Name</label>
               <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" required />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Behavior Trait</label>
-                <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Eye Variant</label>
-                <input type="text" value={editEyeVariant} onChange={(e) => setEditEyeVariant(e.target.value)} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" placeholder="e.g. red, pearl" />
-              </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Behavior Trait</label>
+              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative z-30">
