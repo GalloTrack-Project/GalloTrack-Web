@@ -28,22 +28,21 @@ export async function GET(request: NextRequest) {
 
   const userIds = [...new Set((fowls || []).map((f: { user_id: string }) => f.user_id))];
   const [profilesRes, farmsRes] = await Promise.all([
-    result.adminClient.from('profiles').select('id, full_name, farm_name, email').in('id', userIds),
+    result.adminClient.from('profiles').select('id, full_name, farm_name').in('id', userIds),
     result.adminClient.from('farms').select('owner_id, farm_name').in('owner_id', userIds),
   ]);
 
-  const profileMap = new Map((profilesRes.data || []).map((p: { id: string; full_name?: string; farm_name?: string; email?: string }) => [p.id, p]));
+  const profileMap = new Map((profilesRes.data || []).map((p: { id: string; full_name?: string; farm_name?: string }) => [p.id, p]));
   const farmMap = new Map((farmsRes.data || []).map((f: { owner_id: string; farm_name?: string }) => [f.owner_id, f]));
 
   const enriched = (fowls || []).map((f: Record<string, unknown>) => {
     const profile = profileMap.get(f.user_id as string);
     const farm = farmMap.get(f.user_id as string);
     const resolvedName = (profile?.farm_name || farm?.farm_name || profile?.full_name || '').trim();
-    const fallbackName = profile?.email?.split('@')[0] || 'Unknown';
     return {
       ...f,
-      owner_name: (profile?.full_name || '').trim() || fallbackName,
-      farm_name: resolvedName || fallbackName,
+      owner_name: (profile?.full_name || '').trim() || 'Unknown',
+      farm_name: resolvedName || 'Unknown',
     };
   });
 

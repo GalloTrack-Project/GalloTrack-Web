@@ -59,9 +59,6 @@ export default function AdminDashboardPage() {
         ownerCounts[ownerKey] = (ownerCounts[ownerKey] || 0) + 1;
       });
 
-      console.log('[DEBUG] fowls sample:', fowls.slice(0, 3).map((f: Record<string, unknown>) => ({ name: f.name, user_id: f.user_id, farm_name: f.farm_name, owner_name: f.owner_name })));
-      console.log('[DEBUG] ownerCounts:', ownerCounts);
-
       const wins = matches.filter((m: { outcome: string }) => m.outcome?.toLowerCase() === 'win').length;
       const losses = matches.filter((m: { outcome: string }) => m.outcome?.toLowerCase() === 'loss').length;
       const draws = matches.filter((m: { outcome: string }) => m.outcome?.toLowerCase() === 'draw').length;
