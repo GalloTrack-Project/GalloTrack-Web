@@ -34,21 +34,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin, role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (!profile?.is_admin && profile?.role !== 'admin') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
-  }
-
   return response;
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/profiling/:path*', '/catalog/:path*', '/lineage/:path*', '/milestones/:path*', '/profile/:path*', '/settings/:path*'],
 };
