@@ -154,14 +154,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const syncProfileFromUser = useCallback(async (user: { id: string; user_metadata?: Record<string, unknown>; email?: string }, fallbackName: string): Promise<string> => {
-    const meta = (user.user_metadata || {}) as { full_name?: string; farm_name?: string };
+    const meta = (user.user_metadata || {}) as { full_name?: string; farm_name?: string; first_name?: string; middle_name?: string; last_name?: string; contact_number?: string };
     const fullName = meta.full_name || fallbackName;
+    const farmName = meta.farm_name || '';
     const { error: insertErr } = await supabase.from('profiles').insert([{
       id: user.id,
+      user_id: user.id,
+      email: user.email || '',
+      first_name: meta.first_name || '',
+      middle_name: meta.middle_name || '',
+      last_name: meta.last_name || '',
       full_name: fullName,
-      phone_number: '09123456789',
-      avatar_url: ''
+      farm_name: farmName,
+      phone_number: meta.contact_number || '09123456789',
+      avatar_url: '',
+      role: 'owner',
+      is_active: true,
     }]);
+    if (!insertErr && farmName) {
+      await supabase.from('farms').insert([{
+        owner_id: user.id,
+        farm_name: farmName,
+        contact_number: meta.contact_number || '',
+      }]);
+    }
     if (!insertErr) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('gallotrack_admin_name', fullName);
