@@ -190,6 +190,7 @@ export default function AdminFlockAuditPage() {
               <div className="text-[9px] text-muted-foreground font-medium space-y-0.5">
                 <p>Owner: <span className="text-card-foreground font-bold">{fowl.owner_name}</span> · {fowl.farm_name}</p>
                 <p>Stage: {fowl.growth_stage || '—'} · Sire: {fowl.sire || '—'} · Dam: {fowl.dam || '—'}</p>
+                <p>Registered: <span className="text-card-foreground font-bold">{fowl.created_at ? new Date(fowl.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date(fowl.created_at).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}</span></p>
               </div>
             </div>
           ))}
@@ -209,12 +210,13 @@ export default function AdminFlockAuditPage() {
                   <th className="px-4 py-3">Stage</th>
                   <th className="px-4 py-3">Sire / Dam</th>
                   <th className="px-4 py-3">Owner</th>
+                  <th className="px-4 py-3">Registered</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">No fowls found.</td></tr>
+                  <tr><td colSpan={7} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">No fowls found.</td></tr>
                 )}
                 {filtered.map((fowl) => (
                   <tr key={fowl.id} className="border-b border-border/60 last:border-0 hover:bg-muted/25 transition-colors">
@@ -240,6 +242,10 @@ export default function AdminFlockAuditPage() {
                     <td className="px-4 py-3.5">
                       <p className="text-[11px] font-bold text-card-foreground truncate">{fowl.owner_name}</p>
                       <p className="text-[10px] text-muted-foreground truncate">{fowl.farm_name}</p>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <p className="text-[10px] font-bold text-card-foreground">{fowl.created_at ? new Date(fowl.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</p>
+                      <p className="text-[9px] text-muted-foreground font-medium">{fowl.created_at ? new Date(fowl.created_at).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</p>
                     </td>
                     <td className="px-4 py-3.5">
                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${statusColor(fowl.status)}`}>{fowl.status}</span>
