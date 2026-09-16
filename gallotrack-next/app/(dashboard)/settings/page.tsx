@@ -184,12 +184,14 @@ export default function SettingsPage() {
       })
 
       const { data: { user } } = await supabase.auth.getUser()
-      if (user && settings.farm_name) {
-        await supabase.from('profiles').update({ farm_name: settings.farm_name, updated_at: new Date().toISOString() }).eq('id', user.id)
-        await supabase.from('farms').upsert(
-          { owner_id: user.id, farm_name: settings.farm_name, contact_number: settings.contact_number || '', updated_at: new Date().toISOString() },
-          { onConflict: 'owner_id' }
-        )
+      if (user) {
+        await supabase.from('profiles').update({ farm_name: settings.farm_name || '', updated_at: new Date().toISOString() }).eq('id', user.id)
+        if (settings.farm_name) {
+          await supabase.from('farms').upsert(
+            { owner_id: user.id, farm_name: settings.farm_name, contact_number: settings.contact_number || '', updated_at: new Date().toISOString() },
+            { onConflict: 'owner_id' }
+          )
+        }
       }
 
       window.dispatchEvent(new Event('admin-profile-update'))
