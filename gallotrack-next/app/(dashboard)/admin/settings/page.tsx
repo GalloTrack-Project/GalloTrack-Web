@@ -22,6 +22,18 @@ export default function AdminSettingsPage() {
   const [autoApproveUsers, setAutoApproveUsers] = useState(true);
   const [publicFowlData, setPublicFowlData] = useState(false);
   const [defaultUserRole, setDefaultUserRole] = useState('owner');
+  const [defaultMatchType, setDefaultMatchType] = useState('');
+  const [defaultArena, setDefaultArena] = useState('');
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg');
+  const [heightUnit, setHeightUnit] = useState<'cm' | 'inches'>('cm');
+  const [milestoneAlerts, setMilestoneAlerts] = useState(true);
+  const [overdueAlerts, setOverdueAlerts] = useState(true);
+  const [autoCalculateAge, setAutoCalculateAge] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [farmName, setFarmName] = useState('');
+  const [farmLocation, setFarmLocation] = useState('');
+  const [farmDescription, setFarmDescription] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
 
   // Data Transfer state
   const [transferEmail, setTransferEmail] = useState('');
@@ -49,6 +61,18 @@ export default function AdminSettingsPage() {
         setAutoApproveUsers(settings.auto_approve_users !== false);
         setPublicFowlData(settings.public_fowl_data === true);
         setDefaultUserRole(settings.default_user_role || 'owner');
+        setDefaultMatchType(settings.default_match_type || '');
+        setDefaultArena(settings.default_arena || '');
+        setWeightUnit(settings.weight_unit || 'kg');
+        setHeightUnit(settings.height_unit || 'cm');
+        setMilestoneAlerts(settings.milestone_alerts !== false);
+        setOverdueAlerts(settings.overdue_alerts !== false);
+        setAutoCalculateAge(settings.auto_calculate_age !== false);
+        setTheme(settings.theme || 'dark');
+        setFarmName(settings.farm_name || '');
+        setFarmLocation(settings.farm_location || '');
+        setFarmDescription(settings.farm_description || '');
+        setContactNumber(settings.contact_number || '');
       } catch (err) {
         setMessage({ type: 'error', text: `Failed to load settings: ${(err as Error).message}` });
       } finally {
@@ -73,6 +97,18 @@ export default function AdminSettingsPage() {
         auto_approve_users: autoApproveUsers,
         public_fowl_data: publicFowlData,
         default_user_role: defaultUserRole,
+        default_match_type: defaultMatchType,
+        default_arena: defaultArena,
+        weight_unit: weightUnit,
+        height_unit: heightUnit,
+        milestone_alerts: milestoneAlerts,
+        overdue_alerts: overdueAlerts,
+        auto_calculate_age: autoCalculateAge,
+        theme: theme,
+        farm_name: farmName,
+        farm_location: farmLocation,
+        farm_description: farmDescription,
+        contact_number: contactNumber,
       });
       setMessage({ type: 'success', text: 'System configuration saved successfully.' });
       window.setTimeout(() => setMessage(null), 3000);
@@ -288,6 +324,146 @@ export default function AdminSettingsPage() {
                   <option value="Hybrid">Hybrid</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* MATCH DEFAULTS */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Match Defaults</h2>
+
+            <div>
+              <label className={labelClass}>Default Match Type</label>
+              <input
+                type="text"
+                value={defaultMatchType}
+                onChange={(e) => setDefaultMatchType(e.target.value)}
+                className={inputClass}
+                placeholder="e.g., Derby, Cockicle"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Default Arena</label>
+              <input
+                type="text"
+                value={defaultArena}
+                onChange={(e) => setDefaultArena(e.target.value)}
+                className={inputClass}
+                placeholder="e.g., Main Arena"
+              />
+            </div>
+          </div>
+
+          {/* UNITS & MEASUREMENTS */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Units &amp; Measurements</h2>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Weight Unit</label>
+                <select value={weightUnit} onChange={(e) => setWeightUnit(e.target.value as 'kg' | 'lbs')} className={`${inputClass} cursor-pointer`}>
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="lbs">Pounds (lbs)</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Height Unit</label>
+                <select value={heightUnit} onChange={(e) => setHeightUnit(e.target.value as 'cm' | 'inches')} className={`${inputClass} cursor-pointer`}>
+                  <option value="cm">Centimeters (cm)</option>
+                  <option value="inches">Inches</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* ALERTS & AUTOMATION */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Alerts &amp; Automation</h2>
+
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+              <div>
+                <span className="block text-xs font-extrabold text-card-foreground">Milestone Alerts</span>
+                <span className="text-[11px] text-muted-foreground font-medium block">Notify when fowl reach growth milestones</span>
+              </div>
+              <input type="checkbox" checked={milestoneAlerts} onChange={(e) => setMilestoneAlerts(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
+            </label>
+
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+              <div>
+                <span className="block text-xs font-extrabold text-card-foreground">Overdue Alerts</span>
+                <span className="text-[11px] text-muted-foreground font-medium block">Notify when tasks or checkups are overdue</span>
+              </div>
+              <input type="checkbox" checked={overdueAlerts} onChange={(e) => setOverdueAlerts(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
+            </label>
+
+            <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+              <div>
+                <span className="block text-xs font-extrabold text-card-foreground">Auto-Calculate Age</span>
+                <span className="text-[11px] text-muted-foreground font-medium block">Automatically compute fowl age from birthdate</span>
+              </div>
+              <input type="checkbox" checked={autoCalculateAge} onChange={(e) => setAutoCalculateAge(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
+            </label>
+          </div>
+
+          {/* FARM INFO */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Farm Information</h2>
+
+            <div>
+              <label className={labelClass}>Farm Name</label>
+              <input
+                type="text"
+                value={farmName}
+                onChange={(e) => setFarmName(e.target.value)}
+                className={inputClass}
+                placeholder="e.g., GalloTrack Farm"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Farm Location</label>
+              <input
+                type="text"
+                value={farmLocation}
+                onChange={(e) => setFarmLocation(e.target.value)}
+                className={inputClass}
+                placeholder="e.g., Manila, Philippines"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Farm Description</label>
+              <textarea
+                value={farmDescription}
+                onChange={(e) => setFarmDescription(e.target.value)}
+                className={`${inputClass} min-h-[80px] resize-y`}
+                placeholder="Brief description of the farm"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Contact Number</label>
+              <input
+                type="text"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                className={inputClass}
+                placeholder="e.g., +63 917 123 4567"
+              />
+            </div>
+          </div>
+
+          {/* THEME */}
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-6 space-y-5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-amber-400 border-b border-border pb-3">Appearance</h2>
+
+            <div>
+              <label className={labelClass}>Theme</label>
+              <select value={theme} onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')} className={`${inputClass} cursor-pointer`}>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="system">System</option>
+              </select>
             </div>
           </div>
 

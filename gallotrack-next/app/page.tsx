@@ -35,11 +35,15 @@ export default function LoginPage() {
     handleSendResetLink,
   } = store;
 
+  const redirectPath = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('redirect')
+    : null;
+
   useEffect(() => {
     if (currentPage !== 'login') {
-      router.push('/dashboard');
+      router.push(redirectPath || '/dashboard');
     }
-  }, [currentPage, router]);
+  }, [currentPage, router, redirectPath]);
 
   if (currentPage !== 'login') return null;
 

@@ -58,7 +58,6 @@ export default function MarketplacePage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string>('');
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -71,20 +70,19 @@ export default function MarketplacePage() {
       const token = sessionData?.session?.access_token;
       const uid = sessionData?.session?.user?.id;
       if (!token) return;
-      if (uid) setUserId(uid);
 
       const [approvedRes, myRes] = await Promise.all([
         fetch('/api/marketplace', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/marketplace', { headers: { Authorization: `Bearer ${token}` } }),
+        uid ? fetch(`/api/marketplace?user_id=${uid}`, { headers: { Authorization: `Bearer ${token}` } }) : null,
       ]);
 
       if (approvedRes.ok) {
         const { listings: data } = await approvedRes.json();
         setListings(data);
       }
-      if (myRes.ok) {
+      if (myRes && myRes.ok) {
         const { listings: data } = await myRes.json();
-        setMyListings(data.filter((l: Listing) => l.user_id === uid));
+        setMyListings(data);
       }
     } catch {
       showToast('error', 'Failed to load marketplace data');

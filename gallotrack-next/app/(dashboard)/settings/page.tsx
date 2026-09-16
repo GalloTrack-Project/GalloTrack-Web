@@ -129,15 +129,21 @@ export default function SettingsPage() {
             .eq('id', user.id)
             .maybeSingle()
 
+          const { data: farm } = await supabase
+            .from('farms')
+            .select('farm_name, farm_location, farm_description, contact_number')
+            .eq('owner_id', user.id)
+            .maybeSingle()
+
           const storedPrefs = loadPrefsFromStorage()
 
           if (profile) {
             setSettings((prev) => ({
               ...prev,
-              farm_name: profile.farm_name || storedPrefs.farm_name || '',
-              farm_location: storedPrefs.farm_location || '',
-              contact_number: storedPrefs.contact_number || profile.phone_number || '',
-              farm_description: storedPrefs.farm_description || '',
+              farm_name: farm?.farm_name || profile.farm_name || storedPrefs.farm_name || '',
+              farm_location: farm?.farm_location || storedPrefs.farm_location || '',
+              contact_number: farm?.contact_number || storedPrefs.contact_number || profile.phone_number || '',
+              farm_description: farm?.farm_description || storedPrefs.farm_description || '',
               default_match_type: storedPrefs.default_match_type || '',
               default_arena: storedPrefs.default_arena || '',
               default_strain: storedPrefs.default_strain || 'Sweater',
@@ -166,10 +172,6 @@ export default function SettingsPage() {
     setLoadError('')
     try {
       savePrefsToStorage({
-        farm_name: settings.farm_name || '',
-        farm_location: settings.farm_location || '',
-        contact_number: settings.contact_number || '',
-        farm_description: settings.farm_description || '',
         default_match_type: settings.default_match_type || '',
         default_arena: settings.default_arena || '',
         default_strain: settings.default_strain || 'Sweater',
@@ -185,10 +187,16 @@ export default function SettingsPage() {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.from('profiles').update({ farm_name: settings.farm_name || '', updated_at: new Date().toISOString() }).eq('id', user.id)
         if (settings.farm_name) {
           await supabase.from('farms').upsert(
-            { owner_id: user.id, farm_name: settings.farm_name, contact_number: settings.contact_number || '', updated_at: new Date().toISOString() },
+            {
+              owner_id: user.id,
+              farm_name: settings.farm_name,
+              farm_location: settings.farm_location || '',
+              farm_description: settings.farm_description || '',
+              contact_number: settings.contact_number || '',
+              updated_at: new Date().toISOString(),
+            },
             { onConflict: 'owner_id' }
           )
         }

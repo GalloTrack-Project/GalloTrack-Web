@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.user) {
             setCurrentUserId(session.user.id);
             localStorage.setItem('gallotrack_user_id', session.user.id);
+            document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
             setUsername(session.user.email?.split('@')[0] || 'admin');
             ui.setCurrentPage('dashboard');
             try {
@@ -158,7 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error: insertErr } = await supabase.from('profiles').insert([{
       id: user.id,
       full_name: fullName,
-      farm_name: meta.farm_name || '',
       phone_number: '09123456789',
       avatar_url: ''
     }]);
@@ -207,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentUserId(data.user.id);
       if (typeof window !== 'undefined') {
         localStorage.setItem('gallotrack_user_id', data.user.id);
+        document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
       }
 
       if (!data.user.email_confirmed_at) {
@@ -256,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('gallotrack_admin_avatar');
       localStorage.removeItem('gallotrack_admin_phone');
       localStorage.removeItem('gallotrack_user_id');
+      document.cookie = 'gallotrack_session=; path=/; max-age=0';
     }
     await supabase.auth.signOut();
     if (typeof window !== 'undefined') {

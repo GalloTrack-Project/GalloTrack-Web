@@ -125,6 +125,7 @@ export async function deleteUserRecords(userId: string): Promise<void> {
   await supabase.from('fowl').delete().eq('user_id', userId);
   await supabase.from('match').delete().eq('user_id', userId);
   await supabase.from('farms').delete().eq('owner_id', userId);
+  await supabase.from('marketplace_listings').delete().eq('user_id', userId);
   const { error } = await supabase.from('profiles').delete().eq('id', userId);
   if (error) throw new Error(error.message);
 }

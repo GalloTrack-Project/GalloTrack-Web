@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [farmName, setFarmName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -55,6 +56,7 @@ export default function ProfilePage() {
     e.preventDefault()
     setLoading(true)
     setSavedSuccess(false)
+    setSaveError('')
 
     try {
       if (typeof window !== 'undefined') {
@@ -76,7 +78,6 @@ export default function ProfilePage() {
             id: user.id,
             user_id: user.id,
             full_name: fullName,
-            farm_name: farmName,
             phone_number: phoneNumber,
             avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
@@ -110,6 +111,7 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error(err)
+      setSaveError(err instanceof Error ? err.message : 'Failed to save profile. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -265,6 +267,16 @@ export default function ProfilePage() {
             <span>GalloTrack System Notice: Administrative identity credentials updated successfully.</span>
           </div>
           <span className="text-[10px] text-emerald-600 font-mono font-black dark:text-emerald-400">D4 CLUSTER SYNC</span>
+        </div>
+      )}
+
+      {saveError && (
+        <div className="bg-rose-50/90 border border-rose-200 text-rose-800 p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fadeIn dark:bg-rose-950/90 dark:border-rose-800 dark:text-rose-300">
+          <div className="flex items-center space-x-2">
+            <span className="w-6 h-6 bg-rose-200 rounded-full flex items-center justify-center text-rose-700 text-xs font-black dark:bg-rose-800 dark:text-rose-300">✕</span>
+            <span>{saveError}</span>
+          </div>
+          <button onClick={() => setSaveError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer dark:text-rose-400">✕</button>
         </div>
       )}
 

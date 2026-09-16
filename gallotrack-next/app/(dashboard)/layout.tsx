@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, User, Users, Bird, Swords, Settings, Shield, LogOut } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, Calendar, User, Users, Bird, Swords, Settings, Shield, LogOut } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { supabase } from '@/lib/registry';
@@ -15,6 +15,7 @@ const OWNER_NAV = [
   { href: '/profiling', label: 'Fowl Registry', icon: Dna },
   { href: '/catalog', label: 'Breeding Catalog', icon: Egg },
   { href: '/lineage', label: 'Lineage Directory', icon: TreePine },
+  { href: '/milestones', label: 'Milestones', icon: Calendar },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
 
@@ -23,6 +24,7 @@ const OWNER_MOBILE = [
   { href: '/profiling', label: 'Registry', icon: Dna },
   { href: '/catalog', label: 'Catalog', icon: Egg },
   { href: '/lineage', label: 'Lineage', icon: TreePine },
+  { href: '/milestones', label: 'Milestones', icon: Calendar },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 

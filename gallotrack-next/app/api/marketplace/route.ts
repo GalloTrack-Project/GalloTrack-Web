@@ -33,11 +33,20 @@ export async function GET(request: NextRequest) {
   const auth = await verifyActiveUser(supabase);
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 });
 
-  const { data: listings, error } = await supabase
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('user_id');
+
+  let query = supabase
     .from('marketplace_listings')
-    .select('*')
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false });
+    .select('*');
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  } else {
+    query = query.eq('status', 'approved');
+  }
+
+  const { data: listings, error } = await query.order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
