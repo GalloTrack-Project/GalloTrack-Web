@@ -170,7 +170,6 @@ export default function ProfilingPage() {
           opponentBreed={opponentBreed} setOpponentBreed={setOpponentBreed}
           matchLocation={matchLocation} setMatchLocation={setMatchLocation}
           matchType={matchType} setMatchType={setMatchType}
-          derbyMatchNumber={derbyMatchNumber} setDerbyMatchNumber={setDerbyMatchNumber}
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
           matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}

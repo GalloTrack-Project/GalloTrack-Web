@@ -19,8 +19,6 @@ type Props = {
   setMatchLocation: (v: string) => void;
   matchType: string;
   setMatchType: (v: string) => void;
-  derbyMatchNumber: number;
-  setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string;
   setMatchOutcome: (v: string) => void;
   matchPostFight: string;
@@ -40,7 +38,6 @@ export default function MatchForm({
   opponentBreed, setOpponentBreed,
   matchLocation, setMatchLocation,
   matchType, setMatchType,
-  derbyMatchNumber, setDerbyMatchNumber,
   matchOutcome, setMatchOutcome,
   matchPostFight, setMatchPostFight,
   matchVideoFile, setMatchVideoFile,
@@ -98,22 +95,20 @@ export default function MatchForm({
           </datalist>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Derby Match Number</label>
-          <select value={derbyMatchNumber} onChange={(e) => setDerbyMatchNumber(Number(e.target.value))} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <option key={n} value={n}>Match #{n}</option>
-            ))}
-          </select>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Match Type</label>
           <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
-            <option value="Hack Fight">Hack Fight</option>
-            <option value="Derby Match">Derby Match</option>
-            <option value="Main Fight">Main Fight</option>
-            <option value="Pot Fight">Pot Fight</option>
+            <optgroup label="Derby Match">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={`Derby Match #${n}`}>Derby Match #{n}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Other Match Types">
+              <option value="Hack Fight">Hack Fight</option>
+              <option value="Main Fight">Main Fight</option>
+              <option value="Pot Fight">Pot Fight</option>
+            </optgroup>
           </select>
         </div>
         <div>
