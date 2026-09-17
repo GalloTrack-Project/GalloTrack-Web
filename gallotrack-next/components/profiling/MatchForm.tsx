@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { POST_FIGHT_CONDITIONS } from '@/lib/helpers';
 
@@ -46,6 +46,18 @@ export default function MatchForm({
   matchVideoFile, setMatchVideoFile,
   handleAddMatchRecord,
 }: Props) {
+  const [matchTypeOpen, setMatchTypeOpen] = useState(false);
+  const matchTypeRef = useRef<HTMLDivElement>(null);
+  const MATCH_TYPE_OPTIONS = ['Hack Fight', 'Derby Match', 'Main Fight', 'Pot Fight'];
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (matchTypeRef.current && !matchTypeRef.current.contains(e.target as Node)) setMatchTypeOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-5 animate-fadeIn">
       <h3 className="font-black text-xs text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
@@ -107,14 +119,40 @@ export default function MatchForm({
             ))}
           </select>
         </div>
-        <div>
+        <div className="relative" ref={matchTypeRef}>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Match Type</label>
-          <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
-            <option value="Hack Fight">Hack Fight</option>
-            <option value="Derby Match">Derby Match</option>
-            <option value="Main Fight">Main Fight</option>
-            <option value="Pot Fight">Pot Fight</option>
-          </select>
+          <input
+            type="text"
+            value={matchType}
+            onChange={(e) => { setMatchType(e.target.value); setMatchTypeOpen(true); }}
+            onFocus={() => setMatchTypeOpen(true)}
+            className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all"
+            placeholder="Select or type match type..."
+            required
+          />
+          {matchTypeOpen && (
+            <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+              {MATCH_TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(matchType.toLowerCase())).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => { setMatchType(opt); setMatchTypeOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer ${
+                    matchType === opt
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+              {matchType && !MATCH_TYPE_OPTIONS.includes(matchType) && (
+                <div className="px-4 py-2 text-[10px] font-semibold text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-700">
+                  Custom: &quot;{matchType}&quot;
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Fight Outcome</label>
