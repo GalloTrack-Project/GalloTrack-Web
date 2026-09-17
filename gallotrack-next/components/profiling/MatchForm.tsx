@@ -113,10 +113,17 @@ export default function MatchForm({
             type="text"
             value={matchType}
             onChange={(e) => setMatchType(e.target.value)}
+            list="match-types"
             className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold"
-            placeholder="e.g., Derby Match, Hack Match"
+            placeholder="Select or type match type..."
             required
           />
+          <datalist id="match-types">
+            <option value="Hack Fight" />
+            <option value="Derby Match" />
+            <option value="Main Fight" />
+            <option value="Pot Fight" />
+          </datalist>
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Fight Outcome</label>
