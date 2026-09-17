@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { POST_FIGHT_CONDITIONS } from '@/lib/helpers';
 
@@ -30,6 +30,8 @@ type Props = {
   handleAddMatchRecord: (e: React.FormEvent) => void;
 };
 
+const MATCH_TYPE_OPTIONS = ['Hack Fight', 'Derby Match', 'Main Fight', 'Pot Fight'];
+
 export default function MatchForm({
   fowls,
   loading,
@@ -46,17 +48,17 @@ export default function MatchForm({
   matchVideoFile, setMatchVideoFile,
   handleAddMatchRecord,
 }: Props) {
-  const [matchTypeOpen, setMatchTypeOpen] = useState(false);
-  const matchTypeRef = useRef<HTMLDivElement>(null);
-  const MATCH_TYPE_OPTIONS = ['Hack Fight', 'Derby Match', 'Main Fight', 'Pot Fight'];
+  const [showCustomType, setShowCustomType] = useState(!MATCH_TYPE_OPTIONS.includes(matchType));
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (matchTypeRef.current && !matchTypeRef.current.contains(e.target as Node)) setMatchTypeOpen(false);
+  function handleMatchTypeSelect(value: string) {
+    if (value === '__custom__') {
+      setShowCustomType(true);
+      setMatchType('');
+    } else {
+      setShowCustomType(false);
+      setMatchType(value);
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }
 
   return (
     <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-5 animate-fadeIn">
@@ -119,39 +121,33 @@ export default function MatchForm({
             ))}
           </select>
         </div>
-        <div className="relative" ref={matchTypeRef}>
+        <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Match Type</label>
-          <input
-            type="text"
-            value={matchType}
-            onChange={(e) => { setMatchType(e.target.value); setMatchTypeOpen(true); }}
-            onFocus={() => setMatchTypeOpen(true)}
-            className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all"
-            placeholder="Select or type match type..."
-            required
-          />
-          {matchTypeOpen && (
-            <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-              {MATCH_TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(matchType.toLowerCase())).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => { setMatchType(opt); setMatchTypeOpen(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer ${
-                    matchType === opt
-                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-              {matchType && !MATCH_TYPE_OPTIONS.includes(matchType) && (
-                <div className="px-4 py-2 text-[10px] font-semibold text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-700">
-                  Custom: &quot;{matchType}&quot;
-                </div>
-              )}
+          {showCustomType ? (
+            <div className="space-y-1.5">
+              <input
+                type="text"
+                value={matchType}
+                onChange={(e) => setMatchType(e.target.value)}
+                className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none focus:border-emerald-500 transition-all"
+                placeholder="Type custom match type..."
+                required
+              />
+              <button type="button" onClick={() => { setShowCustomType(false); setMatchType('Derby Match'); }} className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                ← Back to dropdown
+              </button>
             </div>
+          ) : (
+            <select
+              value={matchType}
+              onChange={(e) => handleMatchTypeSelect(e.target.value)}
+              className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all"
+            >
+              {MATCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+              <option value="__custom__">Other (Type Below)...</option>
+            </select>
           )}
         </div>
         <div>
