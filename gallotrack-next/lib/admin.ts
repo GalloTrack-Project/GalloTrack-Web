@@ -11,10 +11,6 @@ export interface AdminSettings {
   auto_approve_users?: boolean;
   public_fowl_data?: boolean;
   default_user_role?: string;
-  farm_name?: string;
-  farm_location?: string;
-  farm_description?: string;
-  contact_number?: string;
   default_match_type?: string;
   default_arena?: string;
   weight_unit?: 'kg' | 'lbs';
@@ -171,10 +167,6 @@ export async function fetchSystemSettings(): Promise<AdminSettings> {
     auto_approve_users: raw.auto_approve_users !== false,
     public_fowl_data: raw.public_fowl_data === true,
     default_user_role: raw.default_user_role || 'owner',
-    farm_name: raw.farm_name || '',
-    farm_location: raw.farm_location || '',
-    farm_description: raw.farm_description || '',
-    contact_number: raw.contact_number || '',
     default_match_type: raw.default_match_type || '',
     default_arena: raw.default_arena || '',
     weight_unit: raw.weight_unit || 'kg',

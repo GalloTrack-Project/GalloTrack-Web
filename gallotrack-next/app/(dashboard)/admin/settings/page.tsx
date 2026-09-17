@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTheme } from 'next-themes';
 import { adminGuard, fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
 import type { AdminProfileRow, AdminSettings } from '@/lib/admin';
-import { Shield, Settings, Bell, Wheat, Users, ArrowRightLeft, HardDrive, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, FileJson } from 'lucide-react';
+import { Shield, Settings, Bell, Users, ArrowRightLeft, HardDrive, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, FileJson } from 'lucide-react';
 
-type Tab = 'general' | 'alerts' | 'farm' | 'users' | 'transfer' | 'backup';
+type Tab = 'general' | 'alerts' | 'users' | 'transfer' | 'backup';
 
 const defaultSettings: AdminSettings = {
   system_name: 'GalloTrack',
@@ -26,10 +27,6 @@ const defaultSettings: AdminSettings = {
   overdue_alerts: true,
   auto_calculate_age: true,
   theme: 'dark',
-  farm_name: '',
-  farm_location: '',
-  farm_description: '',
-  contact_number: '',
 };
 
 const inputClass =
@@ -51,7 +48,6 @@ function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: st
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <Settings size={14} /> },
   { id: 'alerts', label: 'Alerts', icon: <Bell size={14} /> },
-  { id: 'farm', label: 'Farm', icon: <Wheat size={14} /> },
   { id: 'users', label: 'Users', icon: <Users size={14} /> },
   { id: 'transfer', label: 'Transfer', icon: <ArrowRightLeft size={14} /> },
   { id: 'backup', label: 'Backup', icon: <HardDrive size={14} /> },
@@ -64,6 +60,7 @@ export default function AdminSettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
   const [activeTab, setActiveTab] = useState<Tab>('general');
+  const { setTheme } = useTheme();
 
   const [transferEmail, setTransferEmail] = useState('');
   const [transferring, setTransferring] = useState(false);
@@ -84,6 +81,7 @@ export default function AdminSettingsPage() {
       try {
         const s = await fetchSystemSettings();
         setSettings({ ...defaultSettings, ...s });
+        setTheme(s.theme || 'dark');
       } catch (err) {
         setMessage({ type: 'error', text: `Failed to load settings: ${(err as Error).message}` });
       } finally {
@@ -98,6 +96,7 @@ export default function AdminSettingsPage() {
     setMessage(null);
     try {
       await updateSystemSettings(settings);
+      setTheme(settings.theme || 'dark');
       setMessage({ type: 'success', text: 'System configuration saved successfully.' });
       window.setTimeout(() => setMessage(null), 3000);
     } catch (err) {
@@ -251,27 +250,6 @@ export default function AdminSettingsPage() {
             <ToggleRow label="Auto-Calculate Age" desc="Automatically compute fowl age from birthdate" checked={settings.auto_calculate_age !== false} onChange={(v) => update('auto_calculate_age', v)} />
             <ToggleRow label="Cloud Auditing Logs" desc="Record transaction updates to cluster node registries" checked={settings.cloud_logs !== false} onChange={(v) => update('cloud_logs', v)} />
             <ToggleRow label="Event Pop-up Alerts" desc="Enable dynamic pop-up notification frames" checked={settings.event_alerts !== false} onChange={(v) => update('event_alerts', v)} />
-          </div>
-        );
-      case 'farm':
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className={labelClass}>Farm Name</label>
-              <input type="text" value={settings.farm_name || ''} onChange={(e) => update('farm_name', e.target.value)} className={inputClass} placeholder="e.g., GalloTrack Farm" />
-            </div>
-            <div>
-              <label className={labelClass}>Farm Location</label>
-              <input type="text" value={settings.farm_location || ''} onChange={(e) => update('farm_location', e.target.value)} className={inputClass} placeholder="e.g., Manila, Philippines" />
-            </div>
-            <div>
-              <label className={labelClass}>Farm Description</label>
-              <textarea value={settings.farm_description || ''} onChange={(e) => update('farm_description', e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Brief description of the farm" />
-            </div>
-            <div>
-              <label className={labelClass}>Contact Number</label>
-              <input type="text" value={settings.contact_number || ''} onChange={(e) => update('contact_number', e.target.value)} className={inputClass} placeholder="e.g., +63 917 123 4567" />
-            </div>
           </div>
         );
       case 'users':

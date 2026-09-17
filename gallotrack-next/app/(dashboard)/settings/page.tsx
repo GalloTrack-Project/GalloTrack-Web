@@ -5,6 +5,13 @@ import { supabase } from '@/lib/registry'
 import type { AdminSettings } from '@/lib/admin'
 import { User, Home, Settings, Bell, Database, Monitor, X } from 'lucide-react'
 
+interface UserSettings extends AdminSettings {
+  farm_name?: string
+  farm_location?: string
+  farm_description?: string
+  contact_number?: string
+}
+
 type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'data' | 'system'
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -71,7 +78,7 @@ function SectionCard({ title, description, children }: { title: string; descript
 export default function SettingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('account')
-  const [settings, setSettings] = useState<AdminSettings>({
+  const [settings, setSettings] = useState<UserSettings>({
     default_strain: 'Sweater',
     cloud_logs: true,
     event_alerts: true,
@@ -94,7 +101,7 @@ export default function SettingsPage() {
   const [changingPw, setChangingPw] = useState(false)
   const [pwMessage, setPwMessage] = useState('')
 
-  const update = (key: keyof AdminSettings, value: unknown) => setSettings((prev) => ({ ...prev, [key]: value }))
+  const update = (key: keyof UserSettings, value: unknown) => setSettings((prev) => ({ ...prev, [key]: value }))
 
   const STORAGE_KEY = 'gallotrack_user_preferences'
 

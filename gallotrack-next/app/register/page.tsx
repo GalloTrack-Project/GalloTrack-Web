@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, fullNameFromMetadata } from '@/lib/registry';
@@ -69,6 +69,23 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [systemBlocked, setSystemBlocked] = useState(false);
+  const [maintenanceMsg, setMaintenanceMsg] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/system-settings')
+      .then((r) => r.json())
+      .then((s) => {
+        if (s.allow_registrations === false) {
+          setSystemBlocked(true);
+          setError('New registrations are currently disabled by the administrator.');
+        }
+        if (s.system_status === 'Maintenance') {
+          setMaintenanceMsg(s.maintenance_message || 'System is currently under maintenance. Registration may be unavailable.');
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const validateStep1 = () => {
     if (!firstName.trim() || !lastName.trim()) {
@@ -191,6 +208,10 @@ export default function RegisterPage() {
             <h1 className="text-lg sm:text-xl font-black text-emerald-400 tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
             <p className="text-[10px] text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
           </div>
+
+          {maintenanceMsg && (
+            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl">{maintenanceMsg}</div>
+          )}
 
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-2 pt-2">
@@ -340,7 +361,7 @@ export default function RegisterPage() {
               <button
                 type={step === 3 ? 'submit' : 'button'}
                 onClick={step < 3 ? handleNext : undefined}
-                disabled={loading}
+                disabled={loading || systemBlocked}
                 className="group flex-1 relative bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>

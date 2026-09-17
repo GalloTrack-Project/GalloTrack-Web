@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGaloTrack } from '@/lib/context';
@@ -34,6 +34,19 @@ export default function LoginPage() {
     forgotLoading,
     handleSendResetLink,
   } = store;
+
+  const [maintenanceMsg, setMaintenanceMsg] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/system-settings')
+      .then((r) => r.json())
+      .then((s) => {
+        if (s.system_status === 'Maintenance') {
+          setMaintenanceMsg(s.maintenance_message || 'System is currently under maintenance. Some features may be unavailable.');
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const redirectPath = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('redirect')
@@ -151,6 +164,10 @@ export default function LoginPage() {
             <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Welcome back</h2>
             <p className="text-sm text-muted-foreground font-medium">Sign in to your account to continue</p>
           </div>
+
+          {maintenanceMsg && (
+            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl mb-5">{maintenanceMsg}</div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>

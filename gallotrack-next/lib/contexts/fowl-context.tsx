@@ -278,10 +278,24 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
   } = formState;
 
+  // Load system defaults for match type and arena on mount
+  useEffect(() => {
+    fetch('/api/admin/system-settings')
+      .then((r) => r.json())
+      .then((s) => {
+        if (s.default_match_type && matchType === 'Derby Match') setMatchType(s.default_match_type);
+        if (s.default_arena && !matchLocation) setMatchLocation(s.default_arena);
+        if (s.auto_calculate_age === false) setAutoCalcAge(false);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Core data state ──
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [autoCalcAge, setAutoCalcAge] = useState(true);
 
   // ── Derived lists ──
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
@@ -438,7 +452,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         return;
       }
 
-      const autoParts = getAgePartsHelper(newBirthdate);
+      const autoParts = autoCalcAge ? getAgePartsHelper(newBirthdate) : null;
 
       const payload = {
         user_id: activeUserId,
@@ -677,7 +691,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const editDamGen = generationOfNameHelper(editDam, fowls, new Map<string, number>(), new Set<string>());
       const editHasAnyParent = editSire.trim() !== '' || editDam.trim() !== '';
       const calculatedBloodline = generationPurity(editHasAnyParent ? Math.max(editSireGen, editDamGen) + 1 : 0);
-      const editAutoParts = getAgePartsHelper(editBirthdate);
+      const editAutoParts = autoCalcAge ? getAgePartsHelper(editBirthdate) : null;
 
       const payload = {
         name: sanitizeInput(editName),

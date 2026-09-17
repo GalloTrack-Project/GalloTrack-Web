@@ -157,6 +157,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const meta = (user.user_metadata || {}) as { full_name?: string; farm_name?: string; first_name?: string; middle_name?: string; last_name?: string; contact_number?: string };
     const fullName = meta.full_name || fallbackName;
     const farmName = meta.farm_name || '';
+
+    let defaultRole = 'owner';
+    let autoApprove = true;
+    try {
+      const res = await fetch('/api/admin/system-settings');
+      const s = await res.json();
+      if (s.default_user_role) defaultRole = s.default_user_role;
+      if (s.allow_registrations === false) autoApprove = false;
+    } catch { /* use defaults */ }
+
     const { error: insertErr } = await supabase.from('profiles').insert([{
       id: user.id,
       user_id: user.id,
@@ -168,8 +178,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       farm_name: farmName,
       phone_number: meta.contact_number || '09123456789',
       avatar_url: '',
-      role: 'owner',
-      is_active: true,
+      role: defaultRole,
+      is_admin: defaultRole === 'admin',
+      is_active: autoApprove,
     }]);
     if (!insertErr && farmName) {
       await supabase.from('farms').insert([{
