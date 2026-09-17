@@ -109,21 +109,12 @@ export default function MatchForm({
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Match Type</label>
-          <input
-            type="text"
-            value={matchType}
-            onChange={(e) => setMatchType(e.target.value)}
-            list="match-types"
-            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold"
-            placeholder="Select or type match type..."
-            required
-          />
-          <datalist id="match-types">
-            <option value="Hack Fight" />
-            <option value="Derby Match" />
-            <option value="Main Fight" />
-            <option value="Pot Fight" />
-          </datalist>
+          <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
+            <option value="Hack Fight">Hack Fight</option>
+            <option value="Derby Match">Derby Match</option>
+            <option value="Main Fight">Main Fight</option>
+            <option value="Pot Fight">Pot Fight</option>
+          </select>
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Fight Outcome</label>
