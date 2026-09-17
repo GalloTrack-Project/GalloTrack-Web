@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { POST_FIGHT_CONDITIONS } from '@/lib/helpers';
 
@@ -30,8 +30,6 @@ type Props = {
   handleAddMatchRecord: (e: React.FormEvent) => void;
 };
 
-const MATCH_TYPE_OPTIONS = ['Hack Fight', 'Derby Match', 'Main Fight', 'Pot Fight'];
-
 export default function MatchForm({
   fowls,
   loading,
@@ -48,18 +46,6 @@ export default function MatchForm({
   matchVideoFile, setMatchVideoFile,
   handleAddMatchRecord,
 }: Props) {
-  const [showCustomType, setShowCustomType] = useState(!MATCH_TYPE_OPTIONS.includes(matchType));
-
-  function handleMatchTypeSelect(value: string) {
-    if (value === '__custom__') {
-      setShowCustomType(true);
-      setMatchType('');
-    } else {
-      setShowCustomType(false);
-      setMatchType(value);
-    }
-  }
-
   return (
     <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-5 animate-fadeIn">
       <h3 className="font-black text-xs text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
@@ -123,32 +109,12 @@ export default function MatchForm({
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Match Type</label>
-          {showCustomType ? (
-            <div className="space-y-1.5">
-              <input
-                type="text"
-                value={matchType}
-                onChange={(e) => setMatchType(e.target.value)}
-                className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none focus:border-emerald-500 transition-all"
-                placeholder="Type custom match type..."
-                required
-              />
-              <button type="button" onClick={() => { setShowCustomType(false); setMatchType('Derby Match'); }} className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
-                ← Back to dropdown
-              </button>
-            </div>
-          ) : (
-            <select
-              value={matchType}
-              onChange={(e) => handleMatchTypeSelect(e.target.value)}
-              className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all"
-            >
-              {MATCH_TYPE_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-              <option value="__custom__">Other (Type Below)...</option>
-            </select>
-          )}
+          <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
+            <option value="Hack Fight">Hack Fight</option>
+            <option value="Derby Match">Derby Match</option>
+            <option value="Main Fight">Main Fight</option>
+            <option value="Pot Fight">Pot Fight</option>
+          </select>
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Fight Outcome</label>
