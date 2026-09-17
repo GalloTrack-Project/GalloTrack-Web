@@ -29,7 +29,6 @@ async function verifyActiveUser(supabaseClient: SupabaseClient) {
 }
 
 const VALID_OUTCOMES = ['win', 'loss', 'draw', 'no contest'];
-const VALID_TYPES = ['Derby Match', 'Hack Match', '2-Cock Derby', '3-Cock Derby', '4-Cock Derby', '5-Cock Derby', 'Special Championship', 'Regional Circuit', 'Main Event / Solo'];
 const VALID_POST_FIGHT = [
   'Fit / Recovered',
   'Minor Injury',
@@ -84,10 +83,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Invalid outcome. Must be one of: ${VALID_OUTCOMES.join(', ')}` }, { status: 400 });
     }
 
-    if (body.type && !VALID_TYPES.includes(body.type)) {
-      return NextResponse.json({ error: `Invalid match type. Must be one of: ${VALID_TYPES.join(', ')}` }, { status: 400 });
-    }
-
     if (body.post_fight_condition && !VALID_POST_FIGHT.includes(body.post_fight_condition)) {
       return NextResponse.json({ error: `Invalid post-fight condition. Must be one of: ${VALID_POST_FIGHT.join(', ')}` }, { status: 400 });
     }
@@ -111,6 +106,7 @@ export async function POST(request: NextRequest) {
       opponent_breed: body.opponent_breed ? sanitize(String(body.opponent_breed)) : '',
       location: body.location ? sanitize(String(body.location)) : 'Local Breeding Yard',
       type: body.type || 'Derby Match',
+      derby_match_number: body.derby_match_number || 1,
       outcome: body.outcome || 'Win',
       status: 'Verified',
       post_fight_condition: body.post_fight_condition || 'Fit / Recovered',

@@ -325,17 +325,7 @@ export default function SettingsPage() {
             </SectionCard>
             <SectionCard title="Default Match Settings" description="Pre-filled values when logging new matches">
               <Field label="Default Match Type">
-                <SelectInput value={settings.default_match_type || 'Derby Match'} onChange={(v) => update('default_match_type', v)} options={[
-                  { value: 'Derby Match', label: 'Derby Match' },
-                  { value: 'Hack Match', label: 'Hack Match' },
-                  { value: '2-Cock Derby', label: '2-Cock Derby' },
-                  { value: '3-Cock Derby', label: '3-Cock Derby' },
-                  { value: '4-Cock Derby', label: '4-Cock Derby' },
-                  { value: '5-Cock Derby', label: '5-Cock Derby' },
-                  { value: 'Special Championship', label: 'Special Championship' },
-                  { value: 'Regional Circuit', label: 'Regional Circuit' },
-                  { value: 'Main Event / Solo', label: 'Main Event / Solo' },
-                ]} />
+                <TextInput value={settings.default_match_type || ''} onChange={(v) => update('default_match_type', v)} placeholder="e.g. Derby Match, Hack Match" />
               </Field>
               <Field label="Default Arena" description="Pre-filled arena location">
                 <TextInput value={settings.default_arena || ''} onChange={(v) => update('default_arena', v)} placeholder="e.g. Dingle Arena" />

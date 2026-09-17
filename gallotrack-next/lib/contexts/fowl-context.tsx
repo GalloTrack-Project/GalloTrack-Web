@@ -85,6 +85,7 @@ interface FowlContextValue {
   opponentBreed: string; setOpponentBreed: (v: string) => void;
   matchLocation: string; setMatchLocation: (v: string) => void;
   matchType: string; setMatchType: (v: string) => void;
+  derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string; setMatchOutcome: (v: string) => void;
   matchPostFight: string; setMatchPostFight: (v: string) => void;
   matchVideoFile: File | null; setMatchVideoFile: (f: File | null) => void;
@@ -254,7 +255,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     selectedFowlForMatch, setSelectedFowlForMatch,
     matchDate, setMatchDate, opponentName, setOpponentName,
     opponentBreed, setOpponentBreed, matchLocation, setMatchLocation,
-    matchType, setMatchType, matchOutcome, setMatchOutcome,
+    matchType, setMatchType, derbyMatchNumber, setDerbyMatchNumber,
+    matchOutcome, setMatchOutcome,
     matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
     matchOption, setMatchOption, betType, setBetType,
@@ -535,6 +537,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         opponent_breed: sanitizeInput(opponentBreed) || '',
         location: sanitizeInput(matchLocation) || 'Local Breeding Yard',
         type: matchType,
+        derby_match_number: derbyMatchNumber,
         outcome: matchOutcome,
         status: 'Verified',
         post_fight_condition: matchPostFight,
@@ -567,7 +570,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchOutcome, matchPostFight, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, derbyMatchNumber, matchOutcome, matchPostFight, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;

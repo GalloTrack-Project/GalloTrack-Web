@@ -38,6 +38,7 @@ interface FowlFormStateContextValue {
   opponentBreed: string; setOpponentBreed: (v: string) => void;
   matchLocation: string; setMatchLocation: (v: string) => void;
   matchType: string; setMatchType: (v: string) => void;
+  derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string; setMatchOutcome: (v: string) => void;
   matchPostFight: string; setMatchPostFight: (v: string) => void;
   matchVideoFile: File | null; setMatchVideoFile: (f: File | null) => void;
@@ -129,6 +130,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [opponentBreed, setOpponentBreed] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
   const [matchType, setMatchType] = useState('Derby Match');
+  const [derbyMatchNumber, setDerbyMatchNumber] = useState(1);
   const [matchOutcome, setMatchOutcome] = useState('Win');
   const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
   const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
@@ -241,6 +243,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     matchDate, setMatchDate,
     opponentName, setOpponentName, opponentBreed, setOpponentBreed,
     matchLocation, setMatchLocation, matchType, setMatchType,
+    derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
     matchOption, setMatchOption, betType, setBetType,

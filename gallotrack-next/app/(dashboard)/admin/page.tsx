@@ -7,7 +7,8 @@ import {
   deleteUserRecords,
   fetchAllProfiles,
   profileDisplayName,
-  setUserActive,
+  setAccountStatus,
+  setUserVerified,
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
@@ -15,18 +16,18 @@ import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, K
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
 
-interface FowlRecord {
-  id: string;
-  name: string;
-  breed: string;
-  gender: string;
-  growth_stage: string;
-  birthdate: string;
-  status: string;
-  created_at: string;
-  sire: string;
-  dam: string;
-  image_url: string;
+interface FarmDetails {
+  farm_name?: string;
+  farm_location?: string;
+  farm_description?: string;
+  contact_number?: string;
+  created_at?: string;
+}
+
+function getAccountStatus(user: AdminProfileRow): 'active' | 'suspended' | 'deactivated' {
+  if (user.account_status === 'suspended') return 'suspended';
+  if (user.account_status === 'deactivated' || user.is_active === false) return 'deactivated';
+  return 'active';
 }
 
 export default function AdminPanelPage() {
@@ -39,10 +40,10 @@ export default function AdminPanelPage() {
   const [toast, setToast] = useState<ToastState>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'owner'>('all');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'deactivated'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended' | 'deactivated'>('all');
   const [viewUser, setViewUser] = useState<AdminProfileRow | null>(null);
-  const [viewUserFowls, setViewUserFowls] = useState<FowlRecord[]>([]);
-  const [loadingFowls, setLoadingFowls] = useState(false);
+  const [viewUserFarm, setViewUserFarm] = useState<FarmDetails | null>(null);
+  const [loadingFarm, setLoadingFarm] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
@@ -78,6 +79,8 @@ export default function AdminPanelPage() {
             role: u.profile?.role || 'owner',
             is_admin: u.profile?.is_admin || false,
             is_active: u.profile?.is_active !== false,
+            is_verified: u.profile?.is_verified ?? null,
+            account_status: u.profile?.account_status ?? null,
             created_at: u.created_at,
             last_sign_in_at: u.last_sign_in_at,
             email_confirmed_at: u.email_confirmed_at,
@@ -90,19 +93,35 @@ export default function AdminPanelPage() {
     }
   }, [showToast]);
 
-  const loadUserFowls = useCallback(async (userId: string) => {
-    setLoadingFowls(true);
+  const loadUserFarm = useCallback(async (userId: string) => {
+    setLoadingFarm(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) return;
       const res = await fetch(`/api/admin/fowls?user_id=${userId}`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
-        const { fowls } = await res.json();
-        setViewUserFowls(fowls);
+        const data = await res.json();
+        if (data.farm) {
+          setViewUserFarm({
+            farm_name: data.farm.farm_name || data.farm.name,
+            farm_location: data.farm.farm_location || data.farm.location,
+            farm_description: data.farm.farm_description || data.farm.description,
+            contact_number: data.farm.contact_number,
+            created_at: data.farm.created_at,
+          });
+        } else if (data.farm_name || data.farm_location || data.farm_description) {
+          setViewUserFarm({
+            farm_name: data.farm_name,
+            farm_location: data.farm_location,
+            farm_description: data.farm_description,
+            contact_number: data.contact_number,
+            created_at: data.created_at,
+          });
+        }
       }
     } catch { /* non-critical */ } finally {
-      setLoadingFowls(false);
+      setLoadingFarm(false);
     }
   }, []);
 
@@ -145,22 +164,44 @@ export default function AdminPanelPage() {
       }
       if (filterRole === 'admin' && !p.is_admin && p.role !== 'admin') return false;
       if (filterRole === 'owner' && (p.is_admin || p.role === 'admin')) return false;
-      if (filterStatus === 'active' && p.is_active === false) return false;
-      if (filterStatus === 'deactivated' && p.is_active !== false) return false;
+      const status = getAccountStatus(p);
+      if (filterStatus === 'active' && status !== 'active') return false;
+      if (filterStatus === 'suspended' && status !== 'suspended') return false;
+      if (filterStatus === 'deactivated' && status !== 'deactivated') return false;
       return true;
     });
   }, [profiles, searchQuery, filterRole, filterStatus]);
 
-  const handleToggleActive = async (user: AdminProfileRow) => {
+  const handleSetStatus = async (user: AdminProfileRow, status: 'active' | 'suspended' | 'deactivated') => {
     setActionId(user.id);
     try {
-      await setUserActive(user.id, !user.is_active);
+      await setAccountStatus(user.id, status);
       setProfiles((prev) =>
-        prev.map((p) => (p.id === user.id ? { ...p, is_active: !user.is_active } : p))
+        prev.map((p) =>
+          p.id === user.id
+            ? { ...p, account_status: status, is_active: status === 'active' }
+            : p
+        )
       );
-      showToast('success', `Successfully ${user.is_active ? 'deactivated' : 'activated'} ${profileDisplayName(user)}`);
+      showToast('success', `Successfully ${status === 'active' ? 'activated' : status === 'suspended' ? 'suspended' : 'deactivated'} ${profileDisplayName(user)}`);
     } catch (err) {
       showToast('error', `Failed to update status: ${(err as Error).message}`);
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleToggleVerified = async (user: AdminProfileRow) => {
+    setActionId(user.id);
+    try {
+      const newVerified = !user.is_verified;
+      await setUserVerified(user.id, newVerified);
+      setProfiles((prev) =>
+        prev.map((p) => (p.id === user.id ? { ...p, is_verified: newVerified } : p))
+      );
+      showToast('success', `Successfully ${newVerified ? 'verified' : 'unverified'} ${profileDisplayName(user)}`);
+    } catch (err) {
+      showToast('error', `Failed to update verification: ${(err as Error).message}`);
     } finally {
       setActionId(null);
     }
@@ -193,8 +234,10 @@ export default function AdminPanelPage() {
   if (!adminProfile) return null;
 
   const total = profiles.length;
-  const active = profiles.filter((p) => p.is_active !== false).length;
-  const deactivated = total - active;
+  const active = profiles.filter((p) => getAccountStatus(p) === 'active').length;
+  const suspended = profiles.filter((p) => getAccountStatus(p) === 'suspended').length;
+  const deactivated = profiles.filter((p) => getAccountStatus(p) === 'deactivated').length;
+  const verified = profiles.filter((p) => p.is_verified === true).length;
   const admins = profiles.filter((p) => p.is_admin || p.role === 'admin').length;
 
   const statCard = (label: string, value: number, accent: string, icon: React.ReactNode) => (
@@ -207,11 +250,22 @@ export default function AdminPanelPage() {
     </div>
   );
 
-  const statusBadge = (user: AdminProfileRow) =>
-    user.is_active === false ? (
-      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400">Deactivated</span>
+  const statusBadge = (user: AdminProfileRow) => {
+    const status = getAccountStatus(user);
+    if (status === 'suspended') {
+      return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">Suspended</span>;
+    }
+    if (status === 'deactivated') {
+      return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400">Deactivated</span>;
+    }
+    return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">Active</span>;
+  };
+
+  const verificationBadge = (user: AdminProfileRow) =>
+    user.is_verified ? (
+      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">✓ Verified</span>
     ) : (
-      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">Active</span>
+      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-500/15 border border-slate-500/30 text-slate-400">✕ Unverified</span>
     );
 
   const roleBadge = (user: AdminProfileRow) =>
@@ -227,7 +281,6 @@ export default function AdminPanelPage() {
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-        {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
@@ -249,15 +302,14 @@ export default function AdminPanelPage() {
           </div>
         )}
 
-        {/* STATS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">
           {statCard('Total Users', total, 'text-amber-400', <Users size={20} />)}
           {statCard('Active', active, 'text-emerald-400', <CheckCircle size={20} />)}
+          {statCard('Suspended', suspended, 'text-amber-400', <Ban size={20} />)}
           {statCard('Deactivated', deactivated, 'text-rose-400', <Ban size={20} />)}
-          {statCard('Admins', admins, 'text-sky-400', <Shield size={20} />)}
+          {statCard('Verified', verified, 'text-sky-400', <Shield size={20} />)}
         </div>
 
-        {/* SEARCH & FILTERS */}
         <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
@@ -282,18 +334,18 @@ export default function AdminPanelPage() {
               </select>
               <select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'deactivated')}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'suspended' | 'deactivated')}
                 className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active Only</option>
+                <option value="suspended">Suspended Only</option>
                 <option value="deactivated">Deactivated Only</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* USER CARDS - MOBILE */}
         <div className="md:hidden space-y-3 mb-6">
           {filteredProfiles.length === 0 && (
             <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-8 text-center">
@@ -315,6 +367,7 @@ export default function AdminPanelPage() {
                 <div className="flex gap-1.5">
                   {roleBadge(user)}
                   {statusBadge(user)}
+                  {verificationBadge(user)}
                 </div>
               </div>
               <div className="text-[10px] text-muted-foreground font-medium mb-3">
@@ -328,24 +381,48 @@ export default function AdminPanelPage() {
                   </>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  disabled={actionId === user.id || user.id === adminProfile.id}
+                  onClick={() => {
+                    const status = getAccountStatus(user);
+                    const nextStatus = status === 'active' ? 'suspended' : 'active';
+                    handleSetStatus(user, nextStatus);
+                  }}
+                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                    getAccountStatus(user) === 'active'
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                  }`}
+                >
+                  {actionId === user.id ? '...' : getAccountStatus(user) === 'active' ? 'Suspend' : 'Activate'}
+                </button>
                 <button
                   type="button"
                   disabled={actionId === user.id}
-                  onClick={() => handleToggleActive(user)}
-                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
-                    user.is_active === false
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
-                      : 'bg-rose-500/10 border-rose-500/40 text-rose-400 hover:bg-rose-500/20'
+                  onClick={() => handleToggleVerified(user)}
+                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                    user.is_verified
+                      ? 'bg-slate-500/10 border-slate-500/40 text-slate-400 hover:bg-slate-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
                   }`}
                 >
-                  {actionId === user.id ? '...' : user.is_active === false ? 'Activate' : 'Deactivate'}
+                  {actionId === user.id ? '...' : user.is_verified ? 'Unverify' : 'Verify'}
+                </button>
+                <button
+                  type="button"
+                  disabled={resettingPassword}
+                  onClick={() => handleResetPassword(user.email || '')}
+                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {resettingPassword ? '...' : 'Reset'}
                 </button>
                 <button
                   type="button"
                   disabled={actionId === user.id || user.id === adminProfile.id}
                   onClick={() => setPendingDelete(user)}
-                  className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Delete
                 </button>
@@ -354,7 +431,6 @@ export default function AdminPanelPage() {
           ))}
         </div>
 
-        {/* REGISTRY TABLE - DESKTOP */}
         <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Registered Farm Owners</h2>
@@ -362,13 +438,14 @@ export default function AdminPanelPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[760px]">
+            <table className="w-full text-left min-w-[960px]">
               <thead>
                 <tr className="text-[9px] font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">
                   <th className="px-4 sm:px-5 py-3">Owner</th>
                   <th className="px-4 py-3">Farm / Contact</th>
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Verified</th>
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -376,7 +453,7 @@ export default function AdminPanelPage() {
               <tbody>
                 {filteredProfiles.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">
+                    <td colSpan={7} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">
                       No users found matching your filters.
                     </td>
                   </tr>
@@ -402,28 +479,53 @@ export default function AdminPanelPage() {
                     </td>
                     <td className="px-4 py-3.5">{roleBadge(user)}</td>
                     <td className="px-4 py-3.5">{statusBadge(user)}</td>
+                    <td className="px-4 py-3.5">{verificationBadge(user)}</td>
                     <td className="px-4 py-3.5 text-[10px] text-muted-foreground font-semibold whitespace-nowrap">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          disabled={actionId === user.id || user.id === adminProfile.id}
+                          onClick={() => {
+                            const status = getAccountStatus(user);
+                            const nextStatus = status === 'active' ? 'suspended' : 'active';
+                            handleSetStatus(user, nextStatus);
+                          }}
+                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                            getAccountStatus(user) === 'active'
+                              ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
+                              : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                          }`}
+                        >
+                          {actionId === user.id ? '...' : getAccountStatus(user) === 'active' ? 'Suspend' : 'Activate'}
+                        </button>
                         <button
                           type="button"
                           disabled={actionId === user.id}
-                          onClick={() => handleToggleActive(user)}
-                          className={`text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
-                            user.is_active === false
-                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
-                              : 'bg-rose-500/10 border-rose-500/40 text-rose-400 hover:bg-rose-500/20'
+                          onClick={() => handleToggleVerified(user)}
+                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                            user.is_verified
+                              ? 'bg-slate-500/10 border-slate-500/40 text-slate-400 hover:bg-slate-500/20'
+                              : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
                           }`}
                         >
-                          {actionId === user.id ? '...' : user.is_active === false ? 'Activate' : 'Deactivate'}
+                          {actionId === user.id ? '...' : user.is_verified ? 'Unverify' : 'Verify'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={resettingPassword}
+                          onClick={() => handleResetPassword(user.email || '')}
+                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          {resettingPassword ? '...' : 'Reset'}
                         </button>
                         <button
                           type="button"
                           disabled={actionId === user.id || user.id === adminProfile.id}
                           onClick={() => setPendingDelete(user)}
-                          className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Delete
                         </button>
@@ -441,7 +543,6 @@ export default function AdminPanelPage() {
         </p>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
       {pendingDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
@@ -483,13 +584,12 @@ export default function AdminPanelPage() {
         </div>
       )}
 
-      {/* USER DETAIL MODAL */}
       {viewUser && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setViewUser(null); setViewUserFowls([]); }}>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setViewUser(null); setViewUserFarm(null); }}>
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
               <h3 className="text-sm font-black text-card-foreground">User Details</h3>
-              <button type="button" onClick={() => { setViewUser(null); setViewUserFowls([]); }} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer"><X size={14} /></button>
+              <button type="button" onClick={() => { setViewUser(null); setViewUserFarm(null); }} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer"><X size={14} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-3">
@@ -504,6 +604,7 @@ export default function AdminPanelPage() {
                   <div className="flex gap-1.5 mt-1">
                     {roleBadge(viewUser)}
                     {statusBadge(viewUser)}
+                    {verificationBadge(viewUser)}
                   </div>
                 </div>
               </div>
@@ -511,36 +612,78 @@ export default function AdminPanelPage() {
               <div className="grid grid-cols-2 gap-3 text-[10px]">
                 <div className="bg-muted/25 rounded-xl p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Farm</p>
-                  <p className="font-bold text-card-foreground">{viewUser.farm_name || '—'}</p>
+                  <p className="font-bold text-card-foreground">{viewUser.farm_name || viewUserFarm?.farm_name || '—'}</p>
                 </div>
                 <div className="bg-muted/25 rounded-xl p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Contact</p>
-                  <p className="font-bold text-card-foreground">{viewUser.contact_number || viewUser.phone_number || '—'}</p>
+                  <p className="font-bold text-card-foreground">{viewUser.contact_number || viewUser.phone_number || viewUserFarm?.contact_number || '—'}</p>
                 </div>
                 <div className="bg-muted/25 rounded-xl p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Joined</p>
                   <p className="font-bold text-card-foreground">{viewUser.created_at ? new Date(viewUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</p>
                 </div>
                 <div className="bg-muted/25 rounded-xl p-3">
-                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Email Status</p>
-                  <p className={`font-bold ${viewUser.email_confirmed_at ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {viewUser.email_confirmed_at ? '✓ Verified' : '✕ Unverified'}
-                  </p>
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Last Sign In</p>
+                  <p className="font-bold text-card-foreground">{viewUser.last_sign_in_at ? new Date(viewUser.last_sign_in_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</p>
+                </div>
+                <div className="bg-muted/25 rounded-xl p-3">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Account Status</p>
+                  <p className="font-bold">{statusBadge(viewUser)}</p>
+                </div>
+                <div className="bg-muted/25 rounded-xl p-3">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Verification</p>
+                  <p className="font-bold">{verificationBadge(viewUser)}</p>
                 </div>
               </div>
+
+              {viewUserFarm && (
+                <div className="bg-muted/25 rounded-xl p-3 text-[10px]">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-2">Farm Details</p>
+                  {viewUserFarm.farm_name && (
+                    <div className="mb-1.5">
+                      <span className="font-bold text-card-foreground">Name:</span>{' '}
+                      <span className="text-muted-foreground">{viewUserFarm.farm_name}</span>
+                    </div>
+                  )}
+                  {viewUserFarm.farm_location && (
+                    <div className="mb-1.5">
+                      <span className="font-bold text-card-foreground">Location:</span>{' '}
+                      <span className="text-muted-foreground">{viewUserFarm.farm_location}</span>
+                    </div>
+                  )}
+                  {viewUserFarm.farm_description && (
+                    <div className="mb-1.5">
+                      <span className="font-bold text-card-foreground">Description:</span>{' '}
+                      <span className="text-muted-foreground">{viewUserFarm.farm_description}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <button
                   type="button"
-                  disabled={actionId === viewUser.id}
-                  onClick={() => handleToggleActive(viewUser)}
+                  disabled={actionId === viewUser.id || viewUser.id === adminProfile.id}
+                  onClick={() => {
+                    const status = getAccountStatus(viewUser);
+                    const nextStatus = status === 'active' ? 'suspended' : 'active';
+                    handleSetStatus(viewUser, nextStatus);
+                  }}
                   className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border transition-all cursor-pointer disabled:opacity-50 ${
-                    viewUser.is_active === false
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
-                      : 'bg-rose-500/10 border-rose-500/40 text-rose-400 hover:bg-rose-500/20'
+                    getAccountStatus(viewUser) === 'active'
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
                   }`}
                 >
-                  {viewUser.is_active === false ? 'Activate' : 'Deactivate'}
+                  {getAccountStatus(viewUser) === 'active' ? 'Suspend' : 'Activate'}
+                </button>
+                <button
+                  type="button"
+                  disabled={actionId === viewUser.id || viewUser.id === adminProfile.id}
+                  onClick={() => handleSetStatus(viewUser, 'deactivated')}
+                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Deactivate
                 </button>
                 <button
                   type="button"
@@ -554,34 +697,28 @@ export default function AdminPanelPage() {
 
               <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registered Fowls</h4>
-                  {viewUserFowls.length === 0 && (
-                    <button type="button" onClick={() => loadUserFowls(viewUser.id)} className="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer">
-                      {loadingFowls ? 'Loading...' : 'Load fowls'}
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Farm Registration</h4>
+                  {loadingFarm && (
+                    <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {!viewUserFarm && !loadingFarm && (
+                    <button type="button" onClick={() => loadUserFarm(viewUser.id)} className="text-[9px] font-bold text-amber-400 hover:text-amber-300 cursor-pointer">
+                      Load farm info
                     </button>
                   )}
                 </div>
-                {loadingFowls && (
-                  <div className="flex items-center justify-center py-6">
-                    <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                {!loadingFarm && viewUserFarm && (
+                  <div className="text-[10px] text-muted-foreground font-medium space-y-1">
+                    {viewUserFarm.created_at && (
+                      <p>Registered on {new Date(viewUserFarm.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                    )}
+                    {viewUserFarm.farm_location && (
+                      <p>Location: {viewUserFarm.farm_location}</p>
+                    )}
                   </div>
                 )}
-                {!loadingFowls && viewUserFowls.length > 0 && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {viewUserFowls.map((fowl) => (
-                      <div key={fowl.id} className="flex items-center gap-2.5 bg-muted/25 rounded-xl px-3 py-2">
-                        <span className="text-sm">{fowl.gender === 'Male' || fowl.gender === 'Rooster' ? <Bird size={14} /> : <Bird size={14} />}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-bold text-card-foreground truncate">{fowl.name}</p>
-                          <p className="text-[9px] text-muted-foreground font-medium truncate">{fowl.breed} · {fowl.growth_stage || '—'}</p>
-                        </div>
-                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${fowl.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{fowl.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {!loadingFowls && viewUserFowls.length === 0 && (
-                  <p className="text-[10px] text-muted-foreground text-center py-4">Click "Load fowls" to view their chickens.</p>
+                {!loadingFarm && !viewUserFarm && (
+                  <p className="text-[10px] text-muted-foreground text-center py-4">Click "Load farm info" to view farm details.</p>
                 )}
               </div>
             </div>

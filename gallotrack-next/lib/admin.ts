@@ -40,6 +40,8 @@ export interface AdminProfileRow {
   role?: string | null;
   is_admin?: boolean | null;
   is_active?: boolean | null;
+  is_verified?: boolean | null;
+  account_status?: string | null;
   created_at?: string | null;
   email_confirmed_at?: string | null;
   last_sign_in_at?: string | null;
@@ -97,7 +99,27 @@ export async function setUserActive(userId: string, active: boolean): Promise<vo
   }
   const { error } = await supabase
     .from('profiles')
-    .update({ is_active: active, updated_at: new Date().toISOString() })
+    .update({ is_active: active, account_status: active ? 'active' : 'deactivated', updated_at: new Date().toISOString() })
+    .eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
+export async function setAccountStatus(userId: string, status: 'active' | 'suspended' | 'deactivated'): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      account_status: status,
+      is_active: status === 'active',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
+export async function setUserVerified(userId: string, verified: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_verified: verified, updated_at: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw new Error(error.message);
 }

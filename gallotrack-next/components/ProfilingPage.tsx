@@ -38,6 +38,7 @@ export default function ProfilingPage() {
     matchDate, setMatchDate,
     opponentName, setOpponentName, opponentBreed, setOpponentBreed,
     matchLocation, setMatchLocation, matchType, setMatchType,
+    derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile,
     handleAddFowl, handleAddMatchRecord,
@@ -169,6 +170,7 @@ export default function ProfilingPage() {
           opponentBreed={opponentBreed} setOpponentBreed={setOpponentBreed}
           matchLocation={matchLocation} setMatchLocation={setMatchLocation}
           matchType={matchType} setMatchType={setMatchType}
+          derbyMatchNumber={derbyMatchNumber} setDerbyMatchNumber={setDerbyMatchNumber}
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
           matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}

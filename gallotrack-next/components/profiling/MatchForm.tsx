@@ -19,6 +19,8 @@ type Props = {
   setMatchLocation: (v: string) => void;
   matchType: string;
   setMatchType: (v: string) => void;
+  derbyMatchNumber: number;
+  setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string;
   setMatchOutcome: (v: string) => void;
   matchPostFight: string;
@@ -38,6 +40,7 @@ export default function MatchForm({
   opponentBreed, setOpponentBreed,
   matchLocation, setMatchLocation,
   matchType, setMatchType,
+  derbyMatchNumber, setDerbyMatchNumber,
   matchOutcome, setMatchOutcome,
   matchPostFight, setMatchPostFight,
   matchVideoFile, setMatchVideoFile,
@@ -95,20 +98,25 @@ export default function MatchForm({
           </datalist>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Derby Match Number</label>
+          <select value={derbyMatchNumber} onChange={(e) => setDerbyMatchNumber(Number(e.target.value))} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <option key={n} value={n}>Match #{n}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Match Type</label>
-          <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
-            <option value="Derby Match">Derby Match</option>
-            <option value="Hack Match">Hack Match</option>
-            <option value="2-Cock Derby">2-Cock Derby</option>
-            <option value="3-Cock Derby">3-Cock Derby</option>
-            <option value="4-Cock Derby">4-Cock Derby</option>
-            <option value="5-Cock Derby">5-Cock Derby</option>
-            <option value="Special Championship">Special Championship</option>
-            <option value="Regional Circuit">Regional Circuit</option>
-            <option value="Main Event / Solo">Main Event / Solo</option>
-          </select>
+          <input
+            type="text"
+            value={matchType}
+            onChange={(e) => setMatchType(e.target.value)}
+            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold"
+            placeholder="e.g., Derby Match, Hack Match"
+            required
+          />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Fight Outcome</label>

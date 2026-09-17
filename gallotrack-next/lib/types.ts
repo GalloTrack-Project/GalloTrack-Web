@@ -64,6 +64,7 @@ export interface MatchRecord {
   opponent_breed?: string;
   location: string;
   type: string;
+  derby_match_number?: number;
   outcome: string;
   status: string;
   video_url?: string;
