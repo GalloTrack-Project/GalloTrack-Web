@@ -12,7 +12,7 @@ import {
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
-import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, Key, Bird, X, ClipboardList, Clock, FileText } from 'lucide-react';
+import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, Bird, X, ClipboardList, Clock, FileText } from 'lucide-react';
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
 type AdminTab = 'users' | 'audit';
@@ -69,7 +69,7 @@ export default function AdminPanelPage() {
   const [viewUser, setViewUser] = useState<AdminProfileRow | null>(null);
   const [viewUserFarm, setViewUserFarm] = useState<FarmDetails | null>(null);
   const [loadingFarm, setLoadingFarm] = useState(false);
-  const [resettingPassword, setResettingPassword] = useState(false);
+
   const [activeTab, setActiveTab] = useState<AdminTab>('users');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
@@ -155,23 +155,6 @@ export default function AdminPanelPage() {
     }
   }, []);
 
-  const handleResetPassword = useCallback(async (email: string) => {
-    setResettingPassword(true);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      if (!token) return;
-      const res = await fetch('/api/admin/reset-password', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (res.ok) showToast('success', `Password reset link sent to ${email}`);
-      else showToast('error', 'Failed to send reset link');
-    } catch { showToast('error', 'Failed to send reset link'); } finally {
-      setResettingPassword(false);
-    }
-  }, [showToast]);
 
   const loadAuditLogs = useCallback(async () => {
     setAuditLoading(true);
@@ -510,14 +493,6 @@ export default function AdminPanelPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={resettingPassword}
-                  onClick={() => handleResetPassword(user.email || '')}
-                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {resettingPassword ? '...' : 'Reset'}
-                </button>
-                <button
-                  type="button"
                   disabled={actionId === user.id || user.id === adminProfile.id}
                   onClick={() => setPendingDelete(user)}
                   className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -613,14 +588,6 @@ export default function AdminPanelPage() {
                         </button>
                         <button
                           type="button"
-                          disabled={resettingPassword}
-                          onClick={() => handleResetPassword(user.email || '')}
-                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {resettingPassword ? '...' : 'Reset'}
-                        </button>
-                        <button
-                          type="button"
                           disabled={actionId === user.id || user.id === adminProfile.id}
                           onClick={() => setPendingDelete(user)}
                           className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -662,11 +629,6 @@ export default function AdminPanelPage() {
           </div>
 
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
-            <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Admin Activity</h2>
-              <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredAuditLogs.length} of {auditLogs.length} records</span>
-            </div>
-
             {auditLoading ? (
               <div className="p-8 text-center">
                 <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
@@ -862,14 +824,6 @@ export default function AdminPanelPage() {
                   className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
                 >
                   Deactivate
-                </button>
-                <button
-                  type="button"
-                  disabled={resettingPassword}
-                  onClick={() => handleResetPassword(viewUser.email || '')}
-                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border border-purple-500/40 text-purple-400 hover:bg-purple-500/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {resettingPassword ? '...' : <><Key size={12} /> Reset</>}
                 </button>
               </div>
 
