@@ -129,7 +129,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [opponentName, setOpponentName] = useState('');
   const [opponentBreed, setOpponentBreed] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
-  const [matchType, setMatchType] = useState('Derby Match');
+  const [matchType, setMatchType] = useState('Derby Match #1');
   const [derbyMatchNumber, setDerbyMatchNumber] = useState(1);
   const [matchOutcome, setMatchOutcome] = useState('Win');
   const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');

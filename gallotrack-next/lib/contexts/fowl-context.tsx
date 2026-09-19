@@ -283,8 +283,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
       .then((s) => {
-        if (s.default_match_type && matchType === 'Derby Match') setMatchType(s.default_match_type);
-        if (s.default_arena && !matchLocation) setMatchLocation(s.default_arena);
+        if (s.default_match_type) setMatchType(s.default_match_type);
+        if (s.default_arena) setMatchLocation(s.default_arena);
         if (s.auto_calculate_age === false) setAutoCalcAge(false);
       })
       .catch(() => {});
