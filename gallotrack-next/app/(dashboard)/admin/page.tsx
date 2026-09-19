@@ -161,12 +161,12 @@ export default function AdminPanelPage() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
-      if (!token) return;
+      if (!token) { setAuditLoading(false); return; }
       const res = await fetch('/api/admin/audit-logs', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setAuditLogs(data.logs || []);
         const adminIds = [...new Set((data.logs || []).map((l: AuditLog) => l.admin_id))];
         if (adminIds.length > 0) {
@@ -200,7 +200,8 @@ export default function AdminPanelPage() {
     if (activeTab === 'audit' && auditLogs.length === 0 && !auditLoading) {
       loadAuditLogs();
     }
-  }, [activeTab, auditLogs.length, auditLoading, loadAuditLogs]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const filteredProfiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
