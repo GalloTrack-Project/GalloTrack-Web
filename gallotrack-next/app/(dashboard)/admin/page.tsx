@@ -12,9 +12,34 @@ import {
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
-import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, Key, Bird, X } from 'lucide-react';
+import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, Key, Bird, X, ClipboardList, Clock, FileText } from 'lucide-react';
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
+type AdminTab = 'users' | 'audit';
+
+interface AuditLog {
+  id: string;
+  admin_id: string;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
+}
+
+const ACTION_LABELS: Record<string, string> = {
+  marketplace_approved: 'Approved Listing',
+  marketplace_flagged: 'Flagged Listing',
+  marketplace_removed: 'Removed Listing',
+  marketplace_pending: 'Pending Listing',
+  reset_password: 'Password Reset',
+  transfer_data: 'Data Transfer',
+  user_activated: 'User Activated',
+  user_deactivated: 'User Deactivated',
+  user_suspended: 'User Suspended',
+  user_deleted: 'User Deleted',
+  user_verified: 'User Verified',
+};
 
 interface FarmDetails {
   farm_name?: string;
@@ -45,6 +70,11 @@ export default function AdminPanelPage() {
   const [viewUserFarm, setViewUserFarm] = useState<FarmDetails | null>(null);
   const [loadingFarm, setLoadingFarm] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<AdminTab>('users');
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditSearch, setAuditSearch] = useState('');
+  const [adminNames, setAdminNames] = useState<Record<string, string>>({});
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -143,6 +173,36 @@ export default function AdminPanelPage() {
     }
   }, [showToast]);
 
+  const loadAuditLogs = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) return;
+      const res = await fetch('/api/admin/audit-logs', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data.logs || []);
+        const adminIds = [...new Set((data.logs || []).map((l: AuditLog) => l.admin_id))];
+        if (adminIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .in('id', adminIds);
+          const names: Record<string, string> = {};
+          (profiles || []).forEach((p: { id: string; full_name?: string; email?: string }) => {
+            names[p.id] = p.full_name || p.email?.split('@')[0] || 'Admin';
+          });
+          setAdminNames(names);
+        }
+      }
+    } catch { /* silent */ } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       const profile = await adminGuard();
@@ -152,6 +212,12 @@ export default function AdminPanelPage() {
       await loadProfiles();
     })();
   }, [loadProfiles]);
+
+  useEffect(() => {
+    if (activeTab === 'audit' && auditLogs.length === 0 && !auditLoading) {
+      loadAuditLogs();
+    }
+  }, [activeTab, auditLogs.length, auditLoading, loadAuditLogs]);
 
   const filteredProfiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -171,6 +237,16 @@ export default function AdminPanelPage() {
       return true;
     });
   }, [profiles, searchQuery, filterRole, filterStatus]);
+
+  const filteredAuditLogs = useMemo(() => {
+    if (!auditSearch.trim()) return auditLogs;
+    const q = auditSearch.toLowerCase();
+    return auditLogs.filter((log) => {
+      const label = ACTION_LABELS[log.action] || log.action;
+      const name = adminNames[log.admin_id] || '';
+      return label.toLowerCase().includes(q) || name.toLowerCase().includes(q) || (log.target_type || '').toLowerCase().includes(q);
+    });
+  }, [auditLogs, auditSearch, adminNames]);
 
   const handleSetStatus = async (user: AdminProfileRow, status: 'active' | 'suspended' | 'deactivated') => {
     setActionId(user.id);
@@ -290,6 +366,27 @@ export default function AdminPanelPage() {
           </div>
         </div>
 
+        <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0 mb-4">
+          {([
+            { id: 'users' as AdminTab, label: 'Users', icon: <Users size={14} /> },
+            { id: 'audit' as AdminTab, label: 'Audit Logs', icon: <ClipboardList size={14} /> },
+          ]).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/30'
+                  : 'text-muted-foreground hover:text-card-foreground hover:bg-muted'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {toast && (
           <div
             className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
@@ -302,6 +399,7 @@ export default function AdminPanelPage() {
           </div>
         )}
 
+        {activeTab === 'users' && (<>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">
           {statCard('Total Users', total, 'text-amber-400', <Users size={20} />)}
           {statCard('Active', active, 'text-emerald-400', <CheckCircle size={20} />)}
@@ -541,6 +639,86 @@ export default function AdminPanelPage() {
         <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
           Admin access is governed by RLS policies
         </p>
+        </>)}
+
+        {activeTab === 'audit' && (<>
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
+                <input
+                  type="text"
+                  value={auditSearch}
+                  onChange={(e) => setAuditSearch(e.target.value)}
+                  placeholder="Search by action, admin, or target..."
+                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold ml-3">
+                <FileText size={14} />
+                {filteredAuditLogs.length} entries
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
+            <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Admin Activity</h2>
+              <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredAuditLogs.length} of {auditLogs.length} records</span>
+            </div>
+
+            {auditLoading ? (
+              <div className="p-8 text-center">
+                <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-xs text-muted-foreground font-semibold">Loading audit logs...</p>
+              </div>
+            ) : filteredAuditLogs.length === 0 ? (
+              <div className="p-8 text-center">
+                <Clock className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-xs text-muted-foreground font-semibold">No audit logs found.</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">Admin actions will appear here once recorded.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/60">
+                {filteredAuditLogs.map((log) => (
+                  <div key={log.id} className="px-4 sm:px-5 py-3.5 hover:bg-muted/25 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                          <Shield className="w-3.5 h-3.5 text-amber-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-card-foreground">
+                            <span className="text-amber-400">{adminNames[log.admin_id] || 'Admin'}</span>
+                            {' '}
+                            <span className="text-muted-foreground">{ACTION_LABELS[log.action] || log.action}</span>
+                          </p>
+                          {log.target_type && (
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                              Target: {log.target_type}{log.target_id ? ` (${log.target_id.slice(0, 8)}...)` : ''}
+                            </p>
+                          )}
+                          {log.details && Object.keys(log.details).length > 0 && (
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-mono">
+                              {Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-[9px] text-muted-foreground/60 font-mono whitespace-nowrap shrink-0">
+                        {new Date(log.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
+            Audit logs are retained for security and compliance
+          </p>
+        </>)}
       </div>
 
       {pendingDelete && (

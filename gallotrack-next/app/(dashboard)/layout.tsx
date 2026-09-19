@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, User, Users, Bird, Settings, Shield, LogOut, ClipboardList } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, User, Users, Bird, Settings, Shield, LogOut } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { supabase } from '@/lib/registry';
@@ -29,7 +29,6 @@ const OWNER_MOBILE = [
 const ADMIN_NAV = [
   { href: '/dashboard', label: 'System Overview', icon: LayoutDashboard },
   { href: '/admin', label: 'User Registry', icon: Users },
-  { href: '/admin/audit-logs', label: 'Audit Logs', icon: ClipboardList },
   { href: '/admin/settings', label: 'System Config', icon: Settings },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
@@ -37,7 +36,6 @@ const ADMIN_NAV = [
 const ADMIN_MOBILE = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin', label: 'Users', icon: Users },
-  { href: '/admin/audit-logs', label: 'Logs', icon: ClipboardList },
   { href: '/admin/settings', label: 'Config', icon: Settings },
   { href: '/profile', label: 'Profile', icon: User },
 ];
