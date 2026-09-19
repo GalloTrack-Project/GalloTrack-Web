@@ -609,11 +609,12 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[11px] border-collapse min-w-[760px]">
+          <table className="w-full text-left text-[11px] border-collapse min-w-[860px]">
             <thead>
               <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
                 <th className="p-4 pl-6">Match Date</th>
                 <th className="p-4">Fowl Identifier</th>
+                <th className="p-4">Opponent</th>
                 <th className="p-4">Bloodline</th>
                 <th className="p-4">Arena Location</th>
                 <th className="p-4 text-center">Outcome</th>
@@ -624,7 +625,7 @@ export default function DashboardPage() {
             <tbody className="divide-y divide-border text-muted-foreground font-semibold">
               {matchHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-xs font-semibold">
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground text-xs font-semibold">
                     No data available
                   </td>
                 </tr>
@@ -638,6 +639,7 @@ export default function DashboardPage() {
                         <span className="font-bold text-card-foreground">{log.entry_name}</span>
                       </div>
                     </td>
+                    <td className="p-4 font-bold text-card-foreground">{log.opponent || '—'}</td>
                     <td className="p-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
                     </td>
