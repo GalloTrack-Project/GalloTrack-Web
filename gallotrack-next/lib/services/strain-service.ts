@@ -28,7 +28,6 @@ export async function fetchStrains(): Promise<string[]> {
     const { data, error } = await supabase
       .from('strains')
       .select('name')
-      .is('deleted_at', null)
       .order('name', { ascending: true });
     if (!error && data) {
       names = data.map((row: { name: string }) => row.name);
@@ -72,9 +71,8 @@ export async function deleteStrain(name: string): Promise<{ error?: string }> {
   try {
     const { error } = await supabase
       .from('strains')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('name', name)
-      .is('deleted_at', null);
+      .delete()
+      .eq('name', name);
     if (error) return { error: error.message };
     return {};
   } catch {
@@ -90,7 +88,6 @@ export async function fetchLegColors(): Promise<string[]> {
     const { data, error } = await supabase
       .from('leg_colors')
       .select('name')
-      .is('deleted_at', null)
       .order('name', { ascending: true });
     if (!error && data) {
       names = data.map((row: { name: string }) => row.name);
@@ -134,9 +131,8 @@ export async function deleteLegColor(name: string): Promise<{ error?: string }> 
   try {
     const { error } = await supabase
       .from('leg_colors')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('name', name)
-      .is('deleted_at', null);
+      .delete()
+      .eq('name', name);
     if (error) return { error: error.message };
     return {};
   } catch {
