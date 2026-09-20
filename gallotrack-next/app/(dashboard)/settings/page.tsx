@@ -75,6 +75,28 @@ function SectionCard({ title, description, children }: { title: string; descript
   )
 }
 
+interface SystemConfig {
+  system_name: string
+  system_status: string
+  maintenance_message: string
+  default_strain: string
+  default_match_type: string
+  default_arena: string
+  weight_unit: string
+  height_unit: string
+}
+
+const defaultSystemConfig: SystemConfig = {
+  system_name: 'GalloTrack',
+  system_status: 'Operational',
+  maintenance_message: '',
+  default_strain: 'Sweater',
+  default_match_type: '',
+  default_arena: '',
+  weight_unit: 'kg',
+  height_unit: 'cm',
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('account')
@@ -89,6 +111,7 @@ export default function SettingsPage() {
     auto_calculate_age: true,
     theme: 'light',
   })
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>(defaultSystemConfig)
   const [loading, setLoading] = useState(false)
   const [savedNotice, setSavedNotice] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -124,22 +147,39 @@ export default function SettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setUserEmail(user.email || '')
-          setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
-          setUserCreatedAt(new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
+        const [systemRes, userRes] = await Promise.all([
+          fetch('/api/admin/system-settings').then(r => r.ok ? r.json() : defaultSystemConfig).catch(() => defaultSystemConfig),
+          supabase.auth.getUser(),
+        ])
+
+      const sysCfg: SystemConfig = {
+        system_name: systemRes.system_name || 'GalloTrack',
+        system_status: systemRes.system_status || 'Operational',
+        maintenance_message: systemRes.maintenance_message || '',
+        default_strain: systemRes.default_strain || 'Sweater',
+        default_match_type: systemRes.default_match_type || '',
+        default_arena: systemRes.default_arena || '',
+        weight_unit: systemRes.weight_unit || 'kg',
+        height_unit: systemRes.height_unit || 'cm',
+      }
+      setSystemConfig(sysCfg)
+
+      const { data: { user: authUser } } = userRes
+      if (authUser) {
+          setUserEmail(authUser.email || '')
+          setUserName(authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '')
+          setUserCreatedAt(new Date(authUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
 
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', authUser.id)
             .maybeSingle()
 
           const { data: farm } = await supabase
             .from('farms')
             .select('farm_name, farm_location, farm_description, contact_number')
-            .eq('owner_id', user.id)
+            .eq('owner_id', authUser.id)
             .maybeSingle()
 
           const storedPrefs = loadPrefsFromStorage()
@@ -151,11 +191,11 @@ export default function SettingsPage() {
               farm_location: farm?.farm_location || storedPrefs.farm_location || '',
               contact_number: farm?.contact_number || storedPrefs.contact_number || profile.phone_number || '',
               farm_description: farm?.farm_description || storedPrefs.farm_description || '',
-              default_match_type: storedPrefs.default_match_type || '',
-              default_arena: storedPrefs.default_arena || '',
-              default_strain: storedPrefs.default_strain || 'Sweater',
-              weight_unit: storedPrefs.weight_unit || 'kg',
-              height_unit: storedPrefs.height_unit || 'cm',
+              default_match_type: storedPrefs.default_match_type || sysCfg.default_match_type || '',
+              default_arena: storedPrefs.default_arena || sysCfg.default_arena || '',
+              default_strain: storedPrefs.default_strain || sysCfg.default_strain || 'Sweater',
+              weight_unit: storedPrefs.weight_unit || sysCfg.weight_unit || 'kg',
+              height_unit: storedPrefs.height_unit || sysCfg.height_unit || 'cm',
               auto_calculate_age: storedPrefs.auto_calculate_age !== false,
               milestone_alerts: storedPrefs.milestone_alerts !== false,
               overdue_alerts: storedPrefs.overdue_alerts !== false,
@@ -330,12 +370,12 @@ export default function SettingsPage() {
                 <textarea value={settings.farm_description || ''} onChange={(e) => update('farm_description', e.target.value)} placeholder="Brief description of your farm..." rows={3} className="p-2.5 px-3 border border-slate-200/90 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all shadow-sm w-full resize-none" />
               </Field>
             </SectionCard>
-            <SectionCard title="Default Match Settings" description="Pre-filled values when logging new matches">
+            <SectionCard title="Default Match Settings" description="Pre-filled values when logging new matches (admin defaults applied if not overridden)">
               <Field label="Default Match Type">
-                <TextInput value={settings.default_match_type || ''} onChange={(v) => update('default_match_type', v)} placeholder="e.g. Derby Match, Hack Match" />
+                <TextInput value={settings.default_match_type || ''} onChange={(v) => update('default_match_type', v)} placeholder={systemConfig.default_match_type || 'e.g. Derby Match, Hack Match'} />
               </Field>
               <Field label="Default Arena" description="Pre-filled arena location">
-                <TextInput value={settings.default_arena || ''} onChange={(v) => update('default_arena', v)} placeholder="e.g. Dingle Arena" />
+                <TextInput value={settings.default_arena || ''} onChange={(v) => update('default_arena', v)} placeholder={systemConfig.default_arena || 'e.g. Dingle Arena'} />
               </Field>
               <Field label="Default Genetic Strain">
                 <SelectInput value={settings.default_strain || 'Sweater'} onChange={(v) => update('default_strain', v)} options={[
@@ -346,6 +386,9 @@ export default function SettingsPage() {
                   { value: 'Lemon 84', label: 'Lemon 84' },
                   { value: 'Albany', label: 'Albany' },
                   { value: 'Claret', label: 'Claret' },
+                  { value: 'Brood', label: 'Brood' },
+                  { value: 'Classic', label: 'Classic' },
+                  { value: 'Hybrid', label: 'Hybrid' },
                 ]} />
               </Field>
             </SectionCard>
@@ -355,7 +398,7 @@ export default function SettingsPage() {
       case 'preferences':
         return (
           <div className="space-y-4">
-            <SectionCard title="Measurement Units" description="Units used throughout the system">
+            <SectionCard title="Measurement Units" description="Units used throughout the system (admin defaults applied if not overridden)">
               <Field label="Weight Unit">
                 <SelectInput value={settings.weight_unit || 'kg'} onChange={(v) => update('weight_unit', v)} options={[
                   { value: 'kg', label: 'Kilograms (kg)' },
@@ -445,7 +488,49 @@ export default function SettingsPage() {
       case 'system':
         return (
           <div className="space-y-4">
-            <SectionCard title="System Information" description="GalloTrack platform details">
+            <SectionCard title="System Configuration" description="Global settings controlled by the administrator">
+              <Field label="System Name">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{systemConfig.system_name}</span>
+              </Field>
+              <Field label="System Status">
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full border ${
+                  systemConfig.system_status === 'Operational'
+                    ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                    : systemConfig.system_status === 'Maintenance'
+                      ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
+                      : 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    systemConfig.system_status === 'Operational' ? 'bg-emerald-500' :
+                    systemConfig.system_status === 'Maintenance' ? 'bg-amber-500' : 'bg-rose-500'
+                  } animate-pulse`}></span>
+                  {systemConfig.system_status}
+                </span>
+              </Field>
+              {systemConfig.maintenance_message && (
+                <Field label="Maintenance Message">
+                  <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-500/30">{systemConfig.maintenance_message}</span>
+                </Field>
+              )}
+            </SectionCard>
+            <SectionCard title="Default Values" description="Pre-filled defaults set by the administrator">
+              <Field label="Default Strain">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.default_strain}</span>
+              </Field>
+              <Field label="Default Match Type">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.default_match_type || '—'}</span>
+              </Field>
+              <Field label="Default Arena">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.default_arena || '—'}</span>
+              </Field>
+              <Field label="Weight Unit">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.weight_unit === 'kg' ? 'Kilograms (kg)' : 'Pounds (lbs)'}</span>
+              </Field>
+              <Field label="Height Unit">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.height_unit === 'cm' ? 'Centimeters (cm)' : 'Inches (in)'}</span>
+              </Field>
+            </SectionCard>
+            <SectionCard title="Platform Information" description="GalloTrack platform details">
               <Field label="Application">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100">GalloTrack-Web</span>
               </Field>
@@ -457,9 +542,6 @@ export default function SettingsPage() {
               </Field>
               <Field label="Backend">
                 <span className="text-xs font-semibold text-slate-600">Supabase (PostgreSQL + Auth)</span>
-              </Field>
-              <Field label="Database Region">
-                <span className="text-xs font-semibold text-slate-600">Southeast Asia (ap-southeast-1)</span>
               </Field>
             </SectionCard>
             <SectionCard title="Connection Status">
@@ -507,6 +589,16 @@ export default function SettingsPage() {
         <div className="bg-rose-50/90 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm mb-4">
           <span>{loadError}</span>
           <button onClick={() => setLoadError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer"><X size={14} /></button>
+        </div>
+      )}
+
+      {systemConfig.system_status === 'Maintenance' && (
+        <div className="bg-amber-50/90 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 p-4 rounded-2xl text-xs font-bold flex items-center gap-3 shadow-sm mb-4">
+          <span className="text-lg">🔧</span>
+          <div>
+            <p className="font-black">System Under Maintenance</p>
+            {systemConfig.maintenance_message && <p className="text-[11px] font-semibold opacity-80 mt-0.5">{systemConfig.maintenance_message}</p>}
+          </div>
         </div>
       )}
 

@@ -200,6 +200,12 @@ export default function AdminSettingsPage() {
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Dna size={14} /></span>
                   <select value={settings.default_strain || 'Sweater'} onChange={(e) => update('default_strain', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                     <option value="Sweater">Sweater</option>
+                    <option value="Roundhead">Roundhead</option>
+                    <option value="Hatch">Hatch</option>
+                    <option value="Kelso">Kelso</option>
+                    <option value="Lemon 84">Lemon 84</option>
+                    <option value="Albany">Albany</option>
+                    <option value="Claret">Claret</option>
                     <option value="Brood">Brood</option>
                     <option value="Classic">Classic</option>
                     <option value="Hybrid">Hybrid</option>
