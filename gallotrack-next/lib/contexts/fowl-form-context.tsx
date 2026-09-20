@@ -68,6 +68,8 @@ interface FowlFormStateContextValue {
   editSirePct: number | string; setEditSirePct: (v: number | string) => void;
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
 
+  autoCalcAge: boolean; getAutoCalcAge: () => boolean;
+
   availableStrains: string[];
   setAvailableStrains: React.Dispatch<React.SetStateAction<string[]>>;
   customStrainNames: Set<string>;
@@ -101,6 +103,16 @@ export function useFowlFormState(): FowlFormStateContextValue {
 }
 
 export function FowlFormStateProvider({ children }: { children: React.ReactNode }) {
+  function getAutoCalcAge(): boolean {
+    try {
+      const raw = localStorage.getItem('gallotrack_user_preferences');
+      if (raw) {
+        const prefs = JSON.parse(raw);
+        if (prefs.auto_calculate_age === false) return false;
+      }
+    } catch { /* ignore */ }
+    return true;
+  }
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('');
   const [newGender, setNewGender] = useState('');
@@ -190,6 +202,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
 
   const handleNewBirthdateChange = useCallback((val: string) => {
     setNewBirthdate(val);
+    if (!getAutoCalcAge()) {
+      setAge('');
+      return;
+    }
     const parts = getAgePartsHelper(val);
     if (parts) {
       setAge(String(parts.totalMonths));
@@ -202,6 +218,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
 
   const handleEditBirthdateChange = useCallback((val: string) => {
     setEditBirthdate(val);
+    if (!getAutoCalcAge()) {
+      setEditAge('');
+      return;
+    }
     const parts = getAgePartsHelper(val);
     if (parts) {
       setEditAge(String(parts.totalMonths));
@@ -263,6 +283,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
+    autoCalcAge: getAutoCalcAge(), getAutoCalcAge,
   };
 
   return <FowlFormStateContext.Provider value={value}>{children}</FowlFormStateContext.Provider>;

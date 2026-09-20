@@ -24,6 +24,7 @@ export async function GET() {
       system_status: value.system_status || 'Operational',
       maintenance_message: value.maintenance_message || '',
       allow_registrations: value.allow_registrations !== false,
+      auto_calculate_age: value.auto_calculate_age !== false,
     });
   } catch {
     return NextResponse.json({
@@ -31,6 +32,7 @@ export async function GET() {
       system_status: 'Operational',
       maintenance_message: '',
       allow_registrations: true,
+      auto_calculate_age: true,
     });
   }
 }

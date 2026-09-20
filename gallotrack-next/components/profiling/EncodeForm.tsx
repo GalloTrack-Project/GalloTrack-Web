@@ -81,6 +81,7 @@ type Props = {
   damGen: number;
   generationPurity: (gen: number) => number;
   handleAddFowl: (e: React.FormEvent) => void;
+  getAutoCalcAge: () => boolean;
 };
 
 export default function EncodeForm({
@@ -116,6 +117,7 @@ export default function EncodeForm({
   sireGen, damGen,
   generationPurity,
   handleAddFowl,
+  getAutoCalcAge,
 }: Props) {
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
@@ -270,7 +272,7 @@ export default function EncodeForm({
         </h3>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
-            Birth Date <span className="text-emerald-600 font-black">· required — age is auto-calculated</span>
+            Birth Date <span className="text-emerald-600 font-black">{getAutoCalcAge() ? '· required — age is auto-calculated' : '· required'}</span>
           </label>
           <input
             type="date"
@@ -281,6 +283,7 @@ export default function EncodeForm({
             required
           />
           {(() => {
+            if (!getAutoCalcAge()) return null;
             const parts = getAgePartsLocal(newBirthdate);
             return parts ? (
               <p className="mt-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
@@ -293,8 +296,8 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && <span className="text-emerald-600 font-black">· auto</span>}</label>
-            <input type="number" value={newBirthdate ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none" placeholder="0" required />
+            <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && getAutoCalcAge() && <span className="text-emerald-600 font-black">· auto</span>}</label>
+            <input type="number" value={newBirthdate && getAutoCalcAge() ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && getAutoCalcAge()} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none" placeholder="0" required />
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-wider">Growth Stage</label>

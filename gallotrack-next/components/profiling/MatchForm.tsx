@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import type { FowlRecord } from '@/lib/types';
-import { POST_FIGHT_CONDITIONS } from '@/lib/helpers';
+import { POST_FIGHT_CONDITIONS, isMale } from '@/lib/helpers';
 
 type Props = {
   fowls: FowlRecord[];
@@ -53,7 +53,7 @@ export default function MatchForm({
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Select Local Fowl Entry</label>
           <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground outline-none focus:border-emerald-500 cursor-pointer" required>
             <option value="">-- Select Fowl Node --</option>
-            {fowls.filter(f => f.status === 'Active').map(f => (
+            {fowls.filter(f => f.status === 'Active' && isMale(f.gender)).map(f => (
               <option key={f.id} value={f.name}>{f.name} ({f.breed})</option>
             ))}
           </select>

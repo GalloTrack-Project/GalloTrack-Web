@@ -44,6 +44,7 @@ export default function ProfilingPage() {
     handleAddFowl, handleAddMatchRecord,
     handleOpenEditModal, handleRestoreFowlOnly,
     generationPurity,
+    getAutoCalcAge,
   } = fowl;
 
   const profilingSubTab = ui.profilingSubTab;
@@ -136,6 +137,7 @@ export default function ProfilingPage() {
           sireGen={sireGen} damGen={damGen}
           generationPurity={generationPurity}
           handleAddFowl={handleAddFowl}
+          getAutoCalcAge={getAutoCalcAge}
         />
       )}
 
