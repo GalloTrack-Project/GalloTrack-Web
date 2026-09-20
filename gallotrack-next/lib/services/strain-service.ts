@@ -22,7 +22,6 @@ function removeLocalItem(key: string, name: string): void {
 
 export async function fetchStrains(): Promise<string[]> {
   let names: string[] = [];
-  let allNames: string[] = [];
 
   try {
     const { data, error } = await supabase
@@ -32,23 +31,16 @@ export async function fetchStrains(): Promise<string[]> {
     if (!error && data) {
       names = data.map((row: { name: string }) => row.name);
     }
-    const { data: allData } = await supabase.from('strains').select('name');
-    if (allData) allNames = allData.map((r: { name: string }) => r.name);
   } catch (err) {
     console.error('Failed to fetch strains:', err);
   }
 
-  const missing = STRAIN_LIST.filter((d) => !allNames.some((n) => n.toLowerCase() === d.toLowerCase()));
-  if (missing.length > 0) {
-    try {
-      await supabase.from('strains').insert(missing.map((name) => ({ name, is_custom: false })));
-      names = [...names, ...missing];
-    } catch { /* non-critical */ }
+  if (names.length === 0) {
+    names = [...STRAIN_LIST];
   }
 
   const localCustom = getLocalItems(CUSTOM_STRAINS_KEY);
-  const merged = Array.from(new Set([...STRAIN_LIST, ...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
-  return merged;
+  return Array.from(new Set([...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
 }
 
 export async function saveCustomStrain(name: string): Promise<boolean> {
@@ -82,7 +74,6 @@ export async function deleteStrain(name: string): Promise<{ error?: string }> {
 
 export async function fetchLegColors(): Promise<string[]> {
   let names: string[] = [];
-  let allNames: string[] = [];
 
   try {
     const { data, error } = await supabase
@@ -92,23 +83,16 @@ export async function fetchLegColors(): Promise<string[]> {
     if (!error && data) {
       names = data.map((row: { name: string }) => row.name);
     }
-    const { data: allData } = await supabase.from('leg_colors').select('name');
-    if (allData) allNames = allData.map((r: { name: string }) => r.name);
   } catch (err) {
     console.error('Failed to fetch leg colors:', err);
   }
 
-  const missing = LEG_COLOR_LIST.filter((d) => !allNames.some((n) => n.toLowerCase() === d.toLowerCase()));
-  if (missing.length > 0) {
-    try {
-      await supabase.from('leg_colors').insert(missing.map((name) => ({ name, is_custom: false })));
-      names = [...names, ...missing];
-    } catch { /* non-critical */ }
+  if (names.length === 0) {
+    names = [...LEG_COLOR_LIST];
   }
 
   const localCustom = getLocalItems(CUSTOM_LEG_COLORS_KEY);
-  const merged = Array.from(new Set([...LEG_COLOR_LIST, ...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
-  return merged;
+  return Array.from(new Set([...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
 }
 
 export async function saveCustomLegColor(name: string): Promise<boolean> {
