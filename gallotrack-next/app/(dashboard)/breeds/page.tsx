@@ -172,7 +172,7 @@ export default function BreedsPage() {
               const isConfirming = confirmDelete === breed;
               const isDeletingThis = deleting === breed;
               return (
-                <div key={breed} className={`relative flex flex-col p-4 rounded-xl border transition-all ${isCustom ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-muted/50 border-border'}`}>
+                <div key={breed} className={`relative flex flex-col p-4 rounded-xl border transition-all ${isCustom ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-card border-border'}`}>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-card-foreground truncate">{breed}</p>
@@ -185,8 +185,12 @@ export default function BreedsPage() {
                       <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">fowl{count !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
-                  {isCustom && (
-                    <div className="mt-auto pt-2 border-t border-emerald-500/20">
+                  {count > 0 ? (
+                    <div className="mt-auto pt-2 border-t border-border">
+                      <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Used by {count} fowl{count !== 1 ? 's' : ''}</span>
+                    </div>
+                  ) : (
+                    <div className="mt-auto pt-2 border-t border-border">
                       {isConfirming ? (
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] font-bold text-rose-500">Delete?</span>
@@ -215,11 +219,6 @@ export default function BreedsPage() {
                           <Trash2 className="w-3 h-3 inline mr-1" /> Delete
                         </button>
                       )}
-                    </div>
-                  )}
-                  {!isCustom && (
-                    <div className="mt-auto pt-2 border-t border-border">
-                      <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Built-in</span>
                     </div>
                   )}
                 </div>
