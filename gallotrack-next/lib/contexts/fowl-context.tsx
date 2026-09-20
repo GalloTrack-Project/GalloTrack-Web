@@ -23,6 +23,7 @@ import {
   getArchiveBadgeStyle,
   matchSurvivability,
   cleanPct as cleanPctHelper,
+  STRAIN_LIST,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
 import { generateColorReport } from '@/lib/color-genetics';
@@ -114,6 +115,8 @@ interface FowlContextValue {
   editDam: string; setEditDam: (v: string) => void;
   editSirePct: number | string; setEditSirePct: (v: number | string) => void;
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
+
+  autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
   availableStrains: string[];
   setAvailableStrains: React.Dispatch<React.SetStateAction<string[]>>;
@@ -350,7 +353,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setFowls(fowlData);
       setMatchHistory(matchData);
       setAvailableStrains(strainNames);
-      setCustomStrainNames(new Set(strainNames));
+      setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));
       setAvailableLegColors(legColorNames);
       setCustomLegColorNames(new Set(legColorNames));
     } catch (err) {

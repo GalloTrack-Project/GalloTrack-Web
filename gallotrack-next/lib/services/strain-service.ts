@@ -48,7 +48,8 @@ export async function fetchStrains(): Promise<string[]> {
   }
 
   const localCustom = getLocalItems(CUSTOM_STRAINS_KEY);
-  return Array.from(new Set([...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
+  const merged = Array.from(new Set([...STRAIN_LIST, ...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
+  return merged;
 }
 
 export async function saveCustomStrain(name: string): Promise<boolean> {
@@ -109,7 +110,8 @@ export async function fetchLegColors(): Promise<string[]> {
   }
 
   const localCustom = getLocalItems(CUSTOM_LEG_COLORS_KEY);
-  return Array.from(new Set([...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
+  const merged = Array.from(new Set([...LEG_COLOR_LIST, ...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
+  return merged;
 }
 
 export async function saveCustomLegColor(name: string): Promise<boolean> {
