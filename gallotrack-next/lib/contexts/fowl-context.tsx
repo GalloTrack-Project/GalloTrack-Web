@@ -48,6 +48,7 @@ interface FowlContextValue {
   fowls: FowlRecord[];
   setFowls: React.Dispatch<React.SetStateAction<FowlRecord[]>>;
   activeFowls: FowlRecord[];
+  sireMaterialFowls: FowlRecord[];
   maleActiveFowls: FowlRecord[];
   femaleActiveFowls: FowlRecord[];
   archivedFowls: FowlRecord[];
@@ -97,6 +98,10 @@ interface FowlContextValue {
   targetNumber: number; setTargetNumber: (v: number) => void;
   partnerEntry: string; setPartnerEntry: (v: string) => void;
   suggestedPartners: PartnerSuggestion[]; setSuggestedPartners: (v: PartnerSuggestion[]) => void;
+
+  cockCount: number; setCockCount: (v: number) => void;
+  ageCategory: string; setAgeCategory: (v: string) => void;
+  eventType: string; setEventType: (v: string) => void;
 
   editName: string; setEditName: (v: string) => void;
   editBreed: string; setEditBreed: (v: string) => void;
@@ -265,6 +270,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     matchOption, setMatchOption, betType, setBetType,
     targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
     suggestedPartners, setSuggestedPartners,
+    cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
     editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,
@@ -302,6 +308,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
   // ── Derived lists ──
   const activeFowls = fowls.filter(f => f.status === 'Active' || !f.status || f.status === 'active');
+  const sireMaterialFowls = fowls.filter(f => f.status === 'Sire Material');
   const archivedFowls = fowls.filter(f => f.status === 'Archived');
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
   const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
@@ -518,6 +525,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       type: matchType,
       outcome: matchOutcome,
       postFightCondition: matchPostFight,
+      cockCount,
+      ageCategory,
+      eventType,
+      derbyMatchNumber,
     });
     if (!validation.success) {
       ui.showToastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
@@ -553,12 +564,15 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         opponent: sanitizeInput(opponentName) || 'Anonymous Opponent',
         opponent_breed: sanitizeInput(opponentBreed) || '',
         location: sanitizeInput(matchLocation) || 'Local Breeding Yard',
-        type: matchType,
+        type: matchType || `${cockCount}-Cock ${eventType} #${derbyMatchNumber}`,
         derby_match_number: derbyMatchNumber,
         outcome: matchOutcome,
         status: 'Verified',
         post_fight_condition: matchPostFight,
-        video_url: videoUrl || null
+        video_url: videoUrl || null,
+        cock_count: cockCount,
+        age_category: ageCategory,
+        event_type: eventType,
       };
 
       const result = await matchService.insertMatch(payload);
@@ -574,6 +588,15 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           target_number: targetNumber,
           status: partnerEntry ? 'matched' : 'pending',
         });
+
+        // Auto-set fowl to "Sire Material" if severely injured
+        if (matchPostFight === 'Severely Injured / Critical') {
+          const matchedFowl = fowls.find(f => f.name === selectedFowlForMatch);
+          if (matchedFowl) {
+            await fowlService.setSireMaterial(matchedFowl.id);
+            ui.showToastMessage(`${selectedFowlForMatch} is now marked as Sire Material — retired from fighting, available for breeding.`, 'warning');
+          }
+        }
 
         ui.showToastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
@@ -744,7 +767,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     ...formState,
     deleteCustomStrain,
     deleteCustomLegColor,
-    fowls, setFowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
+    fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
     matchHistory, setMatchHistory, loading, setLoading,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,

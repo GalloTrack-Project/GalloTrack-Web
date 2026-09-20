@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Bird, Archive, Skull, Dna } from 'lucide-react';
+import { Bird, Archive, Skull, Dna, Shield } from 'lucide-react';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ export default function ProfilingPage() {
   const router = useRouter();
 
   const {
-    fowls, activeFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
+    fowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
     matchHistory,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newBirthdate, handleNewBirthdateChange,
@@ -41,6 +41,7 @@ export default function ProfilingPage() {
     derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile,
+    cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
     handleAddFowl, handleAddMatchRecord,
     handleOpenEditModal, handleRestoreFowlOnly,
     generationPurity,
@@ -92,6 +93,11 @@ export default function ProfilingPage() {
             <span>Deceased</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'deceased' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{deceasedFowls.length}</span>
           </button>
+          <button type="button" onClick={() => setProfilingSubTab('sireMaterial')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'sireMaterial' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <Shield className="w-4 h-4" />
+            <span>Sire Material</span>
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'sireMaterial' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireMaterialFowls.length}</span>
+          </button>
           <div className="w-px h-6 bg-border shrink-0 mx-0.5"></div>
           <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
@@ -141,7 +147,7 @@ export default function ProfilingPage() {
         />
       )}
 
-      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased') && (
+      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'sireMaterial') && (
         <FowlLists
           tab={profilingSubTab}
           fowls={fowls}
@@ -149,6 +155,7 @@ export default function ProfilingPage() {
           femaleActiveFowls={femaleActiveFowls}
           archivedFowls={archivedFowls}
           deceasedFowls={deceasedFowls}
+          sireMaterialFowls={sireMaterialFowls}
           matchHistory={matchHistory}
           loading={loading}
           setProfilingSubTab={setProfilingSubTab}
@@ -175,7 +182,11 @@ export default function ProfilingPage() {
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
           matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}
+          derbyMatchNumber={derbyMatchNumber} setDerbyMatchNumber={setDerbyMatchNumber}
           handleAddMatchRecord={handleAddMatchRecord}
+          cockCount={cockCount} setCockCount={setCockCount}
+          ageCategory={ageCategory} setAgeCategory={setAgeCategory}
+          eventType={eventType} setEventType={setEventType}
         />
       )}
 

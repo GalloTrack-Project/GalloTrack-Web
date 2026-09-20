@@ -50,6 +50,10 @@ interface FowlFormStateContextValue {
   partnerEntry: string; setPartnerEntry: (v: string) => void;
   suggestedPartners: PartnerSuggestion[]; setSuggestedPartners: (v: PartnerSuggestion[]) => void;
 
+  cockCount: number; setCockCount: (v: number) => void;
+  ageCategory: string; setAgeCategory: (v: string) => void;
+  eventType: string; setEventType: (v: string) => void;
+
   editName: string; setEditName: (v: string) => void;
   editBreed: string; setEditBreed: (v: string) => void;
   editGender: string; setEditGender: (v: string) => void;
@@ -141,7 +145,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [opponentName, setOpponentName] = useState('');
   const [opponentBreed, setOpponentBreed] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
-  const [matchType, setMatchType] = useState('Derby Match #1');
+  const [matchType, setMatchType] = useState('2-Cock Cock Derby');
   const [derbyMatchNumber, setDerbyMatchNumber] = useState(1);
   const [matchOutcome, setMatchOutcome] = useState('Win');
   const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
@@ -153,6 +157,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [targetNumber, setTargetNumber] = useState(1);
   const [partnerEntry, setPartnerEntry] = useState('');
   const [suggestedPartners, setSuggestedPartners] = useState<PartnerSuggestion[]>([]);
+
+  const [cockCount, setCockCount] = useState(2);
+  const [ageCategory, setAgeCategory] = useState('Cock');
+  const [eventType, setEventType] = useState('Derby');
 
   const [editName, setEditName] = useState('');
   const [editBreed, setEditBreed] = useState('');
@@ -269,6 +277,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     matchOption, setMatchOption, betType, setBetType,
     targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
     suggestedPartners, setSuggestedPartners,
+    cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
     editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,

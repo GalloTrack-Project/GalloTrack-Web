@@ -13,15 +13,16 @@ import {
 import Pagination from '@/components/Pagination';
 
 type Props = {
-  tab: 'males' | 'females' | 'archived' | 'deceased';
+  tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial';
   fowls: FowlRecord[];
   maleActiveFowls: FowlRecord[];
   femaleActiveFowls: FowlRecord[];
   archivedFowls: FowlRecord[];
   deceasedFowls: FowlRecord[];
+  sireMaterialFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   loading: boolean;
-  setProfilingSubTab: (tab: 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'matchForm') => void;
+  setProfilingSubTab: (tab: 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'matchForm' | 'breeds') => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleRestoreFowlOnly: (id: number) => void;
   setSelectedFowlForDetails: (fowl: FowlRecord) => void;
@@ -174,6 +175,7 @@ export default function FowlLists({
   femaleActiveFowls,
   archivedFowls,
   deceasedFowls,
+  sireMaterialFowls,
   setProfilingSubTab,
   setPendingPermanentDelete,
   handleRestoreFowlOnly,
@@ -191,10 +193,10 @@ export default function FowlLists({
   }, [tab]);
 
   const paginatedBirds = useMemo(() => {
-    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : deceasedFowls;
+    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : tab === 'sireMaterial' ? sireMaterialFowls : deceasedFowls;
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, page]);
+  }, [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, sireMaterialFowls, page]);
 
   if (tab === 'males' || tab === 'females') {
     const isMaleTab = tab === 'males';

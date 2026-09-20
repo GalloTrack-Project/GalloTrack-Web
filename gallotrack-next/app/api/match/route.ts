@@ -111,6 +111,9 @@ export async function POST(request: NextRequest) {
       status: 'Verified',
       post_fight_condition: body.post_fight_condition || 'Fit / Recovered',
       video_url: body.video_url || null,
+      cock_count: body.cock_count || 2,
+      age_category: body.age_category || 'Cock',
+      event_type: body.event_type || 'Derby',
     };
 
     const { error: insertErr } = await supabase.from('match').insert([payload]);

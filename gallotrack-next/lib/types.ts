@@ -69,6 +69,9 @@ export interface MatchRecord {
   status: string;
   video_url?: string;
   post_fight_condition?: string;
+  cock_count?: number;
+  age_category?: string;
+  event_type?: string;
 }
 
 export interface AgeParts {
@@ -108,7 +111,7 @@ export interface PairingAnalytics {
 
 export type PageId = 'login' | 'dashboard' | 'profiling' | 'marketplace' | 'lineage' | 'profile' | 'settings';
 
-export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'match' | 'matchForm' | 'breeds';
+export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'match' | 'matchForm' | 'breeds';
 
 export type ToastState = {
   show: boolean;

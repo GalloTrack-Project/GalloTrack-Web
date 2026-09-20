@@ -8,6 +8,23 @@ export const POST_FIGHT_CONDITIONS = [
 
 export const STRAIN_LIST = ['Sweater', 'Hatch', 'Roundhead', 'Kelso', 'Lemon 84', 'Albany', 'Claret', 'Whitehackle', 'Black', 'Melsin', 'Bennie', 'Joe Madigin'];
 
+export const MATCH_EVENT_TYPES = ['Derby', 'Lusong'] as const;
+
+export const COCK_COUNT_OPTIONS = [2, 3, 4, 5] as const;
+
+export const AGE_CATEGORY_OPTIONS = [
+  { value: 'Cock', label: 'Cock (24+ mo)', desc: 'Mature fighting cock' },
+  { value: 'Stag', label: 'Stag (6–24 mo)', desc: 'Young stag in conditioning' },
+] as const;
+
+export const MATCH_TYPE_OPTIONS: string[] = [
+  ...COCK_COUNT_OPTIONS.flatMap((n) =>
+    AGE_CATEGORY_OPTIONS.flatMap((a) =>
+      MATCH_EVENT_TYPES.map((e) => `${n}-Cock ${a.value} ${e}`)
+    )
+  ),
+];
+
 export const LEG_COLOR_LIST = ['Yellow', 'White', 'Green / Slate', 'Willow', 'Black'];
 
 export const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[] = [
