@@ -38,7 +38,6 @@ export default function ProfilingPage() {
     matchDate, setMatchDate,
     opponentName, setOpponentName, opponentBreed, setOpponentBreed,
     matchLocation, setMatchLocation, matchType, setMatchType,
-    derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile,
     cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
@@ -184,7 +183,6 @@ export default function ProfilingPage() {
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
           matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}
-          derbyMatchNumber={derbyMatchNumber} setDerbyMatchNumber={setDerbyMatchNumber}
           handleAddMatchRecord={handleAddMatchRecord}
           cockCount={cockCount} setCockCount={setCockCount}
           ageCategory={ageCategory} setAgeCategory={setAgeCategory}

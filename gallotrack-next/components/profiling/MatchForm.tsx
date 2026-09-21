@@ -26,8 +26,6 @@ type Props = {
   matchVideoFile: File | null;
   setMatchVideoFile: (f: File | null) => void;
   handleAddMatchRecord: (e: React.FormEvent) => void;
-  derbyMatchNumber: number;
-  setDerbyMatchNumber: (v: number) => void;
   cockCount: number;
   setCockCount: (v: number) => void;
   ageCategory: string;
@@ -50,7 +48,6 @@ export default function MatchForm({
   matchPostFight, setMatchPostFight,
   matchVideoFile, setMatchVideoFile,
   handleAddMatchRecord,
-  derbyMatchNumber, setDerbyMatchNumber,
   cockCount, setCockCount,
   ageCategory, setAgeCategory,
   eventType, setEventType,
@@ -66,6 +63,15 @@ export default function MatchForm({
     }
     return base;
   };
+
+  const SelectChevron = () => (
+    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
+      <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+    </div>
+  );
+
+  const selectClass = "match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
+  const inputClass = "match-field h-10 min-w-0 flex-1 rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground placeholder:text-[#98a2b3] dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
 
   return (
     <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-5 animate-fadeIn">
@@ -125,142 +131,106 @@ export default function MatchForm({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MATCH TYPE CONFIGURATION — Dropdown + manual input style */}
+      {/* MATCH TYPE CONFIGURATION — 2-column grid per mockup           */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5 shadow-sm">
 
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-[11px] font-extrabold uppercase tracking-[.02em] text-[#344054] dark:text-card-foreground sm:text-xs">Match Type Configuration</h1>
-          <span className="text-[10px] font-semibold text-slate-400 dark:text-muted-foreground sm:text-[11px]">Dropdown selection</span>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.02em] text-[#344054] dark:text-card-foreground sm:text-xs">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            Match Type Configuration
+          </h1>
         </div>
 
-        {/* Match Type dropdown */}
-        <div className="mb-5">
-          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Match Type</label>
-          <div className="relative">
-            <select
-              value={matchType}
-              onChange={(e) => setMatchType(e.target.value)}
-              className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
-            >
-              <option value="Derby Match">Derby Match</option>
-              <option value="Hack Fight">Hack Fight</option>
-              <option value="Main Fight">Main Fight</option>
-              <option value="Pot Fight">Pot Fight</option>
-            </select>
-            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-              <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+        {/* Row 1: Match Type + Number of Cocks */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Match Type</label>
+            <div className="relative">
+              <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className={selectClass}>
+                <option value="Derby Match">Derby Match</option>
+                <option value="Hack Fight">Hack Fight</option>
+                <option value="Main Fight">Main Fight</option>
+                <option value="Pot Fight">Pot Fight</option>
+              </select>
+              <SelectChevron />
             </div>
           </div>
-          <p className="mt-1.5 text-[10px] text-[#98a2b3] dark:text-muted-foreground">Choose the category that will be used for this event.</p>
-        </div>
-
-        {/* Number of Cocks — manual input */}
-        <div className="mb-5">
-          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Number of Cocks to Match</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={1}
-              max={99}
-              value={cockCount || ''}
-              onChange={(e) => setCockCount(Number(e.target.value) || 0)}
-              placeholder="Type number of cocks"
-              className="match-field h-10 min-w-0 flex-1 rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground placeholder:text-[#98a2b3] dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
-            />
-            <span className="rounded-xl bg-[#f3f6f8] dark:bg-muted px-4 py-3 text-[11px] font-bold text-[#667085] dark:text-muted-foreground">cocks</span>
-          </div>
-          <p className="mt-1.5 text-[10px] text-[#98a2b3] dark:text-muted-foreground">Example: type 2, 3, 4, or 5. You may enter a different number if needed.</p>
-        </div>
-
-        {/* Bird Class dropdown */}
-        <div className="mb-5">
-          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Bird Class</label>
-          <div className="relative">
-            <select
-              value={ageCategory}
-              onChange={(e) => setAgeCategory(e.target.value)}
-              className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
-            >
-              <option value="Cock">Cock</option>
-              <option value="Stag">Stag</option>
-            </select>
-            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-              <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+          <div>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Number of Cocks</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={99}
+                value={cockCount || ''}
+                onChange={(e) => setCockCount(Number(e.target.value) || 0)}
+                placeholder="Enter number"
+                className={`${inputClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+              />
+              <span className="rounded-xl bg-[#f3f6f8] dark:bg-muted px-4 py-3 text-[11px] font-bold text-[#667085] dark:text-muted-foreground">cocks</span>
             </div>
           </div>
         </div>
 
-        {/* Event Type dropdown */}
-        <div className="mb-5">
-          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Event Type</label>
-          <div className="relative">
-            <select
-              value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
-              className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
-            >
-              <option value="Derby">Derby</option>
-              <option value="Lusong">Lusong</option>
-            </select>
-            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-              <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+        {/* Row 2: Bird Class + Event Type */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Bird Class</label>
+            <div className="relative">
+              <select value={ageCategory} onChange={(e) => setAgeCategory(e.target.value)} className={selectClass}>
+                <option value="Cock">Cock</option>
+                <option value="Stag">Stag</option>
+              </select>
+              <SelectChevron />
+            </div>
+          </div>
+          <div>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Event Type</label>
+            <div className="relative">
+              <select value={eventType} onChange={(e) => setEventType(e.target.value)} className={selectClass}>
+                <option value="Derby">Derby</option>
+                <option value="Lusong">Lusong</option>
+              </select>
+              <SelectChevron />
             </div>
           </div>
         </div>
 
-        {/* Chicken Age — manual input + unit */}
-        <div className="mb-5">
-          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Chicken Age</label>
-          <div className="grid grid-cols-[minmax(0,1fr)_130px] gap-2">
+        {/* Row 3: Chicken Age + Age Unit */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Chicken Age</label>
             <input
               type="number"
               min={1}
               value={chickenAge}
               onChange={(e) => setChickenAge(e.target.value)}
-              placeholder="Type age"
-              className="match-field no-spinner h-10 w-full rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground placeholder:text-[#98a2b3] dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+              placeholder="Enter age"
+              className={`${inputClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
             />
+          </div>
+          <div>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Age Unit</label>
             <div className="relative">
-              <select
-                value={ageUnit}
-                onChange={(e) => setAgeUnit(e.target.value)}
-                className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-9 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
-              >
+              <select value={ageUnit} onChange={(e) => setAgeUnit(e.target.value)} className={selectClass}>
                 <option value="Months">Months</option>
                 <option value="Years">Years</option>
               </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
-              </div>
+              <SelectChevron />
             </div>
           </div>
-          <p className="mt-1.5 text-[10px] text-[#98a2b3] dark:text-muted-foreground">Manual input is allowed. Enter the target age for the participating chickens.</p>
-        </div>
-
-        {/* Derby Match Number */}
-        <div className="mb-5">
-          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Derby Match Number</label>
-          <input
-            type="number"
-            min={1}
-            max={99}
-            value={derbyMatchNumber}
-            onChange={(e) => setDerbyMatchNumber(Number(e.target.value) || 1)}
-            className="match-field h-10 w-full rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
         </div>
 
         {/* Live Preview — only show when cock count is set */}
         {cockCount > 0 && (
-          <div className="border-t border-[#edf0f3] dark:border-border pt-4">
-            <label className="mb-2 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Live Preview</label>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-base font-extrabold tracking-[-.02em] text-[#111827] dark:text-card-foreground">{buildPreview()}</p>
-              {chickenAge && (
-                <span className="rounded-full bg-[#eaf9f4] dark:bg-emerald-950/50 px-2.5 py-1 text-[10px] font-bold text-[#087b60] dark:text-emerald-400">{chickenAge} {ageUnit}</span>
-              )}
+          <div className="mt-4 rounded-xl bg-[#f0fdf9] dark:bg-emerald-950/30 border border-[#13a983]/20 dark:border-emerald-800/40 p-3.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#13a983] dark:bg-emerald-400 animate-pulse" />
+              <label className="text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Live Preview</label>
             </div>
+            <p className="text-sm font-extrabold tracking-[-.02em] text-[#111827] dark:text-card-foreground">{buildPreview()}</p>
           </div>
         )}
 
