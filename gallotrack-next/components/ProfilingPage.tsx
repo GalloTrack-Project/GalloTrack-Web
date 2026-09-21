@@ -45,6 +45,7 @@ export default function ProfilingPage() {
     handleAddFowl, handleAddMatchRecord,
     handleOpenEditModal, handleRestoreFowlOnly,
     generationPurity,
+    autoCalcAge,
     getAutoCalcAge,
   } = fowl;
 
@@ -143,6 +144,7 @@ export default function ProfilingPage() {
           sireGen={sireGen} damGen={damGen}
           generationPurity={generationPurity}
           handleAddFowl={handleAddFowl}
+          autoCalcAge={autoCalcAge}
           getAutoCalcAge={getAutoCalcAge}
         />
       )}

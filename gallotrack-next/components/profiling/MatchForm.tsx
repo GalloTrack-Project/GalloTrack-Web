@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
-import { POST_FIGHT_CONDITIONS, isMale, COCK_COUNT_OPTIONS } from '@/lib/helpers';
+import { POST_FIGHT_CONDITIONS, isMale } from '@/lib/helpers';
 
 type Props = {
   fowls: FowlRecord[];
@@ -55,32 +55,16 @@ export default function MatchForm({
   ageCategory, setAgeCategory,
   eventType, setEventType,
 }: Props) {
-  const [customMode, setCustomMode] = useState(false);
-  const [customType, setCustomType] = useState('');
+  const [chickenAge, setChickenAge] = useState('');
+  const [ageUnit, setAgeUnit] = useState('Months');
 
   const buildPreview = () => {
-    return `${cockCount}-Cock ${ageCategory} ${eventType} #${derbyMatchNumber}`;
-  };
-
-  React.useEffect(() => {
-    if (!customMode) {
-      setMatchType(buildPreview());
+    const cockText = cockCount > 0 ? `${cockCount} cocks` : '0 cocks';
+    const base = `${matchType} · ${cockText} · ${ageCategory} · ${eventType}`;
+    if (chickenAge) {
+      return `${base} · ${chickenAge} ${ageUnit}`;
     }
-  }, [cockCount, ageCategory, eventType, derbyMatchNumber, customMode]);
-
-  const handleCustomToggle = () => {
-    if (!customMode) {
-      setCustomType(matchType);
-    } else {
-      setCustomType('');
-      setMatchType(buildPreview());
-    }
-    setCustomMode(!customMode);
-  };
-
-  const handleCustomChange = (val: string) => {
-    setCustomType(val);
-    setMatchType(val);
+    return base;
   };
 
   return (
@@ -141,131 +125,145 @@ export default function MatchForm({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MATCH TYPE — Single grouped container */}
+      {/* MATCH TYPE CONFIGURATION — Dropdown + manual input style */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="border border-emerald-200 dark:border-emerald-800/50 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 p-4">
+      <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5 shadow-sm">
 
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-emerald-200/60 dark:border-emerald-800/40 mb-3">
-          <label className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Match Type Configuration</label>
-          <button type="button" onClick={handleCustomToggle} className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${customMode ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-muted border border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground hover:border-emerald-400'}`}>
-            {customMode ? 'Back to Cards' : 'Custom Input'}
-          </button>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-[11px] font-extrabold uppercase tracking-[.02em] text-[#344054] dark:text-card-foreground sm:text-xs">Match Type Configuration</h1>
+          <span className="text-[10px] font-semibold text-slate-400 dark:text-muted-foreground sm:text-[11px]">Dropdown selection</span>
         </div>
 
-        {customMode ? (
-          <div>
-            <input
-              type="text"
-              value={customType}
-              onChange={(e) => handleCustomChange(e.target.value)}
-              className="w-full p-3 border border-emerald-300 dark:border-emerald-700 rounded-xl text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 transition-all"
-              placeholder="e.g., Regional Circuit, Championship, Main Event..."
-              required
-            />
-            <p className="mt-1 text-[9px] text-slate-400 dark:text-muted-foreground font-semibold">Type any custom match type you want.</p>
+        {/* Match Type dropdown */}
+        <div className="mb-5">
+          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Match Type</label>
+          <div className="relative">
+            <select
+              value={matchType}
+              onChange={(e) => setMatchType(e.target.value)}
+              className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+            >
+              <option value="Derby Match">Derby Match</option>
+              <option value="Hack Fight">Hack Fight</option>
+              <option value="Main Fight">Main Fight</option>
+              <option value="Pot Fight">Pot Fight</option>
+            </select>
+            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
+              <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+            </div>
           </div>
-        ) : (
-          <div className="space-y-0">
+          <p className="mt-1.5 text-[10px] text-[#98a2b3] dark:text-muted-foreground">Choose the category that will be used for this event.</p>
+        </div>
 
-            {/* Row 1: Match Format */}
-            <div className="pb-3 border-b border-emerald-100 dark:border-emerald-900/40">
-              <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-500 uppercase mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                Match Format
-              </p>
-              <div className="grid grid-cols-4 gap-2">
-                {COCK_COUNT_OPTIONS.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setCockCount(n)}
-                    className={`py-2.5 rounded-xl text-xs font-black border-2 transition-all cursor-pointer text-center ${
-                      cockCount === n
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900'
-                        : 'bg-white dark:bg-muted border-slate-200 dark:border-border text-slate-600 dark:text-muted-foreground hover:border-emerald-300 dark:hover:border-emerald-700'
-                    }`}
-                  >
-                    {n}-Cock
-                  </button>
-                ))}
+        {/* Number of Cocks — manual input */}
+        <div className="mb-5">
+          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Number of Cocks to Match</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={99}
+              value={cockCount || ''}
+              onChange={(e) => setCockCount(Number(e.target.value) || 0)}
+              placeholder="Type number of cocks"
+              className="match-field h-10 min-w-0 flex-1 rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground placeholder:text-[#98a2b3] dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+            />
+            <span className="rounded-xl bg-[#f3f6f8] dark:bg-muted px-4 py-3 text-[11px] font-bold text-[#667085] dark:text-muted-foreground">cocks</span>
+          </div>
+          <p className="mt-1.5 text-[10px] text-[#98a2b3] dark:text-muted-foreground">Example: type 2, 3, 4, or 5. You may enter a different number if needed.</p>
+        </div>
+
+        {/* Bird Class dropdown */}
+        <div className="mb-5">
+          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Bird Class</label>
+          <div className="relative">
+            <select
+              value={ageCategory}
+              onChange={(e) => setAgeCategory(e.target.value)}
+              className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+            >
+              <option value="Cock">Cock</option>
+              <option value="Stag">Stag</option>
+            </select>
+            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
+              <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Event Type dropdown */}
+        <div className="mb-5">
+          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Event Type</label>
+          <div className="relative">
+            <select
+              value={eventType}
+              onChange={(e) => setEventType(e.target.value)}
+              className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+            >
+              <option value="Derby">Derby</option>
+              <option value="Lusong">Lusong</option>
+            </select>
+            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
+              <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Chicken Age — manual input + unit */}
+        <div className="mb-5">
+          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Chicken Age</label>
+          <div className="grid grid-cols-[minmax(0,1fr)_130px] gap-2">
+            <input
+              type="number"
+              min={1}
+              value={chickenAge}
+              onChange={(e) => setChickenAge(e.target.value)}
+              placeholder="Type age"
+              className="match-field no-spinner h-10 w-full rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground placeholder:text-[#98a2b3] dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+            />
+            <div className="relative">
+              <select
+                value={ageUnit}
+                onChange={(e) => setAgeUnit(e.target.value)}
+                className="match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-9 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]"
+              >
+                <option value="Months">Months</option>
+                <option value="Years">Years</option>
+              </select>
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
               </div>
             </div>
+          </div>
+          <p className="mt-1.5 text-[10px] text-[#98a2b3] dark:text-muted-foreground">Manual input is allowed. Enter the target age for the participating chickens.</p>
+        </div>
 
-            {/* Row 2: Bird Class */}
-            <div className="py-3 border-b border-emerald-100 dark:border-emerald-900/40">
-              <p className="text-[9px] font-bold text-sky-600 dark:text-sky-500 uppercase mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 inline-block"></span>
-                Bird Class
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {['Cock', 'Stag'].map((age) => (
-                  <button
-                    key={age}
-                    type="button"
-                    onClick={() => setAgeCategory(age)}
-                    className={`py-2.5 rounded-xl text-xs font-black border-2 transition-all cursor-pointer text-center ${
-                      ageCategory === age
-                        ? 'bg-sky-600 border-sky-600 text-white shadow-md shadow-sky-200 dark:shadow-sky-900'
-                        : 'bg-white dark:bg-muted border-slate-200 dark:border-border text-slate-600 dark:text-muted-foreground hover:border-sky-300 dark:hover:border-sky-700'
-                    }`}
-                  >
-                    {age}
-                  </button>
-                ))}
-              </div>
+        {/* Derby Match Number */}
+        <div className="mb-5">
+          <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Derby Match Number</label>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            value={derbyMatchNumber}
+            onChange={(e) => setDerbyMatchNumber(Number(e.target.value) || 1)}
+            className="match-field h-10 w-full rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        </div>
+
+        {/* Live Preview — only show when cock count is set */}
+        {cockCount > 0 && (
+          <div className="border-t border-[#edf0f3] dark:border-border pt-4">
+            <label className="mb-2 block text-[9px] font-bold uppercase tracking-[.02em] text-[#98a2b3] dark:text-muted-foreground">Live Preview</label>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-base font-extrabold tracking-[-.02em] text-[#111827] dark:text-card-foreground">{buildPreview()}</p>
+              {chickenAge && (
+                <span className="rounded-full bg-[#eaf9f4] dark:bg-emerald-950/50 px-2.5 py-1 text-[10px] font-bold text-[#087b60] dark:text-emerald-400">{chickenAge} {ageUnit}</span>
+              )}
             </div>
-
-            {/* Row 3: Event Type */}
-            <div className="py-3 border-b border-emerald-100 dark:border-emerald-900/40">
-              <p className="text-[9px] font-bold text-amber-600 dark:text-amber-500 uppercase mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span>
-                Event Type
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {['Derby', 'Lusong'].map((evt) => (
-                  <button
-                    key={evt}
-                    type="button"
-                    onClick={() => setEventType(evt)}
-                    className={`py-2.5 rounded-xl text-xs font-black border-2 transition-all cursor-pointer text-center ${
-                      eventType === evt
-                        ? 'bg-amber-600 border-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-amber-900'
-                        : 'bg-white dark:bg-muted border-slate-200 dark:border-border text-slate-600 dark:text-muted-foreground hover:border-amber-300 dark:hover:border-amber-700'
-                    }`}
-                  >
-                    {evt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Row 4: Match Number */}
-            <div className="py-3 border-b border-emerald-100 dark:border-emerald-900/40">
-              <p className="text-[9px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
-                Match Number
-              </p>
-              <input
-                type="number"
-                min={1}
-                max={99}
-                value={derbyMatchNumber}
-                onChange={(e) => setDerbyMatchNumber(Number(e.target.value) || 1)}
-                className="w-full p-2.5 border border-slate-200 dark:border-border rounded-xl text-xs bg-white dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none focus:border-emerald-500 transition-all"
-              />
-            </div>
-
-            {/* Row 5: Live Preview */}
-            <div className="pt-3">
-              <div className="bg-white dark:bg-muted border border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl p-3 text-center">
-                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase mb-1">Live Preview</p>
-                <p className="text-sm font-black text-emerald-700 dark:text-emerald-400 tracking-wide">{buildPreview()}</p>
-              </div>
-            </div>
-
           </div>
         )}
+
       </div>
 
       {/* Fight Outcome */}

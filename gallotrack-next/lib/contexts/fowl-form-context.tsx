@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   autoComputeGrowthStage,
   getAgeParts as getAgePartsHelper,
@@ -107,15 +107,20 @@ export function useFowlFormState(): FowlFormStateContextValue {
 }
 
 export function FowlFormStateProvider({ children }: { children: React.ReactNode }) {
-  function getAutoCalcAge(): boolean {
+  const [autoCalcAge, setAutoCalcAge] = useState(true);
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem('gallotrack_user_preferences');
       if (raw) {
         const prefs = JSON.parse(raw);
-        if (prefs.auto_calculate_age === false) return false;
+        if (prefs.auto_calculate_age === false) setAutoCalcAge(false);
       }
     } catch { /* ignore */ }
-    return true;
+  }, []);
+
+  function getAutoCalcAge(): boolean {
+    return autoCalcAge;
   }
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('');
@@ -145,7 +150,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [opponentName, setOpponentName] = useState('');
   const [opponentBreed, setOpponentBreed] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
-  const [matchType, setMatchType] = useState('2-Cock Cock Derby');
+  const [matchType, setMatchType] = useState('Derby Match');
   const [derbyMatchNumber, setDerbyMatchNumber] = useState(1);
   const [matchOutcome, setMatchOutcome] = useState('Win');
   const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
@@ -292,7 +297,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
-    autoCalcAge: getAutoCalcAge(), getAutoCalcAge,
+    autoCalcAge, getAutoCalcAge,
   };
 
   return <FowlFormStateContext.Provider value={value}>{children}</FowlFormStateContext.Provider>;
