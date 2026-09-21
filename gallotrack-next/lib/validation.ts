@@ -35,7 +35,7 @@ export const matchFormSchema = z.object({
   betType: z.enum(['durbe', 'lusok', 'contra', 'bulsay']).default('durbe'),
   targetNumber: z.number().min(1).max(10).default(1),
   partnerEntry: z.string().optional(),
-  cockCount: z.number().min(2).max(5).default(2),
+  cockCount: z.number().min(1).max(99).default(2),
   ageCategory: z.enum(['Cock', 'Stag']).default('Cock'),
   eventType: z.string().default('Derby'),
   derbyMatchNumber: z.number().min(1).max(99).default(1),
