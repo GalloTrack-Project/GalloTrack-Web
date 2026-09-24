@@ -267,6 +267,38 @@ export default function FowlLists({
     );
   }
 
+  if (tab === 'sireMaterial') {
+    const { pagedList, totalPages } = paginatedBirds;
+    return (
+      <div className="space-y-4 animate-fadeIn">
+        <div className="bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-amber-500">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 text-amber-500">🛡️</div>
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Sire Material Registry</h2>
+              <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold">Retired fighters promoted to breeding stock after critical injuries</p>
+            </div>
+          </div>
+          <span className="shrink-0 text-[10px] font-black text-white px-3 py-1.5 rounded-full bg-amber-600">{paginatedBirds.list.length} Registered</span>
+        </div>
+        {paginatedBirds.list.length === 0 ? (
+          <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
+            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Sire Material Yet</h3>
+            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No gamefowl have been retired to breeding stock. Record a match with Post-Fight Condition <strong>Severely Injured / Critical</strong> and the fighter will be auto-promoted here.</p>
+          </div>
+        ) : (
+          <>
+            {pagedList.map((fowl, index) => (
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
+            ))}
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
+        )}
+      </div>
+    );
+  }
+
   // deceased
   const { pagedList: deceasedPagedList, totalPages: deceasedTotalPages } = paginatedBirds;
   return (

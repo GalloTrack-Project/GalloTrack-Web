@@ -3,6 +3,14 @@ import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { POST_FIGHT_CONDITIONS, isMale } from '@/lib/helpers';
 
+function SelectChevron() {
+  return (
+    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
+      <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
+    </div>
+  );
+}
+
 type Props = {
   fowls: FowlRecord[];
   loading: boolean;
@@ -52,23 +60,30 @@ export default function MatchForm({
   ageCategory, setAgeCategory,
   eventType, setEventType,
 }: Props) {
-  const [chickenAge, setChickenAge] = useState('');
-  const [ageUnit, setAgeUnit] = useState('Months');
+  const MATCH_TYPE_PRESETS = ['Derby Match', 'Hack Fight', 'Main Fight', 'Pot Fight'];
+  const EVENT_TYPE_PRESETS = ['Derby', 'Lusong'];
+
+  const [customMatchType, setCustomMatchType] = useState('');
+  const [customEventType, setCustomEventType] = useState('');
+
+  const matchTypeIsCustom = matchType === '__custom__' || !MATCH_TYPE_PRESETS.includes(matchType);
+  const eventTypeIsCustom = eventType === '__custom__' || !EVENT_TYPE_PRESETS.includes(eventType);
+
+  const matchTypeSelectValue = MATCH_TYPE_PRESETS.includes(matchType) ? matchType : '__custom__';
+  const eventTypeSelectValue = EVENT_TYPE_PRESETS.includes(eventType) ? eventType : '__custom__';
+
+  const effectiveMatchType = matchType === '__custom__' ? customMatchType : matchType;
+  const effectiveEventType = eventType === '__custom__' ? customEventType : eventType;
+
+  const customMatchTypeEmpty = matchTypeIsCustom && !effectiveMatchType.trim();
+  const customEventTypeEmpty = eventTypeIsCustom && !effectiveEventType.trim();
 
   const buildPreview = () => {
     const cockText = cockCount > 0 ? `${cockCount} cocks` : '0 cocks';
-    const base = `${matchType} · ${cockText} · ${ageCategory} · ${eventType}`;
-    if (chickenAge) {
-      return `${base} · ${chickenAge} ${ageUnit}`;
-    }
-    return base;
+    const typeLabel = effectiveMatchType || 'Match Type';
+    const eventLabel = effectiveEventType || 'Event Type';
+    return `${typeLabel} · ${cockText} · ${ageCategory} · ${eventLabel}`;
   };
-
-  const SelectChevron = () => (
-    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-      <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-[#667085] dark:border-muted-foreground rotate-45 -translate-y-[2px]" />
-    </div>
-  );
 
   const selectClass = "match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
   const inputClass = "match-field h-10 min-w-0 flex-1 rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 text-xs font-semibold text-[#263445] dark:text-card-foreground placeholder:text-[#98a2b3] dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
@@ -148,14 +163,32 @@ export default function MatchForm({
           <div>
             <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Match Type</label>
             <div className="relative">
-              <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className={selectClass}>
+              <select value={matchTypeSelectValue} onChange={(e) => setMatchType(e.target.value)} className={selectClass}>
                 <option value="Derby Match">Derby Match</option>
                 <option value="Hack Fight">Hack Fight</option>
                 <option value="Main Fight">Main Fight</option>
                 <option value="Pot Fight">Pot Fight</option>
+                <option value="__custom__">Others (Add Custom)</option>
               </select>
               <SelectChevron />
             </div>
+            {matchTypeIsCustom && (
+              <input
+                type="text"
+                value={matchType === '__custom__' ? customMatchType : matchType}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCustomMatchType(v);
+                  setMatchType(v || '__custom__');
+                }}
+                placeholder="Type your custom match type..."
+                maxLength={50}
+                className={`${selectClass} mt-2`}
+              />
+            )}
+            {customMatchTypeEmpty && (
+              <p className="mt-1 text-[10px] font-semibold text-red-500">Enter a custom match type or pick a preset.</p>
+            )}
           </div>
           <div>
             <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Number of Cocks</label>
@@ -189,37 +222,30 @@ export default function MatchForm({
           <div>
             <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Event Type</label>
             <div className="relative">
-              <select value={eventType} onChange={(e) => setEventType(e.target.value)} className={selectClass}>
+              <select value={eventTypeSelectValue} onChange={(e) => setEventType(e.target.value)} className={selectClass}>
                 <option value="Derby">Derby</option>
                 <option value="Lusong">Lusong</option>
+                <option value="__custom__">Others (Add Custom)</option>
               </select>
               <SelectChevron />
             </div>
-          </div>
-        </div>
-
-        {/* Row 3: Chicken Age + Age Unit */}
-        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Chicken Age</label>
-            <input
-              type="number"
-              min={1}
-              value={chickenAge}
-              onChange={(e) => setChickenAge(e.target.value)}
-              placeholder="Enter age"
-              className={`${inputClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-            />
-          </div>
-          <div>
-            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Age Unit</label>
-            <div className="relative">
-              <select value={ageUnit} onChange={(e) => setAgeUnit(e.target.value)} className={selectClass}>
-                <option value="Months">Months</option>
-                <option value="Years">Years</option>
-              </select>
-              <SelectChevron />
-            </div>
+            {eventTypeIsCustom && (
+              <input
+                type="text"
+                value={eventType === '__custom__' ? customEventType : eventType}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCustomEventType(v);
+                  setEventType(v || '__custom__');
+                }}
+                placeholder="Type your custom event type..."
+                maxLength={50}
+                className={`${selectClass} mt-2`}
+              />
+            )}
+            {customEventTypeEmpty && (
+              <p className="mt-1 text-[10px] font-semibold text-red-500">Enter a custom event type or pick a preset.</p>
+            )}
           </div>
         </div>
 
@@ -271,7 +297,7 @@ export default function MatchForm({
       </div>
 
       {/* Submit */}
-      <button type="submit" disabled={loading || uploadingVideo} className="w-full bg-slate-900 dark:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 dark:hover:bg-emerald-500 flex items-center justify-center space-x-2">
+      <button type="submit" disabled={loading || uploadingVideo || customMatchTypeEmpty || customEventTypeEmpty} className="w-full bg-slate-900 dark:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 dark:hover:bg-emerald-500 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
         {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
         <span>{loading ? 'Recording...' : 'RECORD MATCH'}</span>
       </button>

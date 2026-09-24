@@ -66,7 +66,7 @@ export async function markFowlDeceased(id: number, reason: string): Promise<{ er
 export async function setSireMaterial(id: number): Promise<{ error?: string }> {
   const { error } = await supabase
     .from('fowl')
-    .update({ status: 'Sire Material', updated_at: new Date().toISOString() })
+    .update({ status: 'Sire Material' })
     .eq('id', id);
   if (error) return { error: error.message };
   return {};

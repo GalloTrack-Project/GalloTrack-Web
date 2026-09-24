@@ -593,8 +593,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         if (matchPostFight === 'Severely Injured / Critical') {
           const matchedFowl = fowls.find(f => f.name === selectedFowlForMatch);
           if (matchedFowl) {
-            await fowlService.setSireMaterial(matchedFowl.id);
-            ui.showToastMessage(`${selectedFowlForMatch} is now marked as Sire Material — retired from fighting, available for breeding.`, 'warning');
+            const sireResult = await fowlService.setSireMaterial(matchedFowl.id);
+            if (sireResult.error) {
+              ui.showToastMessage(`Match saved, but failed to mark ${selectedFowlForMatch} as Sire Material: ${sireResult.error}`, 'error');
+            } else {
+              ui.showToastMessage(`${selectedFowlForMatch} is now marked as Sire Material — retired from fighting, available for breeding.`, 'warning');
+            }
+          } else {
+            ui.showToastMessage(`Match saved, but fowl "${selectedFowlForMatch}" was not found in registry — could not mark as Sire Material.`, 'error');
           }
         }
 
