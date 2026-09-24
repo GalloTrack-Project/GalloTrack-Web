@@ -25,15 +25,22 @@ export async function insertMatch(payload: Record<string, unknown>): Promise<{ e
 }
 
 export async function uploadMatchVideo(file: File): Promise<{ url?: string; error?: string }> {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `match-videos/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: 'Not authenticated' };
 
-  const { error: uploadError } = await supabase.storage
-    .from('match-videos')
-    .upload(fileName, file);
+  const form = new FormData();
+  form.append('file', file);
 
-  if (uploadError) return { error: uploadError.message };
-
-  const { data } = await supabase.storage.from('match-videos').getPublicUrl(fileName);
-  return { url: data.publicUrl };
+  try {
+    const res = await fetch('/api/match/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      body: form,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: body.error || `Upload failed (${res.status})` };
+    return { url: body.url };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Upload failed' };
+  }
 }

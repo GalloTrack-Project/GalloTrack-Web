@@ -16,7 +16,7 @@ async function main() {
 
   const { data: fowls, error } = await supabase
     .from('fowl')
-    .select('id, name, gender, status, user_id, updated_at')
+    .select('id, name, gender, status, user_id')
     .in('name', names);
 
   console.log('=== FOWL STATUS ===');

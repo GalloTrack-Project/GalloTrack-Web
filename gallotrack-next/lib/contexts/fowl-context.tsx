@@ -580,7 +580,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         throw new Error(result.error);
       } else {
         // Save betting/option data to match_options table
-        await matchOptionsService.insertMatchOption({
+        const optResult = await matchOptionsService.insertMatchOption({
           option_number: matchOption,
           fowl_entry: selectedFowlForMatch,
           partner_entry: partnerEntry || undefined,
@@ -588,6 +588,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           target_number: targetNumber,
           status: partnerEntry ? 'matched' : 'pending',
         });
+        if (optResult.error) {
+          console.warn('Match options save skipped:', optResult.error);
+        }
 
         // Auto-set fowl to "Sire Material" if severely injured
         if (matchPostFight === 'Severely Injured / Critical') {
