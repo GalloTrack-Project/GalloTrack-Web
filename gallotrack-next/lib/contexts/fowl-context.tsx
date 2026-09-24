@@ -35,6 +35,7 @@ import * as matchService from '@/lib/services/match-service';
 import * as matchOptionsService from '@/lib/services/match-options-service';
 import type { PartnerSuggestion } from '@/lib/services/match-options-service';
 import * as strainService from '@/lib/services/strain-service';
+import { useUnitPrefs, weightToStorage, heightToStorage, weightFromStorage, heightFromStorage } from '@/lib/units';
 import type { BloodlineReport } from '@/lib/bloodlines';
 import type {
   FowlRecord,
@@ -248,6 +249,7 @@ function sanitizeInput(value: string): string {
 export function FowlProviderInternal({ children }: { children: React.ReactNode }) {
   const ui = useUI();
   const formState = useFowlFormState();
+  const unitPrefs = useUnitPrefs();
   const {
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newColor, newColorCategory,
@@ -287,7 +289,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
   } = formState;
 
-  // Load system defaults for match type and arena on mount
+  // Load system defaults for match type, arena, and default strain on mount
   useEffect(() => {
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
@@ -295,6 +297,20 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         if (s.default_match_type) setMatchType(s.default_match_type);
         if (s.default_arena) setMatchLocation(s.default_arena);
         if (s.auto_calculate_age === false) setAutoCalcAge(false);
+
+        // Default strain: localStorage user preference wins, then admin default
+        let strain = s.default_strain || '';
+        try {
+          const raw = localStorage.getItem('gallotrack_user_preferences');
+          if (raw) {
+            const prefs = JSON.parse(raw);
+            if (prefs.default_strain) strain = prefs.default_strain;
+          }
+        } catch { /* ignore */ }
+        if (strain) {
+          setSelectedStrains((prev) => (prev.length > 0 ? prev : [strain]));
+          setAvailableStrains((prev) => (prev.includes(strain) ? prev : [...prev, strain]));
+        }
       })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -480,8 +496,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           : age && !isNaN(Number(age))
           ? `${Number(age)} Months`
           : 'N/A',
-        weight: weight ? `${Math.round(Number(weight.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
-        height: height ? `${Math.round(Number(height.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
+        weight: weight ? weightToStorage(weight, unitPrefs.weightUnit) : '',
+        height: height ? heightToStorage(height, unitPrefs.heightUnit) : '',
         leg_color: newLegColor.trim() ? newLegColor.trim() : 'N/A',
         sire: sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock',
         dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
@@ -705,8 +721,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditAge(fowl.age ? fowl.age.replace(' Months', '') : '');
     setEditBirthdate(fowl.birthdate || '');
     setEditGrowthStage(fowl.growth_stage || autoComputeGrowthStage(isNaN(parsedAge) ? 0 : parsedAge, fowl.gender));
-    setEditWeight(fowl.weight ? fowl.weight.replace(/ kg$/, '') : '');
-    setEditHeight(fowl.height ? fowl.height.replace(/ cm$/, '') : '');
+    setEditWeight(weightFromStorage(fowl.weight, unitPrefs.weightUnit));
+    setEditHeight(heightFromStorage(fowl.height, unitPrefs.heightUnit));
     setEditLegColor(fowl.leg_color || 'N/A');
     setEditSire(fowl.sire || '');
     setEditDam(fowl.dam || '');
@@ -743,8 +759,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           : editAge && !isNaN(Number(editAge))
           ? `${Number(editAge)} Months`
           : 'N/A',
-        weight: editWeight ? `${Math.round(Number(editWeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
-        height: editHeight ? `${Math.round(Number(editHeight.toString().replace(/[^0-9.]/g, '')) * 10) / 10}` : '',
+        weight: editWeight ? weightToStorage(editWeight, unitPrefs.weightUnit) : '',
+        height: editHeight ? heightToStorage(editHeight, unitPrefs.heightUnit) : '',
         leg_color: editLegColor.trim() ? editLegColor.trim() : 'N/A',
         sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
         dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',

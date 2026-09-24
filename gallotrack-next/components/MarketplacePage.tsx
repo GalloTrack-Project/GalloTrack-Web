@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
+import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
 type SortKey = 'name' | 'age' | 'strain' | 'winrate' | 'weight';
@@ -69,6 +70,7 @@ function ComplianceBadge({ grade }: { grade: string }) {
 }
 
 function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: MatchRecord[]; onClick: () => void }) {
+  const unitPrefs = useUnitPrefs();
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
   const compliance = useMemo(
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
@@ -126,7 +128,7 @@ function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: Match
         </div>
         <div className="bg-muted/50 rounded-xl py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Weight</p>
-          <p className="text-xs font-black text-card-foreground">{fowl.weight ? (fowl.weight.endsWith(' kg') ? fowl.weight : `${fowl.weight} kg`) : '\u2014'}</p>
+          <p className="text-xs font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
         </div>
         <div className="bg-muted/50 rounded-xl py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Stage</p>
@@ -162,6 +164,7 @@ function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: Match
 }
 
 function FowlDetailModal({ fowl, matches, onClose }: { fowl: FowlRecord; matches: MatchRecord[]; onClose: () => void }) {
+  const unitPrefs = useUnitPrefs();
   const stats = getWinRate(fowl.name, matches);
   const compliance = useMemo(
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
@@ -204,8 +207,8 @@ function FowlDetailModal({ fowl, matches, onClose }: { fowl: FowlRecord; matches
               <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-emerald-400">{fowl.behavior_trait || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{fowl.weight ? (fowl.weight.endsWith(' kg') ? fowl.weight : `${fowl.weight} kg`) : '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{fowl.height ? (fowl.height.endsWith(' cm') ? fowl.height : `${fowl.height} cm`) : '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{fowl.height ? `${heightFromStorage(fowl.height, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '\u2014'}</span></div>
             </div>
           </div>
 

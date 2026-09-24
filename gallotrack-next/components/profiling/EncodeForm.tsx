@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { FowlRecord } from '@/lib/types';
 import ParentSelector from '@/components/modals/ParentSelector';
+import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
   const toneCls = tone === 'green'
@@ -121,6 +122,7 @@ export default function EncodeForm({
   autoCalcAge,
   getAutoCalcAge,
 }: Props) {
+  const unitPrefs = useUnitPrefs();
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
   const strainInputElRef = useRef<HTMLInputElement>(null);
@@ -318,11 +320,11 @@ export default function EncodeForm({
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Height (cm)</label>
+            <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
             <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Weight (kg)</label>
+            <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
             <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
           </div>
         </div>

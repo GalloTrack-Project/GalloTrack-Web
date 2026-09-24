@@ -3,6 +3,7 @@ import React from 'react';
 import { Pencil, Tag, Ruler, Calendar, TreePine } from 'lucide-react';
 import type { FowlRecord, AgeParts } from '@/lib/types';
 import ParentSelector from './ParentSelector';
+import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
@@ -111,6 +112,7 @@ export default function EditFowlModal({
   generationOf,
   generationPurity,
 }: EditFowlModalProps) {
+  const unitPrefs = useUnitPrefs();
   if (!editingFowl) return null;
 
   const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
@@ -246,11 +248,11 @@ export default function EditFowlModal({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Height (cm)</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
                 <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Weight (kg)</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
                 <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
               </div>
             </div>
