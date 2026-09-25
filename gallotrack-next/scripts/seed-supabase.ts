@@ -16,6 +16,9 @@
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { FowlRecord } from '../lib/types';
+import { computeAllCompositions, getBloodlineStats } from '../lib/bloodline-composition';
+import { resolveBirdCodes } from '../lib/bird-code';
 
 const envPath = path.resolve(__dirname, '../.env.local');
 const envContent = fs.readFileSync(envPath, 'utf-8');
@@ -318,6 +321,8 @@ async function main() {
     sire_pct: number;
     dam_pct: number;
     bloodline_pct: number;
+    bird_code?: string;
+    bloodline_composition?: Record<string, number>;
     status: string;
     image_url: string;
     archive_reason?: string;
@@ -434,6 +439,22 @@ async function main() {
     fallenRow.death_reason = 'Died from injuries after championship match';
     fallenRow.death_date = '2025-03-01';
   }
+
+  // ─── Genetics: standardized bird codes + per-strain bloodline breakdown ───
+  const geneticsInput = fowlRows.map((r, i) => ({ ...r, id: i + 1 })) as unknown as FowlRecord[];
+  const seedCodes = resolveBirdCodes(geneticsInput);
+  const seedCompositions = computeAllCompositions(geneticsInput);
+  fowlRows.forEach((row, i) => {
+    const key = String(i + 1);
+    const composition = seedCompositions.get(key);
+    const stats = composition ? getBloodlineStats(composition) : null;
+    const code = seedCodes.get(key);
+    if (code) row.bird_code = code;
+    if (stats && composition) {
+      row.bloodline_composition = composition;
+      row.bloodline_pct = stats.specificPct;
+    }
+  });
 
   // Bulk insert all fowl
   const { error: fowlInsertErr } = await supabase.from('fowl').insert(fowlRows);

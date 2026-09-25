@@ -2,7 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { FowlRecord } from '@/lib/types';
+import type { BloodlineStats } from '@/lib/bloodline-composition';
 import ParentSelector from '@/components/modals/ParentSelector';
+import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
@@ -56,6 +58,10 @@ type Props = {
   setSirePct: (v: number | string) => void;
   damPct: number | string;
   setDamPct: (v: number | string) => void;
+  birdCode: string;
+  setBirdCode: (v: string) => void;
+  suggestedBirdCode: string;
+  previewBloodlineStats: BloodlineStats | null;
   selectedImage: File | null;
   setSelectedImage: (f: File | null) => void;
   imagePreview: string;
@@ -105,6 +111,8 @@ export default function EncodeForm({
   damName, setDamName,
   sirePct, setSirePct,
   damPct, setDamPct,
+  birdCode, setBirdCode,
+  suggestedBirdCode, previewBloodlineStats,
   selectedImage, setSelectedImage,
   imagePreview, setImagePreview,
   strainQuery, setStrainQuery,
@@ -178,6 +186,21 @@ export default function EncodeForm({
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Identifier Name</label>
           <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
+            Bird Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
+          </label>
+          <input
+            type="text"
+            value={birdCode}
+            onChange={(e) => setBirdCode(e.target.value)}
+            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            placeholder={suggestedBirdCode || 'e.g. 1A, 2B, 1Ax1B'}
+          />
+          <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">
+            {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-emerald-600">{suggestedBirdCode}</span></>}
+          </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -502,6 +525,21 @@ export default function EncodeForm({
           </div>
           <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold">Purity ladder: F1 (First Cross) = 50% · F2 (1st Backcross) = 75% · F3 (2nd Backcross) = 87.5% · F4+ (Stabilized) = 93.75%–96%+. Purity = 100 × (1 − 2⁻ᵍᵉⁿ) with foundation/base stock = 100%.</p>
         </div>
+        <BloodlineBreakdown
+          stats={previewBloodlineStats && previewBloodlineStats.knownPct > 0 ? previewBloodlineStats : null}
+          title="Bloodline Hatian (Live Preview)"
+          subtitle="Auto-computed mula sa magulang — 50% Sire, 50% Dam, halved bawat henerasyon"
+        />
+        {!previewBloodlineStats || previewBloodlineStats.knownPct === 0 ? (
+          <div className="bg-slate-50 dark:bg-muted/50 border border-dashed border-slate-200 dark:border-border rounded-2xl p-4">
+            <p className="text-[10px] font-black text-slate-400 dark:text-muted-foreground uppercase tracking-widest">
+              🧬 Bloodline Hatian
+            </p>
+            <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold mt-1">
+              Pumili ng Sire at Dam (o maglagay ng strain) para makita ang porsyento ng dugo bawat lahi.
+            </p>
+          </div>
+        ) : null}
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Fowl Attachment Photo</label>
           <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-2xl cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative">
@@ -521,7 +559,7 @@ export default function EncodeForm({
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Validation &amp; Summary Panel</span>
           </div>
-          <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">Node: {nextNodeId}</span>
+          <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">Code: {birdCode.trim() || suggestedBirdCode || '—'}</span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <StatusItem icon="🛡️" label="Data Integrity &amp; Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />

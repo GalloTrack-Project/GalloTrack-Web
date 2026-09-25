@@ -41,7 +41,18 @@ export default function DashboardPage() {
     upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
     dateRangeLabel, dateRangeOpen, setDateRangeOpen,
     dateRangePreset, setDateRangePreset, fetchDatabaseResources, loading,
+    birdCodes,
   } = fowl;
+
+  const codeByName = React.useMemo(() => {
+    const m = new Map<string, string>();
+    fowls.forEach((f) => {
+      const code = birdCodes.get(String(f.id));
+      const k = (f.name || '').trim().toLowerCase();
+      if (code && k) m.set(k, code);
+    });
+    return m;
+  }, [fowls, birdCodes]);
 
   const navigate = (page: string, subTab?: string) => {
     if (subTab) ui.setProfilingSubTab(subTab as never);
@@ -637,6 +648,11 @@ export default function DashboardPage() {
                       <div className="flex items-center space-x-2.5">
                         <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Bird className="w-3.5 h-3.5 text-emerald-400" /></div>
                         <span className="font-bold text-card-foreground">{log.entry_name}</span>
+                        {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
+                          <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                            {codeByName.get((log.entry_name || '').trim().toLowerCase())}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-4 font-bold text-card-foreground">{log.opponent || '—'}</td>

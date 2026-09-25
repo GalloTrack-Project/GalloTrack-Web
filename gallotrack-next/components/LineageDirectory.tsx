@@ -1,7 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
-import { Dna, Users, Bird, Link2, Trophy, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Dna, Users, Bird, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch } from 'lucide-react';
+import PedigreeTree from '@/components/PedigreeTree';
+import { resolveBirdCodes } from '@/lib/bird-code';
 
 function EmptyState({ title, hint }: { title: string; hint: string }) {
   return (
@@ -135,7 +137,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
   );
 }
 
-type LineageTab = 'families' | 'sire' | 'dam';
+type LineageTab = 'families' | 'sire' | 'dam' | 'pedigree';
 
 export default function LineageDirectory({
   fowls,
@@ -150,6 +152,7 @@ export default function LineageDirectory({
   const [expandedSires, setExpandedSires] = useState<Set<string>>(new Set());
   const [expandedDams, setExpandedDams] = useState<Set<string>>(new Set());
   const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
+  const birdCodes = React.useMemo(() => resolveBirdCodes(fowls), [fowls]);
 
   const toggleSire = (name: string) => {
     setExpandedSires((prev) => {
@@ -464,6 +467,11 @@ export default function LineageDirectory({
             <span>Dam Offspring Tree</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'dam' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{damEntries.length}</span>
           </button>
+          <button type="button" onClick={() => setActiveTab('pedigree')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'pedigree' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <span className="text-sm"><GitBranch className="w-4 h-4" /></span>
+            <span>Pedigree / Ancestors</span>
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'pedigree' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fowls.length}</span>
+          </button>
         </div>
       </div>
 
@@ -560,6 +568,19 @@ export default function LineageDirectory({
           ) : (
             renderParentTree(sireEntries, expandedSires, toggleSire, 'sire', 'sky')
           )}
+        </section>
+      )}
+
+      {activeTab === 'pedigree' && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 rounded-xl flex items-center justify-center"><GitBranch className="w-5 h-5" /></div>
+            <div>
+              <h2 className="text-base font-black text-card-foreground tracking-tight">Pedigree / Ancestor Lineage</h2>
+              <p className="text-[11px] text-muted-foreground font-bold">Bakit kailangan: kapag namatay ang magulang, dito makikita ang buong lahi at porsyento ng mga anak na gagamiting bagong broodstock.</p>
+            </div>
+          </div>
+          <PedigreeTree fowls={fowls} codes={birdCodes} />
         </section>
       )}
 

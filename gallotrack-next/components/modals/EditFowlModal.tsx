@@ -51,6 +51,8 @@ type EditFowlModalProps = {
   setEditSirePct: (v: number | string) => void;
   editDamPct: number | string;
   setEditDamPct: (v: number | string) => void;
+  editBirdCode: string;
+  setEditBirdCode: (v: string) => void;
   handleEditBirthdateChange: (val: string) => void;
   handleEditAgeChange: (val: string) => void;
   autoComputeGrowthStage: (ageMonths: number, gender: string) => string;
@@ -103,6 +105,8 @@ export default function EditFowlModal({
   setEditSirePct,
   editDamPct,
   setEditDamPct,
+  editBirdCode,
+  setEditBirdCode,
   handleEditBirthdateChange,
   handleEditAgeChange,
   autoComputeGrowthStage,
@@ -282,6 +286,19 @@ export default function EditFowlModal({
             <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
               <TreePine className="w-3.5 h-3.5" /> <span>Ancestry Heritage Roots</span>
             </h4>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">
+                Bird Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
+              </label>
+              <input
+                type="text"
+                value={editBirdCode}
+                onChange={(e) => setEditBirdCode(e.target.value)}
+                className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-mono font-bold"
+                placeholder="e.g. 1A, 2B, 1Ax1B"
+              />
+              <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">

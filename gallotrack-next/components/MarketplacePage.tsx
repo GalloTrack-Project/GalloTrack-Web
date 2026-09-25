@@ -2,6 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
+import { resolveBirdCodes } from '@/lib/bird-code';
+import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
+import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
@@ -69,7 +72,7 @@ function ComplianceBadge({ grade }: { grade: string }) {
   return <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${cls}`}>{grade}</span>;
 }
 
-function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: MatchRecord[]; onClick: () => void }) {
+function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClick: () => void; code?: string }) {
   const unitPrefs = useUnitPrefs();
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
   const compliance = useMemo(
@@ -107,7 +110,12 @@ function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: Match
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-emerald-400 transition-colors">{fowl.name}</h4>
+          <div className="flex items-center gap-2 min-w-0">
+            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-emerald-400 transition-colors">{fowl.name}</h4>
+            {code && (
+              <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{code}</span>
+            )}
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
           </div>
@@ -163,7 +171,7 @@ function FowlCard({ fowl, matches, onClick }: { fowl: FowlRecord; matches: Match
   );
 }
 
-function FowlDetailModal({ fowl, matches, onClose }: { fowl: FowlRecord; matches: MatchRecord[]; onClose: () => void }) {
+function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClose: () => void; fowls: FowlRecord[]; code?: string }) {
   const unitPrefs = useUnitPrefs();
   const stats = getWinRate(fowl.name, matches);
   const compliance = useMemo(
@@ -176,7 +184,10 @@ function FowlDetailModal({ fowl, matches, onClose }: { fowl: FowlRecord; matches
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <div className="relative bg-card rounded-3xl shadow-2xl border border-border max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-3xl">
-          <h3 className="text-base font-black text-card-foreground">{fowl.name}</h3>
+          <h3 className="text-base font-black text-card-foreground flex items-center gap-2 min-w-0">
+            <span className="truncate">{fowl.name}</span>
+            {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{code}</span>}
+          </h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
@@ -215,6 +226,11 @@ function FowlDetailModal({ fowl, matches, onClose }: { fowl: FowlRecord; matches
           {/* Lineage */}
           <div className="bg-muted/50 rounded-2xl p-4 space-y-3 border border-border">
             <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Lineage</h4>
+            <BloodlineBreakdown
+              stats={getFowlBloodlineStats(fowl, fowls)}
+              title="Bloodline Percentage"
+              subtitle="Hatian ng dugo bawat lahi — 50% Sire, 50% Dam"
+            />
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3">
                 <p className="text-[10px] font-black text-sky-400 uppercase">Sire</p>
@@ -320,6 +336,8 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
     { id: 'deceased', label: 'Deceased', count: fowls.filter((f) => f.status === 'Deceased').length },
   ], [fowls]);
 
+  const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
+
   const filteredFowls = useMemo(() => {
     let result = fowls;
 
@@ -404,13 +422,21 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredFowls.map((fowl) => (
-            <FowlCard key={fowl.id} fowl={fowl} matches={matchHistory} onClick={() => setSelectedFowl(fowl)} />
+            <FowlCard key={fowl.id} fowl={fowl} matches={matchHistory} code={birdCodes.get(String(fowl.id))} onClick={() => setSelectedFowl(fowl)} />
           ))}
         </div>
       )}
 
       {/* Detail Modal */}
-      {selectedFowl && <FowlDetailModal fowl={selectedFowl} matches={matchHistory} onClose={() => setSelectedFowl(null)} />}
+      {selectedFowl && (
+        <FowlDetailModal
+          fowl={selectedFowl}
+          matches={matchHistory}
+          fowls={fowls}
+          code={birdCodes.get(String(selectedFowl.id))}
+          onClose={() => setSelectedFowl(null)}
+        />
+      )}
     </div>
   );
 }

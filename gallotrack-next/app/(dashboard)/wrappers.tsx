@@ -43,6 +43,7 @@ export function MarketplacePageWrapper() {
 
 export function LineageDirectoryWrapper() {
   const fowl = useFowl();
+  const ui = useUI();
   return (
     <LineageDirectory
       fowls={fowl.fowls}
@@ -51,7 +52,7 @@ export function LineageDirectoryWrapper() {
       search={fowl.search}
       setSearch={fowl.setSearch}
       debouncedSearch={fowl.debouncedSearch}
-      setSelectedFowlForDetails={(f) => {}}
+      setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
     />
   );
 }
@@ -149,6 +150,8 @@ export function ModalsWrapper() {
       setEditSirePct={store.setEditSirePct}
       editDamPct={store.editDamPct}
       setEditDamPct={store.setEditDamPct}
+      editBirdCode={store.editBirdCode}
+      setEditBirdCode={store.setEditBirdCode}
       handleEditBirthdateChange={store.handleEditBirthdateChange}
       handleEditAgeChange={store.handleEditAgeChange}
       showPerFowlBreakdownModal={ui.showPerFowlBreakdownModal}

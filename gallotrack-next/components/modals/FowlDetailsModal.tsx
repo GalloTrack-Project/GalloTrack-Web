@@ -10,6 +10,9 @@ import type {
   ArchiveBadge,
 } from '@/lib/types';
 import BloodlineReportCard from '@/components/BloodlineReportCard';
+import BloodlineBreakdown from '@/components/BloodlineBreakdown';
+import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
+import { birdCodeOf } from '@/lib/bird-code';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FowlDetailsModalProps = {
@@ -70,6 +73,12 @@ export default function FowlDetailsModal({
 
         <BloodlineReportCard fowl={selectedFowlForDetails} />
 
+        <BloodlineBreakdown
+          stats={getFowlBloodlineStats(selectedFowlForDetails, fowls)}
+          title="Bloodline Percentage (Hatian ng Dugo)"
+          subtitle="Bawat porsyento ay hati mula sa 50/50 na hatian ng Sire at Dam"
+        />
+
         <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50 dark:bg-muted/50 p-4 rounded-2xl border border-slate-200/70 dark:border-border">
           <div className="w-24 h-24 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner">
             {selectedFowlForDetails.image_url ? (
@@ -81,6 +90,9 @@ export default function FowlDetailsModal({
           <div className="space-y-1.5 text-center sm:text-left flex-1">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <h4 className="text-lg font-black text-slate-900 dark:text-card-foreground">{selectedFowlForDetails.name}</h4>
+              <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">
+                {birdCodeOf(selectedFowlForDetails, fowls) || '—'}
+              </span>
               <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
               {(() => {
                 if (selectedFowlForDetails.status === 'Deceased') {
@@ -624,7 +636,7 @@ export default function FowlDetailsModal({
           </div>
 
           <div className="pt-2 border-t border-slate-200/50 dark:border-border flex justify-between items-center text-[11px]">
-            <span className="font-extrabold text-slate-700 dark:text-card-foreground">Combined Bloodline Index</span>
+            <span className="font-extrabold text-slate-700 dark:text-card-foreground">Specific Bloodline %</span>
             <span className="font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
               {bloodlineOf(selectedFowlForDetails)}%
             </span>

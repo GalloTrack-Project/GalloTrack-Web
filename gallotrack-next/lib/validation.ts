@@ -1,4 +1,14 @@
 import { z } from 'zod';
+import { BIRD_CODE_MAX_LENGTH, BIRD_CODE_PATTERN } from '@/lib/bird-code';
+
+export const birdCodeSchema = z.union([
+  z.literal(''),
+  z
+    .string()
+    .min(1, 'Bird code is required')
+    .max(BIRD_CODE_MAX_LENGTH, `Bird code must be ${BIRD_CODE_MAX_LENGTH} characters or less`)
+    .regex(BIRD_CODE_PATTERN, 'Use letters, numbers, x, - or . only (e.g. 1A, 1Ax1B)'),
+]);
 
 export const fowlFormSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
@@ -14,6 +24,7 @@ export const fowlFormSchema = z.object({
   damName: z.string().optional(),
   sirePct: z.union([z.number(), z.string()]).optional(),
   damPct: z.union([z.number(), z.string()]).optional(),
+  birdCode: birdCodeSchema.optional(),
   legColor: z.string().optional(),
   behaviorTrait: z.string().optional(),
   eyeVariant: z.string().optional(),

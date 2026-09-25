@@ -19,6 +19,10 @@ export interface FowlRecord {
   sire_pct: number;
   dam_pct: number;
   bloodline_pct: number;
+  /** Standardized tag, e.g. 1A / 2B / 1Ax1B. Nullable in the DB. */
+  bird_code?: string | null;
+  /** Per-strain blood percentage breakdown, e.g. { Kelso: 50, Hatch: 25, Roundhead: 25 }. */
+  bloodline_composition?: Record<string, number> | null;
   status: string;
   death_reason?: string;
   death_date?: string;

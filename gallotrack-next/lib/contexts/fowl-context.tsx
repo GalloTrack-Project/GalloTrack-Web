@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/registry';
 import { useUI } from './ui-context';
 import { FowlFormStateProvider, useFowlFormState } from './fowl-form-context';
@@ -26,6 +26,20 @@ import {
   STRAIN_LIST,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
+import {
+  computeBloodlineComposition,
+  getBloodlineStats,
+  getFowlBloodlineStats,
+  type BloodlineComposition,
+  type BloodlineStats,
+} from '@/lib/bloodline-composition';
+import {
+  buildCodeSet,
+  isValidBirdCode,
+  normalizeBirdCode,
+  previewBirdCode,
+  resolveBirdCodes,
+} from '@/lib/bird-code';
 import { generateColorReport } from '@/lib/color-genetics';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
@@ -76,6 +90,7 @@ interface FowlContextValue {
   height: string; setHeight: (v: string) => void;
   newLegColor: string; setNewLegColor: (v: string) => void;
   age: string; setAge: (v: string) => void;
+  birdCode: string; setBirdCode: (v: string) => void;
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
@@ -121,6 +136,7 @@ interface FowlContextValue {
   editDam: string; setEditDam: (v: string) => void;
   editSirePct: number | string; setEditSirePct: (v: number | string) => void;
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
+  editBirdCode: string; setEditBirdCode: (v: string) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -166,6 +182,13 @@ interface FowlContextValue {
   damGenInfo: { short: string; label: string; desc: string; tone: string };
   sireGen: number;
   damGen: number;
+
+  birdCodes: Map<string, string>;
+  birdCodeOf: (f: FowlRecord) => string;
+  suggestedBirdCode: string;
+  previewComposition: BloodlineComposition;
+  previewBloodlineStats: BloodlineStats | null;
+  bloodlineStatsOf: (f: FowlRecord) => BloodlineStats | null;
 
   handleAddFowl: (e: React.FormEvent) => Promise<void>;
   handleAddMatchRecord: (e: React.FormEvent) => Promise<void>;
@@ -259,6 +282,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     sirePct, setSirePct, damPct, setDamPct,
     weight, setWeight, height, setHeight,
     newLegColor, setNewLegColor, age, setAge,
+    birdCode, setBirdCode,
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
@@ -281,6 +305,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     editWeight, setEditWeight, editHeight, setEditHeight,
     editLegColor, setEditLegColor, editSire, setEditSire,
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
+    editBirdCode, setEditBirdCode,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains,
@@ -360,6 +385,33 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const sireGenInfo = generationInfo(sireGen);
   const damGenInfo = generationInfo(damGen);
   const computedBloodlinePct = generationPurity(offspringGen);
+
+  // ── Standardized bird codes (1A / 1B / 1Ax1B) ──
+  const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
+  const takenCodes = useMemo(() => buildCodeSet(Array.from(birdCodes.values())), [birdCodes]);
+  const birdCodeOf = useCallback((f: FowlRecord) => birdCodes.get(String(f.id)) || normalizeBirdCode(f.bird_code), [birdCodes]);
+  const suggestedBirdCode = useMemo(
+    () => previewBirdCode({ gender: newGender, sireName, damName, fowls, taken: takenCodes }),
+    [newGender, sireName, damName, fowls, takenCodes]
+  );
+
+  // ── Bloodline composition preview (hatian ng dugo per lahi) ──
+  const previewComposition = useMemo<BloodlineComposition>(() => {
+    const draft = {
+      id: -1,
+      name: newName.trim() || '__preview__',
+      breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
+      gender: newGender,
+      sire: sireName,
+      dam: damName,
+    } as FowlRecord;
+    return computeBloodlineComposition(draft, fowls);
+  }, [newName, newBreed, selectedStrains, newGender, sireName, damName, fowls]);
+  const previewBloodlineStats = useMemo(() => getBloodlineStats(previewComposition), [previewComposition]);
+  const bloodlineStatsOf = useCallback(
+    (f: FowlRecord) => getFowlBloodlineStats(f, fowls),
+    [fowls]
+  );
 
   // ── Age/birthdate handlers (from formState) ──
 
@@ -452,9 +504,21 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       height,
       sirePct,
       damPct,
+      birdCode,
     });
     if (!validation.success) {
       ui.showToastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
+      return;
+    }
+
+    const submittedCode = normalizeBirdCode(birdCode);
+    const codeToUse = submittedCode || suggestedBirdCode;
+    if (!isValidBirdCode(codeToUse)) {
+      ui.showToastMessage(`Invalid Bird Code: use letters, numbers, x, - or . only.`, 'error');
+      return;
+    }
+    if (takenCodes.has(codeToUse.toLowerCase())) {
+      ui.showToastMessage(`Bird Code "${codeToUse}" is already in use. Pick another.`, 'error');
       return;
     }
 
@@ -480,17 +544,31 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       const autoParts = autoCalcAge ? getAgePartsHelper(newBirthdate) : null;
 
+      const breedValue = selectedStrains.length > 0 ? selectedStrains.join(', ') : sanitizeInput(newBreed) || 'Unspecified Strain';
+      const composition = computeBloodlineComposition(
+        {
+          id: -1,
+          name: sanitizeInput(newName),
+          breed: breedValue,
+          gender: newGender || 'Rooster',
+          sire: sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock',
+          dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
+        } as FowlRecord,
+        fowls
+      );
+      const compositionStats = getBloodlineStats(composition);
+
       const payload = {
         user_id: activeUserId,
         name: sanitizeInput(newName),
-        breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : sanitizeInput(newBreed) || 'Unspecified Strain',
+        breed: breedValue,
         gender: newGender || 'Rooster',
         color: newColor,
         color_category: newColorCategory,
         growth_stage: autoParts ? autoComputeGrowthStage(autoParts.totalMonths, newGender || 'Rooster') : newGrowthStage,
         behavior_trait: newBehaviorTrait,
         eye_variant: newEyeVariant,
-        birthdate: newBirthdate || '',
+        birthdate: newBirthdate || null,
         age: autoParts
           ? `${autoParts.totalMonths} Months`
           : age && !isNaN(Number(age))
@@ -503,7 +581,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
         sire_pct: sPct,
         dam_pct: dPct,
-        bloodline_pct: computedBloodlinePct,
+        bloodline_pct: compositionStats?.specificPct ?? computedBloodlinePct,
+        bloodline_composition: composition,
+        bird_code: codeToUse,
         status: 'Active',
         image_url: publicImageUrl,
       };
@@ -517,7 +597,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           await strainService.saveCustomStrain(s);
         }
         const createdGender = newGender || 'Rooster';
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview('');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview(''); setBirdCode('');
         fetchDatabaseResources();
         ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
       }
@@ -527,7 +607,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, availableStrains, fetchDatabaseResources, ui]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, fetchDatabaseResources, ui]);
 
   const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -728,7 +808,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditDam(fowl.dam || '');
     setEditSirePct(isFoundationStock(fowl.sire || '') ? 100 : (fowl.sire_pct ?? 0));
     setEditDamPct(isFoundationStock(fowl.dam || '') ? 100 : (fowl.dam_pct ?? 0));
-  }, [ui]);
+    setEditBirdCode(birdCodeOf(fowl));
+  }, [ui, birdCodeOf]);
 
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -744,6 +825,34 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const calculatedBloodline = generationPurity(editHasAnyParent ? Math.max(editSireGen, editDamGen) + 1 : 0);
       const editAutoParts = autoCalcAge ? getAgePartsHelper(editBirthdate) : null;
 
+      // Validate the raw input — normalizing first would silently truncate oversize codes.
+      const submittedCode = String(editBirdCode ?? '').replace(/\s+/g, '');
+      if (!isValidBirdCode(submittedCode)) {
+        ui.showToastMessage('Invalid Bird Code: use letters, numbers, x, - or . only (max 24 chars).', 'error');
+        return;
+      }
+      const editingId = String(ui.editingFowl.id);
+      const duplicateCode = Array.from(birdCodes.entries()).some(
+        ([id, code]) => editingId !== id && code.toLowerCase() === submittedCode.toLowerCase()
+      );
+      if (duplicateCode) {
+        ui.showToastMessage(`Bird Code "${submittedCode}" is already in use. Pick another.`, 'error');
+        return;
+      }
+
+      const editComposition = computeBloodlineComposition(
+        {
+          id: ui.editingFowl.id,
+          name: sanitizeInput(editName),
+          breed: sanitizeInput(editBreed),
+          gender: editGender,
+          sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
+          dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',
+        } as FowlRecord,
+        fowls
+      );
+      const editCompositionStats = getBloodlineStats(editComposition);
+
       const payload = {
         name: sanitizeInput(editName),
         breed: sanitizeInput(editBreed),
@@ -753,7 +862,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         growth_stage: editAutoParts ? autoComputeGrowthStage(editAutoParts.totalMonths, editGender || 'Rooster') : editGrowthStage,
         behavior_trait: editBehaviorTrait,
         eye_variant: editEyeVariant,
-        birthdate: editBirthdate || '',
+        birthdate: editBirthdate || null,
         age: editAutoParts
           ? `${editAutoParts.totalMonths} Months`
           : editAge && !isNaN(Number(editAge))
@@ -766,7 +875,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',
         sire_pct: sPct,
         dam_pct: dPct,
-        bloodline_pct: calculatedBloodline
+        bloodline_pct: editCompositionStats?.specificPct ?? calculatedBloodline,
+        bloodline_composition: editComposition,
+        bird_code: submittedCode
       };
 
       const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
@@ -781,7 +892,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, fowls, availableStrains, fetchDatabaseResources, ui]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, birdCodes, fowls, availableStrains, fetchDatabaseResources, ui]);
 
   // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);
@@ -808,6 +919,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     dateRangeLabel: analytics.dateRangeLabel,
     nextNodeId,
     dataCompleteness, validationPassed, bloodlineVerified, computedBloodlinePct,
+    birdCodes, birdCodeOf, suggestedBirdCode, previewComposition, previewBloodlineStats, bloodlineStatsOf,
     offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
     handleAddFowl, handleAddMatchRecord, handleUpdateFowl,
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,

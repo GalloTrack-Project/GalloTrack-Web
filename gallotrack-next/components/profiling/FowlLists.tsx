@@ -11,6 +11,7 @@ import {
   getArchiveBadgeStyle,
 } from '@/lib/helpers';
 import Pagination from '@/components/Pagination';
+import { birdCodeOf } from '@/lib/bird-code';
 
 type Props = {
   tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial';
@@ -44,6 +45,7 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, allFowls
       <div className="flex-1 w-full space-y-3">
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground">{fowl.name}</h4>
+          <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200">{birdCodeOf(fowl, allFowls) || '—'}</span>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200">{fowl.breed}</span>
           <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200' : 'text-pink-700 bg-pink-50 dark:bg-pink-500/10 border-pink-200'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}

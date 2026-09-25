@@ -1,4 +1,5 @@
 import type { FowlRecord, AgeParts, DevelopmentStage, RolledMilestoneStage, MilestoneInfo, PairingStats } from './types';
+import { getBloodlineStats, parseComposition } from './bloodline-composition';
 
 export const POST_FIGHT_CONDITIONS = [
   { value: 'Fit / Recovered', icon: '🟢', short: 'FIT', desc: 'Pulled through cleanly' },
@@ -85,7 +86,11 @@ export const generationInfo = (gen: number): { short: string; label: string; des
 };
 
 export const parentBloodlinePct = (f: FowlRecord, fowls: FowlRecord[]): number => generationPurity(generationOf(f, fowls));
-export const bloodlineOf = (f: FowlRecord): number => Math.round(((cleanPct(f.sire_pct) + cleanPct(f.dam_pct)) / 2) * 10) / 10;
+export const bloodlineOf = (f: FowlRecord): number => {
+  const stats = getBloodlineStats(parseComposition(f.bloodline_composition));
+  if (stats) return stats.specificPct;
+  return Math.round(((cleanPct(f.sire_pct) + cleanPct(f.dam_pct)) / 2) * 10) / 10;
+};
 
 export const parseFowlDate = (value?: string | null): Date | null => {
   if (!value) return null;

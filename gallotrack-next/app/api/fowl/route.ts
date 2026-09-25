@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { sanitize } from '@/lib/sanitize';
+import type { FowlRecord } from '@/lib/types';
+import {
+  computeBloodlineComposition,
+  getBloodlineStats,
+} from '@/lib/bloodline-composition';
+import {
+  buildCodeSet,
+  isValidBirdCode,
+  previewBirdCode,
+  resolveBirdCodes,
+} from '@/lib/bird-code';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -83,7 +94,7 @@ export async function POST(request: NextRequest) {
       growth_stage: body.growth_stage || '',
       behavior_trait: body.behavior_trait || 'Wave-Motion Tracker',
       eye_variant: body.eye_variant || 'Standard Eye',
-      birthdate: body.birthdate || '',
+      birthdate: body.birthdate || null,
       age: body.age || 'N/A',
       weight: body.weight || '',
       height: body.height || '',
@@ -93,6 +104,8 @@ export async function POST(request: NextRequest) {
       sire_pct: Number(body.sire_pct) || 0,
       dam_pct: Number(body.dam_pct) || 0,
       bloodline_pct: Number(body.bloodline_pct) || 0,
+      bloodline_composition: null as Record<string, number> | null,
+      bird_code: null as string | null,
       status: 'Active',
       image_url: body.image_url || '',
     };
@@ -104,6 +117,55 @@ export async function POST(request: NextRequest) {
     if (payload.sire_pct < 0 || payload.sire_pct > 100 || payload.dam_pct < 0 || payload.dam_pct > 100) {
       return NextResponse.json({ error: 'Bloodline percentages must be between 0 and 100' }, { status: 400 });
     }
+
+    // ── Genetics: per-strain bloodline composition (50/50 inheritance rule) ──
+    const { data: registryRows } = await supabase
+      .from('fowl')
+      .select('*')
+      .eq('user_id', auth.user.id);
+    const fowls = (registryRows || []) as FowlRecord[];
+
+    const composition = computeBloodlineComposition(
+      {
+        id: -1,
+        name: payload.name,
+        breed: payload.breed,
+        gender: payload.gender,
+        sire: payload.sire,
+        dam: payload.dam,
+      } as FowlRecord,
+      fowls
+    );
+    const stats = getBloodlineStats(composition);
+    if (stats) {
+      payload.bloodline_composition = composition;
+      payload.bloodline_pct = stats.specificPct;
+    }
+
+    // ── Standardized bird code (1A / 1B / 1Ax1B) ──
+    const codes = resolveBirdCodes(fowls);
+    const taken = buildCodeSet(Array.from(codes.values()));
+    // Validate the raw input first — normalizing would silently truncate oversize codes.
+    const rawCode = String(body.bird_code ?? '').replace(/\s+/g, '');
+    if (rawCode && !isValidBirdCode(rawCode)) {
+      return NextResponse.json(
+        { error: 'Invalid bird code — use letters, numbers, x, - or . only, max 24 chars (e.g. 1A, 1Ax1B)' },
+        { status: 400 }
+      );
+    }
+    const requestedCode = rawCode;
+    if (requestedCode && taken.has(requestedCode.toLowerCase())) {
+      return NextResponse.json({ error: `Bird code "${requestedCode}" is already in use` }, { status: 409 });
+    }
+    payload.bird_code =
+      requestedCode ||
+      previewBirdCode({
+        gender: payload.gender,
+        sireName: payload.sire,
+        damName: payload.dam,
+        fowls,
+        taken,
+      });
 
     const { error: insertErr } = await supabase.from('fowl').insert([payload]);
     if (insertErr) {

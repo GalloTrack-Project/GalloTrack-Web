@@ -26,6 +26,7 @@ interface FowlFormStateContextValue {
   height: string; setHeight: (v: string) => void;
   newLegColor: string; setNewLegColor: (v: string) => void;
   age: string; setAge: (v: string) => void;
+  birdCode: string; setBirdCode: (v: string) => void;
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
@@ -71,6 +72,7 @@ interface FowlFormStateContextValue {
   editDam: string; setEditDam: (v: string) => void;
   editSirePct: number | string; setEditSirePct: (v: number | string) => void;
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
+  editBirdCode: string; setEditBirdCode: (v: string) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -139,6 +141,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [height, setHeight] = useState('');
   const [newLegColor, setNewLegColor] = useState('');
   const [age, setAge] = useState('');
+  const [birdCode, setBirdCode] = useState('');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -184,6 +187,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [editDam, setEditDam] = useState('');
   const [editSirePct, setEditSirePct] = useState<number | string>(100);
   const [editDamPct, setEditDamPct] = useState<number | string>(100);
+  const [editBirdCode, setEditBirdCode] = useState('');
 
   const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
   const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
@@ -269,6 +273,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     sirePct, setSirePct, damPct, setDamPct,
     weight, setWeight, height, setHeight,
     newLegColor, setNewLegColor, age, setAge,
+    birdCode, setBirdCode,
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
@@ -291,6 +296,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     editWeight, setEditWeight, editHeight, setEditHeight,
     editLegColor, setEditLegColor, editSire, setEditSire,
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
+    editBirdCode, setEditBirdCode,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains, addStrain, removeStrain,

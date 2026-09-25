@@ -116,6 +116,8 @@ type ModalsProps = {
   setEditSirePct: (v: number | string) => void;
   editDamPct: number | string;
   setEditDamPct: (v: number | string) => void;
+  editBirdCode: string;
+  setEditBirdCode: (v: string) => void;
 
   handleEditBirthdateChange: (val: string) => void;
   handleEditAgeChange: (val: string) => void;
@@ -216,8 +218,10 @@ export default function Modals(props: ModalsProps) {
         setEditDam={props.setEditDam}
         editSirePct={props.editSirePct}
         setEditSirePct={props.setEditSirePct}
-        editDamPct={props.editDamPct}
-        setEditDamPct={props.setEditDamPct}
+          editDamPct={props.editDamPct}
+          setEditDamPct={props.setEditDamPct}
+          editBirdCode={props.editBirdCode}
+          setEditBirdCode={props.setEditBirdCode}
         handleEditBirthdateChange={props.handleEditBirthdateChange}
         handleEditAgeChange={props.handleEditAgeChange}
         autoComputeGrowthStage={props.autoComputeGrowthStage}
