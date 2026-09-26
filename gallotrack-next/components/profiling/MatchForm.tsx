@@ -97,9 +97,9 @@ export default function MatchForm({
       {/* Row 1: Fowl + Date */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Select Local Fowl Entry</label>
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5">Select Local Chicken Entry</label>
           <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground outline-none focus:border-emerald-500 cursor-pointer" required>
-            <option value="">-- Select Fowl Node --</option>
+            <option value="">-- Select Chicken Node --</option>
             {fowls.filter(f => f.status === 'Active' && isMale(f.gender)).map(f => (
               <option key={f.id} value={f.name}>{f.name} ({f.breed})</option>
             ))}
@@ -210,7 +210,7 @@ export default function MatchForm({
         {/* Row 2: Bird Class + Event Type */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Bird Class</label>
+            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Chicken Class</label>
             <div className="relative">
               <select value={ageCategory} onChange={(e) => setAgeCategory(e.target.value)} className={selectClass}>
                 <option value="Cock">Cock</option>

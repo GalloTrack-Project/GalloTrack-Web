@@ -89,7 +89,7 @@ export default function BreedsPage() {
             <h1 className="text-lg font-black text-card-foreground tracking-tight flex items-center gap-2">
               <Dna className="w-5 h-5" /> Breed Registry
             </h1>
-            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Create and manage genetic strains for your fowl registry</p>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Create and manage genetic strains for your chicken registry</p>
           </div>
         </div>
         <button
@@ -182,12 +182,12 @@ export default function BreedsPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-lg font-black text-card-foreground leading-none">{count}</p>
-                      <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">fowl{count !== 1 ? 's' : ''}</p>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">chicken{count !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
                   {count > 0 ? (
                     <div className="mt-auto pt-2 border-t border-border">
-                      <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Used by {count} fowl{count !== 1 ? 's' : ''}</span>
+                      <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Used by {count} chicken{count !== 1 ? 's' : ''}</span>
                     </div>
                   ) : (
                     <div className="mt-auto pt-2 border-t border-border">

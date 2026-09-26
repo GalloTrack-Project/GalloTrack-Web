@@ -694,7 +694,7 @@ export default function AdminPanelPage() {
               associated data:
             </p>
             <ul className="text-center text-[10px] text-muted-foreground font-medium space-y-1 list-disc list-inside">
-              <li>All fowl profiles and lineage records</li>
+              <li>All chicken profiles and lineage records</li>
               <li>All match history and video evidence</li>
               <li>Farm registration data</li>
               <li>Profile and account information</li>

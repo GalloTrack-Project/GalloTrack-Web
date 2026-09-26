@@ -24,7 +24,7 @@ export default function FarmBloodlineSummary() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-muted/50 border border-border rounded-2xl p-3 text-center">
           <p className="text-2xl font-black text-teal-400">{summary.totalFowls}</p>
-          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Fowls</p>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Chickens</p>
         </div>
         <div className="bg-muted/50 border border-border rounded-2xl p-3 text-center">
           <p className="text-2xl font-black text-sky-400">{summary.avgPurity}%</p>
@@ -64,7 +64,7 @@ export default function FarmBloodlineSummary() {
               <div key={s.strain} className="bg-muted/50 border border-border rounded-xl px-3 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black text-card-foreground">{s.strain}</span>
-                  <span className="text-[8px] text-muted-foreground">({s.count} fowls)</span>
+                  <span className="text-[8px] text-muted-foreground">({s.count} chickens)</span>
                 </div>
                 <span className="text-[9px] font-bold text-sky-400">{s.avgWinRate !== null ? `${s.avgWinRate}% avg win rate` : 'No match data'}</span>
               </div>

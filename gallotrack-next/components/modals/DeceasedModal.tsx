@@ -41,8 +41,8 @@ export default function DeceasedModal({
         </div>
 
         <div className="bg-rose-50/60 dark:bg-muted/50 p-4 rounded-2xl border border-rose-200/60 dark:border-border space-y-2">
-          <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Fowl: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
-          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the fowl has died. Mortality removes the fowl from the active registry. Non-mortality removals (sold, transferred, retired, inactive) belong under <strong className="text-amber-700">Archive</strong> instead.</p>
+          <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
+          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the chicken has died. Mortality removes the chicken from the active registry. Non-mortality removals (sold, transferred, retired, inactive) belong under <strong className="text-amber-700">Archive</strong> instead.</p>
         </div>
 
         <div className="space-y-2">

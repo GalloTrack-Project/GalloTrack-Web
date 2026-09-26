@@ -127,7 +127,7 @@ export default function DashboardPage() {
         <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Fowl Registry</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><Bird className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
             ) : (
-              <div className="text-[10px] font-bold text-muted-foreground pt-2">No active fowl yet</div>
+              <div className="text-[10px] font-bold text-muted-foreground pt-2">No active chickens yet</div>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
@@ -237,7 +237,7 @@ export default function DashboardPage() {
               onClick={() => navigate('profiling', 'form')}
               className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-emerald-400 group-hover/btn:text-emerald-300">+ Register New Fowl</p>
+              <p className="text-[11px] font-extrabold text-emerald-400 group-hover/btn:text-emerald-300">+ Register New Chicken</p>
               <p className="text-[9px] text-emerald-400/70 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
@@ -318,7 +318,7 @@ export default function DashboardPage() {
                 <span className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-400" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
-                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active fowls across all strains</p>
+                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
                 </div>
               </div>
               <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
@@ -345,7 +345,7 @@ export default function DashboardPage() {
                   <div key={strain} className="bg-muted/50 border border-border rounded-xl px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-black text-card-foreground">{strain}</span>
-                      <span className="text-[9px] font-bold text-teal-400">{data.count} fowl{data.count !== 1 ? 's' : ''}</span>
+                      <span className="text-[9px] font-bold text-teal-400">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
@@ -376,7 +376,7 @@ export default function DashboardPage() {
         <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
-              <h3 className="text-sm font-black text-card-foreground tracking-tight">Gamefowl Population & Performance Trends (Q3 2026)</h3>
+              <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Q3 2026)</h3>
               <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
             </div>
             <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground">
@@ -443,7 +443,7 @@ export default function DashboardPage() {
             <div className="my-auto flex flex-col items-center justify-center text-center p-10 space-y-2">
               <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"><TrendingUp className="w-5 h-5" /></div>
               <p className="text-xs font-extrabold text-muted-foreground">No data available</p>
-              <p className="text-[10px] text-muted-foreground max-w-[220px]">Encode fowl and log matches to visualize population and performance trends.</p>
+              <p className="text-[10px] text-muted-foreground max-w-[220px]">Encode chickens and log matches to visualize population and performance trends.</p>
             </div>
           )}
         </div>
@@ -624,7 +624,7 @@ export default function DashboardPage() {
             <thead>
               <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
                 <th className="p-4 pl-6">Match Date</th>
-                <th className="p-4">Fowl Identifier</th>
+                <th className="p-4">Chicken Identifier</th>
                 <th className="p-4">Opponent</th>
                 <th className="p-4">Bloodline</th>
                 <th className="p-4">Arena Location</th>

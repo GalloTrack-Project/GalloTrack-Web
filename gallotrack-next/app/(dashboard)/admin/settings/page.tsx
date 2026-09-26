@@ -122,7 +122,7 @@ export default function AdminSettingsPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setTransferResult({ type: 'success', text: `Transferred ${data.fowls_transferred} fowls and ${data.matches_transferred} matches to ${transferEmail}` });
+        setTransferResult({ type: 'success', text: `Transferred ${data.fowls_transferred} chickens and ${data.matches_transferred} matches to ${transferEmail}` });
         setTransferEmail('');
       } else {
         setTransferResult({ type: 'error', text: data.error || 'Transfer failed' });
@@ -142,7 +142,7 @@ export default function AdminSettingsPage() {
         supabase.from('profiles').select('*'),
         fetchSystemSettings(),
       ]);
-      if (fowlsRes.error) throw new Error(`Fowls: ${fowlsRes.error.message}`);
+      if (fowlsRes.error) throw new Error(`Chickens: ${fowlsRes.error.message}`);
       if (matchesRes.error) throw new Error(`Matches: ${matchesRes.error.message}`);
       if (profilesRes.error) throw new Error(`Profiles: ${profilesRes.error.message}`);
       const backup = {
@@ -155,7 +155,7 @@ export default function AdminSettingsPage() {
       const a = document.createElement('a');
       a.href = url; a.download = `gallotrack-backup-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-      setBackupResult({ type: 'success', text: `Backup exported: ${backup.counts.fowls} fowls, ${backup.counts.matches} matches, ${backup.counts.profiles} profiles.` });
+      setBackupResult({ type: 'success', text: `Backup exported: ${backup.counts.fowls} chickens, ${backup.counts.matches} matches, ${backup.counts.profiles} profiles.` });
     } catch (err) { setBackupResult({ type: 'error', text: `Export failed: ${(err as Error).message}` }); }
     finally { setBacking(false); }
   };
@@ -251,9 +251,9 @@ export default function AdminSettingsPage() {
       case 'alerts':
         return (
           <div className="space-y-3">
-            <ToggleRow label="Milestone Alerts" desc="Notify when fowl reach growth milestones" checked={settings.milestone_alerts !== false} onChange={(v) => update('milestone_alerts', v)} />
+            <ToggleRow label="Milestone Alerts" desc="Notify when chickens reach growth milestones" checked={settings.milestone_alerts !== false} onChange={(v) => update('milestone_alerts', v)} />
             <ToggleRow label="Overdue Alerts" desc="Notify when tasks or checkups are overdue" checked={settings.overdue_alerts !== false} onChange={(v) => update('overdue_alerts', v)} />
-            <ToggleRow label="Auto-Calculate Age" desc="Automatically compute fowl age from birthdate" checked={settings.auto_calculate_age !== false} onChange={(v) => update('auto_calculate_age', v)} />
+            <ToggleRow label="Auto-Calculate Age" desc="Automatically compute chicken age from birthdate" checked={settings.auto_calculate_age !== false} onChange={(v) => update('auto_calculate_age', v)} />
             <ToggleRow label="Cloud Auditing Logs" desc="Record transaction updates to cluster node registries" checked={settings.cloud_logs !== false} onChange={(v) => update('cloud_logs', v)} />
             <ToggleRow label="Event Pop-up Alerts" desc="Enable dynamic pop-up notification frames" checked={settings.event_alerts !== false} onChange={(v) => update('event_alerts', v)} />
           </div>
@@ -263,7 +263,7 @@ export default function AdminSettingsPage() {
           <div className="space-y-3">
             <ToggleRow label="Allow New Registrations" desc="Enable or disable new farm owner sign-ups" checked={settings.allow_registrations !== false} onChange={(v) => update('allow_registrations', v)} />
             <ToggleRow label="Auto-Approve New Users" desc="Newly registered accounts are immediately active" checked={settings.auto_approve_users !== false} onChange={(v) => update('auto_approve_users', v)} />
-            <ToggleRow label="Public Fowl Data" desc="Allow farm owners to see other users' fowl records" checked={settings.public_fowl_data === true} onChange={(v) => update('public_fowl_data', v)} />
+            <ToggleRow label="Public Chicken Data" desc="Allow farm owners to see other users' chicken records" checked={settings.public_fowl_data === true} onChange={(v) => update('public_fowl_data', v)} />
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Default Role</label>
@@ -289,7 +289,7 @@ export default function AdminSettingsPage() {
       case 'transfer':
         return (
           <div className="space-y-4">
-            <p className="text-[11px] text-muted-foreground font-medium">Transfer all fowl and match data from this admin account to a farm owner account.</p>
+            <p className="text-[11px] text-muted-foreground font-medium">Transfer all chicken and match data from this admin account to a farm owner account.</p>
             <div>
               <label className={labelClass}>Target Farm Owner Email</label>
               <div className="relative">
@@ -327,7 +327,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
                 <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-                <p className="text-[9px] font-black text-card-foreground">Fowl Records</p>
+                <p className="text-[9px] font-black text-card-foreground">Chicken Records</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All breeds</p>
               </div>
               <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">

@@ -514,11 +514,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     const submittedCode = normalizeBirdCode(birdCode);
     const codeToUse = submittedCode || suggestedBirdCode;
     if (!isValidBirdCode(codeToUse)) {
-      ui.showToastMessage(`Invalid Bird Code: use letters, numbers, x, - or . only.`, 'error');
+      ui.showToastMessage(`Invalid Chicken Code: use letters, numbers, x, - or . only.`, 'error');
       return;
     }
     if (takenCodes.has(codeToUse.toLowerCase())) {
-      ui.showToastMessage(`Bird Code "${codeToUse}" is already in use. Pick another.`, 'error');
+      ui.showToastMessage(`Chicken Code "${codeToUse}" is already in use. Pick another.`, 'error');
       return;
     }
 
@@ -699,7 +699,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
               ui.showToastMessage(`${selectedFowlForMatch} is now marked as Sire Material — retired from fighting, available for breeding.`, 'warning');
             }
           } else {
-            ui.showToastMessage(`Match saved, but fowl "${selectedFowlForMatch}" was not found in registry — could not mark as Sire Material.`, 'error');
+            ui.showToastMessage(`Match saved, but chicken "${selectedFowlForMatch}" was not found in registry — could not mark as Sire Material.`, 'error');
           }
         }
 
@@ -724,7 +724,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     if (result.error) {
       ui.showToastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage(`Gamefowl archived under ${archiveReasonInput} status log.`, 'warning');
+      ui.showToastMessage(`Chicken archived under ${archiveReasonInput} status log.`, 'warning');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForArchive(null);
       fetchDatabaseResources();
@@ -738,7 +738,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     if (result.error) {
       ui.showToastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage('Gamefowl archived successfully.', 'warning');
+      ui.showToastMessage('Chicken archived successfully.', 'warning');
       if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
@@ -780,7 +780,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     if (result.error) {
       ui.showToastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage('Gamefowl node recorded under mortality archive log.', 'error');
+      ui.showToastMessage('Chicken node recorded under mortality archive log.', 'error');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForDeceased.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForDeceased(null);
       fetchDatabaseResources();
@@ -828,7 +828,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       // Validate the raw input — normalizing first would silently truncate oversize codes.
       const submittedCode = String(editBirdCode ?? '').replace(/\s+/g, '');
       if (!isValidBirdCode(submittedCode)) {
-        ui.showToastMessage('Invalid Bird Code: use letters, numbers, x, - or . only (max 24 chars).', 'error');
+        ui.showToastMessage('Invalid Chicken Code: use letters, numbers, x, - or . only (max 24 chars).', 'error');
         return;
       }
       const editingId = String(ui.editingFowl.id);
@@ -836,7 +836,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         ([id, code]) => editingId !== id && code.toLowerCase() === submittedCode.toLowerCase()
       );
       if (duplicateCode) {
-        ui.showToastMessage(`Bird Code "${submittedCode}" is already in use. Pick another.`, 'error');
+        ui.showToastMessage(`Chicken Code "${submittedCode}" is already in use. Pick another.`, 'error');
         return;
       }
 

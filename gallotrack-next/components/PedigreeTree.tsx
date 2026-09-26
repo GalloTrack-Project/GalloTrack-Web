@@ -166,7 +166,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
     return (
       <div className="bg-card p-10 text-center rounded-3xl border border-border shadow-sm space-y-2">
         <p className="text-sm font-extrabold text-card-foreground">No Pedigree To Show</p>
-        <p className="text-xs text-muted-foreground font-medium">Register gamefowl with Sire and Dam to build the lineage map.</p>
+        <p className="text-xs text-muted-foreground font-medium">Register chickens with Sire and Dam to build the lineage map.</p>
       </div>
     );
   }
@@ -185,7 +185,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
           </p>
         </div>
         <label className="shrink-0">
-          <span className="sr-only">Select bird</span>
+          <span className="sr-only">Select chicken</span>
           <select
             value={subject.id}
             onChange={(e) => {

@@ -54,7 +54,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
           <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-emerald-700 dark:text-emerald-400" /></div>
           <div>
             <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
-            <p className="text-[10px] text-muted-foreground font-semibold">{g.length} birds · {males} male · {females} female</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">{g.length} chickens · {males} male · {females} female</p>
           </div>
         </div>
         <span className="text-[8px] font-black bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider">Full Siblings</span>
@@ -332,7 +332,7 @@ export default function LineageDirectory({
                   <span className="text-xs">{parentKind === 'sire' ? <Bird className="w-4 h-4" /> : <Bird className="w-4 h-4" />}</span>
                   <span className="text-[10px] font-black text-card-foreground truncate">{otherParent}</span>
                   <span className="text-[8px] font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-full shrink-0">
-                    {members.length} bird{members.length !== 1 ? 's' : ''}
+                    {members.length} chicken{members.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -447,7 +447,7 @@ export default function LineageDirectory({
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search family, sire, dam or bird name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
+            <input type="text" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
           </div>
         </div>
 
@@ -480,7 +480,7 @@ export default function LineageDirectory({
           { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> },
           { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <Bird className="w-5 h-5 text-sky-600 dark:text-sky-400" /> },
           { label: 'Dam Offspring Groups', value: damEntries.length, icon: <Bird className="w-5 h-5 text-pink-600 dark:text-pink-400" /> },
-          { label: 'Total Birds Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-600 dark:text-teal-400" /> },
+          { label: 'Total Chickens Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-600 dark:text-teal-400" /> },
         ].map((s) => (
           <div key={s.label} className="bg-card rounded-3xl border border-border shadow-sm p-5 flex items-center gap-4">
             <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 rounded-2xl flex items-center justify-center shrink-0">{s.icon}</div>
@@ -543,9 +543,9 @@ export default function LineageDirectory({
             </div>
           </div>
           {linked.length === 0 ? (
-            <EmptyState title="No Lineage Data Yet" hint="Encode gamefowl with Sire and Dam to start grouping families automatically." />
+            <EmptyState title="No Lineage Data Yet" hint="Encode chickens with Sire and Dam to start grouping families automatically." />
           ) : fullFiltered.length === 0 ? (
-            <EmptyState title="No Full-Sibling Families Found" hint="Birds need at least one sibling with the same Sire and Dam to form a family." />
+            <EmptyState title="No Full-Sibling Families Found" hint="Chickens need at least one sibling with the same Sire and Dam to form a family." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} />)}
@@ -564,7 +564,7 @@ export default function LineageDirectory({
             </div>
           </div>
           {sireEntries.length === 0 ? (
-            <EmptyState title="No Sire Offspring Yet" hint="Encode gamefowl with a Sire name to build the parent-to-offspring tree." />
+            <EmptyState title="No Sire Offspring Yet" hint="Encode chickens with a Sire name to build the parent-to-offspring tree." />
           ) : (
             renderParentTree(sireEntries, expandedSires, toggleSire, 'sire', 'sky')
           )}
@@ -594,7 +594,7 @@ export default function LineageDirectory({
             </div>
           </div>
           {damEntries.length === 0 ? (
-            <EmptyState title="No Dam Offspring Yet" hint="Encode gamefowl with a Dam name to build the parent-to-offspring tree." />
+            <EmptyState title="No Dam Offspring Yet" hint="Encode chickens with a Dam name to build the parent-to-offspring tree." />
           ) : (
             renderParentTree(damEntries, expandedDams, toggleDam, 'dam', 'pink')
           )}

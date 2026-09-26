@@ -288,7 +288,7 @@ export default function EditFowlModal({
             </h4>
             <div>
               <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">
-                Bird Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
+                Chicken Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
               </label>
               <input
                 type="text"
@@ -338,7 +338,7 @@ export default function EditFowlModal({
               className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center space-x-2"
             >
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              <span>{loading ? 'Updating Fowl Node...' : 'Commit Node Updates'}</span>
+              <span>{loading ? 'Updating Chicken Node...' : 'Commit Node Updates'}</span>
             </button>
           </div>
         </form>

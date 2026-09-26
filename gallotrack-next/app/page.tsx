@@ -94,7 +94,7 @@ export default function LoginPage() {
             <div className="space-y-4">
               <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] tracking-tight">
                 Advanced<br/>
-                <span className="text-emerald-200">Gamefowl</span><br/>
+                <span className="text-emerald-200">Chicken</span><br/>
                 Analytics Platform
               </h1>
               <p className="text-sm text-emerald-100/70 font-medium max-w-md leading-relaxed">
@@ -122,7 +122,7 @@ export default function LoginPage() {
           {/* Bottom — Stats */}
           <div className="flex items-center gap-8">
             {[
-              { value: '32+', label: 'Fowls Registered' },
+              { value: '32+', label: 'Chickens Registered' },
               { value: '4+', label: 'Active Farms' },
               { value: '100%', label: 'Open Source' },
             ].map((s) => (

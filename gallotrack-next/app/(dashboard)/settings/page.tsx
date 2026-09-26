@@ -434,7 +434,7 @@ export default function SettingsPage() {
               <Field label="Milestone Alerts" description="Notifications for upcoming growth stage transitions">
                 <Toggle checked={settings.milestone_alerts !== false} onChange={(v) => update('milestone_alerts', v)} />
               </Field>
-              <Field label="Overdue Stage Warnings" description="Highlight fowls past their expected stage transition">
+              <Field label="Overdue Stage Warnings" description="Highlight chickens past their expected stage transition">
                 <Toggle checked={settings.overdue_alerts !== false} onChange={(v) => update('overdue_alerts', v)} />
               </Field>
               <Field label="System Event Toasts" description="Show toast notifications on save, delete, errors">
@@ -456,7 +456,7 @@ export default function SettingsPage() {
               </div>
             )}
             <SectionCard title="Backup & Export" description="Download your data for safekeeping">
-              <Field label="Export All Data" description="Download a JSON backup of all fowl and match records">
+              <Field label="Export All Data" description="Download a JSON backup of all chicken and match records">
                 <button type="button" onClick={handleExport} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-xl text-[11px] transition-all cursor-pointer flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                   Export JSON
@@ -464,19 +464,19 @@ export default function SettingsPage() {
               </Field>
             </SectionCard>
             <SectionCard title="Danger Zone" description="Irreversible actions. Proceed with caution.">
-              <Field label="Clear Match Records" description="Deletes all logged match history. Fowl profiles are kept.">
+              <Field label="Clear Match Records" description="Deletes all logged match history. Chicken profiles are kept.">
                 <button type="button" onClick={() => handleClear('match', 'match records')} disabled={clearing === 'match'} className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
                   {clearing === 'match' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                   {clearing === 'match' ? 'Clearing...' : 'Clear Matches'}
                 </button>
               </Field>
-              <Field label="Clear Fowl Profiles" description="Deletes all registered gamefowl. Match history kept.">
-                <button type="button" onClick={() => handleClear('fowl', 'fowl profiles')} disabled={clearing === 'fowl'} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
+              <Field label="Clear Chicken Profiles" description="Deletes all registered chickens. Match history kept.">
+                <button type="button" onClick={() => handleClear('fowl', 'chicken profiles')} disabled={clearing === 'fowl'} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
                   {clearing === 'fowl' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                  {clearing === 'fowl' ? 'Clearing...' : 'Clear Fowls'}
+                  {clearing === 'fowl' ? 'Clearing...' : 'Clear Chickens'}
                 </button>
               </Field>
-              <Field label="Clear Everything" description="Deletes ALL fowl profiles and match records. Fresh start.">
+              <Field label="Clear Everything" description="Deletes ALL chicken profiles and match records. Fresh start.">
                 <button type="button" onClick={() => { if (confirm('Delete ALL data? This cannot be undone.')) { handleClear('match', 'all data'); handleClear('fowl', 'all data') } }} disabled={clearing !== ''} className="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
                   Clear Everything
                 </button>

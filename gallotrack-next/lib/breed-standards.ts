@@ -42,7 +42,7 @@ const BREED_STANDARDS: BreedStandard[] = [
     fightingStyle: 'All-around — intelligence, speed, and power',
     temperament: 'Alert, intelligent, versatile',
     origin: 'USA (Texas) — Walter Kelso bloodline',
-    notes: 'The most versatile gamefowl. Known for exceptional intelligence and adaptability to any fighting style.',
+    notes: 'The most versatile chicken. Known for exceptional intelligence and adaptability to any fighting style.',
   },
   {
     name: 'Hatch',

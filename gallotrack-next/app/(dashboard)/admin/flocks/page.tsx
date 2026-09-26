@@ -56,7 +56,7 @@ export default function AdminFlockAuditPage() {
         });
       }
     } catch {
-      setToast({ type: 'error', message: 'Failed to load fowls' });
+      setToast({ type: 'error', message: 'Failed to load chickens' });
       window.setTimeout(() => setToast(null), 3500);
     } finally {
       setLoading(false);
@@ -122,12 +122,12 @@ export default function AdminFlockAuditPage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
               Flock <span className="text-amber-400">Audit</span>
             </h1>
-            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Global view of all registered gamefowl across all owners</p>
+            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Global view of all registered chickens across all owners</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Fowls', stats.total, 'text-amber-400', <Bird className="w-5 h-5" />)}
+          {statCard('Total Chickens', stats.total, 'text-amber-400', <Bird className="w-5 h-5" />)}
           {statCard('Active', stats.active, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
           {statCard('Breeds', stats.breeds, 'text-sky-400', <Dna className="w-5 h-5" />)}
           {statCard('Owners', stats.owners, 'text-purple-400', <Users className="w-5 h-5" />)}
@@ -168,7 +168,7 @@ export default function AdminFlockAuditPage() {
         <div className="md:hidden space-y-3 mb-6">
           {filtered.length === 0 && (
             <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-8 text-center">
-              <p className="text-xs text-muted-foreground font-semibold">No fowls found.</p>
+              <p className="text-xs text-muted-foreground font-semibold">No chickens found.</p>
             </div>
           )}
           {filtered.map((fowl) => (
@@ -198,14 +198,14 @@ export default function AdminFlockAuditPage() {
 
         <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Registered Fowls</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Registered Chickens</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {fowls.length} records</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[900px]">
               <thead>
                 <tr className="text-[9px] font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">
-                  <th className="px-4 sm:px-5 py-3">Fowl</th>
+                  <th className="px-4 sm:px-5 py-3">Chicken</th>
                   <th className="px-4 py-3">Breed / Gender</th>
                   <th className="px-4 py-3">Stage</th>
                   <th className="px-4 py-3">Sire / Dam</th>
@@ -216,7 +216,7 @@ export default function AdminFlockAuditPage() {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">No fowls found.</td></tr>
+                  <tr><td colSpan={7} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">No chickens found.</td></tr>
                 )}
                 {filtered.map((fowl) => (
                   <tr key={fowl.id} className="border-b border-border/60 last:border-0 hover:bg-muted/25 transition-colors">

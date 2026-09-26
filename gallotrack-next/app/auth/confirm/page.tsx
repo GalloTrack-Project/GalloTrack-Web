@@ -98,7 +98,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
           <div className="text-center space-y-2">
             <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
             <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
-            <p className="text-[10px] text-muted-foreground font-semibold">Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 
           <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>

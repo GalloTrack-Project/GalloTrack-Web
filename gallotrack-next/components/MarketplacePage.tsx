@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
@@ -329,7 +329,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
   const [selectedFowl, setSelectedFowl] = useState<FowlRecord | null>(null);
 
   const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
-    { id: 'all', label: 'All Birds', count: fowls.length },
+    { id: 'all', label: 'All Chickens', count: fowls.length },
     { id: 'active', label: 'Active', count: fowls.filter((f) => f.status === 'Active').length },
     { id: 'breeding', label: 'Breeding Ready', count: fowls.filter((f) => f.status === 'Active' && (f.growth_stage === 'Mature' || f.growth_stage === 'Broodcock' || f.growth_stage === 'Broodhen')).length },
     { id: 'archived', label: 'Archived', count: fowls.filter((f) => f.status === 'Archived').length },
@@ -382,7 +382,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
           <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">{'\uD83E\uDDEC'}</div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Breeding Catalog</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Manage and monitor your gamefowl breeding inventory</p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Manage and monitor your chicken breeding inventory</p>
           </div>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -394,7 +394,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
           </div>
           <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[11px] font-black px-4 py-3 rounded-2xl shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            <span className="hidden sm:inline">Add Fowl</span>
+            <span className="hidden sm:inline">Add Chicken</span>
             <span className="sm:hidden">Add</span>
           </button>
         </div>
@@ -416,8 +416,8 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
           <div className="w-16 h-16 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-3xl mx-auto">
             {'\uD83E\uDDEC'}
           </div>
-          <h3 className="text-base font-extrabold text-card-foreground">No Birds Found</h3>
-          <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No gamefowl match your current filters. Try adjusting your search or add new birds.</p>
+          <h3 className="text-base font-extrabold text-card-foreground">No Chickens Found</h3>
+          <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chickens match your current filters. Try adjusting your search or add new chickens.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">

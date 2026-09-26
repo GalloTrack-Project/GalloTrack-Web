@@ -212,7 +212,7 @@ export default function FowlLists({
     const accentSoft = isMaleTab ? 'bg-sky-50 border-sky-200' : 'bg-pink-50 border-pink-200';
     const accentText = isMaleTab ? 'text-sky-400' : 'text-pink-400';
     const emptyTitle = isMaleTab ? 'No Roosters / Males Encoded' : 'No Hens / Females Encoded';
-    const emptyHint = isMaleTab ? 'No male gamefowl are registered in the active farm inventory yet. Encode your first rooster / stag / cock to begin populating this housing space.' : 'No female gamefowl are registered in the active farm inventory yet. Encode your first hen / pullet to begin populating this housing space.';
+    const emptyHint = isMaleTab ? 'No male chickens are registered in the active farm inventory yet. Encode your first rooster / stag / cock to begin populating this housing space.' : 'No female chickens are registered in the active farm inventory yet. Encode your first hen / pullet to begin populating this housing space.';
 
     return (
       <div className="space-y-4 animate-fadeIn">
@@ -255,7 +255,7 @@ export default function FowlLists({
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">Archived Registry Empty</h3>
-            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No gamefowl records have been archived. Archived fowl are non-mortality removals (sold, transferred, retired, inactive); deaths belong under 💀 Deceased.</p>
+            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No chicken records have been archived. Archived chickens are non-mortality removals (sold, transferred, retired, inactive); deaths belong under 💀 Deceased.</p>
           </div>
         ) : (
           <>
@@ -287,7 +287,7 @@ export default function FowlLists({
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Sire Material Yet</h3>
-            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No gamefowl have been retired to breeding stock. Record a match with Post-Fight Condition <strong>Severely Injured / Critical</strong> and the fighter will be auto-promoted here.</p>
+            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No chickens have been retired to breeding stock. Record a match with Post-Fight Condition <strong>Severely Injured / Critical</strong> and the fighter will be auto-promoted here.</p>
           </div>
         ) : (
           <>
@@ -309,7 +309,7 @@ export default function FowlLists({
         <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
           <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto">💀</div>
           <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Mortality Records</h3>
-          <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No gamefowl nodes recorded under mortality logs.</p>
+          <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No chicken nodes recorded under mortality logs.</p>
         </div>
       ) : (
         <>

@@ -68,7 +68,7 @@ export default function FowlDetailsModal({
         </button>
 
         <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight border-b pb-3 border-slate-100 flex items-center space-x-2">
-          <span>🧬</span> <span>Individual Gamefowl Analytics & Match Logs</span>
+          <span>🧬</span> <span>Individual Chicken Analytics & Match Logs</span>
         </h3>
 
         <BloodlineReportCard fowl={selectedFowlForDetails} />
@@ -192,14 +192,14 @@ export default function FowlDetailsModal({
               </h4>
               {relations.length === 0 ? (
                 <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold">
-                  No sibling records detected. Add another gamefowl sharing the same Sire and/or Dam to build the lineage tree.
+                  No sibling records detected. Add another chicken sharing the same Sire and/or Dam to build the lineage tree.
                 </p>
               ) : (
                 <>
                   <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-medium bg-slate-50 dark:bg-muted/50 border border-slate-100 dark:border-border rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
                     <span className="text-sm shrink-0">🧬</span>
                     <span>
-                      <strong className="text-slate-700 dark:text-card-foreground">How lineage is matched:</strong> birds sharing both the same{' '}
+                      <strong className="text-slate-700 dark:text-card-foreground">How lineage is matched:</strong> chickens sharing both the same{' '}
                       <strong className="text-slate-700 dark:text-card-foreground">Sire</strong> and <strong className="text-slate-700 dark:text-card-foreground">Dam</strong> are <strong className="text-emerald-700">Full Siblings</strong> (iisang tatay at iisang nanay);
                       sharing only the <strong className="text-slate-700 dark:text-card-foreground">Sire</strong> marks them <strong className="text-amber-700">Half-Siblings (Shared Sire)</strong> — magkaiba ang nanay, iisang tatay;
                       sharing only the <strong className="text-slate-700 dark:text-card-foreground">Dam</strong> marks them <strong className="text-sky-700">Half-Siblings (Shared Dam)</strong> — magkaiba ang tatay, iisang nanay.
@@ -410,7 +410,7 @@ export default function FowlDetailsModal({
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl space-y-3 shadow-sm border border-slate-700/60">
                 <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-700/80">
                   <span>⚔️ Combat Analytics & Performance Vectors</span>
-                  <span className="font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">FOWL ID: #{selectedFowlForDetails.id}</span>
+                  <span className="font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">CHICKEN ID: #{selectedFowlForDetails.id}</span>
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                   <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
@@ -430,7 +430,7 @@ export default function FowlDetailsModal({
                     <strong className="text-base text-amber-400 font-black">{draws} 🤝</strong>
                   </div>
                   <div className="bg-teal-950/40 p-2.5 rounded-xl border border-teal-700/40 col-span-2 sm:col-span-1">
-                    <span className="text-[9px] text-teal-300 font-bold uppercase block">Per-Fowl Win Rate</span>
+                    <span className="text-[9px] text-teal-300 font-bold uppercase block">Per-Chicken Win Rate</span>
                     <strong className="text-base text-teal-300 font-black">{winRate}%</strong>
                     <span className="text-[8px] text-slate-300 block font-mono font-semibold">{wins}W - {losses}L</span>
                   </div>
@@ -456,7 +456,7 @@ export default function FowlDetailsModal({
                   <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
                     <div className="p-3 bg-slate-50 dark:bg-muted/50 border-b border-slate-200/80 dark:border-border">
                       <h4 className="text-[11px] font-black text-slate-700 dark:text-card-foreground uppercase tracking-wider">🏆 Individual Per-Rasa Performance ({breeds.length} breed{breeds.length > 1 ? 's' : ''} faced)</h4>
-                      <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold mt-0.5">Win / Loss breakdown against each opponent breed — specific to this fowl only.</p>
+                      <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold mt-0.5">Win / Loss breakdown against each opponent breed — specific to this chicken only.</p>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 divide-x divide-y divide-slate-100">
                       {breeds.map(([breed, stats]) => {
@@ -514,7 +514,7 @@ export default function FowlDetailsModal({
                       {fowlMatches.length === 0 ? (
                         <tr>
                           <td colSpan={8} className="p-6 text-center text-slate-400 dark:text-muted-foreground text-xs">
-                            No derby performance logs recorded for this specific gamefowl node.
+                            No derby performance logs recorded for this specific chicken node.
                           </td>
                         </tr>
                       ) : (

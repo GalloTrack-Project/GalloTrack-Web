@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', result.userId);
 
     if (fowlError) {
-      return NextResponse.json({ error: `Fowl transfer failed: ${fowlError.message}` }, { status: 500 });
+      return NextResponse.json({ error: `Chicken transfer failed: ${fowlError.message}` }, { status: 500 });
     }
 
     const { count: matchesTransferred, error: matchError } = await result.adminClient

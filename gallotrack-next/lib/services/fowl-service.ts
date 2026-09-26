@@ -12,7 +12,7 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
     .order('id', { ascending: false });
 
   if (error) {
-    console.error('Failed to fetch fowls:', error);
+    console.error('Failed to fetch chickens:', error);
     return [];
   }
   return data || [];

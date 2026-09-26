@@ -93,7 +93,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
           <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
           <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight flex items-center space-x-2">
             <BarChart3 className="w-5 h-5" />
-            <span>Per-Fowl Performance Breakdown</span>
+            <span>Per-Chicken Performance Breakdown</span>
           </h3>
           <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold mt-1">Individual win rates and overall aggregate statistics</p>
         </div>
@@ -120,7 +120,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-sky-400">{fowls.length}</p>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Total Fowls</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase">Total Chickens</p>
               </div>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
             <thead>
               <tr className="border-b border-slate-100 dark:border-border">
                 <th className="text-left py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">#</th>
-                <th className="text-left py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Fowl</th>
+                <th className="text-left py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Chicken</th>
                 <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Tier</th>
                 <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Fights</th>
                 <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">W-L</th>
@@ -225,7 +225,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
               })}
               {stats.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-muted-foreground text-xs font-semibold">No fowls match the current filter.</td>
+                  <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-muted-foreground text-xs font-semibold">No chickens match the current filter.</td>
                 </tr>
               )}
             </tbody>

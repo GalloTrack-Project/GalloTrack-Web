@@ -149,13 +149,13 @@ export async function POST(request: NextRequest) {
     const rawCode = String(body.bird_code ?? '').replace(/\s+/g, '');
     if (rawCode && !isValidBirdCode(rawCode)) {
       return NextResponse.json(
-        { error: 'Invalid bird code — use letters, numbers, x, - or . only, max 24 chars (e.g. 1A, 1Ax1B)' },
+        { error: 'Invalid chicken code — use letters, numbers, x, - or . only, max 24 chars (e.g. 1A, 1Ax1B)' },
         { status: 400 }
       );
     }
     const requestedCode = rawCode;
     if (requestedCode && taken.has(requestedCode.toLowerCase())) {
-      return NextResponse.json({ error: `Bird code "${requestedCode}" is already in use` }, { status: 409 });
+      return NextResponse.json({ error: `Chicken code "${requestedCode}" is already in use` }, { status: 409 });
     }
     payload.bird_code =
       requestedCode ||

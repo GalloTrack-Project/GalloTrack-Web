@@ -12,7 +12,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 const OWNER_NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/profiling', label: 'Fowl Registry', icon: Dna },
+  { href: '/profiling', label: 'Chicken Registry', icon: Dna },
   { href: '/catalog', label: 'Breeding Catalog', icon: Egg },
   { href: '/lineage', label: 'Lineage Directory', icon: TreePine },
   { href: '/profile', label: 'My Profile', icon: User },
@@ -152,7 +152,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <div className="bg-muted/50 rounded-lg p-1.5 text-center">
                   <p className="text-[10px] font-black text-emerald-400">{stats.total_fowls}</p>
-                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Fowls</p>
+                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Chickens</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-1.5 text-center">
                   <p className="text-[10px] font-black text-sky-400">{stats.total_matches}</p>

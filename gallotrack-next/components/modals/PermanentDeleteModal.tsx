@@ -37,8 +37,8 @@ export default function PermanentDeleteModal({
         </div>
 
         <div className="bg-rose-50/60 dark:bg-muted/50 p-4 rounded-2xl border border-rose-200/60 dark:border-border space-y-2">
-          <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Fowl: <strong className="text-rose-800 font-black">{pendingPermanentDelete.name}</strong> ({pendingPermanentDelete.breed})</p>
-          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">This fowl record will be <strong className="text-rose-700">permanently deleted</strong> from the database. This action cannot be undone.</p>
+          <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-rose-800 font-black">{pendingPermanentDelete.name}</strong> ({pendingPermanentDelete.breed})</p>
+          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">This chicken record will be <strong className="text-rose-700">permanently deleted</strong> from the database. This action cannot be undone.</p>
         </div>
 
         <div className="flex space-x-3 pt-2">

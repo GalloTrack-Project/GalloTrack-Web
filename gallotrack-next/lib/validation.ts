@@ -5,8 +5,8 @@ export const birdCodeSchema = z.union([
   z.literal(''),
   z
     .string()
-    .min(1, 'Bird code is required')
-    .max(BIRD_CODE_MAX_LENGTH, `Bird code must be ${BIRD_CODE_MAX_LENGTH} characters or less`)
+    .min(1, 'Chicken code is required')
+    .max(BIRD_CODE_MAX_LENGTH, `Chicken code must be ${BIRD_CODE_MAX_LENGTH} characters or less`)
     .regex(BIRD_CODE_PATTERN, 'Use letters, numbers, x, - or . only (e.g. 1A, 1Ax1B)'),
 ]);
 
@@ -34,7 +34,7 @@ export const fowlFormSchema = z.object({
 export type FowlFormData = z.infer<typeof fowlFormSchema>;
 
 export const matchFormSchema = z.object({
-  selectedFowl: z.string().min(1, 'Select a registered fowl'),
+  selectedFowl: z.string().min(1, 'Select a registered chicken'),
   date: z.string().optional(),
   opponentName: z.string().optional(),
   opponentBreed: z.string().optional(),

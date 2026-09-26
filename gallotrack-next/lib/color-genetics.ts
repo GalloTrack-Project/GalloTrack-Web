@@ -247,7 +247,7 @@ function getComplementaryColors(legColor: string, plumage: string): string {
       'Red': 'Balanced — slate legs tone down bright plumage',
     },
     'Willow': {
-      'Red': 'Classic gamefowl look — Willow legs with Red plumage',
+      'Red': 'Classic chicken look — Willow legs with Red plumage',
       'Spangled': 'Natural appearance — blends with wild-type patterns',
     },
     'Black': {
@@ -255,7 +255,7 @@ function getComplementaryColors(legColor: string, plumage: string): string {
       'Red': 'Intimidating — dark legs with bright plumage',
     },
   };
-  return combos[legColor]?.[plumage] || `${legColor} legs — common in gamefowl`;
+  return combos[legColor]?.[plumage] || `${legColor} legs — common in chickens`;
 }
 
 export { LEG_COLOR_TRAITS, PLUMAGE_TRAITS, PLUMAGE_PATTERNS };

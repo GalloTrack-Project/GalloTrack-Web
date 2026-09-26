@@ -114,7 +114,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
           {candidates.length > 0 && (
             <>
               <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                Registered fowls — tap to select or tap to see children
+                Registered chickens — tap to select or tap to see children
               </div>
               {candidates.map((f) => {
                 const children = getChildrenOf(f.name, fowls, parentGender);

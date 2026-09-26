@@ -29,7 +29,7 @@ export default function SplashScreen({ onFinished }: Props) {
             GALLO<span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">TRACK</span>
           </h1>
           <p className="text-xs text-slate-400 font-semibold tracking-wide max-w-xs mx-auto">
-            Advanced Gamefowl Lineage Analytics &amp; Structural Trace Registry Framework
+            Advanced Chicken Lineage Analytics &amp; Structural Trace Registry Framework
           </p>
         </div>
       </div>

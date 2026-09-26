@@ -46,7 +46,7 @@ export default function MilestonesPage() {
             <h1 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
               <Calendar size={18} /> Development Calendar & Milestones
             </h1>
-            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Stage transitions predicted from each fowl&apos;s birth date · {activeFowls.length} active fowls tracked</p>
+            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Stage transitions predicted from each chicken&apos;s birth date · {activeFowls.length} active chickens tracked</p>
           </div>
         </div>
       </div>

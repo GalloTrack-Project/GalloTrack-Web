@@ -243,7 +243,7 @@ export default function MarketplacePage() {
           <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner"><Egg className="w-5 h-5" /></div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Marketplace</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Buy and sell gamefowl within the GalloTrack community</p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Buy and sell chickens within the GalloTrack community</p>
           </div>
         </div>
       </div>
@@ -379,9 +379,9 @@ export default function MarketplacePage() {
 
           {fowls.length > 0 && !editingId && (
             <div className="mb-4">
-              <label className={labelClass}>Pre-fill from Fowl Registry</label>
+              <label className={labelClass}>Pre-fill from Chicken Registry</label>
               <select onChange={(e) => handleSelectFowl(e.target.value)} value={form.fowl_id} className={`${inputClass} cursor-pointer`}>
-                <option value="">-- Select a fowl --</option>
+                <option value="">-- Select a chicken --</option>
                 {fowls.filter((f) => f.status === 'Active').map((f) => (
                   <option key={f.id} value={f.id}>{f.name} ({f.breed} · {f.gender})</option>
                 ))}
@@ -429,7 +429,7 @@ export default function MarketplacePage() {
             </div>
             <div>
               <label className={labelClass}>Description</label>
-              <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Describe your gamefowl..." rows={3} />
+              <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Describe your chicken..." rows={3} />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={saving} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">

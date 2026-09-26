@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "GalloTrack",
-  description: "Optimizing Gamefowl Management through In-Depth Analytics",
+  description: "Optimizing Chicken Management through In-Depth Analytics",
 };
 
 export default function RootLayout({

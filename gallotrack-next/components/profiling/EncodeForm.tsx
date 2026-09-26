@@ -189,7 +189,7 @@ export default function EncodeForm({
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
-            Bird Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
+            Chicken Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
           </label>
           <input
             type="text"
@@ -541,12 +541,12 @@ export default function EncodeForm({
           </div>
         ) : null}
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Fowl Attachment Photo</label>
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Chicken Attachment Photo</label>
           <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-2xl cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative">
             {imagePreview ? (
               <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-xs text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : 'Choose fowl image file'}</span>
+              <span className="text-xs text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : 'Choose chicken image file'}</span>
             )}
             <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" />
           </label>
