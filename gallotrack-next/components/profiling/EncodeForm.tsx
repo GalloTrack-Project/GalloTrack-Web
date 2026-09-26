@@ -104,6 +104,7 @@ export default function EncodeForm({
   weight, setWeight,
   setNewLegColor,
   availableLegColors,
+  customLegColorNames,
   deleteCustomLegColor,
   legColorQuery, setLegColorQuery,
   legColorOpen, setLegColorOpen,
@@ -397,7 +398,9 @@ export default function EncodeForm({
                               <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer">
                                 {s}
                               </button>
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                              {customLegColorNames.has(s) && (
+                                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                              )}
                             </div>
                         ))}
                       </>
@@ -408,7 +411,9 @@ export default function EncodeForm({
                         <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600' : 'text-slate-600'}`}>
                           {s}
                         </button>
-                        <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                        {customLegColorNames.has(s) && (
+                          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                        )}
                       </div>
                   ));
                 })()}

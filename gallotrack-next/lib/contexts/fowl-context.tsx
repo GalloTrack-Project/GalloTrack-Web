@@ -24,6 +24,7 @@ import {
   matchSurvivability,
   cleanPct as cleanPctHelper,
   STRAIN_LIST,
+  LEG_COLOR_LIST,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
 import {
@@ -430,7 +431,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setAvailableStrains(strainNames);
       setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));
       setAvailableLegColors(legColorNames);
-      setCustomLegColorNames(new Set(legColorNames));
+      setCustomLegColorNames(new Set(legColorNames.filter(s => !LEG_COLOR_LIST.includes(s))));
     } catch (err) {
       console.error('Failed to fetch database resources:', err);
       setFowls([]);
@@ -451,6 +452,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
   // ── Strain/leg-color CRUD ──
   const deleteCustomStrain = useCallback(async (name: string): Promise<void> => {
+    if (STRAIN_LIST.includes(name)) {
+      ui.showToastMessage(`"${name}" is a built-in strain and can't be deleted.`, 'warning');
+      return;
+    }
     setAvailableStrains((prev) => prev.filter((s) => s !== name));
     setCustomStrainNames((prev) => { const n = new Set(prev); n.delete(name); return n; });
     setSelectedStrains((prev) => prev.filter((s) => s !== name));
@@ -463,6 +468,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   }, [ui]);
 
   const deleteCustomLegColor = useCallback(async (name: string): Promise<void> => {
+    if (LEG_COLOR_LIST.includes(name)) {
+      ui.showToastMessage(`"${name}" is a built-in leg color and can't be deleted.`, 'warning');
+      return;
+    }
     const result = await strainService.deleteLegColor(name);
     if (!result.error) {
       setAvailableLegColors((prev) => prev.filter((s) => s !== name));

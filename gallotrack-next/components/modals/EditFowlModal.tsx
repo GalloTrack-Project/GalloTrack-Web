@@ -70,6 +70,7 @@ export default function EditFowlModal({
   loading,
   fowls,
   availableStrains,
+  customStrainNames,
   deleteCustomStrain,
   editName,
   setEditName,
@@ -173,7 +174,9 @@ export default function EditFowlModal({
                     {availableStrains.filter((s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed).slice(0, 5).map((s) => (
                       <div key={s} className="flex items-center bg-slate-100 rounded-full group">
                         <button type="button" onClick={() => setEditBreed(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 hover:text-emerald-700 cursor-pointer">{s}</button>
-                        <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                        {customStrainNames.has(s) && (
+                          <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                        )}
                       </div>
                   ))}
                   </div>

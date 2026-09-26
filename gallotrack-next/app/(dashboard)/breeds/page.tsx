@@ -61,6 +61,11 @@ export default function BreedsPage() {
   };
 
   const handleDelete = async (name: string) => {
+    if (!customStrainNames.has(name)) {
+      ui.showToastMessage(`"${name}" is a built-in breed and can't be deleted.`, 'warning');
+      setConfirmDelete(null);
+      return;
+    }
     setDeleting(name);
     const result = await strainService.deleteStrain(name);
     if (result.error) {
@@ -188,6 +193,10 @@ export default function BreedsPage() {
                   {count > 0 ? (
                     <div className="mt-auto pt-2 border-t border-border">
                       <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Used by {count} chicken{count !== 1 ? 's' : ''}</span>
+                    </div>
+                  ) : !isCustom ? (
+                    <div className="mt-auto pt-2 border-t border-border">
+                      <span className="text-[9px] font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Built-in breed — can&apos;t be deleted</span>
                     </div>
                   ) : (
                     <div className="mt-auto pt-2 border-t border-border">
