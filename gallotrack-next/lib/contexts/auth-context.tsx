@@ -169,14 +169,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { error: insertErr } = await supabase.from('profiles').insert([{
       id: user.id,
-      user_id: user.id,
       email: user.email || '',
-      first_name: meta.first_name || '',
-      middle_name: meta.middle_name || '',
-      last_name: meta.last_name || '',
       full_name: fullName,
       farm_name: farmName,
-      phone_number: meta.contact_number || '09123456789',
+      phone_number: meta.contact_number || '',
       avatar_url: '',
       role: defaultRole,
       is_admin: defaultRole === 'admin',

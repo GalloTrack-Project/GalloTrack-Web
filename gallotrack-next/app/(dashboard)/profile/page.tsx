@@ -76,7 +76,6 @@ export default function ProfilePage() {
           .from('profiles')
           .upsert({
             id: user.id,
-            user_id: user.id,
             full_name: fullName,
             phone_number: phoneNumber,
             avatar_url: avatarUrl,

@@ -48,12 +48,9 @@ export async function ensureOwnerRecords(supabaseClient: SupabaseClient, user: U
     if (!existingProfile) {
       await supabaseClient.from('profiles').insert({
         id: user.id,
-        user_id: user.id,
         email: user.email || '',
-        first_name: meta.first_name || '',
-        middle_name: meta.middle_name || '',
-        last_name: meta.last_name || '',
         full_name: fullName,
+        farm_name: farmName,
         phone_number: contactNumber,
         avatar_url: meta.avatar_url || '',
         role: 'owner',
