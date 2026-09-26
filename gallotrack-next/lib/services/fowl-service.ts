@@ -18,10 +18,10 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
   return data || [];
 }
 
-export async function insertFowl(payload: Record<string, unknown>): Promise<{ error?: string }> {
-  const { error } = await supabase.from('fowl').insert([payload]);
+export async function insertFowl(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
+  const { data, error } = await supabase.from('fowl').insert([payload]).select('id').single();
   if (error) return { error: error.message };
-  return {};
+  return { id: data?.id };
 }
 
 export async function updateFowl(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {

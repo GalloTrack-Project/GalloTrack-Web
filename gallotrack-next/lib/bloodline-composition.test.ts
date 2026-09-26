@@ -10,6 +10,7 @@ import {
   getFowlBloodlineStats,
   normalizeComposition,
   parseComposition,
+  planLineageRefresh,
   specificBloodlinePct,
 } from './bloodline-composition';
 
@@ -227,5 +228,114 @@ describe('getFowlBloodlineStats', () => {
 
   it('returns null when there is no fowl', () => {
     expect(getFowlBloodlineStats(null)).toBeNull();
+  });
+});
+
+describe('planLineageRefresh', () => {
+  const family = (): FowlRecord[] => [
+    bird({
+      id: 1,
+      name: 'King',
+      breed: 'Kelso',
+      bloodline_composition: { Kelso: 100 },
+      bloodline_pct: 100,
+    }),
+    bird({
+      id: 2,
+      name: 'Lady',
+      gender: 'Hen',
+      breed: 'Hatch',
+      bloodline_composition: { Hatch: 100 },
+      bloodline_pct: 100,
+    }),
+    bird({
+      id: 3,
+      name: 'Chick',
+      sire: 'King',
+      dam: 'Lady',
+      bloodline_composition: { Kelso: 50, Hatch: 50 },
+      bloodline_pct: 50,
+    }),
+  ];
+
+  it('updates a child when the parent breed changes', () => {
+    const fowls = family();
+    const edited = { ...fowls[0], breed: 'Roundhead', bloodline_composition: { Roundhead: 100 } };
+    const patches = planLineageRefresh({ root: edited, previousName: 'King', fowls });
+
+    expect(patches).toHaveLength(1);
+    expect(patches[0].id).toBe(3);
+    expect(patches[0].patch.bloodline_composition).toEqual({ Roundhead: 50, Hatch: 50 });
+    expect(patches[0].patch.bloodline_pct).toBe(50);
+  });
+
+  it('returns nothing when the edit changed no blood', () => {
+    const fowls = family();
+    expect(planLineageRefresh({ root: fowls[0], previousName: 'King', fowls })).toEqual([]);
+  });
+
+  it('leaves unrelated chickens alone', () => {
+    const fowls = family();
+    fowls.push(
+      bird({
+        id: 9,
+        name: 'Stranger',
+        breed: 'Lemon 84',
+        bloodline_composition: { 'Lemon 84': 100 },
+        bloodline_pct: 100,
+      })
+    );
+    const edited = { ...fowls[0], breed: 'Roundhead', bloodline_composition: { Roundhead: 100 } };
+    const patches = planLineageRefresh({ root: edited, previousName: 'King', fowls });
+
+    expect(patches.map((p) => p.id)).toEqual([3]);
+  });
+
+  it('repairs parent links after a rename and keeps walking down', () => {
+    const fowls: FowlRecord[] = [
+      bird({ id: 1, name: 'King', breed: 'Kelso', bloodline_composition: { Kelso: 100 }, bloodline_pct: 100 }),
+      bird({
+        id: 3,
+        name: 'Chick',
+        sire: 'King',
+        dam: 'Foundation Stock',
+        bloodline_composition: { Kelso: 50, [UNKNOWN_BLOODLINE]: 50 },
+        bloodline_pct: 50,
+      }),
+      bird({
+        id: 4,
+        name: 'Grand',
+        sire: 'Chick',
+        dam: 'Foundation Stock',
+        bloodline_composition: { Kelso: 100 },
+        bloodline_pct: 100,
+      }),
+    ];
+    const renamed = { ...fowls[0], name: 'Mabuhay' };
+    const patches = planLineageRefresh({ root: renamed, previousName: 'King', fowls });
+
+    expect(patches.map((p) => p.id)).toEqual([3, 4]);
+    expect(patches[0].patch.sire).toBe('Mabuhay');
+    expect(patches[0].patch.bloodline_composition).toEqual({ Kelso: 50, [UNKNOWN_BLOODLINE]: 50 });
+    expect(patches[1].patch.bloodline_composition).toEqual({ Kelso: 25, [UNKNOWN_BLOODLINE]: 75 });
+  });
+
+  it('catches children that were waiting for a parent to be registered', () => {
+    const root = bird({ id: 5, name: 'King', breed: 'Kelso' });
+    const waiting = bird({ id: 2, name: 'Chick', sire: 'King', dam: 'Lady' });
+    const dam = bird({ id: 6, name: 'Lady', gender: 'Hen', breed: 'Hatch' });
+    const patches = planLineageRefresh({ root, fowls: [waiting, dam] });
+
+    expect(patches).toHaveLength(1);
+    expect(patches[0].id).toBe(2);
+    expect(patches[0].patch.bloodline_composition).toEqual({ Kelso: 50, Hatch: 50 });
+  });
+
+  it('never patches the edited bird itself', () => {
+    const fowls = family();
+    const edited = { ...fowls[0], breed: 'Roundhead', bloodline_composition: { Roundhead: 100 } };
+    const patches = planLineageRefresh({ root: edited, previousName: 'King', fowls });
+
+    expect(patches.some((p) => p.id === edited.id)).toBe(false);
   });
 });

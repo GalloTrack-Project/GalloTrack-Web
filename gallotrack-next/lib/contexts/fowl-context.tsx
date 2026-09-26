@@ -31,6 +31,7 @@ import {
   computeBloodlineComposition,
   getBloodlineStats,
   getFowlBloodlineStats,
+  planLineageRefresh,
   type BloodlineComposition,
   type BloodlineStats,
 } from '@/lib/bloodline-composition';
@@ -441,6 +442,39 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  /**
+   * Re-sync descendants after a chicken is created or edited: every child whose
+   * stored bloodline drifted (or that still points at a renamed parent) gets
+   * its own update, so the stored 50/50 percentages never go stale.
+   */
+  const refreshDescendantCompositions = useCallback(
+    async (root: FowlRecord, previousName?: string | null): Promise<number> => {
+      try {
+        const patches = planLineageRefresh({ root, previousName, fowls });
+        let refreshed = 0;
+        for (const { id, patch } of patches) {
+          const { error } = await fowlService.updateFowl(id, patch);
+          if (error) {
+            console.error('Failed to refresh lineage composition:', error);
+            break;
+          }
+          refreshed++;
+        }
+        if (refreshed > 0) {
+          ui.showToastMessage(
+            `Bloodline recomputed for ${refreshed} chicken${refreshed === 1 ? '' : 's'}.`,
+            'success'
+          );
+        }
+        return refreshed;
+      } catch (err) {
+        console.error('Failed to refresh lineage composition:', err);
+        return 0;
+      }
+    },
+    [fowls, ui]
+  );
+
   useEffect(() => {
     if (ui.currentPage !== 'login') {
       const controller = new AbortController();
@@ -607,6 +641,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         }
         const createdGender = newGender || 'Rooster';
         setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview(''); setBirdCode('');
+        if (result.id != null) {
+          await refreshDescendantCompositions({ ...payload, id: result.id } as FowlRecord, null);
+        }
         fetchDatabaseResources();
         ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
       }
@@ -616,7 +653,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, fetchDatabaseResources, ui]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
 
   const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -894,6 +931,17 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       ui.showToastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
       await strainService.saveCustomStrain(editBreed);
+      const editedRoot = {
+        ...ui.editingFowl,
+        name: payload.name,
+        breed: payload.breed,
+        gender: payload.gender,
+        sire: payload.sire,
+        dam: payload.dam,
+        bloodline_pct: payload.bloodline_pct,
+        bloodline_composition: payload.bloodline_composition,
+      } as FowlRecord;
+      await refreshDescendantCompositions(editedRoot, ui.editingFowl.name);
       ui.setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: unknown) {
@@ -901,7 +949,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, birdCodes, fowls, availableStrains, fetchDatabaseResources, ui]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
 
   // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);

@@ -262,3 +262,86 @@ export function compositionIsStale(stored: unknown, computed: BloodlineCompositi
   if (keysA.some((k, i) => k !== keysB[i])) return true;
   return keysA.some((k) => Math.abs((a[k] || 0) - (computed[k] || 0)) > EPSILON);
 }
+
+export type LineageRefreshPatch = {
+  id: number;
+  patch: Record<string, unknown>;
+};
+
+/**
+ * Which descendants went stale after a bird was created or edited?
+ *
+ * Walks downward from `root` — following both its current name and, when the
+ * bird was renamed, its previous name — and builds the update each descendant
+ * needs to match a fresh 50/50 ancestry walk again:
+ *
+ *   • `bloodline_composition` / `bloodline_pct` whenever they drifted
+ *     (parent breed changed, a parent was registered later, deeper edits)
+ *   • `sire` / `dam` when a rename left the child pointing at the old name
+ *
+ * Only descendants that actually changed are returned, so callers can skip
+ * the writes entirely when the edit was harmless.
+ */
+export function planLineageRefresh(params: {
+  root: FowlRecord;
+  previousName?: string | null;
+  fowls: FowlRecord[];
+}): LineageRefreshPatch[] {
+  const { root, previousName, fowls } = params;
+  const key = (s?: string | null): string => String(s ?? '').trim().toLowerCase();
+  const rootKey = key(root.name);
+  const prevKey = key(previousName);
+  const renamed = Boolean(rootKey && prevKey && rootKey !== prevKey);
+
+  const next = [...fowls];
+  const rootIndex = next.findIndex((f) => f.id === root.id);
+  if (rootIndex >= 0) next[rootIndex] = { ...next[rootIndex], ...root };
+  else next.push(root);
+
+  const queue: string[] = [rootKey, ...(renamed ? [prevKey] : [])].filter((k) => k.length > 0);
+  const visited = new Set<number>();
+  const patches: LineageRefreshPatch[] = [];
+
+  while (queue.length > 0) {
+    const parentKey = queue.shift() as string;
+    for (let i = 0; i < next.length; i++) {
+      const f = next[i];
+      if (f.id === root.id || visited.has(f.id)) continue;
+      const isChild = key(f.sire) === parentKey || key(f.dam) === parentKey;
+      if (!isChild) continue;
+      visited.add(f.id);
+
+      // Keep walking down even when this child itself did not drift.
+      const childKey = key(f.name);
+      if (childKey && childKey !== parentKey) queue.push(childKey);
+
+      const linkPatch: Record<string, string> = {};
+      if (renamed) {
+        if (key(f.sire) === prevKey) linkPatch.sire = root.name;
+        if (key(f.dam) === prevKey) linkPatch.dam = root.name;
+      }
+      if (linkPatch.sire || linkPatch.dam) {
+        next[i] = { ...f, ...linkPatch };
+      }
+
+      const fresh = computeBloodlineComposition(next[i], next);
+      const stats = getBloodlineStats(fresh);
+      const freshPct = stats?.specificPct ?? null;
+      const drifted =
+        compositionIsStale(f.bloodline_composition, fresh) ||
+        (freshPct !== null && Math.abs(freshPct - Number(f.bloodline_pct ?? 0)) > EPSILON);
+      const linkChanged = Object.keys(linkPatch).length > 0;
+      if (!linkChanged && !drifted) continue;
+
+      patches.push({
+        id: f.id,
+        patch: {
+          ...linkPatch,
+          bloodline_composition: fresh,
+          ...(freshPct !== null ? { bloodline_pct: freshPct } : {}),
+        },
+      });
+    }
+  }
+  return patches;
+}
