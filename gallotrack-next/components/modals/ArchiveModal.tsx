@@ -42,7 +42,7 @@ export default function ArchiveModal({
 
         <div className="bg-amber-50/60 dark:bg-muted/50 p-4 rounded-2xl border border-amber-200/60 dark:border-border space-y-2">
           <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-amber-800 font-black">{selectedFowlForArchive.name}</strong> ({selectedFowlForArchive.breed})</p>
-            <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Archiving records a non-death disposition (sold, transferred, retired, inactive). It does NOT imply mortality. If the chicken has died, use <strong className="text-rose-700">Deceased</strong> instead.</p>
+            <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Archiving records a non-death disposition (sold, transferred, other). It does NOT imply mortality. If the chicken has died, use <strong className="text-rose-700">Deceased</strong> instead.</p>
         </div>
 
         <div className="space-y-2">
@@ -54,8 +54,6 @@ export default function ArchiveModal({
           >
             <option value="SOLD">SOLD — Sold / Transferred to a Buyer</option>
             <option value="TRANSFERRED">TRANSFERRED — Moved to Another Farm / Owner</option>
-            <option value="RETIRED">RETIRED — Retired from Circuit / Breeding</option>
-            <option value="INACTIVE">INACTIVE — Discontinued / On Hold (Non-Mortality)</option>
             <option value="OTHER">OTHER — Other Non-Mortality Reason</option>
           </select>
         </div>

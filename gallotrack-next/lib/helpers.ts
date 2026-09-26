@@ -224,7 +224,7 @@ export const formatShortDate = (t: number) => {
 };
 
 export const getArchiveBadgeStyle = (reason?: string) => {
-  const r = (reason || 'RETIRED').toUpperCase();
+  const r = (reason || 'OTHER').toUpperCase();
   switch (r) {
     case 'SOLD': return { label: 'ARCHIVED · SOLD', bg: 'bg-emerald-700 text-white' };
     case 'TRANSFERRED': return { label: 'ARCHIVED · TRANSFERRED', bg: 'bg-sky-700 text-white' };
