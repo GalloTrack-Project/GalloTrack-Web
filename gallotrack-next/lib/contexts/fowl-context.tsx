@@ -240,6 +240,7 @@ interface FowlContextValue {
   };
 
   deathReasonInput: string; setDeathReasonInput: (v: string) => void;
+  deathReasonNote: string; setDeathReasonNote: (v: string) => void;
   archiveReasonInput: string; setArchiveReasonInput: (v: string) => void;
   archiveReasonNote: string; setArchiveReasonNote: (v: string) => void;
   breakdownTab: 'individual' | 'strain' | 'pairing';
@@ -360,6 +361,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
   // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
+  const [deathReasonNote, setDeathReasonNote] = useState('');
   const [archiveReasonInput, setArchiveReasonInput] = useState('SOLD');
   const [archiveReasonNote, setArchiveReasonNote] = useState('');
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain' | 'pairing'>('individual');
@@ -830,18 +832,25 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
   const handleMarkFowlDeceased = useCallback(async () => {
     if (!ui.selectedFowlForDeceased) return;
+    const typedCause = deathReasonNote.replace(/[<>&"]/g, '').trim();
+    if (deathReasonInput === 'Other' && !typedCause) {
+      ui.showToastMessage('Type the cause of death before confirming (Other).', 'error');
+      return;
+    }
+    const finalCause = deathReasonInput === 'Other' ? typedCause : deathReasonInput;
     setLoading(true);
-    const result = await fowlService.markFowlDeceased(ui.selectedFowlForDeceased.id, deathReasonInput);
+    const result = await fowlService.markFowlDeceased(ui.selectedFowlForDeceased.id, finalCause);
     if (result.error) {
       ui.showToastMessage(result.error, 'error');
     } else {
       ui.showToastMessage('Chicken node recorded under mortality archive log.', 'error');
+      setDeathReasonNote('');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForDeceased.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForDeceased(null);
       fetchDatabaseResources();
     }
     setLoading(false);
-  }, [deathReasonInput, fetchDatabaseResources, ui]);
+  }, [deathReasonInput, deathReasonNote, fetchDatabaseResources, ui]);
 
   const handleOpenEditModal = useCallback((fowl: FowlRecord) => {
     ui.setEditingFowl(fowl);
@@ -1030,6 +1039,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     },
     getFarmBloodlineSummary: () => generateFarmBloodlineSummary(fowls, matchHistory),
     deathReasonInput, setDeathReasonInput,
+    deathReasonNote, setDeathReasonNote,
     archiveReasonInput, setArchiveReasonInput,
     archiveReasonNote, setArchiveReasonNote,
     breakdownTab, setBreakdownTab,

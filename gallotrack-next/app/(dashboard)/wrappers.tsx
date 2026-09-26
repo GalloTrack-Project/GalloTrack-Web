@@ -70,6 +70,8 @@ export function ModalsWrapper() {
       handleMarkFowlDeceased={store.handleMarkFowlDeceased}
       deathReasonInput={store.deathReasonInput}
       setDeathReasonInput={store.setDeathReasonInput}
+      deathReasonNote={store.deathReasonNote}
+      setDeathReasonNote={store.setDeathReasonNote}
       selectedFowlForArchive={ui.selectedFowlForArchive}
       setSelectedFowlForArchive={ui.setSelectedFowlForArchive}
       handleArchiveFowlWithReason={store.handleArchiveFowlWithReason}

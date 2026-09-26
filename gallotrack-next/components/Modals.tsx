@@ -27,6 +27,8 @@ type ModalsProps = {
   handleMarkFowlDeceased: () => void;
   deathReasonInput: string;
   setDeathReasonInput: (v: string) => void;
+  deathReasonNote: string;
+  setDeathReasonNote: (v: string) => void;
 
   selectedFowlForArchive: FowlRecord | null;
   setSelectedFowlForArchive: (f: FowlRecord | null) => void;
@@ -157,6 +159,8 @@ export default function Modals(props: ModalsProps) {
         handleMarkFowlDeceased={props.handleMarkFowlDeceased}
         deathReasonInput={props.deathReasonInput}
         setDeathReasonInput={props.setDeathReasonInput}
+        deathReasonNote={props.deathReasonNote}
+        setDeathReasonNote={props.setDeathReasonNote}
         loading={props.loading}
       />
 

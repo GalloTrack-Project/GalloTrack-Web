@@ -9,6 +9,8 @@ type DeceasedModalProps = {
   handleMarkFowlDeceased: () => void;
   deathReasonInput: string;
   setDeathReasonInput: (v: string) => void;
+  deathReasonNote: string;
+  setDeathReasonNote: (v: string) => void;
   loading: boolean;
 };
 
@@ -18,6 +20,8 @@ export default function DeceasedModal({
   handleMarkFowlDeceased,
   deathReasonInput,
   setDeathReasonInput,
+  deathReasonNote,
+  setDeathReasonNote,
   loading,
 }: DeceasedModalProps) {
   if (!selectedFowlForDeceased) return null;
@@ -42,7 +46,7 @@ export default function DeceasedModal({
 
         <div className="bg-rose-50/60 dark:bg-muted/50 p-4 rounded-2xl border border-rose-200/60 dark:border-border space-y-2">
           <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
-          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the chicken has died. Mortality removes the chicken from the active registry. Non-mortality removals (sold, transferred, retired, inactive) belong under <strong className="text-amber-700">Archive</strong> instead.</p>
+          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the chicken has died. Mortality removes the chicken from the active registry. Non-mortality removals (sold, transferred, other) belong under <strong className="text-amber-700">Archive</strong> instead.</p>
         </div>
 
         <div className="space-y-2">
@@ -55,9 +59,22 @@ export default function DeceasedModal({
             <option value="Illness">Illness / Disease</option>
             <option value="Injury">Injury / Fight Trauma</option>
             <option value="Natural">Natural Causes / Old Age</option>
-            <option value="Culling">Selective Culling</option>
             <option value="Other">Other Unspecified Cause</option>
           </select>
+          {deathReasonInput === 'Other' && (
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider">Type Cause of Death</label>
+              <input
+                type="text"
+                value={deathReasonNote}
+                onChange={(e) => setDeathReasonNote(e.target.value)}
+                maxLength={60}
+                placeholder="e.g. Heat stroke, predator attack…"
+                className="w-full p-3 border border-slate-200 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500"
+              />
+              <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">This is saved as the cause of death and shown on the chicken&apos;s record.</p>
+            </div>
+          )}
         </div>
 
         <div className="flex space-x-3 pt-2">
