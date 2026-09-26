@@ -9,6 +9,8 @@ type ArchiveModalProps = {
   handleArchiveFowlWithReason: () => void;
   archiveReasonInput: string;
   setArchiveReasonInput: (v: string) => void;
+  archiveReasonNote: string;
+  setArchiveReasonNote: (v: string) => void;
   loading: boolean;
 };
 
@@ -18,6 +20,8 @@ export default function ArchiveModal({
   handleArchiveFowlWithReason,
   archiveReasonInput,
   setArchiveReasonInput,
+  archiveReasonNote,
+  setArchiveReasonNote,
   loading,
 }: ArchiveModalProps) {
   if (!selectedFowlForArchive) return null;
@@ -56,6 +60,20 @@ export default function ArchiveModal({
             <option value="TRANSFERRED">TRANSFERRED — Moved to Another Farm / Owner</option>
             <option value="OTHER">OTHER — Other Non-Mortality Reason</option>
           </select>
+          {archiveReasonInput === 'OTHER' && (
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider">Type Archive Reason</label>
+              <input
+                type="text"
+                value={archiveReasonNote}
+                onChange={(e) => setArchiveReasonNote(e.target.value)}
+                maxLength={60}
+                placeholder="e.g. Retired from circuit, on hold, discontinued…"
+                className="w-full p-3 border border-slate-200 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-amber-500"
+              />
+              <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">This is saved as the archive reason and shown on the chicken&apos;s record.</p>
+            </div>
+          )}
         </div>
 
         <div className="flex space-x-3 pt-2">

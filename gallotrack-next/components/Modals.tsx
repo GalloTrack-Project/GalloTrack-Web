@@ -33,6 +33,8 @@ type ModalsProps = {
   handleArchiveFowlWithReason: () => void;
   archiveReasonInput: string;
   setArchiveReasonInput: (v: string) => void;
+  archiveReasonNote: string;
+  setArchiveReasonNote: (v: string) => void;
 
   pendingPermanentDelete: FowlRecord | null;
   setPendingPermanentDelete: (f: FowlRecord | null) => void;
@@ -164,6 +166,8 @@ export default function Modals(props: ModalsProps) {
         handleArchiveFowlWithReason={props.handleArchiveFowlWithReason}
         archiveReasonInput={props.archiveReasonInput}
         setArchiveReasonInput={props.setArchiveReasonInput}
+        archiveReasonNote={props.archiveReasonNote}
+        setArchiveReasonNote={props.setArchiveReasonNote}
         loading={props.loading}
       />
 

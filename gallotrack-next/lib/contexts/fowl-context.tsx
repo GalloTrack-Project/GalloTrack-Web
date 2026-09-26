@@ -241,6 +241,7 @@ interface FowlContextValue {
 
   deathReasonInput: string; setDeathReasonInput: (v: string) => void;
   archiveReasonInput: string; setArchiveReasonInput: (v: string) => void;
+  archiveReasonNote: string; setArchiveReasonNote: (v: string) => void;
   breakdownTab: 'individual' | 'strain' | 'pairing';
   setBreakdownTab: (v: 'individual' | 'strain' | 'pairing') => void;
   dateRangePreset: '7d' | '30d' | 'month' | '3m' | 'all';
@@ -360,6 +361,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
   const [archiveReasonInput, setArchiveReasonInput] = useState('SOLD');
+  const [archiveReasonNote, setArchiveReasonNote] = useState('');
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain' | 'pairing'>('individual');
   const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
@@ -765,18 +767,25 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;
+    const typedReason = archiveReasonNote.replace(/[<>&"]/g, '').trim();
+    if (archiveReasonInput === 'OTHER' && !typedReason) {
+      ui.showToastMessage('Type the archive reason before confirming (OTHER).', 'error');
+      return;
+    }
+    const finalReason = archiveReasonInput === 'OTHER' ? typedReason : archiveReasonInput;
     setLoading(true);
-    const result = await fowlService.archiveFowl(ui.selectedFowlForArchive.id, archiveReasonInput);
+    const result = await fowlService.archiveFowl(ui.selectedFowlForArchive.id, finalReason);
     if (result.error) {
       ui.showToastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage(`Chicken archived under ${archiveReasonInput} status log.`, 'warning');
+      ui.showToastMessage(`Chicken archived under ${finalReason} status log.`, 'warning');
+      setArchiveReasonNote('');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForArchive(null);
       fetchDatabaseResources();
     }
     setLoading(false);
-  }, [archiveReasonInput, fetchDatabaseResources, ui]);
+  }, [archiveReasonInput, archiveReasonNote, fetchDatabaseResources, ui]);
 
   const handleArchiveFowlOnly = useCallback(async (id: number) => {
     setLoading(true);
@@ -1022,6 +1031,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     getFarmBloodlineSummary: () => generateFarmBloodlineSummary(fowls, matchHistory),
     deathReasonInput, setDeathReasonInput,
     archiveReasonInput, setArchiveReasonInput,
+    archiveReasonNote, setArchiveReasonNote,
     breakdownTab, setBreakdownTab,
     dateRangePreset, setDateRangePreset,
     dateRangeOpen, setDateRangeOpen,

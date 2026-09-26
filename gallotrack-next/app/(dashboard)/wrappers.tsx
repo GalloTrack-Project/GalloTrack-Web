@@ -75,6 +75,8 @@ export function ModalsWrapper() {
       handleArchiveFowlWithReason={store.handleArchiveFowlWithReason}
       archiveReasonInput={store.archiveReasonInput}
       setArchiveReasonInput={store.setArchiveReasonInput}
+      archiveReasonNote={store.archiveReasonNote}
+      setArchiveReasonNote={store.setArchiveReasonNote}
       pendingPermanentDelete={ui.pendingPermanentDelete}
       setPendingPermanentDelete={ui.setPendingPermanentDelete}
       handlePermanentDelete={store.handlePermanentDelete}
