@@ -72,6 +72,15 @@ export async function setSireMaterial(id: number): Promise<{ error?: string }> {
   return {};
 }
 
+export async function setFowlActive(id: number): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from('fowl')
+    .update({ status: 'Active' })
+    .eq('id', id);
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function uploadFowlImage(file: File): Promise<{ url?: string; error?: string }> {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;

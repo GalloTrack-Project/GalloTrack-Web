@@ -44,6 +44,7 @@ export default function ProfilingPage() {
     cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
     handleAddFowl, handleAddMatchRecord,
     handleOpenEditModal, handleRestoreFowlOnly,
+    handleSetActiveStatus,
     generationPurity,
     autoCalcAge,
     getAutoCalcAge,
@@ -182,6 +183,7 @@ export default function ProfilingPage() {
           setProfilingSubTab={setProfilingSubTab}
           handleOpenEditModal={handleOpenEditModal}
           handleRestoreFowlOnly={handleRestoreFowlOnly}
+          handleSetActiveStatus={handleSetActiveStatus}
           setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
           setSelectedFowlForArchive={ui.setSelectedFowlForArchive}
           setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}

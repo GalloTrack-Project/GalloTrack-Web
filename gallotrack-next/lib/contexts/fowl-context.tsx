@@ -201,6 +201,8 @@ interface FowlContextValue {
   handleRestoreFowlOnly: (id: number) => Promise<void>;
   handlePermanentDelete: () => Promise<void>;
   handleMarkFowlDeceased: () => Promise<void>;
+  handleSetSireMaterial: (fowl: FowlRecord) => Promise<void>;
+  handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
   fetchDatabaseResources: () => Promise<void>;
 
   handleAgeChange: (val: string, genderVal?: string) => void;
@@ -737,21 +739,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           console.warn('Match options save skipped:', optResult.error);
         }
 
-        // Auto-set fowl to "Sire Material" if severely injured
-        if (matchPostFight === 'Severely Injured / Critical') {
-          const matchedFowl = fowls.find(f => f.name === selectedFowlForMatch);
-          if (matchedFowl) {
-            const sireResult = await fowlService.setSireMaterial(matchedFowl.id);
-            if (sireResult.error) {
-              ui.showToastMessage(`Match saved, but failed to mark ${selectedFowlForMatch} as Sire Material: ${sireResult.error}`, 'error');
-            } else {
-              ui.showToastMessage(`${selectedFowlForMatch} is now marked as Sire Material — retired from fighting, available for breeding.`, 'warning');
-            }
-          } else {
-            ui.showToastMessage(`Match saved, but chicken "${selectedFowlForMatch}" was not found in registry — could not mark as Sire Material.`, 'error');
-          }
-        }
-
         ui.showToastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
         setPartnerEntry(''); setSuggestedPartners([]);
@@ -765,6 +752,32 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setUploadingVideo(false);
     }
   }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, derbyMatchNumber, matchOutcome, matchPostFight, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
+
+  const handleSetSireMaterial = useCallback(async (fowl: FowlRecord) => {
+    setLoading(true);
+    const result = await fowlService.setSireMaterial(fowl.id);
+    if (result.error) {
+      ui.showToastMessage(`Failed to mark ${fowl.name} as Sire Material: ${result.error}`, 'error');
+    } else {
+      ui.showToastMessage(`${fowl.name} is now Sire Material — retired from fighting, available for breeding.`, 'success');
+      if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
+      fetchDatabaseResources();
+    }
+    setLoading(false);
+  }, [fetchDatabaseResources, ui]);
+
+  const handleSetActiveStatus = useCallback(async (fowl: FowlRecord) => {
+    setLoading(true);
+    const result = await fowlService.setFowlActive(fowl.id);
+    if (result.error) {
+      ui.showToastMessage(`Failed to return ${fowl.name} to Active: ${result.error}`, 'error');
+    } else {
+      ui.showToastMessage(`${fowl.name} is back to Active status.`, 'success');
+      if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
+      fetchDatabaseResources();
+    }
+    setLoading(false);
+  }, [fetchDatabaseResources, ui]);
 
   const handleArchiveFowlWithReason = useCallback(async () => {
     if (!ui.selectedFowlForArchive) return;
@@ -998,6 +1011,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleAddFowl, handleAddMatchRecord, handleUpdateFowl,
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,
     handleRestoreFowlOnly, handlePermanentDelete, handleMarkFowlDeceased,
+    handleSetSireMaterial, handleSetActiveStatus,
     fetchDatabaseResources,
     generationOf: generationOfLocal,
     parentBloodlinePct: parentBloodlinePctLocal,

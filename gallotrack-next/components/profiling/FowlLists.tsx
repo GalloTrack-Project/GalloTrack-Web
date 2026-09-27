@@ -26,6 +26,7 @@ type Props = {
   loading: boolean;
   setProfilingSubTab: (tab: ProfilingSubTab) => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
+  handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
   handleRestoreFowlOnly: (id: number) => void;
   setSelectedFowlForDetails: (fowl: FowlRecord) => void;
   setSelectedFowlForArchive: (fowl: FowlRecord) => void;
@@ -33,7 +34,7 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
@@ -87,6 +88,12 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, allFowls
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
             Deceased
           </button>
+          {onSetActive && (
+            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h18"/><path d="m9 16-4-4 4-4"/></svg>
+              Set to Active
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -186,6 +193,7 @@ export default function FowlLists({
   setSelectedFowlForArchive,
   setSelectedFowlForDeceased,
   handleOpenEditModal,
+  handleSetActiveStatus,
 }: Props) {
   const [page, setPage] = useState(1);
   const prevTabRef = React.useRef(tab);
@@ -289,12 +297,12 @@ export default function FowlLists({
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Sire Material Yet</h3>
-            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No chickens have been retired to breeding stock. Record a match with Post-Fight Condition <strong>Severely Injured / Critical</strong> and the fighter will be auto-promoted here.</p>
+            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No chickens have been retired to breeding stock. Open a fighter&rsquo;s details and click <strong>Mark as Sire Material</strong> to move it here.</p>
           </div>
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onSetActive={handleSetActiveStatus} allFowls={fowls} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>

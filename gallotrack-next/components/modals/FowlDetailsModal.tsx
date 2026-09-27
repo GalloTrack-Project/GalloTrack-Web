@@ -14,6 +14,8 @@ import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { isMale } from '@/lib/helpers';
 
 type FowlDetailsModalProps = {
   selectedFowlForDetails: FowlRecord | null;
@@ -55,6 +57,7 @@ export default function FowlDetailsModal({
   pairingAnalytics,
 }: FowlDetailsModalProps) {
   const unitPrefs = useUnitPrefs();
+  const { handleSetSireMaterial, handleSetActiveStatus } = useFowl();
   if (!selectedFowlForDetails) return null;
 
   return (
@@ -102,6 +105,13 @@ export default function FowlDetailsModal({
                     </span>
                   );
                 }
+                if (selectedFowlForDetails.status === 'Sire Material') {
+                  return (
+                    <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase bg-amber-50 text-amber-700 border border-amber-200">
+                      ● SIRE MATERIAL
+                    </span>
+                  );
+                }
                 if (selectedFowlForDetails.archive_reason) {
                   const badge = getArchiveBadgeStyle(selectedFowlForDetails.archive_reason);
                   return (
@@ -140,6 +150,19 @@ export default function FowlDetailsModal({
               <p className="text-[11px] font-bold text-amber-700">
                 📦 Archive Reason: <strong className="text-amber-800">{selectedFowlForDetails.archive_reason}</strong> (Non-Mortality)
               </p>
+            )}
+            {selectedFowlForDetails.status !== 'Deceased' && !selectedFowlForDetails.archive_reason && isMale(selectedFowlForDetails.gender) && (
+              <div className="pt-1.5">
+                {selectedFowlForDetails.status === 'Sire Material' ? (
+                  <button type="button" onClick={() => handleSetActiveStatus(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+                    Set back to Active
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => handleSetSireMaterial(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+                    Mark as Sire Material
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
