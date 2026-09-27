@@ -42,10 +42,10 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
   const { entries, dominant, strainCount, isDiluted, summary, knownPct, unknownPct } = resolved;
 
   return (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 space-y-3">
+    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-2xl p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+          <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
             🧬 {title || 'Bloodline Percentage Breakdown'}
           </p>
           {subtitle ? (
@@ -96,8 +96,8 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
       </div>
 
       {!compact && (
-        <p className="text-[9px] text-slate-500 dark:text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 pt-2">
-          <span className="font-black text-emerald-700">Summary:</span> {summary}
+        <p className="text-[9px] text-slate-500 dark:text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 dark:border-emerald-900/50 pt-2">
+          <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
           {unknownPct > 0 && (
             <>
               {' '}
@@ -112,9 +112,9 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
       )}
 
       {isDiluted && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-          <p className="text-[9px] font-black text-amber-700 uppercase tracking-wider">⚠️ Banta ng “Galapsaw”</p>
-          <p className="text-[9px] text-amber-700/90 font-semibold mt-0.5 leading-relaxed">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl px-3 py-2">
+          <p className="text-[9px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">⚠️ Banta ng “Galapsaw”</p>
+          <p className="text-[9px] text-amber-700/90 dark:text-amber-300/90 font-semibold mt-0.5 leading-relaxed">
             Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang {dominant.pct}%).
             Bumaba ang specific bloodline percentage — mas mahirap nang panatilihin ang magagandang katangian.
             Maganda ang pure o kontroladong breeding.

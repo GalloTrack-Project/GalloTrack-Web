@@ -41,11 +41,11 @@ function computeStats(fowls: FowlRecord[], matchHistory: MatchRecord[]): FowlSta
 }
 
 function getTierColor(winRate: number, decided: number): string {
-  if (decided === 0) return 'bg-slate-100 text-slate-400 border-slate-200';
-  if (winRate >= 70) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-  if (winRate >= 50) return 'bg-sky-50 text-sky-700 border-sky-200';
-  if (winRate >= 30) return 'bg-amber-50 text-amber-700 border-amber-200';
-  return 'bg-rose-50 text-rose-700 border-rose-200';
+  if (decided === 0) return 'bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground border-slate-200 dark:border-slate-800';
+  if (winRate >= 70) return 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+  if (winRate >= 50) return 'bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800';
+  if (winRate >= 30) return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+  return 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
 }
 
 function getTierLabel(winRate: number, decided: number): string {
@@ -103,24 +103,24 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
           <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-4 text-white">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Overall Aggregate</span>
-              <span className="text-[9px] font-bold text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
             </div>
             <div className="grid grid-cols-4 gap-3">
               <div className="text-center">
                 <p className="text-2xl font-black text-white">{overallWinRate}%</p>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Overall Win Rate</p>
+                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Overall Win Rate</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-emerald-400">{totalWins}</p>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Total Wins</p>
+                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Total Wins</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-rose-400">{totalLosses}</p>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Total Losses</p>
+                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Total Losses</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-sky-400">{fowls.length}</p>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Total Chickens</p>
+                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Total Chickens</p>
               </div>
             </div>
           </div>
@@ -129,19 +129,19 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
           <div className="grid grid-cols-5 gap-2 mt-3">
             <div className="bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border rounded-xl p-2 text-center">
               <p className="text-lg font-black text-emerald-700 dark:text-card-foreground">{eliteCount}</p>
-              <p className="text-[8px] font-bold text-emerald-600 uppercase">Elite 70%+</p>
+              <p className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300 uppercase">Elite 70%+</p>
             </div>
             <div className="bg-sky-50 dark:bg-muted/50 border border-sky-200 dark:border-border rounded-xl p-2 text-center">
               <p className="text-lg font-black text-sky-700 dark:text-card-foreground">{strongCount}</p>
-              <p className="text-[8px] font-bold text-sky-600 uppercase">Strong 50-69%</p>
+              <p className="text-[8px] font-bold text-sky-600 dark:text-sky-300 uppercase">Strong 50-69%</p>
             </div>
             <div className="bg-amber-50 dark:bg-muted/50 border border-amber-200 dark:border-border rounded-xl p-2 text-center">
               <p className="text-lg font-black text-amber-700 dark:text-card-foreground">{avgCount}</p>
-              <p className="text-[8px] font-bold text-amber-600 uppercase">Average 30-49%</p>
+              <p className="text-[8px] font-bold text-amber-600 dark:text-amber-300 uppercase">Average 30-49%</p>
             </div>
             <div className="bg-rose-50 dark:bg-muted/50 border border-rose-200 dark:border-border rounded-xl p-2 text-center">
               <p className="text-lg font-black text-rose-700 dark:text-card-foreground">{weakCount}</p>
-              <p className="text-[8px] font-bold text-rose-600 uppercase">Weak &lt;30%</p>
+              <p className="text-[8px] font-bold text-rose-600 dark:text-rose-300 uppercase">Weak &lt;30%</p>
             </div>
             <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-xl p-2 text-center">
               <p className="text-lg font-black text-slate-500 dark:text-muted-foreground">{noFightCount}</p>
@@ -205,7 +205,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                     <td className="py-2 text-center font-bold text-slate-600 dark:text-muted-foreground">{s.wins}W-{s.losses}L</td>
                     <td className="py-2 text-center">
                       {s.decided > 0 ? (
-                        <span className={`font-black px-2 py-0.5 rounded-full border ${s.winRate >= 50 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                        <span className={`font-black px-2 py-0.5 rounded-full border ${s.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'}`}>
                           {s.winRate}%
                         </span>
                       ) : (

@@ -410,7 +410,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center space-x-3 px-1">
-              <ZoomIn size={18} className="text-slate-400" />
+              <ZoomIn size={18} className="text-slate-400 dark:text-muted-foreground" />
               <input
                 type="range"
                 min={1}
@@ -420,7 +420,7 @@ export default function ProfilePage() {
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="w-full accent-teal-600 cursor-pointer"
               />
-              <ZoomOut size={18} className="text-slate-400" />
+              <ZoomOut size={18} className="text-slate-400 dark:text-muted-foreground" />
             </div>
 
             {cropError && <p className="text-xs font-bold text-rose-600 text-center">{cropError}</p>}

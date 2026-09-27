@@ -29,13 +29,13 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
         type="button"
         disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}
-        className="px-3 py-1.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+        className="px-3 py-1.5 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
       >
         ← Prev
       </button>
       {pages.map((p, i) =>
         p === '...' ? (
-          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-[10px] text-slate-400 font-bold">…</span>
+          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-[10px] text-slate-400 dark:text-muted-foreground font-bold">…</span>
         ) : (
           <button
             key={p}
@@ -43,8 +43,8 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
             onClick={() => onPageChange(p)}
             className={`min-w-[28px] h-7 text-[10px] font-black rounded-lg border transition-all cursor-pointer ${
               p === currentPage
-                ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-emerald-600 dark:border-emerald-600'
+                : 'bg-white dark:bg-card text-slate-600 dark:text-muted-foreground border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/50'
             }`}
           >
             {p}
@@ -55,7 +55,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
         type="button"
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}
-        className="px-3 py-1.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+        className="px-3 py-1.5 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
       >
         Next →
       </button>

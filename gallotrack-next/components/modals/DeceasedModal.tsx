@@ -28,7 +28,7 @@ export default function DeceasedModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-rose-200 max-w-md w-full p-6 space-y-5 relative">
+      <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-800 max-w-md w-full p-6 space-y-5 relative">
         <button 
           onClick={() => setSelectedFowlForDeceased(null)} 
           className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
@@ -36,8 +36,8 @@ export default function DeceasedModal({
           ✕
         </button>
 
-        <div className="flex items-center space-x-3 text-rose-700 border-b pb-3 border-rose-100">
-          <div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center"><Skull className="w-5 h-5 text-rose-600" /></div>
+        <div className="flex items-center space-x-3 text-rose-700 dark:text-rose-300 border-b pb-3 border-rose-100">
+          <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/50 rounded-2xl flex items-center justify-center"><Skull className="w-5 h-5 text-rose-600 dark:text-rose-300" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Record Mortality</h3>
             <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-semibold">Transition node to Deceased status — cause of death required</p>
@@ -45,8 +45,8 @@ export default function DeceasedModal({
         </div>
 
         <div className="bg-rose-50/60 dark:bg-muted/50 p-4 rounded-2xl border border-rose-200/60 dark:border-border space-y-2">
-          <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-rose-700 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
-          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the chicken has died. Mortality removes the chicken from the active registry. Non-mortality removals (sold, transferred, other) belong under <strong className="text-amber-700">Archive</strong> instead.</p>
+          <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-rose-700 dark:text-rose-300 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
+          <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the chicken has died. Mortality removes the chicken from the active registry. Non-mortality removals (sold, transferred, other) belong under <strong className="text-amber-700 dark:text-amber-300">Archive</strong> instead.</p>
         </div>
 
         <div className="space-y-2">

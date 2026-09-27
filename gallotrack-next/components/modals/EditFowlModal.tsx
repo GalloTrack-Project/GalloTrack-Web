@@ -147,7 +147,7 @@ export default function EditFowlModal({
         <form onSubmit={handleUpdateFowl} className="overflow-y-auto p-6 space-y-4 text-xs">
           
           <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-2xl border border-slate-200/40 dark:border-border">
-            <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
+            <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
               <Tag className="w-3.5 h-3.5" /> <span>Core Identity</span>
             </h4>
             <div>
@@ -172,10 +172,10 @@ export default function EditFowlModal({
                 {availableStrains.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {availableStrains.filter((s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed).slice(0, 5).map((s) => (
-                      <div key={s} className="flex items-center bg-slate-100 rounded-full group">
-                        <button type="button" onClick={() => setEditBreed(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 hover:text-emerald-700 cursor-pointer">{s}</button>
+                      <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
+                        <button type="button" onClick={() => setEditBreed(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer">{s}</button>
                         {customStrainNames.has(s) && (
-                          <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                          <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                         )}
                       </div>
                   ))}
@@ -193,7 +193,7 @@ export default function EditFowlModal({
           </div>
 
           <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-2xl border border-slate-200/40 dark:border-border">
-            <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
+            <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
               <Ruler className="w-3.5 h-3.5" /> <span>Physical Parameters</span>
             </h4>
             <div className="grid grid-cols-2 gap-3">
@@ -224,24 +224,24 @@ export default function EditFowlModal({
               </div>
             </div>
             <div className="mb-2">
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Birth Date <span className="text-emerald-600 font-black">· auto age</span></label>
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Birth Date <span className="text-emerald-600 dark:text-emerald-300 font-black">· auto age</span></label>
               <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold outline-none focus:border-emerald-500" />
               {(() => {
                 const parts = getAgeParts(editBirthdate);
                 return parts ? (
-                  <p className="mt-1 text-[10px] font-bold text-emerald-700 flex items-center gap-1"><Calendar className="w-3 h-3" /> Auto Age: {getAgeLabel(parts)} · <span className="font-mono">{getAgeMetrics(parts)}</span></p>
+                  <p className="mt-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1"><Calendar className="w-3 h-3" /> Auto Age: {getAgeLabel(parts)} · <span className="font-mono">{getAgeMetrics(parts)}</span></p>
                 ) : (
-                  <p className="mt-1 text-[10px] text-slate-400 font-medium">Set a birth date for automatic age &amp; milestone tracking.</p>
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-muted-foreground font-medium">Set a birth date for automatic age &amp; milestone tracking.</p>
                 );
               })()}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Age (Mos) {editBirthdate && <span className="text-emerald-600 font-black">· auto</span>}</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Age (Mos) {editBirthdate && <span className="text-emerald-600 dark:text-emerald-300 font-black">· auto</span>}</label>
                 <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400" required />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Growth</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">Growth</label>
                 <input 
                   type="text" 
                   value={editGrowthStage} 
@@ -249,8 +249,8 @@ export default function EditFowlModal({
                   placeholder="Awaiting age..." 
                   className={`w-full p-2.5 border rounded-xl text-xs text-center font-bold transition-all ${
                     editGrowthStage 
-                      ? 'border-emerald-100 bg-emerald-50 text-emerald-800' 
-                      : 'border-slate-200 bg-slate-50 text-slate-400 font-normal'
+                      ? 'border-emerald-100 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300' 
+                      : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50 text-slate-400 dark:text-muted-foreground font-normal'
                   }`} 
                 />
               </div>
@@ -275,9 +275,9 @@ export default function EditFowlModal({
               {availableLegColors.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {availableLegColors.filter((s) => s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor).slice(0, 5).map((s) => (
-                    <div key={s} className="flex items-center bg-slate-100 rounded-full group">
-                      <button type="button" onClick={() => setEditLegColor(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 hover:text-emerald-700 cursor-pointer">{s}</button>
-                      <button type="button" onClick={() => deleteCustomLegColor(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 border border-rose-200 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                    <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
+                      <button type="button" onClick={() => setEditLegColor(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 dark:text-slate-300 hover:text-emerald-700 cursor-pointer">{s}</button>
+                      <button type="button" onClick={() => deleteCustomLegColor(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -286,12 +286,12 @@ export default function EditFowlModal({
           </div>
 
           <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-2xl border border-slate-200/40 dark:border-border">
-            <h4 className="font-black text-emerald-700 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
+            <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-[10px] uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
               <TreePine className="w-3.5 h-3.5" /> <span>Ancestry Heritage Roots</span>
             </h4>
             <div>
               <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">
-                Chicken Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — A = Sire line, B = Dam line, combo = offspring)</span>
+                Chicken Code <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(standardized tag — 1, 2, 3 = sire · A, B, C = dam · 1A1 = offspring)</span>
               </label>
               <input
                 type="text"

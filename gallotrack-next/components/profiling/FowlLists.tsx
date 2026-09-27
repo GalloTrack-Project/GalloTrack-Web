@@ -47,49 +47,49 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
       <div className="flex-1 w-full space-y-3">
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground">{fowl.name}</h4>
-          <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200">{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200">{fowl.breed}</span>
-          <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200' : 'text-pink-700 bg-pink-50 dark:bg-pink-500/10 border-pink-200'}`}>
+          <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800">{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{fowl.breed}</span>
+          <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 bg-teal-50 border-teal-200">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 dark:text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-2xl border border-slate-100 dark:border-border">
           <div>Sire: <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong></div>
           <div>Dam: <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong></div>
           <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
-          <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+          <div>Trait: <strong className="text-emerald-700 dark:text-emerald-300">{fowl.behavior_trait}</strong></div>
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
           <div className="col-span-2 pt-1 border-t border-slate-200/60 dark:border-border flex items-center justify-between text-[10px]">
             <span>📅 Age:</span>
             {(() => {
               const p = getAgeParts(fowl.birthdate);
               return p ? (
-                <strong className="text-emerald-700 font-black">{getAgeLabel(p)} <span className="font-mono font-semibold text-slate-400 dark:text-muted-foreground">· born {fowl.birthdate}</span></strong>
+                <strong className="text-emerald-700 dark:text-emerald-300 font-black">{getAgeLabel(p)} <span className="font-mono font-semibold text-slate-400 dark:text-muted-foreground">· born {fowl.birthdate}</span></strong>
               ) : (
-                <strong className="text-amber-700 font-bold">{fowl.age || 'No birth date'}</strong>
+                <strong className="text-amber-700 dark:text-amber-300 font-bold">{fowl.age || 'No birth date'}</strong>
               );
             })()}
           </div>
         </div>
         <div className="text-[10px] text-slate-500 dark:text-muted-foreground flex justify-between items-center bg-slate-50 dark:bg-muted/50 p-2.5 px-3.5 rounded-xl border border-slate-100 dark:border-border">
-          <div className="font-semibold">Siblings: <span className="text-emerald-700 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
+          <div className="font-semibold">Siblings: <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
             Edit
           </button>
-          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 8-2-2H5l-2 2"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M10 12h4"/></svg>
             Archive
           </button>
-          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
             Deceased
           </button>
           {onSetActive && (
-            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h18"/><path d="m9 16-4-4 4-4"/></svg>
               Set to Active
             </button>
@@ -119,20 +119,20 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
         })()}
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-700 dark:text-card-foreground">{fowl.name}</h4>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 bg-amber-50 dark:bg-amber-500/10 border-amber-200">📦 Archived</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 bg-amber-50 dark:bg-amber-500/10 border-amber-200">{fowl.breed}</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 bg-teal-50 border-teal-200">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">📦 Archived</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">{fowl.breed}</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 dark:text-muted-foreground bg-slate-50 dark:bg-muted/50 p-3 rounded-2xl border border-slate-100 dark:border-border">
           <div>Sire: <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong></div>
           <div>Dam: <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong></div>
           <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
-          <div>Trait: <strong className="text-emerald-700">{fowl.behavior_trait}</strong></div>
+          <div>Trait: <strong className="text-emerald-700 dark:text-emerald-300">{fowl.behavior_trait}</strong></div>
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
-          <div className="col-span-2">Archive Reason: <strong className="text-amber-800">{fowl.archive_reason || 'Unspecified'}</strong></div>
+          <div className="col-span-2">Archive Reason: <strong className="text-amber-800 dark:text-amber-300">{fowl.archive_reason || 'Unspecified'}</strong></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onRestore(fowl.id)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={() => onRestore(fowl.id)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Restore
           </button>
@@ -154,9 +154,9 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
         <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-xl tracking-widest shadow-2xs">● DECEASED</span>
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground line-through opacity-75">{fowl.name}</h4>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 dark:bg-rose-500/10 border-rose-200">{fowl.breed}</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 bg-teal-50 border-teal-200">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 bg-rose-50 border-rose-200">💀 Cause of Death: {fowl.death_reason || 'Unspecified'}{fowl.death_date ? ` · ${fowl.death_date}` : ''}</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800">{fowl.breed}</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800">💀 Cause of Death: {fowl.death_reason || 'Unspecified'}{fowl.death_date ? ` · ${fowl.death_date}` : ''}</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 dark:text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-2xl border border-slate-100 dark:border-border">
           <div>Sire: <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong></div>
@@ -166,7 +166,7 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onDelete(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={() => onDelete(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             Delete
           </button>
@@ -219,7 +219,7 @@ export default function FowlLists({
     const tabLabel = isMaleTab ? 'Sire Registry' : 'Dam Registry';
     const tabSub = isMaleTab ? 'Active breeding males — every sire in the program' : 'Active breeding females — every dam in the program';
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
-    const accentSoft = isMaleTab ? 'bg-sky-50 border-sky-200' : 'bg-pink-50 border-pink-200';
+    const accentSoft = isMaleTab ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800' : 'bg-pink-50 dark:bg-pink-950/50 border-pink-200 dark:border-pink-800';
     const accentText = isMaleTab ? 'text-sky-400' : 'text-pink-400';
     const emptyTitle = isMaleTab ? 'No Sires Encoded' : 'No Dams Encoded';
     const emptyHint = isMaleTab ? 'No sires are registered in the active farm inventory yet. Encode your first sire to begin populating this registry and line up its offspring.' : 'No dams are registered in the active farm inventory yet. Encode your first dam to begin populating this registry and line up its offspring.';
@@ -285,7 +285,7 @@ export default function FowlLists({
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-amber-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 text-amber-500">🛡️</div>
+            <div className="w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800 text-amber-500">🛡️</div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Sire Material Registry</h2>
               <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold">Retired fighters promoted to breeding stock after critical injuries</p>
@@ -317,7 +317,7 @@ export default function FowlLists({
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-teal-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 text-teal-500">🥚</div>
+            <div className="w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal-500">🥚</div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Offspring Registry</h2>
               <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold">Every child sired or dropped by a registered sire and dam — one entry per offspring</p>
