@@ -11,7 +11,6 @@ export interface AdminSettings {
   auto_approve_users?: boolean;
   public_fowl_data?: boolean;
   default_user_role?: string;
-  default_match_type?: string;
   default_arena?: string;
   weight_unit?: 'kg' | 'lbs';
   height_unit?: 'cm' | 'inches';
@@ -167,7 +166,6 @@ export async function fetchSystemSettings(): Promise<AdminSettings> {
     auto_approve_users: raw.auto_approve_users !== false,
     public_fowl_data: raw.public_fowl_data === true,
     default_user_role: raw.default_user_role || 'owner',
-    default_match_type: raw.default_match_type || '',
     default_arena: raw.default_arena || '',
     weight_unit: raw.weight_unit || 'kg',
     height_unit: raw.height_unit || 'cm',

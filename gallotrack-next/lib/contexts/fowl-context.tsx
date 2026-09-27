@@ -293,7 +293,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     selectedFowlForMatch, setSelectedFowlForMatch,
     matchDate, setMatchDate, opponentName, setOpponentName,
     opponentBreed, setOpponentBreed, matchLocation, setMatchLocation,
-    matchType, setMatchType, derbyMatchNumber, setDerbyMatchNumber,
+    matchType, derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome,
     matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
@@ -318,12 +318,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
   } = formState;
 
-  // Load system defaults for match type, arena, and default strain on mount
+  // Load system defaults for arena and default strain on mount
   useEffect(() => {
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
       .then((s) => {
-        if (s.default_match_type) setMatchType(s.default_match_type);
         if (s.default_arena) setMatchLocation(s.default_arena);
         if (s.auto_calculate_age === false) setAutoCalcAge(false);
 
@@ -668,7 +667,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       opponentName,
       opponentBreed,
       location: matchLocation,
-      type: matchType,
+      type: eventType || matchType,
       outcome: matchOutcome,
       postFightCondition: matchPostFight,
       cockCount,
@@ -710,7 +709,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         opponent: sanitizeInput(opponentName) || 'Anonymous Opponent',
         opponent_breed: sanitizeInput(opponentBreed) || '',
         location: sanitizeInput(matchLocation) || 'Local Breeding Yard',
-        type: matchType || `${cockCount}-Cock ${eventType} #${derbyMatchNumber}`,
+        type: eventType || matchType || `${cockCount}-Cock ${eventType} #${derbyMatchNumber}`,
         derby_match_number: derbyMatchNumber,
         outcome: matchOutcome,
         status: 'Verified',

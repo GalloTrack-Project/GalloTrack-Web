@@ -19,7 +19,6 @@ const defaultSettings: AdminSettings = {
   auto_approve_users: true,
   public_fowl_data: false,
   default_user_role: 'owner',
-  default_match_type: '',
   default_arena: '',
   weight_unit: 'kg',
   height_unit: 'cm',
@@ -214,10 +213,6 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Default Match Type</label>
-                <input type="text" value={settings.default_match_type || ''} onChange={(e) => update('default_match_type', e.target.value)} className={inputClass} placeholder="e.g., Derby" />
-              </div>
               <div>
                 <label className={labelClass}>Default Arena</label>
                 <input type="text" value={settings.default_arena || ''} onChange={(e) => update('default_arena', e.target.value)} className={inputClass} placeholder="e.g., Main Arena" />

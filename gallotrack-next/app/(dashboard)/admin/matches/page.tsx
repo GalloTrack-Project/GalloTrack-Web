@@ -83,6 +83,13 @@ export default function AdminMatchAuditPage() {
     });
   }, [matches, search, filterOutcome, filterType, filterHealth]);
 
+  const typeOptions = useMemo(() => {
+    const seen = new Set<string>();
+    matches.forEach((m) => { if (m.type) seen.add(m.type); });
+    if (filterType && filterType !== 'all') seen.add(filterType);
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [matches, filterType]);
+
   if (!authorized || loading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
@@ -172,15 +179,9 @@ export default function AdminMatchAuditPage() {
               </select>
               <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Types</option>
-                <option value="Derby Match">Derby Match</option>
-                <option value="Hack Match">Hack Match</option>
-                <option value="2-Cock Derby">2-Cock Derby</option>
-                <option value="3-Cock Derby">3-Cock Derby</option>
-                <option value="4-Cock Derby">4-Cock Derby</option>
-                <option value="5-Cock Derby">5-Cock Derby</option>
-                <option value="Special Championship">Special Championship</option>
-                <option value="Regional Circuit">Regional Circuit</option>
-                <option value="Main Event / Solo">Main Event / Solo</option>
+                {typeOptions.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </select>
               <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Health</option>

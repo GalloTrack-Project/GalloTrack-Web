@@ -25,8 +25,6 @@ type Props = {
   setOpponentBreed: (v: string) => void;
   matchLocation: string;
   setMatchLocation: (v: string) => void;
-  matchType: string;
-  setMatchType: (v: string) => void;
   matchOutcome: string;
   setMatchOutcome: (v: string) => void;
   matchPostFight: string;
@@ -51,7 +49,6 @@ export default function MatchForm({
   opponentName, setOpponentName,
   opponentBreed, setOpponentBreed,
   matchLocation, setMatchLocation,
-  matchType, setMatchType,
   matchOutcome, setMatchOutcome,
   matchPostFight, setMatchPostFight,
   matchVideoFile, setMatchVideoFile,
@@ -60,29 +57,22 @@ export default function MatchForm({
   ageCategory, setAgeCategory,
   eventType, setEventType,
 }: Props) {
-  const MATCH_TYPE_PRESETS = ['Derby Match', 'Hack Fight', 'Main Fight', 'Pot Fight'];
   const EVENT_TYPE_PRESETS = ['Derby', 'Lusong'];
 
-  const [customMatchType, setCustomMatchType] = useState('');
   const [customEventType, setCustomEventType] = useState('');
 
-  const matchTypeIsCustom = matchType === '__custom__' || !MATCH_TYPE_PRESETS.includes(matchType);
   const eventTypeIsCustom = eventType === '__custom__' || !EVENT_TYPE_PRESETS.includes(eventType);
 
-  const matchTypeSelectValue = MATCH_TYPE_PRESETS.includes(matchType) ? matchType : '__custom__';
   const eventTypeSelectValue = EVENT_TYPE_PRESETS.includes(eventType) ? eventType : '__custom__';
 
-  const effectiveMatchType = matchType === '__custom__' ? customMatchType : matchType;
   const effectiveEventType = eventType === '__custom__' ? customEventType : eventType;
 
-  const customMatchTypeEmpty = matchTypeIsCustom && !effectiveMatchType.trim();
   const customEventTypeEmpty = eventTypeIsCustom && !effectiveEventType.trim();
 
   const buildPreview = () => {
     const cockText = cockCount > 0 ? `${cockCount} cocks` : '0 cocks';
-    const typeLabel = effectiveMatchType || 'Match Type';
     const eventLabel = effectiveEventType || 'Event Type';
-    return `${typeLabel} · ${cockText} · ${ageCategory} · ${eventLabel}`;
+    return `${eventLabel} · ${cockText} · ${ageCategory}`;
   };
 
   const selectClass = "match-field h-10 w-full cursor-pointer rounded-xl border border-[#dfe5ea] dark:border-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-[#263445] dark:text-card-foreground outline-none transition-colors duration-150 focus:border-[#13a983] focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
@@ -146,7 +136,7 @@ export default function MatchForm({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MATCH TYPE CONFIGURATION — 2-column grid per mockup           */}
+      {/* MATCH CONFIGURATION — event type drives the match type         */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5 shadow-sm">
 
@@ -154,42 +144,12 @@ export default function MatchForm({
         <div className="mb-6">
           <h1 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.02em] text-[#344054] dark:text-card-foreground sm:text-xs">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            Match Type Configuration
+            Match Configuration
           </h1>
         </div>
 
-        {/* Row 1: Match Type + Number of Cocks */}
+        {/* Row 1: Number of Cocks + Chicken Class */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Match Type</label>
-            <div className="relative">
-              <select value={matchTypeSelectValue} onChange={(e) => setMatchType(e.target.value)} className={selectClass}>
-                <option value="Derby Match">Derby Match</option>
-                <option value="Hack Fight">Hack Fight</option>
-                <option value="Main Fight">Main Fight</option>
-                <option value="Pot Fight">Pot Fight</option>
-                <option value="__custom__">Others (Add Custom)</option>
-              </select>
-              <SelectChevron />
-            </div>
-            {matchTypeIsCustom && (
-              <input
-                type="text"
-                value={matchType === '__custom__' ? customMatchType : matchType}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setCustomMatchType(v);
-                  setMatchType(v || '__custom__');
-                }}
-                placeholder="Type your custom match type..."
-                maxLength={50}
-                className={`${selectClass} mt-2`}
-              />
-            )}
-            {customMatchTypeEmpty && (
-              <p className="mt-1 text-[10px] font-semibold text-red-500">Enter a custom match type or pick a preset.</p>
-            )}
-          </div>
           <div>
             <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Number of Cocks</label>
             <div className="flex items-center gap-2">
@@ -205,10 +165,6 @@ export default function MatchForm({
               <span className="rounded-xl bg-[#f3f6f8] dark:bg-muted px-4 py-3 text-[11px] font-bold text-[#667085] dark:text-muted-foreground">cocks</span>
             </div>
           </div>
-        </div>
-
-        {/* Row 2: Bird Class + Event Type */}
-        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Chicken Class</label>
             <div className="relative">
@@ -219,7 +175,11 @@ export default function MatchForm({
               <SelectChevron />
             </div>
           </div>
-          <div>
+        </div>
+
+        {/* Row 2: Event Type — may "Others" free text */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
             <label className="mb-2.5 block text-[9px] font-bold uppercase tracking-[.02em] text-[#13a983] dark:text-emerald-400">Event Type</label>
             <div className="relative">
               <select value={eventTypeSelectValue} onChange={(e) => setEventType(e.target.value)} className={selectClass}>
@@ -297,7 +257,7 @@ export default function MatchForm({
       </div>
 
       {/* Submit */}
-      <button type="submit" disabled={loading || uploadingVideo || customMatchTypeEmpty || customEventTypeEmpty} className="w-full bg-slate-900 dark:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 dark:hover:bg-emerald-500 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+      <button type="submit" disabled={loading || uploadingVideo || customEventTypeEmpty} className="w-full bg-slate-900 dark:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all duration-200 hover:bg-emerald-700 dark:hover:bg-emerald-500 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
         {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
         <span>{loading ? 'Recording...' : 'RECORD MATCH'}</span>
       </button>

@@ -80,7 +80,6 @@ interface SystemConfig {
   system_status: string
   maintenance_message: string
   default_strain: string
-  default_match_type: string
   default_arena: string
   weight_unit: string
   height_unit: string
@@ -91,7 +90,6 @@ const defaultSystemConfig: SystemConfig = {
   system_status: 'Operational',
   maintenance_message: '',
   default_strain: 'Sweater',
-  default_match_type: '',
   default_arena: '',
   weight_unit: 'kg',
   height_unit: 'cm',
@@ -157,7 +155,6 @@ export default function SettingsPage() {
         system_status: systemRes.system_status || 'Operational',
         maintenance_message: systemRes.maintenance_message || '',
         default_strain: systemRes.default_strain || 'Sweater',
-        default_match_type: systemRes.default_match_type || '',
         default_arena: systemRes.default_arena || '',
         weight_unit: systemRes.weight_unit || 'kg',
         height_unit: systemRes.height_unit || 'cm',
@@ -191,7 +188,6 @@ export default function SettingsPage() {
               farm_location: farm?.farm_location || storedPrefs.farm_location || '',
               contact_number: farm?.contact_number || storedPrefs.contact_number || profile.phone_number || '',
               farm_description: farm?.farm_description || storedPrefs.farm_description || '',
-              default_match_type: storedPrefs.default_match_type || sysCfg.default_match_type || '',
               default_arena: storedPrefs.default_arena || sysCfg.default_arena || '',
               default_strain: storedPrefs.default_strain || sysCfg.default_strain || 'Sweater',
               weight_unit: storedPrefs.weight_unit || sysCfg.weight_unit || 'kg',
@@ -219,7 +215,6 @@ export default function SettingsPage() {
     setLoadError('')
     try {
       savePrefsToStorage({
-        default_match_type: settings.default_match_type || '',
         default_arena: settings.default_arena || '',
         default_strain: settings.default_strain || 'Sweater',
         weight_unit: settings.weight_unit || 'kg',
@@ -371,9 +366,6 @@ export default function SettingsPage() {
               </Field>
             </SectionCard>
             <SectionCard title="Default Match Settings" description="Pre-filled values when logging new matches (admin defaults applied if not overridden)">
-              <Field label="Default Match Type">
-                <TextInput value={settings.default_match_type || ''} onChange={(v) => update('default_match_type', v)} placeholder={systemConfig.default_match_type || 'e.g. Derby Match, Hack Match'} />
-              </Field>
               <Field label="Default Arena" description="Pre-filled arena location">
                 <TextInput value={settings.default_arena || ''} onChange={(v) => update('default_arena', v)} placeholder={systemConfig.default_arena || 'e.g. Dingle Arena'} />
               </Field>
@@ -516,9 +508,6 @@ export default function SettingsPage() {
             <SectionCard title="Default Values" description="Pre-filled defaults set by the administrator">
               <Field label="Default Strain">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.default_strain}</span>
-              </Field>
-              <Field label="Default Match Type">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.default_match_type || '—'}</span>
               </Field>
               <Field label="Default Arena">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">{systemConfig.default_arena || '—'}</span>
