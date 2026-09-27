@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
-import { resolveBirdCodes } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
@@ -113,7 +113,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
           <div className="flex items-center gap-2 min-w-0">
             <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-emerald-400 transition-colors">{fowl.name}</h4>
             {code && (
-              <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{code}</span>
+              <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -186,7 +186,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
         <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-3xl">
           <h3 className="text-base font-black text-card-foreground flex items-center gap-2 min-w-0">
             <span className="truncate">{fowl.name}</span>
-            {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{code}</span>}
+            {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
           </h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>

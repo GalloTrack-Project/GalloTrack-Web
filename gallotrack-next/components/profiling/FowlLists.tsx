@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
-import type { FowlRecord, MatchRecord, SiblingRelation } from '@/lib/types';
+import type { FowlRecord, MatchRecord, SiblingRelation, ProfilingSubTab } from '@/lib/types';
 import {
   getAgeParts,
   getAgeLabel,
@@ -11,10 +11,11 @@ import {
   getArchiveBadgeStyle,
 } from '@/lib/helpers';
 import Pagination from '@/components/Pagination';
-import { birdCodeOf } from '@/lib/bird-code';
+import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 
 type Props = {
-  tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial';
+  tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring';
+  offspringFowls?: FowlRecord[];
   fowls: FowlRecord[];
   maleActiveFowls: FowlRecord[];
   femaleActiveFowls: FowlRecord[];
@@ -23,7 +24,7 @@ type Props = {
   sireMaterialFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   loading: boolean;
-  setProfilingSubTab: (tab: 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'matchForm' | 'breeds') => void;
+  setProfilingSubTab: (tab: ProfilingSubTab) => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleRestoreFowlOnly: (id: number) => void;
   setSelectedFowlForDetails: (fowl: FowlRecord) => void;
@@ -45,7 +46,7 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, allFowls
       <div className="flex-1 w-full space-y-3">
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground">{fowl.name}</h4>
-          <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200">{birdCodeOf(fowl, allFowls) || '—'}</span>
+          <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200">{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}</span>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200">{fowl.breed}</span>
           <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 bg-sky-50 dark:bg-sky-500/10 border-sky-200' : 'text-pink-700 bg-pink-50 dark:bg-pink-500/10 border-pink-200'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
@@ -172,6 +173,7 @@ const PAGE_SIZE = 10;
 
 export default function FowlLists({
   tab,
+  offspringFowls,
   fowls,
   maleActiveFowls,
   femaleActiveFowls,
@@ -195,10 +197,10 @@ export default function FowlLists({
   }, [tab]);
 
   const paginatedBirds = useMemo(() => {
-    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : tab === 'sireMaterial' ? sireMaterialFowls : deceasedFowls;
+    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : tab === 'sireMaterial' ? sireMaterialFowls : tab === 'offspring' ? offspringFowls ?? [] : deceasedFowls;
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, sireMaterialFowls, page]);
+  }, [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, sireMaterialFowls, offspringFowls, page]);
 
   if (tab === 'males' || tab === 'females') {
     const isMaleTab = tab === 'males';
@@ -206,13 +208,13 @@ export default function FowlLists({
     const pagedList = paginatedBirds.pagedList;
     const totalPages = paginatedBirds.totalPages;
     const tabIcon = isMaleTab ? '🐓' : '🐔';
-    const tabLabel = isMaleTab ? 'Rooster / Male Housing' : 'Hen / Female Housing';
-    const tabSub = isMaleTab ? 'Dedicated cock inventory space — stags, roosters, cocks' : 'Dedicated hen inventory space — pullets, hens';
+    const tabLabel = isMaleTab ? 'Sire Registry' : 'Dam Registry';
+    const tabSub = isMaleTab ? 'Active breeding males — every sire in the program' : 'Active breeding females — every dam in the program';
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
     const accentSoft = isMaleTab ? 'bg-sky-50 border-sky-200' : 'bg-pink-50 border-pink-200';
     const accentText = isMaleTab ? 'text-sky-400' : 'text-pink-400';
-    const emptyTitle = isMaleTab ? 'No Roosters / Males Encoded' : 'No Hens / Females Encoded';
-    const emptyHint = isMaleTab ? 'No male chickens are registered in the active farm inventory yet. Encode your first rooster / stag / cock to begin populating this housing space.' : 'No female chickens are registered in the active farm inventory yet. Encode your first hen / pullet to begin populating this housing space.';
+    const emptyTitle = isMaleTab ? 'No Sires Encoded' : 'No Dams Encoded';
+    const emptyHint = isMaleTab ? 'No sires are registered in the active farm inventory yet. Encode your first sire to begin populating this registry and line up its offspring.' : 'No dams are registered in the active farm inventory yet. Encode your first dam to begin populating this registry and line up its offspring.';
 
     return (
       <div className="space-y-4 animate-fadeIn">
@@ -232,7 +234,7 @@ export default function FowlLists({
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">{emptyTitle}</h3>
             <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">{emptyHint}</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First {isMaleTab ? 'Rooster' : 'Hen'}
+              ➕ Encode First {isMaleTab ? 'Sire' : 'Dam'}
             </button>
           </div>
         ) : (
@@ -294,6 +296,44 @@ export default function FowlLists({
             {pagedList.map((fowl, index) => (
               <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
             ))}
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (tab === 'offspring') {
+    const { pagedList, totalPages } = paginatedBirds;
+    return (
+      <div className="space-y-4 animate-fadeIn">
+        <div className="bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-teal-500">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 text-teal-500">🥚</div>
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Offspring Registry</h2>
+              <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold">Every child sired or dropped by a registered sire and dam — one entry per offspring</p>
+            </div>
+          </div>
+          <span className="shrink-0 text-[10px] font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{paginatedBirds.list.length} Registered</span>
+        </div>
+        {paginatedBirds.list.length === 0 ? (
+          <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
+            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal-500 rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Offspring Yet</h3>
+            <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">No chicken in the registry is linked to a registered sire or dam yet. Encode a chick with its sire and dam to line it up here.</p>
+            <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">
+              ➕ Encode First Offspring
+            </button>
+          </div>
+        ) : (
+          <>
+            {pagedList.map((child, index) => {
+              const childGender: 'Male' | 'Female' = child.gender === 'Male' || child.gender === 'Rooster' ? 'Male' : 'Female';
+              if (child.status === 'Deceased') return <DeceasedCard key={child.id} fowl={child} index={index} onDelete={setPendingPermanentDelete} allFowls={fowls} />;
+              if (child.status === 'Archived') return <ArchivedCard key={child.id} fowl={child} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />;
+              return <FowlCard key={child.id} fowl={child} index={index} gender={childGender} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />;
+            })}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}

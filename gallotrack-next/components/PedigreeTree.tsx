@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { getFowlBloodlineStats, UNKNOWN_BLOODLINE } from '@/lib/bloodline-composition';
+import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 
 const MAX_ANCESTOR_GENERATIONS = 3;
@@ -33,7 +34,7 @@ const ACCENT: Record<CardProps['accent'], { border: string; badge: string; text:
 function AncestorCard({ label, name, fowl, fowls, codes, generation, accent, onPick }: CardProps) {
   const a = ACCENT[accent];
   const stats = fowl ? getFowlBloodlineStats(fowl, fowls) : null;
-  const code = fowl ? codes.get(String(fowl.id)) || '' : '';
+  const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '') : '';
   const missing = isAbsent(name);
 
   return (
@@ -196,7 +197,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
           >
             {fowls.map((f) => (
               <option key={f.id} value={f.id}>
-                {codes.get(String(f.id)) ? `${codes.get(String(f.id))} · ` : ''}
+                {codes.get(String(f.id)) ? `${formatBirdCodeForDisplay(codes.get(String(f.id)))} · ` : ''}
                 {f.name}
               </option>
             ))}

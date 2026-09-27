@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Bird, Archive, Skull, Dna, Shield } from 'lucide-react';
+import { Bird, Archive, Skull, Dna, Shield, Egg } from 'lucide-react';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useRouter } from 'next/navigation';
@@ -52,6 +52,16 @@ export default function ProfilingPage() {
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
 
+  const parentNames = new Set([...maleActiveFowls, ...femaleActiveFowls, ...sireMaterialFowls].map((p) => p.name));
+  const offspringList = fowls
+    .filter((f) => (f.sire && parentNames.has(f.sire)) || (f.dam && parentNames.has(f.dam)))
+    .sort((a, b) => a.id - b.id);
+
+  const listTab =
+    profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'sireMaterial' || profilingSubTab === 'offspring'
+      ? profilingSubTab
+      : null;
+
   return (
     <div className="space-y-5 animate-fadeIn">
       <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col gap-5">
@@ -76,13 +86,18 @@ export default function ProfilingPage() {
           </button>
           <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'males' ? 'bg-sky-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Bird className="w-4 h-4" />
-            <span>Roosters</span>
+            <span>Sire</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'males' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{maleActiveFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'females' ? 'bg-pink-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Bird className="w-4 h-4" />
-            <span>Hens</span>
+            <span>Dam</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'females' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{femaleActiveFowls.length}</span>
+          </button>
+          <button type="button" onClick={() => setProfilingSubTab('offspring')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'offspring' ? 'bg-teal-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <Egg className="w-4 h-4" />
+            <span>Offspring</span>
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'offspring' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{offspringList.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'archived' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Archive className="w-4 h-4" />
@@ -152,9 +167,10 @@ export default function ProfilingPage() {
         />
       )}
 
-      {(profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'sireMaterial') && (
+      {listTab && (
         <FowlLists
-          tab={profilingSubTab}
+          tab={listTab}
+          offspringFowls={offspringList}
           fowls={fowls}
           maleActiveFowls={maleActiveFowls}
           femaleActiveFowls={femaleActiveFowls}

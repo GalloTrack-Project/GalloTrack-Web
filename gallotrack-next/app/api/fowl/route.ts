@@ -142,14 +142,14 @@ export async function POST(request: NextRequest) {
       payload.bloodline_pct = stats.specificPct;
     }
 
-    // ── Standardized bird code (1A / 1B / 1Ax1B) ──
+    // ── Standardized bird code (sire = 1, dam = A, offspring = 1A1 / 1A₂) ──
     const codes = resolveBirdCodes(fowls);
     const taken = buildCodeSet(Array.from(codes.values()));
     // Validate the raw input first — normalizing would silently truncate oversize codes.
     const rawCode = String(body.bird_code ?? '').replace(/\s+/g, '');
     if (rawCode && !isValidBirdCode(rawCode)) {
       return NextResponse.json(
-        { error: 'Invalid chicken code — use letters, numbers, x, - or . only, max 24 chars (e.g. 1A, 1Ax1B)' },
+        { error: 'Invalid chicken code — use letters, numbers, x, - or . only, max 24 chars (e.g. 1, A, 1A1)' },
         { status: 400 }
       );
     }

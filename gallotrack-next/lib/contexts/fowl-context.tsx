@@ -391,7 +391,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const damGenInfo = generationInfo(damGen);
   const computedBloodlinePct = generationPurity(offspringGen);
 
-  // ── Standardized bird codes (1A / 1B / 1Ax1B) ──
+  // ── Standardized bird codes (sire 1, dam A, offspring 1A1 → 1A₁) ──
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
   const takenCodes = useMemo(() => buildCodeSet(Array.from(birdCodes.values())), [birdCodes]);
   const birdCodeOf = useCallback((f: FowlRecord) => birdCodes.get(String(f.id)) || normalizeBirdCode(f.bird_code), [birdCodes]);

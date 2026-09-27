@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
 import { getAgeLabel } from '@/lib/helpers';
+import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { LayoutDashboard, Bird, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
@@ -650,7 +651,7 @@ export default function DashboardPage() {
                         <span className="font-bold text-card-foreground">{log.entry_name}</span>
                         {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
                           <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
-                            {codeByName.get((log.entry_name || '').trim().toLowerCase())}
+                            {formatBirdCodeForDisplay(codeByName.get((log.entry_name || '').trim().toLowerCase()))}
                           </span>
                         )}
                       </div>

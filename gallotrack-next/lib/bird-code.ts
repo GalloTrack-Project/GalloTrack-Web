@@ -1,13 +1,16 @@
 import type { FowlRecord } from './types';
 
 /**
- * Standardized bird tagging / coding scheme.
+ * Standardized bird tagging / coding scheme (adviser convention).
  *
- * Adviser convention:
- *   Sires     -> 1A, 2A, 3A ...   (A = sire / male line)
- *   Dams      -> 1B, 2B, 3B ...   (B = dam / female line)
- *   Offspring -> parent-code combination, e.g. 1A x 1B -> "1Ax1B"
- *                (a "-2", "-3" suffix is appended for later clutch mates)
+ *   Sires     -> 1, 2, 3 ...        (number)
+ *   Dams      -> A, B, C ...        (letter)
+ *   Offspring -> sire number + dam letter + sibling index,
+ *                e.g. sire 1 x dam A -> 1A1, 1A2, 1A3
+ *                (displayed with a subscript: 1A₁, 1A₂, 1A₃)
+ *
+ * Legacy tags from the old scheme (1A / 1B foundation tags) are still accepted
+ * and kept as stored codes; they are converted by the companion SQL migration.
  *
  * Codes are auto-generated but may be overridden manually by the breeder.
  */
@@ -16,14 +19,17 @@ export const BIRD_CODE_MAX_LENGTH = 24;
 
 export const BIRD_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9x.\-]*$/;
 
-export const BIRD_CODE_HINT = 'Letters, numbers, x, - and . only. Example: 1A, 2B, 1Ax1B';
+export const BIRD_CODE_HINT = 'Letters, numbers, x, - and . only. Example: 1, A, 1A1';
+
+/** Offspring tag: base (sire number + dam letter) followed by the sibling index. */
+const OFFSPRING_CODE_PATTERN = /^(\d+[A-Za-z])(\d+)$/;
+
+const SUBSCRIPT_DIGITS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'] as const;
 
 export const isFemaleCode = (gender?: string | null): boolean => {
   const g = String(gender ?? '').trim().toLowerCase();
   return g === 'hen' || g === 'pullet' || g === 'female';
 };
-
-export const suffixForGender = (gender?: string | null): 'A' | 'B' => (isFemaleCode(gender) ? 'B' : 'A');
 
 export const normalizeBirdCode = (value: unknown): string =>
   String(value ?? '')
@@ -51,24 +57,78 @@ export function buildCodeSet(codes: Array<string | undefined | null>): CodeSet {
   return set;
 }
 
-/** Highest leading sequence for a suffix, e.g. from "1A","3A" -> 3. */
-function maxSequence(suffix: 'A' | 'B', taken: CodeSet): number {
+/** 1 -> A, 2 -> B, ... 26 -> Z, 27 -> AA (spreadsheet style). */
+export function numberToLetter(n: number): string {
+  let value = Math.max(1, Math.floor(Number(n) || 1));
+  let out = '';
+  while (value > 0) {
+    value -= 1;
+    out = String.fromCharCode(65 + (value % 26)) + out;
+    value = Math.floor(value / 26);
+  }
+  return out;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Sire half of an offspring tag: his number ("1A" -> "1", "12" -> "12"). */
+function sirePart(code: string): string {
+  const digits = /^(\d+)/.exec(code);
+  if (digits) return digits[1];
+  return code;
+}
+
+/** Dam half of an offspring tag: her number as a letter ("1B" -> "A", "A" -> "A"). */
+function damPart(code: string): string {
+  const digits = /^(\d+)/.exec(code);
+  if (digits) return numberToLetter(Number(digits[1]));
+  const letters = /^([A-Za-z]+)/.exec(code);
+  if (letters) return letters[1].toUpperCase();
+  return code;
+}
+
+/** Offspring base tag (sire number + dam letter), or null when unusable. */
+function offspringBase(sireCode: string, damCode: string): string | null {
+  const sire = sirePart(sireCode);
+  const dam = damPart(damCode);
+  if (!sire || !dam) return null;
+  return `${sire}${dam}`;
+}
+
+/** Next sibling index for a base tag: 1A1, 1A2, 1A3 ... */
+function nextSiblingIndex(base: string, taken: CodeSet): number {
+  const pattern = new RegExp(`^${escapeRegExp(base.toLowerCase())}(\\d+)$`);
   let max = 0;
   taken.forEach((key) => {
-    const m = /^(\d+)([ab])$/.exec(key);
-    if (m && m[2] === suffix.toLowerCase()) {
+    const m = pattern.exec(key);
+    if (m) {
       const n = Number(m[1]);
       if (Number.isFinite(n) && n > max) max = n;
     }
   });
-  return max;
+  return max + 1;
 }
 
-function nextFree(base: string, taken: CodeSet): string {
-  if (!taken.has(base.toLowerCase())) return base;
-  let k = 2;
-  while (taken.has(`${base}-${k}`.toLowerCase())) k++;
-  return `${base}-${k}`;
+/**
+ * Foundation (no parents) tag: sires count 1, 2, 3 ... and dams letter A, B, C ...
+ * Legacy tags (1A, 1B ...) still occupying a number/letter are respected so the
+ * app stays collision-free before the conversion migration is run.
+ */
+function nextFoundationCode(gender: string | null | undefined, taken: CodeSet): string {
+  if (isFemaleCode(gender)) {
+    for (let n = 1; n < 100000; n += 1) {
+      const letter = numberToLetter(n).toLowerCase();
+      if (!taken.has(letter) && !taken.has(`${n}b`)) return letter.toUpperCase();
+    }
+    return 'A';
+  }
+  for (let n = 1; n < 100000; n += 1) {
+    const code = String(n);
+    if (!taken.has(code) && !taken.has(`${n}a`)) return code;
+  }
+  return '1';
 }
 
 /**
@@ -86,12 +146,13 @@ export function generateBirdCode(params: {
   const dam = normalizeBirdCode(damCode);
 
   if (isValidBirdCode(sire) && isValidBirdCode(dam)) {
-    return nextFree(`${sire}x${dam}`, taken);
+    const base = offspringBase(sire, dam);
+    if (base && isValidBirdCode(`${base}1`)) {
+      return `${base}${nextSiblingIndex(base, taken)}`;
+    }
   }
 
-  const suffix = suffixForGender(gender);
-  const n = maxSequence(suffix, taken) + 1;
-  return nextFree(`${n}${suffix}`, taken);
+  return nextFoundationCode(gender, taken);
 }
 
 /** Depth used to make sure parents receive codes before their offspring. */
@@ -195,4 +256,20 @@ export function previewBirdCode(params: {
     damCode: dam ? codes.get(String(dam.id)) || dam.bird_code : null,
     taken,
   });
+}
+
+/**
+ * Render a tag for display: the sibling index of an offspring tag becomes a
+ * subscript (1A1 -> 1A₁). Stored / editable codes stay plain text.
+ */
+export function formatBirdCodeForDisplay(value: unknown): string {
+  const code = normalizeBirdCode(value);
+  if (!code) return '';
+  const m = OFFSPRING_CODE_PATTERN.exec(code);
+  if (!m) return code;
+  const subscript = m[2]
+    .split('')
+    .map((d) => SUBSCRIPT_DIGITS[Number(d)] ?? d)
+    .join('');
+  return `${m[1]}${subscript}`;
 }

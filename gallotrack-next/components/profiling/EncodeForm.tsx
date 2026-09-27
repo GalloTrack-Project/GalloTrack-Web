@@ -6,6 +6,7 @@ import type { BloodlineStats } from '@/lib/bloodline-composition';
 import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
   const toneCls = tone === 'green'
@@ -197,10 +198,10 @@ export default function EncodeForm({
             value={birdCode}
             onChange={(e) => setBirdCode(e.target.value)}
             className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
-            placeholder={suggestedBirdCode || 'e.g. 1A, 2B, 1Ax1B'}
+            placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
           />
           <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">
-            {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-emerald-600">{suggestedBirdCode}</span></>}
+            {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-emerald-600">{formatBirdCodeForDisplay(suggestedBirdCode)}</span></>}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -564,7 +565,7 @@ export default function EncodeForm({
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-muted-foreground">Validation &amp; Summary Panel</span>
           </div>
-          <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">Code: {birdCode.trim() || suggestedBirdCode || '—'}</span>
+          <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">Code: {formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode) || '—'}</span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <StatusItem icon="🛡️" label="Data Integrity &amp; Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />

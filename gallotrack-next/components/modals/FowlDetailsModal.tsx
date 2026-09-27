@@ -12,7 +12,7 @@ import type {
 import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
-import { birdCodeOf } from '@/lib/bird-code';
+import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FowlDetailsModalProps = {
@@ -91,7 +91,7 @@ export default function FowlDetailsModal({
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <h4 className="text-lg font-black text-slate-900 dark:text-card-foreground">{selectedFowlForDetails.name}</h4>
               <span className="text-[9px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">
-                {birdCodeOf(selectedFowlForDetails, fowls) || '—'}
+                {formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls)) || '—'}
               </span>
               <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
               {(() => {

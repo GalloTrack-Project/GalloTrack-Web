@@ -7,7 +7,7 @@ export const birdCodeSchema = z.union([
     .string()
     .min(1, 'Chicken code is required')
     .max(BIRD_CODE_MAX_LENGTH, `Chicken code must be ${BIRD_CODE_MAX_LENGTH} characters or less`)
-    .regex(BIRD_CODE_PATTERN, 'Use letters, numbers, x, - or . only (e.g. 1A, 1Ax1B)'),
+    .regex(BIRD_CODE_PATTERN, 'Use letters, numbers, x, - or . only (e.g. 1, A, 1A1)'),
 ]);
 
 export const fowlFormSchema = z.object({

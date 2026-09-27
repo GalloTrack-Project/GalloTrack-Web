@@ -19,7 +19,7 @@ export interface FowlRecord {
   sire_pct: number;
   dam_pct: number;
   bloodline_pct: number;
-  /** Standardized tag, e.g. 1A / 2B / 1Ax1B. Nullable in the DB. */
+  /** Standardized tag, e.g. 1 (sire) / A (dam) / 1A1 (offspring, shown 1A₁). Nullable in the DB. */
   bird_code?: string | null;
   /** Per-strain blood percentage breakdown, e.g. { Kelso: 50, Hatch: 25, Roundhead: 25 }. */
   bloodline_composition?: Record<string, number> | null;
@@ -115,7 +115,7 @@ export interface PairingAnalytics {
 
 export type PageId = 'login' | 'dashboard' | 'profiling' | 'marketplace' | 'lineage' | 'profile' | 'settings';
 
-export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'match' | 'matchForm' | 'breeds';
+export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring' | 'match' | 'matchForm' | 'breeds';
 
 export type ToastState = {
   show: boolean;

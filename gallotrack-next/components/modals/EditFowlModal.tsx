@@ -298,7 +298,7 @@ export default function EditFowlModal({
                 value={editBirdCode}
                 onChange={(e) => setEditBirdCode(e.target.value)}
                 className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-mono font-bold"
-                placeholder="e.g. 1A, 2B, 1Ax1B"
+                placeholder="e.g. 1, A, 1A1"
               />
               <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
             </div>

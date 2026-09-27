@@ -4,13 +4,14 @@ import {
   BIRD_CODE_PATTERN,
   birdCodeOf,
   buildCodeSet,
+  formatBirdCodeForDisplay,
   generateBirdCode,
   isFemaleCode,
   isValidBirdCode,
   normalizeBirdCode,
+  numberToLetter,
   previewBirdCode,
   resolveBirdCodes,
-  suffixForGender,
 } from './bird-code';
 
 const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -25,8 +26,12 @@ const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): Fowl
 
 describe('validation', () => {
   it('accepts the adviser coding scheme', () => {
+    expect(isValidBirdCode('1')).toBe(true);
+    expect(isValidBirdCode('A')).toBe(true);
+    expect(isValidBirdCode('1A1')).toBe(true);
+    expect(isValidBirdCode('1A12')).toBe(true);
     expect(isValidBirdCode('1A')).toBe(true);
-    expect(isValidBirdCode('2B')).toBe(true);
+    expect(isValidBirdCode('1B')).toBe(true);
     expect(isValidBirdCode('1Ax1B')).toBe(true);
     expect(isValidBirdCode('1Ax1B-2')).toBe(true);
     expect(isValidBirdCode('A-1')).toBe(true);
@@ -41,60 +46,80 @@ describe('validation', () => {
   });
 
   it('matches the documented pattern', () => {
-    expect(BIRD_CODE_PATTERN.test('1Ax1B')).toBe(true);
+    expect(BIRD_CODE_PATTERN.test('1A1')).toBe(true);
     expect(BIRD_CODE_PATTERN.test('-1A')).toBe(false);
   });
 
   it('normalises whitespace and length', () => {
     expect(normalizeBirdCode(' 1 A ')).toBe('1A');
-    expect(normalizeBirdCode('1Ax1B')).toBe('1Ax1B');
+    expect(normalizeBirdCode('1A1')).toBe('1A1');
     expect(normalizeBirdCode('x'.repeat(50))).toHaveLength(24);
   });
 });
 
-describe('suffixForGender', () => {
-  it('maps roosters to A (sire) and hens to B (dam)', () => {
-    expect(suffixForGender('Rooster')).toBe('A');
-    expect(suffixForGender('Hen')).toBe('B');
-    expect(suffixForGender('Pullet')).toBe('B');
-    expect(suffixForGender('')).toBe('A');
+describe('isFemaleCode', () => {
+  it('maps hen / pullet / female to the dam line', () => {
+    expect(isFemaleCode('Hen')).toBe(true);
+    expect(isFemaleCode('Pullet')).toBe(true);
     expect(isFemaleCode('female')).toBe(true);
-    expect(isFemaleCode('male')).toBe(false);
+    expect(isFemaleCode('Rooster')).toBe(false);
+    expect(isFemaleCode('')).toBe(false);
+  });
+});
+
+describe('numberToLetter', () => {
+  it('maps dam numbers to letters', () => {
+    expect(numberToLetter(1)).toBe('A');
+    expect(numberToLetter(2)).toBe('B');
+    expect(numberToLetter(14)).toBe('N');
+    expect(numberToLetter(26)).toBe('Z');
+    expect(numberToLetter(27)).toBe('AA');
   });
 });
 
 describe('generateBirdCode', () => {
-  it('starts foundation birds at 1A / 1B', () => {
-    expect(generateBirdCode({ gender: 'Rooster', taken: new Set() })).toBe('1A');
-    expect(generateBirdCode({ gender: 'Hen', taken: new Set() })).toBe('1B');
+  it('starts foundation sires at 1 and foundation dams at A', () => {
+    expect(generateBirdCode({ gender: 'Rooster', taken: new Set() })).toBe('1');
+    expect(generateBirdCode({ gender: 'Hen', taken: new Set() })).toBe('A');
   });
 
-  it('increments the sequence per suffix', () => {
-    expect(generateBirdCode({ gender: 'Rooster', taken: buildCodeSet(['1A']) })).toBe('2A');
-    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['1A', '1B', '2B']) })).toBe('3B');
+  it('increments each sequence independently', () => {
+    expect(generateBirdCode({ gender: 'Rooster', taken: buildCodeSet(['1', '2']) })).toBe('3');
+    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['A', 'B']) })).toBe('C');
+    expect(generateBirdCode({ gender: 'Rooster', taken: buildCodeSet(['A', 'B', 'C']) })).toBe('1');
+    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['1', '2', '3']) })).toBe('A');
   });
 
-  it('does not consume the other suffix sequence', () => {
-    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['1A', '2A', '3A']) })).toBe('1B');
+  it('treats legacy 1A / 1B tags as occupied numbers and letters', () => {
+    expect(generateBirdCode({ gender: 'Rooster', taken: buildCodeSet(['1A', '2A']) })).toBe('3');
+    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['1B', '2B']) })).toBe('C');
   });
 
-  it('combines parent codes for offspring (1A x 1B -> 1Ax1B)', () => {
-    expect(generateBirdCode({ sireCode: '1A', damCode: '1B', taken: new Set() })).toBe('1Ax1B');
+  it('combines the sire number and dam letter with the sibling index', () => {
+    expect(generateBirdCode({ sireCode: '1', damCode: 'A', taken: new Set() })).toBe('1A1');
+    expect(generateBirdCode({ sireCode: '12', damCode: 'C', taken: new Set() })).toBe('12C1');
+    expect(generateBirdCode({ sireCode: '3A', damCode: '2B', taken: new Set() })).toBe('3B1');
   });
 
-  it('appends -2 for the next clutch mate of the same pair', () => {
-    const taken = buildCodeSet(['1Ax1B']);
-    expect(generateBirdCode({ sireCode: '1A', damCode: '1B', taken })).toBe('1Ax1B-2');
-    const taken2 = buildCodeSet(['1Ax1B', '1Ax1B-2']);
-    expect(generateBirdCode({ sireCode: '1A', damCode: '1B', taken: taken2 })).toBe('1Ax1B-3');
+  it('appends the next sibling index for the same pair', () => {
+    expect(generateBirdCode({ sireCode: '1', damCode: 'A', taken: buildCodeSet(['1A1']) })).toBe('1A2');
+    expect(generateBirdCode({ sireCode: '1', damCode: 'A', taken: buildCodeSet(['1A1', '1A2']) })).toBe('1A3');
+    expect(
+      generateBirdCode({ sireCode: '1', damCode: 'A', taken: buildCodeSet(['1A1', '1A3']) })
+    ).toBe('1A4');
   });
 
-  it('falls back to the sequence when a parent has no code', () => {
-    expect(generateBirdCode({ sireCode: '1A', damCode: null, taken: buildCodeSet(['1A']), gender: 'Hen' })).toBe('1B');
+  it('never reuses a foundation tag when it collides with an offspring tag', () => {
+    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['1A1']) })).toBe('A');
+  });
+
+  it('falls back to the foundation sequence when a parent has no code', () => {
+    expect(generateBirdCode({ sireCode: '1', damCode: null, taken: buildCodeSet(['1']), gender: 'Hen' })).toBe('A');
   });
 
   it('is case-insensitive when checking collisions', () => {
-    expect(generateBirdCode({ gender: 'Rooster', taken: buildCodeSet(['1a']) })).toBe('2A');
+    expect(generateBirdCode({ gender: 'Rooster', taken: buildCodeSet(['1']) })).toBe('2');
+    expect(generateBirdCode({ gender: 'Hen', taken: buildCodeSet(['a']) })).toBe('B');
   });
 });
 
@@ -106,7 +131,7 @@ describe('resolveBirdCodes', () => {
     ];
     const codes = resolveBirdCodes(fowls);
     expect(codes.get('1')).toBe('7A');
-    expect(codes.get('2')).toBe('1B');
+    expect(codes.get('2')).toBe('A');
   });
 
   it('assigns codes to parents before their offspring', () => {
@@ -116,9 +141,23 @@ describe('resolveBirdCodes', () => {
       bird({ id: 2, name: 'Dam One', gender: 'Hen' }),
     ];
     const codes = resolveBirdCodes(fowls);
+    expect(codes.get('1')).toBe('1');
+    expect(codes.get('2')).toBe('A');
+    expect(codes.get('3')).toBe('1A1');
+  });
+
+  it('keeps legacy parent tags while coding their offspring', () => {
+    const fowls = [
+      bird({ id: 1, name: 'Sire One', bird_code: '1A' }),
+      bird({ id: 2, name: 'Dam One', gender: 'Hen', bird_code: '1B' }),
+      bird({ id: 3, name: 'Chick', sire: 'Sire One', dam: 'Dam One' }),
+      bird({ id: 4, name: 'Chick Two', gender: 'Hen', sire: 'Sire One', dam: 'Dam One' }),
+    ];
+    const codes = resolveBirdCodes(fowls);
     expect(codes.get('1')).toBe('1A');
     expect(codes.get('2')).toBe('1B');
-    expect(codes.get('3')).toBe('1Ax1B');
+    expect(codes.get('3')).toBe('1A1');
+    expect(codes.get('4')).toBe('1A2');
   });
 
   it('never emits duplicate codes', () => {
@@ -145,7 +184,7 @@ describe('birdCodeOf', () => {
 
   it('derives one when missing', () => {
     const fowls = [bird({ id: 1, name: 'A' })];
-    expect(birdCodeOf(fowls[0], fowls)).toBe('1A');
+    expect(birdCodeOf(fowls[0], fowls)).toBe('1');
   });
 
   it('returns empty for no fowl', () => {
@@ -160,19 +199,35 @@ describe('previewBirdCode', () => {
   ];
 
   it('previews the offspring combination code', () => {
-    expect(previewBirdCode({ gender: 'Rooster', sireName: 'Sire One', damName: 'Dam One', fowls })).toBe('1Ax1B');
+    expect(previewBirdCode({ gender: 'Rooster', sireName: 'Sire One', damName: 'Dam One', fowls })).toBe('1A1');
   });
 
-  it('previews a sequence code when no parents are picked', () => {
-    expect(previewBirdCode({ gender: 'Hen', fowls })).toBe('2B');
-    expect(previewBirdCode({ gender: 'Rooster', fowls })).toBe('2A');
+  it('previews a foundation code when no parents are picked', () => {
+    expect(previewBirdCode({ gender: 'Hen', fowls })).toBe('B');
+    expect(previewBirdCode({ gender: 'Rooster', fowls })).toBe('2');
   });
 
   it('avoids codes already taken', () => {
     const codes = resolveBirdCodes([...fowls, bird({ id: 3, name: 'Kid', sire: 'Sire One', dam: 'Dam One' })]);
     const taken = buildCodeSet(Array.from(codes.values()));
     expect(previewBirdCode({ gender: 'Rooster', sireName: 'Sire One', damName: 'Dam One', fowls, taken })).toBe(
-      '1Ax1B-2'
+      '1A2'
     );
+  });
+});
+
+describe('formatBirdCodeForDisplay', () => {
+  it('renders the sibling index as a subscript', () => {
+    expect(formatBirdCodeForDisplay('1A1')).toBe('1A₁');
+    expect(formatBirdCodeForDisplay('1A12')).toBe('1A₁₂');
+    expect(formatBirdCodeForDisplay('12C3')).toBe('12C₃');
+  });
+
+  it('leaves foundation and legacy codes untouched', () => {
+    expect(formatBirdCodeForDisplay('1')).toBe('1');
+    expect(formatBirdCodeForDisplay('A')).toBe('A');
+    expect(formatBirdCodeForDisplay('1A')).toBe('1A');
+    expect(formatBirdCodeForDisplay('1Ax1B')).toBe('1Ax1B');
+    expect(formatBirdCodeForDisplay(null)).toBe('');
   });
 });
