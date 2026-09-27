@@ -287,8 +287,8 @@ export default function EncodeForm({
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Gender Class</label>
             <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required>
               <option value="" disabled className="bg-popover text-muted-foreground">Select Gender Class</option>
-              <option value="Rooster" className="bg-popover text-popover-foreground">Rooster (Cock)</option>
-              <option value="Hen" className="bg-popover text-popover-foreground">Hen (Pullet)</option>
+              <option value="Rooster" className="bg-popover text-popover-foreground">Sire (Rooster)</option>
+              <option value="Hen" className="bg-popover text-popover-foreground">Dam (Hen)</option>
             </select>
           </div>
         </div>
