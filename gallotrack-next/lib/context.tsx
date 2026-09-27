@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/app/theme-provider';
 import { UIProvider, useUI } from './contexts/ui-context';
 import { AuthProvider, useAuth } from './contexts/auth-context';
 import { FowlProviderWrapper, useFowl } from './contexts/fowl-context';
@@ -27,9 +27,9 @@ export function GalloTrackProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   return (
-    <UIProvider theme={theme || 'dark'} setTheme={setTheme}>
+    <UIProvider theme={resolvedTheme} setTheme={setTheme}>
       <AuthProvider>
         <FowlProviderWrapper>
           {children}

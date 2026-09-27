@@ -3,15 +3,22 @@ import { useEffect } from 'react';
 
 export default function ThemeInit() {
   useEffect(() => {
+    const apply = (t: string) => {
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark');
+      root.classList.add(t === 'light' ? 'light' : 'dark');
+    };
     try {
       const t = localStorage.getItem('theme');
       if (t === 'light' || t === 'dark') {
-        document.documentElement.classList.add(t);
+        apply(t);
+      } else if (t === 'system') {
+        apply(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       } else {
-        document.documentElement.classList.add('dark');
+        apply('dark');
       }
     } catch {
-      document.documentElement.classList.add('dark');
+      apply('dark');
     }
   }, []);
   return null;

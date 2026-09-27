@@ -341,7 +341,7 @@ export default function EditFowlModal({
               className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-md uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center space-x-2"
             >
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              <span>{loading ? 'Updating Chicken Node...' : 'Commit Node Updates'}</span>
+              <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>
             </button>
           </div>
         </form>

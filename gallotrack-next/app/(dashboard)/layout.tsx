@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/app/theme-provider';
 import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, User, Users, Bird, Settings, Shield, LogOut } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
@@ -42,7 +42,7 @@ const ADMIN_MOBILE = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const ui = useUI();
   const auth = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -209,11 +209,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {mounted && (
                 <button
                   type="button"
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className={`w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground hover:${isAdmin ? 'text-amber-500 hover:border-amber-500/50' : 'text-emerald-500 hover:border-emerald-500/50'} hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer`}
-                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                  className={`w-9 h-9 shrink-0 rounded-full bg-muted border border-border text-muted-foreground ${isAdmin ? 'hover:text-amber-500 hover:border-amber-500/50' : 'hover:text-emerald-500 hover:border-emerald-500/50'} hover:bg-muted/60 flex items-center justify-center shadow-2xs transition-all cursor-pointer`}
+                  title={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {resolvedTheme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               )}
               <button
