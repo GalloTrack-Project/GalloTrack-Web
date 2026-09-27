@@ -5,6 +5,8 @@ import { Dna, Users, Bird, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch 
 import PedigreeTree from '@/components/PedigreeTree';
 import { resolveBirdCodes } from '@/lib/bird-code';
 
+const isMaleChild = (c: FowlRecord) => c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male';
+
 function EmptyState({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="bg-card p-10 text-center rounded-3xl border border-border shadow-sm space-y-2">
@@ -42,10 +44,49 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
   });
   const bestId = ranked.length > 0 && ranked[0].id ? ranked[0].id : null;
 
-  const males = g.filter((c) => c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male').length;
+  const males = g.filter(isMaleChild).length;
   const females = g.length - males;
-  const visible = expanded ? ranked : ranked.slice(0, 3);
-  const hasMore = ranked.length > 3;
+  const roosterOffspring = ranked.filter(isMaleChild);
+  const henOffspring = ranked.filter((c) => !isMaleChild(c));
+  const visibleRoosters = expanded ? roosterOffspring : roosterOffspring.slice(0, 3);
+  const visibleHens = expanded ? henOffspring : henOffspring.slice(0, 3);
+  const hasMore = ranked.length > 6;
+
+  const renderOffspringRow = (child: FowlRecord, i: number) => {
+    const cs = getChildMatchStats(child.name);
+    const isBest = child.id === bestId;
+    return (
+      <button
+        key={child.id}
+        type="button"
+        onClick={() => setSelectedFowlForDetails(child)}
+        className="group w-full flex items-center justify-between gap-3 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="text-[10px] font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
+          <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1">
+              <p className="text-[11px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
+              {isBest && cs.decided > 0 && (
+                <span className="text-[6px] font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+              )}
+            </div>
+            <p className="text-[9px] text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
+          </div>
+        </div>
+        <div className="shrink-0">
+          {cs.total > 0 ? (
+            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+            {cs.winRate}% · {cs.wins}W-{cs.losses}L
+          </span>
+          ) : (
+            <span className="text-[8px] font-bold text-muted-foreground/50">No fights</span>
+          )}
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
@@ -73,43 +114,22 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
       </div>
       <div className="px-5 pb-4">
         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Offspring</p>
-        <div className="space-y-1.5">
-          {visible.map((child, i) => {
-            const cs = getChildMatchStats(child.name);
-            const isBest = child.id === bestId;
-            return (
-              <button
-                key={child.id}
-                type="button"
-                onClick={() => setSelectedFowlForDetails(child)}
-                className="group w-full flex items-center justify-between gap-3 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-[10px] font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1">
-                      <p className="text-[11px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
-                      {isBest && cs.decided > 0 && (
-                        <span className="text-[6px] font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
-                      )}
-                    </div>
-                    <p className="text-[9px] text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="shrink-0">
-                  {cs.total > 0 ? (
-                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
-                      {cs.winRate}% · {cs.wins}W-{cs.losses}L
-                    </span>
-                  ) : (
-                    <span className="text-[8px] font-bold text-muted-foreground/50">No fights</span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {roosterOffspring.length > 0 && (
+          <div className="mb-3">
+              <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1.5">🐓 Sire · {roosterOffspring.length}</p>
+            <div className="space-y-1.5">
+              {visibleRoosters.map((child, i) => renderOffspringRow(child, i))}
+            </div>
+          </div>
+        )}
+        {henOffspring.length > 0 && (
+          <div className="mb-3">
+              <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1.5">🐔 Dam · {henOffspring.length}</p>
+            <div className="space-y-1.5">
+              {visibleHens.map((child, i) => renderOffspringRow(child, i))}
+            </div>
+          </div>
+        )}
         {hasMore && (
           <button type="button" onClick={() => setExpanded(!expanded)} className="w-full mt-2 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:underline py-1 cursor-pointer">
             {expanded ? 'Show less' : `View all ${ranked.length} offspring`}
@@ -381,6 +401,8 @@ export default function LineageDirectory({
           const subgroups = buildSubgroups(children, kind === 'sire' ? 'dam' : 'sire');
           const multiPartner = subgroups.length > 1;
           const ranked = rankByWinRate(children);
+          const roosters = ranked.filter(isMaleChild);
+          const hens = ranked.filter((c) => !isMaleChild(c));
           const bestId = ranked.length > 0 ? ranked[0].id : null;
           return (
             <div key={parentName} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-all">
@@ -421,7 +443,18 @@ export default function LineageDirectory({
                       </span>
                     )}
                   </div>
-                  {ranked.map((child) => renderChildRow(child, bestId))}
+                  {roosters.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire · {roosters.length}</p>
+                      {roosters.map((child) => renderChildRow(child, bestId))}
+                    </div>
+                  )}
+                  {hens.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam · {hens.length}</p>
+                      {hens.map((child) => renderChildRow(child, bestId))}
+                    </div>
+                  )}
                   {renderSubgroupExpandable(parentName, kind, subgroups)}
                 </div>
               )}
