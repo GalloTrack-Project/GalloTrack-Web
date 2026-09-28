@@ -78,8 +78,8 @@ export default function DashboardPage() {
         <div className="flex items-start gap-4">
           <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-emerald-500" /></div>
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Enterprise Analytics Dashboard</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Cross-strain performance vectors, empirical win probabilities, and active inventory metrics</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Farm Dashboard</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Registry, match results, milestones, and bloodline performance of your chickens</p>
           </div>
         </div>
         {/* DATE RANGE SELECTOR */}
