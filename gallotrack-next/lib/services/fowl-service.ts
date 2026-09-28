@@ -45,7 +45,7 @@ export async function archiveFowl(id: number, reason?: string): Promise<{ error?
 }
 
 export async function restoreFowl(id: number): Promise<{ error?: string }> {
-  const { error } = await supabase.from('fowl').update({ status: 'Active' }).eq('id', id);
+  const { error } = await supabase.from('fowl').update({ status: 'Active', archive_reason: null }).eq('id', id);
   if (error) return { error: error.message };
   return {};
 }
@@ -66,7 +66,7 @@ export async function markFowlDeceased(id: number, reason: string): Promise<{ er
 export async function setSireMaterial(id: number): Promise<{ error?: string }> {
   const { error } = await supabase
     .from('fowl')
-    .update({ status: 'Sire Material' })
+    .update({ status: 'Sire Material', archive_reason: null })
     .eq('id', id);
   if (error) return { error: error.message };
   return {};
@@ -75,7 +75,7 @@ export async function setSireMaterial(id: number): Promise<{ error?: string }> {
 export async function setFowlActive(id: number): Promise<{ error?: string }> {
   const { error } = await supabase
     .from('fowl')
-    .update({ status: 'Active' })
+    .update({ status: 'Active', archive_reason: null })
     .eq('id', id);
   if (error) return { error: error.message };
   return {};

@@ -112,8 +112,8 @@ export default function FowlDetailsModal({
                     </span>
                   );
                 }
-                if (selectedFowlForDetails.archive_reason) {
-                  const badge = getArchiveBadgeStyle(selectedFowlForDetails.archive_reason);
+                if (selectedFowlForDetails.status === 'Archived') {
+                  const badge = getArchiveBadgeStyle(selectedFowlForDetails.archive_reason || 'OTHER');
                   return (
                     <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase ${badge.bg} border border-white/20 shadow-2xs`}>
                       {badge.label}
@@ -146,12 +146,12 @@ export default function FowlDetailsModal({
                 {selectedFowlForDetails.death_date ? ` · Recorded ${selectedFowlForDetails.death_date}` : ''}
               </p>
             )}
-            {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.archive_reason && (
+            {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.status === 'Archived' && selectedFowlForDetails.archive_reason && (
               <p className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
                 📦 Archive Reason: <strong className="text-amber-800 dark:text-amber-300">{selectedFowlForDetails.archive_reason}</strong> (Non-Mortality)
               </p>
             )}
-            {selectedFowlForDetails.status !== 'Deceased' && !selectedFowlForDetails.archive_reason && isMale(selectedFowlForDetails.gender) && (
+            {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.status !== 'Archived' && isMale(selectedFowlForDetails.gender) && (
               <div className="pt-1.5">
                 {selectedFowlForDetails.status === 'Sire Material' ? (
                   <button type="button" onClick={() => handleSetActiveStatus(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">

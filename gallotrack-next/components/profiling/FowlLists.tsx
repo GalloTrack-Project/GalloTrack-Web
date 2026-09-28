@@ -34,12 +34,19 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, onOpenDetails, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; onOpenDetails?: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   return (
-    <div className="antigravity-card bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center" style={{ animationDelay: `${(index % 5) * 0.8}s` }}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; onOpenDetails?.(fowl); }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDetails?.(fowl); } }}
+      className="antigravity-card bg-white dark:bg-card p-5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
+      style={{ animationDelay: `${(index % 5) * 0.8}s` }}
+    >
       <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-xl tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
       <div className="antigravity-avatar w-24 h-24 bg-slate-50 dark:bg-muted/50 border border-slate-200/80 dark:border-border rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-slate-400 dark:text-muted-foreground text-[9px] font-mono shadow-inner relative">
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
@@ -194,6 +201,7 @@ export default function FowlLists({
   setSelectedFowlForDeceased,
   handleOpenEditModal,
   handleSetActiveStatus,
+  setSelectedFowlForDetails,
 }: Props) {
   const [page, setPage] = useState(1);
   const prevTabRef = React.useRef(tab);
@@ -248,7 +256,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onOpenDetails={setSelectedFowlForDetails} allFowls={fowls} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -302,7 +310,7 @@ export default function FowlLists({
         ) : (
           <>
             {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onSetActive={handleSetActiveStatus} allFowls={fowls} />
+              <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onSetActive={handleSetActiveStatus} onOpenDetails={setSelectedFowlForDetails} allFowls={fowls} />
             ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
@@ -340,7 +348,7 @@ export default function FowlLists({
               const childGender: 'Male' | 'Female' = child.gender === 'Male' || child.gender === 'Rooster' ? 'Male' : 'Female';
               if (child.status === 'Deceased') return <DeceasedCard key={child.id} fowl={child} index={index} onDelete={setPendingPermanentDelete} allFowls={fowls} />;
               if (child.status === 'Archived') return <ArchivedCard key={child.id} fowl={child} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />;
-              return <FowlCard key={child.id} fowl={child} index={index} gender={childGender} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} allFowls={fowls} />;
+              return <FowlCard key={child.id} fowl={child} index={index} gender={childGender} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onOpenDetails={setSelectedFowlForDetails} allFowls={fowls} />;
             })}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
