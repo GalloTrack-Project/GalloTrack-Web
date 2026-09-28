@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { Bird, Archive, Skull, Dna, Shield, Egg } from 'lucide-react';
+import { Archive, Skull, Dna, Shield, Egg } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useRouter } from 'next/navigation';
@@ -86,12 +87,12 @@ export default function ProfilingPage() {
             <span>Register</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'males' ? 'bg-sky-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <Bird className="w-4 h-4" />
+            <ChickenIcon className="w-4 h-4" />
             <span>Sire</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'males' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{maleActiveFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'females' ? 'bg-pink-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <Bird className="w-4 h-4" />
+            <ChickenIcon className="w-4 h-4" />
             <span>Dam</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'females' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{femaleActiveFowls.length}</span>
           </button>

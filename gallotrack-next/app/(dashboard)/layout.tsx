@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/app/theme-provider';
-import { Sun, Moon, LayoutDashboard, Dna, Egg, TreePine, User, Users, Bird, Settings, Shield, LogOut } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { supabase } from '@/lib/registry';
@@ -13,7 +14,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 const OWNER_NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profiling', label: 'Chicken Registry', icon: Dna },
-  { href: '/catalog', label: 'Chicken Inventory', icon: Egg },
+  { href: '/catalog', label: 'Chicken Inventory', icon: ChickenIcon },
   { href: '/lineage', label: 'Lineage Directory', icon: TreePine },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
@@ -21,7 +22,7 @@ const OWNER_NAV = [
 const OWNER_MOBILE = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profiling', label: 'Registry', icon: Dna },
-  { href: '/catalog', label: 'Inventory', icon: Egg },
+  { href: '/catalog', label: 'Inventory', icon: ChickenIcon },
   { href: '/lineage', label: 'Lineage', icon: TreePine },
   { href: '/profile', label: 'Profile', icon: User },
 ];
@@ -92,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div>
           <div className={`p-6 border-b border-border bg-muted/40 flex items-center space-x-3`}>
             <div className={`w-9 h-9 ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} rounded-xl flex items-center justify-center shadow-inner`}>
-              {isAdmin ? <Shield className="w-4 h-4 text-amber-400" /> : <Bird className="w-4 h-4 text-emerald-400" />}
+              {isAdmin ? <Shield className="w-4 h-4 text-amber-400" /> : <ChickenIcon className="w-4 h-4 text-emerald-400" />}
             </div>
             <div>
               <h2 className="text-xl font-black tracking-tight text-card-foreground">GALLO<span className={isAdmin ? 'text-amber-400' : 'text-emerald-400'}>TRACK</span></h2>

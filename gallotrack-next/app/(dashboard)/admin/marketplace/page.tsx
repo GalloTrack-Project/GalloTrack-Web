@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Clipboard, Clock, CheckCircle, Flag, Search, Bird } from 'lucide-react';
+import { Clipboard, Clock, CheckCircle, Flag, Search } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
 
@@ -198,7 +199,7 @@ export default function AdminMarketplacePage() {
                   <img src={listing.image_url} alt={listing.title} className="w-12 h-12 rounded-xl object-cover border border-border shrink-0" />
                 ) : (
                   <div className="w-12 h-12 rounded-xl bg-muted/30 flex items-center justify-center text-xl shrink-0">
-                    <Bird className="w-5 h-5" />
+                    <ChickenIcon className="w-5 h-5" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -261,7 +262,7 @@ export default function AdminMarketplacePage() {
                         {listing.image_url ? (
                           <img src={listing.image_url} alt={listing.title} className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-muted/30 flex items-center justify-center text-sm shrink-0"><Bird className="w-5 h-5" /></div>
+                          <div className="w-9 h-9 rounded-xl bg-muted/30 flex items-center justify-center text-sm shrink-0"><ChickenIcon className="w-5 h-5" /></div>
                         )}
                         <div>
                           <p className="text-xs font-extrabold text-card-foreground truncate">{listing.title}</p>

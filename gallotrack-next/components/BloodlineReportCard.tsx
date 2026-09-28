@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { useGaloTrack } from '@/lib/context';
-import { Dna, BarChart3, Zap, Bird, Lightbulb } from 'lucide-react';
+import { Dna, BarChart3, Zap, Lightbulb } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 
 type Props = { fowl: FowlRecord; compact?: boolean };
 
@@ -145,11 +146,11 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Sire / Dam Strains */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900/50 rounded-xl p-2">
-              <p className="text-[8px] font-black text-sky-600 dark:text-sky-300 uppercase"><Bird className="w-3 h-3" /> Sire Strain</p>
+              <p className="text-[8px] font-black text-sky-600 dark:text-sky-300 uppercase"><ChickenIcon className="w-3 h-3" /> Sire Strain</p>
               <p className="text-[10px] font-bold text-slate-800 dark:text-card-foreground">{report.sireStrain}</p>
             </div>
             <div className="bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900/50 rounded-xl p-2">
-              <p className="text-[8px] font-black text-pink-600 dark:text-pink-300 uppercase"><Bird className="w-3 h-3" /> Dam Strain</p>
+              <p className="text-[8px] font-black text-pink-600 dark:text-pink-300 uppercase"><ChickenIcon className="w-3 h-3" /> Dam Strain</p>
               <p className="text-[10px] font-bold text-slate-800 dark:text-card-foreground">{report.damStrain}</p>
             </div>
           </div>

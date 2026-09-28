@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { BarChart3, Bird } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 type Props = {
@@ -188,7 +189,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                     <td className="py-2">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
-                           <Bird className="w-3 h-3" />
+                           <ChickenIcon className="w-3 h-3" />
                         </span>
                         <div>
                           <p className="font-black text-slate-800 dark:text-card-foreground">{s.fowl.name}</p>

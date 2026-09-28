@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Bird, Eye } from 'lucide-react';
+import { Eye } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import type { FowlRecord } from '@/lib/types';
 
 export type ParentSelectorProps = {
@@ -47,7 +48,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
       className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-emerald-50 dark:hover:bg-muted/50 text-left cursor-pointer border-b border-slate-50 dark:border-border last:border-b-0"
     >
       <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
-        <Bird className="w-3 h-3" />
+        <ChickenIcon className="w-3 h-3" />
       </span>
       <span className="flex-1 min-w-0">
         <span className="block text-[11px] font-bold text-slate-800 dark:text-card-foreground truncate">{child.name}</span>
@@ -93,7 +94,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const accentBg = accent === 'emerald' ? 'bg-emerald-600' : 'bg-amber-500';
-  const genderIcon = <Bird className="w-3 h-3" />;
+  const genderIcon = <ChickenIcon className="w-3 h-3" />;
   const pad = compact ? 'p-2.5' : 'p-3';
   const parentGender = preferredGender === 'Male' ? 'sire' : 'dam';
   const expandedItem = parentGender === 'sire' ? expandedSire : expandedDam;
@@ -133,7 +134,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
                         }}
                         className="flex-1 flex items-center gap-2.5 min-w-0"
                       >
-                        <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center shrink-0"><Bird className="w-3 h-3 text-slate-500 dark:text-muted-foreground" /></span>
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center shrink-0"><ChickenIcon className="w-3 h-3 text-slate-500 dark:text-muted-foreground" /></span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-xs font-black text-slate-800 dark:text-card-foreground truncate">{f.name}</span>
                           <span className="block text-[9px] font-semibold text-slate-400 dark:text-muted-foreground truncate">{f.breed} · {f.growth_stage || 'Stag'} · {f.gender || 'Unset'}</span>

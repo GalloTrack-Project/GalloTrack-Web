@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Egg, Search, Clipboard, Pencil, Plus, Bird, AlertTriangle } from 'lucide-react';
+import { Egg, Search, Clipboard, Pencil, Plus, AlertTriangle } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import { supabase } from '@/lib/registry';
 import { useFowl } from '@/lib/contexts/fowl-context';
 
@@ -296,7 +297,7 @@ export default function MarketplacePage() {
                     <img src={listing.image_url} alt={listing.title} className="w-full h-48 object-cover" />
                   ) : (
                     <div className="w-full h-48 bg-muted/30 flex items-center justify-center text-4xl">
-                      <Bird className="w-10 h-10 text-muted-foreground" />
+                      <ChickenIcon className="w-10 h-10 text-muted-foreground" />
                     </div>
                   )}
                   <div className="p-4 space-y-3">
@@ -351,7 +352,7 @@ export default function MarketplacePage() {
                     <img src={listing.image_url} alt={listing.title} className="w-16 h-16 rounded-xl object-cover border border-border shrink-0" />
                   ) : (
                     <div className="w-16 h-16 rounded-xl bg-muted/30 flex items-center justify-center text-2xl shrink-0">
-                      <Bird className="w-8 h-8 text-muted-foreground" />
+                      <ChickenIcon className="w-8 h-8 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">

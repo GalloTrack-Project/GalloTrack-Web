@@ -7,7 +7,8 @@ import { getAgeLabel } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { LayoutDashboard, Bird, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
+import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -129,19 +130,19 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-2xl"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><Bird className="w-4 h-4 text-white" /></div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-xl px-2.5 py-2">
-              <span className="text-sm"><Bird className="w-4 h-4 text-sky-400" /></span>
+              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-sky-400" /></span>
               <div>
                 <p className="text-base font-black text-sky-400 leading-none">{maleActiveFowls.length}</p>
                 <p className="text-[8px] font-bold uppercase tracking-wider text-sky-400 mt-0.5">Males</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-xl px-2.5 py-2">
-              <span className="text-sm"><Bird className="w-4 h-4 text-pink-400" /></span>
+              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink-400" /></span>
               <div>
                 <p className="text-base font-black text-pink-400 leading-none">{femaleActiveFowls.length}</p>
                 <p className="text-[8px] font-bold uppercase tracking-wider text-pink-400 mt-0.5">Females</p>
@@ -352,8 +353,8 @@ export default function DashboardPage() {
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-[8px] font-bold text-sky-400 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.males}</span>
-                      <span className="text-[8px] font-bold text-pink-400 flex items-center gap-1"><Bird className="w-3 h-3" /> {data.females}</span>
+                      <span className="text-[8px] font-bold text-sky-400 flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
+                      <span className="text-[8px] font-bold text-pink-400 flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
                     </div>
                   </div>
                 ));
@@ -647,7 +648,7 @@ export default function DashboardPage() {
                     <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">{log.date}</td>
                     <td className="p-4">
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Bird className="w-3.5 h-3.5 text-emerald-400" /></div>
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-emerald-400" /></div>
                         <span className="font-bold text-card-foreground">{log.entry_name}</span>
                         {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
                           <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">

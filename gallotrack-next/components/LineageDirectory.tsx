@@ -1,7 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
-import { Dna, Users, Bird, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch } from 'lucide-react';
+import { Dna, Users, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import PedigreeTree from '@/components/PedigreeTree';
 import { resolveBirdCodes } from '@/lib/bird-code';
 
@@ -103,11 +104,11 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
       <div className="px-5 pb-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-2xl p-3.5 text-center">
-            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1"><Bird className="w-3 h-3 inline" /> Sire</p>
+            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
             <p className="text-xs font-black text-card-foreground truncate">{g[0].sire}</p>
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-2xl p-3.5 text-center">
-            <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1"><Bird className="w-3 h-3 inline" /> Dam</p>
+            <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
             <p className="text-xs font-black text-card-foreground truncate">{g[0].dam}</p>
           </div>
         </div>
@@ -333,7 +334,7 @@ export default function LineageDirectory({
     return (
       <div className="mt-3 pt-3 border-t border-border space-y-2">
         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-          {parentKind === 'sire' ? <><Bird className="w-3 h-3 inline" /> Sibling Subgroups by Dam</> : <><Bird className="w-3 h-3 inline" /> Sibling Subgroups by Sire</>}
+          {parentKind === 'sire' ? <><ChickenIcon className="w-3 h-3 inline" /> Sibling Subgroups by Dam</> : <><ChickenIcon className="w-3 h-3 inline" /> Sibling Subgroups by Sire</>}
         </p>
         {subgroups.map(([otherParent, members]) => {
           const sgKey = `${prefix}|||${parentName}|||${otherParent}`;
@@ -349,7 +350,7 @@ export default function LineageDirectory({
                 className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-muted/80 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs">{parentKind === 'sire' ? <Bird className="w-4 h-4" /> : <Bird className="w-4 h-4" />}</span>
+                  <span className="text-xs">{parentKind === 'sire' ? <ChickenIcon className="w-4 h-4" /> : <ChickenIcon className="w-4 h-4" />}</span>
                   <span className="text-[10px] font-black text-card-foreground truncate">{otherParent}</span>
                   <span className="text-[8px] font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-full shrink-0">
                     {members.length} chicken{members.length !== 1 ? 's' : ''}
@@ -412,7 +413,7 @@ export default function LineageDirectory({
                 className={`w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-left ${c.hoverBg} transition-colors cursor-pointer`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.border} flex items-center justify-center shrink-0`}>{c.icon === 'sire' ? <Bird className="w-5 h-5" /> : <Bird className="w-5 h-5" />}</div>
+                  <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.border} flex items-center justify-center shrink-0`}>{c.icon === 'sire' ? <ChickenIcon className="w-5 h-5" /> : <ChickenIcon className="w-5 h-5" />}</div>
                   <div className="min-w-0">
                     <p className="text-sm font-black text-card-foreground truncate">{parentName}</p>
                     <p className="text-[10px] text-muted-foreground font-semibold">
@@ -491,12 +492,12 @@ export default function LineageDirectory({
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'families' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fullFiltered.length}</span>
           </button>
           <button type="button" onClick={() => setActiveTab('sire')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'sire' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm"><Bird className="w-4 h-4" /></span>
+            <span className="text-sm"><ChickenIcon className="w-4 h-4" /></span>
             <span>Sire Offspring Tree</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'sire' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireEntries.length}</span>
           </button>
           <button type="button" onClick={() => setActiveTab('dam')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'dam' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
-            <span className="text-sm"><Bird className="w-4 h-4" /></span>
+            <span className="text-sm"><ChickenIcon className="w-4 h-4" /></span>
             <span>Dam Offspring Tree</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'dam' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{damEntries.length}</span>
           </button>
@@ -511,8 +512,8 @@ export default function LineageDirectory({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> },
-          { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <Bird className="w-5 h-5 text-sky-600 dark:text-sky-400" /> },
-          { label: 'Dam Offspring Groups', value: damEntries.length, icon: <Bird className="w-5 h-5 text-pink-600 dark:text-pink-400" /> },
+          { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <ChickenIcon className="w-5 h-5 text-sky-600 dark:text-sky-400" /> },
+          { label: 'Dam Offspring Groups', value: damEntries.length, icon: <ChickenIcon className="w-5 h-5 text-pink-600 dark:text-pink-400" /> },
           { label: 'Total Chickens Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-600 dark:text-teal-400" /> },
         ].map((s) => (
           <div key={s.label} className="bg-card rounded-3xl border border-border shadow-sm p-5 flex items-center gap-4">
@@ -590,7 +591,7 @@ export default function LineageDirectory({
       {activeTab === 'sire' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-xl flex items-center justify-center"><Bird className="w-5 h-5" /></div>
+            <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-xl flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Sire Offspring Tree</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
@@ -620,7 +621,7 @@ export default function LineageDirectory({
       {activeTab === 'dam' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-xl flex items-center justify-center"><Bird className="w-5 h-5" /></div>
+            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-xl flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Bird, CheckCircle, Dna, Users, Search } from 'lucide-react';
+import { CheckCircle, Dna, Users, Search } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
 
@@ -127,7 +128,7 @@ export default function AdminFlockAuditPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Chickens', stats.total, 'text-amber-400', <Bird className="w-5 h-5" />)}
+          {statCard('Total Chickens', stats.total, 'text-amber-400', <ChickenIcon className="w-5 h-5" />)}
           {statCard('Active', stats.active, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
           {statCard('Breeds', stats.breeds, 'text-sky-400', <Dna className="w-5 h-5" />)}
           {statCard('Owners', stats.owners, 'text-purple-400', <Users className="w-5 h-5" />)}
@@ -178,7 +179,7 @@ export default function AdminFlockAuditPage() {
                   <img src={fowl.image_url} alt={fowl.name} className="w-10 h-10 rounded-xl object-cover border border-border shrink-0" />
                 ) : (
                   <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
-                    <Bird className="w-5 h-5" />
+                    <ChickenIcon className="w-5 h-5" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -225,7 +226,7 @@ export default function AdminFlockAuditPage() {
                         {fowl.image_url ? (
                           <img src={fowl.image_url} alt={fowl.name} className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><Bird className="w-5 h-5" /></div>
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><ChickenIcon className="w-5 h-5" /></div>
                         )}
                         <p className="text-xs font-extrabold text-card-foreground truncate">{fowl.name}</p>
                       </div>

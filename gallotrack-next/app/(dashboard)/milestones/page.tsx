@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAgeLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
-import { Calendar, CircleDot, Bird, Activity, Crown } from 'lucide-react';
+import { Calendar, CircleDot, Activity, Crown } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 
 type Filter = 'all' | 'soon' | 'overdue' | 'mature';
 
@@ -121,7 +122,7 @@ export default function MilestonesPage() {
             <p className="text-[8px] text-slate-400 dark:text-muted-foreground">0–6 months</p>
           </div>
           <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 text-center">
-            <span className="text-lg block"><Bird size={20} className="mx-auto" /></span>
+            <span className="text-lg block"><ChickenIcon size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 dark:text-foreground mt-1">Stag / Pullet</p>
             <p className="text-[8px] text-slate-400 dark:text-muted-foreground">6–12 months</p>
           </div>

@@ -12,7 +12,7 @@ import {
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
-import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, Bird, X, ClipboardList, Clock, FileText } from 'lucide-react';
+import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, X, ClipboardList, Clock, FileText } from 'lucide-react';
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
 type AdminTab = 'users' | 'audit';
