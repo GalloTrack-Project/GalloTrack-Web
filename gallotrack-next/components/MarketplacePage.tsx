@@ -381,8 +381,8 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
         <div className="flex items-start gap-4">
           <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">{'\uD83E\uDDEC'}</div>
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Breeding Catalog</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Manage and monitor your chicken breeding inventory</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Inventory</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">All your chickens in one list — status, age, weight, stage, and lineage</p>
           </div>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">

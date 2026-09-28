@@ -13,7 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 const OWNER_NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profiling', label: 'Chicken Registry', icon: Dna },
-  { href: '/catalog', label: 'Breeding Catalog', icon: Egg },
+  { href: '/catalog', label: 'Chicken Inventory', icon: Egg },
   { href: '/lineage', label: 'Lineage Directory', icon: TreePine },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
@@ -21,7 +21,7 @@ const OWNER_NAV = [
 const OWNER_MOBILE = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profiling', label: 'Registry', icon: Dna },
-  { href: '/catalog', label: 'Catalog', icon: Egg },
+  { href: '/catalog', label: 'Inventory', icon: Egg },
   { href: '/lineage', label: 'Lineage', icon: TreePine },
   { href: '/profile', label: 'Profile', icon: User },
 ];
