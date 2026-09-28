@@ -320,27 +320,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
   } = formState;
 
-  // Load system defaults for arena and default strain on mount
+  // Load system defaults for arena and age on mount
   useEffect(() => {
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
       .then((s) => {
         if (s.default_arena) setMatchLocation(s.default_arena);
         if (s.auto_calculate_age === false) setAutoCalcAge(false);
-
-        // Default strain: localStorage user preference wins, then admin default
-        let strain = s.default_strain || '';
-        try {
-          const raw = localStorage.getItem('gallotrack_user_preferences');
-          if (raw) {
-            const prefs = JSON.parse(raw);
-            if (prefs.default_strain) strain = prefs.default_strain;
-          }
-        } catch { /* ignore */ }
-        if (strain) {
-          setSelectedStrains((prev) => (prev.length > 0 ? prev : [strain]));
-          setAvailableStrains((prev) => (prev.includes(strain) ? prev : [...prev, strain]));
-        }
       })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
