@@ -7,6 +7,7 @@ import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { isFoundationStock } from '@/lib/helpers';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
   const toneCls = tone === 'green'
@@ -61,6 +62,8 @@ type Props = {
   setDamPct: (v: number | string) => void;
   birdCode: string;
   setBirdCode: (v: string) => void;
+  wingBand: string;
+  setWingBand: (v: string) => void;
   suggestedBirdCode: string;
   previewBloodlineStats: BloodlineStats | null;
   selectedImage: File | null;
@@ -114,6 +117,7 @@ export default function EncodeForm({
   sirePct, setSirePct,
   damPct, setDamPct,
   birdCode, setBirdCode,
+  wingBand, setWingBand,
   suggestedBirdCode, previewBloodlineStats,
   selectedImage, setSelectedImage,
   imagePreview, setImagePreview,
@@ -202,6 +206,22 @@ export default function EncodeForm({
           />
           <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">
             {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-emerald-600 dark:text-emerald-300">{formatBirdCodeForDisplay(suggestedBirdCode)}</span>{suggestedBirdCode ? (/^\d+$/.test(suggestedBirdCode) ? ' · numero (sire)' : /^[A-Za-z]$/.test(suggestedBirdCode) ? ' · titik (dam)' : ' · offspring') : ''}</>}
+          </p>
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
+            Wing Band ID <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>
+          </label>
+          <input
+            type="text"
+            value={wingBand}
+            onChange={(e) => setWingBand(e.target.value)}
+            maxLength={24}
+            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            placeholder="e.g. W-001"
+          />
+          <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">
+            {wingBand.trim() ? 'Ibaband ang numero na ito sa pakpak ng manok' : 'Optional — ang numero na naka-stamp sa wing band ng ibon'}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -489,16 +509,32 @@ export default function EncodeForm({
               Sire Purity (%)
             </label>
             <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 60" />
-            <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Independent — set freely</p>
+            <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Kasama ang Dam — dapat 100% lahat</p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
               Dam Purity (%)
             </label>
             <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 40" />
-            <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Independent — set freely</p>
+            <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Kasama ang Sire — dapat 100% lahat</p>
           </div>
         </div>
+        {(() => {
+          const sNum = Number(sirePct) || 0;
+          const dNum = Number(damPct) || 0;
+          const total = sNum + dNum;
+          const isFoundationPair = isFoundationStock(sireName) || isFoundationStock(damName) || !sireName.trim() || !damName.trim();
+          const ok = total === 100;
+          return (
+            <p className={`text-[10px] font-black px-3 py-2 rounded-xl border ${isFoundationPair ? 'bg-slate-50 dark:bg-muted/50 text-slate-500 dark:text-muted-foreground border-slate-200 dark:border-border' : ok ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'}`}>
+              {isFoundationPair
+                ? `Foundation Stock pair — purity total: ${total}% (exempt, 100/100 auto-applied)`
+                : ok
+                  ? `✓ Purity total: ${total}% — sariwa ang dugo ng pairing na ito`
+                  : `⚠ Purity total: ${total}% — dapat mag-exactly 100% (Sire + Dam) bago i-save`}
+            </p>
+          );
+        })()}
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">

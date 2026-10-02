@@ -21,6 +21,8 @@ export interface FowlRecord {
   bloodline_pct: number;
   /** Standardized tag, e.g. 1 (sire) / A (dam) / 1A1 (offspring, shown 1A₁). Nullable in the DB. */
   bird_code?: string | null;
+  /** Physical wing band number — unique on-farm identifier stamped on the band. */
+  wing_band?: string | null;
   /** Per-strain blood percentage breakdown, e.g. { Kelso: 50, Hatch: 25, Roundhead: 25 }. */
   bloodline_composition?: Record<string, number> | null;
   status: string;

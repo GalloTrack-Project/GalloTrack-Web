@@ -156,6 +156,8 @@ export function ModalsWrapper() {
       setEditDamPct={store.setEditDamPct}
       editBirdCode={store.editBirdCode}
       setEditBirdCode={store.setEditBirdCode}
+      editWingBand={store.editWingBand}
+      setEditWingBand={store.setEditWingBand}
       handleEditBirthdateChange={store.handleEditBirthdateChange}
       handleEditAgeChange={store.handleEditAgeChange}
       showPerFowlBreakdownModal={ui.showPerFowlBreakdownModal}

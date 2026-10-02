@@ -29,6 +29,7 @@ export default function ProfilingPage() {
     sireName, setSireName, damName, setDamName,
     sirePct, setSirePct, damPct, setDamPct,
     birdCode, setBirdCode, suggestedBirdCode, previewBloodlineStats,
+    wingBand, setWingBand,
     selectedImage, setSelectedImage, imagePreview, setImagePreview,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     availableStrains, customStrainNames, deleteCustomStrain,
@@ -146,6 +147,7 @@ export default function ProfilingPage() {
           sirePct={sirePct} setSirePct={setSirePct}
           damPct={damPct} setDamPct={setDamPct}
           birdCode={birdCode} setBirdCode={setBirdCode}
+          wingBand={wingBand} setWingBand={setWingBand}
           suggestedBirdCode={suggestedBirdCode}
           previewBloodlineStats={previewBloodlineStats}
           selectedImage={selectedImage} setSelectedImage={setSelectedImage}

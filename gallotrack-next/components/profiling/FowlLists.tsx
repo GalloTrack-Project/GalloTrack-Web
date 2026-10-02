@@ -55,6 +55,9 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground">{fowl.name}</h4>
           <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800">{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}</span>
+          {fowl.wing_band ? (
+            <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the bird)">🏷 {fowl.wing_band}</span>
+          ) : null}
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{fowl.breed}</span>
           <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
@@ -62,8 +65,20 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-500 dark:text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-2xl border border-slate-100 dark:border-border">
-          <div>Sire: <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong></div>
-          <div>Dam: <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong></div>
+          <div>Sire: {(() => {
+            const name = (fowl.sire || '').trim();
+            const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
+            return target ? (
+              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-sky-700 dark:text-sky-300 hover:underline underline-offset-2 cursor-pointer" title="Buksan ang Sire profile">{name}</button>
+            ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong>;
+          })()}</div>
+          <div>Dam: {(() => {
+            const name = (fowl.dam || '').trim();
+            const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
+            return target ? (
+              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink-700 dark:text-pink-300 hover:underline underline-offset-2 cursor-pointer" title="Buksan ang Dam profile">{name}</button>
+            ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong>;
+          })()}</div>
           <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
           <div>Trait: <strong className="text-emerald-700 dark:text-emerald-300">{fowl.behavior_trait}</strong></div>
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
@@ -204,6 +219,9 @@ export default function FowlLists({
   setSelectedFowlForDetails,
 }: Props) {
   const [page, setPage] = useState(1);
+  const [filterSire, setFilterSire] = useState('all');
+  const [filterDam, setFilterDam] = useState('all');
+  const [filterStage, setFilterStage] = useState('all');
   const prevTabRef = React.useRef(tab);
   React.useEffect(() => {
     if (prevTabRef.current !== tab) {
@@ -212,11 +230,106 @@ export default function FowlLists({
     }
   }, [tab]);
 
+  const baseList = useMemo(
+    () =>
+      tab === 'males' ? maleActiveFowls
+      : tab === 'females' ? femaleActiveFowls
+      : tab === 'archived' ? archivedFowls
+      : tab === 'sireMaterial' ? sireMaterialFowls
+      : tab === 'offspring' ? offspringFowls ?? []
+      : deceasedFowls,
+    [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, sireMaterialFowls, offspringFowls, deceasedFowls]
+  );
+
+  const filterOptions = useMemo(() => {
+    const sires = new Set<string>();
+    const dams = new Set<string>();
+    const stages = new Set<string>();
+    for (const f of baseList) {
+      const s = (f.sire || '').trim();
+      const d = (f.dam || '').trim();
+      if (s) sires.add(s);
+      if (d) dams.add(d);
+      stages.add((f.growth_stage || 'Stag').trim() || 'Stag');
+    }
+    return {
+      sires: Array.from(sires).sort((a, b) => a.localeCompare(b)),
+      dams: Array.from(dams).sort((a, b) => a.localeCompare(b)),
+      stages: Array.from(stages).sort((a, b) => a.localeCompare(b)),
+    };
+  }, [baseList]);
+
+  const filtersActive = filterSire !== 'all' || filterDam !== 'all' || filterStage !== 'all';
+  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setPage(1); };
+  const applyFilter = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
+
   const paginatedBirds = useMemo(() => {
-    const list = tab === 'males' ? maleActiveFowls : tab === 'females' ? femaleActiveFowls : tab === 'archived' ? archivedFowls : tab === 'sireMaterial' ? sireMaterialFowls : tab === 'offspring' ? offspringFowls ?? [] : deceasedFowls;
+    const list = baseList.filter((f) => {
+      const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
+      const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
+      const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
+      return sireOk && damOk && stageOk;
+    });
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, sireMaterialFowls, offspringFowls, page]);
+  }, [baseList, page, filterSire, filterDam, filterStage]);
+
+  const filterBar = (
+    <div className="bg-white dark:bg-card p-3.5 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">
+      <div className="flex-1 min-w-[160px]">
+        <label className="block text-[9px] font-black text-slate-500 dark:text-muted-foreground uppercase tracking-wider mb-1">Filter by Sire</label>
+        <select
+          value={filterSire}
+          onChange={applyFilter(setFilterSire)}
+          className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold outline-none focus:border-emerald-500 cursor-pointer"
+        >
+          <option value="all">All Sires</option>
+          {filterOptions.sires.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+      <div className="flex-1 min-w-[160px]">
+        <label className="block text-[9px] font-black text-slate-500 dark:text-muted-foreground uppercase tracking-wider mb-1">Filter by Dam</label>
+        <select
+          value={filterDam}
+          onChange={applyFilter(setFilterDam)}
+          className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold outline-none focus:border-emerald-500 cursor-pointer"
+        >
+          <option value="all">All Dams</option>
+          {filterOptions.dams.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+      </div>
+      <div className="flex-1 min-w-[160px]">
+        <label className="block text-[9px] font-black text-slate-500 dark:text-muted-foreground uppercase tracking-wider mb-1">Filter by Growth Stage</label>
+        <select
+          value={filterStage}
+          onChange={applyFilter(setFilterStage)}
+          className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold outline-none focus:border-emerald-500 cursor-pointer"
+        >
+          <option value="all">All Stages</option>
+          {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}
+        </select>
+      </div>
+      <div className="flex items-center gap-2 pb-0.5">
+        {filtersActive && (
+          <button type="button" onClick={clearFilters} className="text-[10px] font-black text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-2 rounded-lg transition-all cursor-pointer">
+            ✕ Reset
+          </button>
+        )}
+        <span className="text-[10px] font-bold text-slate-400 dark:text-muted-foreground">
+          {paginatedBirds.list.length} of {baseList.length}
+        </span>
+      </div>
+    </div>
+  );
+
+  const filteredEmpty = (
+    <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
+      <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-3xl mx-auto">🔍</div>
+      <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Matching Chickens</h3>
+      <p className="text-xs text-slate-400 dark:text-muted-foreground font-medium max-w-sm mx-auto">Walang entry na tumutugma sa napiling Sire, Dam, o Growth Stage.</p>
+      <button type="button" onClick={clearFilters} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs cursor-pointer hover:bg-emerald-700 transition-all">✕ Reset Filters</button>
+    </div>
+  );
 
   if (tab === 'males' || tab === 'females') {
     const isMaleTab = tab === 'males';
@@ -244,7 +357,10 @@ export default function FowlLists({
           </div>
           <span className={`shrink-0 text-[10px] font-black text-white px-3 py-1.5 rounded-full ${accentBg}`}>{birds.length} Registered</span>
         </div>
-        {birds.length === 0 ? (
+        {filterBar}
+        {filtersActive && birds.length === 0 ? (
+          filteredEmpty
+        ) : birds.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto ${isMaleTab ? 'bg-sky-50 dark:bg-sky-500/10' : 'bg-pink-50 dark:bg-pink-500/10'} ${accentText}`}>{tabIcon}</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">{emptyTitle}</h3>
@@ -269,7 +385,10 @@ export default function FowlLists({
     const { pagedList, totalPages } = paginatedBirds;
     return (
       <div className="space-y-4 animate-fadeIn">
-        {paginatedBirds.list.length === 0 ? (
+        {filterBar}
+        {filtersActive && paginatedBirds.list.length === 0 ? (
+          filteredEmpty
+        ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">Archived Registry Empty</h3>
@@ -301,7 +420,10 @@ export default function FowlLists({
           </div>
           <span className="shrink-0 text-[10px] font-black text-white px-3 py-1.5 rounded-full bg-amber-600">{paginatedBirds.list.length} Registered</span>
         </div>
-        {paginatedBirds.list.length === 0 ? (
+        {filterBar}
+        {filtersActive && paginatedBirds.list.length === 0 ? (
+          filteredEmpty
+        ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Sire Material Yet</h3>
@@ -333,7 +455,10 @@ export default function FowlLists({
           </div>
           <span className="shrink-0 text-[10px] font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{paginatedBirds.list.length} Registered</span>
         </div>
-        {paginatedBirds.list.length === 0 ? (
+        {filterBar}
+        {filtersActive && paginatedBirds.list.length === 0 ? (
+          filteredEmpty
+        ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal-500 rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Offspring Yet</h3>
@@ -361,7 +486,10 @@ export default function FowlLists({
   const { pagedList: deceasedPagedList, totalPages: deceasedTotalPages } = paginatedBirds;
   return (
     <div className="space-y-4 animate-fadeIn">
-      {paginatedBirds.list.length === 0 ? (
+      {filterBar}
+      {filtersActive && paginatedBirds.list.length === 0 ? (
+        filteredEmpty
+      ) : paginatedBirds.list.length === 0 ? (
         <div className="bg-white dark:bg-card p-12 text-center rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-3">
           <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto">💀</div>
           <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Mortality Records</h3>

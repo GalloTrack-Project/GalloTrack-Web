@@ -12,6 +12,7 @@ import {
   previewBirdCode,
   resolveBirdCodes,
 } from '@/lib/bird-code';
+import { isFoundationStock } from '@/lib/helpers';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -106,9 +107,22 @@ export async function POST(request: NextRequest) {
       bloodline_pct: Number(body.bloodline_pct) || 0,
       bloodline_composition: null as Record<string, number> | null,
       bird_code: null as string | null,
+      wing_band: null as string | null,
       status: 'Active',
       image_url: body.image_url || '',
     };
+
+    // ── Wing Band ID — physical band number, must be unique per user ──
+    const rawBand = String(body.wing_band ?? '').trim();
+    if (rawBand) {
+      if (!/^[A-Za-z0-9._-]{1,24}$/.test(rawBand)) {
+        return NextResponse.json(
+          { error: 'Invalid wing band ID — use letters, numbers, . _ - only, max 24 chars (e.g. W-001)' },
+          { status: 400 }
+        );
+      }
+      payload.wing_band = rawBand;
+    }
 
     if (payload.name.length > 100) {
       return NextResponse.json({ error: 'Name too long (max 100 characters)' }, { status: 400 });
@@ -118,12 +132,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Bloodline percentages must be between 0 and 100' }, { status: 400 });
     }
 
+    // ── Purity rule: a registered (non-foundation) pair must total 100% ──
+    // 0/0 is treated as "unknown heritage" and allowed (matches the client's blank-pct flow).
+    if (!isFoundationStock(payload.sire) && !isFoundationStock(payload.dam)) {
+      const total = payload.sire_pct + payload.dam_pct;
+      if (total !== 0 && total !== 100) {
+        return NextResponse.json(
+          { error: `Sire and Dam purity must total 100% (got ${total}%). Foundation Stock pairs are exempt.` },
+          { status: 400 }
+        );
+      }
+    }
+
     // ── Genetics: per-strain bloodline composition (50/50 inheritance rule) ──
     const { data: registryRows } = await supabase
       .from('fowl')
       .select('*')
       .eq('user_id', auth.user.id);
     const fowls = (registryRows || []) as FowlRecord[];
+
+    // ── Wing band must be unique across the owner's registry ──
+    if (payload.wing_band) {
+      const dupe = fowls.find(
+        (f) => (f.wing_band || '').trim().toUpperCase() === payload.wing_band!.toUpperCase()
+      );
+      if (dupe) {
+        return NextResponse.json(
+          { error: `Wing band "${payload.wing_band}" is already used by "${dupe.name}"` },
+          { status: 409 }
+        );
+      }
+    }
 
     const composition = computeBloodlineComposition(
       {

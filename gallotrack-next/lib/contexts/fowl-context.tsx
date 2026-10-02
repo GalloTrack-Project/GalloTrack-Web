@@ -93,6 +93,7 @@ interface FowlContextValue {
   newLegColor: string; setNewLegColor: (v: string) => void;
   age: string; setAge: (v: string) => void;
   birdCode: string; setBirdCode: (v: string) => void;
+  wingBand: string; setWingBand: (v: string) => void;
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
@@ -139,6 +140,7 @@ interface FowlContextValue {
   editSirePct: number | string; setEditSirePct: (v: number | string) => void;
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
   editBirdCode: string; setEditBirdCode: (v: string) => void;
+  editWingBand: string; setEditWingBand: (v: string) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -289,6 +291,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     weight, setWeight, height, setHeight,
     newLegColor, setNewLegColor, age, setAge,
     birdCode, setBirdCode,
+    wingBand, setWingBand,
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
@@ -312,6 +315,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     editLegColor, setEditLegColor, editSire, setEditSire,
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
     editBirdCode, setEditBirdCode,
+    editWingBand, setEditWingBand,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains,
@@ -556,6 +560,34 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       return;
     }
 
+    // ── Wing band ID: physical band number, unique across the farm ──
+    const bandValue = wingBand.trim();
+    if (bandValue && !/^[A-Za-z0-9._-]{1,24}$/.test(bandValue)) {
+      ui.showToastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
+      return;
+    }
+    if (bandValue && fowls.some((f) => (f.wing_band || '').trim().toLowerCase() === bandValue.toLowerCase())) {
+      ui.showToastMessage(`Wing Band "${bandValue}" is already in use. Pick another.`, 'error');
+      return;
+    }
+
+    // ── Purity guard: heritage weights must total 100% for a registered pair ──
+    const sRaw = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? null : Number(sirePct);
+    const dRaw = damPct === '' || damPct === null || isNaN(Number(damPct)) ? null : Number(damPct);
+    if (sRaw !== null && dRaw !== null && (sRaw < 0 || sRaw > 100 || dRaw < 0 || dRaw > 100)) {
+      ui.showToastMessage('Heritage percentages must be between 0 and 100.', 'error');
+      return;
+    }
+    if (
+      sRaw !== null && dRaw !== null &&
+      sireName.trim() !== '' && damName.trim() !== '' &&
+      !isFoundationStock(sireName) && !isFoundationStock(damName) &&
+      sRaw + dRaw !== 100
+    ) {
+      ui.showToastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave blank if unknown.', 'error');
+      return;
+    }
+
     setLoading(true);
     let publicImageUrl = '';
 
@@ -618,6 +650,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         bloodline_pct: compositionStats?.specificPct ?? computedBloodlinePct,
         bloodline_composition: composition,
         bird_code: codeToUse,
+        wing_band: bandValue || null,
         status: 'Active',
         image_url: publicImageUrl,
       };
@@ -631,7 +664,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           await strainService.saveCustomStrain(s);
         }
         const createdGender = newGender || 'Rooster';
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview(''); setBirdCode('');
+        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview(''); setBirdCode(''); setWingBand('');
         if (result.id != null) {
           await refreshDescendantCompositions({ ...payload, id: result.id } as FowlRecord, null);
         }
@@ -644,7 +677,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
 
   const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -871,6 +904,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditSirePct(isFoundationStock(fowl.sire || '') ? 100 : (fowl.sire_pct ?? 0));
     setEditDamPct(isFoundationStock(fowl.dam || '') ? 100 : (fowl.dam_pct ?? 0));
     setEditBirdCode(birdCodeOf(fowl));
+    setEditWingBand(fowl.wing_band || '');
   }, [ui, birdCodeOf]);
 
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
@@ -899,6 +933,34 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       );
       if (duplicateCode) {
         ui.showToastMessage(`Chicken Code "${submittedCode}" is already in use. Pick another.`, 'error');
+        return;
+      }
+
+      // ── Wing band ID: physical band number, unique across the farm ──
+      const editBand = editWingBand.trim();
+      if (editBand && !/^[A-Za-z0-9._-]{1,24}$/.test(editBand)) {
+        ui.showToastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
+        return;
+      }
+      const duplicateBand = fowls.some(
+        (f) => f.id !== ui.editingFowl?.id && (f.wing_band || '').trim().toLowerCase() === editBand.toLowerCase()
+      );
+      if (editBand && duplicateBand) {
+        ui.showToastMessage(`Wing Band "${editBand}" is already in use. Pick another.`, 'error');
+        return;
+      }
+
+      // ── Purity guard: only when the breeder actually changed the weights ──
+      const origS = Number(ui.editingFowl.sire_pct ?? 0);
+      const origD = Number(ui.editingFowl.dam_pct ?? 0);
+      const pctChanged = sPct !== origS || dPct !== origD;
+      if (
+        pctChanged &&
+        editSire.trim() !== '' && editDam.trim() !== '' &&
+        !isFoundationStock(editSire) && !isFoundationStock(editDam) &&
+        (sPct < 0 || sPct > 100 || dPct < 0 || dPct > 100 || sPct + dPct !== 100)
+      ) {
+        ui.showToastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave unchanged if unknown.', 'error');
         return;
       }
 
@@ -939,7 +1001,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam_pct: dPct,
         bloodline_pct: editCompositionStats?.specificPct ?? calculatedBloodline,
         bloodline_composition: editComposition,
-        bird_code: submittedCode
+        bird_code: submittedCode,
+        wing_band: editBand || null
       };
 
       const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
@@ -965,7 +1028,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
 
   // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);

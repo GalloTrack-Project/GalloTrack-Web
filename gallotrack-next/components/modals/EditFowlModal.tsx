@@ -53,6 +53,8 @@ type EditFowlModalProps = {
   setEditDamPct: (v: number | string) => void;
   editBirdCode: string;
   setEditBirdCode: (v: string) => void;
+  editWingBand: string;
+  setEditWingBand: (v: string) => void;
   handleEditBirthdateChange: (val: string) => void;
   handleEditAgeChange: (val: string) => void;
   autoComputeGrowthStage: (ageMonths: number, gender: string) => string;
@@ -108,6 +110,8 @@ export default function EditFowlModal({
   setEditDamPct,
   editBirdCode,
   setEditBirdCode,
+  editWingBand,
+  setEditWingBand,
   handleEditBirthdateChange,
   handleEditAgeChange,
   autoComputeGrowthStage,
@@ -302,6 +306,20 @@ export default function EditFowlModal({
               />
               <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
             </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">
+                Wing Band ID <span className="text-slate-400 dark:text-muted-foreground font-normal lowercase">(numero sa metal wing band)</span>
+              </label>
+              <input
+                type="text"
+                value={editWingBand}
+                onChange={(e) => setEditWingBand(e.target.value)}
+                maxLength={24}
+                className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-mono font-bold"
+                placeholder="e.g. W-001"
+              />
+              <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Physical ID sa pakpak — dapat natatangi sa buong farm.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">
@@ -322,14 +340,14 @@ export default function EditFowlModal({
                   Sire Purity (%)
                 </label>
                 <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" />
-                <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Independent — set freely</p>
+                <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Dam</p>
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1">
                   Dam Purity (%)
                 </label>
                 <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" />
-                <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Independent — set freely</p>
+                <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Sire</p>
               </div>
             </div>
           </div>

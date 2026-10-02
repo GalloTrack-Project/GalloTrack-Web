@@ -349,7 +349,9 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
         f.gender.toLowerCase().includes(q) ||
         f.color?.toLowerCase().includes(q) ||
         f.sire?.toLowerCase().includes(q) ||
-        f.dam?.toLowerCase().includes(q)
+        f.dam?.toLowerCase().includes(q) ||
+        f.wing_band?.toLowerCase().includes(q) ||
+        f.bird_code?.toLowerCase().includes(q)
       );
     }
 
@@ -390,7 +392,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search name, strain, sire, dam..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
+            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
           </div>
           <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[11px] font-black px-4 py-3 rounded-2xl shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>

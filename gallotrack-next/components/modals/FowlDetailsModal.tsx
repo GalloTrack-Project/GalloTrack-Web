@@ -96,6 +96,11 @@ export default function FowlDetailsModal({
               <span className="text-[9px] font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase">
                 {formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls)) || '—'}
               </span>
+              {selectedFowlForDetails.wing_band ? (
+                <span className="text-[9px] font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 px-2.5 py-0.5 rounded-full uppercase" title="Wing Band ID">
+                  ⌁ {selectedFowlForDetails.wing_band}
+                </span>
+              ) : null}
               <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
               {(() => {
                 if (selectedFowlForDetails.status === 'Deceased') {
@@ -188,16 +193,18 @@ export default function FowlDetailsModal({
               : isSire
               ? `Shared Sire: ${r.sharedSire}`
               : `Shared Dam: ${r.sharedDam}`;
+            const target = fowls.find((f) => f.name.trim().toLowerCase() === r.name.trim().toLowerCase());
             return (
               <div
                 key={r.id}
-                title={`${r.name} — ${badge}. ${context}.`}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50 hover:border-slate-200 transition-colors"
+                title={`${r.name} — ${badge}. ${context}.${target ? ' Klik para buksan ang profile.' : ''}`}
+                onClick={target ? () => setSelectedFowlForDetails(target) : undefined}
+                className={`flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50 hover:border-slate-200 transition-colors ${target ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-muted' : ''}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
                   <div className="min-w-0">
-                    <p className="text-xs font-black text-slate-800 dark:text-card-foreground truncate">{r.name}</p>
+                    <p className={`text-xs font-black truncate ${target ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-card-foreground'}`}>{r.name}</p>
                     <p className="text-[9px] font-semibold text-slate-400 dark:text-muted-foreground uppercase tracking-wider truncate">{context}</p>
                   </div>
                 </div>
@@ -326,7 +333,22 @@ export default function FowlDetailsModal({
                     <tbody>
                       {siblingData.map((s) => (
                         <tr key={s.id} className="border-b border-slate-50 dark:border-border hover:bg-slate-50/50 dark:hover:bg-muted/50">
-                          <td className="py-2 font-black text-slate-800 dark:text-card-foreground">{s.name}</td>
+                          <td className="py-2 font-black text-slate-800 dark:text-card-foreground">
+                            {(() => {
+                              const target = fowls.find((f) => f.name.trim().toLowerCase() === s.name.trim().toLowerCase());
+                              if (!target) return s.name;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedFowlForDetails(target)}
+                                  className="font-black text-emerald-700 dark:text-emerald-300 hover:underline underline-offset-2 cursor-pointer"
+                                  title="Buksan ang profile ng sibling na ito"
+                                >
+                                  {s.name}
+                                </button>
+                              );
+                            })()}
+                          </td>
                           <td className="py-2 text-center">
                             <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${toneBadge(s.relation)}`}>
                               {s.relation === 'Full Sibling' ? 'Full' : s.relation === 'Half-Sibling (Shared Sire)' ? 'Sire-Half' : 'Dam-Half'}
@@ -628,7 +650,22 @@ export default function FowlDetailsModal({
                   );
                 })()}
               </span>
-              <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.sire_pct)}% · <span className="text-slate-600 dark:text-muted-foreground">{selectedFowlForDetails.sire || '—'}</span></span>
+              <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.sire_pct)}% · {(() => {
+                const name = selectedFowlForDetails.sire || '';
+                const target = name.trim() && name.trim().toLowerCase() !== 'foundation stock'
+                  ? fowls.find((f) => f.name.trim().toLowerCase() === name.trim().toLowerCase())
+                  : undefined;
+                return target ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFowlForDetails(target)}
+                    className="text-sky-700 dark:text-sky-300 font-bold hover:underline underline-offset-2 cursor-pointer"
+                    title="Buksan ang Sire profile"
+                  >
+                    {name}
+                  </button>
+                ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>;
+              })()}</span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-muted h-2 rounded-full overflow-hidden">
               <div className="bg-sky-500 h-full rounded-full" style={{ width: `${cleanPct(selectedFowlForDetails.sire_pct)}%` }}></div>
@@ -651,7 +688,22 @@ export default function FowlDetailsModal({
                   );
                 })()}
               </span>
-              <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.dam_pct)}% · <span className="text-slate-600 dark:text-muted-foreground">{selectedFowlForDetails.dam || '—'}</span></span>
+              <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.dam_pct)}% · {(() => {
+                const name = selectedFowlForDetails.dam || '';
+                const target = name.trim() && name.trim().toLowerCase() !== 'foundation stock'
+                  ? fowls.find((f) => f.name.trim().toLowerCase() === name.trim().toLowerCase())
+                  : undefined;
+                return target ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFowlForDetails(target)}
+                    className="text-pink-700 dark:text-pink-300 font-bold hover:underline underline-offset-2 cursor-pointer"
+                    title="Buksan ang Dam profile"
+                  >
+                    {name}
+                  </button>
+                ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>;
+              })()}</span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-muted h-2 rounded-full overflow-hidden">
               <div className="bg-pink-500 h-full rounded-full" style={{ width: `${cleanPct(selectedFowlForDetails.dam_pct)}%` }}></div>
