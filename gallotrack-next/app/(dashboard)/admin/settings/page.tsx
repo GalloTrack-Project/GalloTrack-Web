@@ -34,12 +34,12 @@ const labelClass = 'block text-xs font-black text-muted-foreground mt-2 uppercas
 
 function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-md p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+    <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-md p-4 flex items-center justify-between gap-4 cursor-pointer transition-all" htmlFor="field">
       <div>
         <span className="block text-sm font-extrabold text-card-foreground">{label}</span>
         <span className="text-xs text-muted-foreground font-medium block">{desc}</span>
       </div>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-5 h-5 accent-amber-500 rounded cursor-pointer shrink-0" id="field" />
     </label>
   );
 }
@@ -175,18 +175,18 @@ export default function AdminSettingsPage() {
         return (
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>System Name</label>
+              <label className={labelClass} htmlFor="system-name">System Name</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Tag size={14} /></span>
-                <input type="text" value={settings.system_name || ''} onChange={(e) => update('system_name', e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., GalloTrack" required />
+                <input type="text" value={settings.system_name || ''} onChange={(e) => update('system_name', e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., GalloTrack" required id="system-name" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>System Status</label>
+                <label className={labelClass} htmlFor="system-status">System Status</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><CircleDot size={14} /></span>
-                  <select value={settings.system_status || 'Operational'} onChange={(e) => update('system_status', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
+                  <select value={settings.system_status || 'Operational'} onChange={(e) => update('system_status', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="system-status">
                     <option value="Operational">Operational</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Degraded">Degraded</option>
@@ -194,10 +194,10 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Default Strain</label>
+                <label className={labelClass} htmlFor="default-strain">Default Strain</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Dna size={14} /></span>
-                  <select value={settings.default_strain || 'Sweater'} onChange={(e) => update('default_strain', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
+                  <select value={settings.default_strain || 'Sweater'} onChange={(e) => update('default_strain', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="default-strain">
                     <option value="Sweater">Sweater</option>
                     <option value="Roundhead">Roundhead</option>
                     <option value="Hatch">Hatch</option>
@@ -214,31 +214,31 @@ export default function AdminSettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Default Arena</label>
-                <input type="text" value={settings.default_arena || ''} onChange={(e) => update('default_arena', e.target.value)} className={inputClass} placeholder="e.g., Main Arena" />
+                <label className={labelClass} htmlFor="default-arena">Default Arena</label>
+                <input type="text" value={settings.default_arena || ''} onChange={(e) => update('default_arena', e.target.value)} className={inputClass} placeholder="e.g., Main Arena" id="default-arena" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Weight Unit</label>
-                <select value={settings.weight_unit || 'kg'} onChange={(e) => update('weight_unit', e.target.value as 'kg' | 'lbs')} className={`${inputClass} cursor-pointer`}>
+                <label className={labelClass} htmlFor="weight-unit">Weight Unit</label>
+                <select value={settings.weight_unit || 'kg'} onChange={(e) => update('weight_unit', e.target.value as 'kg' | 'lbs')} className={`${inputClass} cursor-pointer`} id="weight-unit">
                   <option value="kg">Kilograms (kg)</option>
                   <option value="lbs">Pounds (lbs)</option>
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Height Unit</label>
-                <select value={settings.height_unit || 'cm'} onChange={(e) => update('height_unit', e.target.value as 'cm' | 'inches')} className={`${inputClass} cursor-pointer`}>
+                <label className={labelClass} htmlFor="height-unit">Height Unit</label>
+                <select value={settings.height_unit || 'cm'} onChange={(e) => update('height_unit', e.target.value as 'cm' | 'inches')} className={`${inputClass} cursor-pointer`} id="height-unit">
                   <option value="cm">Centimeters (cm)</option>
                   <option value="inches">Inches</option>
                 </select>
               </div>
             </div>
             <div>
-              <label className={labelClass}>Maintenance Message <span className="opacity-60">(optional)</span></label>
+              <label className={labelClass} htmlFor="maintenance-message">Maintenance Message <span className="opacity-60">(optional)</span></label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Megaphone size={14} /></span>
-                <input type="text" value={settings.maintenance_message || ''} onChange={(e) => update('maintenance_message', e.target.value)} className={`${inputClass} pl-9`} placeholder="Shown during maintenance mode" />
+                <input type="text" value={settings.maintenance_message || ''} onChange={(e) => update('maintenance_message', e.target.value)} className={`${inputClass} pl-9`} placeholder="Shown during maintenance mode" id="maintenance-message" />
               </div>
             </div>
           </div>
@@ -261,18 +261,18 @@ export default function AdminSettingsPage() {
             <ToggleRow label="Public Chicken Data" desc="Allow farm owners to see other users' chicken records" checked={settings.public_fowl_data === true} onChange={(v) => update('public_fowl_data', v)} />
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Default Role</label>
+                <label className={labelClass} htmlFor="default-role">Default Role</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><User size={14} /></span>
-                  <select value={settings.default_user_role || 'owner'} onChange={(e) => update('default_user_role', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
+                  <select value={settings.default_user_role || 'owner'} onChange={(e) => update('default_user_role', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="default-role">
                     <option value="owner">Farm Owner</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Theme</label>
-                <select value={settings.theme || 'dark'} onChange={(e) => update('theme', e.target.value as 'light' | 'dark' | 'system')} className={`${inputClass} cursor-pointer`}>
+                <label className={labelClass} htmlFor="theme">Theme</label>
+                <select value={settings.theme || 'dark'} onChange={(e) => update('theme', e.target.value as 'light' | 'dark' | 'system')} className={`${inputClass} cursor-pointer`} id="theme">
                   <option value="dark">Dark</option>
                   <option value="light">Light</option>
                   <option value="system">System</option>
@@ -286,10 +286,10 @@ export default function AdminSettingsPage() {
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground font-medium">Transfer all chicken and match data from this admin account to a farm owner account.</p>
             <div>
-              <label className={labelClass}>Target Farm Owner Email</label>
+              <label className={labelClass} htmlFor="target-farm-owner-email">Target Farm Owner Email</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Mail size={14} /></span>
-                <input type="email" value={transferEmail} onChange={(e) => setTransferEmail(e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., owner@example.com" />
+                <input type="email" value={transferEmail} onChange={(e) => setTransferEmail(e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., owner@example.com" id="target-farm-owner-email" />
               </div>
             </div>
             {transferResult && (

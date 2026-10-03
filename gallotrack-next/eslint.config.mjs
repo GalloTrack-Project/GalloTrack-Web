@@ -20,6 +20,11 @@ const eslintConfig = defineConfig([
       // eslint-config-next already registers the plugin, so only the rules are
       // merged here — adding its flat config would re-register and throw.
       ...jsxA11y.flatConfigs.recommended.rules,
+      // The default search depth of 2 cannot see a label whose copy sits at
+      // label > div > span > text, which is exactly the toggle-row pattern.
+      // Raising it only widens the *text* search; the association check
+      // (htmlFor must be present) stays strict.
+      'jsx-a11y/label-has-associated-control': ['error', { assert: 'either', depth: 4 }],
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {

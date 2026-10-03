@@ -87,8 +87,8 @@ export default function MatchForm({
       {/* Row 1: Fowl + Date */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Select Local Chicken Entry</label>
-          <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground focus:border-emerald-500 cursor-pointer" required>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="select-local-chicken-entry">Select Local Chicken Entry</label>
+          <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground focus:border-emerald-500 cursor-pointer" required id="select-local-chicken-entry">
             <option value="">-- Select Chicken Node --</option>
             {fowls.filter(f => f.status === 'Active' && isMale(f.gender)).map(f => (
               <option key={f.id} value={f.name}>{f.name} ({f.breed})</option>
@@ -96,23 +96,23 @@ export default function MatchForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Match Date</label>
-          <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" />
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="match-date">Match Date</label>
+          <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" id="match-date" />
         </div>
       </div>
 
       {/* Row 2: Opponent + Breed + Location */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Opponent Entry Identity</label>
-          <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-entry-identity">Opponent Entry Identity</label>
+          <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required id="opponent-entry-identity" />
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Opponent Breed / Rasa</label>
-          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" />
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-breed-rasa">Opponent Breed / Rasa</label>
+          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" id="opponent-breed-rasa" />
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Arena Location Hub</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="arena-location-hub">Arena Location Hub</label>
           <input
             list="arena-locations"
             value={matchLocation}
@@ -120,7 +120,7 @@ export default function MatchForm({
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
             placeholder="Select or type arena..."
             required
-          />
+          id="arena-location-hub" />
           <datalist id="arena-locations">
             <option value="Dingle Breeding Arena" />
             <option value="Iloilo Coliseum" />
@@ -151,7 +151,7 @@ export default function MatchForm({
         {/* Row 1: Number of Cocks + Chicken Class */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success">Number of Cocks</label>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="number-of-cocks">Number of Cocks</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -161,14 +161,14 @@ export default function MatchForm({
                 onChange={(e) => setCockCount(Number(e.target.value) || 0)}
                 placeholder="Enter number"
                 className={`${inputClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-              />
+              id="number-of-cocks" />
               <span className="rounded-md bg-muted px-4 py-3 text-xs font-bold text-muted-foreground">cocks</span>
             </div>
           </div>
           <div>
-            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success">Chicken Class</label>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="chicken-class">Chicken Class</label>
             <div className="relative">
-              <select value={ageCategory} onChange={(e) => setAgeCategory(e.target.value)} className={selectClass}>
+              <select value={ageCategory} onChange={(e) => setAgeCategory(e.target.value)} className={selectClass} id="chicken-class">
                 <option value="Cock">Cock</option>
                 <option value="Stag">Stag</option>
               </select>
@@ -180,9 +180,9 @@ export default function MatchForm({
         {/* Row 2: Event Type — may "Others" free text */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success">Event Type</label>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="event-type">Event Type</label>
             <div className="relative">
-              <select value={eventTypeSelectValue} onChange={(e) => setEventType(e.target.value)} className={selectClass}>
+              <select value={eventTypeSelectValue} onChange={(e) => setEventType(e.target.value)} className={selectClass} id="event-type">
                 <option value="Derby">Derby</option>
                 <option value="Lusong">Lusong</option>
                 <option value="__custom__">Others (Add Custom)</option>
@@ -214,7 +214,7 @@ export default function MatchForm({
           <div className="mt-4 rounded-md bg-success/5 dark:bg-success/10 border border-success/20 dark:border-success/30 p-3.5">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              <label className="text-xs font-bold uppercase tracking-[.02em] text-success">Live Preview</label>
+              <span className="text-xs font-bold uppercase tracking-[.02em] text-success">Live Preview</span>
             </div>
             <p className="text-sm font-extrabold tracking-[-.02em] text-foreground">{buildPreview()}</p>
           </div>
@@ -225,8 +225,8 @@ export default function MatchForm({
       {/* Fight Outcome */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Fight Outcome</label>
-          <select value={matchOutcome} onChange={(e) => setMatchOutcome(e.target.value)} className="w-full p-3 border border-amber-200/80 rounded-md text-sm bg-amber-50 dark:bg-amber-950/50 font-black text-amber-900 cursor-pointer">
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="fight-outcome">Fight Outcome</label>
+          <select value={matchOutcome} onChange={(e) => setMatchOutcome(e.target.value)} className="w-full p-3 border border-amber-200/80 rounded-md text-sm bg-amber-50 dark:bg-amber-950/50 font-black text-amber-900 cursor-pointer" id="fight-outcome">
             <option value="Win">WIN</option>
             <option value="Loss">LOSS</option>
             <option value="Draw">DRAW</option>
@@ -237,8 +237,8 @@ export default function MatchForm({
       {/* Post-Fight Condition */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Post-Fight Condition / Health Status</label>
-          <select value={matchPostFight} onChange={(e) => setMatchPostFight(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground cursor-pointer focus:border-emerald-500 transition-all">
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="post-fight-condition-health-">Post-Fight Condition / Health Status</label>
+          <select value={matchPostFight} onChange={(e) => setMatchPostFight(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground cursor-pointer focus:border-emerald-500 transition-all" id="post-fight-condition-health-">
             {POST_FIGHT_CONDITIONS.map((c) => (
               <option key={c.value} value={c.value}>{c.icon} {c.value} — {c.desc}</option>
             ))}
@@ -249,10 +249,10 @@ export default function MatchForm({
 
       {/* Video Upload */}
       <div>
-        <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Video Evidence Upload</label>
-        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all">
+          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Video Evidence Upload</span>
+        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all" htmlFor="field">
           <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchVideoFile ? matchVideoFile.name : 'Upload fight match recording (MP4, MOV, AVI)'}</span>
-          <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" onChange={(e) => e.target.files && setMatchVideoFile(e.target.files[0])} className="hidden" />
+          <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" onChange={(e) => e.target.files && setMatchVideoFile(e.target.files[0])} className="hidden" id="field" />
         </label>
       </div>
 

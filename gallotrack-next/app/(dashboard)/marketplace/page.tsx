@@ -380,8 +380,8 @@ export default function MarketplacePage() {
 
           {fowls.length > 0 && !editingId && (
             <div className="mb-4">
-              <label className={labelClass}>Pre-fill from Chicken Registry</label>
-              <select onChange={(e) => handleSelectFowl(e.target.value)} value={form.fowl_id} className={`${inputClass} cursor-pointer`}>
+              <label className={labelClass} htmlFor="pre-fill-from-chicken-regist">Pre-fill from Chicken Registry</label>
+              <select onChange={(e) => handleSelectFowl(e.target.value)} value={form.fowl_id} className={`${inputClass} cursor-pointer`} id="pre-fill-from-chicken-regist">
                 <option value="">-- Select a chicken --</option>
                 {fowls.filter((f) => f.status === 'Active').map((f) => (
                   <option key={f.id} value={f.id}>{f.name} ({f.breed} · {f.gender})</option>
@@ -393,44 +393,44 @@ export default function MarketplacePage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Title *</label>
-                <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className={inputClass} placeholder="e.g., Champion Sweater Rooster" required />
+                <label className={labelClass} htmlFor="title">Title *</label>
+                <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className={inputClass} placeholder="e.g., Champion Sweater Rooster" required id="title" />
               </div>
               <div>
-                <label className={labelClass}>Breed *</label>
-                <input type="text" value={form.breed} onChange={(e) => setForm((p) => ({ ...p, breed: e.target.value }))} className={inputClass} placeholder="e.g., Sweater" required />
+                <label className={labelClass} htmlFor="breed">Breed *</label>
+                <input type="text" value={form.breed} onChange={(e) => setForm((p) => ({ ...p, breed: e.target.value }))} className={inputClass} placeholder="e.g., Sweater" required id="breed" />
               </div>
               <div>
-                <label className={labelClass}>Price (₱) *</label>
-                <input type="number" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} className={inputClass} placeholder="0" min="0" step="0.01" required />
+                <label className={labelClass} htmlFor="price">Price (₱) *</label>
+                <input type="number" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} className={inputClass} placeholder="0" min="0" step="0.01" required id="price" />
               </div>
               <div>
-                <label className={labelClass}>Gender *</label>
-                <select value={form.gender} onChange={(e) => setForm((p) => ({ ...p, gender: e.target.value }))} className={`${inputClass} cursor-pointer`}>
+                <label className={labelClass} htmlFor="gender">Gender *</label>
+                <select value={form.gender} onChange={(e) => setForm((p) => ({ ...p, gender: e.target.value }))} className={`${inputClass} cursor-pointer`} id="gender">
                   <option value="Rooster">Rooster</option>
                   <option value="Hen">Hen</option>
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Age</label>
-                <input type="text" value={form.age} onChange={(e) => setForm((p) => ({ ...p, age: e.target.value }))} className={inputClass} placeholder="e.g., 8 months" />
+                <label className={labelClass} htmlFor="age">Age</label>
+                <input type="text" value={form.age} onChange={(e) => setForm((p) => ({ ...p, age: e.target.value }))} className={inputClass} placeholder="e.g., 8 months" id="age" />
               </div>
               <div>
-                <label className={labelClass}>Weight</label>
-                <input type="text" value={form.weight} onChange={(e) => setForm((p) => ({ ...p, weight: e.target.value }))} className={inputClass} placeholder="e.g., 2.5 kg" />
+                <label className={labelClass} htmlFor="weight">Weight</label>
+                <input type="text" value={form.weight} onChange={(e) => setForm((p) => ({ ...p, weight: e.target.value }))} className={inputClass} placeholder="e.g., 2.5 kg" id="weight" />
               </div>
               <div>
-                <label className={labelClass}>Color</label>
-                <input type="text" value={form.color} onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))} className={inputClass} placeholder="e.g., Red" />
+                <label className={labelClass} htmlFor="color">Color</label>
+                <input type="text" value={form.color} onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))} className={inputClass} placeholder="e.g., Red" id="color" />
               </div>
               <div>
-                <label className={labelClass}>Image URL</label>
-                <input type="url" value={form.image_url} onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))} className={inputClass} placeholder="https://..." />
+                <label className={labelClass} htmlFor="image-url">Image URL</label>
+                <input type="url" value={form.image_url} onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))} className={inputClass} placeholder="https://..." id="image-url" />
               </div>
             </div>
             <div>
-              <label className={labelClass}>Description</label>
-              <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Describe your chicken..." rows={3} />
+              <label className={labelClass} htmlFor="description">Description</label>
+              <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Describe your chicken..." rows={3} id="description" />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={saving} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">

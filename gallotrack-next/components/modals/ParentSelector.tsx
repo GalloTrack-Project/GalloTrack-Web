@@ -5,6 +5,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 import type { FowlRecord } from '@/lib/types';
 
 export type ParentSelectorProps = {
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   onPick?: (fowl: FowlRecord) => void;
@@ -61,7 +62,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
   );
 }
 
-export default function ParentSelector({ value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
+export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
@@ -103,6 +104,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
   return (
     <div ref={boxRef} className="relative">
       <input
+        id={id}
         type="text"
         value={text}
         onChange={(e) => { setText(e.target.value); onChange(e.target.value); setOpen(true); }}

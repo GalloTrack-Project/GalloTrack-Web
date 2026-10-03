@@ -76,7 +76,7 @@ export default function ForgotPasswordModal({
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Email Address</label>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="email-address">Email Address</label>
                 <input
                   type="email"
                   value={forgotEmail}
@@ -84,7 +84,7 @@ export default function ForgotPasswordModal({
                   className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50/50 dark:bg-muted/50 focus:bg-white dark:focus:bg-input focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
                   placeholder="you@example.com"
                   required
-                />
+                id="email-address" />
               </div>
               {forgotError && (
                 <div className="text-xs text-danger font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-md">{forgotError}</div>

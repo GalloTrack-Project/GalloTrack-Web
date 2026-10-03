@@ -155,16 +155,16 @@ export default function EditFowlModal({
               <Tag className="w-3.5 h-3.5" /> <span>Core Identity</span>
             </h4>
             <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Identifier Name</label>
-              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" required />
+              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="identifier-name">Identifier Name</label>
+              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" required id="identifier-name" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Behavior Trait</label>
-              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
+              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="behavior-trait">Behavior Trait</label>
+              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" id="behavior-trait" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative z-30">
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Genetic Strain</label>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="genetic-strain">Genetic Strain</label>
                 <input 
                   type="text"
                   value={editBreed}
@@ -172,7 +172,7 @@ export default function EditFowlModal({
                   className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" 
                   placeholder="Select or type strain"
                   required 
-                />
+                id="genetic-strain" />
                 {availableStrains.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {availableStrains.filter((s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed).slice(0, 5).map((s) => (
@@ -187,8 +187,8 @@ export default function EditFowlModal({
                 )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Gender Class</label>
-                <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground">
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="gender-class">Gender Class</label>
+                <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground" id="gender-class">
                   <option value="Rooster">Sire (Rooster)</option>
                   <option value="Hen">Dam (Hen)</option>
                 </select>
@@ -202,15 +202,15 @@ export default function EditFowlModal({
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Color Group</label>
-                <select value={editColorCategory} onChange={(e) => { setEditColorCategory(e.target.value); setEditColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground">
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="color-group">Color Group</label>
+                <select value={editColorCategory} onChange={(e) => { setEditColorCategory(e.target.value); setEditColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground" id="color-group">
                   <option value="Red">Red Class</option>
                   <option value="Light Color">Light Class</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Specific Tone</label>
-                <select value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input text-slate-700 dark:text-card-foreground font-medium">
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="specific-tone">Specific Tone</label>
+                <select value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input text-slate-700 dark:text-card-foreground font-medium" id="specific-tone">
                   {editColorCategory === 'Red' ? (
                     <>
                       <option value="Bright Red">Bright Red</option>
@@ -228,8 +228,8 @@ export default function EditFowlModal({
               </div>
             </div>
             <div className="mb-2">
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
-              <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" />
+              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="birth-date">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
+              <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" id="birth-date" />
               {(() => {
                 const parts = getAgeParts(editBirthdate);
                 return parts ? (
@@ -241,11 +241,11 @@ export default function EditFowlModal({
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Age (Mos) {editBirthdate && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
-                <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground" required />
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="age-mos">Age (Mos) {editBirthdate && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
+                <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground" required id="age-mos" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Growth</label>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="growth">Growth</label>
                 <input 
                   type="text" 
                   value={editGrowthStage} 
@@ -256,26 +256,26 @@ export default function EditFowlModal({
                       ? 'border-emerald-100 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300' 
                       : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50 text-muted-foreground font-normal'
                   }`} 
-                />
+                id="growth" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" />
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="height">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
+                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" />
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="weight">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
+                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
               </div>
             </div>
             <div className="mt-2">
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Leg Color</label>
+              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="leg-color">Leg Color</label>
               <input
                 type="text"
                 value={editLegColor}
                 onChange={(e) => setEditLegColor(e.target.value)}
                 className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
                 placeholder="Select or type a leg color..."
-              />
+              id="leg-color" />
               {availableLegColors.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {availableLegColors.filter((s) => s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor).slice(0, 5).map((s) => (
@@ -294,7 +294,7 @@ export default function EditFowlModal({
               <TreePine className="w-3.5 h-3.5" /> <span>Ancestry Heritage Roots</span>
             </h4>
             <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">
+              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="chicken-code">
                 Chicken Code <span className="text-muted-foreground font-normal lowercase">(standardized tag — 1, 2, 3 = sire · A, B, C = dam · 1A1 = offspring)</span>
               </label>
               <input
@@ -303,11 +303,11 @@ export default function EditFowlModal({
                 onChange={(e) => setEditBirdCode(e.target.value)}
                 className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. 1, A, 1A1"
-              />
+              id="chicken-code" />
               <p className="text-xs text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
             </div>
             <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">
+              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="wing-band-id">
                 Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band)</span>
               </label>
               <input
@@ -317,36 +317,36 @@ export default function EditFowlModal({
                 maxLength={24}
                 className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. W-001"
-              />
+              id="wing-band-id" />
               <p className="text-xs text-muted-foreground mt-1 font-semibold">Physical ID sa pakpak — dapat natatangi sa buong farm.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">
-                  Sire (Father) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
-                </label>
-                <ParentSelector value={editSire} onChange={(v) => { setEditSire(v); if (isFoundationStock(v)) setEditSirePct(100); }} onPick={(f) => setEditSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
+                  <label htmlFor="edit-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1">
+                    Sire (Father) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
+                  </label>
+                  <ParentSelector id="edit-sire" value={editSire} onChange={(v) => { setEditSire(v); if (isFoundationStock(v)) setEditSirePct(100); }} onPick={(f) => setEditSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">
-                  Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
-                </label>
-                <ParentSelector value={editDam} onChange={(v) => { setEditDam(v); if (isFoundationStock(v)) setEditDamPct(100); }} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
+                  <label htmlFor="edit-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1">
+                    Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
+                  </label>
+                  <ParentSelector id="edit-dam" value={editDam} onChange={(v) => { setEditDam(v); if (isFoundationStock(v)) setEditDamPct(100); }} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="sire-purity">
                   Sire Purity (%)
                 </label>
-                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" />
+                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" id="sire-purity" />
                 <p className="text-xs text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Dam</p>
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="dam-purity">
                   Dam Purity (%)
                 </label>
-                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" />
+                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" id="dam-purity" />
                 <p className="text-xs text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Sire</p>
               </div>
             </div>

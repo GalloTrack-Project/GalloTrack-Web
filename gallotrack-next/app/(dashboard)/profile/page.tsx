@@ -347,21 +347,21 @@ export default function ProfilePage() {
           
           <div className="space-y-5">
             <div>
-              <label className="block text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest">Full Account Name</label>
+              <label className="block text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest" htmlFor="full-account-name">Full Account Name</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </span>
-                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-md text-sm bg-muted/50 focus:bg-background focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:focus:ring-teal-900 transition-all font-semibold" required />
+                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-md text-sm bg-muted/50 focus:bg-background focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:focus:ring-teal-900 transition-all font-semibold" required id="full-account-name" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest">Contact Communication Number</label>
+              <label className="block text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest" htmlFor="contact-communication-number">Contact Communication Number</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 </span>
-                <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-md text-sm bg-muted/50 focus:bg-background focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:focus:ring-teal-900 transition-all font-semibold" required />
+                <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-md text-sm bg-muted/50 focus:bg-background focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:focus:ring-teal-900 transition-all font-semibold" required id="contact-communication-number" />
               </div>
             </div>
           </div>

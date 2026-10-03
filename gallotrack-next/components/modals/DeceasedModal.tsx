@@ -50,12 +50,12 @@ export default function DeceasedModal({
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider">Cause of Death</label>
+          <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider" htmlFor="cause-of-death">Cause of Death</label>
           <select 
             value={deathReasonInput} 
             onChange={(e) => setDeathReasonInput(e.target.value)} 
             className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-sm bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-rose-500 cursor-pointer"
-          >
+          id="cause-of-death">
             <option value="Illness">Illness / Disease</option>
             <option value="Injury">Injury / Fight Trauma</option>
             <option value="Natural">Natural Causes / Old Age</option>
@@ -63,7 +63,7 @@ export default function DeceasedModal({
           </select>
           {deathReasonInput === 'Other' && (
             <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider">Type Cause of Death</label>
+              <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider" htmlFor="type-cause-of-death">Type Cause of Death</label>
               <input
                 type="text"
                 value={deathReasonNote}
@@ -71,7 +71,7 @@ export default function DeceasedModal({
                 maxLength={60}
                 placeholder="e.g. Heat stroke, predator attack…"
                 className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-sm bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-rose-500"
-              />
+              id="type-cause-of-death" />
               <p className="text-xs text-muted-foreground leading-relaxed">This is saved as the cause of death and shown on the chicken&apos;s record.</p>
             </div>
           )}

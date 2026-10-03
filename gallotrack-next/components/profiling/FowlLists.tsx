@@ -277,34 +277,34 @@ export default function FowlLists({
   const filterBar = (
     <div className="bg-white dark:bg-card p-3.5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">
       <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1">Filter by Sire</label>
+        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-sire">Filter by Sire</label>
         <select
           value={filterSire}
           onChange={applyFilter(setFilterSire)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        >
+        id="filter-by-sire">
           <option value="all">All Sires</option>
           {filterOptions.sires.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
       <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1">Filter by Dam</label>
+        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-dam">Filter by Dam</label>
         <select
           value={filterDam}
           onChange={applyFilter(setFilterDam)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        >
+        id="filter-by-dam">
           <option value="all">All Dams</option>
           {filterOptions.dams.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
       </div>
       <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1">Filter by Growth Stage</label>
+        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-growth-stage">Filter by Growth Stage</label>
         <select
           value={filterStage}
           onChange={applyFilter(setFilterStage)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        >
+        id="filter-by-growth-stage">
           <option value="all">All Stages</option>
           {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}
         </select>

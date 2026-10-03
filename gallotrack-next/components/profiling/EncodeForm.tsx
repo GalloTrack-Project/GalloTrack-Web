@@ -190,11 +190,11 @@ export default function EncodeForm({
           <span className="text-xs font-mono bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full font-black shrink-0">ID: {nextNodeId}</span>
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Identifier Name</label>
-          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">Identifier Name</label>
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required id="identifier-name" />
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="chicken-code">
             Chicken Code <span className="text-muted-foreground font-normal lowercase">(standardized tag — 1, 2, 3 = sire · A, B, C = dam · 1A1 = offspring)</span>
           </label>
           <input
@@ -203,13 +203,13 @@ export default function EncodeForm({
             onChange={(e) => setBirdCode(e.target.value)}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
             placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
-          />
+          id="chicken-code" />
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
             {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-success dark:text-emerald-300">{formatBirdCodeForDisplay(suggestedBirdCode)}</span>{suggestedBirdCode ? (/^\d+$/.test(suggestedBirdCode) ? ' · numero (sire)' : /^[A-Za-z]$/.test(suggestedBirdCode) ? ' · titik (dam)' : ' · offspring') : ''}</>}
           </p>
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="wing-band-id">
             Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>
           </label>
           <input
@@ -219,14 +219,14 @@ export default function EncodeForm({
             maxLength={24}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
             placeholder="e.g. W-001"
-          />
+          id="wing-band-id" />
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
             {wingBand.trim() ? 'Ibaband ang numero na ito sa pakpak ng manok' : 'Optional — ang numero na naka-stamp sa wing band ng ibon'}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Genetic Strain</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="genetic-strain">Genetic Strain</label>
           {selectedStrains.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2.5">
               {selectedStrains.map((s, i) => (
@@ -256,7 +256,7 @@ export default function EncodeForm({
                 }}
                 placeholder="Select or type a strain..."
                 className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
-              />
+              id="genetic-strain" />
               <button
                 type="button"
                 onClick={() => setStrainOpen((o) => !o)}
@@ -304,8 +304,8 @@ export default function EncodeForm({
           </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Gender Class</label>
-            <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">Gender Class</label>
+            <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required id="gender-class">
               <option value="" disabled className="bg-popover text-muted-foreground">Select Gender Class</option>
               <option value="Rooster" className="bg-popover text-popover-foreground">Sire (Rooster)</option>
               <option value="Hen" className="bg-popover text-popover-foreground">Dam (Hen)</option>
@@ -320,7 +320,7 @@ export default function EncodeForm({
           <span>Step 2: Physical Parameters</span>
         </h3>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="birth-date">
             Birth Date <span className="text-success dark:text-emerald-300 font-black">{autoCalcAge ? '· required — age is auto-calculated' : '· required'}</span>
           </label>
           <input
@@ -330,7 +330,7 @@ export default function EncodeForm({
             max={new Date().toISOString().split('T')[0]}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
             required
-          />
+          id="birth-date" />
           {(() => {
             if (!autoCalcAge) return null;
             const parts = getAgePartsLocal(newBirthdate);
@@ -345,16 +345,16 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
-            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" placeholder="0" required />
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">Age (Mos) {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
+            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" placeholder="0" required id="age-mos" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Growth Stage</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="growth-stage">Growth Stage</label>
             <select
               value={newGrowthStage}
               onChange={(e) => setNewGrowthStage(e.target.value)}
               className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-success dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
-            >
+            id="growth-stage">
               <option value="" disabled className="bg-popover text-muted-foreground">Select stage...</option>
               <option value="Chick" className="bg-popover text-popover-foreground">Chick</option>
               <option value="Stag" className="bg-popover text-popover-foreground">Stag</option>
@@ -365,16 +365,16 @@ export default function EncodeForm({
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" />
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="height">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
+            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" />
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="weight">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
+            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Leg Color</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">Leg Color</label>
           <div className="relative">
             <input
               type="text"
@@ -384,7 +384,7 @@ export default function EncodeForm({
               onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
               placeholder="Select or type a leg color..."
               className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
-            />
+            id="leg-color" />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
@@ -456,16 +456,16 @@ export default function EncodeForm({
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-              Sire (Father) <span className="text-muted-foreground font-normal lowercase">(pick from registry or type custom)</span>
-            </label>
-            <ParentSelector value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
+              <label htmlFor="encode-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+                Sire (Father) <span className="text-muted-foreground font-normal lowercase">(pick from registry or type custom)</span>
+              </label>
+              <ParentSelector id="encode-sire" value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-              Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(pick from registry or type custom)</span>
-            </label>
-            <ParentSelector value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
+              <label htmlFor="encode-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+                Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(pick from registry or type custom)</span>
+              </label>
+              <ParentSelector id="encode-dam" value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
           </div>
         </div>
         {(sireName.trim() || damName.trim()) && (() => {
@@ -505,17 +505,17 @@ export default function EncodeForm({
         })()}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="sire-purity">
               Sire Purity (%)
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-bold placeholder:font-normal" placeholder="e.g. 60" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-bold placeholder:font-normal" placeholder="e.g. 60" id="sire-purity" />
             <p className="text-xs text-muted-foreground mt-1 font-semibold">Kasama ang Dam — dapat 100% lahat</p>
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="dam-purity">
               Dam Purity (%)
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-bold placeholder:font-normal" placeholder="e.g. 40" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-bold placeholder:font-normal" placeholder="e.g. 40" id="dam-purity" />
             <p className="text-xs text-muted-foreground mt-1 font-semibold">Kasama ang Sire — dapat 100% lahat</p>
           </div>
         </div>
@@ -583,14 +583,14 @@ export default function EncodeForm({
           </div>
         ) : null}
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Chicken Attachment Photo</label>
-          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative">
+          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Chicken Attachment Photo</span>
+          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative" htmlFor="field">
             {imagePreview ? (
               <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
               <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : 'Choose chicken image file'}</span>
             )}
-            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" />
+            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" id="field" />
           </label>
         </div>
       </div>

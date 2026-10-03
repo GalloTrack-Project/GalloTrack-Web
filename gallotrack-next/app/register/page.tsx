@@ -256,24 +256,24 @@ export default function RegisterPage() {
                     Personal Information
                   </h2>
                   <div>
-                    <label className={labelClass}>First Name <span className="text-danger">*</span></label>
+                    <label className={labelClass} htmlFor="first-name">First Name <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
-                      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
+                      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required id="first-name" />
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Middle Name <span className="text-muted-foreground/60">(Optional)</span></label>
+                    <label className={labelClass} htmlFor="middle-name">Middle Name <span className="text-muted-foreground/60">(Optional)</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
-                      <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} />
+                      <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} id="middle-name" />
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Last Name <span className="text-danger">*</span></label>
+                    <label className={labelClass} htmlFor="last-name">Last Name <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
-                      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
+                      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required id="last-name" />
                     </div>
                   </div>
                 </div>
@@ -289,17 +289,17 @@ export default function RegisterPage() {
                     Farm / Business Information
                   </h2>
                   <div>
-                    <label className={labelClass}>Farm / Yard Name <span className="text-danger">*</span></label>
+                    <label className={labelClass} htmlFor="farm-yard-name">Farm / Yard Name <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="home" />
-                      <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
+                      <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required id="farm-yard-name" />
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Contact Number</label>
+                    <label className={labelClass} htmlFor="contact-number">Contact Number</label>
                     <div className="relative">
                       <FieldIcon which="phone" />
-                      <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} />
+                      <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} id="contact-number" />
                     </div>
                   </div>
                 </div>
@@ -315,17 +315,17 @@ export default function RegisterPage() {
                     Account Security
                   </h2>
                   <div>
-                    <label className={labelClass}>Email Address <span className="text-danger">*</span></label>
+                    <label className={labelClass} htmlFor="email-address">Email Address <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="mail" />
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="off" required />
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="off" required id="email-address" />
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Password <span className="text-danger">*</span></label>
+                    <label className={labelClass} htmlFor="password">Password <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
-                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={handleKeyDown} className={`${inputIcon} pr-11`} autoComplete="new-password" required />
+                      <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={handleKeyDown} className={`${inputIcon} pr-11`} autoComplete="new-password" required id="password" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-success p-1 rounded-sm transition-colors cursor-pointer">
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -336,10 +336,10 @@ export default function RegisterPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Confirm Password <span className="text-danger">*</span></label>
+                    <label className={labelClass} htmlFor="confirm-password">Confirm Password <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
-                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="new-password" required />
+                      <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="new-password" required id="confirm-password" />
                     </div>
                   </div>
                 </div>

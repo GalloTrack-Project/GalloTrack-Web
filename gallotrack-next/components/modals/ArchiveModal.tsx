@@ -50,19 +50,19 @@ export default function ArchiveModal({
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider">Select Archive Reason (Non-Mortality)</label>
+          <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider" htmlFor="select-archive-reason-non-mo">Select Archive Reason (Non-Mortality)</label>
           <select 
             value={archiveReasonInput} 
             onChange={(e) => setArchiveReasonInput(e.target.value)} 
             className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-sm bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-amber-500 cursor-pointer"
-          >
+          id="select-archive-reason-non-mo">
             <option value="SOLD">SOLD — Sold / Transferred to a Buyer</option>
             <option value="TRANSFERRED">TRANSFERRED — Moved to Another Farm / Owner</option>
             <option value="OTHER">OTHER — Other Non-Mortality Reason</option>
           </select>
           {archiveReasonInput === 'OTHER' && (
             <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider">Type Archive Reason</label>
+              <label className="block text-xs font-extrabold text-slate-700 dark:text-card-foreground uppercase tracking-wider" htmlFor="type-archive-reason">Type Archive Reason</label>
               <input
                 type="text"
                 value={archiveReasonNote}
@@ -70,7 +70,7 @@ export default function ArchiveModal({
                 maxLength={60}
                 placeholder="e.g. Retired from circuit, on hold, discontinued…"
                 className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-sm bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-amber-500"
-              />
+              id="type-archive-reason" />
               <p className="text-xs text-muted-foreground leading-relaxed">This is saved as the archive reason and shown on the chicken&apos;s record.</p>
             </div>
           )}
