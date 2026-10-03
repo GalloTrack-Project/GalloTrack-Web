@@ -4,6 +4,7 @@ import { Pencil, Tag, Ruler, Calendar, TreePine } from 'lucide-react';
 import type { FowlRecord, AgeParts } from '@/lib/types';
 import ParentSelector from './ParentSelector';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import { Modal } from '@/components/ui';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
@@ -128,25 +129,14 @@ export default function EditFowlModal({
   const parentBloodlinePct = (f: FowlRecord) => generationPurity(generationOf(f));
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-lg w-full max-w-lg shadow-2xl border border-slate-200/80 dark:border-border overflow-hidden flex flex-col max-h-[90vh]">
-        
-        <div className="p-5 border-b border-slate-100 dark:border-border flex justify-between items-center bg-slate-50/50 dark:bg-muted/50">
-          <div className="flex items-center space-x-2">
-            <Pencil className="w-5 h-5 text-slate-600 dark:text-muted-foreground" />
-            <div>
-              <h3 className="font-extrabold text-slate-900 dark:text-card-foreground text-base">Edit Node Registry</h3>
-              <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Update parameters for {editingFowl.name}</p>
-            </div>
-          </div>
-          <button 
-            type="button"
-            onClick={() => setEditingFowl(null)}
-            className="text-muted-foreground hover:text-slate-600 bg-slate-100 dark:bg-muted hover:bg-slate-200 p-2 rounded-md text-sm font-bold transition-all cursor-pointer"
-          >
-            ✕ Cancel
-          </button>
-        </div>
+    <Modal
+      open
+      onClose={() => setEditingFowl(null)}
+      title="Edit Node Registry"
+      description={`Update parameters for ${editingFowl.name}`}
+      icon={<Pencil className="w-5 h-5" />}
+      className="max-w-lg"
+    >
 
         <form onSubmit={handleUpdateFowl} className="overflow-y-auto p-6 space-y-4 text-sm">
           
@@ -363,7 +353,6 @@ export default function EditFowlModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </Modal>
   );
 }

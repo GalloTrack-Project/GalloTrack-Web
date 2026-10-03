@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { BarChart3 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
+import { Modal } from '@/components/ui';
 
 type Props = {
   show: boolean;
@@ -87,17 +88,14 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
   const weakCount = stats.filter((s) => s.decided > 0 && s.winRate < 30).length;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-slate-200 dark:border-border max-w-3xl w-full max-h-[90vh] flex flex-col relative">
-        {/* Header */}
-        <div className="p-6 pb-4 border-b border-slate-100 dark:border-border shrink-0">
-          <button onClick={onClose} className="absolute top-5 right-5 text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
-          <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight flex items-center space-x-2">
-            <BarChart3 className="w-5 h-5" />
-            <span>Per-Chicken Performance Breakdown</span>
-          </h3>
-          <p className="text-xs text-muted-foreground font-semibold mt-1">Individual win rates and overall aggregate statistics</p>
-        </div>
+    <Modal
+      open
+      onClose={onClose}
+      title="Per-Chicken Performance Breakdown"
+      description="Individual win rates and overall aggregate statistics"
+      icon={<BarChart3 className="w-5 h-5" />}
+      className="max-w-3xl"
+    >
 
         {/* Overall Summary */}
         <div className="px-6 pt-4 pb-3 shrink-0">
@@ -232,7 +230,6 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </Modal>
   );
 }

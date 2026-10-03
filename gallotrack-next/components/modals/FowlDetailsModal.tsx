@@ -16,6 +16,7 @@ import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { isMale } from '@/lib/helpers';
+import { Modal } from '@/components/ui';
 
 type FowlDetailsModalProps = {
   selectedFowlForDetails: FowlRecord | null;
@@ -61,18 +62,13 @@ export default function FowlDetailsModal({
   if (!selectedFowlForDetails) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-slate-200 dark:border-border max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto relative">
-        <button 
-          onClick={() => setSelectedFowlForDetails(null)} 
-          className="absolute top-5 right-5 text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
-        >
-          ✕
-        </button>
-
-        <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight border-b pb-3 border-slate-100 flex items-center space-x-2">
-          <span>🧬</span> <span>Individual Chicken Analytics & Match Logs</span>
-        </h3>
+    <Modal
+      open
+      onClose={() => setSelectedFowlForDetails(null)}
+      title="Individual Chicken Analytics & Match Logs"
+      icon={<span aria-hidden="true">🧬</span>}
+      className="max-w-2xl"
+    >
 
         <BloodlineReportCard fowl={selectedFowlForDetails} />
 
@@ -753,7 +749,6 @@ export default function FowlDetailsModal({
             <strong className="text-emerald-700 dark:text-emerald-300 text-sm mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
           </div>
         </div>
-      </div>
-    </div>
+      </Modal>
   );
 }

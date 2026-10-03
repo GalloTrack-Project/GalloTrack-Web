@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Key, Mail } from 'lucide-react';
+import { Modal } from '@/components/ui';
 
 type ForgotPasswordModalProps = {
   showForgotPasswordModal: boolean;
@@ -26,89 +27,110 @@ export default function ForgotPasswordModal({
   if (!showForgotPasswordModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-lg max-w-sm w-full overflow-hidden shadow-2xl shadow-slate-900/20 ring-1 ring-slate-200/80 dark:ring-border">
-        <div className="p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white border-b border-white/10">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-inner"><Key className="w-4 h-4 text-success" /></div>
-              <div>
-                <h3 className="text-sm font-black tracking-tight text-white">Reset Your Password</h3>
-                <p className="text-xs text-emerald-200/70 font-bold tracking-wider uppercase mt-0.5">Secure Recovery Link</p>
-              </div>
+    <Modal
+      open
+      onClose={() => setShowForgotPasswordModal(false)}
+      title="Reset Your Password"
+      description="Secure recovery link"
+      icon={<Key className="w-5 h-5" />}
+      iconClassName="bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-success dark:text-emerald-400"
+      className="max-w-sm"
+    >
+      {forgotSent ? (
+        <div className="flex flex-col items-center text-center gap-3 py-2">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border flex items-center justify-center text-success dark:text-emerald-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M22 2 11 13" />
+              <path d="M22 2 15 22l-4-9-9-4Z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-slate-800 dark:text-card-foreground">
+            Check your inbox
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            A secure password reset link has been sent to{' '}
+            <strong className="text-slate-600 dark:text-card-foreground">
+              {forgotEmail.trim()}
+            </strong>
+            . Follow the instructions in the email to set a new password.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowForgotPasswordModal(false)}
+            className="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-5 py-3 rounded-sm text-sm transition-colors cursor-pointer shadow-md"
+          >
+            Done
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSendResetLink} className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-sm bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0 text-success dark:text-emerald-400">
+              <Mail className="w-5 h-5" aria-hidden="true" />
             </div>
+            <div>
+              <p className="text-sm text-slate-800 dark:text-card-foreground font-semibold leading-relaxed">
+                Enter your registered email
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-1">
+                We will send you a secure link to reset your GalloTrack password.
+              </p>
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="email-address"
+              className="block text-sm font-semibold text-muted-foreground mb-1.5"
+            >
+              Email Address
+            </label>
+            <input
+              id="email-address"
+              type="email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              className="w-full p-3 border border-input-border rounded-sm text-sm bg-slate-50/50 dark:bg-muted/50 focus:bg-white dark:focus:bg-input focus:border-emerald-500 transition-colors font-semibold"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          {forgotError && (
+            <div
+              role="alert"
+              className="text-sm text-danger font-semibold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-sm"
+            >
+              {forgotError}
+            </div>
+          )}
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <button
               type="button"
               onClick={() => setShowForgotPasswordModal(false)}
-              className="w-8 h-8 rounded-sm bg-white/10 hover:bg-white/20 text-muted-foreground hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+              className="flex-1 bg-slate-100 dark:bg-muted hover:bg-slate-200 text-slate-700 dark:text-card-foreground font-semibold px-5 py-3 rounded-sm text-sm transition-colors cursor-pointer"
             >
-              ✕
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={forgotLoading}
+              className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-5 py-3 rounded-sm text-sm transition-colors cursor-pointer shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {forgotLoading ? 'Sending Link...' : 'Send Reset Link'}
             </button>
           </div>
-        </div>
-        <div className="p-6">
-          {forgotSent ? (
-            <div className="flex flex-col items-center text-center space-y-3 py-2">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4Z" /></svg>
-              </div>
-              <p className="text-sm font-extrabold text-slate-800 dark:text-card-foreground tracking-tight">Check your inbox</p>
-              <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                A secure password reset link has been sent to <strong className="text-slate-600 dark:text-card-foreground">{forgotEmail.trim()}</strong>. Follow the instructions in the email to set a new password.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowForgotPasswordModal(false)}
-                className="w-full mt-2 bg-slate-900 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-md text-sm transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-slate-900/20"
-              >
-                Done
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSendResetLink} className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-success" /></div>
-                <div>
-                  <p className="text-sm text-slate-800 dark:text-card-foreground font-extrabold leading-relaxed tracking-tight">Enter your registered email</p>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-1">
-                    We will send you a secure link to reset your GalloTrack password.
-                  </p>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="email-address">Email Address</label>
-                <input
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50/50 dark:bg-muted/50 focus:bg-white dark:focus:bg-input focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
-                  placeholder="you@example.com"
-                  required
-                id="email-address" />
-              </div>
-              {forgotError && (
-                <div className="text-xs text-danger font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-md">{forgotError}</div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPasswordModal(false)}
-                  className="flex-1 bg-slate-100 dark:bg-muted hover:bg-slate-200 text-slate-700 dark:text-card-foreground font-extrabold px-5 py-3 rounded-md text-sm transition-all cursor-pointer active:scale-[0.98]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={forgotLoading}
-                  className="flex-1 bg-slate-900 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-md text-sm transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-slate-900/20 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {forgotLoading ? 'Sending Link...' : 'Send Reset Link'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+        </form>
+      )}
+    </Modal>
   );
 }

@@ -23,6 +23,10 @@ type ModalProps = {
   footer?: ReactNode;
   className?: string;
   closeOnBackdrop?: boolean;
+  /** Optional decorative glyph shown beside the title. */
+  icon?: ReactNode;
+  /** Colour classes for the icon tile, so each dialog keeps its own accent. */
+  iconClassName?: string;
 };
 
 const subscribeToNothing = () => () => {};
@@ -36,6 +40,8 @@ function Modal({
   footer,
   className,
   closeOnBackdrop = true,
+  icon,
+  iconClassName,
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusTo = useRef<HTMLElement | null>(null);
@@ -130,7 +136,18 @@ function Modal({
         )}
       >
         <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1.5">
+          {icon ? (
+            <div
+              aria-hidden="true"
+              className={cn(
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border',
+                iconClassName ?? 'border-border bg-muted text-muted-foreground',
+              )}
+            >
+              {icon}
+            </div>
+          ) : null}
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <h2 id={`${id}-title`} className="text-lg font-semibold leading-none tracking-tight">
               {title}
             </h2>
