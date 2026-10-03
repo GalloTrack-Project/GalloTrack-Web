@@ -134,7 +134,7 @@ export default function BreedsPage() {
               onChange={(e) => setNewBreedName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
               placeholder="e.g. Roundhead, Kelso, Sweater..."
-              className="flex-1 p-3 border border-emerald-500/30 rounded-md text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
+              className="flex-1 p-3 border border-emerald-500/30 rounded-md text-xs bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
               autoFocus
             />
             <button
@@ -157,7 +157,7 @@ export default function BreedsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search breeds..."
-          className="w-full p-3 pl-10 border border-border rounded-md text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
+          className="w-full p-3 pl-10 border border-border rounded-md text-xs bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
         />
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
       </div>

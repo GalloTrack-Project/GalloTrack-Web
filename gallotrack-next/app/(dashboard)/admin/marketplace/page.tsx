@@ -172,9 +172,9 @@ export default function AdminMarketplacePage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title, breed, seller, or farm..." className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title, breed, seller, or farm..." className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60" />
             </div>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
@@ -315,7 +315,7 @@ export default function AdminMarketplacePage() {
               <textarea
                 value={notesModal.notes}
                 onChange={(e) => setNotesModal((prev) => prev ? { ...prev, notes: e.target.value } : null)}
-                className="w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground min-h-[100px] resize-y"
+                className="w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground min-h-[100px] resize-y"
                 placeholder="Add notes about this listing..."
                 rows={4}
               />

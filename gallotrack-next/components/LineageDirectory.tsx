@@ -481,7 +481,7 @@ export default function LineageDirectory({
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
+            <input type="text" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
           </div>
         </div>
 

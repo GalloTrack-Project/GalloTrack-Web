@@ -227,7 +227,7 @@ export default function MarketplacePage() {
     );
   }
 
-  const inputClass = 'w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-emerald-500 transition-all font-semibold outline-none text-card-foreground';
+  const inputClass = 'w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-emerald-500 transition-all font-semibold text-card-foreground';
   const labelClass = 'block text-[10px] font-black text-muted-foreground mt-2 uppercase tracking-widest';
 
   return (

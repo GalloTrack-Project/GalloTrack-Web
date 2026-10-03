@@ -81,7 +81,7 @@ export default function ForgotPasswordModal({
                   type="email"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full p-3 border border-input-border rounded-md text-xs bg-slate-50/50 dark:bg-muted/50 outline-none focus:bg-white dark:focus:bg-input focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+                  className="w-full p-3 border border-input-border rounded-md text-xs bg-slate-50/50 dark:bg-muted/50 focus:bg-white dark:focus:bg-input focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
                   placeholder="you@example.com"
                   required
                 />

@@ -54,7 +54,7 @@ export default function ArchiveModal({
           <select 
             value={archiveReasonInput} 
             onChange={(e) => setArchiveReasonInput(e.target.value)} 
-            className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-amber-500 cursor-pointer"
+            className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-amber-500 cursor-pointer"
           >
             <option value="SOLD">SOLD — Sold / Transferred to a Buyer</option>
             <option value="TRANSFERRED">TRANSFERRED — Moved to Another Farm / Owner</option>
@@ -69,7 +69,7 @@ export default function ArchiveModal({
                 onChange={(e) => setArchiveReasonNote(e.target.value)}
                 maxLength={60}
                 placeholder="e.g. Retired from circuit, on hold, discontinued…"
-                className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-amber-500"
+                className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-amber-500"
               />
               <p className="text-[10px] text-muted-foreground leading-relaxed">This is saved as the archive reason and shown on the chicken&apos;s record.</p>
             </div>

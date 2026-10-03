@@ -1,0 +1,183 @@
+{
+  "app/(dashboard)/admin/marketplace/page.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 2
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 2
+    }
+  },
+  "app/(dashboard)/admin/page.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 2
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 2
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "app/(dashboard)/admin/settings/page.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 11
+    }
+  },
+  "app/(dashboard)/breeds/page.tsx": {
+    "jsx-a11y/no-autofocus": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/dashboard/admin-page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/layout.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/marketplace/page.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 10
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/profile/page.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 1
+    },
+    "jsx-a11y/label-has-associated-control": {
+      "count": 2
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 1
+    }
+  },
+  "app/auth/update-password/page.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 2
+    }
+  },
+  "app/auth/verify-otp/page.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 2
+    },
+    "jsx-a11y/no-autofocus": {
+      "count": 1
+    }
+  },
+  "app/page.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 2
+    }
+  },
+  "app/register/page.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 8
+    }
+  },
+  "components/DashboardPage.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 2
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 2
+    }
+  },
+  "components/MarketplacePage.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 2
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 2
+    }
+  },
+  "components/modals/ArchiveModal.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 2
+    }
+  },
+  "components/modals/DeceasedModal.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 2
+    }
+  },
+  "components/modals/EditFowlModal.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 15
+    }
+  },
+  "components/modals/ForgotPasswordModal.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 1
+    }
+  },
+  "components/modals/FowlDetailsModal.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 1
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 1
+    }
+  },
+  "components/profiling/EncodeForm.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 12
+    }
+  },
+  "components/profiling/FowlLists.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 3
+    }
+  },
+  "components/profiling/MatchForm.tsx": {
+    "jsx-a11y/label-has-associated-control": {
+      "count": 12
+    }
+  },
+  "components/ui/Card.tsx": {
+    "jsx-a11y/heading-has-content": {
+      "count": 1
+    }
+  },
+  "components/ui/Tabs.tsx": {
+    "jsx-a11y/interactive-supports-focus": {
+      "count": 1
+    }
+  },
+  "components/ui/Tooltip.tsx": {
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 1
+    }
+  },
+  "lib/contexts/fowl-context.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "lib/contexts/fowl-form-context.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "lib/units.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-bird-code.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  }
+}

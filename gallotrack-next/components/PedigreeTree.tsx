@@ -193,7 +193,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
               const f = fowls.find((x) => x.id === Number(e.target.value));
               if (f) select(f);
             }}
-            className="w-full sm:w-72 p-2.5 border border-border rounded-md bg-card text-card-foreground text-xs font-bold outline-none focus:border-emerald-500 cursor-pointer"
+            className="w-full sm:w-72 p-2.5 border border-border rounded-md bg-card text-card-foreground text-xs font-bold focus:border-emerald-500 cursor-pointer"
           >
             {fowls.map((f) => (
               <option key={f.id} value={f.id}>

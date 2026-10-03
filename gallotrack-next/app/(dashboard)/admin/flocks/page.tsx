@@ -143,20 +143,20 @@ export default function AdminFlockAuditPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, breed, owner, or farm..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <select value={filterBreed} onChange={(e) => setFilterBreed(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterBreed} onChange={(e) => setFilterBreed(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Breeds</option>
                 {breeds.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
-              <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Genders</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Status</option>
                 <option value="Active">Active</option>
                 <option value="Sold">Sold</option>

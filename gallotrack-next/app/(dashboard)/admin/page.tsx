@@ -401,14 +401,14 @@ export default function AdminPanelPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, or farm..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value as 'all' | 'admin' | 'owner')}
-                className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
+                className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admins Only</option>
@@ -417,7 +417,7 @@ export default function AdminPanelPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'suspended' | 'deactivated')}
-                className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
+                className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active Only</option>
@@ -619,7 +619,7 @@ export default function AdminPanelPage() {
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
                   placeholder="Search by action, admin, or target..."
-                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
                 />
               </div>
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold ml-3">

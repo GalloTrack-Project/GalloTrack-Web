@@ -166,24 +166,24 @@ export default function AdminMatchAuditPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by entry, opponent, owner, farm, or location..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <select value={filterOutcome} onChange={(e) => setFilterOutcome(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterOutcome} onChange={(e) => setFilterOutcome(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Outcomes</option>
                 <option value="win">Wins</option>
                 <option value="loss">Losses</option>
                 <option value="draw">Draws</option>
                 <option value="no contest">No Contest</option>
               </select>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Types</option>
                 {typeOptions.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
-              <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Health</option>
                 <option value="Fit / Recovered">Fit / Recovered</option>
                 <option value="Minor Injury">Minor Injury</option>

@@ -156,11 +156,11 @@ export default function EditFowlModal({
             </h4>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Identifier Name</label>
-              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium" required />
+              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" required />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Behavior Trait</label>
-              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
+              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative z-30">
@@ -169,7 +169,7 @@ export default function EditFowlModal({
                   type="text"
                   value={editBreed}
                   onChange={(e) => setEditBreed(e.target.value)}
-                  className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium" 
+                  className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" 
                   placeholder="Select or type strain"
                   required 
                 />
@@ -188,7 +188,7 @@ export default function EditFowlModal({
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Gender Class</label>
-                <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-xs bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground outline-none">
+                <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-xs bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground">
                   <option value="Rooster">Sire (Rooster)</option>
                   <option value="Hen">Dam (Hen)</option>
                 </select>
@@ -203,7 +203,7 @@ export default function EditFowlModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Color Group</label>
-                <select value={editColorCategory} onChange={(e) => { setEditColorCategory(e.target.value); setEditColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-xs bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground outline-none">
+                <select value={editColorCategory} onChange={(e) => { setEditColorCategory(e.target.value); setEditColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-xs bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground">
                   <option value="Red">Red Class</option>
                   <option value="Light Color">Light Class</option>
                 </select>
@@ -229,7 +229,7 @@ export default function EditFowlModal({
             </div>
             <div className="mb-2">
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
-              <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold outline-none focus:border-emerald-500" />
+              <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" />
               {(() => {
                 const parts = getAgeParts(editBirthdate);
                 return parts ? (
@@ -260,11 +260,11 @@ export default function EditFowlModal({
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
+                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
+                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" />
               </div>
             </div>
             <div className="mt-2">
@@ -273,7 +273,7 @@ export default function EditFowlModal({
                 type="text"
                 value={editLegColor}
                 onChange={(e) => setEditLegColor(e.target.value)}
-                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium"
+                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
                 placeholder="Select or type a leg color..."
               />
               {availableLegColors.length > 0 && (
@@ -301,7 +301,7 @@ export default function EditFowlModal({
                 type="text"
                 value={editBirdCode}
                 onChange={(e) => setEditBirdCode(e.target.value)}
-                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-mono font-bold"
+                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. 1, A, 1A1"
               />
               <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
@@ -315,7 +315,7 @@ export default function EditFowlModal({
                 value={editWingBand}
                 onChange={(e) => setEditWingBand(e.target.value)}
                 maxLength={24}
-                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-mono font-bold"
+                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. W-001"
               />
               <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Physical ID sa pakpak — dapat natatangi sa buong farm.</p>

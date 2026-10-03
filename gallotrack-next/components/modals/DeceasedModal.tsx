@@ -54,7 +54,7 @@ export default function DeceasedModal({
           <select 
             value={deathReasonInput} 
             onChange={(e) => setDeathReasonInput(e.target.value)} 
-            className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500 cursor-pointer"
+            className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-rose-500 cursor-pointer"
           >
             <option value="Illness">Illness / Disease</option>
             <option value="Injury">Injury / Fight Trauma</option>
@@ -70,7 +70,7 @@ export default function DeceasedModal({
                 onChange={(e) => setDeathReasonNote(e.target.value)}
                 maxLength={60}
                 placeholder="e.g. Heat stroke, predator attack…"
-                className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500"
+                className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground focus:border-rose-500"
               />
               <p className="text-[10px] text-muted-foreground leading-relaxed">This is saved as the cause of death and shown on the chicken&apos;s record.</p>
             </div>

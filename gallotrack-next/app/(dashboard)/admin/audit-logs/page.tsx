@@ -120,7 +120,7 @@ export default function AuditLogsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by action, admin, or target..."
-              className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+              className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
             />
           </div>
         </div>

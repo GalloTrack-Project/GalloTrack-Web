@@ -657,32 +657,42 @@ footer a{color:var(--text2)}
       <table>
         <thead><tr><th>Gate</th><th>Fails when</th><th>Std §</th><th>Today</th></tr></thead>
         <tbody>
-          <tr><td><strong>No sub-12px type</strong></td><td>A <code>text-[Npx]</code> below 12 appears in <code>app/</code> or <code>components/</code>.</td><td>Typography</td><td class="chip fail">835 hits</td></tr>
-          <tr><td><strong>No raw hex in TSX</strong></td><td>A <code>#rrggbb</code> literal appears in a <code>.tsx</code> outside <code>*.chart*</code> config that reads tokens.</td><td>Colour</td><td class="chip fail">80 hits</td></tr>
-          <tr><td><strong>No naked outline-none</strong></td><td><code>outline-none</code> on an element with no <code>focus:</code> style.</td><td>A11y #3</td><td class="chip fail">6 hits</td></tr>
-          <tr><td><strong>Icon buttons need a name</strong></td><td>A <code>&lt;button&gt;</code> with no text content and no <code>aria-label</code>/<code>aria-labelledby</code>.</td><td>A11y #1</td><td class="chip fail">9 hits</td></tr>
-          <tr><td><strong>jsx-a11y</strong></td><td>Any <code>eslint-plugin-jsx-a11y</code> error (labels, roles, alt, keyboard).</td><td>A11y</td><td class="chip warn">not installed</td></tr>
-          <tr><td><strong>vitest-axe</strong></td><td>Any serious/critical axe violation in a primitive's render test.</td><td>A11y</td><td class="chip warn">no component tests</td></tr>
+          <tr><td><strong>No sub-12px type</strong></td><td>A <code>text-[Npx]</code> below 12 appears in <code>app/</code> or <code>components/</code>.</td><td>Typography</td><td class="chip warn">817 baselined</td></tr>
+          <tr><td><strong>No raw hex in TSX</strong></td><td>A <code>#rrggbb</code> literal appears in a <code>.tsx</code> outside <code>*.chart*</code> config that reads tokens.</td><td>Colour</td><td class="chip warn">38 baselined</td></tr>
+          <tr><td><strong>No naked outline-none</strong></td><td><code>outline-none</code> on an element with no <code>focus:</code> style.</td><td>A11y #3</td><td class="chip ok">0 — cleared</td></tr>
+          <tr><td><strong>Icon buttons need a name</strong></td><td>A <code>&lt;button&gt;</code> with no text content and no <code>aria-label</code>/<code>aria-labelledby</code>.</td><td>A11y #1</td><td class="chip ok">0 — cleared</td></tr>
+          <tr><td><strong>jsx-a11y</strong></td><td>Any <code>eslint-plugin-jsx-a11y</code> error (labels, roles, alt, keyboard).</td><td>A11y</td><td class="chip ok">enforced</td></tr>
+          <tr><td><strong>vitest-axe</strong></td><td>Any serious/critical axe violation in a primitive's render test.</td><td>A11y</td><td class="chip ok">12 cases, 0 violations</td></tr>
         </tbody>
       </table>
     </div>
 
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>The gates ratchet rather than block.</strong> <code>scripts/standard-gates.mjs</code> records the current violation count per file in a committed baseline and fails only when a file gets <em>worse</em>, so the standard could land mid-migration instead of waiting for the backlog. Two of the four scans are already at zero — <code>outline-none</code> was provably dead code once PR 3's unlayered <code>:focus-visible</code> rule shipped, and the one genuinely unnamed icon button was fixed. The remaining two (817 sub-12px sizes, 38 hexes in SVG) are PR 5's T6 backlog, correctly ceilinged rather than hidden.</p>
+      <p><strong>ESLint enforces the same way.</strong> jsx-a11y's recommended set surfaced <strong>109 real violations</strong>, 84 of them <code>label-has-associated-control</code> — which is finding F2, the 95 unassociated labels, caught automatically for the first time. ESLint 9's bulk suppressions record that baseline per file per rule, so <code>npx eslint .</code> now exits <strong>0 with 92 warnings still visible</strong> while any new violation fails. When F2 is fixed the suppressions are pruned and the ceiling drops with it.</p>
+    </div>
+
     <h3>Tooling added</h3>
-    <pre><span class="c">// package.json — new devDependencies and scripts</span>
+    <pre><span class="c">// package.json — installed in PR 6</span>
 <span class="k">"devDependencies"</span>: {
-  <span class="k">"clsx"</span>: <span class="c">"^2"</span>,
-  <span class="k">"class-variance-authority"</span>: <span class="c">"^0.7"</span>,
-  <span class="k">"eslint-plugin-jsx-a11y"</span>: <span class="c">"^6"</span>,
-  <span class="k">"vitest-axe"</span>: <span class="c">"^0.1"</span>,
-  <span class="k">"prettier"</span>: <span class="c">"^3"</span>,
-  <span class="k">"prettier-plugin-tailwindcss"</span>: <span class="c">"^0.6"</span>
+  <span class="k">"eslint-plugin-jsx-a11y"</span>: <span class="c">"^6.10.2"</span>,
+  <span class="k">"vitest-axe"</span>: <span class="c">"^0.1.0"</span>,
+  <span class="k">"axe-core"</span>: <span class="c">"^4.13.0"</span>,
+  <span class="k">"prettier"</span>: <span class="c">"^3.9.9"</span>,
+  <span class="k">"prettier-plugin-tailwindcss"</span>: <span class="c">"^0.6.14"</span>
 },
 <span class="k">"scripts"</span>: {
-  <span class="k">"lint"</span>:     <span class="c">"eslint"</span>,
-  <span class="k">"lint:fix"</span>: <span class="c">"eslint --fix"</span>,
-  <span class="k">"format"</span>:   <span class="c">"prettier --write ."</span>,
-  <span class="k">"gate"</span>:     <span class="c">"node scripts/standard-gates.mjs &amp;&amp; eslint &amp;&amp; vitest run"</span>
+  <span class="k">"typecheck"</span>:    <span class="c">"tsc --noEmit"</span>,
+  <span class="k">"lint"</span>:         <span class="c">"eslint . --cache"</span>,
+  <span class="k">"lint:fix"</span>:     <span class="c">"eslint . --fix"</span>,
+  <span class="k">"format"</span>:       <span class="c">"prettier --write ."</span>,
+  <span class="k">"format:check"</span>: <span class="c">"prettier --check ."</span>,
+  <span class="k">"gate:static"</span>:  <span class="c">"node scripts/standard-gates.mjs"</span>,
+  <span class="k">"gate"</span>:         <span class="c">"node scripts/standard-gates.mjs &amp;&amp; tsc --noEmit &amp;&amp; eslint . --cache &amp;&amp; vitest run"</span>
 }</pre>
+    <div class="tldr-note" style="margin-top:18px">
+      <p><strong>Why <code>gate:static</code> exists separately.</strong> ESLint on this project costs <em>13–20 seconds before it reads a single file</em> — plugin-graph startup (<code>typescript-eslint</code>, <code>eslint-plugin-import</code>, the resolvers), confirmed by linting one small file and measuring. It is fixed overhead, which is why <code>--cache</code> cannot remove it and why scoping the paths does not help (57s scoped vs 54s full). So the loop is: <code>gate:static</code> + <code>tsc</code> + <code>vitest</code> while iterating (a second or two), and <code>npm run gate</code> once before a commit. <code>format:check</code> is deliberately <em>not</em> in the gate yet — adopting Prettier across a 130-file codebase is a large unrelated diff, so the config is in place for new code and the repo-wide format is a separate, opt-in change.</p>
+    </div>
 
     <div class="tldr-note" style="margin-top:18px">
       <p><strong>Scope of the gates.</strong> They run over <code>gallotrack-next/app</code> and <code>gallotrack-next/components</code>. The <code>deprecated/</code> Flask tree, <code>supabase/</code> and <code>docs/</code> are excluded. Existing violations are grandfathered per-file during the migration and removed file-by-file, so the gate can land on day one without blocking unrelated work.</p>
@@ -701,14 +711,14 @@ footer a{color:var(--text2)}
 
     <div class="tracker">
       <div class="tracker-bar"><div class="tracker-fill" id="fill"></div></div>
-      <div class="tracker-pct" id="pct">57% complete <span id="count">4 of 7 merged</span></div>
+      <div class="tracker-pct" id="pct">71% complete <span id="count">5 of 7 merged</span></div>
       <ul class="tracker-list" id="list">
         <li data-id="pr1"><label><input type="checkbox" checked><span class="t"><strong>PR 1 — Standard &amp; baseline.</strong> This document, plus the static audit report with 19 logged findings and measured contrast evidence, plus a workbench seed that pre-loads those 21 failed units for the PR 7 re-test.</span><span class="ph">docs</span></label></li>
         <li data-id="pr2"><label><input type="checkbox" checked><span class="t"><strong>PR 2 — Foundations.</strong> Extend <code>@theme</code> with semantic status/radius/shadow/motion/focus tokens; remove the Arial override; add the missing <code>fadeIn</code> keyframes; consolidate the two theme appliers onto the already-installed <code>next-themes</code>; add the reduced-motion block. <em>Verified: tsc 0, build 0, 101/101 tests, lint unchanged at 104 problems.</em></span><span class="ph">globals.css</span></label></li>
         <li data-id="pr3"><label><input type="checkbox" checked><span class="t"><strong>PR 3 — Component library.</strong> <code>components/ui/</code> authored on <code>clsx</code> + <code>class-variance-authority</code>: Button, FormField, Input, SearchInput, Modal, Toast, Badge, Card, StatCard, PageHeader, Table, EmptyState, Skeleton, Spinner, Tabs, Pagination, Tooltip, Breadcrumbs, SkipLink. The a11y-critical behaviour is real, not decorative — <code>role="dialog"</code> with a focus trap and focus restore, labelled toasts in a live region, the WAI-ARIA roving-tabindex tabs pattern, and <code>htmlFor</code>/<code>aria-describedby</code>/<code>aria-invalid</code> wired through FormField. 90 new render tests; the automated axe pass lands in PR 6 with <code>vitest-axe</code>. <em>Verified: tsc 0, build 0, 191/191 tests (was 101), lint unchanged at 104 problems.</em></span><span class="ph">components/ui</span></label></li>
         <li data-id="pr4"><label><input type="checkbox" checked><span class="t"><strong>PR 4 — Shell &amp; pages.</strong> One <code>h1</code> policy — the shell title is now a <code>&lt;span&gt;</code>, so each route owns exactly one <code>h1</code> instead of two, and the six real violations elsewhere (a form label marked up as <code>h1</code>, a transient splash, two brand marks, a missing heading) are fixed. The four nav arrays merged to two with <code>aria-current="page"</code> on both navs. The role accent collapsed from ~20 inline ternaries to one <code>data-role</code> + <code>--accent</code> pair. Added: a skip link, a focusable <code>main</code> landmark, and the missing <code>footer</code>. Chart colours now read from tokens via <code>lib/chart-tokens.ts</code>, replacing an off-brand indigo and the three flagged greys. The radius scale migrated 591 call sites onto three sizes. The single <code>Page</code> wrapper is <em>deferred</em> — it restructures every page header at once, which belongs with the PR 5 visual pass rather than being half-applied here. <em>Verified: tsc 0, build 0, 191/191 tests, lint improved to 103.</em></span><span class="ph">layout + 43 files</span></label></li>
         <li data-id="pr5"><label><input type="checkbox"><span class="t"><strong>PR 5 — WCAG 2.2 AA.</strong> <strong>Contrast landed, and now exceeds the target.</strong> C2 — 148 <code>text-slate-400</code> and 13 <code>text-slate-300</code> sites collapsed onto <code>--muted-foreground</code>; C5 — <code>--input-border</code> across 50 control boundaries; C6 paid in PR 4. Then the systemic fix: 359 palette-shade text tokens (the <code>-300/-400/-500</code> shades that are built for dark surfaces) migrated onto semantic tokens, 149 further hue tokens onto four new <em>categorical</em> tokens (<code>--teal</code>, <code>--pink</code>, <code>--violet</code>, <code>--indigo</code>), and 27 placeholder greys onto <code>--muted-foreground</code>. Every status, categorical and accent token now clears <strong>AAA (7:1) in both themes</strong> — the palette is deep in light mode, luminous in dark, and swaps automatically, so no component ever writes a <code>dark:</code> pair for colour again. The dark field fill was also darkened so placeholder text clears 4.5:1 (4.04 → 5.71). <em>Still open:</em> the type-scale purge (835 sub-12px sizes, T6), label bindings (F2), the toast systems collapsing into one live region (F10), dialog semantics on 8 shells (K2), icon-only names and 24px targets (A3), heading order.</span><span class="ph">remediation</span></label></li>
-        <li data-id="pr6"><label><input type="checkbox"><span class="t"><strong>PR 6 — Enforcement.</strong> Six CI gates, Prettier + tailwind plugin, jsx-a11y, vitest-axe, and the <code>/design-kit</code> route as the living spec.</span><span class="ph">CI</span></label></li>
+        <li data-id="pr6"><label><input type="checkbox" checked><span class="t"><strong>PR 6 — Enforcement.</strong> All six gates are live. <code>scripts/standard-gates.mjs</code> implements the four static scans with a committed per-file ratchet baseline, so they landed without waiting on the backlog — and two are already at zero: <code>outline-none</code> is gone entirely (provably dead once PR 3's unlayered <code>:focus-visible</code> rule shipped) and the one truly unnamed icon button is fixed. jsx-a11y's recommended set is on and immediately surfaced 109 real violations, 84 of them <code>label-has-associated-control</code> — finding F2, caught automatically for the first time; ESLint 9's bulk suppressions baseline them per file per rule so lint exits 0 with warnings still visible while any new violation fails. <code>axe</code> runs over the primitives in 12 cases with zero serious or critical violations, wired as <code>npm run gate</code> alongside <code>tsc</code>. Prettier and the Tailwind class-sorting plugin are configured and applied to all new code. The <code>/design-kit</code> route renders every token and primitive from the real components, so it cannot drift. <em>Deliberately not done:</em> repo-wide Prettier formatting (a 130-file unrelated diff) and adding <code>format:check</code> to the gate until that lands. <em>Verified: tsc 0, 203/203 tests (was 191), lint 0 errors / 92 warnings, gate exit 0.</em></span><span class="ph">CI + design-kit</span></label></li>
         <li data-id="pr7"><label><input type="checkbox"><span class="t"><strong>PR 7 — Verify.</strong> Re-run the full workbench pass, export the post-fix report, target verdict <em>Approve</em> with 0 S1/S2.</span><span class="ph">re-audit</span></label></li>
       </ul>
     </div>
@@ -744,7 +754,7 @@ footer a{color:var(--text2)}
 <script>
 (function(){
   'use strict';
-  var KEY='gallotrack-ui-standard-tracker-v6';
+  var KEY='gallotrack-ui-standard-tracker-v7';
   var boxes=Array.prototype.slice.call(document.querySelectorAll('#list input[type=checkbox]'));
   var items=Array.prototype.slice.call(document.querySelectorAll('#list li'));
   var saved={};

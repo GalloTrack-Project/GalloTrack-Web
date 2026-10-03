@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+dist
+coverage
+package-lock.json
+next-env.d.ts
+.eslintcache
+eslint-suppressions.json
+scripts/standard-gates.baseline.json

@@ -188,8 +188,8 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             <span className="truncate">{fowl.name}</span>
             {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
           </h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          <button type="button" onClick={onClose} aria-label="Close details" className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
 
@@ -392,7 +392,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
+            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
           </div>
           <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[11px] font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>

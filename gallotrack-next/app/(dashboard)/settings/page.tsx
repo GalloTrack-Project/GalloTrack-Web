@@ -30,7 +30,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2 ${checked ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2 ${checked ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
     >
       <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
@@ -51,7 +51,7 @@ function Field({ label, description, children }: { label: string; description?: 
 
 function SelectInput({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all shadow-sm cursor-pointer min-w-[160px]">
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm cursor-pointer min-w-[160px]">
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   )
@@ -59,7 +59,7 @@ function SelectInput({ value, onChange, options }: { value: string; onChange: (v
 
 function TextInput({ value, onChange, placeholder, type = 'text' }: { value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
   return (
-    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all shadow-sm min-w-[200px]" />
+    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm min-w-[200px]" />
   )
 }
 
@@ -328,7 +328,7 @@ export default function SettingsPage() {
             </SectionCard>
             <SectionCard title="Change Password" description="Update your account password. You will remain logged in.">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 py-3.5">
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min. 6 chars)" className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all shadow-sm min-w-[240px]" />
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min. 6 chars)" className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm min-w-[240px]" />
                 <button type="button" onClick={handleChangePassword} disabled={changingPw} className="bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-md text-[11px] transition-all cursor-pointer disabled:opacity-50 shrink-0">
                   {changingPw ? 'Updating...' : 'Update Password'}
                 </button>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
                 <TextInput value={settings.contact_number || ''} onChange={(v) => update('contact_number', v)} placeholder="e.g. 09171234567" type="tel" />
               </Field>
               <Field label="Farm Description" description="Short description shown on profile">
-                <textarea value={settings.farm_description || ''} onChange={(e) => update('farm_description', e.target.value)} placeholder="Brief description of your farm..." rows={3} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-500 transition-all shadow-sm w-full resize-none" />
+                <textarea value={settings.farm_description || ''} onChange={(e) => update('farm_description', e.target.value)} placeholder="Brief description of your farm..." rows={3} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm w-full resize-none" />
               </Field>
             </SectionCard>
             <SectionCard title="Default Match Settings" description="Pre-filled values when logging new matches (admin defaults applied if not overridden)">

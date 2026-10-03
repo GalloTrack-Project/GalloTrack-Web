@@ -44,7 +44,7 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
       tabIndex={0}
       onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; onOpenDetails?.(fowl); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDetails?.(fowl); } }}
-      className="antigravity-card bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
+      className="antigravity-card bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all focus:ring-2 focus:ring-emerald-400/60"
       style={{ animationDelay: `${(index % 5) * 0.8}s` }}
     >
       <span className="antigravity-badge absolute top-0 right-0 text-[8px] font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-md tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
@@ -281,7 +281,7 @@ export default function FowlLists({
         <select
           value={filterSire}
           onChange={applyFilter(setFilterSire)}
-          className="w-full p-2.5 border border-input-border rounded-md text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold outline-none focus:border-emerald-500 cursor-pointer"
+          className="w-full p-2.5 border border-input-border rounded-md text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
         >
           <option value="all">All Sires</option>
           {filterOptions.sires.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -292,7 +292,7 @@ export default function FowlLists({
         <select
           value={filterDam}
           onChange={applyFilter(setFilterDam)}
-          className="w-full p-2.5 border border-input-border rounded-md text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold outline-none focus:border-emerald-500 cursor-pointer"
+          className="w-full p-2.5 border border-input-border rounded-md text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
         >
           <option value="all">All Dams</option>
           {filterOptions.dams.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -303,7 +303,7 @@ export default function FowlLists({
         <select
           value={filterStage}
           onChange={applyFilter(setFilterStage)}
-          className="w-full p-2.5 border border-input-border rounded-md text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold outline-none focus:border-emerald-500 cursor-pointer"
+          className="w-full p-2.5 border border-input-border rounded-md text-[11px] bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
         >
           <option value="all">All Stages</option>
           {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}

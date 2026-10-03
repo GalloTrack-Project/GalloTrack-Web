@@ -75,8 +75,8 @@ export default function MatchForm({
     return `${eventLabel} · ${cockText} · ${ageCategory}`;
   };
 
-  const selectClass = "match-field h-10 w-full cursor-pointer rounded-md border border-input-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-foreground outline-none transition-colors duration-150 focus:border-success focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
-  const inputClass = "match-field h-10 min-w-0 flex-1 rounded-md border border-input-border bg-white dark:bg-input px-3 text-xs font-semibold text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-success focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
+  const selectClass = "match-field h-10 w-full cursor-pointer rounded-md border border-input-border bg-white dark:bg-input px-3 pr-10 text-xs font-semibold text-foreground transition-colors duration-150 focus:border-success focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
+  const inputClass = "match-field h-10 min-w-0 flex-1 rounded-md border border-input-border bg-white dark:bg-input px-3 text-xs font-semibold text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground transition-colors duration-150 focus:border-success focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
 
   return (
     <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-5 animate-fadeIn">
@@ -88,7 +88,7 @@ export default function MatchForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Select Local Chicken Entry</label>
-          <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground outline-none focus:border-emerald-500 cursor-pointer" required>
+          <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground focus:border-emerald-500 cursor-pointer" required>
             <option value="">-- Select Chicken Node --</option>
             {fowls.filter(f => f.status === 'Active' && isMale(f.gender)).map(f => (
               <option key={f.id} value={f.name}>{f.name} ({f.breed})</option>
@@ -97,7 +97,7 @@ export default function MatchForm({
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Match Date</label>
-          <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold outline-none focus:border-emerald-500" />
+          <input type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" />
         </div>
       </div>
 
@@ -105,11 +105,11 @@ export default function MatchForm({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Opponent Entry Identity</label>
-          <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
+          <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Opponent Breed / Rasa</label>
-          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" />
+          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Arena Location Hub</label>
@@ -117,7 +117,7 @@ export default function MatchForm({
             list="arena-locations"
             value={matchLocation}
             onChange={(e) => setMatchLocation(e.target.value)}
-            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
             placeholder="Select or type arena..."
             required
           />
@@ -226,7 +226,7 @@ export default function MatchForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Fight Outcome</label>
-          <select value={matchOutcome} onChange={(e) => setMatchOutcome(e.target.value)} className="w-full p-3 border border-amber-200/80 rounded-md text-xs bg-amber-50 dark:bg-amber-950/50 font-black text-amber-900 outline-none cursor-pointer">
+          <select value={matchOutcome} onChange={(e) => setMatchOutcome(e.target.value)} className="w-full p-3 border border-amber-200/80 rounded-md text-xs bg-amber-50 dark:bg-amber-950/50 font-black text-amber-900 cursor-pointer">
             <option value="Win">WIN</option>
             <option value="Loss">LOSS</option>
             <option value="Draw">DRAW</option>
@@ -238,7 +238,7 @@ export default function MatchForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Post-Fight Condition / Health Status</label>
-          <select value={matchPostFight} onChange={(e) => setMatchPostFight(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground outline-none cursor-pointer focus:border-emerald-500 transition-all">
+          <select value={matchPostFight} onChange={(e) => setMatchPostFight(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground cursor-pointer focus:border-emerald-500 transition-all">
             {POST_FIGHT_CONDITIONS.map((c) => (
               <option key={c.value} value={c.value}>{c.icon} {c.value} — {c.desc}</option>
             ))}

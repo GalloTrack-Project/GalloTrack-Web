@@ -107,7 +107,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
         value={text}
         onChange={(e) => { setText(e.target.value); onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        className={`w-full ${pad} border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold`}
+        className={`w-full ${pad} border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />
       {open && (
