@@ -492,7 +492,7 @@ export default function EncodeForm({
                 )}
                 {damChildren.length > 0 && (
                   <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
-                    <p className="text-[9px] font-black text-pink-600 dark:text-pink-300 uppercase">🐔 {damName.trim()} Offspring</p>
+                    <p className="text-[9px] font-black text-pink uppercase">🐔 {damName.trim()} Offspring</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{damChildren.length}</p>
                     <p className="text-[9px] text-muted-foreground font-semibold">
                       {damChildren.filter((c) => c.gender === 'Male').length} cock(s) · {damChildren.filter((c) => c.gender === 'Female').length} hen(s)
@@ -538,14 +538,14 @@ export default function EncodeForm({
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-widest">🧬 Generational Purity &amp; Backcrossing</p>
+              <p className="text-[10px] font-black text-teal uppercase tracking-widest">🧬 Generational Purity &amp; Backcrossing</p>
               <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history</p>
             </div>
             <div className="text-right shrink-0">
               {hasAnyParent ? (
                 <>
                   <span className="inline-flex items-center gap-1.5 bg-teal-700 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{offspringGenInfo.short} · {offspringGenInfo.label}</span>
-                  <p className="text-2xl font-black text-teal-700 dark:text-teal-300 mt-1.5">{computedBloodlinePct}%</p>
+                  <p className="text-2xl font-black text-teal mt-1.5">{computedBloodlinePct}%</p>
                 </>
               ) : (
                 <p className="text-2xl font-black text-muted-foreground mt-1.5">—</p>
@@ -560,7 +560,7 @@ export default function EncodeForm({
               <p className="text-[9px] font-bold text-muted-foreground mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% purity` : '—'}</p>
             </div>
             <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
-              <p className="text-[9px] font-black text-pink-600 dark:text-pink-300 uppercase tracking-wider">🐔 Dam Lineage</p>
+              <p className="text-[9px] font-black text-pink uppercase tracking-wider">🐔 Dam Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{damName.trim() ? damName : '—'}</p>
               <p className="text-[9px] font-bold text-muted-foreground mt-0.5">{damName.trim() ? `${damGenInfo.label} · ${generationPurity(damGen)}% purity` : '—'}</p>
             </div>

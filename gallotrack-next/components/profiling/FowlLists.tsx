@@ -59,10 +59,10 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
             <span className="antigravity-badge text-[9px] font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the bird)">🏷 {fowl.wing_band}</span>
           ) : null}
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{fowl.breed}</span>
-          <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
+          <span className={`antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-lg border border-slate-100 dark:border-border">
           <div>Sire: {(() => {
@@ -76,7 +76,7 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
             const name = (fowl.dam || '').trim();
             const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
             return target ? (
-              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink-700 dark:text-pink-300 hover:underline underline-offset-2 cursor-pointer" title="Buksan ang Dam profile">{name}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink hover:underline underline-offset-2 cursor-pointer" title="Buksan ang Dam profile">{name}</button>
             ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong>;
           })()}</div>
           <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
@@ -143,7 +143,7 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
           <h4 className="text-base font-black text-slate-700 dark:text-card-foreground">{fowl.name}</h4>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">📦 Archived</span>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">{fowl.breed}</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground bg-slate-50 dark:bg-muted/50 p-3 rounded-lg border border-slate-100 dark:border-border">
           <div>Sire: <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong></div>
@@ -177,7 +177,7 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground line-through opacity-75">{fowl.name}</h4>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800">{fowl.breed}</span>
-          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
           <span className="antigravity-badge text-[9px] font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800">💀 Cause of Death: {fowl.death_reason || 'Unspecified'}{fowl.death_date ? ` · ${fowl.death_date}` : ''}</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-lg border border-slate-100 dark:border-border">
@@ -341,7 +341,7 @@ export default function FowlLists({
     const tabSub = isMaleTab ? 'Active breeding males — every sire in the program' : 'Active breeding females — every dam in the program';
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
     const accentSoft = isMaleTab ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800' : 'bg-pink-50 dark:bg-pink-950/50 border-pink-200 dark:border-pink-800';
-    const accentText = isMaleTab ? 'text-info' : 'text-pink-600 dark:text-pink-400';
+    const accentText = isMaleTab ? 'text-info' : 'text-pink';
     const emptyTitle = isMaleTab ? 'No Sires Encoded' : 'No Dams Encoded';
     const emptyHint = isMaleTab ? 'No sires are registered in the active farm inventory yet. Encode your first sire to begin populating this registry and line up its offspring.' : 'No dams are registered in the active farm inventory yet. Encode your first dam to begin populating this registry and line up its offspring.';
 
@@ -447,7 +447,7 @@ export default function FowlLists({
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-teal-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400">🥚</div>
+            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal">🥚</div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Offspring Registry</h2>
               <p className="text-[10px] text-muted-foreground font-semibold">Every child sired or dropped by a registered sire and dam — one entry per offspring</p>
@@ -460,7 +460,7 @@ export default function FowlLists({
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
+            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Offspring Yet</h3>
             <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chicken in the registry is linked to a registered sire or dam yet. Encode a chick with its sire and dam to line it up here.</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-xs cursor-pointer hover:bg-emerald-700 transition-all">

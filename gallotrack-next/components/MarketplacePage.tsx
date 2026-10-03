@@ -54,7 +54,7 @@ function getAgeDays(birthdate: string) {
 function GenderIcon({ gender }: { gender: string }) {
   const g = gender?.toLowerCase();
   if (g === 'rooster' || g === 'male') return <span className="text-info text-sm">{'\u2642'}</span>;
-  if (g === 'hen' || g === 'female') return <span className="text-pink-600 dark:text-pink-400 text-sm">{'\u2640'}</span>;
+  if (g === 'hen' || g === 'female') return <span className="text-pink text-sm">{'\u2640'}</span>;
   return <span className="text-muted-foreground text-sm">{'\u2014'}</span>;
 }
 
@@ -238,9 +238,9 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
                 {fowl.sire_pct ? <p className="text-[10px] text-info font-bold">{fowl.sire_pct}%</p> : null}
               </div>
               <div className="bg-pink-500/10 border border-pink-500/30 rounded-md p-3">
-                <p className="text-[10px] font-black text-pink-600 dark:text-pink-400 uppercase">Dam</p>
+                <p className="text-[10px] font-black text-pink uppercase">Dam</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
-                {fowl.dam_pct ? <p className="text-[10px] text-pink-600 dark:text-pink-400 font-bold">{fowl.dam_pct}%</p> : null}
+                {fowl.dam_pct ? <p className="text-[10px] text-pink font-bold">{fowl.dam_pct}%</p> : null}
               </div>
             </div>
           </div>

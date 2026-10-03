@@ -12,10 +12,10 @@ export default function FarmBloodlineSummary() {
     <div className="bg-card border border-border rounded-lg p-5 space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Dna className="w-5 h-5 text-teal-700 dark:text-teal-400" />
+          <Dna className="w-5 h-5 text-teal" />
           <h3 className="text-sm font-black text-card-foreground">Farm Bloodline Overview</h3>
         </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-[9px] font-bold text-teal-700 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 cursor-pointer">
+        <button onClick={() => setExpanded(!expanded)} className="text-[9px] font-bold text-teal hover:text-teal cursor-pointer">
           {expanded ? '▲ Less' : '▼ Details'}
         </button>
       </div>
@@ -23,7 +23,7 @@ export default function FarmBloodlineSummary() {
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
-          <p className="text-2xl font-black text-teal-700 dark:text-teal-400">{summary.totalFowls}</p>
+          <p className="text-2xl font-black text-teal">{summary.totalFowls}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Chickens</p>
         </div>
         <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
@@ -58,7 +58,7 @@ export default function FarmBloodlineSummary() {
       {/* Strain Distribution */}
       {summary.strainRankings && summary.strainRankings.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[9px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest">Strain Distribution</p>
+          <p className="text-[9px] font-black text-teal uppercase tracking-widest">Strain Distribution</p>
           <div className="space-y-1.5">
             {summary.strainRankings.map((s) => (
               <div key={s.strain} className="bg-muted/50 border border-border rounded-md px-3 py-2 flex items-center justify-between">
@@ -76,7 +76,7 @@ export default function FarmBloodlineSummary() {
       {/* Cross Patterns */}
       {summary.crossPatterns.length > 0 && expanded && (
         <div className="space-y-2">
-          <p className="text-[9px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-widest">Cross Patterns</p>
+          <p className="text-[9px] font-black text-violet uppercase tracking-widest">Cross Patterns</p>
           <div className="space-y-1.5">
             {summary.crossPatterns.map((cp) => (
               <div key={cp.pattern} className="bg-muted/50 border border-border rounded-md px-3 py-2 flex items-center justify-between">

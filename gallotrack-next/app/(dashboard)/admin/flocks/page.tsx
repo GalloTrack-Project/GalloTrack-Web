@@ -131,7 +131,7 @@ export default function AdminFlockAuditPage() {
           {statCard('Total Chickens', stats.total, 'text-warning', <ChickenIcon className="w-5 h-5" />)}
           {statCard('Active', stats.active, 'text-success', <CheckCircle className="w-5 h-5" />)}
           {statCard('Breeds', stats.breeds, 'text-info', <Dna className="w-5 h-5" />)}
-          {statCard('Owners', stats.owners, 'text-purple-600 dark:text-purple-400', <Users className="w-5 h-5" />)}
+          {statCard('Owners', stats.owners, 'text-violet', <Users className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">

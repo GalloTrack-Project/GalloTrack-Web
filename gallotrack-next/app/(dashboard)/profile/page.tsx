@@ -338,7 +338,7 @@ export default function ProfilePage() {
         {/* INPUT IDENTITY FORM */}
         <form onSubmit={handleUpdateProfile} className="antigravity-hover bg-card p-7 rounded-lg border border-border shadow-sm space-y-6 md:col-span-2">
           <div className="flex justify-between items-center border-b border-border pb-4">
-            <h3 className="text-xs font-black text-teal-800 uppercase tracking-widest flex items-center gap-2 dark:text-teal-400">
+            <h3 className="text-xs font-black text-teal uppercase tracking-widest flex items-center gap-2 dark:text-teal">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
               Administrative Identity Credentials
             </h3>

@@ -21,21 +21,21 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
     return (
       <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-200 dark:border-teal-900/50 rounded-lg p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[9px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline</span>
+          <span className="text-[9px] font-black text-teal uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline</span>
           <div className="flex items-center gap-1.5">
             {report.crossPattern && <TierBadge tier={report.crossPattern.tier} />}
-            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full ${report.strainType === 'purebred' ? 'bg-sky-100 text-sky-700 dark:text-sky-300' : report.strainType === 'crossbred' ? 'bg-violet-100 text-violet-700 dark:text-violet-300' : report.strainType === 'linebred' ? 'bg-amber-100 text-amber-700 dark:text-amber-300' : 'bg-slate-100 dark:bg-muted text-slate-600 dark:text-card-foreground'}`}>
+            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full ${report.strainType === 'purebred' ? 'bg-sky-100 text-sky-700 dark:text-sky-300' : report.strainType === 'crossbred' ? 'bg-violet-100 text-violet' : report.strainType === 'linebred' ? 'bg-amber-100 text-amber-700 dark:text-amber-300' : 'bg-slate-100 dark:bg-muted text-slate-600 dark:text-card-foreground'}`}>
               {report.strainType.toUpperCase()}
             </span>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
           <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Strain</p><p className="text-[10px] font-black text-slate-800 dark:text-card-foreground">{report.primaryStrain}</p></div>
-          <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Purity</p><p className="text-[10px] font-black text-teal-700 dark:text-teal-300">{report.purityPct}%</p></div>
+          <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Purity</p><p className="text-[10px] font-black text-teal">{report.purityPct}%</p></div>
           <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Vigor</p><p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">{report.hybridVigor.score}</p></div>
           <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Inbred</p><p className={`text-[10px] font-black ${report.inbreedingCoefficient > 20 ? 'text-danger dark:text-rose-300' : 'text-success dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p></div>
         </div>
-        {report.crossPattern && <p className="text-[8px] text-teal-700 dark:text-teal-300 font-semibold text-center">{report.crossPattern.label} — {report.crossPattern.fightingStyle}</p>}
+        {report.crossPattern && <p className="text-[8px] text-teal font-semibold text-center">{report.crossPattern.label} — {report.crossPattern.fightingStyle}</p>}
       </div>
     );
   }
@@ -45,10 +45,10 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline Report</span>
+          <span className="text-[10px] font-black text-teal uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline Report</span>
           {report.crossPattern && <TierBadge tier={report.crossPattern.tier} />}
         </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-[8px] font-bold text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 cursor-pointer">
+        <button onClick={() => setExpanded(!expanded)} className="text-[8px] font-bold text-teal hover:text-teal dark:hover:text-teal cursor-pointer">
           {expanded ? '▲ Less' : '▼ Details'}
         </button>
       </div>
@@ -57,7 +57,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground uppercase">Type</p>
-          <p className={`text-[10px] font-black ${report.strainType === 'purebred' ? 'text-sky-700 dark:text-sky-300' : report.strainType === 'crossbred' ? 'text-violet-700 dark:text-violet-300' : report.strainType === 'linebred' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-card-foreground'}`}>{report.strainType.toUpperCase()}</p>
+          <p className={`text-[10px] font-black ${report.strainType === 'purebred' ? 'text-sky-700 dark:text-sky-300' : report.strainType === 'crossbred' ? 'text-violet' : report.strainType === 'linebred' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-card-foreground'}`}>{report.strainType.toUpperCase()}</p>
         </div>
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground uppercase">Strain</p>
@@ -65,11 +65,11 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
         </div>
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground uppercase">Generation</p>
-          <p className="text-[10px] font-black text-teal-700 dark:text-teal-300">{report.generationLabel}</p>
+          <p className="text-[10px] font-black text-teal">{report.generationLabel}</p>
         </div>
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground uppercase">Purity</p>
-          <p className="text-[10px] font-black text-teal-700 dark:text-teal-300">{report.purityPct}%</p>
+          <p className="text-[10px] font-black text-teal">{report.purityPct}%</p>
         </div>
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground uppercase">Inbreeding</p>
@@ -81,14 +81,14 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       {report.crossPattern && (
         <div className="bg-white/70 dark:bg-card/70 border border-violet-200 dark:border-violet-900/50 rounded-md p-3 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-black text-violet-700 dark:text-violet-300 uppercase">{report.crossPattern.label}</span>
+            <span className="text-[9px] font-black text-violet uppercase">{report.crossPattern.label}</span>
             <div className="flex items-center gap-2">
               <TierBadge tier={report.crossPattern.tier} />
               <span className="text-[8px] font-bold text-success dark:text-emerald-300">+{report.crossPattern.winRateBonus}% win rate</span>
             </div>
           </div>
           <p className="text-[9px] text-muted-foreground">{report.crossPattern.description}</p>
-          <p className="text-[8px] text-violet-600 dark:text-violet-300 font-semibold">Fighting style: {report.crossPattern.fightingStyle}</p>
+          <p className="text-[8px] text-violet font-semibold">Fighting style: {report.crossPattern.fightingStyle}</p>
         </div>
       )}
 
@@ -150,7 +150,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
               <p className="text-[10px] font-bold text-slate-800 dark:text-card-foreground">{report.sireStrain}</p>
             </div>
             <div className="bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900/50 rounded-md p-2">
-              <p className="text-[8px] font-black text-pink-600 dark:text-pink-300 uppercase"><ChickenIcon className="w-3 h-3" /> Dam Strain</p>
+              <p className="text-[8px] font-black text-pink uppercase"><ChickenIcon className="w-3 h-3" /> Dam Strain</p>
               <p className="text-[10px] font-bold text-slate-800 dark:text-card-foreground">{report.damStrain}</p>
             </div>
           </div>
@@ -168,8 +168,8 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Heritability */}
           <div className="bg-white/70 dark:bg-card/70 border border-indigo-200 dark:border-indigo-900/50 rounded-md p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black text-indigo-700 dark:text-indigo-300 uppercase">Heritability</span>
-              <span className="text-[9px] font-black text-indigo-700 dark:text-indigo-300">{report.heritability.overall}/100 — {report.heritability.label}</span>
+              <span className="text-[9px] font-black text-indigo uppercase">Heritability</span>
+              <span className="text-[9px] font-black text-indigo">{report.heritability.overall}/100 — {report.heritability.label}</span>
             </div>
             <div className="w-full h-1.5 bg-slate-100 dark:bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${report.heritability.overall}%` }} />
@@ -276,7 +276,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
 
           {/* Confidence */}
           <div className="text-center">
-            <p className="text-[8px] text-muted-foreground font-semibold">Classification confidence: <span className="text-teal-700 dark:text-teal-300 font-black">{report.confidence}%</span></p>
+            <p className="text-[8px] text-muted-foreground font-semibold">Classification confidence: <span className="text-teal font-black">{report.confidence}%</span></p>
           </div>
         </div>
       )}

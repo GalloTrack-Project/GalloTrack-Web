@@ -146,10 +146,10 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
-              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink-600 dark:text-pink-400" /></span>
+              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink" /></span>
               <div>
-                <p className="text-base font-black text-pink-600 dark:text-pink-400 leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 mt-0.5">Females</p>
+                <p className="text-base font-black text-pink leading-none">{femaleActiveFowls.length}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-pink mt-0.5">Females</p>
               </div>
             </div>
           </div>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
           </div>
         </div>
 
@@ -250,13 +250,13 @@ export default function DashboardPage() {
               onClick={() => navigate('profiling', 'matchForm')}
               className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 group-hover/btn:text-indigo-600 dark:text-indigo-400">+ Log Match Result</p>
-              <p className="text-[9px] text-indigo-600 dark:text-indigo-400/70 font-semibold mt-0.5">Record fight outcome</p>
+              <p className="text-[11px] font-extrabold text-indigo group-hover/btn:text-indigo">+ Log Match Result</p>
+              <p className="text-[9px] text-indigo/70 font-semibold mt-0.5">Record fight outcome</p>
             </button>
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <span className="text-[10px] font-extrabold text-muted-foreground">Start here</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-violet bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
           </div>
         </div>
       </div>
@@ -321,13 +321,13 @@ export default function DashboardPage() {
           <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-700 dark:text-teal-400" /></span>
+                <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
                   <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
                 </div>
               </div>
-              <span className="text-[9px] font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
+              <span className="text-[9px] font-mono font-black text-teal bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
             </div>
             <div className="space-y-2 flex-1">
               {(() => {
@@ -351,14 +351,14 @@ export default function DashboardPage() {
                   <div key={strain} className="bg-muted/50 border border-border rounded-md px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-black text-card-foreground">{strain}</span>
-                      <span className="text-[9px] font-bold text-teal-700 dark:text-teal-400">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
+                      <span className="text-[9px] font-bold text-teal">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
                       <span className="text-[8px] font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
-                      <span className="text-[8px] font-bold text-pink-600 dark:text-pink-400 flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
+                      <span className="text-[8px] font-bold text-pink flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
                     </div>
                   </div>
                 ));
@@ -367,7 +367,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/lineage')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-teal-700 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-teal hover:text-teal hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View Full Lineage →
             </button>
@@ -566,7 +566,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal-700 dark:text-teal-400' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
                             <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
                           </span>
                           {p.casualties > 0 && (
@@ -604,7 +604,7 @@ export default function DashboardPage() {
             <span className="text-success">Elite = ≥70% win rate with 5+ decided fights</span>
             <span className="text-info">Solid = ≥50%</span>
             <span className="text-danger">Avoid = below 50% with 5+ decided fights</span>
-            <span className="text-teal-700 dark:text-teal-400">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
+            <span className="text-teal">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
             <span className="text-warning">Confidence = Low (&lt;5 fights) · Medium (5-9) · High (10+)</span>
             <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
           </div>
@@ -680,7 +680,7 @@ export default function DashboardPage() {
                             ? 'bg-rose-500/10 text-danger border-rose-500/20'
                             : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely')
                             ? 'bg-amber-500/10 text-warning border-amber-500/20'
-                            : 'bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20'
+                            : 'bg-teal-500/10 text-teal border-teal-500/20'
                         }`}>
                           {log.post_fight_condition}
                         </span>

@@ -18,15 +18,19 @@
   --input: #cbd5e1;
   --input-border: #6b7c93;
 
-  --success: #047857;
-  --warning: #b45309;
-  --danger: #be123c;
-  --info: #0369a1;
-  --primary: #047857;
+  --success: #065f46;
+  --warning: #92400e;
+  --danger: #9f1239;
+  --info: #075985;
+  --primary: #065f46;
   --primary-foreground: #ffffff;
   --danger-foreground: #ffffff;
+  --teal: #115e59;
+  --pink: #9d174d;
+  --violet: #6d28d9;
+  --indigo: #4338ca;
   --ring: #0f172a;
-  --accent: #047857;
+  --accent: #065f46;
   --accent-foreground: #ffffff;
 
   --duration-fast: 150ms;
@@ -49,16 +53,20 @@
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
   --border: #1e293b;
-  --input: #334155;
+  --input: #1e293b;
   --input-border: #64748b;
 
   --success: #4ade80;
   --warning: #fbbf24;
-  --danger: #fb7185;
+  --danger: #fda4af;
   --info: #7dd3fc;
   --primary: #10b981;
   --primary-foreground: #04210f;
   --danger-foreground: #4c0519;
+  --teal: #5eead4;
+  --pink: #f9a8d4;
+  --violet: #c4b5fd;
+  --indigo: #a5b4fc;
   --ring: #e2e8f0;
   --accent: #10b981;
   --accent-foreground: #04210f;
@@ -68,7 +76,7 @@
    admin swaps to amber. Contrast verified: white on #b45309 = 5.02:1,
    #04210f on #fbbf24 = 10.23:1. */
 [data-role="admin"] {
-  --accent: #b45309;
+  --accent: #92400e;
   --accent-foreground: #ffffff;
 }
 
@@ -96,6 +104,10 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-danger-foreground: var(--danger-foreground);
+  --color-teal: var(--teal);
+  --color-pink: var(--pink);
+  --color-violet: var(--violet);
+  --color-indigo: var(--indigo);
   --color-ring: var(--ring);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);

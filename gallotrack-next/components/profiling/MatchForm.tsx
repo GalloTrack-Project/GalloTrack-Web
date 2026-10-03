@@ -204,7 +204,7 @@ export default function MatchForm({
               />
             )}
             {customEventTypeEmpty && (
-              <p className="mt-1 text-[10px] font-semibold text-red-600 dark:text-red-400">Enter a custom event type or pick a preset.</p>
+              <p className="mt-1 text-[10px] font-semibold text-danger">Enter a custom event type or pick a preset.</p>
             )}
           </div>
         </div>

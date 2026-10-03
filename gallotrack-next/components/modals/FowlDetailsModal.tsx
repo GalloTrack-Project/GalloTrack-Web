@@ -97,7 +97,7 @@ export default function FowlDetailsModal({
                 {formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls)) || '—'}
               </span>
               {selectedFowlForDetails.wing_band ? (
-                <span className="text-[9px] font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 px-2.5 py-0.5 rounded-full uppercase" title="Wing Band ID">
+                <span className="text-[9px] font-mono font-black text-teal bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 px-2.5 py-0.5 rounded-full uppercase" title="Wing Band ID">
                   ⌁ {selectedFowlForDetails.wing_band}
                 </span>
               ) : null}
@@ -475,8 +475,8 @@ export default function FowlDetailsModal({
                     <strong className="text-base text-warning font-black">{draws} 🤝</strong>
                   </div>
                   <div className="bg-teal-950/40 p-2.5 rounded-md border border-teal-700/40 col-span-2 sm:col-span-1">
-                    <span className="text-[9px] text-teal-700 dark:text-teal-400 font-bold uppercase block">Per-Chicken Win Rate</span>
-                    <strong className="text-base text-teal-700 dark:text-teal-400 font-black">{winRate}%</strong>
+                    <span className="text-[9px] text-teal font-bold uppercase block">Per-Chicken Win Rate</span>
+                    <strong className="text-base text-teal font-black">{winRate}%</strong>
                     <span className="text-[8px] text-muted-foreground block font-mono font-semibold">{wins}W - {losses}L</span>
                   </div>
                 </div>
@@ -588,7 +588,7 @@ export default function FowlDetailsModal({
                                     ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                                     : (match.post_fight_condition || '').toLowerCase().includes('critical') || (match.post_fight_condition || '').toLowerCase().includes('severely')
                                     ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                                    : 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800'
+                                    : 'bg-teal-50 dark:bg-teal-950/50 text-teal border-teal-200 dark:border-teal-800'
                                 }`}>
                                   {(match.post_fight_condition || '').toLowerCase().includes('deceased') ? '💀 ' : (match.post_fight_condition || '').toLowerCase().includes('critical') || (match.post_fight_condition || '').toLowerCase().includes('severely') ? '🟠 ' : '🟢 '}{match.post_fight_condition}
                                 </span>
@@ -623,11 +623,11 @@ export default function FowlDetailsModal({
             return (
               <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-md px-3 py-2.5">
                 <div className="min-w-0">
-                  <p className="text-[9px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-wider">🧬 Breeding Generation</p>
+                  <p className="text-[9px] font-black text-teal uppercase tracking-wider">🧬 Breeding Generation</p>
                   <p className="text-[10px] font-bold text-muted-foreground truncate">{selInfo.label} · {selInfo.desc}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-lg font-black text-teal-700 dark:text-teal-300">{generationPurity(selGen)}%</span>
+                  <span className="text-lg font-black text-teal">{generationPurity(selGen)}%</span>
                   <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Generational Purity</p>
                 </div>
               </div>
@@ -682,7 +682,7 @@ export default function FowlDetailsModal({
                   const isFoundation = damLower === 'foundation stock' || !damLower;
                   const isRegistered = !isFoundation && fowls.some((f) => f.name.trim().toLowerCase() === damLower);
                   return (
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase ${isRegistered ? 'bg-pink-100 text-pink-700 border border-pink-200 dark:border-pink-800' : isFoundation ? 'bg-slate-100 dark:bg-muted text-muted-foreground border border-slate-200 dark:border-border' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}`}>
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase ${isRegistered ? 'bg-pink-100 text-pink border border-pink-200 dark:border-pink-800' : isFoundation ? 'bg-slate-100 dark:bg-muted text-muted-foreground border border-slate-200 dark:border-border' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}`}>
                       {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
                     </span>
                   );
@@ -697,7 +697,7 @@ export default function FowlDetailsModal({
                   <button
                     type="button"
                     onClick={() => setSelectedFowlForDetails(target)}
-                    className="text-pink-700 dark:text-pink-300 font-bold hover:underline underline-offset-2 cursor-pointer"
+                    className="text-pink font-bold hover:underline underline-offset-2 cursor-pointer"
                     title="Buksan ang Dam profile"
                   >
                     {name}

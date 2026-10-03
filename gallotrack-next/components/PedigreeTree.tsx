@@ -28,7 +28,7 @@ const ACCENT: Record<CardProps['accent'], { border: string; badge: string; text:
   emerald: { border: 'border-emerald-300 dark:border-emerald-800', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400', text: 'text-emerald-700 dark:text-emerald-400' },
   sky: { border: 'border-sky-300 dark:border-sky-800', badge: 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400', text: 'text-sky-700 dark:text-sky-400' },
   amber: { border: 'border-amber-300 dark:border-amber-800', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400', text: 'text-amber-700 dark:text-amber-400' },
-  violet: { border: 'border-violet-300 dark:border-violet-800', badge: 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-400', text: 'text-violet-700 dark:text-violet-400' },
+  violet: { border: 'border-violet-300 dark:border-violet-800', badge: 'bg-violet-100 text-violet dark:bg-violet-950/60 dark:text-violet', text: 'text-violet' },
 };
 
 function AncestorCard({ label, name, fowl, fowls, codes, generation, accent, onPick }: CardProps) {

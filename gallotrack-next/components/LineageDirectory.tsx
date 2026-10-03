@@ -108,7 +108,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
             <p className="text-xs font-black text-card-foreground truncate">{g[0].sire}</p>
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-lg p-3.5 text-center">
-            <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
+            <p className="text-[9px] font-black text-pink uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
             <p className="text-xs font-black text-card-foreground truncate">{g[0].dam}</p>
           </div>
         </div>
@@ -125,7 +125,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
         )}
         {henOffspring.length > 0 && (
           <div className="mb-3">
-              <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-1.5">🐔 Dam · {henOffspring.length}</p>
+              <p className="text-[9px] font-black text-pink uppercase tracking-widest mb-1.5">🐔 Dam · {henOffspring.length}</p>
             <div className="space-y-1.5">
               {visibleHens.map((child, i) => renderOffspringRow(child, i))}
             </div>
@@ -388,7 +388,7 @@ export default function LineageDirectory({
   ) => {
     const colorMap = {
       sky: { bg: 'bg-sky-100 dark:bg-sky-950/50', border: 'border-sky-200 dark:border-sky-800', hoverBg: 'hover:bg-sky-50/50 dark:hover:bg-sky-950/20', icon: 'sire', text: 'text-sky-700 dark:text-sky-400' },
-      pink: { bg: 'bg-pink-100 dark:bg-pink-950/50', border: 'border-pink-200 dark:border-pink-800', hoverBg: 'hover:bg-pink-50/50 dark:hover:bg-pink-950/20', icon: 'dam', text: 'text-pink-700 dark:text-pink-400' },
+      pink: { bg: 'bg-pink-100 dark:bg-pink-950/50', border: 'border-pink-200 dark:border-pink-800', hoverBg: 'hover:bg-pink-50/50 dark:hover:bg-pink-950/20', icon: 'dam', text: 'text-pink' },
     };
     const c = colorMap[color];
     const otherLabel = kind === 'sire' ? 'dam' : 'sire';
@@ -452,7 +452,7 @@ export default function LineageDirectory({
                   )}
                   {hens.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam · {hens.length}</p>
+                      <p className="text-[9px] font-black text-pink uppercase tracking-widest">🐔 Dam · {hens.length}</p>
                       {hens.map((child) => renderChildRow(child, bestId))}
                     </div>
                   )}
@@ -513,8 +513,8 @@ export default function LineageDirectory({
         {[
           { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-success dark:text-emerald-400" /> },
           { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <ChickenIcon className="w-5 h-5 text-info dark:text-sky-400" /> },
-          { label: 'Dam Offspring Groups', value: damEntries.length, icon: <ChickenIcon className="w-5 h-5 text-pink-600 dark:text-pink-400" /> },
-          { label: 'Total Chickens Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-700 dark:text-teal-400" /> },
+          { label: 'Dam Offspring Groups', value: damEntries.length, icon: <ChickenIcon className="w-5 h-5 text-pink" /> },
+          { label: 'Total Chickens Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal" /> },
         ].map((s) => (
           <div key={s.label} className="bg-card rounded-lg border border-border shadow-sm p-5 flex items-center gap-4">
             <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 rounded-lg flex items-center justify-center shrink-0">{s.icon}</div>
@@ -608,7 +608,7 @@ export default function LineageDirectory({
       {activeTab === 'pedigree' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 rounded-md flex items-center justify-center"><GitBranch className="w-5 h-5" /></div>
+            <div className="w-9 h-9 bg-teal-100 dark:bg-teal-950/50 text-teal rounded-md flex items-center justify-center"><GitBranch className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Pedigree / Ancestor Lineage</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Bakit kailangan: kapag namatay ang magulang, dito makikita ang buong lahi at porsyento ng mga anak na gagamiting bagong broodstock.</p>
@@ -621,7 +621,7 @@ export default function LineageDirectory({
       {activeTab === 'dam' && (
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 rounded-md flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
+            <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink rounded-md flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
               <p className="text-[11px] text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>
