@@ -75,6 +75,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname.startsWith(href);
   }
 
+  const currentNav = navItems.find((item) => isActive(item.href));
+  const activeTitle = currentNav?.label || (
+    pathname === '/settings' ? 'Settings' :
+    pathname.startsWith('/admin/audit') ? 'Audit Logs' :
+    pathname.startsWith('/admin/flocks') ? 'Flocks' :
+    pathname.startsWith('/admin/matches') ? 'Match History' :
+    pathname.startsWith('/admin/marketplace') ? 'Marketplace' :
+    pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Dashboard'
+  );
+
   return (
     <div className="bg-background min-h-screen font-sans antialiased text-foreground flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative selection:bg-emerald-500 selection:text-white">
       {ui.toast.show && (
@@ -91,13 +101,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* SIDEBAR */}
       <aside className="hidden md:flex w-64 bg-card text-card-foreground flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-border shadow-2xl h-full justify-between">
         <div>
-          <div className={`p-6 border-b border-border bg-muted/40 flex items-center space-x-3`}>
-            <div className={`w-9 h-9 ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} rounded-xl flex items-center justify-center shadow-inner`}>
+          <div className="h-16 px-5 border-b border-border bg-muted/40 flex items-center space-x-3 shrink-0">
+            <div className={`w-8 h-8 ${isAdmin ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-emerald-500/20 border border-emerald-500/40'} rounded-lg flex items-center justify-center shadow-inner shrink-0`}>
               {isAdmin ? <Shield className="w-4 h-4 text-amber-400" /> : <ChickenIcon className="w-4 h-4 text-emerald-400" />}
             </div>
-            <div>
-              <h2 className="text-xl font-black tracking-tight text-card-foreground">GALLO<span className={isAdmin ? 'text-amber-400' : 'text-emerald-400'}>TRACK</span></h2>
-              <span className={`text-[9px] font-mono font-bold ${isAdmin ? 'text-amber-400' : 'text-emerald-400'} tracking-widest uppercase block`}>
+            <div className="min-w-0 flex-1 leading-none">
+              <h2 className="text-base font-black tracking-tight text-card-foreground">GALLO<span className={isAdmin ? 'text-amber-400' : 'text-emerald-400'}>TRACK</span></h2>
+              <span className={`text-[8.5px] font-mono font-bold ${isAdmin ? 'text-amber-400' : 'text-emerald-400'} tracking-widest uppercase block mt-1`}>
                 {isAdmin ? 'ADMIN PANEL' : 'v1.0.0'}
               </span>
             </div>
@@ -178,13 +188,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* MAIN CONTENT */}
       <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-16 md:pb-0">
-        <header className="bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0">
-          <div className="py-3.5 px-4 sm:px-6 md:px-8 flex justify-between items-center">
+        <header className="h-16 bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0 flex items-center">
+          <div className="w-full px-4 sm:px-6 md:px-8 flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <span className={`md:hidden font-black text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground ${isAdmin ? 'to-amber-400' : 'to-emerald-400'} bg-clip-text text-transparent`}>
                 {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'}
               </span>
-              <div className="hidden md:flex items-center space-x-2 select-none">
+
+              <div className="hidden md:flex items-center gap-2.5">
+                <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                  isAdmin 
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                }`}>
+                  {isAdmin ? 'Admin' : 'Portal'}
+                </span>
+                <span className="text-muted-foreground/30 text-xs">/</span>
+                <h1 className="text-sm font-bold text-foreground tracking-tight">{activeTitle}</h1>
+              </div>
+
+              <div className="hidden lg:flex items-center space-x-2 select-none pl-3 border-l border-border/60">
                 <span className={`relative flex h-1.5 w-1.5`}>
                   <span className={`animate-pulse absolute inline-flex h-full w-full rounded-full ${isAdmin ? 'bg-amber-500/40' : 'bg-emerald-500/40'}`}></span>
                   <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isAdmin ? 'bg-amber-500/80' : 'bg-emerald-500/80'}`}></span>
