@@ -95,7 +95,7 @@ export default function AdminFlockAuditPage() {
   }
 
   const statCard = (label: string, value: number | string, accent: string, icon: ReactNode) => (
-    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
+    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
@@ -113,7 +113,7 @@ export default function AdminFlockAuditPage() {
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {toast && (
-          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
+          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
             toast.type === 'success' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
           }`}>{toast.message}</div>
         )}
@@ -134,7 +134,7 @@ export default function AdminFlockAuditPage() {
           {statCard('Owners', stats.owners, 'text-purple-400', <Users className="w-5 h-5" />)}
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
@@ -143,20 +143,20 @@ export default function AdminFlockAuditPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, breed, owner, or farm..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <select value={filterBreed} onChange={(e) => setFilterBreed(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterBreed} onChange={(e) => setFilterBreed(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Breeds</option>
                 {breeds.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
-              <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Genders</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Status</option>
                 <option value="Active">Active</option>
                 <option value="Sold">Sold</option>
@@ -168,17 +168,17 @@ export default function AdminFlockAuditPage() {
 
         <div className="md:hidden space-y-3 mb-6">
           {filtered.length === 0 && (
-            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-8 text-center">
+            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-8 text-center">
               <p className="text-xs text-muted-foreground font-semibold">No chickens found.</p>
             </div>
           )}
           {filtered.map((fowl) => (
-            <div key={fowl.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xs">
+            <div key={fowl.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 shadow-2xs">
               <div className="flex items-center gap-3 mb-2">
                 {fowl.image_url ? (
-                  <img src={fowl.image_url} alt={fowl.name} className="w-10 h-10 rounded-xl object-cover border border-border shrink-0" />
+                  <img src={fowl.image_url} alt={fowl.name} className="w-10 h-10 rounded-md object-cover border border-border shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
                     <ChickenIcon className="w-5 h-5" />
                   </div>
                 )}
@@ -197,7 +197,7 @@ export default function AdminFlockAuditPage() {
           ))}
         </div>
 
-        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
+        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Registered Chickens</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {fowls.length} records</span>
@@ -224,9 +224,9 @@ export default function AdminFlockAuditPage() {
                     <td className="px-4 sm:px-5 py-3.5">
                       <div className="flex items-center space-x-3">
                         {fowl.image_url ? (
-                          <img src={fowl.image_url} alt={fowl.name} className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
+                          <img src={fowl.image_url} alt={fowl.name} className="w-9 h-9 rounded-md object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><ChickenIcon className="w-5 h-5" /></div>
+                          <div className="w-9 h-9 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><ChickenIcon className="w-5 h-5" /></div>
                         )}
                         <p className="text-xs font-extrabold text-card-foreground truncate">{fowl.name}</p>
                       </div>

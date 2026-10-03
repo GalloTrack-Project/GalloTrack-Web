@@ -69,7 +69,7 @@ function ComplianceBadge({ grade }: { grade: string }) {
     : grade.startsWith('B') ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
     : grade.startsWith('C') ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
     : 'bg-muted border-border text-muted-foreground';
-  return <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${cls}`}>{grade}</span>;
+  return <span className={`text-[10px] font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
 }
 
 function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClick: () => void; code?: string }) {
@@ -84,7 +84,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
     <button
       type="button"
       onClick={onClick}
-      className="group bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all duration-200 text-left w-full relative overflow-hidden"
+      className="group bg-card p-5 rounded-lg border border-border shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all duration-200 text-left w-full relative overflow-hidden"
     >
       {/* Top accent */}
       <div className={`absolute top-0 left-0 right-0 h-1 ${fowl.status === 'Active' ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : fowl.status === 'Archived' ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-500'}`}></div>
@@ -102,7 +102,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
 
       {/* Photo + Name + Breed */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-16 h-16 rounded-xl bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+        <div className="w-16 h-16 rounded-md bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
           {fowl.image_url ? (
             <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" />
           ) : (
@@ -130,15 +130,15 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
 
       {/* Data grid */}
       <div className="grid grid-cols-3 gap-2 text-center mb-3">
-        <div className="bg-muted/50 rounded-xl py-2 px-1">
+        <div className="bg-muted/50 rounded-md py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Age</p>
           <p className="text-xs font-black text-card-foreground">{getAgeDisplay(fowl.birthdate)}</p>
         </div>
-        <div className="bg-muted/50 rounded-xl py-2 px-1">
+        <div className="bg-muted/50 rounded-md py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Weight</p>
           <p className="text-xs font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
         </div>
-        <div className="bg-muted/50 rounded-xl py-2 px-1">
+        <div className="bg-muted/50 rounded-md py-2 px-1">
           <p className="text-[9px] font-bold text-muted-foreground uppercase">Stage</p>
           <p className="text-xs font-black text-card-foreground truncate">{fowl.growth_stage || '\u2014'}</p>
         </div>
@@ -182,8 +182,8 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      <div className="relative bg-card rounded-3xl shadow-2xl border border-border max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-3xl">
+      <div className="relative bg-card rounded-lg shadow-2xl border border-border max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-lg">
           <h3 className="text-base font-black text-card-foreground flex items-center gap-2 min-w-0">
             <span className="truncate">{fowl.name}</span>
             {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
@@ -196,7 +196,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
         <div className="p-6 space-y-5">
           {/* Identity */}
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-2xl bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-20 h-20 rounded-lg bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
               {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground/50"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
             </div>
             <div className="space-y-1.5">
@@ -211,7 +211,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           </div>
 
           {/* Physical traits */}
-          <div className="bg-muted/50 rounded-2xl p-4 space-y-3 border border-border">
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
             <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Physical Profile</h4>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div><span className="text-muted-foreground font-semibold">Color: </span><span className="font-black text-card-foreground">{fowl.color || '\u2014'}</span></div>
@@ -224,7 +224,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           </div>
 
           {/* Lineage */}
-          <div className="bg-muted/50 rounded-2xl p-4 space-y-3 border border-border">
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
             <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Lineage</h4>
             <BloodlineBreakdown
               stats={getFowlBloodlineStats(fowl, fowls)}
@@ -232,12 +232,12 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
               subtitle="Hatian ng dugo bawat lahi — 50% Sire, 50% Dam"
             />
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3">
+              <div className="bg-sky-500/10 border border-sky-500/30 rounded-md p-3">
                 <p className="text-[10px] font-black text-sky-400 uppercase">Sire</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{fowl.sire || '\u2014'}</p>
                 {fowl.sire_pct ? <p className="text-[10px] text-sky-400 font-bold">{fowl.sire_pct}%</p> : null}
               </div>
-              <div className="bg-pink-500/10 border border-pink-500/30 rounded-xl p-3">
+              <div className="bg-pink-500/10 border border-pink-500/30 rounded-md p-3">
                 <p className="text-[10px] font-black text-pink-400 uppercase">Dam</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
                 {fowl.dam_pct ? <p className="text-[10px] text-pink-400 font-bold">{fowl.dam_pct}%</p> : null}
@@ -247,22 +247,22 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
 
           {/* Performance */}
           {stats.total > 0 && (
-            <div className="bg-muted/50 rounded-2xl p-4 space-y-3 border border-border">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
               <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Match Performance</h4>
               <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-card rounded-xl py-2.5 border border-border">
+                <div className="bg-card rounded-md py-2.5 border border-border">
                   <p className="text-xl font-black text-card-foreground">{stats.total}</p>
                   <p className="text-[9px] font-bold text-muted-foreground uppercase">Total</p>
                 </div>
-                <div className="bg-emerald-500/10 rounded-xl py-2.5 border border-emerald-500/30">
+                <div className="bg-emerald-500/10 rounded-md py-2.5 border border-emerald-500/30">
                   <p className="text-xl font-black text-emerald-400">{stats.wins}</p>
                   <p className="text-[9px] font-bold text-emerald-400 uppercase">Wins</p>
                 </div>
-                <div className="bg-rose-500/10 rounded-xl py-2.5 border border-rose-500/30">
+                <div className="bg-rose-500/10 rounded-md py-2.5 border border-rose-500/30">
                   <p className="text-xl font-black text-rose-400">{stats.losses}</p>
                   <p className="text-[9px] font-bold text-rose-400 uppercase">Losses</p>
                 </div>
-                <div className={`rounded-xl py-2.5 border ${stats.winRate >= 50 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                <div className={`rounded-md py-2.5 border ${stats.winRate >= 50 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
                   <p className={`text-xl font-black ${stats.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>{stats.winRate}%</p>
                   <p className={`text-[9px] font-bold uppercase ${stats.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>Win Rate</p>
                 </div>
@@ -272,7 +272,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
 
           {/* Breed Compliance */}
           {compliance.matchedStandard && (
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 space-y-3">
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Breed Compliance</h4>
                 <div className="flex items-center gap-2">
@@ -379,9 +379,9 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">{'\uD83E\uDDEC'}</div>
+          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">{'\uD83E\uDDEC'}</div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Inventory</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">All your chickens in one list — status, age, weight, stage, and lineage</p>
@@ -392,9 +392,9 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-2xl bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
+            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
           </div>
-          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[11px] font-black px-4 py-3 rounded-2xl shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
+          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[11px] font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span className="hidden sm:inline">Add Chicken</span>
             <span className="sm:hidden">Add</span>
@@ -403,9 +403,9 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1 bg-muted rounded-xl border border-border p-1 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-1 bg-muted rounded-md border border-border p-1 shadow-sm overflow-x-auto">
         {tabs.map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-sm text-[11px] font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
             {tab.label}
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
           </button>
@@ -414,7 +414,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
 
       {/* Grid */}
       {filteredFowls.length === 0 ? (
-        <div className="bg-card p-14 text-center rounded-3xl border border-border shadow-sm space-y-3">
+        <div className="bg-card p-14 text-center rounded-lg border border-border shadow-sm space-y-3">
           <div className="w-16 h-16 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-3xl mx-auto">
             {'\uD83E\uDDEC'}
           </div>

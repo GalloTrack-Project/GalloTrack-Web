@@ -47,7 +47,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
       onMouseDown={(e) => { e.preventDefault(); onSelect(); }}
       className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-emerald-50 dark:hover:bg-muted/50 text-left cursor-pointer border-b border-slate-50 dark:border-border last:border-b-0"
     >
-      <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
+      <span className="w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
         <ChickenIcon className="w-3 h-3" />
       </span>
       <span className="flex-1 min-w-0">
@@ -107,11 +107,11 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
         value={text}
         onChange={(e) => { setText(e.target.value); onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        className={`w-full ${pad} border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold`}
+        className={`w-full ${pad} border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />
       {open && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-2xl shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
+        <div className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
           {candidates.length > 0 && (
             <>
               <div className="px-3 py-2 bg-slate-50 dark:bg-muted/50 border-b border-slate-100 dark:border-border text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
@@ -134,7 +134,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
                         }}
                         className="flex-1 flex items-center gap-2.5 min-w-0"
                       >
-                        <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center shrink-0"><ChickenIcon className="w-3 h-3 text-slate-500 dark:text-muted-foreground" /></span>
+                        <span className="w-7 h-7 rounded-sm bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center shrink-0"><ChickenIcon className="w-3 h-3 text-slate-500 dark:text-muted-foreground" /></span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-xs font-black text-slate-800 dark:text-card-foreground truncate">{f.name}</span>
                           <span className="block text-[9px] font-semibold text-slate-400 dark:text-muted-foreground truncate">{f.breed} · {f.growth_stage || 'Stag'} · {f.gender || 'Unset'}</span>
@@ -148,7 +148,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
                             e.stopPropagation();
                             setExpandedItem(isExpanded ? null : f.name);
                           }}
-                          className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black transition-all cursor-pointer ${
+                          className={`shrink-0 w-7 h-7 rounded-sm flex items-center justify-center text-[10px] font-black transition-all cursor-pointer ${
                             isExpanded
                               ? 'bg-emerald-500 text-white border border-emerald-500'
                               : 'bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground hover:bg-emerald-100 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-900/50 dark:hover:text-emerald-300 dark:hover:border-emerald-700'
@@ -196,7 +196,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-muted/50 text-left cursor-pointer border-t border-slate-100 dark:border-border"
           >
-            <span className={`w-7 h-7 rounded-lg ${accentBg} text-white flex items-center justify-center text-[10px] font-black shrink-0`}>{genderIcon}</span>
+            <span className={`w-7 h-7 rounded-sm ${accentBg} text-white flex items-center justify-center text-[10px] font-black shrink-0`}>{genderIcon}</span>
             <span className="flex-1 min-w-0">
               <span className="block text-xs font-black text-slate-800 dark:text-card-foreground truncate">
                 {text.trim() ? `Use "${text.trim()}" as custom ${preferredGender?.toLowerCase() || 'parent'}` : 'External / Foundation Stock name...'}

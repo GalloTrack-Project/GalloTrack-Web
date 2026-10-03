@@ -67,58 +67,58 @@ export default function ProfilingPage() {
 
   return (
     <div className="space-y-5 animate-fadeIn">
-      <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col gap-5">
+      <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col gap-5">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
+          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Chicken Registry</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-0.5">Register and manage your chicken lineage, traits, and match records</p>
           </div>
-          <button type="button" onClick={() => setProfilingSubTab(profilingSubTab === 'breeds' ? 'form' : 'breeds')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer shrink-0 ${profilingSubTab === 'breeds' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-muted border border-border text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/50'}`}>
+          <button type="button" onClick={() => setProfilingSubTab(profilingSubTab === 'breeds' ? 'form' : 'breeds')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer shrink-0 ${profilingSubTab === 'breeds' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-muted border border-border text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/50'}`}>
             <Dna className="w-4 h-4" />
             <span>Breeds</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0">
-          <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'form' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+        <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-lg border border-border overflow-x-auto shrink-0">
+          <button type="button" onClick={() => setProfilingSubTab('form')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'form' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span>Register</span>
           </button>
-          <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'males' ? 'bg-sky-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'males' ? 'bg-sky-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <ChickenIcon className="w-4 h-4" />
             <span>Sire</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'males' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{maleActiveFowls.length}</span>
           </button>
-          <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'females' ? 'bg-pink-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'females' ? 'bg-pink-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <ChickenIcon className="w-4 h-4" />
             <span>Dam</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'females' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{femaleActiveFowls.length}</span>
           </button>
-          <button type="button" onClick={() => setProfilingSubTab('offspring')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'offspring' ? 'bg-teal-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('offspring')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'offspring' ? 'bg-teal-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Egg className="w-4 h-4" />
             <span>Offspring</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'offspring' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{offspringList.length}</span>
           </button>
-          <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'archived' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'archived' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Archive className="w-4 h-4" />
             <span>Archived</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'archived' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{archivedFowls.length}</span>
           </button>
-          <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-rose-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('deceased')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'deceased' ? 'bg-rose-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Skull className="w-4 h-4" />
             <span>Deceased</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'deceased' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{deceasedFowls.length}</span>
           </button>
-          <button type="button" onClick={() => setProfilingSubTab('sireMaterial')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'sireMaterial' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('sireMaterial')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'sireMaterial' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Shield className="w-4 h-4" />
             <span>Sire Material</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'sireMaterial' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireMaterialFowls.length}</span>
           </button>
           <div className="w-px h-6 bg-border shrink-0 mx-0.5"></div>
-          <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setProfilingSubTab('matchForm')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'matchForm' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
             <span>Match Logs</span>
           </button>

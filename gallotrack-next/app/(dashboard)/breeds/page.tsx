@@ -86,7 +86,7 @@ export default function BreedsPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-9 h-9 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer"
+            className="w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer"
           >
             ←
           </button>
@@ -100,7 +100,7 @@ export default function BreedsPage() {
         <button
           type="button"
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer"
+          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-4 py-2.5 rounded-md shadow-sm transition-all cursor-pointer"
         >
           <span className="text-base">{showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}</span>
           {showAddForm ? 'Cancel' : 'Add New Breed'}
@@ -109,15 +109,15 @@ export default function BreedsPage() {
 
       {/* STATS */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-2xl font-black text-card-foreground">{availableStrains.length}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Breeds</p>
         </div>
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-2xl font-black text-sky-600">{builtInCount}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Built-in</p>
         </div>
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-4 text-center">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-2xl font-black text-emerald-600">{customCount}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Custom</p>
         </div>
@@ -125,7 +125,7 @@ export default function BreedsPage() {
 
       {/* ADD FORM */}
       {showAddForm && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 space-y-3">
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-5 space-y-3">
           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Create New Breed</p>
           <div className="flex gap-2">
             <input
@@ -134,14 +134,14 @@ export default function BreedsPage() {
               onChange={(e) => setNewBreedName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
               placeholder="e.g. Roundhead, Kelso, Sweater..."
-              className="flex-1 p-3 border border-emerald-500/30 rounded-xl text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
+              className="flex-1 p-3 border border-emerald-500/30 rounded-md text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
               autoFocus
             />
             <button
               type="button"
               onClick={handleAdd}
               disabled={!newBreedName.trim()}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0"
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-white font-bold text-xs rounded-md transition-all cursor-pointer shrink-0"
             >
               Save
             </button>
@@ -157,13 +157,13 @@ export default function BreedsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search breeds..."
-          className="w-full p-3 pl-10 border border-border rounded-xl text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
+          className="w-full p-3 pl-10 border border-border rounded-md text-xs bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
         />
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
       </div>
 
       {/* BREED LIST */}
-      <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
+      <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6">
         {breeds.length === 0 ? (
           <div className="text-center py-12">
             <Dna className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
@@ -177,7 +177,7 @@ export default function BreedsPage() {
               const isConfirming = confirmDelete === breed;
               const isDeletingThis = deleting === breed;
               return (
-                <div key={breed} className={`relative flex flex-col p-4 rounded-xl border transition-all ${isCustom ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-card border-border'}`}>
+                <div key={breed} className={`relative flex flex-col p-4 rounded-md border transition-all ${isCustom ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-card border-border'}`}>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-card-foreground truncate">{breed}</p>
@@ -207,14 +207,14 @@ export default function BreedsPage() {
                             type="button"
                             onClick={() => handleDelete(breed)}
                             disabled={isDeletingThis}
-                            className="text-[9px] font-bold bg-rose-500 text-white px-2.5 py-1 rounded-lg hover:bg-rose-600 transition-all cursor-pointer disabled:opacity-50"
+                            className="text-[9px] font-bold bg-rose-500 text-white px-2.5 py-1 rounded-sm hover:bg-rose-600 transition-all cursor-pointer disabled:opacity-50"
                           >
                             {isDeletingThis ? '...' : 'Yes'}
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(null)}
-                            className="text-[9px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-lg hover:bg-muted/80 transition-all cursor-pointer"
+                            className="text-[9px] font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-sm hover:bg-muted/80 transition-all cursor-pointer"
                           >
                             No
                           </button>

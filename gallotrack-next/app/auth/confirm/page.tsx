@@ -93,7 +93,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
+      <div className="bg-card/95 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
         <div className="p-8 sm:p-10 space-y-7 text-center">
           <div className="text-center space-y-2">
             <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
@@ -121,7 +121,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               </p>
               <Link
                 href="/"
-                className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
+                className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">PROCEED TO LOGIN</span>
               </Link>
@@ -137,7 +137,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               <p className="text-xs text-muted-foreground font-semibold leading-relaxed">{errorMessage}</p>
               <Link
                 href="/"
-                className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2"
+                className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">BACK TO LOGIN</span>
               </Link>

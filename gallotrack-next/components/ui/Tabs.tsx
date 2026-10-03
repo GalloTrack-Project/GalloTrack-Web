@@ -94,7 +94,7 @@ function Tabs({
               disabled={item.disabled}
               onClick={() => select(item.value)}
               className={cn(
-                'inline-flex h-9 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors duration-150 ease-out',
+                'inline-flex h-9 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-sm px-3 text-sm font-medium transition-colors duration-150 ease-out',
                 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 'disabled:pointer-events-none disabled:opacity-50',
                 selected && 'bg-muted text-foreground',

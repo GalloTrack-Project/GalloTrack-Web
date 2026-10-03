@@ -9,7 +9,7 @@ export default function FarmBloodlineSummary() {
   const summary = getFarmBloodlineSummary();
 
   return (
-    <div className="bg-card border border-border rounded-3xl p-5 space-y-4">
+    <div className="bg-card border border-border rounded-lg p-5 space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Dna className="w-5 h-5 text-teal-400" />
@@ -22,19 +22,19 @@ export default function FarmBloodlineSummary() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-muted/50 border border-border rounded-2xl p-3 text-center">
+        <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
           <p className="text-2xl font-black text-teal-400">{summary.totalFowls}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Chickens</p>
         </div>
-        <div className="bg-muted/50 border border-border rounded-2xl p-3 text-center">
+        <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
           <p className="text-2xl font-black text-sky-400">{summary.avgPurity}%</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Avg Purity</p>
         </div>
-        <div className="bg-muted/50 border border-border rounded-2xl p-3 text-center">
+        <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
           <p className="text-2xl font-black text-emerald-400">{summary.avgHybridVigor}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Avg Vigor</p>
         </div>
-        <div className="bg-muted/50 border border-border rounded-2xl p-3 text-center">
+        <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
           <p className={`text-2xl font-black ${summary.inbreedingRisk > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>{summary.inbreedingRisk}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Inbreeding Risk</p>
         </div>
@@ -61,7 +61,7 @@ export default function FarmBloodlineSummary() {
           <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest">Strain Distribution</p>
           <div className="space-y-1.5">
             {summary.strainRankings.map((s) => (
-              <div key={s.strain} className="bg-muted/50 border border-border rounded-xl px-3 py-2 flex items-center justify-between">
+              <div key={s.strain} className="bg-muted/50 border border-border rounded-md px-3 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black text-card-foreground">{s.strain}</span>
                   <span className="text-[8px] text-muted-foreground">({s.count} chickens)</span>
@@ -79,7 +79,7 @@ export default function FarmBloodlineSummary() {
           <p className="text-[9px] font-black text-violet-400 uppercase tracking-widest">Cross Patterns</p>
           <div className="space-y-1.5">
             {summary.crossPatterns.map((cp) => (
-              <div key={cp.pattern} className="bg-muted/50 border border-border rounded-xl px-3 py-2 flex items-center justify-between">
+              <div key={cp.pattern} className="bg-muted/50 border border-border rounded-md px-3 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={`inline-block w-2 h-2 rounded-full ${cp.tier === 'S' ? 'bg-amber-400' : cp.tier === 'A' ? 'bg-emerald-400' : cp.tier === 'B' ? 'bg-sky-400' : 'bg-muted-foreground'}`}></span>
                   <span className="text-[10px] font-black text-card-foreground">{cp.pattern}</span>

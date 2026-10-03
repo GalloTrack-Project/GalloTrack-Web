@@ -29,12 +29,12 @@ const defaultSettings: AdminSettings = {
 };
 
 const inputClass =
-  'w-full p-3 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground';
+  'w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground';
 const labelClass = 'block text-[10px] font-black text-muted-foreground mt-2 uppercase tracking-widest';
 
 function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
+    <label className="bg-muted/25 border border-border hover:border-amber-500/40 rounded-md p-4 flex items-center justify-between gap-4 cursor-pointer transition-all">
       <div>
         <span className="block text-xs font-extrabold text-card-foreground">{label}</span>
         <span className="text-[11px] text-muted-foreground font-medium block">{desc}</span>
@@ -293,12 +293,12 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             {transferResult && (
-              <div className={`text-xs font-bold p-3 rounded-xl border ${transferResult.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
+              <div className={`text-xs font-bold p-3 rounded-md border ${transferResult.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
                 {transferResult.text}
               </div>
             )}
             <button type="button" onClick={handleTransferData} disabled={transferring || !transferEmail.trim()}
-              className="w-full text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white shadow-md shadow-purple-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+              className="w-full text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-md bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white shadow-md shadow-purple-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
               {transferring && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
               {transferring ? 'Transferring...' : 'Transfer Data to Farm Owner'}
             </button>
@@ -309,28 +309,28 @@ export default function AdminSettingsPage() {
           <div className="space-y-4">
             <p className="text-[11px] text-muted-foreground font-medium">Download a complete JSON backup of all system data.</p>
             {backupResult && (
-              <div className={`text-xs font-bold p-3 rounded-xl border ${backupResult.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
+              <div className={`text-xs font-bold p-3 rounded-md border ${backupResult.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
                 {backupResult.text}
               </div>
             )}
             <button type="button" onClick={handleExportBackup} disabled={backing}
-              className="w-full text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+              className="w-full text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-md bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
               {backing && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
               {!backing && <Download size={14} />}
               {backing ? 'Exporting...' : 'Download Full System Backup'}
             </button>
             <div className="grid grid-cols-3 gap-2">
-              <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
+              <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
                 <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
                 <p className="text-[9px] font-black text-card-foreground">Chicken Records</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All breeds</p>
               </div>
-              <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
+              <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
                 <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
                 <p className="text-[9px] font-black text-card-foreground">Match History</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All records</p>
               </div>
-              <div className="bg-muted/25 border border-border rounded-xl p-3 text-center">
+              <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
                 <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
                 <p className="text-[9px] font-black text-card-foreground">Profiles</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All accounts</p>
@@ -358,7 +358,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {message && (
-          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
+          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
             message.type === 'success'
               ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
               : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
@@ -366,17 +366,17 @@ export default function AdminSettingsPage() {
         )}
 
         {/* ADMIN IDENTITY */}
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center"><Shield size={18} /></div>
+              <div className="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center"><Shield size={18} /></div>
               <div>
                 <p className="text-sm font-extrabold text-card-foreground">{adminProfile.full_name || 'Administrator'}</p>
                 <p className="text-[10px] text-muted-foreground font-semibold">{adminProfile.email || ''} · Admin session</p>
               </div>
             </div>
             <button type="submit" form="system-settings-form" disabled={saving}
-              className="text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
+              className="text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
               {saving && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -384,13 +384,13 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* TAB BAR — matches LineageDirectory pattern */}
-        <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0 mb-4">
+        <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded-lg border border-border overflow-x-auto shrink-0 mb-4">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-md text-[10px] sm:text-[11px] font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-amber-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
@@ -403,7 +403,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* TAB CONTENT */}
-        <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-5">
+        <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-5">
           {renderTab()}
         </form>
 

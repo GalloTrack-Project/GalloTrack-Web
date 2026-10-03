@@ -28,7 +28,7 @@ export default function DeceasedModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-800 max-w-md w-full p-6 space-y-5 relative">
+      <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-rose-200 dark:border-rose-800 max-w-md w-full p-6 space-y-5 relative">
         <button 
           onClick={() => setSelectedFowlForDeceased(null)} 
           className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
@@ -37,14 +37,14 @@ export default function DeceasedModal({
         </button>
 
         <div className="flex items-center space-x-3 text-rose-700 dark:text-rose-300 border-b pb-3 border-rose-100">
-          <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/50 rounded-2xl flex items-center justify-center"><Skull className="w-5 h-5 text-rose-600 dark:text-rose-300" /></div>
+          <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/50 rounded-lg flex items-center justify-center"><Skull className="w-5 h-5 text-rose-600 dark:text-rose-300" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Record Mortality</h3>
             <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-semibold">Transition node to Deceased status — cause of death required</p>
           </div>
         </div>
 
-        <div className="bg-rose-50/60 dark:bg-muted/50 p-4 rounded-2xl border border-rose-200/60 dark:border-border space-y-2">
+        <div className="bg-rose-50/60 dark:bg-muted/50 p-4 rounded-lg border border-rose-200/60 dark:border-border space-y-2">
           <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-rose-700 dark:text-rose-300 font-black">{selectedFowlForDeceased.name}</strong> ({selectedFowlForDeceased.breed})</p>
           <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Use this ONLY when the chicken has died. Mortality removes the chicken from the active registry. Non-mortality removals (sold, transferred, other) belong under <strong className="text-amber-700 dark:text-amber-300">Archive</strong> instead.</p>
         </div>
@@ -54,7 +54,7 @@ export default function DeceasedModal({
           <select 
             value={deathReasonInput} 
             onChange={(e) => setDeathReasonInput(e.target.value)} 
-            className="w-full p-3 border border-slate-200 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500 cursor-pointer"
+            className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500 cursor-pointer"
           >
             <option value="Illness">Illness / Disease</option>
             <option value="Injury">Injury / Fight Trauma</option>
@@ -70,7 +70,7 @@ export default function DeceasedModal({
                 onChange={(e) => setDeathReasonNote(e.target.value)}
                 maxLength={60}
                 placeholder="e.g. Heat stroke, predator attack…"
-                className="w-full p-3 border border-slate-200 dark:border-border rounded-xl text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500"
+                className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-rose-500"
               />
               <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">This is saved as the cause of death and shown on the chicken&apos;s record.</p>
             </div>
@@ -81,7 +81,7 @@ export default function DeceasedModal({
           <button 
             type="button" 
             onClick={() => setSelectedFowlForDeceased(null)} 
-            className="flex-1 bg-slate-100 dark:bg-muted hover:bg-slate-200 text-slate-700 dark:text-card-foreground font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer"
+            className="flex-1 bg-slate-100 dark:bg-muted hover:bg-slate-200 text-slate-700 dark:text-card-foreground font-black py-3 rounded-md text-xs uppercase tracking-wider transition-all cursor-pointer"
           >
             Cancel
           </button>
@@ -89,7 +89,7 @@ export default function DeceasedModal({
             type="button" 
             onClick={handleMarkFowlDeceased} 
             disabled={loading}
-            className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md"
+            className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-3 rounded-md text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-2 shadow-md"
           >
             {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
             <span>Record Deceased</span>

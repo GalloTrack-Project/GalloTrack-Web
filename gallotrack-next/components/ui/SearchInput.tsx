@@ -21,7 +21,7 @@ function SearchInput({ className, onClear, value, ...props }: SearchInputProps) 
         type="search"
         value={value}
         className={cn(
-          'h-10 w-full rounded-md border border-border bg-background py-2 pl-9 pr-9 text-sm text-foreground',
+          'h-10 w-full rounded-sm border border-border bg-background py-2 pl-9 pr-9 text-sm text-foreground',
           'placeholder:text-muted-foreground',
           'transition-colors duration-150 ease-out',
           'disabled:cursor-not-allowed disabled:opacity-50',
@@ -35,7 +35,7 @@ function SearchInput({ className, onClear, value, ...props }: SearchInputProps) 
           type="button"
           onClick={onClear}
           aria-label="Clear search"
-          className="absolute right-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+          className="absolute right-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>

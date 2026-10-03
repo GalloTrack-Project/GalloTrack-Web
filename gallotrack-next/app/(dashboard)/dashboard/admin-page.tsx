@@ -67,13 +67,13 @@ export default function AdminDashboardPage() {
     <div className="space-y-6 animate-fadeIn">
 
       {/* HERO HEADER */}
-      <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-transparent">
+      <div className="relative overflow-hidden rounded-lg border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-transparent">
         <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
+              <div className="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
                 <Shield className="w-6 h-6 text-amber-400" />
               </div>
               <div>
@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ADMIN ROLE INFO */}
-      <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-5 shadow-sm">
+      <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Admin Responsibilities</h3>
         </div>
@@ -156,9 +156,9 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
   const a = accentMap[accent] || accentMap.amber;
 
   return (
-    <div className={`bg-card/95 backdrop-blur-xl border ${a.border} rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-300`}>
+    <div className={`bg-card/95 backdrop-blur-xl border ${a.border} rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-300`}>
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl ${a.bg} border ${a.border} flex items-center justify-center text-lg`}>
+        <div className={`w-10 h-10 rounded-md ${a.bg} border ${a.border} flex items-center justify-center text-lg`}>
           {icon}
         </div>
         {trend && (
@@ -176,7 +176,7 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
 
 function RoleCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="p-3 bg-muted/20 rounded-xl hover:bg-muted/30 transition-colors">
+    <div className="p-3 bg-muted/20 rounded-md hover:bg-muted/30 transition-colors">
       <p className="text-xs font-bold text-card-foreground mb-1">{title}</p>
       <p className="text-[10px] text-muted-foreground font-medium">{description}</p>
     </div>

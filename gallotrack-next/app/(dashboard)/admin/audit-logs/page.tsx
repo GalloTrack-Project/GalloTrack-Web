@@ -112,7 +112,7 @@ export default function AuditLogsPage() {
           </div>
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
             <input
@@ -120,12 +120,12 @@ export default function AuditLogsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by action, admin, or target..."
-              className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+              className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
             />
           </div>
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
+        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Admin Activity</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredLogs.length} of {logs.length} records</span>
@@ -143,7 +143,7 @@ export default function AuditLogsPage() {
                 <div key={log.id} className="px-4 sm:px-5 py-3.5 hover:bg-muted/25 transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-sm bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
                         <Shield className="w-3.5 h-3.5 text-amber-400" />
                       </div>
                       <div className="min-w-0">

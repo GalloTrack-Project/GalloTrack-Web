@@ -62,7 +62,7 @@ export default function FowlDetailsModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-slate-200 dark:border-border max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-slate-200 dark:border-border max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto relative">
         <button 
           onClick={() => setSelectedFowlForDetails(null)} 
           className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
@@ -82,8 +82,8 @@ export default function FowlDetailsModal({
           subtitle="Bawat porsyento ay hati mula sa 50/50 na hatian ng Sire at Dam"
         />
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50 dark:bg-muted/50 p-4 rounded-2xl border border-slate-200/70 dark:border-border">
-          <div className="w-24 h-24 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner">
+        <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/70 dark:border-border">
+          <div className="w-24 h-24 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner">
             {selectedFowlForDetails.image_url ? (
               <img src={selectedFowlForDetails.image_url} alt={selectedFowlForDetails.name} className="w-full h-full object-cover" />
             ) : (
@@ -159,11 +159,11 @@ export default function FowlDetailsModal({
             {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.status !== 'Archived' && isMale(selectedFowlForDetails.gender) && (
               <div className="pt-1.5">
                 {selectedFowlForDetails.status === 'Sire Material' ? (
-                  <button type="button" onClick={() => handleSetActiveStatus(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+                  <button type="button" onClick={() => handleSetActiveStatus(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
                     Set back to Active
                   </button>
                 ) : (
-                  <button type="button" onClick={() => handleSetSireMaterial(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-lg transition-all cursor-pointer">
+                  <button type="button" onClick={() => handleSetSireMaterial(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
                     Mark as Sire Material
                   </button>
                 )}
@@ -199,10 +199,10 @@ export default function FowlDetailsModal({
                 key={r.id}
                 title={`${r.name} — ${badge}. ${context}.${target ? ' Klik para buksan ang profile.' : ''}`}
                 onClick={target ? () => setSelectedFowlForDetails(target) : undefined}
-                className={`flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50 hover:border-slate-200 transition-colors ${target ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-muted' : ''}`}
+                className={`flex items-center justify-between gap-3 p-3 rounded-md border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50 hover:border-slate-200 transition-colors ${target ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-muted' : ''}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
+                  <span className={`w-8 h-8 rounded-sm flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
                   <div className="min-w-0">
                     <p className={`text-xs font-black truncate ${target ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-card-foreground'}`}>{r.name}</p>
                     <p className="text-[9px] font-semibold text-slate-400 dark:text-muted-foreground uppercase tracking-wider truncate">{context}</p>
@@ -213,7 +213,7 @@ export default function FowlDetailsModal({
             );
           };
           return (
-            <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
+            <div className="bg-white dark:bg-card rounded-lg border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
               <h4 className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-100 mb-3">
                 <span>🧬 Sibling Match &amp; Lineage Relations</span>
                 <span className={`font-mono px-2 py-0.5 rounded border ${relations.length > 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:border-emerald-800' : 'text-slate-500 dark:text-muted-foreground bg-slate-100 dark:bg-muted border-slate-200 dark:border-border'}`}>
@@ -226,7 +226,7 @@ export default function FowlDetailsModal({
                 </p>
               ) : (
                 <>
-                  <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-medium bg-slate-50 dark:bg-muted/50 border border-slate-100 dark:border-border rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
+                  <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-medium bg-slate-50 dark:bg-muted/50 border border-slate-100 dark:border-border rounded-sm px-3 py-2 mb-3 flex items-start gap-2">
                     <span className="text-sm shrink-0">🧬</span>
                     <span>
                       <strong className="text-slate-700 dark:text-card-foreground">How lineage is matched:</strong> chickens sharing both the same{' '}
@@ -298,7 +298,7 @@ export default function FowlDetailsModal({
           };
 
           return (
-            <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
+            <div className="bg-white dark:bg-card rounded-lg border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
               <h4 className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-100 mb-3">
                 <span>📊 Sibling Performance Analysis</span>
                 <span className="font-mono px-2 py-0.5 rounded border text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800">
@@ -307,10 +307,10 @@ export default function FowlDetailsModal({
               </h4>
 
               {/* THIS BIRD */}
-              <div className="bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-900/50 rounded-xl p-3 mb-3">
+              <div className="bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-900/50 rounded-md p-3 mb-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-[9px] font-black">YOU</span>
+                    <span className="w-6 h-6 bg-emerald-600 text-white rounded-sm flex items-center justify-center text-[9px] font-black">YOU</span>
                     <span className="text-xs font-black text-slate-800 dark:text-slate-300">{selectedFowlForDetails.name}</span>
                   </div>
                   {formatStats(thisBirdStats)}
@@ -365,7 +365,7 @@ export default function FowlDetailsModal({
               )}
 
               {/* BREEDING INSIGHT */}
-              <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200/60 dark:border-border rounded-xl p-3 space-y-2">
+              <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200/60 dark:border-border rounded-md p-3 space-y-2">
                 <p className="text-[9px] font-black text-slate-600 dark:text-muted-foreground uppercase tracking-widest">🧬 Breeding Insight</p>
                 {bestSibling && bestSibling.stats.winRate > thisBirdStats.winRate ? (
                   <p className="text-[11px] text-slate-700 dark:text-card-foreground font-medium">
@@ -394,7 +394,7 @@ export default function FowlDetailsModal({
           const info = getMilestoneInfo(selectedFowlForDetails.birthdate, selectedFowlForDetails.gender);
           if (!info) return null;
           return (
-            <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
+            <div className="bg-white dark:bg-card rounded-lg border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
               <h4 className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-100 mb-3">
                 <span>📅 Development Timeline &amp; Calendar Milestones</span>
                 <span className="font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">CURRENT: {info.current?.stage || '—'}</span>
@@ -405,8 +405,8 @@ export default function FowlDetailsModal({
                   const isPast = info.parts.totalMonths >= s.toMonths;
                   const isNext = info.next !== null && info.next.id === s.id;
                   return (
-                    <div key={s.id} className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${isCurrent ? 'bg-emerald-50 border-emerald-300 shadow-sm' : isPast ? 'bg-slate-50 dark:bg-muted/50 border-slate-100 dark:border-border opacity-60' : 'bg-white dark:bg-card border-slate-100 dark:border-border'}`}>
-                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0 ${isCurrent ? 'bg-emerald-600' : isPast ? 'bg-slate-200 dark:bg-muted' : 'bg-white dark:bg-card border border-slate-200 dark:border-border'}`}>{s.icon}</span>
+                    <div key={s.id} className={`flex items-center gap-3 p-2.5 rounded-md border transition-all ${isCurrent ? 'bg-emerald-50 border-emerald-300 shadow-sm' : isPast ? 'bg-slate-50 dark:bg-muted/50 border-slate-100 dark:border-border opacity-60' : 'bg-white dark:bg-card border-slate-100 dark:border-border'}`}>
+                      <span className={`w-8 h-8 rounded-sm flex items-center justify-center text-base shrink-0 ${isCurrent ? 'bg-emerald-600' : isPast ? 'bg-slate-200 dark:bg-muted' : 'bg-white dark:bg-card border border-slate-200 dark:border-border'}`}>{s.icon}</span>
                       <div className="flex-1 min-w-0">
                         <p className={`text-xs font-black ${isCurrent ? 'text-emerald-800 dark:text-emerald-300' : isPast ? 'text-slate-500 dark:text-muted-foreground' : 'text-slate-700 dark:text-card-foreground'}`}>
                           {s.stage} <span className="font-mono text-[9px] text-slate-400 dark:text-muted-foreground">({s.fromMonths}–{isFinite(s.toMonths) ? s.toMonths : '∞'} mo)</span>
@@ -427,7 +427,7 @@ export default function FowlDetailsModal({
                 })}
               </div>
               {info.next && (
-                <p className="mt-3 text-[10px] text-slate-500 dark:text-muted-foreground bg-slate-50 dark:bg-muted/50 border border-slate-100 dark:border-border rounded-lg px-3 py-2 font-semibold">
+                <p className="mt-3 text-[10px] text-slate-500 dark:text-muted-foreground bg-slate-50 dark:bg-muted/50 border border-slate-100 dark:border-border rounded-sm px-3 py-2 font-semibold">
                   🗓️ Next milestone: reach <span className="text-amber-700 dark:text-amber-300 font-black">{info.next.stage}</span> around <span className="text-slate-800 dark:text-card-foreground font-black">{info.next.date.toLocaleDateString()}</span>
                   {info.next.daysUntil >= 0 ? ` — in ${info.next.daysUntil} day${info.next.daysUntil === 1 ? '' : 's'}.` : ` (already ${Math.abs(info.next.daysUntil)} days past due).`}
                 </p>
@@ -452,29 +452,29 @@ export default function FowlDetailsModal({
 
           return (
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl space-y-3 shadow-sm border border-slate-700/60">
+              <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-lg space-y-3 shadow-sm border border-slate-700/60">
                 <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-700/80">
                   <span>⚔️ Combat Analytics & Performance Vectors</span>
                   <span className="font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">CHICKEN ID: #{selectedFowlForDetails.id}</span>
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
-                  <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
+                  <div className="bg-slate-800/80 p-2.5 rounded-md border border-slate-700/60">
                     <span className="text-[9px] text-slate-400 dark:text-muted-foreground font-bold uppercase block">Total Fights</span>
                     <strong className="text-base text-white font-black">{totalFights}</strong>
                   </div>
-                  <div className="bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-700/40">
+                  <div className="bg-emerald-950/40 p-2.5 rounded-md border border-emerald-700/40">
                     <span className="text-[9px] text-emerald-400 font-bold uppercase block">Wins</span>
                     <strong className="text-base text-emerald-400 font-black">{wins} 🏆</strong>
                   </div>
-                  <div className="bg-rose-950/40 p-2.5 rounded-xl border border-rose-700/40">
+                  <div className="bg-rose-950/40 p-2.5 rounded-md border border-rose-700/40">
                     <span className="text-[9px] text-rose-400 font-bold uppercase block">Losses</span>
                     <strong className="text-base text-rose-400 font-black">{losses} 💀</strong>
                   </div>
-                  <div className="bg-amber-950/40 p-2.5 rounded-xl border border-amber-700/40">
+                  <div className="bg-amber-950/40 p-2.5 rounded-md border border-amber-700/40">
                     <span className="text-[9px] text-amber-400 font-bold uppercase block">Draws</span>
                     <strong className="text-base text-amber-400 font-black">{draws} 🤝</strong>
                   </div>
-                  <div className="bg-teal-950/40 p-2.5 rounded-xl border border-teal-700/40 col-span-2 sm:col-span-1">
+                  <div className="bg-teal-950/40 p-2.5 rounded-md border border-teal-700/40 col-span-2 sm:col-span-1">
                     <span className="text-[9px] text-teal-300 font-bold uppercase block">Per-Chicken Win Rate</span>
                     <strong className="text-base text-teal-300 font-black">{winRate}%</strong>
                     <span className="text-[8px] text-slate-300 block font-mono font-semibold">{wins}W - {losses}L</span>
@@ -498,7 +498,7 @@ export default function FowlDetailsModal({
                 const breeds = Array.from(breedMap.entries()).sort((a, b) => b[1].fights - a[1].fights);
                 if (breeds.length === 0) return null;
                 return (
-                  <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
+                  <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
                     <div className="p-3 bg-slate-50 dark:bg-muted/50 border-b border-slate-200/80 dark:border-border">
                       <h4 className="text-[11px] font-black text-slate-700 dark:text-card-foreground uppercase tracking-wider">🏆 Individual Per-Rasa Performance ({breeds.length} breed{breeds.length > 1 ? 's' : ''} faced)</h4>
                       <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold mt-0.5">Win / Loss breakdown against each opponent breed — specific to this chicken only.</p>
@@ -536,7 +536,7 @@ export default function FowlDetailsModal({
               })()}
 
               {/* DEDICATED INDIVIDUAL MATCH LOG TABLE */}
-              <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
+              <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
                 <div className="p-3 bg-slate-50 dark:bg-muted/50 border-b border-slate-200/80 dark:border-border flex justify-between items-center">
                   <h4 className="text-[11px] font-black text-slate-700 dark:text-card-foreground uppercase tracking-wider">Individual Fight History Logs ({totalFights})</h4>
                   <span className="text-[9px] font-mono font-bold bg-slate-200 dark:bg-muted text-slate-700 dark:text-card-foreground px-2 py-0.5 rounded">MATCH LOG PARITY</span>
@@ -614,14 +614,14 @@ export default function FowlDetailsModal({
           );
         })()}
 
-        <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-2xl border border-slate-100 dark:border-border">
+        <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-100 dark:border-border">
           <h4 className="text-[11px] font-black text-slate-400 dark:text-muted-foreground uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>
           
           {(() => {
             const selGen = generationOf(selectedFowlForDetails);
             const selInfo = generationInfo(selGen);
             return (
-              <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-xl px-3 py-2.5">
+              <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-md px-3 py-2.5">
                 <div className="min-w-0">
                   <p className="text-[9px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-wider">🧬 Breeding Generation</p>
                   <p className="text-[10px] font-bold text-slate-500 dark:text-muted-foreground truncate">{selInfo.label} · {selInfo.desc}</p>
@@ -732,23 +732,23 @@ export default function FowlDetailsModal({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
+          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Structural Weight</span>
             <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.weight ? `${weightFromStorage(selectedFowlForDetails.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : 'N/A'}</strong>
           </div>
-          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
+          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Height Dimension</span>
             <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.height ? `${heightFromStorage(selectedFowlForDetails.height, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : 'N/A'}</strong>
           </div>
-          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
+          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Eye Specimen Variant</span>
             <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
           </div>
-          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border">
+          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Visual Color Range</span>
             <strong className="text-slate-800 dark:text-card-foreground text-xs mt-0.5 block">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
           </div>
-          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-xl border border-slate-100 dark:border-border sm:col-span-2">
+          <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border sm:col-span-2">
             <span className="text-[10px] text-slate-400 dark:text-muted-foreground block font-bold uppercase tracking-wider">Behavioral Spec</span>
             <strong className="text-emerald-700 dark:text-emerald-300 text-xs mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
           </div>

@@ -27,11 +27,11 @@ export default function ForgotPasswordModal({
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-[22px] max-w-sm w-full overflow-hidden shadow-2xl shadow-slate-900/20 ring-1 ring-slate-200/80 dark:ring-border">
+      <div className="bg-white dark:bg-card rounded-lg max-w-sm w-full overflow-hidden shadow-2xl shadow-slate-900/20 ring-1 ring-slate-200/80 dark:ring-border">
         <div className="p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white border-b border-white/10">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-inner"><Key className="w-4 h-4 text-emerald-400" /></div>
+              <div className="w-9 h-9 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-inner"><Key className="w-4 h-4 text-emerald-400" /></div>
               <div>
                 <h3 className="text-sm font-black tracking-tight text-white">Reset Your Password</h3>
                 <p className="text-[10px] text-emerald-200/70 font-bold tracking-wider uppercase mt-0.5">Secure Recovery Link</p>
@@ -40,7 +40,7 @@ export default function ForgotPasswordModal({
             <button
               type="button"
               onClick={() => setShowForgotPasswordModal(false)}
-              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+              className="w-8 h-8 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
             >
               ✕
             </button>
@@ -59,7 +59,7 @@ export default function ForgotPasswordModal({
               <button
                 type="button"
                 onClick={() => setShowForgotPasswordModal(false)}
-                className="w-full mt-2 bg-slate-900 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-slate-900/20"
+                className="w-full mt-2 bg-slate-900 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-md text-xs transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-slate-900/20"
               >
                 Done
               </button>
@@ -67,7 +67,7 @@ export default function ForgotPasswordModal({
           ) : (
             <form onSubmit={handleSendResetLink} className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-emerald-600" /></div>
+                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-emerald-600" /></div>
                 <div>
                   <p className="text-sm text-slate-800 dark:text-card-foreground font-extrabold leading-relaxed tracking-tight">Enter your registered email</p>
                   <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium leading-relaxed mt-1">
@@ -81,26 +81,26 @@ export default function ForgotPasswordModal({
                   type="email"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full p-3 border border-slate-200/90 dark:border-border rounded-xl text-xs bg-slate-50/50 dark:bg-muted/50 outline-none focus:bg-white dark:focus:bg-input focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+                  className="w-full p-3 border border-slate-200/90 dark:border-border rounded-md text-xs bg-slate-50/50 dark:bg-muted/50 outline-none focus:bg-white dark:focus:bg-input focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
                   placeholder="you@example.com"
                   required
                 />
               </div>
               {forgotError && (
-                <div className="text-[11px] text-rose-600 font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-xl">{forgotError}</div>
+                <div className="text-[11px] text-rose-600 font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-md">{forgotError}</div>
               )}
               <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowForgotPasswordModal(false)}
-                  className="flex-1 bg-slate-100 dark:bg-muted hover:bg-slate-200 text-slate-700 dark:text-card-foreground font-extrabold px-5 py-3 rounded-xl text-xs transition-all cursor-pointer active:scale-[0.98]"
+                  className="flex-1 bg-slate-100 dark:bg-muted hover:bg-slate-200 text-slate-700 dark:text-card-foreground font-extrabold px-5 py-3 rounded-md text-xs transition-all cursor-pointer active:scale-[0.98]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={forgotLoading}
-                  className="flex-1 bg-slate-900 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-slate-900/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 bg-slate-900 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-md text-xs transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-slate-900/20 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {forgotLoading ? 'Sending Link...' : 'Send Reset Link'}
                 </button>

@@ -301,7 +301,7 @@ export default function AdminPanelPage() {
   const admins = profiles.filter((p) => p.is_admin || p.role === 'admin').length;
 
   const statCard = (label: string, value: number, accent: string, icon: React.ReactNode) => (
-    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
+    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
@@ -350,7 +350,7 @@ export default function AdminPanelPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border overflow-x-auto shrink-0 mb-4">
+        <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded-lg border border-border overflow-x-auto shrink-0 mb-4">
           {([
             { id: 'users' as AdminTab, label: 'Users', icon: <Users size={14} /> },
             { id: 'audit' as AdminTab, label: 'Audit Logs', icon: <ClipboardList size={14} /> },
@@ -359,7 +359,7 @@ export default function AdminPanelPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/30'
                   : 'text-muted-foreground hover:text-card-foreground hover:bg-muted'
@@ -373,7 +373,7 @@ export default function AdminPanelPage() {
 
         {toast && (
           <div
-            className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
+            className={`mb-4 text-xs font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
               toast.type === 'success'
                 ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
                 : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
@@ -392,7 +392,7 @@ export default function AdminPanelPage() {
           {statCard('Verified', verified, 'text-sky-400', <Shield size={20} />)}
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
@@ -401,14 +401,14 @@ export default function AdminPanelPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, or farm..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value as 'all' | 'admin' | 'owner')}
-                className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
+                className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admins Only</option>
@@ -417,7 +417,7 @@ export default function AdminPanelPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'suspended' | 'deactivated')}
-                className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
+                className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active Only</option>
@@ -430,17 +430,17 @@ export default function AdminPanelPage() {
 
         <div className="md:hidden space-y-3 mb-6">
           {filteredProfiles.length === 0 && (
-            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-8 text-center">
+            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-8 text-center">
               <p className="text-xs text-muted-foreground font-semibold">No users found.</p>
             </div>
           )}
           {filteredProfiles.map((user) => (
-            <div key={user.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xs">
+            <div key={user.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 shadow-2xs">
               <div className="flex items-center gap-3 mb-3">
                 {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="avatar" className="w-10 h-10 rounded-xl object-cover border border-border shrink-0" />
+                  <img src={user.avatar_url} alt="avatar" className="w-10 h-10 rounded-md object-cover border border-border shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><User size={16} /></div>
+                  <div className="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><User size={16} /></div>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-extrabold text-card-foreground truncate">{profileDisplayName(user)}</p>
@@ -472,7 +472,7 @@ export default function AdminPanelPage() {
                     const nextStatus = status === 'active' ? 'suspended' : 'active';
                     handleSetStatus(user, nextStatus);
                   }}
-                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                     getAccountStatus(user) === 'active'
                       ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
                       : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
@@ -484,7 +484,7 @@ export default function AdminPanelPage() {
                   type="button"
                   disabled={actionId === user.id}
                   onClick={() => handleToggleVerified(user)}
-                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                  className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                     user.is_verified
                       ? 'bg-slate-500/10 border-slate-500/40 text-slate-400 hover:bg-slate-500/20'
                       : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
@@ -496,7 +496,7 @@ export default function AdminPanelPage() {
                   type="button"
                   disabled={actionId === user.id || user.id === adminProfile.id}
                   onClick={() => setPendingDelete(user)}
-                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Delete
                 </button>
@@ -505,7 +505,7 @@ export default function AdminPanelPage() {
           ))}
         </div>
 
-        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
+        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Registered Farm Owners</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredProfiles.length} of {total} records</span>
@@ -537,9 +537,9 @@ export default function AdminPanelPage() {
                     <td className="px-4 sm:px-5 py-3.5">
                       <div className="flex items-center space-x-3">
                         {user.avatar_url ? (
-                          <img src={user.avatar_url} alt="avatar" className="w-9 h-9 rounded-xl object-cover border border-border shrink-0" />
+                          <img src={user.avatar_url} alt="avatar" className="w-9 h-9 rounded-md object-cover border border-border shrink-0" />
                         ) : (
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><User size={14} /></div>
+                          <div className="w-9 h-9 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0"><User size={14} /></div>
                         )}
                         <div className="min-w-0">
                           <p className="text-xs font-extrabold text-card-foreground truncate">{profileDisplayName(user)}</p>
@@ -567,7 +567,7 @@ export default function AdminPanelPage() {
                             const nextStatus = status === 'active' ? 'suspended' : 'active';
                             handleSetStatus(user, nextStatus);
                           }}
-                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                             getAccountStatus(user) === 'active'
                               ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
                               : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
@@ -579,7 +579,7 @@ export default function AdminPanelPage() {
                           type="button"
                           disabled={actionId === user.id}
                           onClick={() => handleToggleVerified(user)}
-                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
+                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                             user.is_verified
                               ? 'bg-slate-500/10 border-slate-500/40 text-slate-400 hover:bg-slate-500/20'
                               : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
@@ -591,7 +591,7 @@ export default function AdminPanelPage() {
                           type="button"
                           disabled={actionId === user.id || user.id === adminProfile.id}
                           onClick={() => setPendingDelete(user)}
-                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Delete
                         </button>
@@ -610,7 +610,7 @@ export default function AdminPanelPage() {
         </>)}
 
         {activeTab === 'audit' && (<>
-          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
             <div className="flex items-center justify-between">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
@@ -619,7 +619,7 @@ export default function AdminPanelPage() {
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
                   placeholder="Search by action, admin, or target..."
-                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
                 />
               </div>
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold ml-3">
@@ -629,7 +629,7 @@ export default function AdminPanelPage() {
             </div>
           </div>
 
-          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
+          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
             {auditLoading ? (
               <div className="p-8 text-center">
                 <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
@@ -647,7 +647,7 @@ export default function AdminPanelPage() {
                   <div key={log.id} className="px-4 sm:px-5 py-3.5 hover:bg-muted/25 transition-colors">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-sm bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
                           <Shield className="w-3.5 h-3.5 text-amber-400" />
                         </div>
                         <div className="min-w-0">
@@ -686,8 +686,8 @@ export default function AdminPanelPage() {
 
       {pendingDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
+          <div className="bg-card border border-border rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
+            <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Farm Owner?</h3>
             <p className="text-center text-[11px] text-muted-foreground font-semibold leading-relaxed">
               This permanently removes <span className="text-rose-400 font-black">{profileDisplayName(pendingDelete)}</span> and all
@@ -707,7 +707,7 @@ export default function AdminPanelPage() {
                 type="button"
                 disabled={deleting}
                 onClick={() => setPendingDelete(null)}
-                className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+                className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -715,7 +715,7 @@ export default function AdminPanelPage() {
                 type="button"
                 disabled={deleting}
                 onClick={handleConfirmDelete}
-                className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deleting && <span className="w-3.5 h-3.5 border-2 border-rose-300 border-t-transparent rounded-full animate-spin"></span>}
                 {deleting ? 'Deleting...' : 'Delete Forever'}
@@ -727,17 +727,17 @@ export default function AdminPanelPage() {
 
       {viewUser && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setViewUser(null); setViewUserFarm(null); }}>
-          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card border border-border rounded-lg shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
               <h3 className="text-sm font-black text-card-foreground">User Details</h3>
-              <button type="button" onClick={() => { setViewUser(null); setViewUserFarm(null); }} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer"><X size={14} /></button>
+              <button type="button" onClick={() => { setViewUser(null); setViewUserFarm(null); }} className="w-7 h-7 rounded-sm bg-muted flex items-center justify-center text-xs text-muted-foreground hover:text-foreground cursor-pointer"><X size={14} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-3">
                 {viewUser.avatar_url ? (
-                  <img src={viewUser.avatar_url} alt="avatar" className="w-14 h-14 rounded-xl object-cover border border-border" />
+                  <img src={viewUser.avatar_url} alt="avatar" className="w-14 h-14 rounded-md object-cover border border-border" />
                 ) : (
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl"><User size={20} /></div>
+                  <div className="w-14 h-14 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl"><User size={20} /></div>
                 )}
                 <div>
                   <p className="text-base font-extrabold text-card-foreground">{profileDisplayName(viewUser)}</p>
@@ -751,34 +751,34 @@ export default function AdminPanelPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-[10px]">
-                <div className="bg-muted/25 rounded-xl p-3">
+                <div className="bg-muted/25 rounded-md p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Farm</p>
                   <p className="font-bold text-card-foreground">{viewUser.farm_name || viewUserFarm?.farm_name || '—'}</p>
                 </div>
-                <div className="bg-muted/25 rounded-xl p-3">
+                <div className="bg-muted/25 rounded-md p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Contact</p>
                   <p className="font-bold text-card-foreground">{viewUser.contact_number || viewUser.phone_number || viewUserFarm?.contact_number || '—'}</p>
                 </div>
-                <div className="bg-muted/25 rounded-xl p-3">
+                <div className="bg-muted/25 rounded-md p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Joined</p>
                   <p className="font-bold text-card-foreground">{viewUser.created_at ? new Date(viewUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</p>
                 </div>
-                <div className="bg-muted/25 rounded-xl p-3">
+                <div className="bg-muted/25 rounded-md p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Last Sign In</p>
                   <p className="font-bold text-card-foreground">{viewUser.last_sign_in_at ? new Date(viewUser.last_sign_in_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</p>
                 </div>
-                <div className="bg-muted/25 rounded-xl p-3">
+                <div className="bg-muted/25 rounded-md p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Account Status</p>
                   <p className="font-bold">{statusBadge(viewUser)}</p>
                 </div>
-                <div className="bg-muted/25 rounded-xl p-3">
+                <div className="bg-muted/25 rounded-md p-3">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Verification</p>
                   <p className="font-bold">{verificationBadge(viewUser)}</p>
                 </div>
               </div>
 
               {viewUserFarm && (
-                <div className="bg-muted/25 rounded-xl p-3 text-[10px]">
+                <div className="bg-muted/25 rounded-md p-3 text-[10px]">
                   <p className="font-bold text-muted-foreground uppercase tracking-wider mb-2">Farm Details</p>
                   {viewUserFarm.farm_name && (
                     <div className="mb-1.5">
@@ -810,7 +810,7 @@ export default function AdminPanelPage() {
                     const nextStatus = status === 'active' ? 'suspended' : 'active';
                     handleSetStatus(viewUser, nextStatus);
                   }}
-                  className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border transition-all cursor-pointer disabled:opacity-50 ${
+                  className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-md border transition-all cursor-pointer disabled:opacity-50 ${
                     getAccountStatus(viewUser) === 'active'
                       ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
                       : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
@@ -822,7 +822,7 @@ export default function AdminPanelPage() {
                   type="button"
                   disabled={actionId === viewUser.id || viewUser.id === adminProfile.id}
                   onClick={() => handleSetStatus(viewUser, 'deactivated')}
-                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-xl border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
                 >
                   Deactivate
                 </button>

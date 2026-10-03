@@ -128,7 +128,7 @@ function VerifyOtpCard() {
     }
   };
 
-  const inputClass = "w-full p-3 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground";
+  const inputClass = "w-full p-3 border border-input rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground";
   const labelClass = "block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest";
 
   return (
@@ -146,7 +146,7 @@ function VerifyOtpCard() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
+      <div className="bg-card/95 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
         <div className="p-8 sm:p-10 space-y-6 text-center">
           <div className="text-center space-y-2">
             <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
@@ -167,7 +167,7 @@ function VerifyOtpCard() {
               </p>
               <Link
                 href="/"
-                className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
+                className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">PROCEED TO LOGIN</span>
               </Link>
@@ -205,23 +205,23 @@ function VerifyOtpCard() {
                       onKeyDown={(e) => handleDigitKeyDown(e, i)}
                       onPaste={handlePaste}
                       aria-label={`Digit ${i + 1} of 6`}
-                      className="w-10 h-12 sm:w-11 sm:h-12 border border-input rounded-xl text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-foreground"
+                      className="w-10 h-12 sm:w-11 sm:h-12 border border-input rounded-md text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-foreground"
                     />
                   ))}
                 </div>
                 <p className="text-[9px] text-muted-foreground font-mono font-semibold mt-1.5">6-digit code. Check your Gmail inbox (and spam folder).</p>
               </div>
 
-              {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-xl">{error}</div>}
+              {error && <div className="text-xs text-rose-300 font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-md">{error}</div>}
 
               {resendNotice && (
-                <div className="text-xs text-emerald-300 font-bold text-center bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-xl leading-relaxed">{resendNotice}</div>
+                <div className="text-xs text-emerald-300 font-bold text-center bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-md leading-relaxed">{resendNotice}</div>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                className="group relative w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <span className="relative flex items-center justify-center gap-2">
                   {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}

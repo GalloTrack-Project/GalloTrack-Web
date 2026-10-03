@@ -42,7 +42,7 @@ function AncestorCard({ label, name, fowl, fowls, codes, generation, accent, onP
       type="button"
       onClick={() => fowl && onPick?.(fowl)}
       disabled={!fowl}
-      className={`w-[184px] shrink-0 text-left bg-card rounded-xl border ${a.border} shadow-sm px-3 py-2 space-y-1 transition-all ${
+      className={`w-[184px] shrink-0 text-left bg-card rounded-md border ${a.border} shadow-sm px-3 py-2 space-y-1 transition-all ${
         fowl ? 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : 'opacity-90 cursor-default'
       }`}
     >
@@ -165,7 +165,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
 
   if (fowls.length === 0 || !subject) {
     return (
-      <div className="bg-card p-10 text-center rounded-3xl border border-border shadow-sm space-y-2">
+      <div className="bg-card p-10 text-center rounded-lg border border-border shadow-sm space-y-2">
         <p className="text-sm font-extrabold text-card-foreground">No Pedigree To Show</p>
         <p className="text-xs text-muted-foreground font-medium">Register chickens with Sire and Dam to build the lineage map.</p>
       </div>
@@ -176,7 +176,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
 
   return (
     <div className="space-y-4">
-      <div className="bg-card rounded-3xl border border-border shadow-sm p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
+      <div className="bg-card rounded-lg border border-border shadow-sm p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
             📜 Pedigree / Lineage Map
@@ -193,7 +193,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
               const f = fowls.find((x) => x.id === Number(e.target.value));
               if (f) select(f);
             }}
-            className="w-full sm:w-72 p-2.5 border border-border rounded-xl bg-card text-card-foreground text-xs font-bold outline-none focus:border-emerald-500 cursor-pointer"
+            className="w-full sm:w-72 p-2.5 border border-border rounded-md bg-card text-card-foreground text-xs font-bold outline-none focus:border-emerald-500 cursor-pointer"
           >
             {fowls.map((f) => (
               <option key={f.id} value={f.id}>
@@ -213,7 +213,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
         />
       )}
 
-      <div className="bg-card rounded-3xl border border-border shadow-sm p-5 overflow-auto max-h-[70vh]">
+      <div className="bg-card rounded-lg border border-border shadow-sm p-5 overflow-auto max-h-[70vh]">
         <div className="flex items-stretch gap-6 min-w-max">
           <div className="flex flex-col justify-center">
             <AncestorCard

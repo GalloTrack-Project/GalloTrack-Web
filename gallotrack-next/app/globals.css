@@ -25,6 +25,8 @@
   --primary-foreground: #ffffff;
   --danger-foreground: #ffffff;
   --ring: #0f172a;
+  --accent: #047857;
+  --accent-foreground: #ffffff;
 
   --duration-fast: 150ms;
   --duration-base: 200ms;
@@ -56,6 +58,21 @@
   --primary-foreground: #04210f;
   --danger-foreground: #4c0519;
   --ring: #e2e8f0;
+  --accent: #10b981;
+  --accent-foreground: #04210f;
+}
+
+/* ROLE ACCENT — the shell sets data-role; owner inherits the primary green,
+   admin swaps to amber. Contrast verified: white on #b45309 = 5.02:1,
+   #04210f on #fbbf24 = 10.23:1. */
+[data-role="admin"] {
+  --accent: #b45309;
+  --accent-foreground: #ffffff;
+}
+
+.dark [data-role="admin"] {
+  --accent: #fbbf24;
+  --accent-foreground: #04210f;
 }
 
 @theme inline {
@@ -77,15 +94,21 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-danger-foreground: var(--danger-foreground);
   --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  --radius-xs: 0.125rem;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.5rem;
-  --radius-4xl: 2rem;
+  /* Radius scale: three semantic sizes. sm = controls, md = cards/panels/modals,
+     lg = large blocks. xl/2xl/3xl/4xl are pinned onto the same scale as a safety
+     net for any call site that has not been migrated yet, so nothing can render
+     off-scale. */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 10px;
+  --radius-2xl: 16px;
+  --radius-3xl: 16px;
+  --radius-4xl: 16px;
 
   --shadow-2xs: 0 1px rgb(0 0 0 / 0.05);
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);

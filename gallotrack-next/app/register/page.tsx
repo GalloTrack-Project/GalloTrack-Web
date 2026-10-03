@@ -180,7 +180,7 @@ export default function RegisterPage() {
   };
 
   const inputBase =
-    "w-full p-3 border border-input rounded-xl text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground";
+    "w-full p-3 border border-input rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground";
   const inputIcon = `${inputBase} pl-9`;
   const labelClass = "block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest";
 
@@ -199,18 +199,18 @@ export default function RegisterPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border my-4">
+      <div className="bg-card/95 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border my-4">
         <div className="p-6 sm:p-8 space-y-5">
           {/* Header */}
           <div className="text-center space-y-2">
             <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
-            <h1 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
+            <p className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</p>
             <h1 className="text-lg sm:text-xl font-black text-emerald-400 tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
             <p className="text-[10px] text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
           </div>
 
           {maintenanceMsg && (
-            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl">{maintenanceMsg}</div>
+            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-md">{maintenanceMsg}</div>
           )}
 
           {/* Step Indicator */}
@@ -219,7 +219,7 @@ export default function RegisterPage() {
               <div key={s.id} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1.5">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all duration-300 ${
+                    className={`w-10 h-10 rounded-md flex items-center justify-center text-xs font-black transition-all duration-300 ${
                       step > s.id
                         ? 'bg-emerald-500 text-white'
                         : step === s.id
@@ -243,16 +243,16 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="text-xs text-rose-300 light:text-rose-600 font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl">{error}</div>
+            <div className="text-xs text-rose-300 light:text-rose-600 font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-md">{error}</div>
           )}
 
           <form onSubmit={step === 3 ? handleRegister : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
             {/* Step 1: Personal Information */}
             {step === 1 && (
               <div className="space-y-4 animate-enter-right">
-                <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="bg-muted/25 border border-border rounded-lg p-4 sm:p-5 space-y-4">
                   <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">👤</span>
+                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">👤</span>
                     Personal Information
                   </h2>
                   <div>
@@ -283,9 +283,9 @@ export default function RegisterPage() {
             {/* Step 2: Farm / Business Information */}
             {step === 2 && (
               <div className="space-y-4 animate-enter-right">
-                <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="bg-muted/25 border border-border rounded-lg p-4 sm:p-5 space-y-4">
                   <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🏡</span>
+                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🏡</span>
                     Farm / Business Information
                   </h2>
                   <div>
@@ -309,9 +309,9 @@ export default function RegisterPage() {
             {/* Step 3: Account Security */}
             {step === 3 && (
               <div className="space-y-4 animate-enter-right">
-                <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="bg-muted/25 border border-border rounded-lg p-4 sm:p-5 space-y-4">
                   <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🔒</span>
+                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🔒</span>
                     Account Security
                   </h2>
                   <div>
@@ -326,7 +326,7 @@ export default function RegisterPage() {
                     <div className="relative">
                       <FieldIcon which="lock" />
                       <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={handleKeyDown} className={`${inputIcon} pr-11`} autoComplete="new-password" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-lg transition-colors cursor-pointer">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-sm transition-colors cursor-pointer">
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                         ) : (
@@ -352,7 +352,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border border-border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-card-foreground text-xs font-bold transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-md border border-border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-card-foreground text-xs font-bold transition-all cursor-pointer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS.chevronLeft}</svg>
                   Back
@@ -362,7 +362,7 @@ export default function RegisterPage() {
                 type={step === 3 ? 'submit' : 'button'}
                 onClick={step < 3 ? handleNext : undefined}
                 disabled={loading || systemBlocked}
-                className="group flex-1 relative bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                className="group flex-1 relative bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <span className="relative flex items-center justify-center gap-2">

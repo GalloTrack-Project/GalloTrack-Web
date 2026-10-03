@@ -39,7 +39,7 @@ export default function MilestonesPage() {
           <button
             type="button"
             onClick={() => router.push('/dashboard')}
-            className="w-9 h-9 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border flex items-center justify-center text-slate-400 dark:text-muted-foreground hover:text-emerald-600 hover:border-emerald-200 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 transition-all cursor-pointer"
+            className="w-9 h-9 rounded-md bg-white dark:bg-card border border-slate-200 dark:border-border flex items-center justify-center text-slate-400 dark:text-muted-foreground hover:text-emerald-600 hover:border-emerald-200 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 transition-all cursor-pointer"
           >
             ←
           </button>
@@ -71,7 +71,7 @@ export default function MilestonesPage() {
       </div>
 
       {/* MILESTONES LIST */}
-      <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border shadow-sm p-5 sm:p-6">
+      <div className="bg-white dark:bg-card rounded-lg border border-slate-200/80 dark:border-border shadow-sm p-5 sm:p-6">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
             <span className="block mb-3 text-slate-300"><Calendar size={36} /></span>
@@ -83,8 +83,8 @@ export default function MilestonesPage() {
               const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
               const overdue = info.next !== null && info.next!.daysUntil < 0;
               return (
-                <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30' : overdue ? 'bg-rose-50/70 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30' : 'bg-slate-50/60 border-slate-100 dark:bg-muted/50 dark:border-border'}`}>
-                  <span className="w-10 h-10 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card flex items-center justify-center text-lg shrink-0">{info.current?.icon || <CircleDot size={20} />}</span>
+                <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30' : overdue ? 'bg-rose-50/70 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30' : 'bg-slate-50/60 border-slate-100 dark:bg-muted/50 dark:border-border'}`}>
+                  <span className="w-10 h-10 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-card flex items-center justify-center text-lg shrink-0">{info.current?.icon || <CircleDot size={20} />}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-black text-slate-800 dark:text-foreground truncate">{fowl.name} <span className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground font-mono">#{fowl.id}</span></p>
                     <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold truncate">
@@ -113,25 +113,25 @@ export default function MilestonesPage() {
       </div>
 
       {/* STAGE REFERENCE */}
-      <div className="bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-950/40 dark:to-slate-900/30 border border-slate-200 dark:border-border rounded-2xl p-5">
+      <div className="bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-950/40 dark:to-slate-900/30 border border-slate-200 dark:border-border rounded-lg p-5">
         <p className="text-[10px] font-black text-slate-500 dark:text-muted-foreground uppercase tracking-widest mb-3">Development Stage Reference</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 text-center">
+          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md p-3 text-center">
             <span className="text-lg block"><CircleDot size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 dark:text-foreground mt-1">Chick</p>
             <p className="text-[8px] text-slate-400 dark:text-muted-foreground">0–6 months</p>
           </div>
-          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 text-center">
+          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md p-3 text-center">
             <span className="text-lg block"><ChickenIcon size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 dark:text-foreground mt-1">Stag / Pullet</p>
             <p className="text-[8px] text-slate-400 dark:text-muted-foreground">6–12 months</p>
           </div>
-          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 text-center">
+          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md p-3 text-center">
             <span className="text-lg block"><Activity size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 dark:text-foreground mt-1">Bull Stag / Hen</p>
             <p className="text-[8px] text-slate-400 dark:text-muted-foreground">12–24 months</p>
           </div>
-          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 text-center">
+          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md p-3 text-center">
             <span className="text-lg block"><Crown size={20} className="mx-auto" /></span>
             <p className="text-[10px] font-black text-slate-700 dark:text-foreground mt-1">Cock / Senior Hen</p>
             <p className="text-[8px] text-slate-400 dark:text-muted-foreground">24+ months</p>

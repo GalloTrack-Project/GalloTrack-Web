@@ -88,7 +88,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-slate-200 dark:border-border max-w-3xl w-full max-h-[90vh] flex flex-col relative">
+      <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-slate-200 dark:border-border max-w-3xl w-full max-h-[90vh] flex flex-col relative">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-slate-100 dark:border-border shrink-0">
           <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
@@ -101,7 +101,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
 
         {/* Overall Summary */}
         <div className="px-6 pt-4 pb-3 shrink-0">
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-4 text-white">
+          <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg p-4 text-white">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Overall Aggregate</span>
               <span className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
@@ -128,23 +128,23 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
 
           {/* Tier Summary */}
           <div className="grid grid-cols-5 gap-2 mt-3">
-            <div className="bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border rounded-xl p-2 text-center">
+            <div className="bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-emerald-700 dark:text-card-foreground">{eliteCount}</p>
               <p className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300 uppercase">Elite 70%+</p>
             </div>
-            <div className="bg-sky-50 dark:bg-muted/50 border border-sky-200 dark:border-border rounded-xl p-2 text-center">
+            <div className="bg-sky-50 dark:bg-muted/50 border border-sky-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-sky-700 dark:text-card-foreground">{strongCount}</p>
               <p className="text-[8px] font-bold text-sky-600 dark:text-sky-300 uppercase">Strong 50-69%</p>
             </div>
-            <div className="bg-amber-50 dark:bg-muted/50 border border-amber-200 dark:border-border rounded-xl p-2 text-center">
+            <div className="bg-amber-50 dark:bg-muted/50 border border-amber-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-amber-700 dark:text-card-foreground">{avgCount}</p>
               <p className="text-[8px] font-bold text-amber-600 dark:text-amber-300 uppercase">Average 30-49%</p>
             </div>
-            <div className="bg-rose-50 dark:bg-muted/50 border border-rose-200 dark:border-border rounded-xl p-2 text-center">
+            <div className="bg-rose-50 dark:bg-muted/50 border border-rose-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-rose-700 dark:text-card-foreground">{weakCount}</p>
               <p className="text-[8px] font-bold text-rose-600 dark:text-rose-300 uppercase">Weak &lt;30%</p>
             </div>
-            <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-xl p-2 text-center">
+            <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-slate-500 dark:text-muted-foreground">{noFightCount}</p>
               <p className="text-[8px] font-bold text-slate-500 dark:text-muted-foreground uppercase">No Fights</p>
             </div>
@@ -159,7 +159,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
             </button>
           ))}
           <div className="flex-1"></div>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="text-[10px] font-bold text-slate-500 dark:text-muted-foreground bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg px-2 py-1.5 cursor-pointer">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="text-[10px] font-bold text-slate-500 dark:text-muted-foreground bg-white dark:bg-card border border-slate-200 dark:border-border rounded-sm px-2 py-1.5 cursor-pointer">
             <option value="winrate">Sort: Win Rate</option>
             <option value="name">Sort: Name</option>
             <option value="fights">Sort: Fights</option>
@@ -188,7 +188,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                     <td className="py-2 font-bold text-slate-400 dark:text-muted-foreground">{i + 1}</td>
                     <td className="py-2">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
+                        <span className="w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
                            <ChickenIcon className="w-3 h-3" />
                         </span>
                         <div>

@@ -125,7 +125,7 @@ function Modal({
         aria-describedby={description ? `${id}-description` : undefined}
         tabIndex={-1}
         className={cn(
-          'relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg border border-border bg-card p-6 text-card-foreground shadow-lg animate-enter-right',
+          'relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-md border border-border bg-card p-6 text-card-foreground shadow-lg animate-enter-right',
           className,
         )}
       >

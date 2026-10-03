@@ -14,7 +14,7 @@ function EmptyState({ title, description, icon, action, compact = false, classNa
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card/50 text-center',
+        'flex flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border bg-card/50 text-center',
         compact ? 'px-4 py-8' : 'px-6 py-16',
         className,
       )}

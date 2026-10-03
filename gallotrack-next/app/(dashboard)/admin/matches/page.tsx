@@ -100,7 +100,7 @@ export default function AdminMatchAuditPage() {
   }
 
   const statCard = (label: string, value: number, accent: string, icon: ReactNode) => (
-    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5 shadow-2xs">
+    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
@@ -135,7 +135,7 @@ export default function AdminMatchAuditPage() {
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {toast && (
-          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-xl border animate-fadeIn ${
+          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
             toast.type === 'success' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
           }`}>{toast.message}</div>
         )}
@@ -157,7 +157,7 @@ export default function AdminMatchAuditPage() {
           {statCard('Deceased', stats.deceased, 'text-rose-300', <Skull className="w-5 h-5" />)}
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
@@ -166,24 +166,24 @@ export default function AdminMatchAuditPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by entry, opponent, owner, farm, or location..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold outline-none text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <select value={filterOutcome} onChange={(e) => setFilterOutcome(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterOutcome} onChange={(e) => setFilterOutcome(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Outcomes</option>
                 <option value="win">Wins</option>
                 <option value="loss">Losses</option>
                 <option value="draw">Draws</option>
                 <option value="no contest">No Contest</option>
               </select>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Types</option>
                 {typeOptions.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
-              <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-xl text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
+              <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all outline-none text-card-foreground cursor-pointer">
                 <option value="all">All Health</option>
                 <option value="Fit / Recovered">Fit / Recovered</option>
                 <option value="Minor Injury">Minor Injury</option>
@@ -197,12 +197,12 @@ export default function AdminMatchAuditPage() {
 
         <div className="md:hidden space-y-3 mb-6">
           {filtered.length === 0 && (
-            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-8 text-center">
+            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-8 text-center">
               <p className="text-xs text-muted-foreground font-semibold">No matches found.</p>
             </div>
           )}
           {filtered.map((match) => (
-            <div key={match.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xs">
+            <div key={match.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 shadow-2xs">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-extrabold text-card-foreground">{match.entry_name}</p>
                 <div className="flex gap-1.5">
@@ -223,7 +223,7 @@ export default function AdminMatchAuditPage() {
           ))}
         </div>
 
-        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xs overflow-hidden">
+        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Match Records</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {matches.length} records</span>

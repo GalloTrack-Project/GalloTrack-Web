@@ -26,7 +26,7 @@ function StatCard({ label, value, hint, icon, delta, className }: StatCardProps)
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-border bg-card p-5 text-card-foreground shadow-xs',
+        'flex flex-col gap-3 rounded-md border border-border bg-card p-5 text-card-foreground shadow-xs',
         className,
       )}
     >

@@ -12,7 +12,7 @@ function SkipLink({ href = '#main-content', children = 'Skip to main content', c
     <a
       href={href}
       className={cn(
-        'sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground',
+        'sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-sm focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground',
         className,
       )}
     >

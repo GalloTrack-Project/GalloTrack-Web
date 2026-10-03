@@ -16,7 +16,7 @@ function StatusItem({ icon, label, value, tone }: { icon?: string; label: string
       ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
       : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800';
   return (
-    <div className="bg-slate-50 dark:bg-muted/50 rounded-xl border border-slate-200/70 dark:border-border p-3 min-w-0">
+    <div className="bg-slate-50 dark:bg-muted/50 rounded-md border border-slate-200/70 dark:border-border p-3 min-w-0">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-muted-foreground leading-tight">{icon && <span className="mr-1">{icon}</span>}{label}</span>
         <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border whitespace-nowrap shrink-0 ${toneCls}`}>{value}</span>
@@ -181,7 +181,7 @@ export default function EncodeForm({
 
   return (
     <form onSubmit={handleAddFowl} className="space-y-5 animate-fadeIn">
-      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
+      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-xs text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
             <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">1</span>
@@ -191,7 +191,7 @@ export default function EncodeForm({
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Identifier Name</label>
-          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
@@ -201,7 +201,7 @@ export default function EncodeForm({
             type="text"
             value={birdCode}
             onChange={(e) => setBirdCode(e.target.value)}
-            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
             placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
           />
           <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">
@@ -217,7 +217,7 @@ export default function EncodeForm({
             value={wingBand}
             onChange={(e) => setWingBand(e.target.value)}
             maxLength={24}
-            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
             placeholder="e.g. W-001"
           />
           <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">
@@ -230,10 +230,10 @@ export default function EncodeForm({
           {selectedStrains.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2.5">
               {selectedStrains.map((s, i) => (
-                <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-[11px] font-semibold px-3 py-1.5 rounded-lg group hover:border-emerald-300 transition-all">
+                <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-[11px] font-semibold px-3 py-1.5 rounded-sm group hover:border-emerald-300 transition-all">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                   {s}
-                  <button type="button" onClick={() => removeStrain(i)} className="ml-0.5 w-5 h-5 rounded-md bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-slate-400 dark:text-muted-foreground hover:text-white flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
+                  <button type="button" onClick={() => removeStrain(i)} className="ml-0.5 w-5 h-5 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-slate-400 dark:text-muted-foreground hover:text-white flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
                 </span>
               ))}
             </div>
@@ -255,19 +255,19 @@ export default function EncodeForm({
                   if (e.key === 'Escape') setStrainOpen(false);
                 }}
                 placeholder="Select or type a strain..."
-                className={`w-full pl-3 pr-9 p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-neutral-400 dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
+                className={`w-full pl-3 pr-9 p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-neutral-400 dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
               />
               <button
                 type="button"
                 onClick={() => setStrainOpen((o) => !o)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-input text-slate-400 dark:text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-slate-400 dark:text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
                 aria-label="Toggle strain list"
               >
                 ▾
               </button>
             </div>
             {strainOpen && strainDropdownPos && createPortal(
-              <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}>
+              <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}>
                 <div className="overflow-y-auto">
                   {(() => {
                     const q = strainQuery.trim().toLowerCase();
@@ -305,7 +305,7 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Gender Class</label>
-            <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required>
+            <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input rounded-md text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required>
               <option value="" disabled className="bg-popover text-muted-foreground">Select Gender Class</option>
               <option value="Rooster" className="bg-popover text-popover-foreground">Sire (Rooster)</option>
               <option value="Hen" className="bg-popover text-popover-foreground">Dam (Hen)</option>
@@ -314,7 +314,7 @@ export default function EncodeForm({
         </div>
       </div>
 
-      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-5">
+      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-5">
         <h3 className="font-black text-xs text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">2</span>
           <span>Step 2: Physical Parameters</span>
@@ -328,14 +328,14 @@ export default function EncodeForm({
             value={newBirthdate}
             onChange={(e) => handleNewBirthdateChange(e.target.value)}
             max={new Date().toISOString().split('T')[0]}
-            className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+            className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
             required
           />
           {(() => {
             if (!autoCalcAge) return null;
             const parts = getAgePartsLocal(newBirthdate);
             return parts ? (
-              <p className="mt-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
+              <p className="mt-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 rounded-sm px-2.5 py-1.5">
                 📅 Auto Age: {getAgeLabelLocal(parts)} &nbsp;·&nbsp; <span className="font-mono font-semibold">Exact {getAgeExactLocal(parts)}</span>
               </p>
             ) : (
@@ -346,14 +346,14 @@ export default function EncodeForm({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && autoCalcAge && <span className="text-emerald-600 dark:text-emerald-300 font-black">· auto</span>}</label>
-            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none" placeholder="0" required />
+            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none" placeholder="0" required />
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Growth Stage</label>
             <select
               value={newGrowthStage}
               onChange={(e) => setNewGrowthStage(e.target.value)}
-              className={`w-full p-3 border border-input rounded-xl text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
+              className={`w-full p-3 border border-input rounded-md text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
             >
               <option value="" disabled className="bg-popover text-muted-foreground">Select stage...</option>
               <option value="Chick" className="bg-popover text-popover-foreground">Chick</option>
@@ -366,11 +366,11 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
+            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
+            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
@@ -383,19 +383,19 @@ export default function EncodeForm({
               onFocus={() => setLegColorOpen(true)}
               onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
               placeholder="Select or type a leg color..."
-              className={`w-full pl-3 pr-9 p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-neutral-400 dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
+              className={`w-full pl-3 pr-9 p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-neutral-400 dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
             />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-input text-slate-400 dark:text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-slate-400 dark:text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
               aria-label="Toggle leg color list"
             >
               ▾
             </button>
           </div>
           {legColorOpen && legColorDropdownPos && createPortal(
-            <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}>
+            <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}>
               <div className="overflow-y-auto">
                 {(() => {
                   const q = legColorQuery.trim().toLowerCase();
@@ -449,7 +449,7 @@ export default function EncodeForm({
         </div>
       </div>
 
-      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-3xl border border-slate-200/80 dark:border-border shadow-sm space-y-4">
+      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4">
         <h3 className="font-black text-xs text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black shrink-0">3</span>
           <span>Step 3: Ancestry Roots &amp; Photo</span>
@@ -475,11 +475,11 @@ export default function EncodeForm({
           const hasData = sireChildren.length > 0 || damChildren.length > 0;
           if (!hasData) return null;
           return (
-            <div className="bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-950/40 border border-sky-100 dark:border-sky-900/50 rounded-2xl p-4 space-y-2">
+            <div className="bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-950/40 border border-sky-100 dark:border-sky-900/50 rounded-lg p-4 space-y-2">
               <p className="text-[10px] font-black text-sky-700 dark:text-sky-300 uppercase tracking-widest">👤 Existing Offspring &amp; Siblings</p>
               <div className="grid grid-cols-2 gap-3">
                 {sireChildren.length > 0 && (
-                  <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-xl p-3">
+                  <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
                     <p className="text-[9px] font-black text-sky-600 dark:text-sky-300 uppercase">🐓 {sireName.trim()} Offspring</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{sireChildren.length}</p>
                     <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold">
@@ -491,7 +491,7 @@ export default function EncodeForm({
                   </div>
                 )}
                 {damChildren.length > 0 && (
-                  <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-xl p-3">
+                  <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
                     <p className="text-[9px] font-black text-pink-600 dark:text-pink-300 uppercase">🐔 {damName.trim()} Offspring</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{damChildren.length}</p>
                     <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold">
@@ -508,14 +508,14 @@ export default function EncodeForm({
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
               Sire Purity (%)
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 60" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 60" />
             <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Kasama ang Dam — dapat 100% lahat</p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">
               Dam Purity (%)
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-slate-300 dark:border-border rounded-xl text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 40" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-slate-300 dark:border-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 40" />
             <p className="text-[9px] text-slate-400 dark:text-muted-foreground mt-1 font-semibold">Kasama ang Sire — dapat 100% lahat</p>
           </div>
         </div>
@@ -526,7 +526,7 @@ export default function EncodeForm({
           const isFoundationPair = isFoundationStock(sireName) || isFoundationStock(damName) || !sireName.trim() || !damName.trim();
           const ok = total === 100;
           return (
-            <p className={`text-[10px] font-black px-3 py-2 rounded-xl border ${isFoundationPair ? 'bg-slate-50 dark:bg-muted/50 text-slate-500 dark:text-muted-foreground border-slate-200 dark:border-border' : ok ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'}`}>
+            <p className={`text-[10px] font-black px-3 py-2 rounded-md border ${isFoundationPair ? 'bg-slate-50 dark:bg-muted/50 text-slate-500 dark:text-muted-foreground border-slate-200 dark:border-border' : ok ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'}`}>
               {isFoundationPair
                 ? `Foundation Stock pair — purity total: ${total}% (exempt, 100/100 auto-applied)`
                 : ok
@@ -535,7 +535,7 @@ export default function EncodeForm({
             </p>
           );
         })()}
-        <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-2xl p-4 space-y-3">
+        <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-widest">🧬 Generational Purity &amp; Backcrossing</p>
@@ -554,12 +554,12 @@ export default function EncodeForm({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-xl p-3">
+            <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
               <p className="text-[9px] font-black text-sky-600 dark:text-sky-300 uppercase tracking-wider">🐓 Sire Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{sireName.trim() ? sireName : '—'}</p>
               <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% purity` : '—'}</p>
             </div>
-            <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-xl p-3">
+            <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
               <p className="text-[9px] font-black text-pink-600 dark:text-pink-300 uppercase tracking-wider">🐔 Dam Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{damName.trim() ? damName : '—'}</p>
               <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground mt-0.5">{damName.trim() ? `${damGenInfo.label} · ${generationPurity(damGen)}% purity` : '—'}</p>
@@ -573,7 +573,7 @@ export default function EncodeForm({
           subtitle="Auto-computed mula sa magulang — 50% Sire, 50% Dam, halved bawat henerasyon"
         />
         {!previewBloodlineStats || previewBloodlineStats.knownPct === 0 ? (
-          <div className="bg-slate-50 dark:bg-muted/50 border border-dashed border-slate-200 dark:border-border rounded-2xl p-4">
+          <div className="bg-slate-50 dark:bg-muted/50 border border-dashed border-slate-200 dark:border-border rounded-lg p-4">
             <p className="text-[10px] font-black text-slate-400 dark:text-muted-foreground uppercase tracking-widest">
               🧬 Bloodline Hatian
             </p>
@@ -584,7 +584,7 @@ export default function EncodeForm({
         ) : null}
         <div>
           <label className="block text-[10px] font-bold text-slate-500 dark:text-muted-foreground uppercase mb-1.5 tracking-wider">Chicken Attachment Photo</label>
-          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-2xl cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative">
+          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative">
             {imagePreview ? (
               <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
@@ -595,7 +595,7 @@ export default function EncodeForm({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-card rounded-3xl border-2 border-slate-900 dark:border-border shadow-sm p-5">
+      <div className="bg-white dark:bg-card rounded-lg border-2 border-slate-900 dark:border-border shadow-sm p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -609,7 +609,7 @@ export default function EncodeForm({
           <StatusItem icon="🔗" label="Bloodline Consistency" value={bloodlineVerified ? `${computedBloodlinePct}%` : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
           <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
         </div>
-        <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-2xl text-xs shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
+        <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-xs shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
           <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Registering...' : 'REGISTER'}</span>
         </button>

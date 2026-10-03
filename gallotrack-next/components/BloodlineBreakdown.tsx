@@ -42,7 +42,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
   const { entries, dominant, strainCount, isDiluted, summary, knownPct, unknownPct } = resolved;
 
   return (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-2xl p-4 space-y-3">
+    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
@@ -112,7 +112,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
       )}
 
       {isDiluted && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl px-3 py-2">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-md px-3 py-2">
           <p className="text-[9px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">⚠️ Banta ng “Galapsaw”</p>
           <p className="text-[9px] text-amber-700/90 dark:text-amber-300/90 font-semibold mt-0.5 leading-relaxed">
             Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang {dominant.pct}%).

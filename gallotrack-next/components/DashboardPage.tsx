@@ -1,10 +1,12 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
 import { getAgeLabel } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { readChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
@@ -36,6 +38,8 @@ export default function DashboardPage() {
   const fowl = useFowl();
   const ui = useUI();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const chart = React.useMemo(() => readChartTokens(resolvedTheme), [resolvedTheme]);
 
   const {
     fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
@@ -75,9 +79,9 @@ export default function DashboardPage() {
     <div className="space-y-6 animate-fadeIn">
       
       {/* HEADER CARDS */}
-      <div className="rounded-3xl border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-emerald-500" /></div>
+          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-emerald-500" /></div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Farm Dashboard</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Registry, match results, milestones, and bloodline performance of your chickens</p>
@@ -91,20 +95,20 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setDateRangeOpen(o => !o)}
-            className="bg-muted hover:bg-muted/60 text-foreground border border-border px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
+            className="bg-muted hover:bg-muted/60 text-foreground border border-border px-4 py-2.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
             <span>{dateRangeLabel}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dateRangeOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
           </button>
           {dateRangeOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-popover rounded-2xl border border-border shadow-xl z-50 p-1.5">
+            <div className="absolute right-0 mt-2 w-56 bg-popover rounded-lg border border-border shadow-xl z-50 p-1.5">
               {DATE_RANGES.map((r) => (
                 <button
                   key={r.id}
                   type="button"
                   onClick={() => { setDateRangePreset(r.id); setDateRangeOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-emerald-300' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`w-full text-left px-3 py-2 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-emerald-300' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   {r.label}
                 </button>
@@ -113,7 +117,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => { setDateRangeOpen(false); fetchDatabaseResources(); }}
-                className="w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-md text-[11px] font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 {loading ? '↻ Syncing...' : '↻ Refresh Data'}
               </button>
@@ -126,22 +130,22 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* ACTIVE FOWL REGISTRY */}
-        <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-2xl"></div>
+        <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
+            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-xl px-2.5 py-2">
+            <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-md px-2.5 py-2">
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-sky-400" /></span>
               <div>
                 <p className="text-base font-black text-sky-400 leading-none">{maleActiveFowls.length}</p>
                 <p className="text-[8px] font-bold uppercase tracking-wider text-sky-400 mt-0.5">Males</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-xl px-2.5 py-2">
+            <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink-400" /></span>
               <div>
                 <p className="text-base font-black text-pink-400 leading-none">{femaleActiveFowls.length}</p>
@@ -154,7 +158,7 @@ export default function DashboardPage() {
               <Line
                 data={{
                   labels: monthLabels,
-                  datasets: [{ data: activeSpark, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.14)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
+                  datasets: [{ data: activeSpark, borderColor: chart.success, backgroundColor: withAlpha(chart.success, 0.14), fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
                 }}
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
@@ -169,11 +173,11 @@ export default function DashboardPage() {
         </div>
 
         {/* TOTAL MATCHES LOGGED */}
-        <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-2xl"></div>
+        <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Total Matches Logged</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
+            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{matchHistory.length}</div>
           <div className="h-12 -mx-1">
@@ -181,7 +185,7 @@ export default function DashboardPage() {
               <Bar
                 data={{
                   labels: monthLabels,
-                  datasets: [{ data: matchesByMonth, backgroundColor: '#6366f1', borderRadius: 4, maxBarThickness: 14 }],
+                  datasets: [{ data: matchesByMonth, backgroundColor: chart.info, borderRadius: 4, maxBarThickness: 14 }],
                 }}
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
@@ -198,9 +202,9 @@ export default function DashboardPage() {
         {/* OVERALL WIN RATE */}
         <div
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
-          className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden"
+          className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden"
         >
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-2xl"></div>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
             <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
@@ -213,7 +217,7 @@ export default function DashboardPage() {
               <Line
                 data={{
                   labels: monthLabels,
-                  datasets: [{ data: trendWinRate, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.16)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
+                  datasets: [{ data: trendWinRate, borderColor: chart.success, backgroundColor: withAlpha(chart.success, 0.16), fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
                 }}
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } } }}
               />
@@ -228,23 +232,23 @@ export default function DashboardPage() {
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="group relative bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-2xl"></div>
+        <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Quick Actions</span>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
+            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
           </div>
           <div className="space-y-2 mt-1">
             <button
               onClick={() => navigate('profiling', 'form')}
-              className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
               <p className="text-[11px] font-extrabold text-emerald-400 group-hover/btn:text-emerald-300">+ Register New Chicken</p>
               <p className="text-[9px] text-emerald-400/70 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
               onClick={() => navigate('profiling', 'matchForm')}
-              className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
               <p className="text-[11px] font-extrabold text-indigo-400 group-hover/btn:text-indigo-300">+ Log Match Result</p>
               <p className="text-[9px] text-indigo-400/70 font-semibold mt-0.5">Record fight outcome</p>
@@ -262,10 +266,10 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+          <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-400" /></span>
+                <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-400" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h3>
                   <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
@@ -278,8 +282,8 @@ export default function DashboardPage() {
                 const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
                 const overdue = info.next !== null && info.next!.daysUntil < 0;
                 return (
-                  <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
-                    <span className="w-9 h-9 rounded-lg border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
+                  <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
+                    <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-card-foreground truncate">{fowl.name} <span className="text-[9px] font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
                       <p className="text-[10px] text-muted-foreground font-semibold truncate">
@@ -307,17 +311,17 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/milestones')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View All Milestones →
             </button>
           </div>
 
           {/* BLOODLINE OVERVIEW */}
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+          <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-400" /></span>
+                <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-400" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
                   <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
@@ -344,7 +348,7 @@ export default function DashboardPage() {
                 if (sorted.length === 0) return <p className="text-[10px] text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
                 const maxCount = sorted[0][1].count;
                 return sorted.map(([strain, data]) => (
-                  <div key={strain} className="bg-muted/50 border border-border rounded-xl px-3 py-2.5">
+                  <div key={strain} className="bg-muted/50 border border-border rounded-md px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-black text-card-foreground">{strain}</span>
                       <span className="text-[9px] font-bold text-teal-400">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
@@ -363,7 +367,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/lineage')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 border border-teal-500/20 rounded-xl py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View Full Lineage →
             </button>
@@ -375,15 +379,15 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* GAMEFOWL POPULATION & PERFORMANCE TRENDS */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
               <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Q3 2026)</h3>
               <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
             </div>
             <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Population</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded bg-emerald-400 border-t-2 border-dashed border-emerald-400 bg-transparent"></span>Win Rate %</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-success"></span>Population</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded border-t-2 border-dashed border-info bg-transparent"></span>Win Rate %</span>
             </div>
           </div>
           {fowls.length > 0 || matchHistory.length > 0 ? (
@@ -395,25 +399,25 @@ export default function DashboardPage() {
                     {
                       label: 'Population',
                       data: activeSpark,
-                      borderColor: '#047857',
-                      backgroundColor: 'rgba(4,120,87,0.16)',
+                      borderColor: chart.success,
+                      backgroundColor: withAlpha(chart.success, 0.16),
                       fill: true,
                       borderWidth: 2.5,
                       pointRadius: 3,
-                      pointBackgroundColor: '#047857',
+                      pointBackgroundColor: chart.success,
                       tension: 0.4,
                       yAxisID: 'y',
                     },
                     {
                       label: 'Win Rate %',
                       data: trendWinRate,
-                      borderColor: '#34d399',
-                      backgroundColor: 'rgba(52,211,153,0.04)',
+                      borderColor: chart.info,
+                      backgroundColor: withAlpha(chart.info, 0.06),
                       fill: false,
                       borderWidth: 2,
                       borderDash: [6, 5],
                       pointRadius: 3,
-                      pointBackgroundColor: '#34d399',
+                      pointBackgroundColor: chart.info,
                       tension: 0.4,
                       yAxisID: 'y1',
                     },
@@ -426,7 +430,11 @@ export default function DashboardPage() {
                   plugins: {
                     legend: { display: false },
                     tooltip: {
-                      backgroundColor: '#0f172a',
+                      backgroundColor: chart.card,
+                      titleColor: chart.foreground,
+                      bodyColor: chart.foreground,
+                      borderColor: chart.border,
+                      borderWidth: 1,
                       titleFont: { size: 11, weight: 'bold' },
                       bodyFont: { size: 11 },
                       padding: 10,
@@ -434,16 +442,16 @@ export default function DashboardPage() {
                     },
                   },
                   scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' } },
-                    y: { min: 0, grid: { color: 'rgba(148,163,184,0.15)' }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }, title: { display: true, text: 'Population', font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
-                    y1: { min: 0, max: 100, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#34d399', callback: (v) => `${v}%` }, title: { display: true, text: 'Win Rate', font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: chart.mutedForeground } },
+                    y: { min: 0, grid: { color: withAlpha(chart.mutedForeground, 0.2) }, ticks: { font: { size: 10, weight: 'bold' }, color: chart.mutedForeground }, title: { display: true, text: 'Population', font: { size: 9, weight: 'bold' }, color: chart.mutedForeground } },
+                    y1: { min: 0, max: 100, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10, weight: 'bold' }, color: chart.info, callback: (v) => `${v}%` }, title: { display: true, text: 'Win Rate', font: { size: 9, weight: 'bold' }, color: chart.mutedForeground } },
                   },
                 }}
               />
             </div>
           ) : (
             <div className="my-auto flex flex-col items-center justify-center text-center p-10 space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"><TrendingUp className="w-5 h-5" /></div>
+              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"><TrendingUp className="w-5 h-5" /></div>
               <p className="text-xs font-extrabold text-muted-foreground">No data available</p>
               <p className="text-[10px] text-muted-foreground max-w-[220px]">Encode chickens and log matches to visualize population and performance trends.</p>
             </div>
@@ -451,7 +459,7 @@ export default function DashboardPage() {
         </div>
 
         {/* BLOODLINE WIN RATIOS */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
           <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
             <div>
               <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Win Ratios</h3>
@@ -467,9 +475,9 @@ export default function DashboardPage() {
                     labels: crossbreedChartData.labels.map((l, i) => `${l} ${crossbreedChartData.data[i]}%`),
                     datasets: [{
                       data: crossbreedChartData.data,
-                      backgroundColor: ['#059669', '#10b981', '#34d399', '#047857', '#065f46', '#6ee7b7'],
+                      backgroundColor: chart.series,
                       borderWidth: 3,
-                      borderColor: 'var(--card)',
+                      borderColor: chart.card,
                       hoverOffset: 6,
                     }],
                   }}
@@ -478,8 +486,8 @@ export default function DashboardPage() {
                     maintainAspectRatio: false,
                     cutout: '68%',
                     plugins: {
-                      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 10, weight: 'bold' }, color: '#94a3b8' } },
-                      tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}` }, backgroundColor: '#0f172a', padding: 10, cornerRadius: 8 },
+                      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 10, weight: 'bold' }, color: chart.mutedForeground } },
+                      tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}` }, backgroundColor: chart.card, titleColor: chart.foreground, bodyColor: chart.foreground, borderColor: chart.border, borderWidth: 1, padding: 10, cornerRadius: 8 },
                     },
                   }}
                 />
@@ -492,7 +500,7 @@ export default function DashboardPage() {
             </>
           ) : (
             <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"><PieChart className="w-5 h-5" /></div>
+              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"><PieChart className="w-5 h-5" /></div>
               <p className="text-xs font-extrabold text-muted-foreground">No data available</p>
               <p className="text-[10px] text-muted-foreground max-w-[200px]">Log match records to generate bloodline win ratio breakdowns.</p>
             </div>
@@ -502,10 +510,10 @@ export default function DashboardPage() {
 
       {/* BREEDING PAIR PERFORMANCE ANALYTICS */}
       {pairingAnalytics.ranked.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-emerald-400" /></span>
+              <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-emerald-400" /></span>
               <div>
                 <h3 className="text-sm font-black text-card-foreground tracking-tight">Breeding Pair Performance Analytics</h3>
                 <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
@@ -604,7 +612,7 @@ export default function DashboardPage() {
       )}
 
       {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
         <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
           <div>
             <h3 className="text-sm font-black text-card-foreground tracking-tight">Historical Analytics Match Logs</h3>
@@ -615,7 +623,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => navigate('profiling', 'matchForm')}
-              className="bg-card hover:bg-emerald-500/20 active:scale-[0.98] text-card-foreground text-[10px] font-black px-4 py-2 rounded-lg border border-border shadow-sm transition-all cursor-pointer"
+              className="bg-card hover:bg-emerald-500/20 active:scale-[0.98] text-card-foreground text-[10px] font-black px-4 py-2 rounded-sm border border-border shadow-sm transition-all cursor-pointer"
             >
               View All →
             </button>
@@ -659,7 +667,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="p-4 font-bold text-card-foreground">{log.opponent || '—'}</td>
                     <td className="p-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
                     </td>
                     <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
                     <td className="p-4 text-center">
@@ -682,7 +690,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="p-4 text-center">
                       {log.video_url ? (
-                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/40 transition-all cursor-pointer">
+                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/40 transition-all cursor-pointer">
                           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
                         </a>
                       ) : (
