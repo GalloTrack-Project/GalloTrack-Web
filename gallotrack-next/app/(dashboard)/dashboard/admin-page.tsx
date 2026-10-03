@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
             <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
           </div>
         </div>
-        <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-muted-foreground">Initializing dashboard</p>
+        <p className="text-xs font-mono tracking-[0.2em] uppercase text-muted-foreground">Initializing dashboard</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function AdminDashboardPage() {
                 <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">
                   System <span className="text-warning">Overview</span>
                 </h1>
-                <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                <p className="text-sm text-muted-foreground font-medium mt-0.5">
                   Manage farm owner accounts and system configuration
                 </p>
               </div>
@@ -90,7 +90,7 @@ export default function AdminDashboardPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400/60"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] font-mono font-semibold text-success uppercase tracking-wider">All Systems Operational</span>
+              <span className="text-xs font-mono font-semibold text-success uppercase tracking-wider">All Systems Operational</span>
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
       {/* ADMIN ROLE INFO */}
       <div className="bg-card/95 border border-border rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Admin Responsibilities</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Admin Responsibilities</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <RoleCard title="User Management" description="Activate, deactivate, or delete farm owner accounts" />
@@ -162,14 +162,14 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
           {icon}
         </div>
         {trend && (
-          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${trend === 'up' ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
+          <span className={`text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${trend === 'up' ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
             {trend === 'up' ? <><ArrowUpRight className="w-3 h-3" /> Active</> : <><ArrowDownRight className="w-3 h-3" /> Low</>}
           </span>
         )}
       </div>
       <p className={`text-2xl sm:text-3xl font-black ${a.text} tracking-tight`}>{value}</p>
-      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{label}</p>
-      {subtitle && <p className="text-[10px] text-muted-foreground/70 mt-1 font-medium">{subtitle}</p>}
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{label}</p>
+      {subtitle && <p className="text-xs text-muted-foreground/70 mt-1 font-medium">{subtitle}</p>}
     </div>
   );
 }
@@ -177,8 +177,8 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
 function RoleCard({ title, description }: { title: string; description: string }) {
   return (
     <div className="p-3 bg-muted/20 rounded-md hover:bg-muted/30 transition-colors">
-      <p className="text-xs font-bold text-card-foreground mb-1">{title}</p>
-      <p className="text-[10px] text-muted-foreground font-medium">{description}</p>
+      <p className="text-sm font-bold text-card-foreground mb-1">{title}</p>
+      <p className="text-xs text-muted-foreground font-medium">{description}</p>
     </div>
   );
 }

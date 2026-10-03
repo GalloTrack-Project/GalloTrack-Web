@@ -180,9 +180,9 @@ export default function RegisterPage() {
   };
 
   const inputBase =
-    "w-full p-3 border border-input-border rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground";
+    "w-full p-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground";
   const inputIcon = `${inputBase} pl-9`;
-  const labelClass = "block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest";
+  const labelClass = "block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest";
 
   return (
     <div className="flex items-start justify-center min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328] light:from-emerald-50 light:via-slate-50 light:to-teal-50 overflow-hidden relative">
@@ -203,14 +203,14 @@ export default function RegisterPage() {
         <div className="p-6 sm:p-8 space-y-5">
           {/* Header */}
           <div className="text-center space-y-2">
-            <span className="text-[9px] font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
+            <span className="text-xs font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
             <p className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</p>
             <h1 className="text-lg sm:text-xl font-black text-success tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
-            <p className="text-[10px] text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
+            <p className="text-xs text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
           </div>
 
           {maintenanceMsg && (
-            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-md">{maintenanceMsg}</div>
+            <div className="text-sm text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-md">{maintenanceMsg}</div>
           )}
 
           {/* Step Indicator */}
@@ -219,7 +219,7 @@ export default function RegisterPage() {
               <div key={s.id} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1.5">
                   <div
-                    className={`w-10 h-10 rounded-md flex items-center justify-center text-xs font-black transition-all duration-300 ${
+                    className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-black transition-all duration-300 ${
                       step > s.id
                         ? 'bg-emerald-500 text-white'
                         : step === s.id
@@ -233,7 +233,7 @@ export default function RegisterPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS[s.icon]}</svg>
                     )}
                   </div>
-                  <span className={`text-[9px] font-bold tracking-wider ${step === s.id ? 'text-success' : 'text-muted-foreground'}`}>{s.label}</span>
+                  <span className={`text-xs font-bold tracking-wider ${step === s.id ? 'text-success' : 'text-muted-foreground'}`}>{s.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
                   <div className={`w-12 h-0.5 rounded-full mb-5 transition-all duration-300 ${step > s.id ? 'bg-emerald-500' : 'bg-border'}`}></div>
@@ -243,7 +243,7 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="text-xs text-danger light:text-danger font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-md">{error}</div>
+            <div className="text-sm text-danger light:text-danger font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-md">{error}</div>
           )}
 
           <form onSubmit={step === 3 ? handleRegister : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
@@ -251,8 +251,8 @@ export default function RegisterPage() {
             {step === 1 && (
               <div className="space-y-4 animate-enter-right">
                 <div className="bg-muted/25 border border-border rounded-lg p-4 sm:p-5 space-y-4">
-                  <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">👤</span>
+                  <h2 className="text-xs font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xs shrink-0">👤</span>
                     Personal Information
                   </h2>
                   <div>
@@ -284,8 +284,8 @@ export default function RegisterPage() {
             {step === 2 && (
               <div className="space-y-4 animate-enter-right">
                 <div className="bg-muted/25 border border-border rounded-lg p-4 sm:p-5 space-y-4">
-                  <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🏡</span>
+                  <h2 className="text-xs font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xs shrink-0">🏡</span>
                     Farm / Business Information
                   </h2>
                   <div>
@@ -310,8 +310,8 @@ export default function RegisterPage() {
             {step === 3 && (
               <div className="space-y-4 animate-enter-right">
                 <div className="bg-muted/25 border border-border rounded-lg p-4 sm:p-5 space-y-4">
-                  <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🔒</span>
+                  <h2 className="text-xs font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-sm bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xs shrink-0">🔒</span>
                     Account Security
                   </h2>
                   <div>
@@ -352,7 +352,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-md border border-border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-card-foreground text-xs font-bold transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-md border border-border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-card-foreground text-sm font-bold transition-all cursor-pointer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS.chevronLeft}</svg>
                   Back
@@ -370,12 +370,12 @@ export default function RegisterPage() {
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   ) : step < 3 ? (
                     <>
-                      <span className="text-xs tracking-widest">NEXT</span>
+                      <span className="text-sm tracking-widest">NEXT</span>
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS.chevronRight}</svg>
                     </>
                   ) : (
                     <>
-                      <span className="text-xs tracking-widest">{loading ? 'Creating Account...' : 'REGISTER'}</span>
+                      <span className="text-sm tracking-widest">{loading ? 'Creating Account...' : 'REGISTER'}</span>
                       {!loading && <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>}
                     </>
                   )}
@@ -384,7 +384,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="pt-1">
-              <Link href="/" className="text-[10px] font-bold text-muted-foreground hover:text-success transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
+              <Link href="/" className="text-xs font-bold text-muted-foreground hover:text-success transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
                 Already have an account? Log In
               </Link>
             </div>

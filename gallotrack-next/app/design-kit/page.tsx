@@ -69,7 +69,7 @@ const TYPE_SCALE = [
   { cls: 'text-lg font-semibold', label: 'lg / 18 — section heading' },
   { cls: 'text-base', label: 'base / 16 — emphasis body' },
   { cls: 'text-sm', label: 'sm / 14 — body (default)' },
-  { cls: 'text-xs', label: 'xs / 12 — minimum, metadata' },
+  { cls: 'text-sm', label: 'xs / 12 — minimum, metadata' },
 ];
 
 function Section({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
@@ -93,8 +93,8 @@ function Swatch({ token, note }: { token: string; note?: string }) {
         style={{ backgroundColor: `var(--${token})` }}
       />
       <div className="min-w-0">
-        <p className="text-foreground truncate font-mono text-xs font-semibold">--{token}</p>
-        {note ? <p className="text-muted-foreground truncate text-xs">{note}</p> : null}
+        <p className="text-foreground truncate font-mono text-sm font-semibold">--{token}</p>
+        {note ? <p className="text-muted-foreground truncate text-sm">{note}</p> : null}
       </div>
     </div>
   );
@@ -389,7 +389,7 @@ export default function DesignKitPage() {
           </Section>
 
           <footer className="border-border border-t pt-6">
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-sm">
               GalloTrack design kit — generated from{' '}
               <code className="font-mono">components/ui</code> and{' '}
               <code className="font-mono">app/globals.css</code>. Enforced by{' '}

@@ -47,29 +47,29 @@ function AncestorCard({ label, name, fowl, fowls, codes, generation, accent, onP
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className={`text-[8px] font-black uppercase tracking-widest ${a.text}`}>{label}</span>
-        <span className="text-[8px] font-black text-muted-foreground tabular-nums">G{generation}</span>
+        <span className={`text-xs font-black uppercase tracking-widest ${a.text}`}>{label}</span>
+        <span className="text-xs font-black text-muted-foreground tabular-nums">G{generation}</span>
       </div>
       <div className="flex items-center gap-1.5 min-w-0">
         {code && (
-          <span className={`text-[8px] font-mono font-black px-1.5 py-0.5 rounded shrink-0 ${a.badge}`}>{code}</span>
+          <span className={`text-xs font-mono font-black px-1.5 py-0.5 rounded shrink-0 ${a.badge}`}>{code}</span>
         )}
-        <span className="text-[11px] font-black text-card-foreground truncate">
+        <span className="text-xs font-black text-card-foreground truncate">
           {missing ? (name || 'Foundation Stock') : name}
         </span>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[9px] font-bold text-muted-foreground truncate">
+        <span className="text-xs font-bold text-muted-foreground truncate">
           {fowl ? fowl.breed || '—' : 'Not in registry'}
         </span>
         {stats && (
-          <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 tabular-nums shrink-0">
+          <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 tabular-nums shrink-0">
             {stats.dominant.pct}%
           </span>
         )}
       </div>
       {stats && stats.strainCount > 1 && (
-        <p className="text-[8px] font-semibold text-muted-foreground truncate">{stats.summary}</p>
+        <p className="text-xs font-semibold text-muted-foreground truncate">{stats.summary}</p>
       )}
     </button>
   );
@@ -167,7 +167,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
     return (
       <div className="bg-card p-10 text-center rounded-lg border border-border shadow-sm space-y-2">
         <p className="text-sm font-extrabold text-card-foreground">No Pedigree To Show</p>
-        <p className="text-xs text-muted-foreground font-medium">Register chickens with Sire and Dam to build the lineage map.</p>
+        <p className="text-sm text-muted-foreground font-medium">Register chickens with Sire and Dam to build the lineage map.</p>
       </div>
     );
   }
@@ -178,10 +178,10 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
     <div className="space-y-4">
       <div className="bg-card rounded-lg border border-border shadow-sm p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
+          <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
             📜 Pedigree / Lineage Map
           </p>
-          <p className="text-[10px] text-muted-foreground font-semibold">
+          <p className="text-xs text-muted-foreground font-semibold">
             3 ancestor generations (parents → grandparents → great-grandparents). Sire sa itaas, Dam sa ibaba.
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
               const f = fowls.find((x) => x.id === Number(e.target.value));
               if (f) select(f);
             }}
-            className="w-full sm:w-72 p-2.5 border border-border rounded-md bg-card text-card-foreground text-xs font-bold focus:border-emerald-500 cursor-pointer"
+            className="w-full sm:w-72 p-2.5 border border-border rounded-md bg-card text-card-foreground text-sm font-bold focus:border-emerald-500 cursor-pointer"
           >
             {fowls.map((f) => (
               <option key={f.id} value={f.id}>
@@ -239,7 +239,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
         </div>
       </div>
 
-      <p className="text-[10px] text-muted-foreground font-semibold">
+      <p className="text-xs text-muted-foreground font-semibold">
         Ang bawat porsyento ay hati mula sa magulang ({UNKNOWN_BLOODLINE} = hindi rehistrado ang magulang sa registry).
         Kapag masyadong maraming krus at hindi na-track, bumababa ang specific bloodline percentage (“galapsaw”).
       </p>

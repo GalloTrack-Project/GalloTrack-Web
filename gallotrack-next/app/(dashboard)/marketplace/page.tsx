@@ -222,18 +222,18 @@ export default function MarketplacePage() {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
         <div className="w-10 h-10 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">Loading marketplace...</p>
+        <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">Loading marketplace...</p>
       </div>
     );
   }
 
-  const inputClass = 'w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-emerald-500 transition-all font-semibold text-card-foreground';
-  const labelClass = 'block text-[10px] font-black text-muted-foreground mt-2 uppercase tracking-widest';
+  const inputClass = 'w-full p-3 border border-border rounded-md text-sm bg-muted/25 focus:bg-card focus:border-emerald-500 transition-all font-semibold text-card-foreground';
+  const labelClass = 'block text-xs font-black text-muted-foreground mt-2 uppercase tracking-widest';
 
   return (
     <div className="space-y-6 animate-fadeIn">
       {toast && (
-        <div className={`fixed top-5 right-5 z-[9999] text-xs font-bold p-4 rounded-md border shadow-2xl backdrop-blur-xl animate-fadeIn ${
+        <div className={`fixed top-5 right-5 z-[9999] text-sm font-bold p-4 rounded-md border shadow-2xl backdrop-blur-xl animate-fadeIn ${
           toast.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
         }`}>{toast.message}</div>
       )}
@@ -244,7 +244,7 @@ export default function MarketplacePage() {
           <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner"><Egg className="w-5 h-5" /></div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Marketplace</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Buy and sell chickens within the GalloTrack community</p>
+            <p className="text-sm text-muted-foreground font-semibold mt-1">Buy and sell chickens within the GalloTrack community</p>
           </div>
         </div>
       </div>
@@ -260,7 +260,7 @@ export default function MarketplacePage() {
             key={tab.id}
             type="button"
             onClick={() => { setActiveTab(tab.id); if (tab.id !== 'create') { setEditingId(null); setForm(emptyForm); } }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-sm text-[11px] font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-sm text-xs font-bold transition-all cursor-pointer ${
               activeTab === tab.id ? 'bg-card shadow-sm text-card-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -287,7 +287,7 @@ export default function MarketplacePage() {
             <div className="rounded-lg border border-border bg-card/70 p-12 text-center">
               <span className="text-4xl mb-3 block"><Egg className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings available</p>
-              <p className="text-xs text-muted-foreground mt-1">Check back later or create your own listing!</p>
+              <p className="text-sm text-muted-foreground mt-1">Check back later or create your own listing!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -306,20 +306,20 @@ export default function MarketplacePage() {
                       <span className="text-sm font-black text-success whitespace-nowrap">₱{listing.price.toLocaleString()}</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.breed}</span>
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.gender}</span>
-                      {listing.age && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.age}</span>}
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.breed}</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.gender}</span>
+                      {listing.age && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.age}</span>}
                     </div>
                     {listing.description && (
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">{listing.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{listing.description}</p>
                     )}
                     <div className="border-t border-border pt-3 flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-bold text-card-foreground">{listing.seller_name}</p>
-                        <p className="text-[9px] text-muted-foreground">{listing.farm_name}</p>
+                        <p className="text-xs font-bold text-card-foreground">{listing.seller_name}</p>
+                        <p className="text-xs text-muted-foreground">{listing.farm_name}</p>
                       </div>
                       {listing.seller_contact && (
-                        <span className="text-[9px] font-bold text-muted-foreground">{listing.seller_contact}</span>
+                        <span className="text-xs font-bold text-muted-foreground">{listing.seller_contact}</span>
                       )}
                     </div>
                   </div>
@@ -341,8 +341,8 @@ export default function MarketplacePage() {
             <div className="rounded-lg border border-border bg-card/70 p-12 text-center">
               <span className="text-4xl mb-3 block"><Clipboard className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Create your first listing to start selling!</p>
-              <button type="button" onClick={() => setActiveTab('create')} className="mt-4 text-[11px] font-bold text-success hover:text-success cursor-pointer">+ Create Listing</button>
+              <p className="text-sm text-muted-foreground mt-1">Create your first listing to start selling!</p>
+              <button type="button" onClick={() => setActiveTab('create')} className="mt-4 text-xs font-bold text-success hover:text-success cursor-pointer">+ Create Listing</button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -357,14 +357,14 @@ export default function MarketplacePage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xs font-extrabold text-card-foreground truncate">{listing.title}</h3>
-                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span>
+                      <h3 className="text-sm font-extrabold text-card-foreground truncate">{listing.title}</h3>
+                      <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{listing.breed} · {listing.gender} · ₱{listing.price.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{listing.breed} · {listing.gender} · ₱{listing.price.toLocaleString()}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button type="button" onClick={() => handleEdit(listing)} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-emerald-500/40 text-success hover:bg-emerald-500/20 transition-all cursor-pointer">Edit</button>
-                    <button type="button" onClick={() => setDeleteConfirm(listing.id)} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer">Delete</button>
+                    <button type="button" onClick={() => handleEdit(listing)} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-emerald-500/40 text-success hover:bg-emerald-500/20 transition-all cursor-pointer">Edit</button>
+                    <button type="button" onClick={() => setDeleteConfirm(listing.id)} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer">Delete</button>
                   </div>
                 </div>
               ))}
@@ -433,12 +433,12 @@ export default function MarketplacePage() {
               <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Describe your chicken..." rows={3} />
             </div>
             <div className="flex gap-3 pt-2">
-              <button type="submit" disabled={saving} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+              <button type="submit" disabled={saving} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
                 {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                 {saving ? 'Saving...' : editingId ? 'Update Listing' : 'Submit Listing'}
               </button>
               {editingId && (
-                <button type="button" onClick={() => { setEditingId(null); setForm(emptyForm); setActiveTab('my'); }} className="text-[11px] font-black uppercase tracking-wider px-4 py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { setEditingId(null); setForm(emptyForm); setActiveTab('my'); }} className="text-xs font-black uppercase tracking-wider px-4 py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
               )}
             </div>
           </form>
@@ -451,10 +451,10 @@ export default function MarketplacePage() {
           <div className="bg-card border border-border rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
             <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto"><AlertTriangle className="w-6 h-6 text-danger" /></div>
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Listing?</h3>
-            <p className="text-center text-[11px] text-muted-foreground font-semibold">This action cannot be undone.</p>
+            <p className="text-center text-xs text-muted-foreground font-semibold">This action cannot be undone.</p>
             <div className="flex gap-2.5 pt-1">
-              <button type="button" onClick={() => setDeleteConfirm(null)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
-              <button type="button" onClick={() => handleDelete(deleteConfirm)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-all cursor-pointer">Delete</button>
+              <button type="button" onClick={() => setDeleteConfirm(null)} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
+              <button type="button" onClick={() => handleDelete(deleteConfirm)} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-all cursor-pointer">Delete</button>
             </div>
           </div>
         </div>

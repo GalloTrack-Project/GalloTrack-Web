@@ -94,7 +94,7 @@ export default function AdminMatchAuditPage() {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
         <div className="w-10 h-10 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">Loading match records...</p>
+        <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">Loading match records...</p>
       </div>
     );
   }
@@ -105,7 +105,7 @@ export default function AdminMatchAuditPage() {
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
       </div>
-      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
     </div>
   );
 
@@ -135,7 +135,7 @@ export default function AdminMatchAuditPage() {
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {toast && (
-          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
+          <div className={`mb-4 text-sm font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
             toast.type === 'success' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
           }`}>{toast.message}</div>
         )}
@@ -145,7 +145,7 @@ export default function AdminMatchAuditPage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
               Match <span className="text-warning">Audit</span>
             </h1>
-            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Review all match results, post-fight conditions, and video evidence</p>
+            <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Review all match results, post-fight conditions, and video evidence</p>
           </div>
         </div>
 
@@ -166,24 +166,24 @@ export default function AdminMatchAuditPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by entry, opponent, owner, farm, or location..."
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-sm bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <select value={filterOutcome} onChange={(e) => setFilterOutcome(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
+              <select value={filterOutcome} onChange={(e) => setFilterOutcome(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-xs font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Outcomes</option>
                 <option value="win">Wins</option>
                 <option value="loss">Losses</option>
                 <option value="draw">Draws</option>
                 <option value="no contest">No Contest</option>
               </select>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-xs font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Types</option>
                 {typeOptions.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
-              <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
+              <select value={filterHealth} onChange={(e) => setFilterHealth(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-xs font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
                 <option value="all">All Health</option>
                 <option value="Fit / Recovered">Fit / Recovered</option>
                 <option value="Minor Injury">Minor Injury</option>
@@ -198,19 +198,19 @@ export default function AdminMatchAuditPage() {
         <div className="md:hidden space-y-3 mb-6">
           {filtered.length === 0 && (
             <div className="bg-card/95 border border-border rounded-lg p-8 text-center">
-              <p className="text-xs text-muted-foreground font-semibold">No matches found.</p>
+              <p className="text-sm text-muted-foreground font-semibold">No matches found.</p>
             </div>
           )}
           {filtered.map((match) => (
             <div key={match.id} className="bg-card/95 border border-border rounded-lg p-4 shadow-2xs">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-extrabold text-card-foreground">{match.entry_name}</p>
+                <p className="text-sm font-extrabold text-card-foreground">{match.entry_name}</p>
                 <div className="flex gap-1.5">
-                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${outcomeColor(match.outcome)}`}>{match.outcome}</span>
-                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${healthColor(match.post_fight_condition)}`}>{match.post_fight_condition}</span>
+                  <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${outcomeColor(match.outcome)}`}>{match.outcome}</span>
+                  <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${healthColor(match.post_fight_condition)}`}>{match.post_fight_condition}</span>
                 </div>
               </div>
-              <div className="text-[9px] text-muted-foreground font-medium space-y-0.5">
+              <div className="text-xs text-muted-foreground font-medium space-y-0.5">
                 <p>vs <span className="text-card-foreground font-bold">{match.opponent}</span> ({match.opponent_breed || 'Unknown'})</p>
                 <p>Type: {match.type} · Location: {match.location}</p>
                 <p>Owner: <span className="text-card-foreground font-bold">{match.owner_name}</span> · {match.farm_name}</p>
@@ -225,13 +225,13 @@ export default function AdminMatchAuditPage() {
 
         <div className="hidden md:block bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Match Records</h2>
-            <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {matches.length} records</span>
+            <h2 className="text-xs font-black uppercase tracking-widest text-card-foreground">All Match Records</h2>
+            <span className="text-xs font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {matches.length} records</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[1000px]">
               <thead>
-                <tr className="text-[9px] font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">
+                <tr className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">
                   <th className="px-4 sm:px-5 py-3">Entry</th>
                   <th className="px-4 py-3">Opponent</th>
                   <th className="px-4 py-3">Type</th>
@@ -244,31 +244,31 @@ export default function AdminMatchAuditPage() {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={8} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">No matches found.</td></tr>
+                  <tr><td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground font-semibold">No matches found.</td></tr>
                 )}
                 {filtered.map((match) => (
                   <tr key={match.id} className="border-b border-border/60 last:border-0 hover:bg-muted/25 transition-colors">
                     <td className="px-4 sm:px-5 py-3.5">
-                      <p className="text-xs font-extrabold text-card-foreground">{match.entry_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{match.breed}</p>
+                      <p className="text-sm font-extrabold text-card-foreground">{match.entry_name}</p>
+                      <p className="text-xs text-muted-foreground">{match.breed}</p>
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="text-[11px] font-bold text-card-foreground">{match.opponent}</p>
-                      <p className="text-[10px] text-muted-foreground">{match.opponent_breed || '—'}</p>
+                      <p className="text-xs font-bold text-card-foreground">{match.opponent}</p>
+                      <p className="text-xs text-muted-foreground">{match.opponent_breed || '—'}</p>
                     </td>
-                    <td className="px-4 py-3.5 text-[11px] font-bold text-card-foreground">{match.type}</td>
-                    <td className="px-4 py-3.5"><span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${outcomeColor(match.outcome)}`}>{match.outcome}</span></td>
-                    <td className="px-4 py-3.5"><span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${healthColor(match.post_fight_condition)}`}>{match.post_fight_condition}</span></td>
+                    <td className="px-4 py-3.5 text-xs font-bold text-card-foreground">{match.type}</td>
+                    <td className="px-4 py-3.5"><span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${outcomeColor(match.outcome)}`}>{match.outcome}</span></td>
+                    <td className="px-4 py-3.5"><span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${healthColor(match.post_fight_condition)}`}>{match.post_fight_condition}</span></td>
                     <td className="px-4 py-3.5">
-                      <p className="text-[11px] font-bold text-card-foreground truncate">{match.owner_name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{match.farm_name}</p>
+                      <p className="text-xs font-bold text-card-foreground truncate">{match.owner_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{match.farm_name}</p>
                     </td>
-                    <td className="px-4 py-3.5 text-[10px] text-muted-foreground font-semibold whitespace-nowrap">{match.date ? new Date(match.date).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3.5 text-xs text-muted-foreground font-semibold whitespace-nowrap">{match.date ? new Date(match.date).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3.5">
                       {match.video_url ? (
-                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-warning hover:text-warning underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
+                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-warning hover:text-warning underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>

@@ -45,22 +45,22 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
     <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
+          <p className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
             🧬 {title || 'Bloodline Percentage Breakdown'}
           </p>
           {subtitle ? (
-            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{subtitle}</p>
+            <p className="text-xs text-muted-foreground font-semibold mt-0.5">{subtitle}</p>
           ) : (
-            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
+            <p className="text-xs text-muted-foreground font-semibold mt-0.5">
               50% Sire · 50% Dam — halved bawat henerasyon
             </p>
           )}
         </div>
         <div className="text-right shrink-0">
-          <span className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
             {dominant.strain} {dominant.pct}%
           </span>
-          <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wide mt-1">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mt-1">
             {strainCount} bloodline{strainCount === 1 ? '' : 's'}
           </p>
         </div>
@@ -71,14 +71,14 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
           <div key={entry.strain} className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <span
-                className={`text-[10px] font-black truncate ${
+                className={`text-xs font-black truncate ${
                   entry.isUnknown ? 'text-muted-foreground' : 'text-slate-700 dark:text-card-foreground'
                 }`}
               >
                 {entry.strain}
               </span>
               <span
-                className={`text-[10px] font-black tabular-nums shrink-0 ${
+                className={`text-xs font-black tabular-nums shrink-0 ${
                   entry.isUnknown ? 'text-muted-foreground' : 'text-slate-800 dark:text-card-foreground'
                 }`}
               >
@@ -96,7 +96,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
       </div>
 
       {!compact && (
-        <p className="text-[9px] text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 dark:border-emerald-900/50 pt-2">
+        <p className="text-xs text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 dark:border-emerald-900/50 pt-2">
           <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
           {unknownPct > 0 && (
             <>
@@ -113,8 +113,8 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
 
       {isDiluted && (
         <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-md px-3 py-2">
-          <p className="text-[9px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">⚠️ Banta ng “Galapsaw”</p>
-          <p className="text-[9px] text-amber-700/90 dark:text-amber-300/90 font-semibold mt-0.5 leading-relaxed">
+          <p className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">⚠️ Banta ng “Galapsaw”</p>
+          <p className="text-xs text-amber-700/90 dark:text-amber-300/90 font-semibold mt-0.5 leading-relaxed">
             Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang {dominant.pct}%).
             Bumaba ang specific bloodline percentage — mas mahirap nang panatilihin ang magagandang katangian.
             Maganda ang pure o kontroladong breeding.

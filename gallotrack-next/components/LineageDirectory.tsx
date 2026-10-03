@@ -13,7 +13,7 @@ function EmptyState({ title, hint }: { title: string; hint: string }) {
     <div className="bg-card p-10 text-center rounded-lg border border-border shadow-sm space-y-2">
       <div className="w-12 h-12 bg-muted text-muted-foreground rounded-full flex items-center justify-center mx-auto"><Dna className="w-6 h-6" /></div>
       <h3 className="text-sm font-extrabold text-card-foreground">{title}</h3>
-      <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">{hint}</p>
+      <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">{hint}</p>
     </div>
   );
 }
@@ -64,25 +64,25 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
         className="group w-full flex items-center justify-between gap-3 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-md px-3.5 py-2.5 transition-all cursor-pointer"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-[10px] font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
+          <span className="text-xs font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
           <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
           <div className="min-w-0">
             <div className="flex items-center gap-1">
-              <p className="text-[11px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
+              <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
               {isBest && cs.decided > 0 && (
-                <span className="text-[6px] font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
+            <p className="text-xs text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
           </div>
         </div>
         <div className="shrink-0">
           {cs.total > 0 ? (
-            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+            <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
             {cs.winRate}% · {cs.wins}W-{cs.losses}L
           </span>
           ) : (
-            <span className="text-[8px] font-bold text-muted-foreground/50">No fights</span>
+            <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
           )}
         </div>
       </button>
@@ -96,28 +96,28 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
           <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-md flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-emerald-700 dark:text-emerald-400" /></div>
           <div>
             <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
-            <p className="text-[10px] text-muted-foreground font-semibold">{g.length} chickens · {males} male · {females} female</p>
+            <p className="text-xs text-muted-foreground font-semibold">{g.length} chickens · {males} male · {females} female</p>
           </div>
         </div>
-        <span className="text-[8px] font-black bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider">Full Siblings</span>
+        <span className="text-xs font-black bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider">Full Siblings</span>
       </div>
       <div className="px-5 pb-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-3.5 text-center">
-            <p className="text-[9px] font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
-            <p className="text-xs font-black text-card-foreground truncate">{g[0].sire}</p>
+            <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
+            <p className="text-sm font-black text-card-foreground truncate">{g[0].sire}</p>
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-lg p-3.5 text-center">
-            <p className="text-[9px] font-black text-pink uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
-            <p className="text-xs font-black text-card-foreground truncate">{g[0].dam}</p>
+            <p className="text-xs font-black text-pink uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
+            <p className="text-sm font-black text-card-foreground truncate">{g[0].dam}</p>
           </div>
         </div>
       </div>
       <div className="px-5 pb-4">
-        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Offspring</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Offspring</p>
         {roosterOffspring.length > 0 && (
           <div className="mb-3">
-              <p className="text-[9px] font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">🐓 Sire · {roosterOffspring.length}</p>
+              <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">🐓 Sire · {roosterOffspring.length}</p>
             <div className="space-y-1.5">
               {visibleRoosters.map((child, i) => renderOffspringRow(child, i))}
             </div>
@@ -125,33 +125,33 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
         )}
         {henOffspring.length > 0 && (
           <div className="mb-3">
-              <p className="text-[9px] font-black text-pink uppercase tracking-widest mb-1.5">🐔 Dam · {henOffspring.length}</p>
+              <p className="text-xs font-black text-pink uppercase tracking-widest mb-1.5">🐔 Dam · {henOffspring.length}</p>
             <div className="space-y-1.5">
               {visibleHens.map((child, i) => renderOffspringRow(child, i))}
             </div>
           </div>
         )}
         {hasMore && (
-          <button type="button" onClick={() => setExpanded(!expanded)} className="w-full mt-2 text-[10px] font-black text-success dark:text-emerald-400 hover:underline py-1 cursor-pointer">
+          <button type="button" onClick={() => setExpanded(!expanded)} className="w-full mt-2 text-xs font-black text-success dark:text-emerald-400 hover:underline py-1 cursor-pointer">
             {expanded ? 'Show less' : `View all ${ranked.length} offspring`}
           </button>
         )}
       </div>
       <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground"><Link2 className="w-3 h-3 inline" /> Pairing Win Rate</span>
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground"><Link2 className="w-3 h-3 inline" /> Pairing Win Rate</span>
           {decided > 0 && (
-            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${groupWinRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+            <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${groupWinRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
               {wins}W-{losses}L
             </span>
           )}
         </div>
         {ps && ps.totalFights > 0 ? (
-          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+          <span className={`text-xs font-black px-2.5 py-1 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
             {ps.winRate}%
           </span>
         ) : (
-          <span className="text-[10px] font-bold text-muted-foreground/50">No match data yet</span>
+          <span className="text-xs font-bold text-muted-foreground/50">No match data yet</span>
         )}
       </div>
     </div>
@@ -301,23 +301,23 @@ export default function LineageDirectory({
           <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="text-[11px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
+              <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
               {isBest && stats.decided > 0 && (
-                <span className="text-[7px] font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                <span className="text-xs font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground font-semibold truncate">
+            <p className="text-xs text-muted-foreground font-semibold truncate">
               {child.breed} · {child.gender} · {child.age || 'N/A'}
             </p>
           </div>
         </div>
         <div className="shrink-0 flex items-center gap-2">
           {stats.total > 0 ? (
-            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${stats.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+            <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${stats.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
               {stats.winRate}% · {stats.wins}W-{stats.losses}L
             </span>
           ) : (
-            <span className="text-[9px] font-bold text-muted-foreground/50">No fights</span>
+            <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
           )}
         </div>
       </button>
@@ -333,7 +333,7 @@ export default function LineageDirectory({
     const prefix = parentKind === 'sire' ? 'sire' : 'dam';
     return (
       <div className="mt-3 pt-3 border-t border-border space-y-2">
-        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
           {parentKind === 'sire' ? <><ChickenIcon className="w-3 h-3 inline" /> Sibling Subgroups by Dam</> : <><ChickenIcon className="w-3 h-3 inline" /> Sibling Subgroups by Sire</>}
         </p>
         {subgroups.map(([otherParent, members]) => {
@@ -350,15 +350,15 @@ export default function LineageDirectory({
                 className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-muted/80 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs">{parentKind === 'sire' ? <ChickenIcon className="w-4 h-4" /> : <ChickenIcon className="w-4 h-4" />}</span>
-                  <span className="text-[10px] font-black text-card-foreground truncate">{otherParent}</span>
-                  <span className="text-[8px] font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-full shrink-0">
+                  <span className="text-sm">{parentKind === 'sire' ? <ChickenIcon className="w-4 h-4" /> : <ChickenIcon className="w-4 h-4" />}</span>
+                  <span className="text-xs font-black text-card-foreground truncate">{otherParent}</span>
+                  <span className="text-xs font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-full shrink-0">
                     {members.length} chicken{members.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {sgStats.decided > 0 && (
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border ${sgStats.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                    <span className={`text-xs font-black px-1.5 py-0.5 rounded-full border ${sgStats.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
                       {sgStats.winRate}%
                     </span>
                   )}
@@ -416,7 +416,7 @@ export default function LineageDirectory({
                   <div className={`w-10 h-10 rounded-md ${c.bg} ${c.border} flex items-center justify-center shrink-0`}>{c.icon === 'sire' ? <ChickenIcon className="w-5 h-5" /> : <ChickenIcon className="w-5 h-5" />}</div>
                   <div className="min-w-0">
                     <p className="text-sm font-black text-card-foreground truncate">{parentName}</p>
-                    <p className="text-[10px] text-muted-foreground font-semibold">
+                    <p className="text-xs text-muted-foreground font-semibold">
                       {children.length} offspring · {males} male{males !== 1 ? 's' : ''} · {females} female{females !== 1 ? 's' : ''}
                       {multiPartner && <span className={`ml-1 ${c.text}`}>· {subgroups.length} {otherLabel}s</span>}
                       {gs.decided > 0 && <span className={`ml-1.5 ${c.text}`}>· {gs.winRate}% group win rate</span>}
@@ -425,7 +425,7 @@ export default function LineageDirectory({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {gs.decided > 0 && (
-                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${gs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                    <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${gs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
                       {gs.wins}W-{gs.losses}L
                     </span>
                   )}
@@ -437,22 +437,22 @@ export default function LineageDirectory({
               {isExpanded && (
                 <div className="border-t border-border bg-muted/30 p-4 sm:p-5 space-y-2 animate-fadeIn">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">All Offspring — Ranked by Performance</p>
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">All Offspring — Ranked by Performance</p>
                     {bestId && ranked[0] && getChildMatchStats(ranked[0].name).decided > 0 && (
-                      <span className="text-[8px] font-black bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-black bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
                         <Trophy className="w-3 h-3 inline" /> Top: {ranked[0].name}
                       </span>
                     )}
                   </div>
                   {roosters.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black text-info dark:text-sky-400 uppercase tracking-widest">🐓 Sire · {roosters.length}</p>
+                      <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest">🐓 Sire · {roosters.length}</p>
                       {roosters.map((child) => renderChildRow(child, bestId))}
                     </div>
                   )}
                   {hens.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black text-pink uppercase tracking-widest">🐔 Dam · {hens.length}</p>
+                      <p className="text-xs font-black text-pink uppercase tracking-widest">🐔 Dam · {hens.length}</p>
                       {hens.map((child) => renderChildRow(child, bestId))}
                     </div>
                   )}
@@ -475,36 +475,36 @@ export default function LineageDirectory({
           </div>
           <div className="flex-1">
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Family Lineage Directory</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-0.5">Track sibling groups, sire & dam offspring trees to compare performance per bloodline</p>
+            <p className="text-sm text-muted-foreground font-semibold mt-0.5">Track sibling groups, sire & dam offspring trees to compare performance per bloodline</p>
           </div>
           <div className="relative w-full sm:w-72 shrink-0">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
+            <input type="text" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
           </div>
         </div>
 
         <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-lg border border-border overflow-x-auto shrink-0">
-          <button type="button" onClick={() => setActiveTab('families')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'families' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setActiveTab('families')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'families' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <span className="text-sm"><Users className="w-4 h-4" /></span>
             <span>Full Siblings &amp; Families</span>
-            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'families' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fullFiltered.length}</span>
+            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === 'families' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fullFiltered.length}</span>
           </button>
-          <button type="button" onClick={() => setActiveTab('sire')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'sire' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setActiveTab('sire')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'sire' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <span className="text-sm"><ChickenIcon className="w-4 h-4" /></span>
             <span>Sire Offspring Tree</span>
-            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'sire' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireEntries.length}</span>
+            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === 'sire' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{sireEntries.length}</span>
           </button>
-          <button type="button" onClick={() => setActiveTab('dam')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'dam' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setActiveTab('dam')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'dam' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <span className="text-sm"><ChickenIcon className="w-4 h-4" /></span>
             <span>Dam Offspring Tree</span>
-            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'dam' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{damEntries.length}</span>
+            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === 'dam' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{damEntries.length}</span>
           </button>
-          <button type="button" onClick={() => setActiveTab('pedigree')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'pedigree' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+          <button type="button" onClick={() => setActiveTab('pedigree')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'pedigree' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <span className="text-sm"><GitBranch className="w-4 h-4" /></span>
             <span>Pedigree / Ancestors</span>
-            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === 'pedigree' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fowls.length}</span>
+            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === 'pedigree' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{fowls.length}</span>
           </button>
         </div>
       </div>
@@ -520,7 +520,7 @@ export default function LineageDirectory({
             <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 rounded-lg flex items-center justify-center shrink-0">{s.icon}</div>
             <div className="min-w-0">
               <p className="text-2xl font-black text-card-foreground leading-none">{s.value}</p>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mt-1">{s.label}</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mt-1">{s.label}</p>
             </div>
           </div>
         ))}
@@ -539,27 +539,27 @@ export default function LineageDirectory({
               <span className="w-9 h-9 bg-emerald-600 text-white rounded-md flex items-center justify-center"><Trophy className="w-5 h-5" /></span>
               <div>
                 <h3 className="text-sm font-black text-card-foreground">Breeding Recommendation</h3>
-                <p className="text-[10px] text-muted-foreground font-semibold">Based on sibling and pairing performance data</p>
+                <p className="text-xs text-muted-foreground font-semibold">Based on sibling and pairing performance data</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-lg p-3">
-                <p className="text-[9px] font-black text-success dark:text-emerald-400 uppercase tracking-widest"><Trophy className="w-3 h-3 inline" /> Best Cross</p>
-                <p className="text-xs font-black text-card-foreground mt-1">{best.sire} × {best.dam}</p>
-                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{best.winRate}% win rate · {best.wins}W-{best.losses}L</p>
+                <p className="text-xs font-black text-success dark:text-emerald-400 uppercase tracking-widest"><Trophy className="w-3 h-3 inline" /> Best Cross</p>
+                <p className="text-sm font-black text-card-foreground mt-1">{best.sire} × {best.dam}</p>
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{best.winRate}% win rate · {best.wins}W-{best.losses}L</p>
               </div>
               {eliteCount > 0 && (
                 <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-lg p-3">
-                  <p className="text-[9px] font-black text-success dark:text-emerald-400 uppercase tracking-widest"><CheckCircle className="w-3 h-3 inline" /> Elite Crosses</p>
+                  <p className="text-xs font-black text-success dark:text-emerald-400 uppercase tracking-widest"><CheckCircle className="w-3 h-3 inline" /> Elite Crosses</p>
                   <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{eliteCount}</p>
-                  <p className="text-[10px] font-bold text-muted-foreground">crosses with 70%+ win rate</p>
+                  <p className="text-xs font-bold text-muted-foreground">crosses with 70%+ win rate</p>
                 </div>
               )}
               {weakCount > 0 && (
                 <div className="bg-card/80 border border-rose-200/50 dark:border-rose-800/50 rounded-lg p-3">
-                  <p className="text-[9px] font-black text-danger dark:text-rose-400 uppercase tracking-widest"><AlertTriangle className="w-3 h-3 inline" /> Avoid</p>
-                  <p className="text-xs font-black text-card-foreground mt-1">{worst.sire} × {worst.dam}</p>
-                  <p className="text-[10px] font-bold text-danger dark:text-rose-400">{worst.winRate}% win rate · Consider different pairing</p>
+                  <p className="text-xs font-black text-danger dark:text-rose-400 uppercase tracking-widest"><AlertTriangle className="w-3 h-3 inline" /> Avoid</p>
+                  <p className="text-sm font-black text-card-foreground mt-1">{worst.sire} × {worst.dam}</p>
+                  <p className="text-xs font-bold text-danger dark:text-rose-400">{worst.winRate}% win rate · Consider different pairing</p>
                 </div>
               )}
             </div>
@@ -573,7 +573,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-md flex items-center justify-center"><Users className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Full-Sibling Families</h2>
-              <p className="text-[11px] text-muted-foreground font-bold">Same Sire and same Dam — iisang tatay at iisang nanay. Ranked by win rate.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same Sire and same Dam — iisang tatay at iisang nanay. Ranked by win rate.</p>
             </div>
           </div>
           {linked.length === 0 ? (
@@ -594,7 +594,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-md flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Sire Offspring Tree</h2>
-              <p className="text-[11px] text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
             </div>
           </div>
           {sireEntries.length === 0 ? (
@@ -611,7 +611,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-teal-100 dark:bg-teal-950/50 text-teal rounded-md flex items-center justify-center"><GitBranch className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Pedigree / Ancestor Lineage</h2>
-              <p className="text-[11px] text-muted-foreground font-bold">Bakit kailangan: kapag namatay ang magulang, dito makikita ang buong lahi at porsyento ng mga anak na gagamiting bagong broodstock.</p>
+              <p className="text-xs text-muted-foreground font-bold">Bakit kailangan: kapag namatay ang magulang, dito makikita ang buong lahi at porsyento ng mga anak na gagamiting bagong broodstock.</p>
             </div>
           </div>
           <PedigreeTree fowls={fowls} codes={birdCodes} />
@@ -624,7 +624,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink rounded-md flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
-              <p className="text-[11px] text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>
             </div>
           </div>
           {damEntries.length === 0 ? (

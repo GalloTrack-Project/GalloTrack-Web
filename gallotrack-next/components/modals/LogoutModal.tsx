@@ -27,7 +27,7 @@ export default function LogoutModal({
               <div className="w-10 h-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm"><LogOut className="w-5 h-5 text-white" /></div>
               <div>
                 <h3 className="text-sm font-black tracking-tight text-white">Log Out Confirmation</h3>
-                <p className="text-[9px] text-emerald-100/70 font-bold tracking-[0.15em] uppercase mt-0.5">Secure Session Termination</p>
+                <p className="text-xs text-emerald-100/70 font-bold tracking-[0.15em] uppercase mt-0.5">Secure Session Termination</p>
               </div>
             </div>
             <button
@@ -50,7 +50,7 @@ export default function LogoutModal({
               <p className="text-sm text-card-foreground font-extrabold leading-relaxed tracking-tight">
                 Are you sure you want to log out?
               </p>
-              <p className="text-[11px] text-muted-foreground font-medium leading-relaxed mt-1">
+              <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-1">
                 Your active session and local tokens will be securely terminated. You will need to sign in again to access your farm dashboard.
               </p>
             </div>
@@ -61,14 +61,14 @@ export default function LogoutModal({
             <button
               type="button"
               onClick={() => setShowLogoutModal(false)}
-              className="flex-1 bg-muted hover:bg-muted/80 text-card-foreground font-extrabold px-5 py-3 rounded-md text-xs transition-all cursor-pointer active:scale-[0.98] border border-border"
+              className="flex-1 bg-muted hover:bg-muted/80 text-card-foreground font-extrabold px-5 py-3 rounded-md text-sm transition-all cursor-pointer active:scale-[0.98] border border-border"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={() => { setShowLogoutModal(false); handleLogout(); }}
-              className="flex-1 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-extrabold px-5 py-3 rounded-md text-xs transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-rose-500/25"
+              className="flex-1 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-extrabold px-5 py-3 rounded-md text-sm transition-all cursor-pointer active:scale-[0.98] shadow-lg shadow-rose-500/25"
             >
               Yes, Log Out
             </button>

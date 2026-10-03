@@ -114,7 +114,7 @@ export default function AdminMarketplacePage() {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
         <div className="w-10 h-10 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">Loading marketplace moderation...</p>
+        <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">Loading marketplace moderation...</p>
       </div>
     );
   }
@@ -125,7 +125,7 @@ export default function AdminMarketplacePage() {
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
       </div>
-      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
     </div>
   );
 
@@ -147,7 +147,7 @@ export default function AdminMarketplacePage() {
 
       <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {toast && (
-          <div className={`mb-4 text-xs font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
+          <div className={`mb-4 text-sm font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
             toast.type === 'success' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
           }`}>{toast.message}</div>
         )}
@@ -157,7 +157,7 @@ export default function AdminMarketplacePage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
               Marketplace <span className="text-warning">Moderation</span>
             </h1>
-            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Review, approve, and manage marketplace listings</p>
+            <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Review, approve, and manage marketplace listings</p>
           </div>
         </div>
 
@@ -172,9 +172,9 @@ export default function AdminMarketplacePage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title, breed, seller, or farm..." className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title, breed, seller, or farm..." className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-sm bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60" />
             </div>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-[10px] font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2.5 border border-border rounded-md text-xs font-bold bg-muted/25 focus:border-amber-500 transition-all text-card-foreground cursor-pointer">
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
@@ -189,7 +189,7 @@ export default function AdminMarketplacePage() {
         <div className="md:hidden space-y-3 mb-6">
           {filtered.length === 0 && (
             <div className="bg-card/95 border border-border rounded-lg p-8 text-center">
-              <p className="text-xs text-muted-foreground font-semibold">No listings found.</p>
+              <p className="text-sm text-muted-foreground font-semibold">No listings found.</p>
             </div>
           )}
           {filtered.map((listing) => (
@@ -204,30 +204,30 @@ export default function AdminMarketplacePage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-extrabold text-card-foreground truncate">{listing.title}</p>
-                    <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span>
+                    <p className="text-sm font-extrabold text-card-foreground truncate">{listing.title}</p>
+                    <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">{listing.breed} · ₱{listing.price.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{listing.breed} · ₱{listing.price.toLocaleString()}</p>
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground mb-3">Seller: {listing.seller_name} · {listing.farm_name}</p>
+              <p className="text-xs text-muted-foreground mb-3">Seller: {listing.seller_name} · {listing.farm_name}</p>
               <div className="flex gap-2">
                 {listing.status === 'pending' && (
                   <>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="flex-1 text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
                   </>
                 )}
                 {listing.status === 'approved' && (
-                  <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                  <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                 )}
                 {listing.status === 'flagged' && (
                   <>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                   </>
                 )}
-                <button type="button" onClick={() => setNotesModal({ id: listing.id, notes: listing.admin_notes })} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Notes</button>
+                <button type="button" onClick={() => setNotesModal({ id: listing.id, notes: listing.admin_notes })} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Notes</button>
               </div>
             </div>
           ))}
@@ -236,13 +236,13 @@ export default function AdminMarketplacePage() {
         {/* DESKTOP TABLE */}
         <div className="hidden md:block bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Listings</h2>
-            <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {listings.length} records</span>
+            <h2 className="text-xs font-black uppercase tracking-widest text-card-foreground">All Listings</h2>
+            <span className="text-xs font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {listings.length} records</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[900px]">
               <thead>
-                <tr className="text-[9px] font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">
+                <tr className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">
                   <th className="px-4 sm:px-5 py-3">Listing</th>
                   <th className="px-4 py-3">Breed / Gender</th>
                   <th className="px-4 py-3">Price</th>
@@ -253,7 +253,7 @@ export default function AdminMarketplacePage() {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="px-5 py-10 text-center text-xs text-muted-foreground font-semibold">No listings found.</td></tr>
+                  <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground font-semibold">No listings found.</td></tr>
                 )}
                 {filtered.map((listing) => (
                   <tr key={listing.id} className="border-b border-border/60 last:border-0 hover:bg-muted/25 transition-colors">
@@ -265,39 +265,39 @@ export default function AdminMarketplacePage() {
                           <div className="w-9 h-9 rounded-md bg-muted/30 flex items-center justify-center text-sm shrink-0"><ChickenIcon className="w-5 h-5" /></div>
                         )}
                         <div>
-                          <p className="text-xs font-extrabold text-card-foreground truncate">{listing.title}</p>
-                          {listing.description && <p className="text-[9px] text-muted-foreground truncate max-w-[200px]">{listing.description}</p>}
+                          <p className="text-sm font-extrabold text-card-foreground truncate">{listing.title}</p>
+                          {listing.description && <p className="text-xs text-muted-foreground truncate max-w-[200px]">{listing.description}</p>}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="text-[11px] font-bold text-card-foreground">{listing.breed}</p>
-                      <p className="text-[10px] text-muted-foreground">{listing.gender}</p>
+                      <p className="text-xs font-bold text-card-foreground">{listing.breed}</p>
+                      <p className="text-xs text-muted-foreground">{listing.gender}</p>
                     </td>
                     <td className="px-4 py-3.5 text-sm font-black text-success">₱{listing.price.toLocaleString()}</td>
                     <td className="px-4 py-3.5">
-                      <p className="text-[11px] font-bold text-card-foreground truncate">{listing.seller_name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{listing.farm_name}</p>
+                      <p className="text-xs font-bold text-card-foreground truncate">{listing.seller_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{listing.farm_name}</p>
                     </td>
-                    <td className="px-4 py-3.5"><span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span></td>
+                    <td className="px-4 py-3.5"><span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span></td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-2">
                         {listing.status === 'pending' && (
                           <>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
                           </>
                         )}
                         {listing.status === 'approved' && (
-                          <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                          <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                         )}
                         {listing.status === 'flagged' && (
                           <>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                           </>
                         )}
-                        <button type="button" onClick={() => setNotesModal({ id: listing.id, notes: listing.admin_notes })} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Notes</button>
+                        <button type="button" onClick={() => setNotesModal({ id: listing.id, notes: listing.admin_notes })} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Notes</button>
                       </div>
                     </td>
                   </tr>
@@ -315,13 +315,13 @@ export default function AdminMarketplacePage() {
               <textarea
                 value={notesModal.notes}
                 onChange={(e) => setNotesModal((prev) => prev ? { ...prev, notes: e.target.value } : null)}
-                className="w-full p-3 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground min-h-[100px] resize-y"
+                className="w-full p-3 border border-border rounded-md text-sm bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground min-h-[100px] resize-y"
                 placeholder="Add notes about this listing..."
                 rows={4}
               />
               <div className="flex gap-2.5">
-                <button type="button" onClick={() => setNotesModal(null)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
-                <button type="button" onClick={() => { handleModerate(notesModal.id, listings.find((l) => l.id === notesModal.id)?.status || 'pending', notesModal.notes); setNotesModal(null); }} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-amber-500/20 border border-amber-500/50 text-warning hover:bg-amber-500/30 transition-all cursor-pointer">Save Notes</button>
+                <button type="button" onClick={() => setNotesModal(null)} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { handleModerate(notesModal.id, listings.find((l) => l.id === notesModal.id)?.status || 'pending', notesModal.notes); setNotesModal(null); }} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-amber-500/20 border border-amber-500/50 text-warning hover:bg-amber-500/30 transition-all cursor-pointer">Save Notes</button>
               </div>
             </div>
           </div>

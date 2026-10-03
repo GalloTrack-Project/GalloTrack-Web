@@ -128,8 +128,8 @@ function VerifyOtpCard() {
     }
   };
 
-  const inputClass = "w-full p-3 border border-input-border rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground";
-  const labelClass = "block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest";
+  const inputClass = "w-full p-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground";
+  const labelClass = "block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest";
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328] light:from-emerald-50 light:via-slate-50 light:to-teal-50 overflow-hidden relative">
@@ -149,9 +149,9 @@ function VerifyOtpCard() {
       <div className="bg-card/95 rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
         <div className="p-8 sm:p-10 space-y-6 text-center">
           <div className="text-center space-y-2">
-            <span className="text-[9px] font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
+            <span className="text-xs font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
             <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
-            <p className="text-[10px] text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
+            <p className="text-xs text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 
           <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
@@ -162,7 +162,7 @@ function VerifyOtpCard() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Farm Owner Verified! 🎉</h2>
-              <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+              <p className="text-sm text-muted-foreground font-semibold leading-relaxed">
                 Your account is now active and your farm profile has been linked to your inventory. You can now sign in.
               </p>
               <Link
@@ -178,7 +178,7 @@ function VerifyOtpCard() {
             <form onSubmit={handleVerify} className="space-y-5">
               <div>
                 <h2 className="text-base font-black text-card-foreground tracking-tight">Email Verification</h2>
-                <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">
+                <p className="text-xs text-muted-foreground font-semibold mt-0.5">
                   Enter the <strong className="text-success font-black">6-digit code</strong> sent to your Gmail address to activate your farm owner account.
                 </p>
               </div>
@@ -209,13 +209,13 @@ function VerifyOtpCard() {
                     />
                   ))}
                 </div>
-                <p className="text-[9px] text-muted-foreground font-mono font-semibold mt-1.5">6-digit code. Check your Gmail inbox (and spam folder).</p>
+                <p className="text-xs text-muted-foreground font-mono font-semibold mt-1.5">6-digit code. Check your Gmail inbox (and spam folder).</p>
               </div>
 
-              {error && <div className="text-xs text-danger font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-md">{error}</div>}
+              {error && <div className="text-sm text-danger font-bold text-center bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-md">{error}</div>}
 
               {resendNotice && (
-                <div className="text-xs text-success font-bold text-center bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-md leading-relaxed">{resendNotice}</div>
+                <div className="text-sm text-success font-bold text-center bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-md leading-relaxed">{resendNotice}</div>
               )}
 
               <button
@@ -229,7 +229,7 @@ function VerifyOtpCard() {
                 </span>
               </button>
 
-              <div className="flex items-center justify-between text-[10px] font-bold pt-1">
+              <div className="flex items-center justify-between text-xs font-bold pt-1">
                 <button type="button" onClick={handleResend} disabled={resending} className="text-muted-foreground hover:text-success transition-colors cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 disabled:opacity-50">
                   {resending ? 'Sending...' : 'Resend Code'}
                 </button>

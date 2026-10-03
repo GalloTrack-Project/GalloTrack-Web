@@ -24,10 +24,10 @@ const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[
 
 function TrendChip({ up, label }: { up: boolean; label: string }) {
   if (!up) {
-    return <span className="text-xs font-bold text-muted-foreground">{label}</span>;
+    return <span className="text-sm font-bold text-muted-foreground">{label}</span>;
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-bold text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
+    <span className="inline-flex items-center gap-1 text-sm font-bold text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
       {label}
     </span>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                   key={r.id}
                   type="button"
                   onClick={() => { setDateRangePreset(r.id); setDateRangeOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-xs font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-success' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-success' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   {r.label}
                 </button>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => { setDateRangeOpen(false); fetchDatabaseResources(); }}
-                className="w-full text-left px-3 py-2 rounded-md text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 {loading ? '↻ Syncing...' : '↻ Refresh Data'}
               </button>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
         <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
@@ -142,14 +142,14 @@ export default function DashboardPage() {
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-info" /></span>
               <div>
                 <p className="text-base font-black text-info leading-none">{maleActiveFowls.length}</p>
-                <p className="text-xs font-bold uppercase tracking-wider text-info mt-0.5">Males</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-info mt-0.5">Males</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink" /></span>
               <div>
                 <p className="text-base font-black text-pink leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-xs font-bold uppercase tracking-wider text-pink mt-0.5">Females</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-pink mt-0.5">Females</p>
               </div>
             </div>
           </div>
@@ -163,12 +163,12 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
             ) : (
-              <div className="text-xs font-bold text-muted-foreground pt-2">No active chickens yet</div>
+              <div className="text-sm font-bold text-muted-foreground pt-2">No active chickens yet</div>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={activeNewThisWeek > 0} label={activeNewThisWeek > 0 ? `${activeNewThisWeek} this week` : 'No change'} />
-            <span className="text-xs font-bold uppercase tracking-widest text-success bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">Registered</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-success bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">Registered</span>
           </div>
         </div>
 
@@ -176,7 +176,7 @@ export default function DashboardPage() {
         <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider leading-tight">Total Matches Logged</span>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Total Matches Logged</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
           </div>
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{matchHistory.length}</div>
@@ -190,12 +190,12 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
               />
             ) : (
-              <div className="text-xs font-bold text-muted-foreground pt-2">No matches logged yet</div>
+              <div className="text-sm font-bold text-muted-foreground pt-2">No matches logged yet</div>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className="text-xs font-bold uppercase tracking-widest text-indigo bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-indigo bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
           </div>
         </div>
 
@@ -206,8 +206,8 @@ export default function DashboardPage() {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
-            <span className="text-xs font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
+            <span className="text-sm font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
           </div>
           <div className="text-3xl font-black text-success tracking-tight leading-none mt-1">
             {matchHistory.length > 0 ? `${winRatePct}%` : '—'}
@@ -222,12 +222,12 @@ export default function DashboardPage() {
                 options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } } }}
               />
             ) : (
-              <div className="text-xs font-bold text-muted-foreground pt-2">No matches logged yet</div>
+              <div className="text-sm font-bold text-muted-foreground pt-2">No matches logged yet</div>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className="text-xs font-extrabold text-success">Win trend</span>
-            <span className="text-xs font-black text-muted-foreground group-hover:text-success transition-colors flex items-center gap-1"><Search className="w-3 h-3" /> Breakdown</span>
+            <span className="text-sm font-extrabold text-success">Win trend</span>
+            <span className="text-sm font-black text-muted-foreground group-hover:text-success transition-colors flex items-center gap-1"><Search className="w-3 h-3" /> Breakdown</span>
           </div>
         </div>
 
@@ -235,7 +235,7 @@ export default function DashboardPage() {
         <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider leading-tight">Quick Actions</span>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Quick Actions</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
           </div>
           <div className="space-y-2 mt-1">
@@ -243,20 +243,20 @@ export default function DashboardPage() {
               onClick={() => navigate('profiling', 'form')}
               className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-xs font-extrabold text-success group-hover/btn:text-success">+ Register New Chicken</p>
-              <p className="text-xs text-success/70 font-semibold mt-0.5">Add to your roster</p>
+              <p className="text-sm font-extrabold text-success group-hover/btn:text-success">+ Register New Chicken</p>
+              <p className="text-sm text-success/70 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
               onClick={() => navigate('profiling', 'matchForm')}
               className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-xs font-extrabold text-indigo group-hover/btn:text-indigo">+ Log Match Result</p>
-              <p className="text-xs text-indigo/70 font-semibold mt-0.5">Record fight outcome</p>
+              <p className="text-sm font-extrabold text-indigo group-hover/btn:text-indigo">+ Log Match Result</p>
+              <p className="text-sm text-indigo/70 font-semibold mt-0.5">Record fight outcome</p>
             </button>
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className="text-xs font-extrabold text-muted-foreground">Start here</span>
-            <span className="text-xs font-bold uppercase tracking-widest text-violet bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
+            <span className="text-sm font-extrabold text-muted-foreground">Start here</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-violet bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
           </div>
         </div>
       </div>
@@ -272,10 +272,10 @@ export default function DashboardPage() {
                 <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-success" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h3>
-                  <p className="text-xs text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
+                  <p className="text-sm text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
               </div>
-              <span className="text-xs font-mono font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">AUTO</span>
+              <span className="text-sm font-mono font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">AUTO</span>
             </div>
             <div className="space-y-2 flex-1">
               {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {
@@ -285,23 +285,23 @@ export default function DashboardPage() {
                   <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
                     <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-card-foreground truncate">{fowl.name} <span className="text-xs font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
-                      <p className="text-xs text-muted-foreground font-semibold truncate">
+                      <p className="text-sm font-black text-card-foreground truncate">{fowl.name} <span className="text-sm font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
+                      <p className="text-sm text-muted-foreground font-semibold truncate">
                         {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       {info.next ? (
                         <>
-                          <p className={`text-xs font-black uppercase tracking-wide ${soon ? 'text-success' : overdue ? 'text-danger' : 'text-warning'}`}>
+                          <p className={`text-sm font-black uppercase tracking-wide ${soon ? 'text-success' : overdue ? 'text-danger' : 'text-warning'}`}>
                             {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
                           </p>
-                          <p className="text-xs font-mono text-muted-foreground font-bold">
+                          <p className="text-sm font-mono text-muted-foreground font-bold">
                             {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
                           </p>
                         </>
                       ) : (
-                        <p className="text-xs font-black text-success uppercase">Fully mature</p>
+                        <p className="text-sm font-black text-success uppercase">Fully mature</p>
                       )}
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/milestones')}
-              className="mt-3 w-full text-center text-xs font-bold text-success hover:text-success hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-sm font-bold text-success hover:text-success hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View All Milestones →
             </button>
@@ -324,10 +324,10 @@ export default function DashboardPage() {
                 <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
-                  <p className="text-xs text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
+                  <p className="text-sm text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
                 </div>
               </div>
-              <span className="text-xs font-mono font-black text-teal bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
+              <span className="text-sm font-mono font-black text-teal bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
             </div>
             <div className="space-y-2 flex-1">
               {(() => {
@@ -345,20 +345,20 @@ export default function DashboardPage() {
                 const sorted = Array.from(strainMap.entries())
                   .sort((a, b) => b[1].count - a[1].count)
                   .slice(0, 5);
-                if (sorted.length === 0) return <p className="text-xs text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
+                if (sorted.length === 0) return <p className="text-sm text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
                 const maxCount = sorted[0][1].count;
                 return sorted.map(([strain, data]) => (
                   <div key={strain} className="bg-muted/50 border border-border rounded-md px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-black text-card-foreground">{strain}</span>
-                      <span className="text-xs font-bold text-teal">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
+                      <span className="text-sm font-black text-card-foreground">{strain}</span>
+                      <span className="text-sm font-bold text-teal">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-xs font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
-                      <span className="text-xs font-bold text-pink flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
+                      <span className="text-sm font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
+                      <span className="text-sm font-bold text-pink flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
                     </div>
                   </div>
                 ));
@@ -367,7 +367,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/lineage')}
-              className="mt-3 w-full text-center text-xs font-bold text-teal hover:text-teal hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-sm font-bold text-teal hover:text-teal hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View Full Lineage →
             </button>
@@ -383,9 +383,9 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
               <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Q3 2026)</h3>
-              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
+              <p className="text-sm text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
             </div>
-            <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
+            <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-success"></span>Population</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded border-t-2 border-dashed border-info bg-transparent"></span>Win Rate %</span>
             </div>
@@ -453,7 +453,7 @@ export default function DashboardPage() {
             <div className="my-auto flex flex-col items-center justify-center text-center p-10 space-y-2">
               <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"><TrendingUp className="w-5 h-5" /></div>
               <p className="text-sm font-extrabold text-muted-foreground">No data available</p>
-              <p className="text-xs text-muted-foreground max-w-[220px]">Encode chickens and log matches to visualize population and performance trends.</p>
+              <p className="text-sm text-muted-foreground max-w-[220px]">Encode chickens and log matches to visualize population and performance trends.</p>
             </div>
           )}
         </div>
@@ -463,9 +463,9 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
             <div>
               <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Win Ratios</h3>
-              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Win share by primary genetic strain</p>
+              <p className="text-sm text-muted-foreground font-semibold mt-0.5">Win share by primary genetic strain</p>
             </div>
-            <span className="text-xs font-mono bg-emerald-500/10 text-success border border-emerald-500/20 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
+            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
           </div>
           {crossbreedChartData.hasData ? (
             <>
@@ -514,7 +514,7 @@ export default function DashboardPage() {
             <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
               <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"><PieChart className="w-5 h-5" /></div>
               <p className="text-sm font-extrabold text-muted-foreground">No data available</p>
-              <p className="text-xs text-muted-foreground max-w-[200px]">Log match records to generate bloodline win ratio breakdowns.</p>
+              <p className="text-sm text-muted-foreground max-w-[200px]">Log match records to generate bloodline win ratio breakdowns.</p>
             </div>
           )}
         </div>
@@ -528,13 +528,13 @@ export default function DashboardPage() {
               <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-success" /></span>
               <div>
                 <h3 className="text-sm font-black text-card-foreground tracking-tight">Breeding Pair Performance Analytics</h3>
-                <p className="text-xs text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
+                <p className="text-sm text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
               </div>
             </div>
-            <span className="text-xs font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
+            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse min-w-[860px]">
+            <table className="w-full text-left text-sm border-collapse min-w-[860px]">
               <thead>
                 <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
                   <th className="p-4 pl-6">Rank</th>
@@ -563,7 +563,7 @@ export default function DashboardPage() {
                           <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-success" /></div>
                           <div className="min-w-0">
                             <p className="font-bold text-card-foreground">{p.sire} <span className="text-muted-foreground font-black">×</span> {p.dam}</p>
-                            <p className="text-xs font-semibold text-muted-foreground truncate">{p.members.map((m) => m.name).join(', ')}</p>
+                            <p className="text-sm font-semibold text-muted-foreground truncate">{p.members.map((m) => m.name).join(', ')}</p>
                           </div>
                         </div>
                       </td>
@@ -572,23 +572,23 @@ export default function DashboardPage() {
                       <td className="p-4 text-center font-mono font-extrabold text-success">{p.wins}</td>
                       <td className="p-4 text-center font-mono font-extrabold text-danger">{p.losses}</td>
                       <td className="p-4 text-center font-mono">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-xs ${p.winRate >= 50 ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm ${p.winRate >= 50 ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
                           {p.winRate}%
                         </span>
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-xs ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
                             <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
                           </span>
                           {p.casualties > 0 && (
-                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-xs font-black text-danger bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
+                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-sm font-black text-danger bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
                           )}
                         </div>
                       </td>
                       <td className="p-4 text-center pr-6">
                         <div className="flex flex-col items-center gap-1">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-xs uppercase tracking-wider border whitespace-nowrap ${
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border whitespace-nowrap ${
                             elite ? 'bg-emerald-500/15 text-success border-emerald-500/30'
                             : solid ? 'bg-sky-500/15 text-info border-sky-500/30'
                             : weak ? 'bg-rose-500/15 text-danger border-rose-500/30'
@@ -596,7 +596,7 @@ export default function DashboardPage() {
                           }`}>
                             {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
                           </span>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                          <span className={`text-sm font-bold px-1.5 py-0.5 rounded-full ${
                             p.verdictConfidence === 'High' ? 'bg-emerald-500/10 text-success' :
                             p.verdictConfidence === 'Medium' ? 'bg-amber-500/10 text-warning' :
                             'bg-muted text-muted-foreground'
@@ -611,7 +611,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs font-bold text-muted-foreground">
+          <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm font-bold text-muted-foreground">
             <span>Verdict logic:</span>
             <span className="text-success">Elite = ≥70% win rate with 5+ decided fights</span>
             <span className="text-info">Solid = ≥50%</span>
@@ -628,21 +628,21 @@ export default function DashboardPage() {
         <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
           <div>
             <h3 className="text-sm font-black text-card-foreground tracking-tight">Historical Analytics Match Logs</h3>
-            <p className="text-xs text-muted-foreground font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
+            <p className="text-sm text-muted-foreground font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
+            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
             <button
               type="button"
               onClick={() => navigate('profiling', 'matchForm')}
-              className="bg-card hover:bg-emerald-500/20 active:scale-[0.98] text-card-foreground text-xs font-black px-4 py-2 rounded-sm border border-border shadow-sm transition-all cursor-pointer"
+              className="bg-card hover:bg-emerald-500/20 active:scale-[0.98] text-card-foreground text-sm font-black px-4 py-2 rounded-sm border border-border shadow-sm transition-all cursor-pointer"
             >
               View All →
             </button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[860px]">
+          <table className="w-full text-left text-sm border-collapse min-w-[860px]">
             <thead>
               <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
                 <th className="p-4 pl-6">Match Date</th>
@@ -671,7 +671,7 @@ export default function DashboardPage() {
                         <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-success" /></div>
                         <span className="font-bold text-card-foreground">{log.entry_name}</span>
                         {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
-                          <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase">
+                          <span className="text-sm font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase">
                             {formatBirdCodeForDisplay(codeByName.get((log.entry_name || '').trim().toLowerCase()))}
                           </span>
                         )}
@@ -679,15 +679,15 @@ export default function DashboardPage() {
                     </td>
                     <td className="p-4 font-bold text-card-foreground">{log.opponent || '—'}</td>
                     <td className="p-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-success border border-emerald-500/20 font-bold text-xs uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-success border border-emerald-500/20 font-bold text-sm uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
                     </td>
                     <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-xs uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-500/10 text-success border-emerald-500/20' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-500/10 text-danger border-rose-500/20' : 'bg-muted text-muted-foreground border-border'}`}>{log.outcome || '—'}</span>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-500/10 text-success border-emerald-500/20' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-500/10 text-danger border-rose-500/20' : 'bg-muted text-muted-foreground border-border'}`}>{log.outcome || '—'}</span>
                     </td>
                     <td className="p-4 text-center">
                       {log.post_fight_condition ? (
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-xs uppercase tracking-wider border whitespace-nowrap ${
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border whitespace-nowrap ${
                           (log.post_fight_condition || '').toLowerCase().includes('deceased')
                             ? 'bg-rose-500/10 text-danger border-rose-500/20'
                             : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely')
@@ -697,7 +697,7 @@ export default function DashboardPage() {
                           {log.post_fight_condition}
                         </span>
                       ) : (
-                        <span className="text-xs text-muted-foreground font-bold">—</span>
+                        <span className="text-sm text-muted-foreground font-bold">—</span>
                       )}
                     </td>
                     <td className="p-4 text-center">
@@ -706,7 +706,7 @@ export default function DashboardPage() {
                           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
                         </a>
                       ) : (
-                        <span className="text-xs text-muted-foreground font-bold">—</span>
+                        <span className="text-sm text-muted-foreground font-bold">—</span>
                       )}
                     </td>
                   </tr>

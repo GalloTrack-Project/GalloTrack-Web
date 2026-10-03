@@ -23,12 +23,12 @@ export default class ErrorBoundary extends Component<Props, State> {
           <h3 className="text-sm font-extrabold text-rose-800 dark:text-rose-300">
             {this.props.label || 'Section'} Error
           </h3>
-          <p className="text-xs text-danger dark:text-rose-300 font-medium max-w-sm mx-auto">
+          <p className="text-sm text-danger dark:text-rose-300 font-medium max-w-sm mx-auto">
             {this.state.error?.message || 'Something went wrong in this section.'}
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-md cursor-pointer transition-all"
+            className="bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold px-4 py-2 rounded-md cursor-pointer transition-all"
           >
             Try Again
           </button>

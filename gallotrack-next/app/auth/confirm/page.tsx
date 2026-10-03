@@ -96,9 +96,9 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
       <div className="bg-card/95 rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
         <div className="p-8 sm:p-10 space-y-7 text-center">
           <div className="text-center space-y-2">
-            <span className="text-[9px] font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
+            <span className="text-xs font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
             <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
-            <p className="text-[10px] text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
+            <p className="text-xs text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 
           <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
@@ -116,7 +116,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Email Confirmed Successfully! 🎉</h2>
-              <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+              <p className="text-sm text-muted-foreground font-semibold leading-relaxed">
                 Your account is now verified.
               </p>
               <Link
@@ -134,7 +134,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-danger tracking-tight">Confirmation Link Invalid</h2>
-              <p className="text-xs text-muted-foreground font-semibold leading-relaxed">{errorMessage}</p>
+              <p className="text-sm text-muted-foreground font-semibold leading-relaxed">{errorMessage}</p>
               <Link
                 href="/"
                 className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2"

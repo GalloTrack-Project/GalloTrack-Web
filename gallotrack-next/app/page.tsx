@@ -85,7 +85,7 @@ export default function LoginPage() {
             </div>
             <div>
               <h2 className="text-xl font-black text-white tracking-tight">GALLO<span className="text-emerald-200">TRACK</span></h2>
-              <span className="text-[9px] font-mono font-bold text-emerald-200/70 tracking-widest uppercase block">v1.0.0</span>
+              <span className="text-xs font-mono font-bold text-emerald-200/70 tracking-widest uppercase block">v1.0.0</span>
             </div>
           </div>
 
@@ -112,8 +112,8 @@ export default function LoginPage() {
               ].map((f) => (
                 <div key={f.title} className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-md p-3.5 space-y-1.5 hover:bg-white/15 transition-colors">
                   <f.icon className="w-5 h-5 text-emerald-300" />
-                  <p className="text-xs font-bold text-white">{f.title}</p>
-                  <p className="text-[10px] text-emerald-200/60 font-medium">{f.desc}</p>
+                  <p className="text-sm font-bold text-white">{f.title}</p>
+                  <p className="text-xs text-emerald-200/60 font-medium">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -128,7 +128,7 @@ export default function LoginPage() {
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-2xl font-black text-white">{s.value}</p>
-                <p className="text-[10px] text-emerald-200/60 font-semibold uppercase tracking-wider">{s.label}</p>
+                <p className="text-xs text-emerald-200/60 font-semibold uppercase tracking-wider">{s.label}</p>
               </div>
             ))}
           </div>
@@ -166,27 +166,27 @@ export default function LoginPage() {
           </div>
 
           {maintenanceMsg && (
-            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-md mb-5">{maintenanceMsg}</div>
+            <div className="text-sm text-amber-700 dark:text-amber-300 font-bold text-center bg-amber-500/10 border border-amber-500/30 p-3 rounded-md mb-5">{maintenanceMsg}</div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Email Address</label>
+              <label className="block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest">Email Address</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                 </span>
-                <input type="email" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input-border rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder="you@example.com" autoComplete="off" required />
+                <input type="email" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder="you@example.com" autoComplete="off" required />
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">Password</label>
+              <label className="block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest">Password</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </span>
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-input-border rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder="Enter your password" autoComplete="new-password" required />
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder="Enter your password" autoComplete="new-password" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-sm transition-colors cursor-pointer" title={showPassword ? 'Hide' : 'Show'}>
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -205,15 +205,15 @@ export default function LoginPage() {
                     <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Remember Me</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Remember Me</span>
               </label>
-              <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-[10px] font-bold text-emerald-500 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer">
+              <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-xs font-bold text-emerald-500 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer">
                 Forgot Password?
               </button>
             </div>
 
-            {error && <div className="text-xs text-rose-500 font-bold text-center bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-md dark:text-rose-300">{error}</div>}
-            {successMessage && <div className="text-xs text-emerald-500 font-bold text-center bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-md dark:text-emerald-300 leading-relaxed">{successMessage}</div>}
+            {error && <div className="text-sm text-rose-500 font-bold text-center bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-md dark:text-rose-300">{error}</div>}
+            {successMessage && <div className="text-sm text-emerald-500 font-bold text-center bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-md dark:text-emerald-300 leading-relaxed">{successMessage}</div>}
 
             <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-500/30 cursor-pointer overflow-hidden">
               <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -223,14 +223,14 @@ export default function LoginPage() {
               </div>
             </button>
 
-            <p className="text-center text-[11px] text-muted-foreground font-medium pt-1">
+            <p className="text-center text-xs text-muted-foreground font-medium pt-1">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="font-bold text-emerald-500 hover:text-emerald-400 transition-colors">
                 Create one
               </Link>
             </p>
 
-            <p className="text-center text-[9px] text-muted-foreground/50 font-semibold tracking-wide flex items-center justify-center gap-1.5 pt-2">
+            <p className="text-center text-xs text-muted-foreground/50 font-semibold tracking-wide flex items-center justify-center gap-1.5 pt-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500/50"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg>
               ISUFST CICT Capstone Project
             </p>

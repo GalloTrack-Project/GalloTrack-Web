@@ -86,7 +86,7 @@ export default function AuditLogsPage() {
     return (
       <div className="min-h-[60vh] w-full flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">Loading audit logs...</p>
+        <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">Loading audit logs...</p>
       </div>
     );
   }
@@ -104,9 +104,9 @@ export default function AuditLogsPage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
               Audit <span className="text-warning">Logs</span>
             </h1>
-            <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Activity Trail for Admin Actions</p>
+            <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Activity Trail for Admin Actions</p>
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
             <FileText size={14} />
             {filteredLogs.length} entries
           </div>
@@ -120,22 +120,22 @@ export default function AuditLogsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by action, admin, or target..."
-              className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-xs bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
+              className="w-full pl-9 pr-4 py-2.5 border border-border rounded-md text-sm bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground placeholder:text-muted-foreground/60"
             />
           </div>
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Admin Activity</h2>
-            <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredLogs.length} of {logs.length} records</span>
+            <h2 className="text-xs font-black uppercase tracking-widest text-card-foreground">Admin Activity</h2>
+            <span className="text-xs font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredLogs.length} of {logs.length} records</span>
           </div>
 
           {filteredLogs.length === 0 ? (
             <div className="p-8 text-center">
               <Clock className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-xs text-muted-foreground font-semibold">No audit logs found.</p>
-              <p className="text-[10px] text-muted-foreground/60 mt-1">Admin actions will appear here once recorded.</p>
+              <p className="text-sm text-muted-foreground font-semibold">No audit logs found.</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Admin actions will appear here once recorded.</p>
             </div>
           ) : (
             <div className="divide-y divide-border/60">
@@ -147,24 +147,24 @@ export default function AuditLogsPage() {
                         <Shield className="w-3.5 h-3.5 text-warning" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-card-foreground">
+                        <p className="text-sm font-bold text-card-foreground">
                           <span className="text-warning">{adminNames[log.admin_id] || 'Admin'}</span>
                           {' '}
                           <span className="text-muted-foreground">{ACTION_LABELS[log.action] || log.action}</span>
                         </p>
                         {log.target_type && (
-                          <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                          <p className="text-xs text-muted-foreground/70 mt-0.5">
                             Target: {log.target_type}{log.target_id ? ` (${log.target_id.slice(0, 8)}...)` : ''}
                           </p>
                         )}
                         {log.details && Object.keys(log.details).length > 0 && (
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-mono">
+                          <p className="text-xs text-muted-foreground/60 mt-0.5 font-mono">
                             {Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(' · ')}
                           </p>
                         )}
                       </div>
                     </div>
-                    <span className="text-[9px] text-muted-foreground/60 font-mono whitespace-nowrap shrink-0">
+                    <span className="text-xs text-muted-foreground/60 font-mono whitespace-nowrap shrink-0">
                       {new Date(log.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -174,7 +174,7 @@ export default function AuditLogsPage() {
           )}
         </div>
 
-        <p className="mt-4 text-center text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
+        <p className="mt-4 text-center text-xs font-mono text-muted-foreground tracking-widest uppercase">
           Audit logs are retained for security and compliance
         </p>
       </div>

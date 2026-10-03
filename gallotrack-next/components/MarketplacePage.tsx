@@ -69,7 +69,7 @@ function ComplianceBadge({ grade }: { grade: string }) {
     : grade.startsWith('B') ? 'bg-sky-500/15 text-info border-sky-500/30'
     : grade.startsWith('C') ? 'bg-amber-500/15 text-warning border-amber-500/30'
     : 'bg-muted border-border text-muted-foreground';
-  return <span className={`text-[10px] font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
+  return <span className={`text-xs font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
 }
 
 function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClick: () => void; code?: string }) {
@@ -93,7 +93,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <StatusDot status={fowl.status} />
-          <span className="text-[10px] font-bold text-muted-foreground uppercase">{fowl.status}</span>
+          <span className="text-xs font-bold text-muted-foreground uppercase">{fowl.status}</span>
         </div>
         {compliance.complianceGrade && compliance.matchedStandard && (
           <ComplianceBadge grade={compliance.complianceGrade} />
@@ -113,17 +113,17 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
           <div className="flex items-center gap-2 min-w-0">
             <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">{fowl.name}</h4>
             {code && (
-              <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>
+              <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
+            <span className="text-xs font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
             <GenderIcon gender={fowl.gender} />
-            <span className="text-[11px] font-semibold text-muted-foreground">{fowl.gender}</span>
+            <span className="text-xs font-semibold text-muted-foreground">{fowl.gender}</span>
             <span className="text-muted-foreground/40">{'\u00B7'}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">{getAgeDisplay(fowl.birthdate)}</span>
+            <span className="text-xs font-semibold text-muted-foreground">{getAgeDisplay(fowl.birthdate)}</span>
           </div>
         </div>
       </div>
@@ -131,16 +131,16 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
       {/* Data grid */}
       <div className="grid grid-cols-3 gap-2 text-center mb-3">
         <div className="bg-muted/50 rounded-md py-2 px-1">
-          <p className="text-[9px] font-bold text-muted-foreground uppercase">Age</p>
-          <p className="text-xs font-black text-card-foreground">{getAgeDisplay(fowl.birthdate)}</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase">Age</p>
+          <p className="text-sm font-black text-card-foreground">{getAgeDisplay(fowl.birthdate)}</p>
         </div>
         <div className="bg-muted/50 rounded-md py-2 px-1">
-          <p className="text-[9px] font-bold text-muted-foreground uppercase">Weight</p>
-          <p className="text-xs font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase">Weight</p>
+          <p className="text-sm font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
         </div>
         <div className="bg-muted/50 rounded-md py-2 px-1">
-          <p className="text-[9px] font-bold text-muted-foreground uppercase">Stage</p>
-          <p className="text-xs font-black text-card-foreground truncate">{fowl.growth_stage || '\u2014'}</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase">Stage</p>
+          <p className="text-sm font-black text-card-foreground truncate">{fowl.growth_stage || '\u2014'}</p>
         </div>
       </div>
 
@@ -148,21 +148,21 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
       {stats.total > 0 && (
         <div className="pt-3 border-t border-border">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase">Performance</span>
-            <span className={`text-xs font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase">Performance</span>
+            <span className={`text-sm font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</span>
           </div>
           <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
             <div className={`h-full rounded-full transition-all ${stats.winRate >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`} style={{ width: `${stats.winRate}%` }}></div>
           </div>
-          <p className="text-[10px] text-muted-foreground font-semibold mt-1.5">{stats.wins}W {'\u00B7'} {stats.losses}L {'\u00B7'} {stats.total} total</p>
+          <p className="text-xs text-muted-foreground font-semibold mt-1.5">{stats.wins}W {'\u00B7'} {stats.losses}L {'\u00B7'} {stats.total} total</p>
         </div>
       )}
 
       {/* Lineage */}
       {(fowl.sire || fowl.dam) && (
         <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center gap-2">
-          <span className="text-[9px] font-bold text-muted-foreground uppercase">Lineage:</span>
-          <span className="text-[10px] text-muted-foreground font-semibold truncate">
+          <span className="text-xs font-bold text-muted-foreground uppercase">Lineage:</span>
+          <span className="text-xs text-muted-foreground font-semibold truncate">
             {fowl.sire || '\u2014'} {'\u00D7'} {fowl.dam || '\u2014'}
           </span>
         </div>
@@ -186,7 +186,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
         <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-lg">
           <h3 className="text-base font-black text-card-foreground flex items-center gap-2 min-w-0">
             <span className="truncate">{fowl.name}</span>
-            {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
+            {code && <span className="text-xs font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
           </h3>
           <button type="button" onClick={onClose} aria-label="Close details" className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -202,18 +202,18 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <StatusDot status={fowl.status} />
-                <span className="text-xs font-bold text-muted-foreground">{fowl.status}</span>
+                <span className="text-sm font-bold text-muted-foreground">{fowl.status}</span>
                 {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
               </div>
-              <p className="text-xs text-muted-foreground font-semibold">{fowl.gender} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
+              <p className="text-sm text-muted-foreground font-semibold">{fowl.gender} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
               <p className="text-sm font-bold text-success">{fowl.breed}</p>
             </div>
           </div>
 
           {/* Physical traits */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
-            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Physical Profile</h4>
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Physical Profile</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div><span className="text-muted-foreground font-semibold">Color: </span><span className="font-black text-card-foreground">{fowl.color || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
@@ -225,7 +225,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
 
           {/* Lineage */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
-            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Lineage</h4>
+            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Lineage</h4>
             <BloodlineBreakdown
               stats={getFowlBloodlineStats(fowl, fowls)}
               title="Bloodline Percentage"
@@ -233,14 +233,14 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             />
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-sky-500/10 border border-sky-500/30 rounded-md p-3">
-                <p className="text-[10px] font-black text-info uppercase">Sire</p>
-                <p className="text-xs font-black text-card-foreground mt-1">{fowl.sire || '\u2014'}</p>
-                {fowl.sire_pct ? <p className="text-[10px] text-info font-bold">{fowl.sire_pct}%</p> : null}
+                <p className="text-xs font-black text-info uppercase">Sire</p>
+                <p className="text-sm font-black text-card-foreground mt-1">{fowl.sire || '\u2014'}</p>
+                {fowl.sire_pct ? <p className="text-xs text-info font-bold">{fowl.sire_pct}%</p> : null}
               </div>
               <div className="bg-pink-500/10 border border-pink-500/30 rounded-md p-3">
-                <p className="text-[10px] font-black text-pink uppercase">Dam</p>
-                <p className="text-xs font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
-                {fowl.dam_pct ? <p className="text-[10px] text-pink font-bold">{fowl.dam_pct}%</p> : null}
+                <p className="text-xs font-black text-pink uppercase">Dam</p>
+                <p className="text-sm font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
+                {fowl.dam_pct ? <p className="text-xs text-pink font-bold">{fowl.dam_pct}%</p> : null}
               </div>
             </div>
           </div>
@@ -248,23 +248,23 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           {/* Performance */}
           {stats.total > 0 && (
             <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
-              <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Match Performance</h4>
+              <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Match Performance</h4>
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div className="bg-card rounded-md py-2.5 border border-border">
                   <p className="text-xl font-black text-card-foreground">{stats.total}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase">Total</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase">Total</p>
                 </div>
                 <div className="bg-emerald-500/10 rounded-md py-2.5 border border-emerald-500/30">
                   <p className="text-xl font-black text-success">{stats.wins}</p>
-                  <p className="text-[9px] font-bold text-success uppercase">Wins</p>
+                  <p className="text-xs font-bold text-success uppercase">Wins</p>
                 </div>
                 <div className="bg-rose-500/10 rounded-md py-2.5 border border-rose-500/30">
                   <p className="text-xl font-black text-danger">{stats.losses}</p>
-                  <p className="text-[9px] font-bold text-danger uppercase">Losses</p>
+                  <p className="text-xs font-bold text-danger uppercase">Losses</p>
                 </div>
                 <div className={`rounded-md py-2.5 border ${stats.winRate >= 50 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
                   <p className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</p>
-                  <p className={`text-[9px] font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>Win Rate</p>
+                  <p className={`text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>Win Rate</p>
                 </div>
               </div>
             </div>
@@ -274,14 +274,14 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           {compliance.matchedStandard && (
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black text-success uppercase tracking-widest">Breed Compliance</h4>
+                <h4 className="text-xs font-black text-success uppercase tracking-widest">Breed Compliance</h4>
                 <div className="flex items-center gap-2">
                   <ComplianceBadge grade={compliance.complianceGrade} />
-                  <span className="text-[10px] font-black text-success">{compliance.overallScore}/100</span>
+                  <span className="text-xs font-black text-success">{compliance.overallScore}/100</span>
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground font-semibold">Standard: {compliance.matchedStandard.name} ({compliance.matchedStandard.origin})</p>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <p className="text-xs text-muted-foreground font-semibold">Standard: {compliance.matchedStandard.name} ({compliance.matchedStandard.origin})</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <span className="text-muted-foreground font-semibold">Weight: </span>
                   <span className={compliance.weightCompliance.status === 'within' ? 'text-success font-black' : 'text-warning font-black'}>
@@ -308,11 +308,11 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
                 </div>
               </div>
               {compliance.matchedStandard.fightingStyle && (
-                <p className="text-[10px] text-success/70 font-semibold">Fighting style: {compliance.matchedStandard.fightingStyle}</p>
+                <p className="text-xs text-success/70 font-semibold">Fighting style: {compliance.matchedStandard.fightingStyle}</p>
               )}
               {compliance.recommendations.length > 0 && (
                 <div className="space-y-1">
-                  {compliance.recommendations.map((r, i) => <p key={i} className="text-[10px] text-warning">{'\uD83D\uDCA1'} {r}</p>)}
+                  {compliance.recommendations.map((r, i) => <p key={i} className="text-xs text-warning">{'\uD83D\uDCA1'} {r}</p>)}
                 </div>
               )}
             </div>
@@ -384,7 +384,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
           <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">{'\uD83E\uDDEC'}</div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Inventory</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">All your chickens in one list — status, age, weight, stage, and lineage</p>
+            <p className="text-sm text-muted-foreground font-semibold mt-1">All your chickens in one list — status, age, weight, stage, and lineage</p>
           </div>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -392,9 +392,9 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-xs focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
+            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
           </div>
-          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-[11px] font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
+          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span className="hidden sm:inline">Add Chicken</span>
             <span className="sm:hidden">Add</span>
@@ -405,9 +405,9 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
       {/* Filter Tabs */}
       <div className="flex items-center gap-1 bg-muted rounded-md border border-border p-1 shadow-sm overflow-x-auto">
         {tabs.map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-sm text-[11px] font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
             {tab.label}
-            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
+            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
           </button>
         ))}
       </div>
@@ -419,7 +419,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             {'\uD83E\uDDEC'}
           </div>
           <h3 className="text-base font-extrabold text-card-foreground">No Chickens Found</h3>
-          <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chickens match your current filters. Try adjusting your search or add new chickens.</p>
+          <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chickens match your current filters. Try adjusting your search or add new chickens.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">

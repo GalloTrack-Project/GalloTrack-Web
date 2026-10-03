@@ -112,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="min-w-0 flex-1 leading-none">
               <p className="text-base font-semibold tracking-tight text-card-foreground">GALLO<span className="text-accent">TRACK</span></p>
-              <span className="text-xs font-mono font-medium text-accent tracking-widest uppercase block mt-1.5">
+              <span className="text-sm font-mono font-medium text-accent tracking-widest uppercase block mt-1.5">
                 {isAdmin ? 'Admin Panel' : 'v1.0.0'}
               </span>
             </div>
@@ -146,7 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-card-foreground truncate">{auth.adminName}</p>
-              <span className="inline-block text-xs font-medium uppercase tracking-wider px-2 py-0.5 mt-0.5 rounded-full border bg-accent/15 border-accent/30 text-accent">
+              <span className="inline-block text-sm font-medium uppercase tracking-wider px-2 py-0.5 mt-0.5 rounded-full border bg-accent/15 border-accent/30 text-accent">
                 {isAdmin ? 'Admin' : 'Farm Owner'}
               </span>
             </div>
@@ -154,19 +154,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {isAdmin && (
             <div className="px-2 space-y-1.5">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">System Overview</p>
+              <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">System Overview</p>
               <div className="grid grid-cols-3 gap-1.5">
                 <div className="bg-muted/50 rounded-sm p-2 text-center">
                   <p className="text-sm font-semibold text-accent tabular-nums">{stats.total_users}</p>
-                  <p className="text-xs font-medium text-muted-foreground">Users</p>
+                  <p className="text-sm font-medium text-muted-foreground">Users</p>
                 </div>
                 <div className="bg-muted/50 rounded-sm p-2 text-center">
                   <p className="text-sm font-semibold text-success tabular-nums">{stats.total_fowls}</p>
-                  <p className="text-xs font-medium text-muted-foreground">Chickens</p>
+                  <p className="text-sm font-medium text-muted-foreground">Chickens</p>
                 </div>
                 <div className="bg-muted/50 rounded-sm p-2 text-center">
                   <p className="text-sm font-semibold text-info tabular-nums">{stats.total_matches}</p>
-                  <p className="text-xs font-medium text-muted-foreground">Matches</p>
+                  <p className="text-sm font-medium text-muted-foreground">Matches</p>
                 </div>
               </div>
             </div>
@@ -174,13 +174,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="px-2 flex items-center justify-between gap-2">
             <span className={cn(
-              'inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest',
+              'inline-flex items-center gap-1.5 text-sm font-medium uppercase tracking-widest',
               auth.userActive ? 'text-success' : 'text-danger',
             )}>
               <span aria-hidden="true" className={cn('w-1.5 h-1.5 rounded-full', auth.userActive ? 'bg-success' : 'bg-danger animate-pulse')}></span>
               {auth.userActive ? 'Access Active' : 'Access Restricted'}
             </span>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{auth.userHub}</span>
+            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider truncate">{auth.userHub}</span>
           </div>
           <button type="button" onClick={() => ui.setShowLogoutModal(true)} className="w-full bg-muted hover:bg-danger/10 text-muted-foreground hover:text-danger border border-border hover:border-danger/30 text-left flex items-center gap-3 px-4 py-2.5 rounded-sm text-sm font-medium transition-colors duration-150 cursor-pointer">
             <LogOut className="w-4 h-4" aria-hidden="true" />
@@ -199,10 +199,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
 
               <div className="hidden md:flex items-center gap-2.5">
-                <span className="text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border bg-accent/10 border-accent/30 text-accent">
+                <span className="text-sm font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border bg-accent/10 border-accent/30 text-accent">
                   {isAdmin ? 'Admin' : 'Portal'}
                 </span>
-                <span aria-hidden="true" className="text-muted-foreground/40 text-xs">/</span>
+                <span aria-hidden="true" className="text-muted-foreground/40 text-sm">/</span>
                 <span className="text-sm font-semibold text-foreground tracking-tight">{activeTitle}</span>
               </div>
 
@@ -211,7 +211,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-accent/40"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent/80"></span>
                 </span>
-                <span className="text-xs font-medium text-muted-foreground tracking-wide">PostgreSQL Connected</span>
+                <span className="text-sm font-medium text-muted-foreground tracking-wide">PostgreSQL Connected</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
@@ -239,7 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 type="button"
                 onClick={() => ui.setShowLogoutModal(true)}
                 aria-label="Log out"
-                className="md:hidden bg-danger/10 text-danger hover:bg-danger/20 border border-danger/30 p-1.5 px-3 rounded-full text-xs font-semibold cursor-pointer transition-colors duration-150 flex items-center shadow-2xs"
+                className="md:hidden bg-danger/10 text-danger hover:bg-danger/20 border border-danger/30 p-1.5 px-3 rounded-full text-sm font-semibold cursor-pointer transition-colors duration-150 flex items-center shadow-2xs"
               >
                 <LogOut className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -254,7 +254,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
 
         <footer className="shrink-0 border-t border-border bg-card/60 px-4 sm:px-6 md:px-8 py-2">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             GALLOTRACK v1.0.0 · {isAdmin ? 'Administrator console' : 'Farm management console'}
           </p>
         </footer>
@@ -277,7 +277,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="text-xs tracking-tight">{item.shortLabel}</span>
+                <span className="text-sm tracking-tight">{item.shortLabel}</span>
               </Link>
             ))}
           </div>
