@@ -199,7 +199,7 @@ export default function RegisterPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="bg-card/95 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border my-4">
+      <div className="bg-card/95 rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border my-4">
         <div className="p-6 sm:p-8 space-y-5">
           {/* Header */}
           <div className="text-center space-y-2">

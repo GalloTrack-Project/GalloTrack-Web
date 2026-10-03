@@ -301,7 +301,7 @@ export default function AdminPanelPage() {
   const admins = profiles.filter((p) => p.is_admin || p.role === 'admin').length;
 
   const statCard = (label: string, value: number, accent: string, icon: React.ReactNode) => (
-    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
+    <div className="bg-card/95 border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
@@ -392,7 +392,7 @@ export default function AdminPanelPage() {
           {statCard('Verified', verified, 'text-sky-400', <Shield size={20} />)}
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
@@ -430,12 +430,12 @@ export default function AdminPanelPage() {
 
         <div className="md:hidden space-y-3 mb-6">
           {filteredProfiles.length === 0 && (
-            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-8 text-center">
+            <div className="bg-card/95 border border-border rounded-lg p-8 text-center">
               <p className="text-xs text-muted-foreground font-semibold">No users found.</p>
             </div>
           )}
           {filteredProfiles.map((user) => (
-            <div key={user.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 shadow-2xs">
+            <div key={user.id} className="bg-card/95 border border-border rounded-lg p-4 shadow-2xs">
               <div className="flex items-center gap-3 mb-3">
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="avatar" className="w-10 h-10 rounded-md object-cover border border-border shrink-0" />
@@ -505,7 +505,7 @@ export default function AdminPanelPage() {
           ))}
         </div>
 
-        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
+        <div className="hidden md:block bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Registered Farm Owners</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredProfiles.length} of {total} records</span>
@@ -610,7 +610,7 @@ export default function AdminPanelPage() {
         </>)}
 
         {activeTab === 'audit' && (<>
-          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
+          <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
             <div className="flex items-center justify-between">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
@@ -629,7 +629,7 @@ export default function AdminPanelPage() {
             </div>
           </div>
 
-          <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
+          <div className="bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
             {auditLoading ? (
               <div className="p-8 text-center">
                 <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>

@@ -112,7 +112,7 @@ export default function AuditLogsPage() {
           </div>
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search size={16} /></span>
             <input
@@ -125,7 +125,7 @@ export default function AuditLogsPage() {
           </div>
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
+        <div className="bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">Admin Activity</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredLogs.length} of {logs.length} records</span>

@@ -239,7 +239,7 @@ export default function MarketplacePage() {
       )}
 
       {/* HEADER */}
-      <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-lg border border-border bg-card/70 p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner"><Egg className="w-5 h-5" /></div>
           <div>
@@ -284,7 +284,7 @@ export default function MarketplacePage() {
             />
           </div>
           {filteredListings.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-12 text-center">
+            <div className="rounded-lg border border-border bg-card/70 p-12 text-center">
               <span className="text-4xl mb-3 block"><Egg className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings available</p>
               <p className="text-xs text-muted-foreground mt-1">Check back later or create your own listing!</p>
@@ -292,7 +292,7 @@ export default function MarketplacePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredListings.map((listing) => (
-                <div key={listing.id} className="rounded-lg border border-border bg-card/70 backdrop-blur-md overflow-hidden hover:shadow-lg transition-all">
+                <div key={listing.id} className="rounded-lg border border-border bg-card/70 overflow-hidden hover:shadow-lg transition-all">
                   {listing.image_url ? (
                     <img src={listing.image_url} alt={listing.title} className="w-full h-48 object-cover" />
                   ) : (
@@ -338,7 +338,7 @@ export default function MarketplacePage() {
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search your listings..." className={`${inputClass} pl-9`} />
           </div>
           {filteredMyListings.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-12 text-center">
+            <div className="rounded-lg border border-border bg-card/70 p-12 text-center">
               <span className="text-4xl mb-3 block"><Clipboard className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings yet</p>
               <p className="text-xs text-muted-foreground mt-1">Create your first listing to start selling!</p>
@@ -347,7 +347,7 @@ export default function MarketplacePage() {
           ) : (
             <div className="space-y-3">
               {filteredMyListings.map((listing) => (
-                <div key={listing.id} className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-4 flex items-center gap-4">
+                <div key={listing.id} className="rounded-lg border border-border bg-card/70 p-4 flex items-center gap-4">
                   {listing.image_url ? (
                     <img src={listing.image_url} alt={listing.title} className="w-16 h-16 rounded-md object-cover border border-border shrink-0" />
                   ) : (
@@ -375,7 +375,7 @@ export default function MarketplacePage() {
 
       {/* CREATE / EDIT TAB */}
       {activeTab === 'create' && (
-        <div className="rounded-lg border border-border bg-card/70 backdrop-blur-md p-6 max-w-2xl">
+        <div className="rounded-lg border border-border bg-card/70 p-6 max-w-2xl">
           <h2 className="text-sm font-extrabold text-card-foreground mb-4">{editingId ? 'Edit Listing' : 'Create New Listing'}</h2>
 
           {fowls.length > 0 && !editingId && (

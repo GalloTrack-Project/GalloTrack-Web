@@ -120,7 +120,7 @@ export default function AdminMarketplacePage() {
   }
 
   const statCard = (label: string, value: number, accent: string, icon: ReactNode) => (
-    <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
+    <div className="bg-card/95 border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <p className={`text-2xl sm:text-3xl font-black ${accent}`}>{value}</p>
         <span className="text-xl opacity-60">{icon}</span>
@@ -168,7 +168,7 @@ export default function AdminMarketplacePage() {
           {statCard('Flagged', stats.flagged, 'text-rose-400', <Flag className="w-5 h-5" />)}
         </div>
 
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
@@ -188,12 +188,12 @@ export default function AdminMarketplacePage() {
         {/* MOBILE CARDS */}
         <div className="md:hidden space-y-3 mb-6">
           {filtered.length === 0 && (
-            <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-8 text-center">
+            <div className="bg-card/95 border border-border rounded-lg p-8 text-center">
               <p className="text-xs text-muted-foreground font-semibold">No listings found.</p>
             </div>
           )}
           {filtered.map((listing) => (
-            <div key={listing.id} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-4 shadow-2xs">
+            <div key={listing.id} className="bg-card/95 border border-border rounded-lg p-4 shadow-2xs">
               <div className="flex items-center gap-3 mb-2">
                 {listing.image_url ? (
                   <img src={listing.image_url} alt={listing.title} className="w-12 h-12 rounded-md object-cover border border-border shrink-0" />
@@ -234,7 +234,7 @@ export default function AdminMarketplacePage() {
         </div>
 
         {/* DESKTOP TABLE */}
-        <div className="hidden md:block bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs overflow-hidden">
+        <div className="hidden md:block bg-card/95 border border-border rounded-lg shadow-2xs overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-card-foreground">All Listings</h2>
             <span className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {listings.length} records</span>

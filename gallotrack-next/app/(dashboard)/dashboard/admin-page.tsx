@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ADMIN ROLE INFO */}
-      <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg p-5 shadow-sm">
+      <div className="bg-card/95 border border-border rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Admin Responsibilities</h3>
         </div>
@@ -156,7 +156,7 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
   const a = accentMap[accent] || accentMap.amber;
 
   return (
-    <div className={`bg-card/95 backdrop-blur-xl border ${a.border} rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-300`}>
+    <div className={`bg-card/95 border ${a.border} rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-300`}>
       <div className="flex items-start justify-between mb-3">
         <div className={`w-10 h-10 rounded-md ${a.bg} border ${a.border} flex items-center justify-center text-lg`}>
           {icon}

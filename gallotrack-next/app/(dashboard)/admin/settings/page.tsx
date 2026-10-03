@@ -366,7 +366,7 @@ export default function AdminSettingsPage() {
         )}
 
         {/* ADMIN IDENTITY */}
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-4 mb-4">
+        <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center"><Shield size={18} /></div>
@@ -403,7 +403,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* TAB CONTENT */}
-        <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xs p-5">
+        <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 border border-border rounded-lg shadow-2xs p-5">
           {renderTab()}
         </form>
 
