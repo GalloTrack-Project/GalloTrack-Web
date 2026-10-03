@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Modal } from '@/components/ui';
 import {
   adminGuard,
   deleteUserRecords,
@@ -12,7 +13,7 @@ import {
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
-import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, X, ClipboardList, Clock, FileText } from 'lucide-react';
+import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, ClipboardList, Clock, FileText } from 'lucide-react';
 
 type ToastState = { type: 'success' | 'error'; message: string } | null;
 type AdminTab = 'users' | 'audit';
@@ -685,29 +686,31 @@ export default function AdminPanelPage() {
       </div>
 
       {pendingDelete && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
-            <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
-            <h3 className="text-center text-sm font-black text-card-foreground">Delete Farm Owner?</h3>
-            <p className="text-center text-xs text-muted-foreground font-semibold leading-relaxed">
-              This permanently removes <span className="text-danger font-black">{profileDisplayName(pendingDelete)}</span> and all
-              associated data:
-            </p>
-            <ul className="text-center text-xs text-muted-foreground font-medium space-y-1 list-disc list-inside">
+        <Modal
+          open
+          onClose={() => setPendingDelete(null)}
+          title="Delete Farm Owner?"
+          description={`This permanently removes ${profileDisplayName(pendingDelete)} and all associated data. This action cannot be undone.`}
+          icon={<AlertTriangle size={24} />}
+          iconClassName="bg-rose-500/15 border-rose-500/40 text-danger"
+          className="max-w-sm"
+          closeOnBackdrop={false}
+        >
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>All chicken profiles and lineage records</li>
               <li>All match history and video evidence</li>
               <li>Farm registration data</li>
               <li>Profile and account information</li>
             </ul>
-            <p className="text-center text-xs text-danger font-bold">
-              This action cannot be undone. The authentication account remains but access will be revoked.
+            <p className="text-sm text-danger font-semibold">
+              The authentication account remains but access will be revoked.
             </p>
             <div className="flex gap-2.5 pt-1">
               <button
                 type="button"
                 disabled={deleting}
                 onClick={() => setPendingDelete(null)}
-                className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+                className="flex-1 text-sm font-semibold py-3 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -715,24 +718,23 @@ export default function AdminPanelPage() {
                 type="button"
                 disabled={deleting}
                 onClick={handleConfirmDelete}
-                className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 text-sm font-semibold py-3 rounded-sm bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deleting && <span className="w-3.5 h-3.5 border-2 border-rose-300 border-t-transparent rounded-full animate-spin"></span>}
                 {deleting ? 'Deleting...' : 'Delete Forever'}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {viewUser && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setViewUser(null); setViewUserFarm(null); }}>
-          <div className="bg-card border border-border rounded-lg shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-              <h3 className="text-sm font-black text-card-foreground">User Details</h3>
-              <button type="button" onClick={() => { setViewUser(null); setViewUserFarm(null); }} className="w-7 h-7 rounded-sm bg-muted flex items-center justify-center text-sm text-muted-foreground hover:text-foreground cursor-pointer"><X size={14} /></button>
-            </div>
-            <div className="p-5 space-y-4">
+        <Modal
+          open
+          onClose={() => { setViewUser(null); setViewUserFarm(null); }}
+          title="User Details"
+          className="max-w-lg"
+        >
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
                 {viewUser.avatar_url ? (
                   <img src={viewUser.avatar_url} alt="avatar" className="w-14 h-14 rounded-md object-cover border border-border" />
@@ -855,8 +857,7 @@ export default function AdminPanelPage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

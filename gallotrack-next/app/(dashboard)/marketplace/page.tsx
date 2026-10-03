@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Egg, Search, Clipboard, Pencil, Plus, AlertTriangle } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import { Modal } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { useFowl } from '@/lib/contexts/fowl-context';
 
@@ -447,17 +448,20 @@ export default function MarketplacePage() {
 
       {/* DELETE CONFIRMATION */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
-            <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto"><AlertTriangle className="w-6 h-6 text-danger" /></div>
-            <h3 className="text-center text-sm font-black text-card-foreground">Delete Listing?</h3>
-            <p className="text-center text-xs text-muted-foreground font-semibold">This action cannot be undone.</p>
+        <Modal
+          open
+          onClose={() => setDeleteConfirm(null)}
+          title="Delete Listing?"
+          description="This action cannot be undone."
+          icon={<AlertTriangle className="w-5 h-5" />}
+          iconClassName="bg-rose-500/15 border-rose-500/40 text-danger"
+          className="max-w-sm"
+        >
             <div className="flex gap-2.5 pt-1">
-              <button type="button" onClick={() => setDeleteConfirm(null)} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
-              <button type="button" onClick={() => handleDelete(deleteConfirm)} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-all cursor-pointer">Delete</button>
+              <button type="button" onClick={() => setDeleteConfirm(null)} className="flex-1 text-sm font-semibold py-3 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Cancel</button>
+              <button type="button" onClick={() => handleDelete(deleteConfirm)} className="flex-1 text-sm font-semibold py-3 rounded-sm bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-colors cursor-pointer">Delete</button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

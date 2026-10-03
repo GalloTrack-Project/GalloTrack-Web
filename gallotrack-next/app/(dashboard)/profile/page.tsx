@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
 import { supabase } from '@/lib/registry'
-import { ZoomIn, ZoomOut, X } from 'lucide-react'
+import { ZoomIn, ZoomOut } from 'lucide-react'
+import { Modal } from '@/components/ui'
 
 export default function ProfilePage() {
   const [fullName, setFullName] = useState('')
@@ -385,17 +386,14 @@ export default function ProfilePage() {
 
       {/* IMAGE CROPPER MODAL */}
       {imageSrc && (
-        <div className="fixed inset-0 bg-slate-900/70 dark:bg-black/70 backdrop-blur-sm z-[999] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-card rounded-lg shadow-2xl border border-border w-full max-w-lg p-6 space-y-5">
-            <div className="flex justify-between items-center border-b border-border pb-3">
-              <div>
-                <h3 className="text-base font-black tracking-tight">Crop Profile Picture</h3>
-                <p className="text-xs text-muted-foreground font-semibold">Drag to pan, use the slider to zoom, then save</p>
-              </div>
-              <button onClick={closeCropper} className="text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"><X size={14} /></button>
-            </div>
-
-            <div className="relative w-full h-72 bg-slate-900 rounded-lg overflow-hidden">
+        <Modal
+          open
+          onClose={closeCropper}
+          title="Crop Profile Picture"
+          description="Drag to pan, use the slider to zoom, then save"
+          className="max-w-lg"
+        >
+            <div className="relative w-full h-72 bg-slate-900 rounded-md overflow-hidden">
               <Cropper
                 image={imageSrc}
                 crop={crop}
@@ -434,8 +432,7 @@ export default function ProfilePage() {
                 <span>{cropping ? 'Uploading...' : 'Crop & Save'}</span>
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

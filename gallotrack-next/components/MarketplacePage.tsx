@@ -5,6 +5,7 @@ import { generateBreedCompliance } from '@/lib/breed-standards';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
+import { Modal } from '@/components/ui';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
@@ -180,20 +181,19 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      <div className="relative bg-card rounded-lg shadow-2xl border border-border max-w-lg w-full max-h-[85vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-lg">
-          <h3 className="text-base font-black text-card-foreground flex items-center gap-2 min-w-0">
-            <span className="truncate">{fowl.name}</span>
-            {code && <span className="text-xs font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
-          </h3>
-          <button type="button" onClick={onClose} aria-label="Close details" className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
+    <Modal
+      open
+      onClose={onClose}
+      title={fowl.name}
+      className="max-w-lg"
+    >
+      {code ? (
+        <span className="self-start rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-xs font-semibold uppercase text-success">
+          {formatBirdCodeForDisplay(code)}
+        </span>
+      ) : null}
 
-        <div className="p-6 space-y-5">
+        <div className="space-y-5">
           {/* Identity */}
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-lg bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
@@ -318,8 +318,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

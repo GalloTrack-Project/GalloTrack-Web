@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Clipboard, Clock, CheckCircle, Flag, Search } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import { Modal } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
 
@@ -309,22 +310,25 @@ export default function AdminMarketplacePage() {
 
         {/* NOTES MODAL */}
         {notesModal && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setNotesModal(null)}>
-            <div className="bg-card border border-border rounded-lg shadow-2xl max-w-md w-full p-6 space-y-4 animate-fadeIn" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-sm font-black text-card-foreground">Admin Notes</h3>
+          <Modal
+            open
+            onClose={() => setNotesModal(null)}
+            title="Admin Notes"
+            className="max-w-md"
+          >
               <textarea
+                aria-label="Admin notes"
                 value={notesModal.notes}
                 onChange={(e) => setNotesModal((prev) => prev ? { ...prev, notes: e.target.value } : null)}
-                className="w-full p-3 border border-border rounded-md text-sm bg-muted/25 focus:bg-card focus:border-amber-500 transition-all font-semibold text-card-foreground min-h-[100px] resize-y"
+                className="w-full p-3 border border-input-border rounded-sm text-sm bg-muted/25 focus:bg-card focus:border-amber-500 transition-colors font-semibold text-card-foreground min-h-[100px] resize-y"
                 placeholder="Add notes about this listing..."
                 rows={4}
               />
               <div className="flex gap-2.5">
-                <button type="button" onClick={() => setNotesModal(null)} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
-                <button type="button" onClick={() => { handleModerate(notesModal.id, listings.find((l) => l.id === notesModal.id)?.status || 'pending', notesModal.notes); setNotesModal(null); }} className="flex-1 text-xs font-black uppercase tracking-wider py-3 rounded-md bg-amber-500/20 border border-amber-500/50 text-warning hover:bg-amber-500/30 transition-all cursor-pointer">Save Notes</button>
+                <button type="button" onClick={() => setNotesModal(null)} className="flex-1 text-sm font-semibold py-3 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { handleModerate(notesModal.id, listings.find((l) => l.id === notesModal.id)?.status || 'pending', notesModal.notes); setNotesModal(null); }} className="flex-1 text-sm font-semibold py-3 rounded-sm bg-amber-500/20 border border-amber-500/50 text-warning hover:bg-amber-500/30 transition-colors cursor-pointer">Save Notes</button>
               </div>
-            </div>
-          </div>
+          </Modal>
         )}
       </div>
     </div>

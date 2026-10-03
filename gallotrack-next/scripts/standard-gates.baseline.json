@@ -8,7 +8,6 @@
       "app/auth/verify-otp/page.tsx": 7,
       "app/page.tsx": 2,
       "app/register/page.tsx": 6,
-      "components/modals/ForgotPasswordModal.tsx": 1,
       "components/SplashScreen.tsx": 3
     },
     "naked-outline-none": {},
