@@ -4,6 +4,8 @@
 @custom-variant light (&:where(:not(.dark), :not(.dark) *));
 
 :root {
+  color-scheme: light;
+
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -14,9 +16,24 @@
   --muted-foreground: #64748b;
   --border: #e2e8f0;
   --input: #cbd5e1;
+
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #be123c;
+  --info: #0369a1;
+  --ring: #0f172a;
+
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: #090d16;
   --foreground: #e2e8f0;
   --card: #0f172a;
@@ -27,6 +44,12 @@
   --muted-foreground: #94a3b8;
   --border: #1e293b;
   --input: #334155;
+
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --info: #7dd3fc;
+  --ring: #e2e8f0;
 }
 
 @theme inline {
@@ -40,6 +63,30 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-ring: var(--ring);
+
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.05);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -47,7 +94,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 /* ANTI-GRAVITY FLOATING VISUAL EFFECTS */
@@ -179,6 +225,35 @@ body {
   animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* ENTRANCE ANIMATIONS — animate-fadeIn is referenced across the app but had no keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn var(--duration-base, 200ms) ease-out both;
+}
+
+@keyframes enterRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-enter-right {
+  animation: enterRight var(--duration-base, 200ms) ease-out both;
+}
+
 /* Fix select option visibility in dark mode */
 .dark select option {
   background-color: #1e293b;
@@ -194,6 +269,29 @@ body {
 .no-spinner {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* REDUCED MOTION — no floats, no hover lift, no entrance animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [class*="antigravity-"],
+  .animate-fadeIn,
+  .animate-enter-right,
+  .animate-slideInRight {
+    animation: none !important;
+  }
+
+  [class*="antigravity-"]:hover {
+    transform: none !important;
+  }
 }
 
 

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from '@/app/theme-provider';
+import { useTheme } from 'next-themes';
 import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useUI } from '@/lib/contexts/ui-context';

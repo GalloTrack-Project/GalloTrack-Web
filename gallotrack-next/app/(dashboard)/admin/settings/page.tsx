@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useTheme } from '@/app/theme-provider';
+import { useTheme } from 'next-themes';
 import { adminGuard, fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
 import type { AdminProfileRow, AdminSettings } from '@/lib/admin';
 import { Shield, Settings, Bell, Users, ArrowRightLeft, HardDrive, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, FileJson } from 'lucide-react';

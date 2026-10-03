@@ -249,7 +249,7 @@ export default function RegisterPage() {
           <form onSubmit={step === 3 ? handleRegister : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
             {/* Step 1: Personal Information */}
             {step === 1 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-4 animate-enter-right">
                 <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
                   <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
                     <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">👤</span>
@@ -282,7 +282,7 @@ export default function RegisterPage() {
 
             {/* Step 2: Farm / Business Information */}
             {step === 2 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-4 animate-enter-right">
                 <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
                   <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
                     <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🏡</span>
@@ -308,7 +308,7 @@ export default function RegisterPage() {
 
             {/* Step 3: Account Security */}
             {step === 3 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-4 animate-enter-right">
                 <div className="bg-muted/25 border border-border rounded-2xl p-4 sm:p-5 space-y-4">
                   <h2 className="text-[10px] font-black text-card-foreground uppercase tracking-widest border-b border-border pb-2.5 flex items-center gap-2.5">
                     <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] shrink-0">🔒</span>

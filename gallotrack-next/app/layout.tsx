@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "./theme-provider";
+import { ThemeProvider } from "next-themes";
 import { GalloTrackProvider } from "@/lib/context";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
-import ThemeInit from "@/components/ThemeInit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,8 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <ThemeInit />
-        <ThemeProvider defaultTheme="dark">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem storageKey="theme">
           <GalloTrackProvider>
             <RootErrorBoundary>
               <div className="min-h-full w-full flex flex-col">
