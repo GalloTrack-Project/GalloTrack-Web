@@ -469,7 +469,7 @@ export default function DashboardPage() {
           </div>
           {crossbreedChartData.hasData ? (
             <>
-              <div className="relative w-52 h-52 sm:w-56 sm:h-56 mx-auto my-4 flex items-center justify-center">
+              <div className="relative mx-auto my-4 h-52 w-52 sm:h-56 sm:w-56">
                 <Doughnut
                   data={{
                     labels: crossbreedChartData.labels.map((l, i) => `${l} ${crossbreedChartData.data[i]}%`),
@@ -486,17 +486,29 @@ export default function DashboardPage() {
                     maintainAspectRatio: false,
                     cutout: '68%',
                     plugins: {
-                      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 10, weight: 'bold' }, color: chart.mutedForeground } },
+                      legend: { display: false },
                       tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}` }, backgroundColor: chart.card, titleColor: chart.foreground, bodyColor: chart.foreground, borderColor: chart.border, borderWidth: 1, padding: 10, cornerRadius: 8 },
                     },
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-2xl font-black text-success">{winRatePct}%</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Win Rate</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Win Rate</span>
                 </div>
               </div>
-              <p className="text-center text-[10px] text-muted-foreground font-semibold pb-1">Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'}</p>
+              <ul className="mx-auto flex flex-col items-center gap-1.5">
+                {crossbreedChartData.labels.map((label, i) => (
+                  <li key={label} className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <span
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{ backgroundColor: chart.series[i % chart.series.length] }}
+                    />
+                    <span>{label} {crossbreedChartData.data[i]}%</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-center text-xs text-muted-foreground font-semibold pb-1 mt-3">Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'}</p>
             </>
           ) : (
             <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
