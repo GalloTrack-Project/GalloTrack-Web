@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>GalloTrack baseline UI/UX audit · Syntaxure Labs</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#050505;--text:#ededed;--text2:#B7BFCB;--muted:#8A93A0;
+  --line:rgba(255,255,255,.10);--panel:rgba(255,255,255,.045);--field:rgba(255,255,255,.06);--edge:#6B7686;
+  --accent:#22D3EE;--accent-2:#A855F7;--grad:linear-gradient(135deg,#22D3EE,#A855F7);--focus:#7DD3FC;
+  --r-sm:6px;--r-lg:16px;--topbar-h:60px;
+  --pass:#4ADE80;--pass-bg:rgba(74,222,128,.12);
+  --fail:#FB7185;--fail-bg:rgba(251,113,133,.13);
+  --na:#B4C1D4;--na-bg:rgba(180,193,212,.12);
+  --warn:#FBBF24;--warn-bg:rgba(251,191,36,.12);
+  --sans:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --prose:min(72ch,100%);
+  --wide:clamp(0px,calc(100vw - 2*clamp(24px,5vw,80px)),1160px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--topbar-h) + 20px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+h1,h2,h3,p,ul,ol,dl,dd,figure{margin:0}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.08;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(22px,3vw,30px);line-height:1.2;font-weight:800;letter-spacing:-.02em}
+h3{font-size:clamp(17px,2vw,19px);line-height:1.35;font-weight:700;letter-spacing:-.01em}
+a{color:var(--accent);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:var(--r-sm);color:var(--text)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:var(--r-sm)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:#050505;padding:10px 14px;border-radius:var(--r-sm);font-weight:700;z-index:100}
+.skip:focus{left:12px}
+
+.topbar{position:sticky;top:0;z-index:60;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 clamp(24px,5vw,80px);background:rgba(5,5,5,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.wordmark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.wordmark i{width:12px;height:12px;border-radius:3px;background:var(--grad);display:block}
+.wordmark span{color:var(--muted);font-weight:500;font-size:13px}
+.topnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav a{font:600 13.5px var(--sans);color:var(--text2);text-decoration:none;padding:8px 12px;border-radius:var(--r-sm);white-space:nowrap;min-height:40px;display:inline-flex;align-items:center}
+.topnav a:hover{background:var(--panel);color:var(--text)}
+@media (max-width:900px){.topnav{display:none}}
+
+.band{padding:clamp(40px,6vw,72px) clamp(24px,5vw,80px);border-top:1px solid var(--line)}
+.band:first-of-type{border-top:0}
+.prose{max-width:var(--prose)}
+.prose p+p{margin-top:12px}
+.prose p,.prose li{color:var(--text2)}
+.prose strong{color:var(--text)}
+.lede{font-size:clamp(16.5px,1.6vw,18px);max-width:78ch;color:var(--text2)!important}
+h2+*{margin-top:18px}
+h3{margin-top:30px}
+.wrap{width:100%;max-width:var(--wide)}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+
+.tldr{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.stat b{display:block;font-size:clamp(23px,3.2vw,30px);font-weight:800;letter-spacing:-.025em;line-height:1.05}
+.stat span{display:block;font-size:13.5px;color:var(--muted);margin-top:6px}
+.stat.bad b{color:var(--fail)}.stat.ok b{color:var(--pass)}.stat.mid b{color:var(--warn)}
+.stat.g b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.verdict-box{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px)}
+.verdict-box .big{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;color:var(--warn)}
+.verdict-box p{margin-top:8px;color:var(--text2);max-width:82ch}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(16px,2vw,24px)}
+.tablewrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+th,td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--text);white-space:nowrap;background:rgba(255,255,255,.03);font-size:13.5px}
+td{color:var(--text2)}
+td strong{color:var(--text)}
+tbody tr:last-child td{border-bottom:0}
+.mono{font-family:var(--mono);font-size:13px}
+tr.s1 td{box-shadow:inset 3px 0 0 var(--fail);background:var(--fail-bg)}
+tr.s2 td{box-shadow:inset 3px 0 0 var(--fail)}
+tr.s3 td{box-shadow:inset 3px 0 0 var(--warn)}
+tr.s4 td{box-shadow:inset 3px 0 0 var(--na)}
+
+.chip{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);font-family:var(--mono);
+  font-size:11.5px;letter-spacing:.04em;padding:3px 8px;text-transform:uppercase;color:var(--accent);line-height:1.5;white-space:nowrap}
+.chip.pass{color:var(--pass)}.chip.fail{color:var(--fail)}.chip.na{color:var(--na)}.chip.warn{color:var(--warn)}
+.chip.s1{background:var(--fail-bg);color:var(--fail)}.chip.s2{background:var(--fail-bg);color:var(--fail)}
+.chip.s3{background:var(--warn-bg);color:var(--warn)}.chip.s4{background:var(--na-bg);color:var(--na)}
+
+.stack{display:flex;height:14px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.08);border:1px solid var(--edge);max-width:620px;margin-top:8px}
+.stack i{display:block;height:100%}
+.stack .f{background:var(--fail)}.stack .n{background:var(--na)}.stack .u{background:rgba(255,255,255,.14)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.legend span{font:600 12.5px var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+.ratio-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:16px}
+.rd{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;background:var(--panel)}
+.rd .num{font:800 clamp(25px,3.4vw,33px)/1 var(--sans);letter-spacing:-.03em}
+.rd .lbl{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+.rd.ok .num{color:var(--pass)}.rd.bad .num{color:var(--fail)}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:15.5px}
+.card p{font-size:14.5px;color:var(--text2)}
+
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch;margin-top:18px}
+.note p{color:var(--text2);font-size:15.5px}
+.note p+p{margin-top:10px}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:14.5px;margin-top:6px}
+.kv dt{color:var(--muted)}
+.kv dd{color:var(--text);min-width:0}
+
+pre{margin:14px 0 0;padding:14px 16px;background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:var(--r-sm);
+  font:12.5px/1.6 var(--mono);color:var(--text);overflow-x:auto;white-space:pre}
+
+.btn{font:600 14px/1 var(--sans);min-height:40px;padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--field);color:var(--text);cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.10)}
+.btn.primary{background:var(--grad);color:#050505;border-color:transparent;font-weight:700}
+.btn.primary:hover{filter:brightness(1.1)}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.msg{font-size:13.5px;color:var(--muted);min-height:20px;margin-top:8px}
+
+/* matrix */
+.mx th,.mx td{text-align:center;padding:8px;vertical-align:middle}
+.mx th:first-child,.mx td:first-child{text-align:left;font-weight:700;color:var(--text);white-space:nowrap}
+.mx .cell{min-height:40px;min-width:96px;font:600 13.5px var(--sans);border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--field);color:var(--muted);cursor:default}
+
+/* tracker */
+.tracker{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px);margin-top:20px}
+.tracker-bar{height:12px;border-radius:var(--r-sm);background:rgba(255,255,255,.08);border:1px solid var(--edge);overflow:hidden}
+.tracker-fill{height:100%;width:0;background:var(--grad);transition:width .25s ease}
+.tracker-pct{font:800 22px var(--sans);letter-spacing:-.02em;margin-top:12px}
+.tracker-pct span{font:500 13.5px var(--sans);color:var(--muted);margin-left:8px}
+.tracker-list{list-style:none;margin:16px 0 0;padding:0}
+.tracker-list li{border-top:1px solid var(--line)}
+.tracker-list li:first-child{border-top:0}
+.tracker-list label{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:13px 6px;min-height:44px;cursor:pointer}
+.tracker-list input{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;margin-top:3px}
+.tracker-list .t{font-size:14.5px;color:var(--text2);line-height:1.55}
+.tracker-list .t strong{color:var(--text)}
+.tracker-list .t code{white-space:nowrap}
+.tracker-list input:checked+.t{color:var(--muted)}
+.tracker-list input:checked+.t strong{text-decoration:line-through}
+.tracker-list .ph{font:600 11.5px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;padding-top:4px}
+.tracker-list li.done .ph{color:var(--pass)}
+
+footer{padding:36px clamp(24px,5vw,80px) 56px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+footer a{color:var(--text2)}
+@media print{.topbar,.skip,.btnrow,.tracker{display:none}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wordmark"><i></i>Syntaxure <span>/ GalloTrack baseline audit</span></div>
+  <nav class="topnav" aria-label="Sections">
+    <a href="#status">Status</a>
+    <a href="#method">Method</a>
+    <a href="#findings">Findings</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#metrics">Metrics</a>
+    <a href="#coverage">Coverage</a>
+    <a href="#verdict">Verdict</a>
+    <a href="#retest">Retest</a>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ============ TL;DR / STATUS ============ -->
+<section class="band" id="status">
+  <div class="eyebrow">Review 001 · Static pass · Baseline d147d46 · 2026-10-04</div>
+  <h1>GalloTrack baseline UI/UX audit</h1>
+  <p class="lede" style="margin-top:16px">A source-level review of <code>gallotrack-next</code> (54 <code>.tsx</code> files, 14,078 lines) against the 92 check units in the <a href="../UI_UX%20Review%20Workbench%20%C2%B7%20Syntaxure%20Labs.html">UI/UX Review Workbench</a>, with every contrast claim computed from the actual token values rather than eyeballed. <strong>19 failures are already logged before a single screen has been opened in a browser</strong> — eight of them WCAG 2.2 AA failures that block a conformance claim on their own.</p>
+
+  <div class="tldr">
+    <div class="stat g"><b>Incomplete</b><span>Suggested verdict — rule 2 of 6 · a blank is never a pass</span></div>
+    <div class="stat bad"><b>19</b><span>Findings logged · 8 S2 major, 9 S3 minor, 2 S4 polish</span></div>
+    <div class="stat bad"><b>0</b><span>S1 blockers confirmed at this stage</span></div>
+    <div class="stat mid"><b>21/92</b><span>Units marked failed · 0 passed · 71 blank</span></div>
+    <div class="stat mid"><b>9</b><span>Individual contrast ratios below threshold, across 3 findings</span></div>
+  </div>
+
+  <div class="verdict-box">
+    <div class="eyebrow" style="margin-bottom:6px">Suggested verdict · rule 2 of 6</div>
+    <div class="big">Incomplete</div>
+    <p>71 checks are not reviewed yet. This pass covered only what is answerable from source code — semantics, structure, duplicated patterns, sizes and token-level contrast. The light-theme pass, dark-theme pass, keyboard walk, screen reader pass, zoom/reflow checks and device matrix are all still blank, and a blank is never a pass. Fixing the 19 logged findings moves this to <em>Triage needed</em> → <em>Reject</em> → <em>Approve</em> as the remaining units are worked; it cannot reach <em>Approve</em> until the runtime passes exist.</p>
+  </div>
+</section>
+
+<!-- ============ METHOD ============ -->
+<section class="band" id="method">
+  <div class="wrap">
+    <div class="eyebrow">01 · Method</div>
+    <h2>What was reviewed, and how</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>The workbench defines a seven-step flow: scope, set up, light pass, dark pass, functional walk, log, verdict. <strong>This report completes steps 1 and 6 only.</strong> Everything between them is runtime work that needs a browser, two themes, a keyboard and a screen reader — none of which a source review can substitute for. Reporting that honestly is the point: the workbench's first rule is that a blank is never a pass, and its second is that a pass is not a conformance claim.</p>
+      <p>Where a claim could be measured, it was measured. Every contrast figure in this report comes from running the WCAG relative-luminance formula over the hex values actually present in <code>app/globals.css</code> and <code>components/DashboardPage.tsx</code>, truncated to two decimals — never rounded, because 4.49:1 does not meet 4.5:1. Every count comes from a regex sweep over <code>app/</code> and <code>components/</code>.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Done in this pass</h3>
+        <p>Scope: <code>gallotrack-next/app</code> + <code>gallotrack-next/components</code> (54 <code>.tsx</code>, 14,078 lines). Review details, source-level structural and semantic checks, token-level contrast math, duplicate-pattern inventory, size-scale census.</p></div>
+      <div class="card"><h3>Not done — blank</h3>
+        <p>Light pass, dark pass, keyboard-only walk, screen reader pass, 200%/400% zoom, 320px reflow, text-spacing override, forced colours, reduced motion, real-device pass, browser matrix, automated axe scan, evidence screenshots.</p></div>
+      <div class="card"><h3>Why the split matters</h3>
+        <p>Eight of the nine checklist categories contain at least one unit that is only answerable by rendering the page. Those units stay blank regardless of how much source review is done — which is exactly why the suggested verdict is Incomplete rather than Reject.</p></div>
+    </div>
+
+    <div class="note">
+      <p><strong>Review details.</strong> App under review: GalloTrack Web (Next.js 16 / React 19 / Tailwind v4 / Supabase). Build: commit <code>d147d46</code>, branch <code>ui-improvement</code>. Standard: WCAG 2.2 A and AA, plus practice checks. Roles tested: none yet — owner and admin accounts still need a runtime walk. Devices and browsers: none yet. Reviewer: Syntaxure Labs. Review date: 2026-10-04.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINDINGS ============ -->
+<section class="band" id="findings">
+  <div class="wrap">
+    <div class="eyebrow">02 · Findings</div>
+    <h2>19 logged failures</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Sorted by severity. Severity is rated by user impact on a real task, not by how hard the fix is: <strong>S2</strong> is a significant barrier with a workaround, <strong>S3</strong> is noticeable but blocks nothing, <strong>S4</strong> is refinement with no real user impact. Every row carries a checklist reference so it can be re-marked in the workbench when the runtime pass happens.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:20px">
+      <table>
+        <thead><tr><th>Ref</th><th>Item</th><th>What failed</th><th>Sev</th><th>Measured note</th><th>Evidence</th></tr></thead>
+        <tbody>
+          <tr class="s2"><td class="mono">C2</td><td>Light-theme muted text</td><td><strong>Metadata text below 4.5:1</strong> — <code>text-slate-400</code> on white card, rendered at 8–9px.</td><td><span class="chip s2">S2</span></td><td><strong>2.56:1</strong> (needs 4.5). Affects bloodline report labels: Strain, Purity, Vigor, Inbred, Win Rate.</td><td class="mono">BloodlineReportCard.tsx:33,34,35,59,63,67,71,75,101,105 · BloodlineBreakdown.tsx:63,75,82 · PerFowlBreakdownModal.tsx:94</td></tr>
+          <tr class="s2"><td class="mono">C6</td><td>Chart marks and axis text</td><td><strong>Chart series and axis ticks below threshold in both themes</strong>; colours are hardcoded and never re-read on theme change.</td><td><span class="chip s2">S2</span></td><td>Light — win-rate line <code>#34d399</code> <strong>1.92:1</strong>; doughnut <code>#10b981</code> 2.54, <code>#34d399</code> 1.92, <code>#6ee7b7</code> 1.52; axis ticks <code>#94a3b8</code> <strong>2.56:1</strong> as 9–10px text. Dark — doughnut <code>#065f46</code> <strong>2.32:1</strong>.</td><td class="mono">DashboardPage.tsx:410,416,437,438,439,470,481</td></tr>
+          <tr class="s2"><td class="mono">K4</td><td>Focus indicator</td><td><strong>Focus removed with no replacement</strong> — <code>outline-none</code> on controls with no <code>focus:</code> style on the element.</td><td><span class="chip s2">S2</span></td><td>6 controls. Keyboard-only users cannot locate position inside edit and encode dialogs.</td><td class="mono">EditFowlModal.tsx:191,206 · EncodeForm.tsx:349,511,518 · MatchForm.tsx:229</td></tr>
+          <tr class="s2"><td class="mono">F2</td><td>Label association</td><td><strong>No programmatic label binding</strong> — labels and inputs are siblings with no <code>id</code>/<code>htmlFor</code>.</td><td><span class="chip s2">S2</span></td><td>0 <code>htmlFor</code> across <strong>95 <code>&lt;label&gt;</code></strong> and 81 inputs. Accessible name falls back to placeholder, which disappears on input.</td><td class="mono">register/page.tsx:259-277 · settings/page.tsx · marketplace/page.tsx · admin/settings/page.tsx</td></tr>
+          <tr class="s2"><td class="mono">K2 / K7</td><td>Dialog semantics</td><td><strong>Modal shells have no dialog semantics</strong> — no role, no modal flag, no focus move-in, no focus return, effectively no Escape.</td><td><span class="chip s2">S2</span></td><td>8 overlay shells, <strong>0</strong> <code>role="dialog"</code> / <code>aria-modal</code> / <code>aria-labelledby</code> / focus trap. One Escape handler in the entire app.</td><td class="mono">components/modals/* (8 files) · DashboardPage.tsx:89 · MarketplacePage.tsx:183</td></tr>
+          <tr class="s2"><td class="mono">A3 / K10</td><td>Icon-only controls</td><td><strong>Icon-only buttons with no accessible name, below target size.</strong></td><td><span class="chip s2">S2</span></td><td>9 buttons at <strong>16–20px</strong> (needs 24×24): row delete, chip remove, modal close. Theme toggle carries only a <code>title</code>.</td><td class="mono">EditFowlModal.tsx:182,284 · EncodeForm.tsx:236,423,436 · PerFowlBreakdownModal.tsx:94 · layout.tsx:234-242</td></tr>
+          <tr class="s2"><td class="mono">T6</td><td>Type scale</td><td><strong>Font sizes far below any readable floor</strong>, used as the default for metadata and table content.</td><td><span class="chip s2">S2</span></td><td><strong>835</strong> arbitrary px sizes: 317×10px, 280×9px, 95×8px, plus 7px and 6px. <code>text-[10px]</code> is used more than <code>text-sm</code>. <code>font-black</code> ×514.</td><td class="mono">FowlDetailsModal (76) · DashboardPage (68) · EncodeForm (63) · BloodlineReportCard (56) · LineageDirectory (53)</td></tr>
+          <tr class="s2"><td class="mono">F10</td><td>Status messages</td><td><strong>No live regions anywhere</strong> — toasts and save confirmations are purely visual.</td><td><span class="chip s2">S2</span></td><td>0 <code>aria-live</code>, 0 <code>role="status"</code>, 0 <code>role="alert"</code>. Two competing toast systems coexist.</td><td class="mono">lib/contexts/ui-context.tsx:72-77 · layout.tsx:90-99 · 5 per-page toast boxes</td></tr>
+
+          <tr class="s3"><td class="mono">N2</td><td>Heading hierarchy</td><td><strong>Two <code>h1</code> on most pages</strong>; the shell emits one and the page emits another. Two pages have none.</td><td><span class="chip s3">S3</span></td><td>26 <code>h1</code> across 15 pages + shell <code>layout.tsx:207</code>. <code>settings</code> and <code>profile</code> start at <code>h2</code>.</td><td class="mono">layout.tsx:207 · settings/page.tsx:572 · profile/page.tsx:253</td></tr>
+          <tr class="s3"><td class="mono">K6</td><td>Skip link</td><td><strong>No skip link</strong> — every keyboard pass re-traverses the full sidebar.</td><td><span class="chip s3">S3</span></td><td>0 matches for skip-to content. Landmarks do exist (<code>header</code>, <code>nav</code>×2, <code>main</code>, <code>aside</code>), so a screen reader can jump; a keyboard user cannot.</td><td class="mono">layout.tsx:102,115,191,255,264</td></tr>
+          <tr class="s3"><td class="mono">A4</td><td>Landmarks</td><td><strong>The <code>footer</code> landmark is missing entirely</strong> — four of five required landmarks are present.</td><td><span class="chip s3">S3</span></td><td><strong>0</strong> <code>&lt;footer&gt;</code> across all 54 <code>.tsx</code> files. <code>header</code>, <code>nav</code>×2, <code>main</code> and <code>aside</code> exist and <code>&lt;html lang="en"&gt;</code> is set, so a screen reader has 4 of 5 landmarks to jump with.</td><td class="mono">app/layout.tsx:30 (lang) · grep <code>&lt;footer&gt;</code> = 0</td></tr>
+          <tr class="s3"><td class="mono">L2</td><td>Scale consistency</td><td><strong>No radius, shadow or spacing scale</strong> — families mixed arbitrarily, sometimes within one element stack.</td><td><span class="chip s3">S3</span></td><td>5 radii: <code>rounded-xl</code> ×312, <code>2xl</code> ×141, <code>lg</code> ×79, <code>3xl</code> ×53, <code>md</code> ×5. 7 shadow levels. 24 distinct <code>p-*</code> values.</td><td class="mono">LogoutModal.tsx:20-36 (3xl → square → 2xl → xl in one dialog)</td></tr>
+          <tr class="s3"><td class="mono">L4</td><td>Consistent controls</td><td><strong>No shared Button</strong> — padding and primary style chosen per call site.</td><td><span class="chip s3">S3</span></td><td>173 buttons, 5 paddings (58/50/24/22/5 sites), 2 competing primary styles: gradient vs solid.</td><td class="mono">layout.tsx:124 (gradient) vs 23 solid emerald call sites</td></tr>
+          <tr class="s3"><td class="mono">L4</td><td>Consistent components</td><td><strong>No shared Card, Badge or EmptyState</strong> — the same thing looks different on every screen.</td><td><span class="chip s3">S3</span></td><td>5 StatCard implementations, ~31 hand-written empty states across 13 files, 6 badge paddings, 3 file-local <code>FowlCard</code>s.</td><td class="mono">admin-page.tsx:143 · admin/{flocks,marketplace,matches}/page.tsx · LineageDirectory.tsx:11</td></tr>
+          <tr class="s3"><td class="mono">L5</td><td>Designed states</td><td><strong>Loading states are ad hoc</strong> — no skeletons, raw "Loading…" strings, layout jumps on load.</td><td><span class="chip s3">S3</span></td><td>0 skeleton components, 9 scattered <code>animate-pulse</code>, 4 spinner-ish occurrences. Empty/error states exist but are never shared.</td><td class="mono">grep: <code>Skeleton</code> = 0 · <code>animate-pulse</code> = 9</td></tr>
+          <tr class="s3"><td class="mono">C5</td><td>Control boundaries</td><td><strong>Input border below 3:1</strong> in both themes; the boundary is the affordance for a text field.</td><td><span class="chip s3">S3</span></td><td>Light <code>--input</code> on card = <strong>1.48:1</strong>; dark = <strong>1.72:1</strong> (needs 3). Mitigated where a visible label sits above the field, fails where the placeholder is the only cue.</td><td class="mono">globals.css:16,28 · MatchForm.tsx:78-79 (<code>border-[#dfe5ea]</code>)</td></tr>
+          <tr class="s3"><td class="mono">N4</td><td>Navigation consistency</td><td><strong>Nav data duplicated four ways</strong>; role accent decided in the shell but ignored by pages.</td><td><span class="chip s3">S3</span></td><td><code>OWNER_NAV</code>, <code>OWNER_MOBILE</code>, <code>ADMIN_NAV</code>, <code>ADMIN_MOBILE</code> are separate arrays with divergent labels. Shell flips emerald→amber by role; pages hardcode emerald.</td><td class="mono">layout.tsx:14-42,70 · pages hardcode <code>emerald</code></td></tr>
+
+          <tr class="s4"><td class="mono">Practice</td><td>Motion integrity</td><td><strong>Two animation utilities are silent no-ops</strong> — entrances are inconsistent across the app.</td><td><span class="chip s4">S4</span></td><td><code>animate-fadeIn</code> used <strong>43×</strong> with no <code>@keyframes fadeIn</code> defined; <code>animate-in fade-in …</code> needs <code>tailwindcss-animate</code>, which is not installed.</td><td class="mono">globals.css (6 keyframes, no fadeIn) · register/page.tsx:252,285,309</td></tr>
+          <tr class="s4"><td class="mono">Practice</td><td>Code hygiene</td><td><strong>Unreferenced components and barrels</strong> that look like part of the system.</td><td><span class="chip s4">S4</span></td><td><code>components/modals/index.ts</code> exports 8 modals, imported by nothing; <code>SplashScreen.tsx</code> and <code>FarmBloodlineSummary.tsx</code> have no importers.</td><td class="mono">components/modals/index.ts · SplashScreen.tsx · FarmBloodlineSummary.tsx</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <p><strong>Why nothing is rated S1.</strong> An S1 blocker stops a user finishing a core task or makes core content unreadable or unreachable. The closest candidate — 8px text at 2.56:1 in the bloodline report — fails only in the light theme, and the app defaults to dark, where the same element measures 6.96:1. A workaround exists (switch theme), so it is S2, not S1. If the runtime pass finds the same text failing in dark, or a keyboard trap in any dialog, that row becomes S1 and rule 1 flips the suggested verdict to <em>Reject: rework needed</em> immediately.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EVIDENCE ============ -->
+<section class="band" id="evidence">
+  <div class="wrap">
+    <div class="eyebrow">03 · Evidence</div>
+    <h2>Measured contrast</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Computed with the WCAG relative-luminance formula from the hex values in <code>app/globals.css</code> and <code>components/DashboardPage.tsx</code>, truncated to two decimals. Green meets the threshold for its role; red does not. These are the numbers to re-run after PR 2 and PR 5.</p>
+    </div>
+
+    <div class="ratio-demo">
+      <div class="rd ok"><div class="num">4.55:1</div><div class="lbl">Light <code>--muted-foreground</code> on <code>--background</code> · needs 4.5</div></div>
+      <div class="rd ok"><div class="num">7.58:1</div><div class="lbl">Dark <code>--muted-foreground</code> on <code>--background</code> · needs 4.5</div></div>
+      <div class="rd ok"><div class="num">17.06:1</div><div class="lbl">Light <code>--foreground</code> on <code>--background</code> · needs 4.5</div></div>
+      <div class="rd bad"><div class="num">2.56:1</div><div class="lbl">Light <code>text-slate-400</code> on white card · needs 4.5 · <strong>C2 fail</strong></div></div>
+      <div class="rd bad"><div class="num">1.92:1</div><div class="lbl">Chart <code>#34d399</code> on white · needs 3 · <strong>C6 fail</strong></div></div>
+      <div class="rd bad"><div class="num">2.56:1</div><div class="lbl">Axis ticks <code>#94a3b8</code> on white · needs 4.5 as text · <strong>C6 fail</strong></div></div>
+      <div class="rd bad"><div class="num">1.48:1</div><div class="lbl">Light input border on card · needs 3 · <strong>C5 fail</strong></div></div>
+      <div class="rd bad"><div class="num">1.72:1</div><div class="lbl">Dark input border on card · needs 3 · <strong>C5 fail</strong></div></div>
+      <div class="rd ok"><div class="num">3.77:1</div><div class="lbl">White on <code>emerald-600</code> fill · needs 4.5 for text, 3 for UI</div></div>
+      <div class="rd ok"><div class="num">5.48:1</div><div class="lbl">White on <code>emerald-700</code> fill · needs 4.5</div></div>
+      <div class="rd ok"><div class="num">6.96:1</div><div class="lbl">Dark muted metadata on card · needs 4.5</div></div>
+      <div class="rd ok"><div class="num">9.29:1</div><div class="lbl">Chart <code>#34d399</code> on dark card · needs 3</div></div>
+      <div class="rd bad"><div class="num">2.32:1</div><div class="lbl">Doughnut <code>#065f46</code> on dark card · needs 3 · <strong>C6 fail</strong></div></div>
+    </div>
+
+    <div class="note">
+      <p><strong>The failures are concentrated in the light theme, with one dark-theme exception.</strong> Text contrast passes in dark because <code>--muted-foreground</code> was tuned to <code>#94a3b8</code> against a near-black surface, while the light theme reuses raw palette utilities (<code>slate-400</code>, <code>emerald-500</code>, <code>amber-500</code>) that were never tuned for their background. The exception is the chart palette: it is hardcoded, so the same six-colour emerald ramp that fails three segments on white fails a different segment (<code>#065f46</code>, 2.32:1) on the dark card. This is checklist item <strong>M6</strong> — brand and accent colours must be re-tuned per theme — and it is exactly what a token layer prevents: one value in one file instead of 80 literals across 39.</p>
+      <p><strong>Not measured here:</strong> any colour sitting on a <code>backdrop-blur</code> layer, gradient, or image. The dashboard uses <code>bg-card/85 backdrop-blur-md</code> for the topbar and <code>bg-card/95</code> for the mobile bar, so the rendered pixel differs from the CSS value. Those need the DevTools eyedropper during the light pass.</p>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn primary" type="button" id="b-md">Copy Markdown report</button>
+      <button class="btn" type="button" id="b-json">Copy findings as JSON</button>
+      <span class="msg" id="msg" role="status" aria-live="polite"></span>
+    </div>
+    <div class="note" style="margin-top:14px">
+      <p>The Markdown output matches the report format the review workbench exports, so it can be pasted directly into a ticket or the workbench's own output box.</p>
+      <p><strong>To load this audit into the workbench itself:</strong> open the <a href="../UI_UX%20Review%20Workbench%20%C2%B7%20Syntaxure%20Labs.html">UI/UX Review Workbench</a>, paste the contents of <a href="GalloTrack-workbench-seed.json"><code>GalloTrack-workbench-seed.json</code></a> into its output box, and press <em>Load from JSON</em>. That pre-fills the review details and marks the 21 failed units (12 S2, 9 S3) with their measurements and evidence, so PR 7's runtime pass starts from this state instead of from a blank checklist. Nothing else is pre-marked — 71 units stay blank, because a source review cannot pass them.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ METRICS ============ -->
+<section class="band" id="metrics">
+  <div class="wrap">
+    <div class="eyebrow">04 · Baseline</div>
+    <h2>Starting metrics</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>These are the numbers the migration has to move. Every one is reproducible with a regex sweep over <code>gallotrack-next/app</code> and <code>gallotrack-next/components</code>, which is how the CI gates in the standard will re-check them.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Metric</th><th class="center">Baseline</th><th>Where</th><th>Target</th></tr></thead>
+        <tbody>
+          <tr><td>Arbitrary pixel font sizes</td><td class="center mono"><strong>835</strong></td><td>317×10px, 280×9px, 95×8px, rest 6–11px · 39 files</td><td class="mono">0</td></tr>
+          <tr><td>Hex literals in <code>.tsx</code></td><td class="center mono"><strong>80</strong></td><td>DashboardPage 21 · MatchForm 21 · update-password 11 · confirm 8</td><td class="mono">0</td></tr>
+          <tr><td>Raw palette utilities</td><td class="center mono"><strong>2,468</strong></td><td><code>slate-</code> 849 · <code>emerald-</code> 1,132 · <code>amber-</code> 225 · <code>rose-</code> 172 · <code>sky-</code> 81</td><td>semantic roles only</td></tr>
+          <tr><td><code>aria-*</code> attributes</td><td class="center mono"><strong>4</strong></td><td>EncodeForm ×2 · verify-otp ×1 · settings ×1</td><td class="mono">≥120</td></tr>
+          <tr><td><code>htmlFor</code> bindings</td><td class="center mono"><strong>0</strong></td><td>against 95 <code>&lt;label&gt;</code> and 81 <code>&lt;input&gt;</code></td><td class="mono">100%</td></tr>
+          <tr><td><code>role="dialog"</code> / focus trap</td><td class="center mono"><strong>0 / 0</strong></td><td>across 8 modal shells</td><td class="mono">8/8 via 1 component</td></tr>
+          <tr><td>Live regions</td><td class="center mono"><strong>0</strong></td><td>0 <code>aria-live</code>, 0 <code>role="status"</code>, 0 <code>role="alert"</code></td><td class="mono">toast + errors</td></tr>
+          <tr><td>Skip link</td><td class="center mono"><strong>0</strong></td><td>no skip-to content anywhere</td><td class="mono">1</td></tr>
+          <tr><td><code>h1</code> per dashboard page</td><td class="center mono"><strong>2</strong></td><td>shell <code>layout.tsx:207</code> + page heading</td><td class="mono">1</td></tr>
+          <tr><td>Buttons / StatCards / empty states</td><td class="center mono"><strong>173 / 5 / ~31</strong></td><td>no shared primitive for any of them</td><td class="mono">1 / 1 / 1</td></tr>
+          <tr><td><code>outline-none</code> with no focus style</td><td class="center mono"><strong>6</strong></td><td>of 80 <code>outline-none</code> total</td><td class="mono">0</td></tr>
+          <tr><td>Buttons below 24×24px</td><td class="center mono"><strong>9</strong></td><td>16–20px row/chip/close controls</td><td class="mono">0</td></tr>
+          <tr><td>Components with zero <code>dark:</code></td><td class="center mono"><strong>14</strong></td><td>incl. <code>layout.tsx</code>, <code>DashboardPage</code>, <code>ProfilingPage</code></td><td>token-first</td></tr>
+          <tr><td>Component tests</td><td class="center mono"><strong>0</strong></td><td>5 tests exist, all pure logic in <code>lib/</code></td><td class="mono">≥16 + axe</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COVERAGE ============ -->
+<section class="band" id="coverage">
+  <div class="wrap">
+    <div class="eyebrow">05 · Test plan</div>
+    <h2>Coverage matrix</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>All blank, and deliberately shown that way. A theme × width cell is only marked once the key screens have actually been walked at that combination; a mode is only marked once it has been emulated and observed. This matrix is the work that PR 5 and PR 7 have to fill in — it is the direct measure of how far the review is from <em>Approve</em>.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:18px">
+      <table class="mx">
+        <thead><tr><th>Theme</th><th>320 px</th><th>375 px</th><th>768 px</th><th>1280 px</th><th>1920 px</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Light</th><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td></tr>
+          <tr><th scope="row">Dark</th><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td><td><span class="cell">Not yet</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Modes and assistive checks</h3>
+        <p>200% text zoom · 320px reflow (400%) · keyboard-only walkthrough · screen reader pass · reduced motion · forced colours · throttled network — <strong>0 of 7 done</strong>.</p></div>
+      <div class="card"><h3>Browsers and devices</h3>
+        <p>Chrome · Firefox · Safari · Edge · iOS device · Android device — <strong>0 of 6 done</strong>. At least one real phone is required before R5 can be marked.</p></div>
+      <div class="card"><h3>Critical user flows</h3>
+        <p>Sign in/out · create fowl (encode) · edit and delete a record · search and filter · settings and profile · error and empty states — <strong>0 of 6 walked</strong>.</p></div>
+      <div class="card"><h3>Environment notes</h3>
+        <p>Not recorded yet. Needs browser and OS versions, screen reader pairing, test accounts for owner and admin roles, and throwaway data for delete/deactivate tests.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERDICT ============ -->
+<section class="band" id="verdict">
+  <div class="wrap">
+    <div class="eyebrow">06 · Decision</div>
+    <h2>Verdict rules applied</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>The workbench applies these in order and the first match wins. Rule 1 does not fire — no S1 is open. Rule 2 does.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th class="center">Order</th><th>Condition</th><th>Verdict</th><th>Matches?</th></tr></thead>
+        <tbody>
+          <tr><td class="center mono">1</td><td>Any S1 blocker is open</td><td><span class="chip s1">Reject: rework needed</span></td><td><span class="chip na">No · 0 S1</span></td></tr>
+          <tr style="background:var(--warn-bg)"><td class="center mono">2</td><td><strong>Any check is not reviewed</strong></td><td><span class="chip warn">Incomplete</span></td><td><span class="chip warn">Yes · 71 blank</span></td></tr>
+          <tr><td class="center mono">3</td><td>Any failure has no severity</td><td><span class="chip na">Triage needed</span></td><td><span class="chip na">No · all 19 rated</span></td></tr>
+          <tr><td class="center mono">4</td><td>Any S2 major is open</td><td><span class="chip s2">Reject: rework needed</span></td><td><span class="chip na">Would fire next</span></td></tr>
+          <tr><td class="center mono">5</td><td>Only S3/S4 items open</td><td><span class="chip s3">Approve with fixes</span></td><td><span class="chip na">No</span></td></tr>
+          <tr><td class="center mono">6</td><td>No failures, everything reviewed</td><td><span class="chip pass">Approve</span></td><td><span class="chip na">No</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" role="img" aria-label="Proportion of 92 check units: 21 failed, 0 passed, 71 not reviewed">
+      <i class="f" style="width:22.8%"></i><i class="u" style="width:77.2%"></i>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--fail)"></i>21 failed (22.8%)</span>
+      <span><i style="background:var(--pass)"></i>0 passed (0%)</span>
+      <span><i style="background:rgba(255,255,255,.14)"></i>71 not reviewed (77.2%)</span>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Why zero passes are recorded</h3>
+        <p>Source review can prove a failure but rarely prove a pass. <code>header</code>/<code>nav</code>/<code>main</code>/<code>aside</code> exist, <code>&lt;html lang="en"&gt;</code> is set and all 19 images carry <code>alt</code> — but the workbench only accepts a pass for units sampled <em>on every screen and state</em>, and no screen has been rendered yet. Those units stay blank until PR 7.</p></div>
+      <div class="card"><h3>What unblocks the verdict</h3>
+        <p>Clear the 8 S2 findings (PRs 2–5), then run the runtime passes to fill the 71 blanks (PR 7). Only then can rule 6 return <em>Approve</em>. Until the S2s are cleared, the verdict sits at rule 2 and cannot climb.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RETEST TRACKER ============ -->
+<section class="band" id="retest">
+  <div class="wrap">
+    <div class="eyebrow">07 · Retest</div>
+    <h2>Findings tracker</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Check a finding off when it is fixed <em>and</em> retested in both themes — the workbench's closing rule is that every fix is retested in light and dark before it is closed. State persists in this browser.</p>
+    </div>
+
+    <div class="tracker">
+      <div class="tracker-bar"><div class="tracker-fill" id="fill"></div></div>
+      <div class="tracker-pct" id="pct">0% complete <span id="count">0 of 19 closed</span></div>
+      <ul class="tracker-list" id="list">
+        <li data-id="c2"><label><input type="checkbox"><span class="t"><strong>C2 · Light metadata text 2.56:1 at 8–9px</strong> — replace <code>text-slate-400</code> with the <code>--muted-foreground</code> token; raise the 8–9px tier to 12px.</span><span class="ph">S2</span></label></li>
+        <li data-id="c6"><label><input type="checkbox"><span class="t"><strong>C6 · Chart marks and axis text below threshold</strong> — token-driven chart palette verified at 3:1 in both themes; axis ticks at 12px and 4.5:1.</span><span class="ph">S2</span></label></li>
+        <li data-id="k4"><label><input type="checkbox"><span class="t"><strong>K4 · Focus removed on 6 controls</strong> — global <code>:focus-visible</code> ring; delete every <code>outline-none</code> without a replacement.</span><span class="ph">S2</span></label></li>
+        <li data-id="f2"><label><input type="checkbox"><span class="t"><strong>F2 · 0 label bindings</strong> — <code>FormField</code> primitive with real <code>htmlFor</code>/<code>id</code> on all 81 inputs and 41 selects.</span><span class="ph">S2</span></label></li>
+        <li data-id="k2"><label><input type="checkbox"><span class="t"><strong>K2/K7 · 8 modal shells without dialog semantics</strong> — one <code>Modal</code> component: role, modal flag, labelled by title, focus trap, focus return, Esc.</span><span class="ph">S2</span></label></li>
+        <li data-id="a3"><label><input type="checkbox"><span class="t"><strong>A3/K10 · 9 icon-only buttons unnamed and under 24px</strong> — <code>aria-label</code> on every icon-only control; 40px minimum hit area.</span><span class="ph">S2</span></label></li>
+        <li data-id="t6"><label><input type="checkbox"><span class="t"><strong>T6 · 835 sub-12px font sizes</strong> — enforce 14px body / 12px floor; migrate the 8px and 9px metadata tier to 12px.</span><span class="ph">S2</span></label></li>
+        <li data-id="f10"><label><input type="checkbox"><span class="t"><strong>F10 · No live regions, two toast systems</strong> — single toast provider with <code>role="status"</code> and <code>aria-live="polite"</code>.</span><span class="ph">S2</span></label></li>
+        <li data-id="n2"><label><input type="checkbox"><span class="t"><strong>N2 · Two <code>h1</code> per page</strong> — <code>PageHeader</code> owns the single <code>h1</code>; shell breadcrumb demoted; settings and profile gain theirs.</span><span class="ph">S3</span></label></li>
+        <li data-id="k6"><label><input type="checkbox"><span class="t"><strong>K6 · No skip link</strong> — first focusable element in the shell, targets <code>&lt;main&gt;</code>, visible on focus only.</span><span class="ph">S3</span></label></li>
+        <li data-id="a4"><label><input type="checkbox"><span class="t"><strong>A4 · No <code>footer</code> landmark</strong> — the other four exist; add a real <code>&lt;footer&gt;</code> in the shell wrapping the colophon.</span><span class="ph">S3</span></label></li>
+        <li data-id="l2"><label><input type="checkbox"><span class="t"><strong>L2 · 5 radius families, 7 shadow levels, 24 paddings</strong> — collapse to the token scale in <code>globals.css</code>.</span><span class="ph">S3</span></label></li>
+        <li data-id="l4a"><label><input type="checkbox"><span class="t"><strong>L4 · No shared Button</strong> — one primitive, four sizes, one primary and one danger style.</span><span class="ph">S3</span></label></li>
+        <li data-id="l4b"><label><input type="checkbox"><span class="t"><strong>L4 · No shared Card, Badge or EmptyState</strong> — 5 StatCards → 1, ~31 empty states → 1, 6 pill paddings → 1.</span><span class="ph">S3</span></label></li>
+        <li data-id="l5"><label><input type="checkbox"><span class="t"><strong>L5 · Loading states not designed</strong> — <code>Skeleton</code> mirroring layout, <code>Spinner</code> for inline, plus designed error and partial states.</span><span class="ph">S3</span></label></li>
+        <li data-id="c5"><label><input type="checkbox"><span class="t"><strong>C5 · Input borders 1.48:1 / 1.72:1</strong> — raise the control border token to 3:1 in both themes, or guarantee an adjacent label at 3:1.</span><span class="ph">S3</span></label></li>
+        <li data-id="n4"><label><input type="checkbox"><span class="t"><strong>N4 · Nav duplicated four ways, role accent inconsistent</strong> — one nav array with short labels; accent decided once and applied everywhere.</span><span class="ph">S3</span></label></li>
+        <li data-id="l6"><label><input type="checkbox"><span class="t"><strong>Practice · 43 dead <code>animate-fadeIn</code> + missing <code>animate-in</code> dep</strong> — define one real <code>fadeIn</code>, remove or install the other.</span><span class="ph">S4</span></label></li>
+        <li data-id="l7"><label><input type="checkbox"><span class="t"><strong>Practice · dead components</strong> — delete or wire up <code>modals/index.ts</code>, <code>SplashScreen.tsx</code>, <code>FarmBloodlineSummary.tsx</code>.</span><span class="ph">S4</span></label></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Syntaxure Labs · GalloTrack baseline audit · Review 001 · 2026-10-04 · commit <span class="mono">d147d46</span> on <span class="mono">ui-improvement</span>.
+  Measured against the <a href="../UI_UX%20Review%20Workbench%20%C2%B7%20Syntaxure%20Labs.html">UI/UX Review Workbench</a> (WCAG 2.2 A/AA, 92 check units) · companion document: <a href="../GalloTrack-UI-Standard.html">GalloTrack UI Standard</a>.</p>
+</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- trackers ---------- */
+function wireTracker(key){
+  var boxes=Array.prototype.slice.call(document.querySelectorAll('#list input[type=checkbox]'));
+  var items=Array.prototype.slice.call(document.querySelectorAll('#list li'));
+  if(!boxes.length)return;
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){saved={}}
+  function update(){
+    var done=0;
+    items.forEach(function(li,i){
+      var on=boxes[i].checked;
+      if(on)done++;
+      li.classList.toggle('done',on);
+    });
+    var pct=Math.round(100*done/items.length);
+    document.getElementById('fill').style.width=pct+'%';
+    document.getElementById('pct').firstChild.nodeValue=pct+'% complete ';
+    document.getElementById('count').textContent=done+' of '+items.length+' closed';
+  }
+  boxes.forEach(function(b,i){
+    b.checked=!!saved[items[i].dataset.id];
+    b.addEventListener('change',function(){
+      var s={};
+      try{s=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){s={}}
+      s[items[i].dataset.id]=b.checked;
+      try{localStorage.setItem(key,JSON.stringify(s))}catch(e){}
+      update();
+    });
+  });
+  update();
+}
+wireTracker('gallotrack-audit-retest-v1');
+
+/* ---------- export ---------- */
+var FINDINGS=[
+ {sev:'S2',ref:'C2',theme:'Light',text:'Muted metadata text below 4.5:1',note:'text-slate-400 on white card = 2.56:1, rendered at 8-9px (needs 4.5). Bloodline report labels: Strain, Purity, Vigor, Inbred, Win Rate.',ev:'BloodlineReportCard.tsx:33,34,35,59,63,67,71,75,101,105; BloodlineBreakdown.tsx:63,75,82; PerFowlBreakdownModal.tsx:94'},
+ {sev:'S2',ref:'C6',theme:'Both',text:'Chart marks and axis text below threshold',note:'Light: win-rate line #34d399 = 1.92:1; doughnut #10b981 2.54 / #34d399 1.92 / #6ee7b7 1.52 (needs 3); axis ticks #94a3b8 = 2.56:1 as 9-10px text (needs 4.5). Dark: doughnut #065f46 = 2.32:1. Chart colours hardcoded, never re-read on theme change.',ev:'DashboardPage.tsx:410,416,437,438,439,470,481'},
+ {sev:'S2',ref:'K4',theme:'All',text:'Focus indicator removed with no replacement',note:'outline-none on controls with no focus: style on the element. 6 controls. Keyboard users cannot locate position inside edit and encode dialogs.',ev:'EditFowlModal.tsx:191,206; EncodeForm.tsx:349,511,518; MatchForm.tsx:229'},
+ {sev:'S2',ref:'F2',theme:'All',text:'No programmatic label association',note:'0 htmlFor across 95 label elements and 81 inputs. Accessible name falls back to placeholder, which disappears on input.',ev:'register/page.tsx:259-277; settings/page.tsx; marketplace/page.tsx; admin/settings/page.tsx'},
+ {sev:'S2',ref:'K2/K7',theme:'All',text:'Modal shells have no dialog semantics',note:'8 overlay shells, 0 role=dialog / aria-modal / aria-labelledby, no focus move-in or return, 1 Escape handler app-wide.',ev:'components/modals/* (8 files); DashboardPage.tsx:89; MarketplacePage.tsx:183'},
+ {sev:'S2',ref:'A3/K10',theme:'All',text:'Icon-only buttons without accessible name, below target size',note:'9 buttons at 16-20px (needs 24x24): row delete, chip remove, modal close. Theme toggle carries only a title attribute.',ev:'EditFowlModal.tsx:182,284; EncodeForm.tsx:236,423,436; PerFowlBreakdownModal.tsx:94; layout.tsx:234-242'},
+ {sev:'S2',ref:'T6',theme:'All',text:'Font sizes far below any readable floor',note:'835 arbitrary px sizes: 317x10px, 280x9px, 95x8px, plus 7px and 6px. text-[10px] used more often than text-sm. font-black x514.',ev:'FowlDetailsModal (76); DashboardPage (68); EncodeForm (63); BloodlineReportCard (56); LineageDirectory (53)'},
+ {sev:'S2',ref:'F10',theme:'All',text:'No live regions for status messages',note:'0 aria-live, 0 role=status, 0 role=alert. Two competing toast systems coexist (global context + 5 per-page boxes).',ev:'lib/contexts/ui-context.tsx:72-77; layout.tsx:90-99'},
+ {sev:'S3',ref:'N2',theme:'All',text:'Two h1 on most pages',note:'26 h1 across 15 pages plus the shell breadcrumb h1. settings and profile pages start at h2 with no h1.',ev:'layout.tsx:207; settings/page.tsx:572; profile/page.tsx:253'},
+ {sev:'S3',ref:'K6',theme:'All',text:'No skip link',note:'0 matches. Landmarks exist so a screen reader can jump; a keyboard user re-traverses the full sidebar every page.',ev:'layout.tsx:102,115,191,255,264'},
+ {sev:'S3',ref:'A4',theme:'All',text:'Footer landmark missing',note:'0 footer elements across 54 .tsx files. Checklist A4 requires header, nav, main and footer plus the page language. header, nav x2, main and aside are present and html lang=en is set, so 4 of 5 landmarks exist.',ev:'app/layout.tsx:30 (lang=en); grep <footer> = 0 across all 54 .tsx files'},
+ {sev:'S3',ref:'L2',theme:'All',text:'No radius, shadow or spacing scale',note:'5 radii (rounded-xl x312, 2xl x141, lg x79, 3xl x53, md x5), 7 shadow levels, 24 distinct p-* values, mixed arbitrarily within single elements.',ev:'LogoutModal.tsx:20-36'},
+ {sev:'S3',ref:'L4',theme:'All',text:'No shared Button component',note:'173 buttons across 5 padding scales (58/50/24/22/5 call sites) and 2 competing primary styles (gradient vs solid).',ev:'layout.tsx:124 vs 23 solid emerald call sites'},
+ {sev:'S3',ref:'L4',theme:'All',text:'No shared Card, Badge or EmptyState',note:'5 StatCard implementations, ~31 hand-written empty states across 13 files, 6 badge paddings, 3 file-local FowlCard variants.',ev:'admin-page.tsx:143; admin/{flocks,marketplace,matches}/page.tsx; LineageDirectory.tsx:11'},
+ {sev:'S3',ref:'L5',theme:'All',text:'Loading and edge states not designed',note:'0 skeleton components, 9 scattered animate-pulse, 4 spinner occurrences, raw Loading... strings.',ev:'grep Skeleton = 0; animate-pulse = 9'},
+ {sev:'S3',ref:'C5',theme:'Both',text:'Input border below 3:1 in both themes',note:'Light --input on card = 1.48:1, dark = 1.72:1 (needs 3). Mitigated by visible labels, fails where the placeholder is the only cue.',ev:'globals.css:16,28; MatchForm.tsx:78-79'},
+ {sev:'S3',ref:'N4',theme:'All',text:'Navigation data duplicated four ways',note:'OWNER_NAV / OWNER_MOBILE / ADMIN_NAV / ADMIN_MOBILE are separate arrays with divergent labels. Shell flips accent by role; pages hardcode emerald.',ev:'layout.tsx:14-42,70'},
+ {sev:'S4',ref:'Practice',theme:'All',text:'Two animation utilities are silent no-ops',note:'animate-fadeIn used 43x with no @keyframes fadeIn defined; animate-in fade-in needs tailwindcss-animate, which is not installed.',ev:'globals.css (6 keyframes, no fadeIn); register/page.tsx:252,285,309'},
+ {sev:'S4',ref:'Practice',theme:'All',text:'Unreferenced components and barrels',note:'components/modals/index.ts exports 8 modals imported by nothing; SplashScreen.tsx and FarmBloodlineSummary.tsx have no importers.',ev:'components/modals/index.ts; SplashScreen.tsx; FarmBloodlineSummary.tsx'}
+];
+
+function say(t){var m=document.getElementById('msg');m.textContent=t}
+
+function buildMarkdown(){
+  var L=[];
+  L.push('# UI/UX review: GalloTrack Web');
+  L.push('');
+  L.push('- Build or URL: commit d147d46, branch ui-improvement (gallotrack-next)');
+  L.push('- Reviewer: Syntaxure Labs on 2026-10-04');
+  L.push('- Roles tested: none yet (owner, admin pending)');
+  L.push('- Devices and browsers: none yet');
+  L.push('- Standard: WCAG 2.2 A and AA, plus practice checks');
+  L.push('- Pass type: static source review (steps 1 and 6 of the review flow only)');
+  L.push('');
+  L.push('## Summary');
+  L.push('- Reviewed 21 of 92 units (23%): 0 passed, 21 failed, 71 not reviewed');
+  L.push('- Findings logged: 19 (S1 0, S2 8, S3 9, S4 2) across 21 failed units (12 S2, 9 S3), unrated 0');
+  L.push('- Suggested verdict: Incomplete (71 checks not reviewed yet. A blank is not a pass.)');
+  L.push('- Final decision: not decided');
+  L.push('');
+  L.push('## Failed checks');
+  FINDINGS.forEach(function(x){
+    L.push('- ['+x.sev+'] '+x.ref+' ('+x.theme+'): '+x.text+' — '+x.note+' Evidence: '+x.ev);
+  });
+  L.push('');
+  L.push('## Critical flows');
+  L.push('None recorded.');
+  L.push('');
+  L.push('## Coverage');
+  L.push('- Theme and width: none (0/10 cells)');
+  L.push('- Modes, browsers, devices: none (0/7 modes, 0/6 browsers)');
+  L.push('- Environment: not recorded');
+  L.push('');
+  L.push('## Evidence');
+  L.push('Measured contrast (WCAG relative luminance, truncated):');
+  L.push('- Light muted-foreground on background: 4.55:1 (needs 4.5) pass');
+  L.push('- Dark muted-foreground on background: 7.58:1 (needs 4.5) pass');
+  L.push('- Light text-slate-400 on white card: 2.56:1 (needs 4.5) FAIL');
+  L.push('- Chart #34d399 on white: 1.92:1 (needs 3) FAIL');
+  L.push('- Axis ticks #94a3b8 on white: 2.56:1 (needs 4.5) FAIL');
+  L.push('- Doughnut #065f46 on dark card: 2.32:1 (needs 3) FAIL');
+  L.push('- Doughnut #10b981/#34d399/#6ee7b7 on white: 2.54 / 1.92 / 1.52 (needs 3) FAIL');
+  L.push('- Light input border on card: 1.48:1 (needs 3) FAIL');
+  L.push('- Dark input border on card: 1.72:1 (needs 3) FAIL');
+  L.push('- White on emerald-600: 3.77:1; white on emerald-700: 5.48:1');
+  return L.join('\n');
+}
+
+function copy(text,label){
+  function fb(){say('Clipboard blocked. Select the page text and copy manually.');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){say(label)},fb);
+  }else fb();
+}
+document.getElementById('b-md').addEventListener('click',function(){copy(buildMarkdown(),'Markdown report copied to clipboard.')});
+document.getElementById('b-json').addEventListener('click',function(){copy(JSON.stringify(FINDINGS,null,2),FINDINGS.length+' findings copied as JSON.')});
+})();
+</script>
+</body>
+</html>

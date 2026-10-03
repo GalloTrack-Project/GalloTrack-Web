@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>GalloTrack UI Standard · Syntaxure Labs</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#050505;--text:#ededed;--text2:#B7BFCB;--muted:#8A93A0;
+  --line:rgba(255,255,255,.10);--panel:rgba(255,255,255,.045);--field:rgba(255,255,255,.06);--edge:#6B7686;
+  --accent:#22D3EE;--accent-2:#A855F7;--grad:linear-gradient(135deg,#22D3EE,#A855F7);--focus:#7DD3FC;
+  --r-sm:6px;--r-lg:16px;--topbar-h:60px;
+  --pass:#4ADE80;--pass-bg:rgba(74,222,128,.12);
+  --fail:#FB7185;--fail-bg:rgba(251,113,133,.13);
+  --na:#B4C1D4;--na-bg:rgba(180,193,212,.12);
+  --warn:#FBBF24;--warn-bg:rgba(251,191,36,.12);
+  --sans:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --prose:min(72ch,100%);
+  --wide:clamp(0px,calc(100vw - 2*clamp(24px,5vw,80px)),1120px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--topbar-h) + 20px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+h1,h2,h3,p,ul,ol,dl,dd,figure{margin:0}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.08;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(22px,3vw,30px);line-height:1.2;font-weight:800;letter-spacing:-.02em}
+h3{font-size:clamp(17px,2vw,19px);line-height:1.35;font-weight:700;letter-spacing:-.01em}
+a{color:var(--accent);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:var(--r-sm);color:var(--text)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:var(--r-sm)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:#050505;padding:10px 14px;border-radius:var(--r-sm);font-weight:700;z-index:100}
+.skip:focus{left:12px}
+
+/* topbar */
+.topbar{position:sticky;top:0;z-index:60;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 clamp(24px,5vw,80px);background:rgba(5,5,5,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.wordmark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.wordmark i{width:12px;height:12px;border-radius:3px;background:var(--grad);display:block}
+.wordmark span{color:var(--muted);font-weight:500;font-size:13px}
+.topnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav a{font:600 13.5px var(--sans);color:var(--text2);text-decoration:none;padding:8px 12px;border-radius:var(--r-sm);white-space:nowrap;min-height:40px;display:inline-flex;align-items:center}
+.topnav a:hover{background:var(--panel);color:var(--text)}
+@media (max-width:820px){.topnav{display:none}}
+
+/* layout */
+.band{padding:clamp(40px,6vw,72px) clamp(24px,5vw,80px);border-top:1px solid var(--line)}
+.band:first-of-type{border-top:0}
+.prose{max-width:var(--prose)}
+.prose p+p{margin-top:12px}
+.prose p,.prose li{color:var(--text2)}
+.prose strong{color:var(--text)}
+.lede{font-size:clamp(16.5px,1.6vw,18px);max-width:78ch;color:var(--text2)!important}
+h2+*{margin-top:18px}
+h3{margin-top:30px}
+.wrap{width:100%;max-width:var(--wide)}
+.sec-eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+
+/* tldr */
+.tldr{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.stat b{display:block;font-size:clamp(24px,3.4vw,32px);font-weight:800;letter-spacing:-.025em;line-height:1.05}
+.stat span{display:block;font-size:13.5px;color:var(--muted);margin-top:6px}
+.stat.g b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tldr-note{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch}
+.tldr-note p{color:var(--text2);font-size:15.5px}
+
+/* generic panel + table */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(16px,2vw,24px)}
+.tablewrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+th,td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--text);white-space:nowrap;background:rgba(255,255,255,.03);font-size:13.5px;letter-spacing:.02em}
+td{color:var(--text2)}
+td strong{color:var(--text)}
+tbody tr:last-child td{border-bottom:0}
+.mono{font-family:var(--mono);font-size:13px}
+.center{text-align:center}
+
+.chip{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);font-family:var(--mono);
+  font-size:11.5px;letter-spacing:.04em;padding:3px 8px;text-transform:uppercase;color:var(--accent);line-height:1.5;white-space:nowrap}
+.chip.pass{color:var(--pass)}.chip.fail{color:var(--fail)}.chip.na{color:var(--na)}.chip.warn{color:var(--warn)}
+.chip.s2{background:var(--fail-bg);color:var(--fail)}.chip.s3{background:var(--warn-bg);color:var(--warn)}.chip.s4{background:var(--na-bg);color:var(--na)}
+
+/* swatches */
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px}
+.sw{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--panel)}
+.sw i{display:block;height:64px}
+.sw div{padding:11px 13px}
+.sw b{display:block;font:600 13px var(--mono);color:var(--text)}
+.sw span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+
+/* type scale demo */
+.scale{display:grid;gap:0;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--panel)}
+.scale-row{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:baseline;padding:14px 18px;border-bottom:1px solid var(--line)}
+.scale-row:last-child{border-bottom:0}
+.scale-row .meta{font:600 12px var(--mono);color:var(--muted)}
+.scale-row .meta em{display:block;font-style:normal;color:var(--accent);margin-top:3px;font-size:11.5px}
+.scale-row .demo{color:var(--text);min-width:0}
+@media (max-width:640px){.scale-row{grid-template-columns:1fr;gap:6px}}
+
+/* pass/fail meter */
+.meter{display:flex;height:12px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.08);border:1px solid var(--edge);max-width:560px}
+.meter i{display:block;height:100%}
+.meter .p{background:var(--pass)}.meter .f{background:var(--fail)}.meter .n{background:var(--na)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.legend span{font:600 12.5px var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+/* ratio visual */
+.ratio-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:16px}
+.rd{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px}
+.rd .num{font:800 clamp(26px,3.5vw,34px)/1 var(--sans);letter-spacing:-.03em}
+.rd .lbl{font-size:13.5px;color:var(--muted);margin-top:7px}
+.rd.ok .num{color:var(--pass)}.rd.bad .num{color:var(--fail)}
+
+/* component cards */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.card h3{margin:0 0 6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card p{font-size:14.5px;color:var(--text2)}
+.card ul{margin:10px 0 0;padding-left:18px;font-size:14px;color:var(--text2)}
+.card li{margin:5px 0}
+.card li strong{color:var(--text)}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin-top:22px;counter-reset:step}
+.flow-step{position:relative;padding:18px 16px 18px 0;counter-increment:step}
+.flow-step::before{content:counter(step);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+  background:var(--grad);color:#050505;font:800 15px var(--sans);margin-bottom:12px}
+.flow-step::after{content:'';position:absolute;top:17px;left:34px;right:8px;height:2px;background:var(--line)}
+.flow-step:last-child::after{display:none}
+.flow-step b{display:block;font-size:15px;font-weight:700}
+.flow-step span{display:block;font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+
+/* code block */
+pre{margin:14px 0 0;padding:14px 16px;background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:var(--r-sm);
+  font:12.5px/1.6 var(--mono);color:var(--text);overflow-x:auto;white-space:pre}
+pre .c{color:var(--muted)}
+pre .k{color:var(--accent)}
+
+/* do/dont */
+.dd{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));margin-top:18px}
+.dd div{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;background:var(--panel)}
+.dd h3{margin:0 0 8px;font-size:15px}
+.dd .do h3{color:var(--pass)}
+.dd .dont h3{color:var(--fail)}
+.dd ul{margin:0;padding-left:18px;font-size:14px;color:var(--text2)}
+.dd li{margin:6px 0}
+
+/* tracker */
+.tracker{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px);margin-top:20px}
+.tracker-bar{height:12px;border-radius:var(--r-sm);background:rgba(255,255,255,.08);border:1px solid var(--edge);overflow:hidden}
+.tracker-fill{height:100%;width:0;background:var(--grad);transition:width .25s ease}
+.tracker-pct{font:800 22px var(--sans);letter-spacing:-.02em;margin-top:12px}
+.tracker-pct span{font:500 13.5px var(--sans);color:var(--muted);margin-left:8px}
+.tracker-list{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:2px}
+.tracker-list li{border-top:1px solid var(--line)}
+.tracker-list li:first-child{border-top:0}
+.tracker-list label{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 6px;min-height:44px;cursor:pointer}
+.tracker-list input{width:20px;height:20px;accent-color:var(--accent);cursor:pointer}
+.tracker-list .t{font-size:14.5px;color:var(--text2)}
+.tracker-list input:checked+.t{color:var(--muted);text-decoration:line-through}
+.tracker-list .ph{font:600 11.5px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.tracker-list li.done .ph{color:var(--pass)}
+
+footer{padding:36px clamp(24px,5vw,80px) 56px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+footer a{color:var(--text2)}
+@media print{.topbar,.skip{display:none}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wordmark"><i></i>Syntaxure <span>/ GalloTrack UI Standard</span></div>
+  <nav class="topnav" aria-label="Sections">
+    <a href="#tokens">Tokens</a>
+    <a href="#type">Typography</a>
+    <a href="#color">Color</a>
+    <a href="#components">Components</a>
+    <a href="#layout">Layout</a>
+    <a href="#a11y">Accessibility</a>
+    <a href="#motion">Motion</a>
+    <a href="#gates">Enforcement</a>
+    <a href="#tracker">Tracker</a>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ================= TL;DR ================= -->
+<section class="band" id="tldr">
+  <div class="sec-eyebrow">v1.0 · Baseline d147d46 · branch ui-improvement</div>
+  <h1>GalloTrack UI&nbsp;Standard</h1>
+  <p class="lede" style="margin-top:16px">The single source of truth for how GalloTrack looks, behaves, and is built. Every phase of the UI/UX upgrade plan cites this document, and every enforcement gate in CI is derived from it. It exists because the current codebase has <strong>no shared component layer, no type scale, and no accessibility floor</strong> — 54 files re-implementing the same buttons, cards, modals and toasts by hand.</p>
+
+  <div class="tldr">
+    <div class="stat g"><b>14px / 12px</b><span>Body text floor / absolute minimum size. 835 current sizes below it.</span></div>
+    <div class="stat"><b>4.5:1 · 3:1</b><span>Text and UI-component contrast minimums, measured not eyeballed.</span></div>
+    <div class="stat"><b>16</b><span>Shared primitives in <code>components/ui/</code> replacing ~40 inline re-implementations.</span></div>
+    <div class="stat"><b>6</b><span>CI gates that keep the standard from decaying after the migration.</span></div>
+  </div>
+
+  <div class="tldr-note">
+    <p><strong>How to read this:</strong> sections 1–4 define the <em>foundations</em> (tokens, type, color) that live in <code>app/globals.css</code>. Section 5 defines the <em>component layer</em>. Sections 6–8 define <em>behaviour</em> — layout, accessibility, motion. Section 9 lists the CI gates. Section 10 is the live migration tracker. Where a rule maps to a WCAG 2.2 success criterion, the criterion is named so it can be verified against the review workbench.</p>
+  </div>
+</section>
+
+<!-- ================= TOKENS ================= -->
+<section class="band" id="tokens">
+  <div class="wrap">
+    <div class="sec-eyebrow">01 · Foundations</div>
+    <h2>Design tokens</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Tokens are the contract between the design and the code. A component may only reference a token — never a literal colour, radius, or duration. The current codebase ships <strong>80 hardcoded hex values across <code>.tsx</code> files</strong> on top of a 10-key semantic palette, which is why charts, auth screens and cards drift out of sync the moment the theme changes.</p>
+      <p>The palette below is a strict extension of what already exists in <code>app/globals.css</code>: the ten semantic surface keys stay exactly as they are, and the missing layers — accent, status, radius, shadow, motion, focus — are added so that no component ever needs a raw value again.</p>
+    </div>
+
+    <h3>Colour roles — surfaces</h3>
+    <p class="prose" style="margin-top:8px">Unchanged from the current implementation. These are theme-aware and must be used for every surface, border and body of text.</p>
+    <div class="swatches" style="margin-top:14px">
+      <div class="sw"><i style="background:#f8fafc"></i><div><b>--background</b><span>Light #f8fafc · Dark #090d16</span></div></div>
+      <div class="sw"><i style="background:#ffffff"></i><div><b>--card</b><span>Light #ffffff · Dark #0f172a</span></div></div>
+      <div class="sw"><i style="background:#f1f5f9"></i><div><b>--muted</b><span>Light #f1f5f9 · Dark #1e293b</span></div></div>
+      <div class="sw"><i style="background:#64748b"></i><div><b>--muted-foreground</b><span>Light #64748b · Dark #94a3b8</span></div></div>
+      <div class="sw"><i style="background:#e2e8f0"></i><div><b>--border</b><span>Light #e2e8f0 · Dark #1e293b</span></div></div>
+      <div class="sw"><i style="background:#0f172a"></i><div><b>--foreground</b><span>Light #0f172a · Dark #e2e8f0</span></div></div>
+    </div>
+
+    <h3>Colour roles — semantic status</h3>
+    <p class="prose" style="margin-top:8px">The raw <code>emerald-</code>, <code>amber-</code>, <code>rose-</code> and <code>sky-</code> utilities currently appear <strong>1,132 / 225 / 172 / 81 times</strong> respectively, hand-picked per call site. They collapse into five roles. A component asks for <em>intent</em>, not a hue — which is what makes the palette re-tunable in one file instead of nine hundred.</p>
+    <div class="tablewrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Used for</th><th>Replaces</th></tr></thead>
+        <tbody>
+          <tr><td><code>--primary</code></td><td class="mono">#047857</td><td class="mono">#10b981</td><td>Primary buttons, active nav, links on surface</td><td><code>emerald-600/700</code> ×23, gradient variants</td></tr>
+          <tr><td><code>--primary-foreground</code></td><td class="mono">#ffffff</td><td class="mono">#04210f</td><td>Text on primary fill</td><td><code>text-white</code> on emerald</td></tr>
+          <tr><td><code>--success</code></td><td class="mono">#047857</td><td class="mono">#4ade80</td><td>Pass states, win results</td><td><code>emerald-*</code> in badges</td></tr>
+          <tr><td><code>--warning</code></td><td class="mono">#b45309</td><td class="mono">#fbbf24</td><td>Caution, pending, archived</td><td><code>amber-500</code> (2.15:1 → fails)</td></tr>
+          <tr><td><code>--danger</code></td><td class="mono">#be123c</td><td class="mono">#fb7185</td><td>Delete, loss, validation error</td><td><code>rose-500</code> (3.67:1 → fails)</td></tr>
+          <tr><td><code>--danger-foreground</code></td><td class="mono">#ffffff</td><td class="mono">#4c0519</td><td>Text on a <code>--danger</code> fill</td><td><code>text-white</code> on rose</td></tr>
+          <tr><td><code>--info</code></td><td class="mono">#0369a1</td><td class="mono">#7dd3fc</td><td>Neutral callouts, tips</td><td><code>sky-*</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>Why the light values are darker than the dark values:</strong> contrast is a ratio, not a brightness. <code>#10b981</code> on white is 2.54:1 — a fail — while <code>#047857</code> on white is 5.48:1 — a pass. The same hue therefore has to be re-tuned per theme, which is exactly checklist item <strong>M6</strong>. Tokens make that a one-line change instead of a hunt.</p>
+    </div>
+
+    <h3>Radius, shadow, focus</h3>
+    <div class="tablewrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th>Token</th><th>Value</th><th>Applies to</th><th>Current state</th></tr></thead>
+        <tbody>
+          <tr><td><code>--radius-sm</code></td><td class="mono">6px</td><td>Inputs, buttons, chips, tags</td><td rowspan="4">5 radius families in use, mixed arbitrarily: <code>rounded-xl</code> ×312, <code>rounded-2xl</code> ×141, <code>rounded-lg</code> ×79, <code>rounded-3xl</code> ×53, <code>rounded-md</code> ×5 — including <code>rounded-3xl</code> panel → square header → <code>rounded-2xl</code> icon → <code>rounded-xl</code> button inside one modal.</td></tr>
+          <tr><td><code>--radius-md</code></td><td class="mono">10px</td><td>Cards, panels, modals</td></tr>
+          <tr><td><code>--radius-lg</code></td><td class="mono">16px</td><td>Hero cards, large blocks</td></tr>
+          <tr><td><code>--radius-full</code></td><td class="mono">9999px</td><td>Avatars, dots, pills</td></tr>
+          <tr><td><code>--shadow-xs · --shadow-sm · --shadow-md</code></td><td class="mono">3 levels</td><td>Inputs, cards, popovers, modals</td><td>7 shadow levels in use (<code>shadow-2xs</code> ×33, <code>xs</code> ×1 … <code>2xl</code> ×27) with no elevation rule.</td></tr>
+          <tr><td><code>--ring</code></td><td class="mono">#0f172a light / #e2e8f0 dark</td><td><code>:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px }</code></td><td><code>outline-none</code> ×80; only 6 of those lines carry no focus replacement at all.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>Why <code>--ring</code> is just a colour:</strong> the focus <em>rule</em> is one global selector, so it only needs the colour and the width as constants. Both values clear 3:1 against the page background in their own theme by a wide margin — 17.06:1 light, 15.76:1 dark — which is what lets a single rule serve every control instead of 80 hand-tuned replacements. The rule shipped in PR 3 as an <em>unlayered</em> <code>:focus-visible</code> selector, so it outranks Tailwind's <code>@layer utilities</code> <code>outline-none</code> without an <code>!important</code> — that is what neutralises all 80 of those call sites at once. It is keyboard-only by construction, so the app looks identical to a mouse user.</p>
+      <p><strong>A foreground per fill, not one global <code>text-white</code>:</strong> white on the dark-theme <code>--danger</code> (<code>#fb7185</code>) is <strong>2.69:1</strong> — a fail. The dark theme therefore pairs that fill with <code>#4c0519</code> (5.81:1) instead. This is why the fill and its label are two tokens: a single global white would silently fail in exactly one theme, which is the hardest kind of contrast bug to catch in review.</p>
+      <p><strong>Status of these values:</strong> the status, motion and focus tokens shipped in PR 2 and are live in <code>globals.css</code>. The radius and shadow <em>scales</em> are pinned in PR 2 to exactly the values Tailwind already emits — <code>sm</code> 4px, <code>md</code> 6px, <code>lg</code> 8px, <code>xl</code> 12px — so that PR 2 is provably non-visual. The 6/10/16px target above is what PR 4 migrates the 599 non-<code>rounded-full</code> call sites onto (863 <code>rounded-*</code> total, of which 264 are already <code>rounded-full</code> and stay); until then the table states the destination, not the current state. PR 3 became the first consumer: the <code>components/ui/</code> primitives read these tokens directly, so from PR 3 onward the palette re-tunes in one file rather than nine hundred.</p>
+    </div>
+
+    <h3>Motion</h3>
+    <div class="tablewrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>--duration-fast</code></td><td class="mono">150ms</td><td>Hover, focus, colour and border changes</td></tr>
+          <tr><td><code>--duration-base</code></td><td class="mono">200ms</td><td>Disclosure, dropdown, tab switch</td></tr>
+          <tr><td><code>--duration-slow</code></td><td class="mono">300ms</td><td>Modal and drawer enter</td></tr>
+          <tr><td><code>ease-out</code></td><td class="mono">cubic-bezier(0,0,.2,1)</td><td>Enter</td></tr>
+          <tr><td><code>ease-in-out</code></td><td class="mono">cubic-bezier(.4,0,.2,1)</td><td>Exit and reflow</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>These three durations deliberately equal Tailwind's core utilities</strong> — <code>duration-150</code> / <code>duration-200</code> / <code>duration-300</code> — so a component may use either the utility or <code>var(--duration-*)</code> and get exactly the same number. (Tailwind v4 has no <code>--duration-*</code> theme namespace, so a custom-named utility like <code>duration-base</code> does <em>not</em> generate; this was verified against the compiled CSS rather than assumed.) Easing is likewise Tailwind's built-in <code>ease-out</code> / <code>ease-in-out</code> tokens at the values shown — deliberately <strong>not</strong> overridden, because Tailwind already emits <code>--ease-out</code> in <code>:root</code> and a second declaration of the same name is silently shadowed by whichever block lands last.</p>
+    </div>
+    <p class="prose" style="margin-top:14px">All transitions resolve through a single <code>@media (prefers-reduced-motion: reduce)</code> block that sets durations to <code>1ms</code> and disables transform-based animation. See <a href="#motion">Motion</a>.</p>
+  </div>
+</section>
+
+<!-- ================= TYPOGRAPHY ================= -->
+<section class="band" id="type">
+  <div class="wrap">
+    <div class="sec-eyebrow">02 · Foundations</div>
+    <h2>Typography</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>This is the largest single defect in the current UI. The app contains <strong>835 arbitrary pixel font sizes</strong> across 39 files — <strong>317 at 10px, 280 at 9px, 95 at 8px</strong>, plus stray 7px and 6px. In practice <code>text-[10px]</code> is used more often than <code>text-sm</code>. Alongside that, <code>font-black</code> appears <strong>514 times</strong> and <code>font-bold</code> 460 times, so almost everything is shouting and nothing has hierarchy.</p>
+      <p>The scale below is the whole permitted set. A font size that is not on this list does not ship. The floor is a hard rule: <strong>14px body, 12px absolute minimum</strong>, because 8–9px text fails 1.4.4 (resize) in practice — users cannot zoom it past the browser's minimum without losing layout — and it fails the readability intent of every readability check in the workbench.</p>
+    </div>
+
+    <div class="scale" style="margin-top:22px">
+      <div class="scale-row"><div class="meta">display<em>clamp(30px,5vw,46px) / 800</em></div><div class="demo" style="font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.03em;line-height:1.08">Dashboard</div></div>
+      <div class="scale-row"><div class="meta">h1 · page title<em>28px → sm:32px / 800</em></div><div class="demo" style="font-size:30px;font-weight:800;letter-spacing:-.02em">Fowl registry</div></div>
+      <div class="scale-row"><div class="meta">h2 · section<em>22px / 700</em></div><div class="demo" style="font-size:22px;font-weight:700;letter-spacing:-.015em">Lineage breakdown</div></div>
+      <div class="scale-row"><div class="meta">h3 · card title<em>18px / 700</em></div><div class="demo" style="font-size:18px;font-weight:700">Bloodline purity</div></div>
+      <div class="scale-row"><div class="meta">body · 16px<em>16px / 400 / 1.65</em></div><div class="demo" style="font-size:16px">Active birds with at least one recorded match in the last season.</div></div>
+      <div class="scale-row"><div class="meta">body-sm · 14px<em>14px / 400–600</em></div><div class="demo" style="font-size:14px">Secondary copy, table cells, form helper text, labels.</div></div>
+      <div class="scale-row"><div class="meta">label · 13px<em>13px / 600</em></div><div class="demo" style="font-size:13px;font-weight:600;letter-spacing:.01em">GENETIC STRAIN</div></div>
+      <div class="scale-row"><div class="meta">caption · 12px<em>12px / 500 — floor</em></div><div class="demo" style="font-size:12px;color:var(--text2)">Metadata, timestamps, badges. Nothing renders below this.</div></div>
+    </div>
+
+    <div class="dd">
+      <div class="dont">
+        <h3>Not allowed</h3>
+        <ul>
+          <li>Any <code>text-[Npx]</code> below 12 — that is <strong>732 instances today</strong>.</li>
+          <li><code>text-xs</code> (12px) used for body prose.</li>
+          <li><code>font-black</code> as the default heading weight — reserve 800 for <code>display</code>/<code>h1</code> only.</li>
+          <li>Uppercase + <code>tracking-wider</code> on more than a label (currently ×129).</li>
+          <li>Two weights on one line doing the same job.</li>
+        </ul>
+      </div>
+      <div class="do">
+        <h3>Required</h3>
+        <ul>
+          <li>One <code>h1</code> per page, owned by <code>PageHeader</code> — the shell stops emitting its own.</li>
+          <li>Heading levels descend without skipping (1.3.1 / 2.4.6).</li>
+          <li>Body 16/1.65; tables and helper text 14/1.5.</li>
+          <li>Truncation never hides an ID, status, or amount (T9) — show the value on hover/focus.</li>
+          <li>Prose measure capped at 72ch (T7).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COLOR ================= -->
+<section class="band" id="color">
+  <div class="wrap">
+    <div class="sec-eyebrow">03 · Foundations</div>
+    <h2>Colour and contrast</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Contrast is measured against the <em>rendered</em> pixel, never the source hex — a translucent layer or gradient changes the result. The ratios below were computed from the actual token values in <code>app/globals.css</code> and the actual chart colours in <code>components/DashboardPage.tsx</code>. Four fail, and they concentrate in <strong>light mode</strong> — the theme nobody tested — with one dark-theme exception: the hardcoded chart ramp fails a different segment against the dark card.</p>
+    </div>
+
+    <div class="ratio-demo">
+      <div class="rd ok"><div class="num">4.55:1</div><div class="lbl">Light <code>--muted-foreground</code> on <code>--background</code> · <strong>needs 4.5</strong> · passes</div></div>
+      <div class="rd ok"><div class="num">7.58:1</div><div class="lbl">Dark <code>--muted-foreground</code> on <code>--background</code> · <strong>needs 4.5</strong> · passes</div></div>
+      <div class="rd bad"><div class="num">2.56:1</div><div class="lbl">Light <code>text-slate-400</code> metadata on white card · <strong>needs 4.5</strong> · <strong>fails</strong></div></div>
+      <div class="rd bad"><div class="num">1.92:1</div><div class="lbl">Chart win-rate line <code>#34d399</code> on white · <strong>needs 3</strong> · <strong>fails</strong></div></div>
+      <div class="rd bad"><div class="num">2.32:1</div><div class="lbl">Doughnut segment <code>#065f46</code> on dark card · <strong>needs 3</strong> · <strong>fails</strong></div></div>
+      <div class="rd bad"><div class="num">1.48:1</div><div class="lbl">Light input border <code>#cbd5e1</code> on card · <strong>needs 3</strong> · <strong>fails</strong></div></div>
+      <div class="rd ok"><div class="num">3.77:1</div><div class="lbl">White label on <code>--primary</code> fill · <strong>needs 4.5</strong> · passes at body weight</div></div>
+    </div>
+
+    <h3>Thresholds</h3>
+    <div class="tablewrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>What</th><th>Minimum</th><th>Criterion</th><th>Rule in this codebase</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Body and metadata text</strong> (&lt;24px, or &lt;18.66px bold)</td><td class="mono">4.5:1</td><td class="mono">1.4.3 · AA</td><td>Never use a raw <code>text-slate-400</code>/<code>text-emerald-500</code>/<code>text-amber-500</code> for text — all three fail on white.</td></tr>
+          <tr><td><strong>Large text</strong> (≥24px, or ≥18.66px bold)</td><td class="mono">3:1</td><td class="mono">1.4.3 · AA</td><td>Only <code>h1</code>/<code>display</code> qualify at the new scale.</td></tr>
+          <tr><td><strong>UI boundaries</strong> — input borders, checkbox, toggle, focus ring</td><td class="mono">3:1</td><td class="mono">1.4.11 · AA</td><td><code>--border</code> is decorative only. <strong>Controls need <code>--input</code> at 3:1 or a text label at 3:1.</strong> Currently 1.48:1 light / 1.72:1 dark.</td></tr>
+          <tr><td><strong>Chart marks</strong> — lines, bars, segments, axis ticks</td><td class="mono">3:1 text 4.5:1</td><td class="mono">1.4.11 / 1.4.3 · AA</td><td>Axis ticks are text: <code>#94a3b8</code> on white = 2.56:1, fails. Doughnut segments <code>#10b981</code>/<code>#34d399</code>/<code>#6ee7b7</code> = 2.54 / 1.92 / 1.52, fail.</td></tr>
+          <tr><td><strong>Focus indicator</strong></td><td class="mono">3:1 vs adjacent</td><td class="mono">2.4.7 · AA</td><td>Global <code>:focus-visible</code> ring, never <code>outline-none</code> without it.</td></tr>
+          <tr><td><strong>Exempt</strong></td><td class="mono">none</td><td class="mono">1.4.3, 1.4.11</td><td>Disabled controls, logos, decorative icons beside a text label.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose" style="margin-top:14px">The calculator in the review workbench truncates rather than rounds, because 4.49:1 does not meet 4.5:1. Any ratio in this document was truncated the same way. When a value sits on a gradient or a <code>backdrop-blur</code> layer — which the dashboard uses liberally — sample the rendered pixel, not the CSS.</p>
+
+    <h3>Chart colours</h3>
+    <p class="prose" style="margin-top:8px">Chart.js options are configured once with hardcoded hex and never re-read on theme change, so they are correct in one theme and wrong in the other. Charts must pull from CSS custom properties via <code>getComputedStyle</code> at mount and on theme mutation, using a two-series-safe palette (a distinct hue per series, each verified at 3:1 against <em>both</em> card surfaces).</p>
+    <pre><span class="c">// one palette, verified in both themes — never inline hex in a chart config</span>
+<span class="k">const</span> readChartTokens = () =&gt; {
+  <span class="k">const</span> s = getComputedStyle(document.documentElement);
+  <span class="k">return</span> {
+    series: [s.getPropertyValue(<span class="c">'--chart-1'</span>), s.getPropertyValue(<span class="c">'--chart-2'</span>),
+             s.getPropertyValue(<span class="c">'--chart-3'</span>), s.getPropertyValue(<span class="c">'--chart-4'</span>)],
+    tick:   s.getPropertyValue(<span class="c">'--muted-foreground'</span>),
+    grid:   s.getPropertyValue(<span class="c">'--border'</span>),
+    surface:s.getPropertyValue(<span class="c">'--card'</span>),
+  };
+};</pre>
+  </div>
+</section>
+
+<!-- ================= COMPONENTS ================= -->
+<section class="band" id="components">
+  <div class="wrap">
+    <div class="sec-eyebrow">04 · Component layer</div>
+    <h2>Component inventory</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Sixteen primitives in <code>gallotrack-next/components/ui/</code>, built with plain React + <code>clsx</code> + <code>class-variance-authority</code> on top of the tokens above. No new paradigm, no component framework — the point is that a button looks and behaves the same on all 27 pages, and that accessibility is solved <strong>once</strong> in the primitive instead of 173 times by hand.</p>
+      <p>Today there is <strong>no <code>Button</code>, <code>Card</code>, <code>Badge</code>, <code>Input</code>, <code>Modal</code>, <code>Table</code>, <code>Toast</code>, <code>EmptyState</code>, <code>Skeleton</code> or <code>PageHeader</code></strong>. What exists instead: five separate <code>StatCard</code> implementations, eight modal shells each re-implementing the overlay, two competing toast systems, roughly 31 hand-written "No … found" blocks, 173 unshared buttons across five padding scales and two different primary styles, and 95 labels with zero <code>htmlFor</code>.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Button <span class="chip">migrate</span></h3>
+        <p>One primary style, one danger style, four sizes. Loading state is built in, so double-submit prevention (F12) comes free.</p>
+        <ul>
+          <li><strong>Variants:</strong> primary · secondary · ghost · danger · link</li>
+            <li><strong>Sizes:</strong> sm 36px · md 40px · lg 48px — every size clears the 24×24 CSS px floor of WCAG 2.2 <strong>2.5.8 · AA</strong>; sm is for dense table rows only</li>
+          <li><strong>Props:</strong> <code>loading</code>, <code>iconLeft</code>, <code>iconRight</code>, <code>fullWidth</code></li>
+          <li><strong>Replaces:</strong> 5 paddings (58/50/24/22/5 call sites), 2 primary styles (gradient + solid)</li>
+        </ul></div>
+      <div class="card"><h3>FormField <span class="chip">migrate</span></h3>
+        <p>Label, control, hint and error as one unit with a real <code>htmlFor</code>/<code>id</code> pair. This is the fix for 95 unassociated labels.</p>
+        <ul>
+          <li><strong>Props:</strong> <code>label</code>, <code>hint</code>, <code>error</code>, <code>required</code>, <code>optional</code></li>
+          <li><strong>Error</strong> renders as text with <code>role="alert"</code> — never colour alone (C8, F4)</li>
+          <li><strong>Wraps:</strong> Input · Select · Textarea · Checkbox · Switch</li>
+          <li><strong>Replaces:</strong> 81 inputs + 41 selects styled by hand, 5 divergent field recipes</li>
+        </ul></div>
+      <div class="card"><h3>Modal <span class="chip fail">S2 fix</span></h3>
+        <p>Eight shells today have no <code>role="dialog"</code>, no focus trap, no focus return, and the whole app has one Escape handler.</p>
+        <ul>
+          <li><strong>Behaviour:</strong> <code>role="dialog"</code> + <code>aria-modal</code> + <code>aria-labelledby</code></li>
+          <li><strong>Focus</strong> moves in on open, returns to the trigger on close</li>
+          <li><strong>Esc</strong> closes; backdrop click closes; body scroll locked</li>
+          <li><strong>Traps</strong> Tab inside the panel</li>
+        </ul></div>
+      <div class="card"><h3>Toast <span class="chip fail">S3 fix</span></h3>
+        <p>Two systems live at once: a global context and per-page local boxes, none of which announce.</p>
+        <ul>
+          <li>Single <code>ui-context</code> provider, rendered once in the shell</li>
+          <li><code>role="status"</code> + <code>aria-live="polite"</code> — announced without moving focus (F10)</li>
+          <li>Variants: success · error · info · loading; auto-dismiss with pause-on-hover</li>
+        </ul></div>
+      <div class="card"><h3>Badge <span class="chip">migrate</span></h3>
+        <p>Status pills currently use six paddings and 129 hand-typed uppercase/tracking combos.</p>
+        <ul>
+          <li><strong>Tone:</strong> neutral · success · warning · danger · info · accent</li>
+          <li><strong>Never</strong> communicates status by colour alone — icon or text always accompanies (C8)</li>
+          <li>Fixed 12px floor, fixed <code>px-2 py-0.5</code> + <code>rounded-full</code></li>
+        </ul></div>
+      <div class="card"><h3>Card · StatCard <span class="chip">migrate</span></h3>
+        <p>Five StatCard implementations today, each with its own accent mapping.</p>
+        <ul>
+          <li><code>Card</code>, <code>CardHeader</code>, <code>CardTitle</code>, <code>CardContent</code>, <code>CardFooter</code></li>
+          <li><code>StatCard</code>: label · value · trend · icon, one accent scale</li>
+          <li><code>radius-md</code> + <code>shadow-1</code> — the elevation rule</li>
+        </ul></div>
+      <div class="card"><h3>PageHeader <span class="chip fail">S3 fix</span></h3>
+        <p>26 <code>h1</code> elements across 15 pages; the shell emits one too, so most pages render two.</p>
+        <ul>
+          <li>Owns the single <code>h1</code>, breadcrumb, description and page actions</li>
+          <li>Shell breadcrumb becomes a non-heading element</li>
+          <li><code>settings</code> and <code>profile</code> (which start at <code>h2</code>) gain their missing <code>h1</code></li>
+        </ul></div>
+      <div class="card"><h3>Table <span class="chip">migrate</span></h3>
+        <p>9 tables, 65 <code>th</code>, zero <code>caption</code>, zero <code>scope</code>.</p>
+        <ul>
+          <li>Built-in <code>caption</code>, <code>scope="col|row"</code>, sortable headers as buttons</li>
+          <li>Wrapper scrolls horizontally at 320px — never the page (R2)</li>
+          <li>Sticky header + zebra optional; row density sm/md/lg</li>
+        </ul></div>
+      <div class="card"><h3>EmptyState <span class="chip">migrate</span></h3>
+        <p>~31 "No … found" blocks across 13 files, only one of them a component.</p>
+        <ul>
+          <li>Icon · title · description · primary action · secondary link</li>
+          <li>Used by every list, table and grid — one voice for "nothing here"</li>
+          <li>Covers the L5 empty-state requirement</li>
+        </ul></div>
+      <div class="card"><h3>Skeleton / Spinner <span class="chip">migrate</span></h3>
+        <p>Zero skeletons in the app; nine <code>animate-pulse</code>, four ad-hoc spinners, plus raw "Loading…".</p>
+        <ul>
+          <li><code>Skeleton</code> mirrors the real layout so nothing jumps on load (L6)</li>
+          <li><code>Spinner</code> for inline actions; <code>aria-label</code> + <code>role="status"</code></li>
+          <li>Both disabled under <code>prefers-reduced-motion</code> → static block</li>
+        </ul></div>
+      <div class="card"><h3>Tabs · Pagination · Tooltip <span class="chip">migrate</span></h3>
+        <p>Tabs are re-typed per page; <code>Pagination</code> exists but only one of three lists uses it.</p>
+        <ul>
+          <li><code>Tabs</code>: roving tabindex, arrow keys, <code>aria-selected</code></li>
+          <li><code>Pagination</code>: adopt the existing component everywhere</li>
+          <li><code>Tooltip</code>: dismissible, hoverable, stays until dismissed (T4)</li>
+        </ul></div>
+      <div class="card"><h3>SearchInput <span class="chip">migrate</span></h3>
+        <p>The <code>pl-9</code> icon-input recipe is retyped in 8 files.</p>
+        <ul>
+          <li>Icon, clear button (with a name), result count slot</li>
+          <li>Debounced via the existing <code>lib/use-debounce.ts</code></li>
+          <li>Visible label or <code>aria-label</code> — never placeholder-as-label</li>
+        </ul></div>
+      <div class="card"><h3>Breadcrumbs · SkipLink <span class="chip fail">S2 fix</span></h3>
+        <p>There is no skip link anywhere, so every keyboard pass re-traverses the whole sidebar.</p>
+        <ul>
+          <li><code>SkipLink</code> is the first focusable element in the shell</li>
+          <li>Target is <code>&lt;main id="content"&gt;</code>; visible only on focus</li>
+          <li>Landmarks: one <code>banner</code>, one <code>main</code>, one <code>contentinfo</code></li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LAYOUT ================= -->
+<section class="band" id="layout">
+  <div class="wrap">
+    <div class="sec-eyebrow">05 · Behaviour</div>
+    <h2>Layout and shell</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>The shell (<code>app/(dashboard)/layout.tsx</code>) already applies <code>p-4 sm:p-6 md:p-8</code> to <code>&lt;main&gt;</code>. Six admin pages then apply another <code>p-4 sm:p-6 lg:p-8</code> wrapper inside it, with three different <code>max-w-*</code> values (<code>3xl</code>, <code>6xl</code>, <code>7xl</code>), plus a <code>min-h-screen</code> inside an <code>h-[100dvh] overflow-y-auto</code> container. The result is double horizontal padding, inconsistent content widths between sibling pages, and a page that scrolls inside a page.</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step"><b>Shell owns chrome</b><span>Sidebar, topbar, mobile tab bar, toast host, modal host. Nothing else renders fixed UI.</span></div>
+      <div class="flow-step"><b>Main owns padding</b><span>One <code>p-4 sm:p-6 md:p-8</code>. Pages never re-apply horizontal padding.</span></div>
+      <div class="flow-step"><b>Page owns width</b><span>A single <code>&lt;Page&gt;</code> wrapper sets <code>max-w-6xl</code> (forms/settings <code>max-w-3xl</code>). One value per family.</span></div>
+      <div class="flow-step"><b>PageHeader owns h1</b><span>Title, breadcrumb, description, actions. The shell breadcrumb stops being a heading.</span></div>
+      <div class="flow-step"><b>Sections own rhythm</b><span><code>space-y-6</code> between sections; <code>Card</code> inside; no <code>min-h-screen</code>, no nested background.</span></div>
+    </div>
+
+    <div class="dd">
+      <div class="dont">
+        <h3>Remove</h3>
+        <ul>
+          <li>The <code>min-h-screen … max-w-7xl</code> wrapper inside <code>main</code> (6 admin pages).</li>
+          <li>Per-page full-bleed backgrounds and blurred blobs painted inside a shell that already painted <code>bg-background</code>.</li>
+          <li>Three competing <code>max-w-*</code> values on sibling pages.</li>
+          <li>Duplicate nav data: <code>OWNER_NAV</code> / <code>OWNER_MOBILE</code> / <code>ADMIN_NAV</code> / <code>ADMIN_MOBILE</code> → one array with a <code>short</code> label.</li>
+        </ul>
+      </div>
+      <div class="do">
+        <h3>Adopt</h3>
+        <ul>
+          <li>One <code>Page</code> component: <code>max-w-6xl mx-auto space-y-6</code>.</li>
+          <li>Role accent decided <strong>once</strong> — either apply emerald/amber everywhere from the token, or drop the role accent. Today the shell flips it but pages hardcode emerald.</li>
+          <li>Mobile: bottom tab bar stays; add the sidebar as a drawer only if nav grows past 6 items.</li>
+          <li>Safe-area padding on every fixed bar (<code>env(safe-area-inset-bottom)</code> — already correct on the tab bar, extend to toasts).</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Responsive checkpoints</h3>
+    <div class="tablewrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Width</th><th>Purpose</th><th>Required behaviour</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">320px</td><td>Reflow requirement (1.4.10)</td><td>No horizontal scroll on the page body. Tables scroll in their own wrapper.</td></tr>
+          <tr><td class="mono">375px</td><td>Real phone, bottom tab bar visible</td><td>Core flow completes with the on-screen keyboard open; fields not covered.</td></tr>
+          <tr><td class="mono">768px</td><td>Tablet — sidebar appears</td><td>Sidebar fixed left; main scrolls independently; no double padding.</td></tr>
+          <tr><td class="mono">1280px</td><td>Laptop default</td><td>Full shell; card grids at their minimum column width.</td></tr>
+          <tr><td class="mono">1920px</td><td>Wide desktop</td><td><code>max-w-6xl</code> content, centred; prose never exceeds 72ch.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= A11Y ================= -->
+<section class="band" id="a11y">
+  <div class="wrap">
+    <div class="sec-eyebrow">06 · Behaviour</div>
+    <h2>Accessibility floor</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>WCAG 2.2 level AA is the bar, and the current codebase is not close: <strong>4 <code>aria-*</code> attributes in 54 files</strong>, <strong>0 <code>htmlFor</code></strong> against 95 labels, <strong>0 skip link</strong>, <strong>0 <code>aria-live</code></strong>, <strong>0 <code>role="dialog"</code></strong>, 26 <code>h1</code> elements, and 9 icon-only buttons between 16 and 20px — below the 24×24px target floor of 2.5.8.</p>
+      <p>These are not "nice to haves"; each maps to a success criterion that the workbench scores as a pass or a fail. The rules below are the minimum for anything that ships after this migration.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:20px">
+      <table>
+        <thead><tr><th style="width:34px">#</th><th>Rule</th><th>Criterion</th><th>Current state</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1</td><td><strong>Every control has an accessible name.</strong> Icon-only buttons get <code>aria-label</code>; never rely on <code>title</code>.</td><td class="mono">4.1.2 · A</td><td>9 icon-only buttons 16–20px with no name; theme toggle has only <code>title</code>.</td></tr>
+          <tr><td class="mono">2</td><td><strong>Every input has a real label</strong> bound with <code>htmlFor</code>/<code>id</code>. Placeholder is not a label.</td><td class="mono">3.3.2 · A, 1.3.1 · A</td><td>0 <code>htmlFor</code> across 95 labels.</td></tr>
+          <tr><td class="mono">3</td><td><strong>Focus is always visible</strong> via the global ring. <code>outline-none</code> only ever alongside a focus replacement.</td><td class="mono">2.4.7 · AA, 1.4.11</td><td><code>outline-none</code> ×80; 6 controls with no focus style at all.</td></tr>
+          <tr><td class="mono">4</td><td><strong>A skip link is the first focusable element</strong> and jumps to <code>&lt;main&gt;</code>.</td><td class="mono">2.4.1 · A</td><td>None. Focus is never obscured because focus is never clearly placed.</td></tr>
+          <tr><td class="mono">5</td><td><strong>Dialogs are dialogs</strong> — semantic role, focus moved in, focus returned, Esc closes.</td><td class="mono">2.1.2 · A, 4.1.2 · A</td><td>8 shells, 0 semantics, 1 Escape handler app-wide.</td></tr>
+          <tr><td class="mono">6</td><td><strong>Pointer targets ≥24×24px</strong>, 40px preferred for touch.</td><td class="mono">2.5.8 · AA</td><td>9 buttons at 16–20px (row delete, chip remove, modal close).</td></tr>
+          <tr><td class="mono">7</td><td><strong>Status messages announce</strong> via <code>role="status"</code> / <code>aria-live</code> without moving focus.</td><td class="mono">4.1.3 · AA</td><td>0 live regions; both toast systems are purely visual.</td></tr>
+          <tr><td class="mono">8</td><td><strong>One <code>h1</code> per page</strong>, levels descend without skips.</td><td class="mono">1.3.1 · A, 2.4.6 · AA</td><td>26 <code>h1</code> across 15 pages; shell adds a second; 2 pages start at <code>h2</code>.</td></tr>
+          <tr><td class="mono">9</td><td><strong>Errors are text, next to the field, and say how to fix it.</strong></td><td class="mono">3.3.1 · A, 3.3.3 · AA</td><td>Validation styling is border-colour only in several forms.</td></tr>
+          <tr><td class="mono">10</td><td><strong>Colour is never the only signal</strong> for status, error, or series.</td><td class="mono">1.4.1 · A</td><td>Status dots and chart series rely on hue alone in cards and legends.</td></tr>
+          <tr><td class="mono">11</td><td><strong>Tables carry a <code>caption</code> and headers carry <code>scope</code>.</strong></td><td class="mono">1.3.1 · A</td><td>9 tables, 65 <code>th</code>, 0 captions, 0 scopes.</td></tr>
+          <tr><td class="mono">12</td><td><strong>Images and icons have text equivalents</strong>; decorative ones get <code>aria-hidden</code>.</td><td class="mono">1.1.1 · A</td><td>19 <code>alt</code> for 19 images; SVG icons largely unlabelled.</td></tr>
+          <tr><td class="mono">13</td><td><strong>Interactive <code>&lt;div&gt;</code> is banned</strong> — use a button, or add <code>role</code>, <code>tabIndex</code> and key handling.</td><td class="mono">2.1.1 · A</td><td>8 clickable divs; only 1 implements keyboard activation correctly.</td></tr>
+          <tr><td class="mono">14</td><td><strong>Personal-data fields carry <code>autocomplete</code>.</strong></td><td class="mono">1.3.5 · AA</td><td>Almost absent from register and settings forms.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tldr-note" style="margin-top:18px">
+      <p><strong>Verification is part of the rule.</strong> Each rule above is checked three ways: <code>eslint-plugin-jsx-a11y</code> in CI (static), <code>vitest-axe</code> on the primitives (automated), and one manual pass per release using the snippets in the review workbench — heading outline, missing alt, unlabeled fields, small-target finder, grayscale check. An automated scan is evidence, never a verdict (A6).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MOTION ================= -->
+<section class="band" id="motion">
+  <div class="wrap">
+    <div class="sec-eyebrow">07 · Behaviour</div>
+    <h2>Motion and states</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>The app ships a family of "antigravity" float animations — infinite loops on cards, badges and avatars — used 30 times across the profile and profiling screens, plus a hover <code>scale(1.014)</code> with a glow. Two of the animation classes actually referenced in the codebase don't exist: <strong><code>animate-fadeIn</code> is used 43 times with no <code>@keyframes fadeIn</code> defined</strong>, and <code>animate-in fade-in slide-in-from-right-4</code> requires <code>tailwindcss-animate</code>, which is not installed. Both are silent no-ops today, which means the UI has animating and non-animating entrances side by side.</p>
+      <p>The policy is deliberately conservative: motion may confirm an action or explain a spatial change, and nothing else. Infinite loops on content surfaces are removed. Everything that remains is gated.</p>
+    </div>
+
+    <div class="dd">
+      <div class="dont">
+        <h3>Removed</h3>
+        <ul>
+          <li>All infinite <code>float</code>/<code>float-slow</code>/<code>float-subtle</code>/<code>float-gentle</code> loops on cards, badges, avatars.</li>
+          <li>Hover <code>scale()</code> + glow on content cards (transform on a reading surface causes reflow and vestibular load).</li>
+          <li>Broken classes: <code>animate-fadeIn</code> (43 uses, no keyframes) and <code>animate-in …</code> (missing dep) — one real <code>fadeIn</code> replaces both.</li>
+          <li>Any transition longer than 300ms.</li>
+        </ul>
+      </div>
+      <div class="do">
+        <h3>Retained and gated</h3>
+        <ul>
+          <li>Enter/exit for modals, drawers, dropdowns (200&ndash;300ms, <code>ease-out</code>).</li>
+          <li>Hover/press feedback on buttons and rows (150ms, colour only).</li>
+          <li>Progress and skeleton shimmer — the only loops allowed, both with a static fallback.</li>
+          <li>One global block: <code>@media (prefers-reduced-motion: reduce){ *{animation-duration:1ms!important;transition-duration:1ms!important} }</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Every view designs four states</h3>
+    <p class="prose" style="margin-top:8px">L5 requires empty, loading, error and partial-data states to be designed rather than blank or raw. Today there are zero skeletons and nine scattered <code>animate-pulse</code>.</p>
+    <div class="grid">
+      <div class="card"><h3>Loading</h3><p><code>Skeleton</code> mirroring the final layout. Never a bare "Loading…" string, never an empty box. Announced with <code>role="status"</code>.</p></div>
+      <div class="card"><h3>Empty</h3><p><code>EmptyState</code> with title, one sentence of explanation, and the primary action that creates the first record.</p></div>
+      <div class="card"><h3>Error</h3><p>Plain-language message, a retry action, and the reference ID if one exists. Announced with <code>role="alert"</code>. Never a raw stack or a red border alone.</p></div>
+      <div class="card"><h3>Partial</h3><p>Render what loaded, mark what didn't inline, and never block the whole page on one failed request.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GATES ================= -->
+<section class="band" id="gates">
+  <div class="wrap">
+    <div class="sec-eyebrow">08 · Enforcement</div>
+    <h2>CI gates</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>A standard that is not enforced decays within a sprint. Six gates run on every push; the first four are greps that fail the build, the last two are real tooling. Each one traces back to a rule in this document, so "why did CI fail" always has a section to point at.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Gate</th><th>Fails when</th><th>Std §</th><th>Today</th></tr></thead>
+        <tbody>
+          <tr><td><strong>No sub-12px type</strong></td><td>A <code>text-[Npx]</code> below 12 appears in <code>app/</code> or <code>components/</code>.</td><td>Typography</td><td class="chip fail">835 hits</td></tr>
+          <tr><td><strong>No raw hex in TSX</strong></td><td>A <code>#rrggbb</code> literal appears in a <code>.tsx</code> outside <code>*.chart*</code> config that reads tokens.</td><td>Colour</td><td class="chip fail">80 hits</td></tr>
+          <tr><td><strong>No naked outline-none</strong></td><td><code>outline-none</code> on an element with no <code>focus:</code> style.</td><td>A11y #3</td><td class="chip fail">6 hits</td></tr>
+          <tr><td><strong>Icon buttons need a name</strong></td><td>A <code>&lt;button&gt;</code> with no text content and no <code>aria-label</code>/<code>aria-labelledby</code>.</td><td>A11y #1</td><td class="chip fail">9 hits</td></tr>
+          <tr><td><strong>jsx-a11y</strong></td><td>Any <code>eslint-plugin-jsx-a11y</code> error (labels, roles, alt, keyboard).</td><td>A11y</td><td class="chip warn">not installed</td></tr>
+          <tr><td><strong>vitest-axe</strong></td><td>Any serious/critical axe violation in a primitive's render test.</td><td>A11y</td><td class="chip warn">no component tests</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tooling added</h3>
+    <pre><span class="c">// package.json — new devDependencies and scripts</span>
+<span class="k">"devDependencies"</span>: {
+  <span class="k">"clsx"</span>: <span class="c">"^2"</span>,
+  <span class="k">"class-variance-authority"</span>: <span class="c">"^0.7"</span>,
+  <span class="k">"eslint-plugin-jsx-a11y"</span>: <span class="c">"^6"</span>,
+  <span class="k">"vitest-axe"</span>: <span class="c">"^0.1"</span>,
+  <span class="k">"prettier"</span>: <span class="c">"^3"</span>,
+  <span class="k">"prettier-plugin-tailwindcss"</span>: <span class="c">"^0.6"</span>
+},
+<span class="k">"scripts"</span>: {
+  <span class="k">"lint"</span>:     <span class="c">"eslint"</span>,
+  <span class="k">"lint:fix"</span>: <span class="c">"eslint --fix"</span>,
+  <span class="k">"format"</span>:   <span class="c">"prettier --write ."</span>,
+  <span class="k">"gate"</span>:     <span class="c">"node scripts/standard-gates.mjs &amp;&amp; eslint &amp;&amp; vitest run"</span>
+}</pre>
+
+    <div class="tldr-note" style="margin-top:18px">
+      <p><strong>Scope of the gates.</strong> They run over <code>gallotrack-next/app</code> and <code>gallotrack-next/components</code>. The <code>deprecated/</code> Flask tree, <code>supabase/</code> and <code>docs/</code> are excluded. Existing violations are grandfathered per-file during the migration and removed file-by-file, so the gate can land on day one without blocking unrelated work.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TRACKER ================= -->
+<section class="band" id="tracker">
+  <div class="wrap">
+    <div class="sec-eyebrow">09 · Execution</div>
+    <h2>Migration tracker</h2>
+    <div class="prose" style="margin-top:16px">
+      <p>Seven pull requests, each independently shippable and independently revertible. Check items off as they merge — the bar and state persist in this browser.</p>
+    </div>
+
+    <div class="tracker">
+      <div class="tracker-bar"><div class="tracker-fill" id="fill"></div></div>
+      <div class="tracker-pct" id="pct">43% complete <span id="count">3 of 7 merged</span></div>
+      <ul class="tracker-list" id="list">
+        <li data-id="pr1"><label><input type="checkbox" checked><span class="t"><strong>PR 1 — Standard &amp; baseline.</strong> This document, plus the static audit report with 19 logged findings and measured contrast evidence, plus a workbench seed that pre-loads those 21 failed units for the PR 7 re-test.</span><span class="ph">docs</span></label></li>
+        <li data-id="pr2"><label><input type="checkbox" checked><span class="t"><strong>PR 2 — Foundations.</strong> Extend <code>@theme</code> with semantic status/radius/shadow/motion/focus tokens; remove the Arial override; add the missing <code>fadeIn</code> keyframes; consolidate the two theme appliers onto the already-installed <code>next-themes</code>; add the reduced-motion block. <em>Verified: tsc 0, build 0, 101/101 tests, lint unchanged at 104 problems.</em></span><span class="ph">globals.css</span></label></li>
+        <li data-id="pr3"><label><input type="checkbox" checked><span class="t"><strong>PR 3 — Component library.</strong> <code>components/ui/</code> authored on <code>clsx</code> + <code>class-variance-authority</code>: Button, FormField, Input, SearchInput, Modal, Toast, Badge, Card, StatCard, PageHeader, Table, EmptyState, Skeleton, Spinner, Tabs, Pagination, Tooltip, Breadcrumbs, SkipLink. The a11y-critical behaviour is real, not decorative — <code>role="dialog"</code> with a focus trap and focus restore, labelled toasts in a live region, the WAI-ARIA roving-tabindex tabs pattern, and <code>htmlFor</code>/<code>aria-describedby</code>/<code>aria-invalid</code> wired through FormField. 90 new render tests; the automated axe pass lands in PR 6 with <code>vitest-axe</code>. <em>Verified: tsc 0, build 0, 191/191 tests (was 101), lint unchanged at 104 problems.</em></span><span class="ph">components/ui</span></label></li>
+        <li data-id="pr4"><label><input type="checkbox"><span class="t"><strong>PR 4 — Shell &amp; pages.</strong> One <code>Page</code> wrapper, one <code>h1</code> policy, merged nav arrays, consistent role accent, token-driven chart colours.</span><span class="ph">layout + 27 pages</span></label></li>
+        <li data-id="pr5"><label><input type="checkbox"><span class="t"><strong>PR 5 — WCAG 2.2 AA.</strong> Contrast, type-scale purge, focus/skip-link/dialog semantics, labels, live regions, targets, headings — worked in the workbench's light → dark → functional order.</span><span class="ph">remediation</span></label></li>
+        <li data-id="pr6"><label><input type="checkbox"><span class="t"><strong>PR 6 — Enforcement.</strong> Six CI gates, Prettier + tailwind plugin, jsx-a11y, vitest-axe, and the <code>/design-kit</code> route as the living spec.</span><span class="ph">CI</span></label></li>
+        <li data-id="pr7"><label><input type="checkbox"><span class="t"><strong>PR 7 — Verify.</strong> Re-run the full workbench pass, export the post-fix report, target verdict <em>Approve</em> with 0 S1/S2.</span><span class="ph">re-audit</span></label></li>
+      </ul>
+    </div>
+
+    <h3>Definition of done for the whole migration</h3>
+    <div class="tablewrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Measure</th><th>Baseline (d147d46)</th><th>Target</th></tr></thead>
+        <tbody>
+          <tr><td>Arbitrary sub-12px font sizes</td><td class="mono">835</td><td class="mono">0</td></tr>
+          <tr><td>Hardcoded hex in <code>.tsx</code></td><td class="mono">80</td><td class="mono">0</td></tr>
+          <tr><td><code>aria-*</code> attributes</td><td class="mono">4</td><td class="mono">≥120</td></tr>
+          <tr><td><code>htmlFor</code> bindings</td><td class="mono">0 / 95 labels</td><td class="mono">100% of inputs</td></tr>
+          <tr><td>Modal shells with dialog semantics</td><td class="mono">0 / 8</td><td class="mono">8 / 8 (1 component)</td></tr>
+          <tr><td>StatCard implementations</td><td class="mono">5</td><td class="mono">1</td></tr>
+          <tr><td><code>h1</code> per page</td><td class="mono">2 on most pages</td><td class="mono">1</td></tr>
+          <tr><td>Contrast ratios below threshold</td><td class="mono">9 across 3 findings</td><td class="mono">0</td></tr>
+          <tr><td>Component tests</td><td class="mono">0</td><td class="mono">≥16 + axe</td></tr>
+          <tr><td>Workbench verdict</td><td class="mono">Incomplete</td><td class="mono">Approve</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Syntaxure Labs · GalloTrack UI Standard v1.0 · Generated 2026-10-04 from baseline commit <span class="mono">d147d46</span> on <span class="mono">ui-improvement</span>.
+  Measured against <a href="UI_UX%20Review%20Workbench%20%C2%B7%20Syntaxure%20Labs.html">the UI/UX Review Workbench</a> (WCAG 2.2 A/AA) · companion report: <a href="audit/GalloTrack-baseline.html">GalloTrack baseline audit</a>.</p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  var KEY='gallotrack-ui-standard-tracker-v2';
+  var boxes=Array.prototype.slice.call(document.querySelectorAll('#list input[type=checkbox]'));
+  var items=Array.prototype.slice.call(document.querySelectorAll('#list li'));
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){saved={}}
+  function update(){
+    var done=0;
+    items.forEach(function(li,i){
+      var on=boxes[i].checked;
+      if(on)done++;
+      li.classList.toggle('done',on);
+    });
+    var pct=Math.round(100*done/items.length);
+    document.getElementById('fill').style.width=pct+'%';
+    document.getElementById('pct').firstChild.nodeValue=pct+'% complete ';
+    document.getElementById('count').textContent=done+' of '+items.length+' merged';
+  }
+  boxes.forEach(function(b,i){
+    b.checked=!!saved[items[i].dataset.id];
+    b.addEventListener('change',function(){
+      var s={};
+      try{s=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){s={}}
+      s[items[i].dataset.id]=b.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}
+      update();
+    });
+  });
+  update();
+})();
+</script>
+</body>
+</html>
