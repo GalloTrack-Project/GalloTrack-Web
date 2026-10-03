@@ -42,7 +42,7 @@ function computeStats(fowls: FowlRecord[], matchHistory: MatchRecord[]): FowlSta
 }
 
 function getTierColor(winRate: number, decided: number): string {
-  if (decided === 0) return 'bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground border-slate-200 dark:border-slate-800';
+  if (decided === 0) return 'bg-slate-100 dark:bg-muted text-muted-foreground border-slate-200 dark:border-slate-800';
   if (winRate >= 70) return 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
   if (winRate >= 50) return 'bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800';
   if (winRate >= 30) return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
@@ -91,12 +91,12 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
       <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-slate-200 dark:border-border max-w-3xl w-full max-h-[90vh] flex flex-col relative">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-slate-100 dark:border-border shrink-0">
-          <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
+          <button onClick={onClose} className="absolute top-5 right-5 text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer">✕</button>
           <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight flex items-center space-x-2">
             <BarChart3 className="w-5 h-5" />
             <span>Per-Chicken Performance Breakdown</span>
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-muted-foreground font-semibold mt-1">Individual win rates and overall aggregate statistics</p>
+          <p className="text-[10px] text-muted-foreground font-semibold mt-1">Individual win rates and overall aggregate statistics</p>
         </div>
 
         {/* Overall Summary */}
@@ -104,24 +104,24 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
           <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg p-4 text-white">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Overall Aggregate</span>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
+              <span className="text-[9px] font-bold text-muted-foreground bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
             </div>
             <div className="grid grid-cols-4 gap-3">
               <div className="text-center">
                 <p className="text-2xl font-black text-white">{overallWinRate}%</p>
-                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Overall Win Rate</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase">Overall Win Rate</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-emerald-400">{totalWins}</p>
-                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Total Wins</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase">Total Wins</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-rose-400">{totalLosses}</p>
-                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Total Losses</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase">Total Losses</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-black text-sky-400">{fowls.length}</p>
-                <p className="text-[9px] font-bold text-slate-400 dark:text-muted-foreground uppercase">Total Chickens</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase">Total Chickens</p>
               </div>
             </div>
           </div>
@@ -145,8 +145,8 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
               <p className="text-[8px] font-bold text-rose-600 dark:text-rose-300 uppercase">Weak &lt;30%</p>
             </div>
             <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md p-2 text-center">
-              <p className="text-lg font-black text-slate-500 dark:text-muted-foreground">{noFightCount}</p>
-              <p className="text-[8px] font-bold text-slate-500 dark:text-muted-foreground uppercase">No Fights</p>
+              <p className="text-lg font-black text-muted-foreground">{noFightCount}</p>
+              <p className="text-[8px] font-bold text-muted-foreground uppercase">No Fights</p>
             </div>
           </div>
         </div>
@@ -154,12 +154,12 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
         {/* Filters */}
         <div className="px-6 pb-2 flex items-center gap-2 shrink-0">
           {(['all', 'fought', 'nofight'] as const).map((f) => (
-            <button key={f} type="button" onClick={() => setFilter(f)} className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${filter === f ? 'bg-slate-900 text-white border-slate-900' : 'bg-white dark:bg-card text-slate-500 dark:text-muted-foreground border-slate-200 dark:border-border hover:border-slate-400'}`}>
+            <button key={f} type="button" onClick={() => setFilter(f)} className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${filter === f ? 'bg-slate-900 text-white border-slate-900' : 'bg-white dark:bg-card text-muted-foreground border-slate-200 dark:border-border hover:border-slate-400'}`}>
               {f === 'all' ? `All (${fowls.length})` : f === 'fought' ? `Fought (${foughtCount})` : `No Fight (${noFightCount})`}
             </button>
           ))}
           <div className="flex-1"></div>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="text-[10px] font-bold text-slate-500 dark:text-muted-foreground bg-white dark:bg-card border border-slate-200 dark:border-border rounded-sm px-2 py-1.5 cursor-pointer">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="text-[10px] font-bold text-muted-foreground bg-white dark:bg-card border border-slate-200 dark:border-border rounded-sm px-2 py-1.5 cursor-pointer">
             <option value="winrate">Sort: Win Rate</option>
             <option value="name">Sort: Name</option>
             <option value="fights">Sort: Fights</option>
@@ -171,13 +171,13 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
           <table className="w-full text-[10px]">
             <thead>
               <tr className="border-b border-slate-100 dark:border-border">
-                <th className="text-left py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">#</th>
-                <th className="text-left py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Chicken</th>
-                <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Tier</th>
-                <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Fights</th>
-                <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">W-L</th>
-                <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">Win Rate</th>
-                <th className="text-center py-2 font-bold text-slate-500 dark:text-muted-foreground uppercase tracking-wider">% of Overall</th>
+                <th className="text-left py-2 font-bold text-muted-foreground uppercase tracking-wider">#</th>
+                <th className="text-left py-2 font-bold text-muted-foreground uppercase tracking-wider">Chicken</th>
+                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">Tier</th>
+                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">Fights</th>
+                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">W-L</th>
+                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">Win Rate</th>
+                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">% of Overall</th>
               </tr>
             </thead>
             <tbody>
@@ -185,7 +185,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                 const pctOfOverall = totalDecided > 0 ? Math.round((s.decided / totalDecided) * 100) : 0;
                 return (
                   <tr key={s.fowl.id} className="border-b border-slate-50 dark:border-border hover:bg-slate-50/50 dark:hover:bg-muted/50">
-                    <td className="py-2 font-bold text-slate-400 dark:text-muted-foreground">{i + 1}</td>
+                    <td className="py-2 font-bold text-muted-foreground">{i + 1}</td>
                     <td className="py-2">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-[9px] shrink-0">
@@ -193,7 +193,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                         </span>
                         <div>
                           <p className="font-black text-slate-800 dark:text-card-foreground">{s.fowl.name}</p>
-                          <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-semibold">{s.fowl.breed} · {s.fowl.growth_stage || 'N/A'}</p>
+                          <p className="text-[9px] text-muted-foreground font-semibold">{s.fowl.breed} · {s.fowl.growth_stage || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
@@ -210,7 +210,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                           {s.winRate}%
                         </span>
                       ) : (
-                        <span className="text-slate-300 font-bold">—</span>
+                        <span className="text-muted-foreground font-bold">—</span>
                       )}
                     </td>
                     <td className="py-2 text-center">
@@ -218,7 +218,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                         <div className="w-12 bg-slate-200 dark:bg-muted rounded-full h-1.5 overflow-hidden">
                            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${pctOfOverall}%` }}></div>
                          </div>
-                         <span className="font-bold text-slate-500 dark:text-muted-foreground">{pctOfOverall}%</span>
+                         <span className="font-bold text-muted-foreground">{pctOfOverall}%</span>
                       </div>
                     </td>
                   </tr>
@@ -226,7 +226,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
               })}
               {stats.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-muted-foreground text-xs font-semibold">No chickens match the current filter.</td>
+                  <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs font-semibold">No chickens match the current filter.</td>
                 </tr>
               )}
             </tbody>

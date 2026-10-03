@@ -31,7 +31,7 @@ export default function ArchiveModal({
       <div className="bg-white dark:bg-card rounded-lg shadow-2xl border border-amber-200 dark:border-amber-800 max-w-md w-full p-6 space-y-5 relative">
         <button 
           onClick={() => setSelectedFowlForArchive(null)} 
-          className="absolute top-5 right-5 text-slate-400 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+          className="absolute top-5 right-5 text-muted-foreground hover:text-slate-700 dark:hover:text-card-foreground bg-slate-100 dark:bg-muted hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
         >
           ✕
         </button>
@@ -40,13 +40,13 @@ export default function ArchiveModal({
           <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center"><Archive className="w-5 h-5 text-amber-600 dark:text-amber-300" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Archive Chicken Node</h3>
-            <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-semibold">Select a NON-MORTALITY reason for inventory removal</p>
+            <p className="text-[11px] text-muted-foreground font-semibold">Select a NON-MORTALITY reason for inventory removal</p>
           </div>
         </div>
 
         <div className="bg-amber-50/60 dark:bg-muted/50 p-4 rounded-lg border border-amber-200/60 dark:border-border space-y-2">
           <p className="text-xs font-bold text-slate-800 dark:text-card-foreground">Target Chicken: <strong className="text-amber-800 dark:text-amber-300 font-black">{selectedFowlForArchive.name}</strong> ({selectedFowlForArchive.breed})</p>
-            <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">Archiving records a non-death disposition (sold, transferred, other). It does NOT imply mortality. If the chicken has died, use <strong className="text-rose-700 dark:text-rose-300">Deceased</strong> instead.</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">Archiving records a non-death disposition (sold, transferred, other). It does NOT imply mortality. If the chicken has died, use <strong className="text-rose-700 dark:text-rose-300">Deceased</strong> instead.</p>
         </div>
 
         <div className="space-y-2">
@@ -71,7 +71,7 @@ export default function ArchiveModal({
                 placeholder="e.g. Retired from circuit, on hold, discontinued…"
                 className="w-full p-3 border border-slate-200 dark:border-border rounded-md text-xs bg-slate-50 dark:bg-muted font-extrabold text-slate-800 dark:text-card-foreground outline-none focus:border-amber-500"
               />
-              <p className="text-[10px] text-slate-500 dark:text-muted-foreground leading-relaxed">This is saved as the archive reason and shown on the chicken&apos;s record.</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">This is saved as the archive reason and shown on the chicken&apos;s record.</p>
             </div>
           )}
         </div>

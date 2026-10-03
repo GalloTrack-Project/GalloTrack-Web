@@ -49,9 +49,9 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
             🧬 {title || 'Bloodline Percentage Breakdown'}
           </p>
           {subtitle ? (
-            <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-semibold mt-0.5">{subtitle}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{subtitle}</p>
           ) : (
-            <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-semibold mt-0.5">
+            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
               50% Sire · 50% Dam — halved bawat henerasyon
             </p>
           )}
@@ -60,7 +60,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
           <span className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
             {dominant.strain} {dominant.pct}%
           </span>
-          <p className="text-[9px] text-slate-400 dark:text-muted-foreground font-bold uppercase tracking-wide mt-1">
+          <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wide mt-1">
             {strainCount} bloodline{strainCount === 1 ? '' : 's'}
           </p>
         </div>
@@ -72,14 +72,14 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
             <div className="flex items-center justify-between gap-2">
               <span
                 className={`text-[10px] font-black truncate ${
-                  entry.isUnknown ? 'text-slate-400 dark:text-muted-foreground' : 'text-slate-700 dark:text-card-foreground'
+                  entry.isUnknown ? 'text-muted-foreground' : 'text-slate-700 dark:text-card-foreground'
                 }`}
               >
                 {entry.strain}
               </span>
               <span
                 className={`text-[10px] font-black tabular-nums shrink-0 ${
-                  entry.isUnknown ? 'text-slate-400 dark:text-muted-foreground' : 'text-slate-800 dark:text-card-foreground'
+                  entry.isUnknown ? 'text-muted-foreground' : 'text-slate-800 dark:text-card-foreground'
                 }`}
               >
                 {entry.pct}%
@@ -96,12 +96,12 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
       </div>
 
       {!compact && (
-        <p className="text-[9px] text-slate-500 dark:text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 dark:border-emerald-900/50 pt-2">
+        <p className="text-[9px] text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 dark:border-emerald-900/50 pt-2">
           <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
           {unknownPct > 0 && (
             <>
               {' '}
-              · <span className="font-black text-slate-500">{unknownPct}% unregistered ancestry</span> — ilagay ang
+              · <span className="font-black text-muted-foreground">{unknownPct}% unregistered ancestry</span> — ilagay ang
               breed ng magulang para mabuo ang hatian.
             </>
           )}

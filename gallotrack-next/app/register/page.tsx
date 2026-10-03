@@ -180,7 +180,7 @@ export default function RegisterPage() {
   };
 
   const inputBase =
-    "w-full p-3 border border-input rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground";
+    "w-full p-3 border border-input-border rounded-md text-xs bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none text-foreground placeholder:text-muted-foreground";
   const inputIcon = `${inputBase} pl-9`;
   const labelClass = "block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest";
 

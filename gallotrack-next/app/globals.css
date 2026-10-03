@@ -16,6 +16,7 @@
   --muted-foreground: #64748b;
   --border: #e2e8f0;
   --input: #cbd5e1;
+  --input-border: #6b7c93;
 
   --success: #047857;
   --warning: #b45309;
@@ -49,6 +50,7 @@
   --muted-foreground: #94a3b8;
   --border: #1e293b;
   --input: #334155;
+  --input-border: #64748b;
 
   --success: #4ade80;
   --warning: #fbbf24;
@@ -86,6 +88,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-border: var(--input-border);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);

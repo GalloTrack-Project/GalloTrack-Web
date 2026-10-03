@@ -35,7 +35,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
       </button>
       {pages.map((p, i) =>
         p === '...' ? (
-          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-[10px] text-slate-400 dark:text-muted-foreground font-bold">…</span>
+          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-[10px] text-muted-foreground font-bold">…</span>
         ) : (
           <button
             key={p}

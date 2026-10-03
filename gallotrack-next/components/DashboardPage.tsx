@@ -544,7 +544,7 @@ export default function DashboardPage() {
                   return (
                     <tr key={p.key} className={`hover:bg-muted/30 transition-colors ${weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''}`}>
                       <td className="p-4 pl-6 whitespace-nowrap">
-                        {i === 0 ? <Medal className="w-4 h-4 text-amber-500" /> : i === 1 ? <Medal className="w-4 h-4 text-slate-400" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
+                        {i === 0 ? <Medal className="w-4 h-4 text-amber-500" /> : i === 1 ? <Medal className="w-4 h-4 text-muted-foreground" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">

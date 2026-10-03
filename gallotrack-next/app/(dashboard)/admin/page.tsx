@@ -325,7 +325,7 @@ export default function AdminPanelPage() {
     user.is_verified ? (
       <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">✓ Verified</span>
     ) : (
-      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-500/15 border border-slate-500/30 text-slate-400">✕ Unverified</span>
+      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-500/15 border border-slate-500/30 text-muted-foreground">✕ Unverified</span>
     );
 
   const roleBadge = (user: AdminProfileRow) =>
@@ -486,7 +486,7 @@ export default function AdminPanelPage() {
                   onClick={() => handleToggleVerified(user)}
                   className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                     user.is_verified
-                      ? 'bg-slate-500/10 border-slate-500/40 text-slate-400 hover:bg-slate-500/20'
+                      ? 'bg-slate-500/10 border-slate-500/40 text-muted-foreground hover:bg-slate-500/20'
                       : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
                   }`}
                 >
@@ -581,7 +581,7 @@ export default function AdminPanelPage() {
                           onClick={() => handleToggleVerified(user)}
                           className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                             user.is_verified
-                              ? 'bg-slate-500/10 border-slate-500/40 text-slate-400 hover:bg-slate-500/20'
+                              ? 'bg-slate-500/10 border-slate-500/40 text-muted-foreground hover:bg-slate-500/20'
                               : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
                           }`}
                         >

@@ -28,7 +28,7 @@ export default function SplashScreen({ onFinished }: Props) {
         <p className="text-4xl md:text-5xl font-black tracking-wider text-white">
           GALLO<span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">TRACK</span>
         </p>
-          <p className="text-xs text-slate-400 font-semibold tracking-wide max-w-xs mx-auto">
+          <p className="text-xs text-muted-foreground font-semibold tracking-wide max-w-xs mx-auto">
             Advanced Chicken Lineage Analytics &amp; Structural Trace Registry Framework
           </p>
         </div>
@@ -37,9 +37,9 @@ export default function SplashScreen({ onFinished }: Props) {
       <div className="flex flex-col items-center space-y-3 relative z-10 mb-4">
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs font-bold text-slate-300 tracking-wider">INITIALIZING CLUSTER PIPELINE</span>
+          <span className="text-xs font-bold text-muted-foreground tracking-wider">INITIALIZING CLUSTER PIPELINE</span>
         </div>
-        <p className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">ISUFST DINGLE CAMPUS HUB v1.2.0</p>
+        <p className="text-[10px] text-muted-foreground font-mono tracking-widest uppercase">ISUFST DINGLE CAMPUS HUB v1.2.0</p>
       </div>
     </div>
   );
