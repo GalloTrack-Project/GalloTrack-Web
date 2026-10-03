@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { GalloTrackProvider } from "@/lib/context";
+import { ToastProvider } from "@/components/ui";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
 
 const geistSans = Geist({
@@ -29,13 +30,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem storageKey="theme">
-          <GalloTrackProvider>
-            <RootErrorBoundary>
-              <div className="min-h-full w-full flex flex-col">
-                {children}
-              </div>
-            </RootErrorBoundary>
-          </GalloTrackProvider>
+          <ToastProvider>
+            <GalloTrackProvider>
+              <RootErrorBoundary>
+                <div className="min-h-full w-full flex flex-col">
+                  {children}
+                </div>
+              </RootErrorBoundary>
+            </GalloTrackProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

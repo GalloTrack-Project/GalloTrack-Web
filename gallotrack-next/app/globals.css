@@ -21,6 +21,9 @@
   --warning: #b45309;
   --danger: #be123c;
   --info: #0369a1;
+  --primary: #047857;
+  --primary-foreground: #ffffff;
+  --danger-foreground: #ffffff;
   --ring: #0f172a;
 
   --duration-fast: 150ms;
@@ -49,6 +52,9 @@
   --warning: #fbbf24;
   --danger: #fb7185;
   --info: #7dd3fc;
+  --primary: #10b981;
+  --primary-foreground: #04210f;
+  --danger-foreground: #4c0519;
   --ring: #e2e8f0;
 }
 
@@ -67,6 +73,9 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-info: var(--info);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-danger-foreground: var(--danger-foreground);
   --color-ring: var(--ring);
 
   --radius-xs: 0.125rem;
@@ -269,6 +278,12 @@ body {
 .no-spinner {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* GLOBAL FOCUS INDICATOR — one rule instead of 80 hand-tuned replacements (WCAG 2.4.7 AA) */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 /* REDUCED MOTION — no floats, no hover lift, no entrance animation */
