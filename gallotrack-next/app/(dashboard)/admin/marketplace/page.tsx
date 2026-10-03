@@ -131,11 +131,11 @@ export default function AdminMarketplacePage() {
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case 'approved': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-      case 'pending': return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-      case 'flagged': return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+      case 'approved': return 'bg-emerald-500/15 text-success border-emerald-500/30';
+      case 'pending': return 'bg-amber-500/15 text-warning border-amber-500/30';
+      case 'flagged': return 'bg-rose-500/15 text-danger border-rose-500/30';
       case 'removed': return 'bg-muted text-muted-foreground border-border';
-      case 'sold': return 'bg-sky-500/15 text-sky-400 border-sky-500/30';
+      case 'sold': return 'bg-sky-500/15 text-info border-sky-500/30';
       default: return 'bg-muted text-muted-foreground border-border';
     }
   };
@@ -155,17 +155,17 @@ export default function AdminMarketplacePage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-              Marketplace <span className="text-amber-400">Moderation</span>
+              Marketplace <span className="text-warning">Moderation</span>
             </h1>
             <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Review, approve, and manage marketplace listings</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Listings', stats.total, 'text-amber-400', <Clipboard className="w-5 h-5" />)}
-          {statCard('Pending Review', stats.pending, 'text-amber-400', <Clock className="w-5 h-5" />)}
-          {statCard('Approved', stats.approved, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
-          {statCard('Flagged', stats.flagged, 'text-rose-400', <Flag className="w-5 h-5" />)}
+          {statCard('Total Listings', stats.total, 'text-warning', <Clipboard className="w-5 h-5" />)}
+          {statCard('Pending Review', stats.pending, 'text-warning', <Clock className="w-5 h-5" />)}
+          {statCard('Approved', stats.approved, 'text-success', <CheckCircle className="w-5 h-5" />)}
+          {statCard('Flagged', stats.flagged, 'text-danger', <Flag className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
@@ -214,17 +214,17 @@ export default function AdminMarketplacePage() {
               <div className="flex gap-2">
                 {listing.status === 'pending' && (
                   <>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
                   </>
                 )}
                 {listing.status === 'approved' && (
-                  <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                  <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                 )}
                 {listing.status === 'flagged' && (
                   <>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                    <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="flex-1 text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                   </>
                 )}
                 <button type="button" onClick={() => setNotesModal({ id: listing.id, notes: listing.admin_notes })} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Notes</button>
@@ -274,7 +274,7 @@ export default function AdminMarketplacePage() {
                       <p className="text-[11px] font-bold text-card-foreground">{listing.breed}</p>
                       <p className="text-[10px] text-muted-foreground">{listing.gender}</p>
                     </td>
-                    <td className="px-4 py-3.5 text-sm font-black text-emerald-400">₱{listing.price.toLocaleString()}</td>
+                    <td className="px-4 py-3.5 text-sm font-black text-success">₱{listing.price.toLocaleString()}</td>
                     <td className="px-4 py-3.5">
                       <p className="text-[11px] font-bold text-card-foreground truncate">{listing.seller_name}</p>
                       <p className="text-[10px] text-muted-foreground truncate">{listing.farm_name}</p>
@@ -284,17 +284,17 @@ export default function AdminMarketplacePage() {
                       <div className="flex items-center justify-end gap-2">
                         {listing.status === 'pending' && (
                           <>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'flagged')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Flag</button>
                           </>
                         )}
                         {listing.status === 'approved' && (
-                          <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                          <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                         )}
                         {listing.status === 'flagged' && (
                           <>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
-                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'approved')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-emerald-500/15 border border-emerald-500/40 text-success hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50">Approve</button>
+                            <button type="button" disabled={actionId === listing.id} onClick={() => handleModerate(listing.id, 'removed')} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm bg-rose-500/10 border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50">Remove</button>
                           </>
                         )}
                         <button type="button" onClick={() => setNotesModal({ id: listing.id, notes: listing.admin_notes })} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Notes</button>
@@ -321,7 +321,7 @@ export default function AdminMarketplacePage() {
               />
               <div className="flex gap-2.5">
                 <button type="button" onClick={() => setNotesModal(null)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
-                <button type="button" onClick={() => { handleModerate(notesModal.id, listings.find((l) => l.id === notesModal.id)?.status || 'pending', notesModal.notes); setNotesModal(null); }} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-amber-500/20 border border-amber-500/50 text-amber-300 hover:bg-amber-500/30 transition-all cursor-pointer">Save Notes</button>
+                <button type="button" onClick={() => { handleModerate(notesModal.id, listings.find((l) => l.id === notesModal.id)?.status || 'pending', notesModal.notes); setNotesModal(null); }} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-amber-500/20 border border-amber-500/50 text-warning hover:bg-amber-500/30 transition-all cursor-pointer">Save Notes</button>
               </div>
             </div>
           </div>

@@ -102,7 +102,7 @@ export default function AuditLogsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-              Audit <span className="text-amber-400">Logs</span>
+              Audit <span className="text-warning">Logs</span>
             </h1>
             <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Activity Trail for Admin Actions</p>
           </div>
@@ -144,11 +144,11 @@ export default function AuditLogsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-sm bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <Shield className="w-3.5 h-3.5 text-amber-400" />
+                        <Shield className="w-3.5 h-3.5 text-warning" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-bold text-card-foreground">
-                          <span className="text-amber-400">{adminNames[log.admin_id] || 'Admin'}</span>
+                          <span className="text-warning">{adminNames[log.admin_id] || 'Admin'}</span>
                           {' '}
                           <span className="text-muted-foreground">{ACTION_LABELS[log.action] || log.action}</span>
                         </p>

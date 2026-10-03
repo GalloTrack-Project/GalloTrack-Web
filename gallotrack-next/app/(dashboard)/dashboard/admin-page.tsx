@@ -74,11 +74,11 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
-                <Shield className="w-6 h-6 text-amber-400" />
+                <Shield className="w-6 h-6 text-warning" />
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">
-                  System <span className="text-amber-400">Overview</span>
+                  System <span className="text-warning">Overview</span>
                 </h1>
                 <p className="text-xs text-muted-foreground font-medium mt-0.5">
                   Manage farm owner accounts and system configuration
@@ -90,7 +90,7 @@ export default function AdminDashboardPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400/60"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] font-mono font-semibold text-emerald-400 uppercase tracking-wider">All Systems Operational</span>
+              <span className="text-[10px] font-mono font-semibold text-success uppercase tracking-wider">All Systems Operational</span>
             </div>
           </div>
         </div>
@@ -149,9 +149,9 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
   trend?: 'up' | 'down';
 }) {
   const accentMap: Record<string, { text: string; bg: string; border: string; glow: string }> = {
-    amber: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', glow: 'shadow-amber-500/5' },
-    emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', glow: 'shadow-emerald-500/5' },
-    sky: { text: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/20', glow: 'shadow-sky-500/5' },
+    amber: { text: 'text-warning', bg: 'bg-amber-500/10', border: 'border-amber-500/20', glow: 'shadow-amber-500/5' },
+    emerald: { text: 'text-success', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', glow: 'shadow-emerald-500/5' },
+    sky: { text: 'text-info', bg: 'bg-sky-500/10', border: 'border-sky-500/20', glow: 'shadow-sky-500/5' },
   };
   const a = accentMap[accent] || accentMap.amber;
 
@@ -162,7 +162,7 @@ function StatCard({ label, value, icon, accent, subtitle, trend }: {
           {icon}
         </div>
         {trend && (
-          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${trend === 'up' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
+          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${trend === 'up' ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
             {trend === 'up' ? <><ArrowUpRight className="w-3 h-3" /> Active</> : <><ArrowDownRight className="w-3 h-3" /> Low</>}
           </span>
         )}

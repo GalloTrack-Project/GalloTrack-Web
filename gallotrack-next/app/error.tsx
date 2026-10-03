@@ -14,7 +14,7 @@ export default function Error({
           ⚠️
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black tracking-tight text-rose-500">Something went wrong</h1>
+          <h1 className="text-2xl font-black tracking-tight text-danger">Something went wrong</h1>
           <p className="text-sm text-muted-foreground/70">
             {error.message || 'An unexpected error occurred.'}
           </p>

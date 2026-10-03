@@ -265,7 +265,7 @@ export default function ProfilePage() {
             <span className="w-6 h-6 bg-emerald-200 rounded-full flex items-center justify-center text-emerald-700 text-xs font-black dark:bg-emerald-800 dark:text-emerald-300">✓</span>
             <span>GalloTrack System Notice: Administrative identity credentials updated successfully.</span>
           </div>
-          <span className="text-[10px] text-emerald-600 font-mono font-black dark:text-emerald-400">D4 CLUSTER SYNC</span>
+          <span className="text-[10px] text-success font-mono font-black dark:text-emerald-400">D4 CLUSTER SYNC</span>
         </div>
       )}
 
@@ -275,7 +275,7 @@ export default function ProfilePage() {
             <span className="w-6 h-6 bg-rose-200 rounded-full flex items-center justify-center text-rose-700 text-xs font-black dark:bg-rose-800 dark:text-rose-300">✕</span>
             <span>{saveError}</span>
           </div>
-          <button onClick={() => setSaveError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer dark:text-rose-400">✕</button>
+          <button onClick={() => setSaveError('')} className="text-danger hover:text-rose-800 font-bold cursor-pointer dark:text-rose-400">✕</button>
         </div>
       )}
 
@@ -327,7 +327,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center justify-between px-1">
               <span className="text-muted-foreground font-bold tracking-wide">GLOBAL ACCESS</span>
-              <span className="text-emerald-600 font-black flex items-center gap-1 dark:text-emerald-400">
+              <span className="text-success font-black flex items-center gap-1 dark:text-emerald-400">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
                 VERIFIED
               </span>
@@ -423,7 +423,7 @@ export default function ProfilePage() {
               <ZoomOut size={18} className="text-muted-foreground" />
             </div>
 
-            {cropError && <p className="text-xs font-bold text-rose-600 text-center">{cropError}</p>}
+            {cropError && <p className="text-xs font-bold text-danger text-center">{cropError}</p>}
 
             <div className="flex space-x-3">
               <button type="button" onClick={closeCropper} className="flex-1 bg-muted hover:bg-muted/80 text-foreground font-black py-3 rounded-md text-xs uppercase tracking-wider transition-all cursor-pointer">

@@ -191,7 +191,7 @@ export default function EncodeForm({
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Identifier Name</label>
-          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
@@ -201,11 +201,11 @@ export default function EncodeForm({
             type="text"
             value={birdCode}
             onChange={(e) => setBirdCode(e.target.value)}
-            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
             placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
           />
           <p className="text-[9px] text-muted-foreground mt-1 font-semibold">
-            {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-emerald-600 dark:text-emerald-300">{formatBirdCodeForDisplay(suggestedBirdCode)}</span>{suggestedBirdCode ? (/^\d+$/.test(suggestedBirdCode) ? ' · numero (sire)' : /^[A-Za-z]$/.test(suggestedBirdCode) ? ' · titik (dam)' : ' · offspring') : ''}</>}
+            {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-success dark:text-emerald-300">{formatBirdCodeForDisplay(suggestedBirdCode)}</span>{suggestedBirdCode ? (/^\d+$/.test(suggestedBirdCode) ? ' · numero (sire)' : /^[A-Za-z]$/.test(suggestedBirdCode) ? ' · titik (dam)' : ' · offspring') : ''}</>}
           </p>
         </div>
         <div>
@@ -217,7 +217,7 @@ export default function EncodeForm({
             value={wingBand}
             onChange={(e) => setWingBand(e.target.value)}
             maxLength={24}
-            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
             placeholder="e.g. W-001"
           />
           <p className="text-[9px] text-muted-foreground mt-1 font-semibold">
@@ -255,12 +255,12 @@ export default function EncodeForm({
                   if (e.key === 'Escape') setStrainOpen(false);
                 }}
                 placeholder="Select or type a strain..."
-                className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-neutral-400 dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
+                className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
               />
               <button
                 type="button"
                 onClick={() => setStrainOpen((o) => !o)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
                 aria-label="Toggle strain list"
               >
                 ▾
@@ -280,8 +280,8 @@ export default function EncodeForm({
                           {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Matching strains</div>}
                           {matching.map((s) => (
                             <div key={s} className="flex items-center w-full group">
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainQuery(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
-                                {s} {selectedStrains.includes(s) && <span className="text-[9px] text-emerald-500 ml-1">✓ added</span>}
+                              <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainQuery(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                                {s} {selectedStrains.includes(s) && <span className="text-[9px] text-success ml-1">✓ added</span>}
                               </button>
                             </div>
                           ))}
@@ -289,8 +289,8 @@ export default function EncodeForm({
                       );
                     }
                     return matching.map((s) => (
-                        <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainQuery(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
-                          {s} {selectedStrains.includes(s) && <span className="text-[9px] text-emerald-500 ml-1">✓ added</span>}
+                        <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainQuery(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                          {s} {selectedStrains.includes(s) && <span className="text-[9px] text-success ml-1">✓ added</span>}
                         </button>
                     ));
                   })()}
@@ -321,7 +321,7 @@ export default function EncodeForm({
         </h3>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-            Birth Date <span className="text-emerald-600 dark:text-emerald-300 font-black">{autoCalcAge ? '· required — age is auto-calculated' : '· required'}</span>
+            Birth Date <span className="text-success dark:text-emerald-300 font-black">{autoCalcAge ? '· required — age is auto-calculated' : '· required'}</span>
           </label>
           <input
             type="date"
@@ -345,15 +345,15 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && autoCalcAge && <span className="text-emerald-600 dark:text-emerald-300 font-black">· auto</span>}</label>
-            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none" placeholder="0" required />
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Age (Mos) {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
+            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none" placeholder="0" required />
           </div>
           <div>
             <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Growth Stage</label>
             <select
               value={newGrowthStage}
               onChange={(e) => setNewGrowthStage(e.target.value)}
-              className={`w-full p-3 border border-input-border rounded-md text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
+              className={`w-full p-3 border border-input-border rounded-md text-xs bg-muted font-extrabold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-success dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
             >
               <option value="" disabled className="bg-popover text-muted-foreground">Select stage...</option>
               <option value="Chick" className="bg-popover text-popover-foreground">Chick</option>
@@ -366,11 +366,11 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
+            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
           </div>
           <div>
             <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
+            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-xs text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
@@ -383,12 +383,12 @@ export default function EncodeForm({
               onFocus={() => setLegColorOpen(true)}
               onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
               placeholder="Select or type a leg color..."
-              className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-neutral-400 dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
+              className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
             />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-emerald-500 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-[10px] focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
               aria-label="Toggle leg color list"
             >
               ▾
@@ -410,8 +410,8 @@ export default function EncodeForm({
                           onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(legColorQuery.trim()); setNewLegColor(legColorQuery.trim()); setLegColorOpen(false); }}
                           className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-slate-200 dark:border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
                         >
-                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-300">➕ Save &quot;{legColorQuery.trim()}&quot; as new leg color</span>
-                          <span className="text-[9px] font-mono text-emerald-500 uppercase shrink-0">Auto-saved</span>
+                          <span className="text-xs font-black text-success dark:text-emerald-300">➕ Save &quot;{legColorQuery.trim()}&quot; as new leg color</span>
+                          <span className="text-[9px] font-mono text-success uppercase shrink-0">Auto-saved</span>
                         </button>
                         {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Matching colors</div>}
                         {matching.map((s) => (
@@ -420,7 +420,7 @@ export default function EncodeForm({
                                 {s}
                               </button>
                               {customLegColorNames.has(s) && (
-                                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                               )}
                             </div>
                         ))}
@@ -429,11 +429,11 @@ export default function EncodeForm({
                   }
                   return matching.map((s) => (
                       <div key={s} className="flex items-center w-full group">
-                        <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
                           {s}
                         </button>
                         {customLegColorNames.has(s) && (
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                         )}
                       </div>
                   ));
@@ -480,13 +480,13 @@ export default function EncodeForm({
               <div className="grid grid-cols-2 gap-3">
                 {sireChildren.length > 0 && (
                   <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
-                    <p className="text-[9px] font-black text-sky-600 dark:text-sky-300 uppercase">🐓 {sireName.trim()} Offspring</p>
+                    <p className="text-[9px] font-black text-info dark:text-sky-300 uppercase">🐓 {sireName.trim()} Offspring</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{sireChildren.length}</p>
                     <p className="text-[9px] text-muted-foreground font-semibold">
                       {sireChildren.filter((c) => c.gender === 'Male').length} cock(s) · {sireChildren.filter((c) => c.gender === 'Female').length} hen(s)
                     </p>
                     {sireFullSibs.length > 0 && (
-                      <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-300 mt-1">✓ {sireFullSibs.length} full sibling(s) with current dam</p>
+                      <p className="text-[9px] font-bold text-success dark:text-emerald-300 mt-1">✓ {sireFullSibs.length} full sibling(s) with current dam</p>
                     )}
                   </div>
                 )}
@@ -508,14 +508,14 @@ export default function EncodeForm({
             <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
               Sire Purity (%)
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 60" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 60" />
             <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Kasama ang Dam — dapat 100% lahat</p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
               Dam Purity (%)
             </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 40" />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none font-bold placeholder:font-normal" placeholder="e.g. 40" />
             <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Kasama ang Sire — dapat 100% lahat</p>
           </div>
         </div>
@@ -555,7 +555,7 @@ export default function EncodeForm({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
-              <p className="text-[9px] font-black text-sky-600 dark:text-sky-300 uppercase tracking-wider">🐓 Sire Lineage</p>
+              <p className="text-[9px] font-black text-info dark:text-sky-300 uppercase tracking-wider">🐓 Sire Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{sireName.trim() ? sireName : '—'}</p>
               <p className="text-[9px] font-bold text-muted-foreground mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% purity` : '—'}</p>
             </div>

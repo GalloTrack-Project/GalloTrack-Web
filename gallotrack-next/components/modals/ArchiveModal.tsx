@@ -37,7 +37,7 @@ export default function ArchiveModal({
         </button>
 
         <div className="flex items-center space-x-3 text-amber-800 dark:text-amber-300 border-b pb-3 border-amber-100">
-          <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center"><Archive className="w-5 h-5 text-amber-600 dark:text-amber-300" /></div>
+          <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center"><Archive className="w-5 h-5 text-warning dark:text-amber-300" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Archive Chicken Node</h3>
             <p className="text-[11px] text-muted-foreground font-semibold">Select a NON-MORTALITY reason for inventory removal</p>

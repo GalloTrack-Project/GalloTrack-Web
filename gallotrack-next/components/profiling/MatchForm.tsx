@@ -105,11 +105,11 @@ export default function MatchForm({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Opponent Entry Identity</label>
-          <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
+          <input type="text" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso Express" required />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Opponent Breed / Rasa</label>
-          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" />
+          <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" />
         </div>
         <div>
           <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Arena Location Hub</label>
@@ -117,7 +117,7 @@ export default function MatchForm({
             list="arena-locations"
             value={matchLocation}
             onChange={(e) => setMatchLocation(e.target.value)}
-            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
+            className="w-full p-3 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
             placeholder="Select or type arena..."
             required
           />
@@ -204,7 +204,7 @@ export default function MatchForm({
               />
             )}
             {customEventTypeEmpty && (
-              <p className="mt-1 text-[10px] font-semibold text-red-500">Enter a custom event type or pick a preset.</p>
+              <p className="mt-1 text-[10px] font-semibold text-red-600 dark:text-red-400">Enter a custom event type or pick a preset.</p>
             )}
           </div>
         </div>

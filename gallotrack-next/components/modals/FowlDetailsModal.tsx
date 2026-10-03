@@ -142,11 +142,11 @@ export default function FowlDetailsModal({
                   Born {selectedFowlForDetails.birthdate} · Exact {getAgeExact(p)} · {getAgeMetrics(p)}
                 </p>
               ) : (
-                <p className="text-[10px] text-amber-600 dark:text-amber-300 font-bold">⚠️ No birth date recorded — use ✏️ Edit to set one for automatic age &amp; milestone tracking.</p>
+                <p className="text-[10px] text-warning dark:text-amber-300 font-bold">⚠️ No birth date recorded — use ✏️ Edit to set one for automatic age &amp; milestone tracking.</p>
               );
             })()}
             {selectedFowlForDetails.status === 'Deceased' && (
-              <p className="text-[11px] font-bold text-rose-600 dark:text-rose-300">
+              <p className="text-[11px] font-bold text-danger dark:text-rose-300">
                 💀 Cause of Death: <strong className="text-rose-800 dark:text-rose-300">{selectedFowlForDetails.death_reason || 'Unspecified'}</strong>
                 {selectedFowlForDetails.death_date ? ` · Recorded ${selectedFowlForDetails.death_date}` : ''}
               </p>
@@ -414,7 +414,7 @@ export default function FowlDetailsModal({
                         <p className="text-[10px] text-muted-foreground font-medium truncate">{s.note}</p>
                       </div>
                       {isCurrent ? (
-                        <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-1 rounded-full shrink-0">● Current</span>
+                        <span className="text-[9px] font-black uppercase text-success dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-1 rounded-full shrink-0">● Current</span>
                       ) : isPast ? (
                         <span className="text-[9px] font-bold text-muted-foreground shrink-0">✓ Reached</span>
                       ) : isNext && info.next ? (
@@ -453,9 +453,9 @@ export default function FowlDetailsModal({
           return (
             <div className="space-y-4">
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-lg space-y-3 shadow-sm border border-slate-700/60">
-                <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-700/80">
+                <h4 className="text-[10px] font-black text-success uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-700/80">
                   <span>⚔️ Combat Analytics & Performance Vectors</span>
-                  <span className="font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">CHICKEN ID: #{selectedFowlForDetails.id}</span>
+                  <span className="font-mono text-success bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">CHICKEN ID: #{selectedFowlForDetails.id}</span>
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                   <div className="bg-slate-800/80 p-2.5 rounded-md border border-slate-700/60">
@@ -463,20 +463,20 @@ export default function FowlDetailsModal({
                     <strong className="text-base text-white font-black">{totalFights}</strong>
                   </div>
                   <div className="bg-emerald-950/40 p-2.5 rounded-md border border-emerald-700/40">
-                    <span className="text-[9px] text-emerald-400 font-bold uppercase block">Wins</span>
-                    <strong className="text-base text-emerald-400 font-black">{wins} 🏆</strong>
+                    <span className="text-[9px] text-success font-bold uppercase block">Wins</span>
+                    <strong className="text-base text-success font-black">{wins} 🏆</strong>
                   </div>
                   <div className="bg-rose-950/40 p-2.5 rounded-md border border-rose-700/40">
-                    <span className="text-[9px] text-rose-400 font-bold uppercase block">Losses</span>
-                    <strong className="text-base text-rose-400 font-black">{losses} 💀</strong>
+                    <span className="text-[9px] text-danger font-bold uppercase block">Losses</span>
+                    <strong className="text-base text-danger font-black">{losses} 💀</strong>
                   </div>
                   <div className="bg-amber-950/40 p-2.5 rounded-md border border-amber-700/40">
-                    <span className="text-[9px] text-amber-400 font-bold uppercase block">Draws</span>
-                    <strong className="text-base text-amber-400 font-black">{draws} 🤝</strong>
+                    <span className="text-[9px] text-warning font-bold uppercase block">Draws</span>
+                    <strong className="text-base text-warning font-black">{draws} 🤝</strong>
                   </div>
                   <div className="bg-teal-950/40 p-2.5 rounded-md border border-teal-700/40 col-span-2 sm:col-span-1">
-                    <span className="text-[9px] text-teal-300 font-bold uppercase block">Per-Chicken Win Rate</span>
-                    <strong className="text-base text-teal-300 font-black">{winRate}%</strong>
+                    <span className="text-[9px] text-teal-700 dark:text-teal-400 font-bold uppercase block">Per-Chicken Win Rate</span>
+                    <strong className="text-base text-teal-700 dark:text-teal-400 font-black">{winRate}%</strong>
                     <span className="text-[8px] text-muted-foreground block font-mono font-semibold">{wins}W - {losses}L</span>
                   </div>
                 </div>
@@ -519,9 +519,9 @@ export default function FowlDetailsModal({
                               }`}>{wr}%</span>
                             </div>
                             <div className="flex gap-2 text-[9px] font-bold">
-                              <span className="text-emerald-600 dark:text-emerald-300">{stats.wins}W</span>
-                              <span className="text-rose-600 dark:text-rose-300">{stats.losses}L</span>
-                              {stats.draws > 0 && <span className="text-amber-600 dark:text-amber-300">{stats.draws}D</span>}
+                              <span className="text-success dark:text-emerald-300">{stats.wins}W</span>
+                              <span className="text-danger dark:text-rose-300">{stats.losses}L</span>
+                              {stats.draws > 0 && <span className="text-warning dark:text-amber-300">{stats.draws}D</span>}
                               <span className="text-muted-foreground">{stats.fights} total</span>
                             </div>
                             <div className="w-full h-1.5 bg-slate-100 dark:bg-muted rounded-full overflow-hidden flex">
@@ -598,7 +598,7 @@ export default function FowlDetailsModal({
                             </td>
                             <td className="p-2.5 text-center">
                               {match.video_url ? (
-                                <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-emerald-600 dark:text-emerald-300 hover:text-emerald-800 underline underline-offset-2">▶ PLAY</a>
+                                <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-success dark:text-emerald-300 hover:text-emerald-800 underline underline-offset-2">▶ PLAY</a>
                               ) : (
                                 <span className="text-[9px] text-muted-foreground font-bold">—</span>
                               )}

@@ -333,7 +333,7 @@ export default function SettingsPage() {
                   {changingPw ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
-              {pwMessage && <p className={`text-[11px] font-bold pb-3 ${pwMessage.includes('success') ? 'text-emerald-600' : 'text-rose-600'}`}>{pwMessage}</p>}
+              {pwMessage && <p className={`text-[11px] font-bold pb-3 ${pwMessage.includes('success') ? 'text-success' : 'text-danger'}`}>{pwMessage}</p>}
             </SectionCard>
             <SectionCard title="Account Status">
               <Field label="Authentication Provider">
@@ -553,7 +553,7 @@ export default function SettingsPage() {
                 <span className="text-xs font-semibold text-slate-600 dark:text-foreground">ISUFST CICT — Capstone Project</span>
               </Field>
               <Field label="Repository">
-                <a href="https://github.com/GalloTrack-Project/GalloTrack-Web" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline underline-offset-2">github.com/GalloTrack-Project/GalloTrack-Web</a>
+                <a href="https://github.com/GalloTrack-Project/GalloTrack-Web" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-success dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline underline-offset-2">github.com/GalloTrack-Project/GalloTrack-Web</a>
               </Field>
             </SectionCard>
           </div>
@@ -565,7 +565,7 @@ export default function SettingsPage() {
     <div className="max-w-5xl mx-auto animate-fadeIn text-slate-800 dark:text-slate-100">
       {/* HEADER */}
       <div className="bg-white/90 dark:bg-slate-900/90 p-5 rounded-lg border border-slate-200/80 dark:border-slate-700/50 shadow-sm mb-6 flex items-center gap-3">
-        <button type="button" onClick={() => router.back()} className="w-9 h-9 shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 flex items-center justify-center transition-all cursor-pointer" title="Go Back">
+        <button type="button" onClick={() => router.back()} className="w-9 h-9 shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground hover:text-success hover:border-emerald-300 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 flex items-center justify-center transition-all cursor-pointer" title="Go Back">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <div>
@@ -577,7 +577,7 @@ export default function SettingsPage() {
       {loadError && (
         <div className="bg-rose-50/90 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 p-4 rounded-lg text-xs font-bold flex items-center justify-between shadow-sm mb-4">
           <span>{loadError}</span>
-          <button onClick={() => setLoadError('')} className="text-rose-600 hover:text-rose-800 font-bold cursor-pointer"><X size={14} /></button>
+          <button onClick={() => setLoadError('')} className="text-danger hover:text-rose-800 font-bold cursor-pointer"><X size={14} /></button>
         </div>
       )}
 

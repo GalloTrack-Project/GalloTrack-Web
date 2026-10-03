@@ -86,7 +86,7 @@ export default function BreedsPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer"
+            className="w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-success hover:border-emerald-500/50 transition-all cursor-pointer"
           >
             ←
           </button>
@@ -114,11 +114,11 @@ export default function BreedsPage() {
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total Breeds</p>
         </div>
         <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
-          <p className="text-2xl font-black text-sky-600">{builtInCount}</p>
+          <p className="text-2xl font-black text-info">{builtInCount}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Built-in</p>
         </div>
         <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
-          <p className="text-2xl font-black text-emerald-600">{customCount}</p>
+          <p className="text-2xl font-black text-success">{customCount}</p>
           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Custom</p>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function BreedsPage() {
       {/* ADD FORM */}
       {showAddForm && (
         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-5 space-y-3">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Create New Breed</p>
+          <p className="text-[10px] font-black text-success uppercase tracking-widest">Create New Breed</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -146,7 +146,7 @@ export default function BreedsPage() {
               Save
             </button>
           </div>
-          <p className="text-[9px] text-muted-foreground font-semibold">Type the breed name then click <strong className="text-emerald-600">Save</strong> or press Enter.</p>
+          <p className="text-[9px] text-muted-foreground font-semibold">Type the breed name then click <strong className="text-success">Save</strong> or press Enter.</p>
         </div>
       )}
 
@@ -202,7 +202,7 @@ export default function BreedsPage() {
                     <div className="mt-auto pt-2 border-t border-border">
                       {isConfirming ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-rose-500">Delete?</span>
+                          <span className="text-[9px] font-bold text-danger">Delete?</span>
                           <button
                             type="button"
                             onClick={() => handleDelete(breed)}
@@ -223,7 +223,7 @@ export default function BreedsPage() {
                         <button
                           type="button"
                           onClick={() => setConfirmDelete(breed)}
-                          className="text-[9px] font-bold text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
+                          className="text-[9px] font-bold text-danger hover:text-rose-700 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3 h-3 inline mr-1" /> Delete
                         </button>

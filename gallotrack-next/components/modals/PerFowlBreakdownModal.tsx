@@ -103,7 +103,7 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
         <div className="px-6 pt-4 pb-3 shrink-0">
           <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg p-4 text-white">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Overall Aggregate</span>
+              <span className="text-[10px] font-black text-success uppercase tracking-widest">Overall Aggregate</span>
               <span className="text-[9px] font-bold text-muted-foreground bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
             </div>
             <div className="grid grid-cols-4 gap-3">
@@ -112,15 +112,15 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Overall Win Rate</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-black text-emerald-400">{totalWins}</p>
+                <p className="text-2xl font-black text-success">{totalWins}</p>
                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Total Wins</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-black text-rose-400">{totalLosses}</p>
+                <p className="text-2xl font-black text-danger">{totalLosses}</p>
                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Total Losses</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-black text-sky-400">{fowls.length}</p>
+                <p className="text-2xl font-black text-info">{fowls.length}</p>
                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Total Chickens</p>
               </div>
             </div>
@@ -130,19 +130,19 @@ export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHisto
           <div className="grid grid-cols-5 gap-2 mt-3">
             <div className="bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-emerald-700 dark:text-card-foreground">{eliteCount}</p>
-              <p className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300 uppercase">Elite 70%+</p>
+              <p className="text-[8px] font-bold text-success dark:text-emerald-300 uppercase">Elite 70%+</p>
             </div>
             <div className="bg-sky-50 dark:bg-muted/50 border border-sky-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-sky-700 dark:text-card-foreground">{strongCount}</p>
-              <p className="text-[8px] font-bold text-sky-600 dark:text-sky-300 uppercase">Strong 50-69%</p>
+              <p className="text-[8px] font-bold text-info dark:text-sky-300 uppercase">Strong 50-69%</p>
             </div>
             <div className="bg-amber-50 dark:bg-muted/50 border border-amber-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-amber-700 dark:text-card-foreground">{avgCount}</p>
-              <p className="text-[8px] font-bold text-amber-600 dark:text-amber-300 uppercase">Average 30-49%</p>
+              <p className="text-[8px] font-bold text-warning dark:text-amber-300 uppercase">Average 30-49%</p>
             </div>
             <div className="bg-rose-50 dark:bg-muted/50 border border-rose-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-rose-700 dark:text-card-foreground">{weakCount}</p>
-              <p className="text-[8px] font-bold text-rose-600 dark:text-rose-300 uppercase">Weak &lt;30%</p>
+              <p className="text-[8px] font-bold text-danger dark:text-rose-300 uppercase">Weak &lt;30%</p>
             </div>
             <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md p-2 text-center">
               <p className="text-lg font-black text-muted-foreground">{noFightCount}</p>

@@ -37,7 +37,7 @@ export default function DeceasedModal({
         </button>
 
         <div className="flex items-center space-x-3 text-rose-700 dark:text-rose-300 border-b pb-3 border-rose-100">
-          <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/50 rounded-lg flex items-center justify-center"><Skull className="w-5 h-5 text-rose-600 dark:text-rose-300" /></div>
+          <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/50 rounded-lg flex items-center justify-center"><Skull className="w-5 h-5 text-danger dark:text-rose-300" /></div>
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Record Mortality</h3>
             <p className="text-[11px] text-muted-foreground font-semibold">Transition node to Deceased status — cause of death required</p>

@@ -209,11 +209,11 @@ export default function MarketplacePage() {
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case 'approved': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-      case 'pending': return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-      case 'flagged': return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+      case 'approved': return 'bg-emerald-500/15 text-success border-emerald-500/30';
+      case 'pending': return 'bg-amber-500/15 text-warning border-amber-500/30';
+      case 'flagged': return 'bg-rose-500/15 text-danger border-rose-500/30';
       case 'removed': return 'bg-muted text-muted-foreground border-border';
-      case 'sold': return 'bg-sky-500/15 text-sky-400 border-sky-500/30';
+      case 'sold': return 'bg-sky-500/15 text-info border-sky-500/30';
       default: return 'bg-muted text-muted-foreground border-border';
     }
   };
@@ -303,7 +303,7 @@ export default function MarketplacePage() {
                   <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-sm font-extrabold text-card-foreground leading-tight">{listing.title}</h3>
-                      <span className="text-sm font-black text-emerald-400 whitespace-nowrap">₱{listing.price.toLocaleString()}</span>
+                      <span className="text-sm font-black text-success whitespace-nowrap">₱{listing.price.toLocaleString()}</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.breed}</span>
@@ -342,7 +342,7 @@ export default function MarketplacePage() {
               <span className="text-4xl mb-3 block"><Clipboard className="w-10 h-10 mx-auto text-muted-foreground" /></span>
               <p className="text-sm font-bold text-card-foreground">No listings yet</p>
               <p className="text-xs text-muted-foreground mt-1">Create your first listing to start selling!</p>
-              <button type="button" onClick={() => setActiveTab('create')} className="mt-4 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer">+ Create Listing</button>
+              <button type="button" onClick={() => setActiveTab('create')} className="mt-4 text-[11px] font-bold text-success hover:text-success cursor-pointer">+ Create Listing</button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -363,8 +363,8 @@ export default function MarketplacePage() {
                     <p className="text-[10px] text-muted-foreground">{listing.breed} · {listing.gender} · ₱{listing.price.toLocaleString()}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button type="button" onClick={() => handleEdit(listing)} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer">Edit</button>
-                    <button type="button" onClick={() => setDeleteConfirm(listing.id)} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer">Delete</button>
+                    <button type="button" onClick={() => handleEdit(listing)} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-emerald-500/40 text-success hover:bg-emerald-500/20 transition-all cursor-pointer">Edit</button>
+                    <button type="button" onClick={() => setDeleteConfirm(listing.id)} className="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer">Delete</button>
                   </div>
                 </div>
               ))}
@@ -449,12 +449,12 @@ export default function MarketplacePage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fadeIn">
-            <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto"><AlertTriangle className="w-6 h-6 text-rose-400" /></div>
+            <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-2xl mx-auto"><AlertTriangle className="w-6 h-6 text-danger" /></div>
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Listing?</h3>
             <p className="text-center text-[11px] text-muted-foreground font-semibold">This action cannot be undone.</p>
             <div className="flex gap-2.5 pt-1">
               <button type="button" onClick={() => setDeleteConfirm(null)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer">Cancel</button>
-              <button type="button" onClick={() => handleDelete(deleteConfirm)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/30 transition-all cursor-pointer">Delete</button>
+              <button type="button" onClick={() => handleDelete(deleteConfirm)} className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-all cursor-pointer">Delete</button>
             </div>
           </div>
         </div>

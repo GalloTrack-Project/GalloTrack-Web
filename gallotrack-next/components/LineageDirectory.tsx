@@ -104,7 +104,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
       <div className="px-5 pb-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-3.5 text-center">
-            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
+            <p className="text-[9px] font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
             <p className="text-xs font-black text-card-foreground truncate">{g[0].sire}</p>
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-lg p-3.5 text-center">
@@ -117,7 +117,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Offspring</p>
         {roosterOffspring.length > 0 && (
           <div className="mb-3">
-              <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1.5">🐓 Sire · {roosterOffspring.length}</p>
+              <p className="text-[9px] font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">🐓 Sire · {roosterOffspring.length}</p>
             <div className="space-y-1.5">
               {visibleRoosters.map((child, i) => renderOffspringRow(child, i))}
             </div>
@@ -132,7 +132,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
           </div>
         )}
         {hasMore && (
-          <button type="button" onClick={() => setExpanded(!expanded)} className="w-full mt-2 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:underline py-1 cursor-pointer">
+          <button type="button" onClick={() => setExpanded(!expanded)} className="w-full mt-2 text-[10px] font-black text-success dark:text-emerald-400 hover:underline py-1 cursor-pointer">
             {expanded ? 'Show less' : `View all ${ranked.length} offspring`}
           </button>
         )}
@@ -446,7 +446,7 @@ export default function LineageDirectory({
                   </div>
                   {roosters.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire · {roosters.length}</p>
+                      <p className="text-[9px] font-black text-info dark:text-sky-400 uppercase tracking-widest">🐓 Sire · {roosters.length}</p>
                       {roosters.map((child) => renderChildRow(child, bestId))}
                     </div>
                   )}
@@ -471,7 +471,7 @@ export default function LineageDirectory({
       <div className="bg-card p-6 sm:p-7 rounded-lg border border-border shadow-sm flex flex-col gap-5">
         <div className="flex items-start gap-4">
           <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <div className="flex-1">
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Family Lineage Directory</h1>
@@ -511,10 +511,10 @@ export default function LineageDirectory({
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> },
-          { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <ChickenIcon className="w-5 h-5 text-sky-600 dark:text-sky-400" /> },
+          { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-success dark:text-emerald-400" /> },
+          { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <ChickenIcon className="w-5 h-5 text-info dark:text-sky-400" /> },
           { label: 'Dam Offspring Groups', value: damEntries.length, icon: <ChickenIcon className="w-5 h-5 text-pink-600 dark:text-pink-400" /> },
-          { label: 'Total Chickens Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-600 dark:text-teal-400" /> },
+          { label: 'Total Chickens Tracked', value: fowls.length, icon: <Dna className="w-5 h-5 text-teal-700 dark:text-teal-400" /> },
         ].map((s) => (
           <div key={s.label} className="bg-card rounded-lg border border-border shadow-sm p-5 flex items-center gap-4">
             <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 rounded-lg flex items-center justify-center shrink-0">{s.icon}</div>
@@ -544,22 +544,22 @@ export default function LineageDirectory({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-lg p-3">
-                <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest"><Trophy className="w-3 h-3 inline" /> Best Cross</p>
+                <p className="text-[9px] font-black text-success dark:text-emerald-400 uppercase tracking-widest"><Trophy className="w-3 h-3 inline" /> Best Cross</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{best.sire} × {best.dam}</p>
                 <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{best.winRate}% win rate · {best.wins}W-{best.losses}L</p>
               </div>
               {eliteCount > 0 && (
                 <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-lg p-3">
-                  <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest"><CheckCircle className="w-3 h-3 inline" /> Elite Crosses</p>
+                  <p className="text-[9px] font-black text-success dark:text-emerald-400 uppercase tracking-widest"><CheckCircle className="w-3 h-3 inline" /> Elite Crosses</p>
                   <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{eliteCount}</p>
                   <p className="text-[10px] font-bold text-muted-foreground">crosses with 70%+ win rate</p>
                 </div>
               )}
               {weakCount > 0 && (
                 <div className="bg-card/80 border border-rose-200/50 dark:border-rose-800/50 rounded-lg p-3">
-                  <p className="text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest"><AlertTriangle className="w-3 h-3 inline" /> Avoid</p>
+                  <p className="text-[9px] font-black text-danger dark:text-rose-400 uppercase tracking-widest"><AlertTriangle className="w-3 h-3 inline" /> Avoid</p>
                   <p className="text-xs font-black text-card-foreground mt-1">{worst.sire} × {worst.dam}</p>
-                  <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400">{worst.winRate}% win rate · Consider different pairing</p>
+                  <p className="text-[10px] font-bold text-danger dark:text-rose-400">{worst.winRate}% win rate · Consider different pairing</p>
                 </div>
               )}
             </div>

@@ -53,8 +53,8 @@ function getAgeDays(birthdate: string) {
 
 function GenderIcon({ gender }: { gender: string }) {
   const g = gender?.toLowerCase();
-  if (g === 'rooster' || g === 'male') return <span className="text-sky-500 text-sm">{'\u2642'}</span>;
-  if (g === 'hen' || g === 'female') return <span className="text-pink-500 text-sm">{'\u2640'}</span>;
+  if (g === 'rooster' || g === 'male') return <span className="text-info text-sm">{'\u2642'}</span>;
+  if (g === 'hen' || g === 'female') return <span className="text-pink-600 dark:text-pink-400 text-sm">{'\u2640'}</span>;
   return <span className="text-muted-foreground text-sm">{'\u2014'}</span>;
 }
 
@@ -65,9 +65,9 @@ function StatusDot({ status }: { status: string }) {
 }
 
 function ComplianceBadge({ grade }: { grade: string }) {
-  const cls = grade.startsWith('A') ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-    : grade.startsWith('B') ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
-    : grade.startsWith('C') ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+  const cls = grade.startsWith('A') ? 'bg-emerald-500/15 text-success border-emerald-500/30'
+    : grade.startsWith('B') ? 'bg-sky-500/15 text-info border-sky-500/30'
+    : grade.startsWith('C') ? 'bg-amber-500/15 text-warning border-amber-500/30'
     : 'bg-muted border-border text-muted-foreground';
   return <span className={`text-[10px] font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
 }
@@ -111,13 +111,13 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-emerald-400 transition-colors">{fowl.name}</h4>
+            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">{fowl.name}</h4>
             {code && (
-              <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>
+              <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
+            <span className="text-[10px] font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
             <GenderIcon gender={fowl.gender} />
@@ -149,7 +149,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
         <div className="pt-3 border-t border-border">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Performance</span>
-            <span className={`text-xs font-black ${stats.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>{stats.winRate}%</span>
+            <span className={`text-xs font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</span>
           </div>
           <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
             <div className={`h-full rounded-full transition-all ${stats.winRate >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`} style={{ width: `${stats.winRate}%` }}></div>
@@ -186,7 +186,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
         <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-lg">
           <h3 className="text-base font-black text-card-foreground flex items-center gap-2 min-w-0">
             <span className="truncate">{fowl.name}</span>
-            {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
+            {code && <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>}
           </h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -206,7 +206,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
                 {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
               </div>
               <p className="text-xs text-muted-foreground font-semibold">{fowl.gender} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
-              <p className="text-sm font-bold text-emerald-400">{fowl.breed}</p>
+              <p className="text-sm font-bold text-success">{fowl.breed}</p>
             </div>
           </div>
 
@@ -217,7 +217,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
               <div><span className="text-muted-foreground font-semibold">Color: </span><span className="font-black text-card-foreground">{fowl.color || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-emerald-400">{fowl.behavior_trait || '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-success">{fowl.behavior_trait || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{fowl.height ? `${heightFromStorage(fowl.height, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '\u2014'}</span></div>
             </div>
@@ -233,14 +233,14 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             />
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-sky-500/10 border border-sky-500/30 rounded-md p-3">
-                <p className="text-[10px] font-black text-sky-400 uppercase">Sire</p>
+                <p className="text-[10px] font-black text-info uppercase">Sire</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{fowl.sire || '\u2014'}</p>
-                {fowl.sire_pct ? <p className="text-[10px] text-sky-400 font-bold">{fowl.sire_pct}%</p> : null}
+                {fowl.sire_pct ? <p className="text-[10px] text-info font-bold">{fowl.sire_pct}%</p> : null}
               </div>
               <div className="bg-pink-500/10 border border-pink-500/30 rounded-md p-3">
-                <p className="text-[10px] font-black text-pink-400 uppercase">Dam</p>
+                <p className="text-[10px] font-black text-pink-600 dark:text-pink-400 uppercase">Dam</p>
                 <p className="text-xs font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
-                {fowl.dam_pct ? <p className="text-[10px] text-pink-400 font-bold">{fowl.dam_pct}%</p> : null}
+                {fowl.dam_pct ? <p className="text-[10px] text-pink-600 dark:text-pink-400 font-bold">{fowl.dam_pct}%</p> : null}
               </div>
             </div>
           </div>
@@ -255,16 +255,16 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
                   <p className="text-[9px] font-bold text-muted-foreground uppercase">Total</p>
                 </div>
                 <div className="bg-emerald-500/10 rounded-md py-2.5 border border-emerald-500/30">
-                  <p className="text-xl font-black text-emerald-400">{stats.wins}</p>
-                  <p className="text-[9px] font-bold text-emerald-400 uppercase">Wins</p>
+                  <p className="text-xl font-black text-success">{stats.wins}</p>
+                  <p className="text-[9px] font-bold text-success uppercase">Wins</p>
                 </div>
                 <div className="bg-rose-500/10 rounded-md py-2.5 border border-rose-500/30">
-                  <p className="text-xl font-black text-rose-400">{stats.losses}</p>
-                  <p className="text-[9px] font-bold text-rose-400 uppercase">Losses</p>
+                  <p className="text-xl font-black text-danger">{stats.losses}</p>
+                  <p className="text-[9px] font-bold text-danger uppercase">Losses</p>
                 </div>
                 <div className={`rounded-md py-2.5 border ${stats.winRate >= 50 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
-                  <p className={`text-xl font-black ${stats.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>{stats.winRate}%</p>
-                  <p className={`text-[9px] font-bold uppercase ${stats.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>Win Rate</p>
+                  <p className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</p>
+                  <p className={`text-[9px] font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>Win Rate</p>
                 </div>
               </div>
             </div>
@@ -274,45 +274,45 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           {compliance.matchedStandard && (
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Breed Compliance</h4>
+                <h4 className="text-[10px] font-black text-success uppercase tracking-widest">Breed Compliance</h4>
                 <div className="flex items-center gap-2">
                   <ComplianceBadge grade={compliance.complianceGrade} />
-                  <span className="text-[10px] font-black text-emerald-400">{compliance.overallScore}/100</span>
+                  <span className="text-[10px] font-black text-success">{compliance.overallScore}/100</span>
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground font-semibold">Standard: {compliance.matchedStandard.name} ({compliance.matchedStandard.origin})</p>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div>
                   <span className="text-muted-foreground font-semibold">Weight: </span>
-                  <span className={compliance.weightCompliance.status === 'within' ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
+                  <span className={compliance.weightCompliance.status === 'within' ? 'text-success font-black' : 'text-warning font-black'}>
                     {compliance.weightCompliance.actual}kg ({compliance.weightCompliance.status})
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground font-semibold">Height: </span>
-                  <span className={compliance.heightCompliance.status === 'within' ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
+                  <span className={compliance.heightCompliance.status === 'within' ? 'text-success font-black' : 'text-warning font-black'}>
                     {compliance.heightCompliance.actual}cm ({compliance.heightCompliance.status})
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground font-semibold">Legs: </span>
-                  <span className={compliance.legColorCompliance.status === 'matches' ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
+                  <span className={compliance.legColorCompliance.status === 'matches' ? 'text-success font-black' : 'text-warning font-black'}>
                     {compliance.legColorCompliance.actual}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground font-semibold">Plumage: </span>
-                  <span className={compliance.plumageCompliance.status === 'matches' ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
+                  <span className={compliance.plumageCompliance.status === 'matches' ? 'text-success font-black' : 'text-warning font-black'}>
                     {compliance.plumageCompliance.actual}
                   </span>
                 </div>
               </div>
               {compliance.matchedStandard.fightingStyle && (
-                <p className="text-[10px] text-emerald-400/70 font-semibold">Fighting style: {compliance.matchedStandard.fightingStyle}</p>
+                <p className="text-[10px] text-success/70 font-semibold">Fighting style: {compliance.matchedStandard.fightingStyle}</p>
               )}
               {compliance.recommendations.length > 0 && (
                 <div className="space-y-1">
-                  {compliance.recommendations.map((r, i) => <p key={i} className="text-[10px] text-amber-400">{'\uD83D\uDCA1'} {r}</p>)}
+                  {compliance.recommendations.map((r, i) => <p key={i} className="text-[10px] text-warning">{'\uD83D\uDCA1'} {r}</p>)}
                 </div>
               )}
             </div>

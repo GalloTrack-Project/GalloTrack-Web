@@ -111,19 +111,19 @@ export default function AdminMatchAuditPage() {
 
   const outcomeColor = (o: string) => {
     switch (o?.toLowerCase()) {
-      case 'win': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-      case 'loss': return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
-      case 'draw': return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+      case 'win': return 'bg-emerald-500/15 text-success border-emerald-500/30';
+      case 'loss': return 'bg-rose-500/15 text-danger border-rose-500/30';
+      case 'draw': return 'bg-amber-500/15 text-warning border-amber-500/30';
       default: return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   const healthColor = (h: string) => {
     switch (h) {
-      case 'Fit / Recovered': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-      case 'Minor Injury': return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-      case 'Severely Injured': case 'Critical Condition': return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
-      case 'Deceased': return 'bg-rose-600/20 text-rose-300 border-rose-600/40';
+      case 'Fit / Recovered': return 'bg-emerald-500/15 text-success border-emerald-500/30';
+      case 'Minor Injury': return 'bg-amber-500/15 text-warning border-amber-500/30';
+      case 'Severely Injured': case 'Critical Condition': return 'bg-rose-500/15 text-danger border-rose-500/30';
+      case 'Deceased': return 'bg-rose-600/20 text-danger border-rose-600/40';
       default: return 'bg-muted text-muted-foreground border-border';
     }
   };
@@ -143,18 +143,18 @@ export default function AdminMatchAuditPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-              Match <span className="text-amber-400">Audit</span>
+              Match <span className="text-warning">Audit</span>
             </h1>
             <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Review all match results, post-fight conditions, and video evidence</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Matches', stats.total, 'text-amber-400', <Swords className="w-5 h-5" />)}
-          {statCard('Wins', stats.wins, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
-          {statCard('Losses', stats.losses, 'text-rose-400', <XCircle className="w-5 h-5" />)}
-          {statCard('Draws', stats.draws, 'text-sky-400', <Handshake className="w-5 h-5" />)}
-          {statCard('Deceased', stats.deceased, 'text-rose-300', <Skull className="w-5 h-5" />)}
+          {statCard('Total Matches', stats.total, 'text-warning', <Swords className="w-5 h-5" />)}
+          {statCard('Wins', stats.wins, 'text-success', <CheckCircle className="w-5 h-5" />)}
+          {statCard('Losses', stats.losses, 'text-danger', <XCircle className="w-5 h-5" />)}
+          {statCard('Draws', stats.draws, 'text-info', <Handshake className="w-5 h-5" />)}
+          {statCard('Deceased', stats.deceased, 'text-danger', <Skull className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
@@ -216,7 +216,7 @@ export default function AdminMatchAuditPage() {
                 <p>Owner: <span className="text-card-foreground font-bold">{match.owner_name}</span> · {match.farm_name}</p>
                 {match.date && <p>Date: {new Date(match.date).toLocaleDateString()}</p>}
                 {match.video_url && (
-                  <p><a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">Video Evidence <ArrowUpRight className="inline w-3 h-3" /></a></p>
+                  <p><a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-warning hover:text-warning underline">Video Evidence <ArrowUpRight className="inline w-3 h-3" /></a></p>
                 )}
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function AdminMatchAuditPage() {
                     <td className="px-4 py-3.5 text-[10px] text-muted-foreground font-semibold whitespace-nowrap">{match.date ? new Date(match.date).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3.5">
                       {match.video_url ? (
-                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-amber-400 hover:text-amber-300 underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
+                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-warning hover:text-warning underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
                       ) : (
                         <span className="text-[10px] text-muted-foreground">—</span>
                       )}

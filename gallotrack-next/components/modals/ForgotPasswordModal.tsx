@@ -31,7 +31,7 @@ export default function ForgotPasswordModal({
         <div className="p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white border-b border-white/10">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-inner"><Key className="w-4 h-4 text-emerald-400" /></div>
+              <div className="w-9 h-9 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-inner"><Key className="w-4 h-4 text-success" /></div>
               <div>
                 <h3 className="text-sm font-black tracking-tight text-white">Reset Your Password</h3>
                 <p className="text-[10px] text-emerald-200/70 font-bold tracking-wider uppercase mt-0.5">Secure Recovery Link</p>
@@ -67,7 +67,7 @@ export default function ForgotPasswordModal({
           ) : (
             <form onSubmit={handleSendResetLink} className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-emerald-600" /></div>
+                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-muted/50 border border-emerald-200/80 dark:border-border flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-success" /></div>
                 <div>
                   <p className="text-sm text-slate-800 dark:text-card-foreground font-extrabold leading-relaxed tracking-tight">Enter your registered email</p>
                   <p className="text-[11px] text-muted-foreground font-medium leading-relaxed mt-1">
@@ -87,7 +87,7 @@ export default function ForgotPasswordModal({
                 />
               </div>
               {forgotError && (
-                <div className="text-[11px] text-rose-600 font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-md">{forgotError}</div>
+                <div className="text-[11px] text-danger font-bold text-center bg-rose-50 dark:bg-muted/50 border border-rose-200/60 dark:border-border p-3 rounded-md">{forgotError}</div>
               )}
               <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                 <button

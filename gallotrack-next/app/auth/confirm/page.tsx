@@ -96,7 +96,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
       <div className="bg-card/95 rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border">
         <div className="p-8 sm:p-10 space-y-7 text-center">
           <div className="text-center space-y-2">
-            <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
+            <span className="text-[9px] font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
             <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
             <p className="text-[10px] text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
@@ -106,7 +106,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
           {status === 'loading' && (
             <div className="py-10 flex flex-col items-center space-y-4">
               <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
-              <p className="text-sm font-bold text-emerald-400 uppercase tracking-widest">Verifying your email link…</p>
+              <p className="text-sm font-bold text-success uppercase tracking-widest">Verifying your email link…</p>
             </div>
           )}
 
@@ -133,7 +133,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               <div className="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight">Confirmation Link Invalid</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-danger tracking-tight">Confirmation Link Invalid</h2>
               <p className="text-xs text-muted-foreground font-semibold leading-relaxed">{errorMessage}</p>
               <Link
                 href="/"

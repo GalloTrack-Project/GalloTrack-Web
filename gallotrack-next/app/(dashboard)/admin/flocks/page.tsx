@@ -104,7 +104,7 @@ export default function AdminFlockAuditPage() {
     </div>
   );
 
-  const statusColor = (s: string) => s === 'Active' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : s === 'Sold' ? 'bg-sky-500/15 text-sky-400 border-sky-500/30' : s === 'Deceased' ? 'bg-rose-500/15 text-rose-400 border-rose-500/30' : 'bg-muted text-muted-foreground border-border';
+  const statusColor = (s: string) => s === 'Active' ? 'bg-emerald-500/15 text-success border-emerald-500/30' : s === 'Sold' ? 'bg-sky-500/15 text-info border-sky-500/30' : s === 'Deceased' ? 'bg-rose-500/15 text-danger border-rose-500/30' : 'bg-muted text-muted-foreground border-border';
 
   return (
     <div className="min-h-screen w-full bg-background relative overflow-hidden">
@@ -121,17 +121,17 @@ export default function AdminFlockAuditPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-              Flock <span className="text-amber-400">Audit</span>
+              Flock <span className="text-warning">Audit</span>
             </h1>
             <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Global view of all registered chickens across all owners</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Chickens', stats.total, 'text-amber-400', <ChickenIcon className="w-5 h-5" />)}
-          {statCard('Active', stats.active, 'text-emerald-400', <CheckCircle className="w-5 h-5" />)}
-          {statCard('Breeds', stats.breeds, 'text-sky-400', <Dna className="w-5 h-5" />)}
-          {statCard('Owners', stats.owners, 'text-purple-400', <Users className="w-5 h-5" />)}
+          {statCard('Total Chickens', stats.total, 'text-warning', <ChickenIcon className="w-5 h-5" />)}
+          {statCard('Active', stats.active, 'text-success', <CheckCircle className="w-5 h-5" />)}
+          {statCard('Breeds', stats.breeds, 'text-info', <Dna className="w-5 h-5" />)}
+          {statCard('Owners', stats.owners, 'text-purple-600 dark:text-purple-400', <Users className="w-5 h-5" />)}
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">

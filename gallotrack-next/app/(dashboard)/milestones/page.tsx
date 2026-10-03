@@ -39,7 +39,7 @@ export default function MilestonesPage() {
           <button
             type="button"
             onClick={() => router.push('/dashboard')}
-            className="w-9 h-9 rounded-md bg-white dark:bg-card border border-slate-200 dark:border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-200 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 transition-all cursor-pointer"
+            className="w-9 h-9 rounded-md bg-white dark:bg-card border border-slate-200 dark:border-border flex items-center justify-center text-muted-foreground hover:text-success hover:border-emerald-200 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 transition-all cursor-pointer"
           >
             ←
           </button>
@@ -94,7 +94,7 @@ export default function MilestonesPage() {
                   <div className="text-right shrink-0">
                     {info.next ? (
                       <>
-                        <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-700 dark:text-emerald-300' : overdue ? 'text-rose-600 dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                        <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-700 dark:text-emerald-300' : overdue ? 'text-danger dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'}`}>
                           {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
                         </p>
                         <p className="text-[9px] font-mono text-muted-foreground font-bold">

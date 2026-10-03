@@ -33,9 +33,9 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Strain</p><p className="text-[10px] font-black text-slate-800 dark:text-card-foreground">{report.primaryStrain}</p></div>
           <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Purity</p><p className="text-[10px] font-black text-teal-700 dark:text-teal-300">{report.purityPct}%</p></div>
           <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Vigor</p><p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">{report.hybridVigor.score}</p></div>
-          <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Inbred</p><p className={`text-[10px] font-black ${report.inbreedingCoefficient > 20 ? 'text-rose-600 dark:text-rose-300' : 'text-emerald-600 dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p></div>
+          <div><p className="text-[8px] font-bold text-muted-foreground uppercase">Inbred</p><p className={`text-[10px] font-black ${report.inbreedingCoefficient > 20 ? 'text-danger dark:text-rose-300' : 'text-success dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p></div>
         </div>
-        {report.crossPattern && <p className="text-[8px] text-teal-600 dark:text-teal-300 font-semibold text-center">{report.crossPattern.label} — {report.crossPattern.fightingStyle}</p>}
+        {report.crossPattern && <p className="text-[8px] text-teal-700 dark:text-teal-300 font-semibold text-center">{report.crossPattern.label} — {report.crossPattern.fightingStyle}</p>}
       </div>
     );
   }
@@ -48,7 +48,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           <span className="text-[10px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-widest"><Dna className="w-3 h-3" /> Bloodline Report</span>
           {report.crossPattern && <TierBadge tier={report.crossPattern.tier} />}
         </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-[8px] font-bold text-teal-600 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 cursor-pointer">
+        <button onClick={() => setExpanded(!expanded)} className="text-[8px] font-bold text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 cursor-pointer">
           {expanded ? '▲ Less' : '▼ Details'}
         </button>
       </div>
@@ -73,7 +73,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
         </div>
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
           <p className="text-[8px] font-bold text-muted-foreground uppercase">Inbreeding</p>
-          <p className={`text-[10px] font-black ${report.inbreedingCoefficient > 30 ? 'text-rose-600 dark:text-rose-300' : report.inbreedingCoefficient > 15 ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p>
+          <p className={`text-[10px] font-black ${report.inbreedingCoefficient > 30 ? 'text-danger dark:text-rose-300' : report.inbreedingCoefficient > 15 ? 'text-warning dark:text-amber-300' : 'text-success dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             <span className="text-[9px] font-black text-violet-700 dark:text-violet-300 uppercase">{report.crossPattern.label}</span>
             <div className="flex items-center gap-2">
               <TierBadge tier={report.crossPattern.tier} />
-              <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300">+{report.crossPattern.winRateBonus}% win rate</span>
+              <span className="text-[8px] font-bold text-success dark:text-emerald-300">+{report.crossPattern.winRateBonus}% win rate</span>
             </div>
           </div>
           <p className="text-[9px] text-muted-foreground">{report.crossPattern.description}</p>
@@ -111,7 +111,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             </div>
           </div>
           {report.performanceBenchmark.topPerformers.length > 0 && (
-            <p className="text-[8px] text-sky-600 dark:text-sky-300">Top performers: {report.performanceBenchmark.topPerformers.join(', ')}</p>
+            <p className="text-[8px] text-info dark:text-sky-300">Top performers: {report.performanceBenchmark.topPerformers.join(', ')}</p>
           )}
         </div>
       )}
@@ -146,7 +146,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Sire / Dam Strains */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900/50 rounded-md p-2">
-              <p className="text-[8px] font-black text-sky-600 dark:text-sky-300 uppercase"><ChickenIcon className="w-3 h-3" /> Sire Strain</p>
+              <p className="text-[8px] font-black text-info dark:text-sky-300 uppercase"><ChickenIcon className="w-3 h-3" /> Sire Strain</p>
               <p className="text-[10px] font-bold text-slate-800 dark:text-card-foreground">{report.sireStrain}</p>
             </div>
             <div className="bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900/50 rounded-md p-2">
@@ -206,7 +206,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
               {report.colorReport.inheritance && report.colorReport.inheritance.notes.length > 0 && (
                 <div className="space-y-0.5">
                   {report.colorReport.inheritance.notes.map((n, i) => (
-                    <p key={i} className="text-[8px] text-amber-600 dark:text-amber-300">• {n}</p>
+                    <p key={i} className="text-[8px] text-warning dark:text-amber-300">• {n}</p>
                   ))}
                 </div>
               )}
@@ -239,27 +239,27 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
               <div className="grid grid-cols-4 gap-1 text-[8px]">
                 <div>
                   <p className="font-bold text-muted-foreground">Weight</p>
-                  <p className={report.breedCompliance.weightCompliance.status === 'within' ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : 'text-amber-600 dark:text-amber-300 font-semibold'}>
+                  <p className={report.breedCompliance.weightCompliance.status === 'within' ? 'text-success dark:text-emerald-300 font-semibold' : 'text-warning dark:text-amber-300 font-semibold'}>
                     {report.breedCompliance.weightCompliance.actual}kg
                     <span className="text-muted-foreground block">{report.breedCompliance.weightCompliance.status} ({report.breedCompliance.weightCompliance.deviation}%)</span>
                   </p>
                 </div>
                 <div>
                   <p className="font-bold text-muted-foreground">Height</p>
-                  <p className={report.breedCompliance.heightCompliance.status === 'within' ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : 'text-amber-600 dark:text-amber-300 font-semibold'}>
+                  <p className={report.breedCompliance.heightCompliance.status === 'within' ? 'text-success dark:text-emerald-300 font-semibold' : 'text-warning dark:text-amber-300 font-semibold'}>
                     {report.breedCompliance.heightCompliance.actual}cm
                     <span className="text-muted-foreground block">{report.breedCompliance.heightCompliance.status} ({report.breedCompliance.heightCompliance.deviation}%)</span>
                   </p>
                 </div>
                 <div>
                   <p className="font-bold text-muted-foreground">Legs</p>
-                  <p className={report.breedCompliance.legColorCompliance.status === 'matches' ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : 'text-amber-600 dark:text-amber-300 font-semibold'}>
+                  <p className={report.breedCompliance.legColorCompliance.status === 'matches' ? 'text-success dark:text-emerald-300 font-semibold' : 'text-warning dark:text-amber-300 font-semibold'}>
                     {report.breedCompliance.legColorCompliance.actual}
                   </p>
                 </div>
                 <div>
                   <p className="font-bold text-muted-foreground">Plumage</p>
-                  <p className={report.breedCompliance.plumageCompliance.status === 'matches' ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : 'text-amber-600 dark:text-amber-300 font-semibold'}>
+                  <p className={report.breedCompliance.plumageCompliance.status === 'matches' ? 'text-success dark:text-emerald-300 font-semibold' : 'text-warning dark:text-amber-300 font-semibold'}>
                     {report.breedCompliance.plumageCompliance.actual}
                   </p>
                 </div>
@@ -267,7 +267,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
               {report.breedCompliance.recommendations.length > 0 && (
                 <div className="space-y-0.5">
                   {report.breedCompliance.recommendations.map((r, i) => (
-                    <p key={i} className="text-[8px] text-amber-600 dark:text-amber-300"><Lightbulb className="w-3 h-3 inline" /> {r}</p>
+                    <p key={i} className="text-[8px] text-warning dark:text-amber-300"><Lightbulb className="w-3 h-3 inline" /> {r}</p>
                   ))}
                 </div>
               )}
@@ -276,7 +276,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
 
           {/* Confidence */}
           <div className="text-center">
-            <p className="text-[8px] text-muted-foreground font-semibold">Classification confidence: <span className="text-teal-600 dark:text-teal-300 font-black">{report.confidence}%</span></p>
+            <p className="text-[8px] text-muted-foreground font-semibold">Classification confidence: <span className="text-teal-700 dark:text-teal-300 font-black">{report.confidence}%</span></p>
           </div>
         </div>
       )}

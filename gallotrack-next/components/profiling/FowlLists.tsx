@@ -98,20 +98,20 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           <div className="font-semibold">Siblings: <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : 'None'}</span></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
             Edit
           </button>
-          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-warning dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 8-2-2H5l-2 2"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M10 12h4"/></svg>
             Archive
           </button>
-          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-danger dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
             Deceased
           </button>
           {onSetActive && (
-            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h18"/><path d="m9 16-4-4 4-4"/></svg>
               Set to Active
             </button>
@@ -154,7 +154,7 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
           <div className="col-span-2">Archive Reason: <strong className="text-amber-800 dark:text-amber-300">{fowl.archive_reason || 'Unspecified'}</strong></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onRestore(fowl.id)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onRestore(fowl.id)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Restore
           </button>
@@ -188,7 +188,7 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onDelete(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onDelete(fowl)} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-danger dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             Delete
           </button>
@@ -311,7 +311,7 @@ export default function FowlLists({
       </div>
       <div className="flex items-center gap-2 pb-0.5">
         {filtersActive && (
-          <button type="button" onClick={clearFilters} className="text-[10px] font-black text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-2 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={clearFilters} className="text-[10px] font-black text-danger dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-2 rounded-sm transition-all cursor-pointer">
             ✕ Reset
           </button>
         )}
@@ -324,7 +324,7 @@ export default function FowlLists({
 
   const filteredEmpty = (
     <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-      <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-3xl mx-auto">🔍</div>
+      <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-success flex items-center justify-center text-3xl mx-auto">🔍</div>
       <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Matching Chickens</h3>
       <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">Walang entry na tumutugma sa napiling Sire, Dam, o Growth Stage.</p>
       <button type="button" onClick={clearFilters} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-xs cursor-pointer hover:bg-emerald-700 transition-all">✕ Reset Filters</button>
@@ -341,7 +341,7 @@ export default function FowlLists({
     const tabSub = isMaleTab ? 'Active breeding males — every sire in the program' : 'Active breeding females — every dam in the program';
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
     const accentSoft = isMaleTab ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800' : 'bg-pink-50 dark:bg-pink-950/50 border-pink-200 dark:border-pink-800';
-    const accentText = isMaleTab ? 'text-sky-400' : 'text-pink-400';
+    const accentText = isMaleTab ? 'text-info' : 'text-pink-600 dark:text-pink-400';
     const emptyTitle = isMaleTab ? 'No Sires Encoded' : 'No Dams Encoded';
     const emptyHint = isMaleTab ? 'No sires are registered in the active farm inventory yet. Encode your first sire to begin populating this registry and line up its offspring.' : 'No dams are registered in the active farm inventory yet. Encode your first dam to begin populating this registry and line up its offspring.';
 
@@ -390,7 +390,7 @@ export default function FowlLists({
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
+            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-warning rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">Archived Registry Empty</h3>
             <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chicken records have been archived. Archived chickens are non-mortality removals (sold, transferred, retired, inactive); deaths belong under 💀 Deceased.</p>
           </div>
@@ -412,7 +412,7 @@ export default function FowlLists({
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-amber-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800 text-amber-500">🛡️</div>
+            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800 text-warning">🛡️</div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Sire Material Registry</h2>
               <p className="text-[10px] text-muted-foreground font-semibold">Retired fighters promoted to breeding stock after critical injuries</p>
@@ -425,7 +425,7 @@ export default function FowlLists({
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
+            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-warning rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Sire Material Yet</h3>
             <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chickens have been retired to breeding stock. Open a fighter&rsquo;s details and click <strong>Mark as Sire Material</strong> to move it here.</p>
           </div>
@@ -447,7 +447,7 @@ export default function FowlLists({
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-teal-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal-500">🥚</div>
+            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400">🥚</div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Offspring Registry</h2>
               <p className="text-[10px] text-muted-foreground font-semibold">Every child sired or dropped by a registered sire and dam — one entry per offspring</p>
@@ -460,7 +460,7 @@ export default function FowlLists({
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal-500 rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
+            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Offspring Yet</h3>
             <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chicken in the registry is linked to a registered sire or dam yet. Encode a chick with its sire and dam to line it up here.</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-xs cursor-pointer hover:bg-emerald-700 transition-all">
@@ -491,7 +491,7 @@ export default function FowlLists({
         filteredEmpty
       ) : paginatedBirds.list.length === 0 ? (
         <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto">💀</div>
+          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 text-danger rounded-full flex items-center justify-center text-3xl mx-auto">💀</div>
           <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Mortality Records</h3>
           <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">No chicken nodes recorded under mortality logs.</p>
         </div>

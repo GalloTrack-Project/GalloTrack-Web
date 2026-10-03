@@ -177,7 +177,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>System Name</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Tag size={14} /></span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-xs"><Tag size={14} /></span>
                 <input type="text" value={settings.system_name || ''} onChange={(e) => update('system_name', e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., GalloTrack" required />
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function AdminSettingsPage() {
               <div>
                 <label className={labelClass}>System Status</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><CircleDot size={14} /></span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-xs"><CircleDot size={14} /></span>
                   <select value={settings.system_status || 'Operational'} onChange={(e) => update('system_status', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                     <option value="Operational">Operational</option>
                     <option value="Maintenance">Maintenance</option>
@@ -196,7 +196,7 @@ export default function AdminSettingsPage() {
               <div>
                 <label className={labelClass}>Default Strain</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Dna size={14} /></span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-xs"><Dna size={14} /></span>
                   <select value={settings.default_strain || 'Sweater'} onChange={(e) => update('default_strain', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                     <option value="Sweater">Sweater</option>
                     <option value="Roundhead">Roundhead</option>
@@ -237,7 +237,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Maintenance Message <span className="opacity-60">(optional)</span></label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Megaphone size={14} /></span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-xs"><Megaphone size={14} /></span>
                 <input type="text" value={settings.maintenance_message || ''} onChange={(e) => update('maintenance_message', e.target.value)} className={`${inputClass} pl-9`} placeholder="Shown during maintenance mode" />
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function AdminSettingsPage() {
               <div>
                 <label className={labelClass}>Default Role</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><User size={14} /></span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-xs"><User size={14} /></span>
                   <select value={settings.default_user_role || 'owner'} onChange={(e) => update('default_user_role', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`}>
                     <option value="owner">Farm Owner</option>
                     <option value="admin">Admin</option>
@@ -288,7 +288,7 @@ export default function AdminSettingsPage() {
             <div>
               <label className={labelClass}>Target Farm Owner Email</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none text-xs"><Mail size={14} /></span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-xs"><Mail size={14} /></span>
                 <input type="email" value={transferEmail} onChange={(e) => setTransferEmail(e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., owner@example.com" />
               </div>
             </div>
@@ -321,17 +321,17 @@ export default function AdminSettingsPage() {
             </button>
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
-                <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                <FileJson className="w-4 h-4 text-warning mx-auto mb-1" />
                 <p className="text-[9px] font-black text-card-foreground">Chicken Records</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All breeds</p>
               </div>
               <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
-                <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                <FileJson className="w-4 h-4 text-warning mx-auto mb-1" />
                 <p className="text-[9px] font-black text-card-foreground">Match History</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All records</p>
               </div>
               <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
-                <FileJson className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                <FileJson className="w-4 h-4 text-warning mx-auto mb-1" />
                 <p className="text-[9px] font-black text-card-foreground">Profiles</p>
                 <p className="text-[8px] text-muted-foreground font-semibold">All accounts</p>
               </div>
@@ -351,7 +351,7 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-              System <span className="text-amber-400">Settings</span>
+              System <span className="text-warning">Settings</span>
             </h1>
             <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Admin-Controlled Application Configuration</p>
           </div>

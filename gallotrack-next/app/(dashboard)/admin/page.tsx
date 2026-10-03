@@ -313,26 +313,26 @@ export default function AdminPanelPage() {
   const statusBadge = (user: AdminProfileRow) => {
     const status = getAccountStatus(user);
     if (status === 'suspended') {
-      return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">Suspended</span>;
+      return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-warning">Suspended</span>;
     }
     if (status === 'deactivated') {
-      return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400">Deactivated</span>;
+      return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-danger">Deactivated</span>;
     }
-    return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">Active</span>;
+    return <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-success">Active</span>;
   };
 
   const verificationBadge = (user: AdminProfileRow) =>
     user.is_verified ? (
-      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">✓ Verified</span>
+      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-success">✓ Verified</span>
     ) : (
       <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-500/15 border border-slate-500/30 text-muted-foreground">✕ Unverified</span>
     );
 
   const roleBadge = (user: AdminProfileRow) =>
     user.is_admin || user.role === 'admin' ? (
-      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">Admin</span>
+      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-warning">Admin</span>
     ) : (
-      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-400">Owner</span>
+      <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 text-info">Owner</span>
     );
 
   return (
@@ -344,7 +344,7 @@ export default function AdminPanelPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
-              User <span className="text-amber-400">Management</span>
+              User <span className="text-warning">Management</span>
             </h1>
             <p className="text-[9px] font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Access Control &amp; Account Administration</p>
           </div>
@@ -385,11 +385,11 @@ export default function AdminPanelPage() {
 
         {activeTab === 'users' && (<>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">
-          {statCard('Total Users', total, 'text-amber-400', <Users size={20} />)}
-          {statCard('Active', active, 'text-emerald-400', <CheckCircle size={20} />)}
-          {statCard('Suspended', suspended, 'text-amber-400', <Ban size={20} />)}
-          {statCard('Deactivated', deactivated, 'text-rose-400', <Ban size={20} />)}
-          {statCard('Verified', verified, 'text-sky-400', <Shield size={20} />)}
+          {statCard('Total Users', total, 'text-warning', <Users size={20} />)}
+          {statCard('Active', active, 'text-success', <CheckCircle size={20} />)}
+          {statCard('Suspended', suspended, 'text-warning', <Ban size={20} />)}
+          {statCard('Deactivated', deactivated, 'text-danger', <Ban size={20} />)}
+          {statCard('Verified', verified, 'text-info', <Shield size={20} />)}
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
@@ -474,8 +474,8 @@ export default function AdminPanelPage() {
                   }}
                   className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                     getAccountStatus(user) === 'active'
-                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
-                      : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                      ? 'bg-amber-500/10 border-amber-500/40 text-warning hover:bg-amber-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/40 text-success hover:bg-emerald-500/25'
                   }`}
                 >
                   {actionId === user.id ? '...' : getAccountStatus(user) === 'active' ? 'Suspend' : 'Activate'}
@@ -487,7 +487,7 @@ export default function AdminPanelPage() {
                   className={`flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                     user.is_verified
                       ? 'bg-slate-500/10 border-slate-500/40 text-muted-foreground hover:bg-slate-500/20'
-                      : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                      : 'bg-emerald-500/15 border-emerald-500/40 text-success hover:bg-emerald-500/25'
                   }`}
                 >
                   {actionId === user.id ? '...' : user.is_verified ? 'Unverify' : 'Verify'}
@@ -496,7 +496,7 @@ export default function AdminPanelPage() {
                   type="button"
                   disabled={actionId === user.id || user.id === adminProfile.id}
                   onClick={() => setPendingDelete(user)}
-                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 text-[9px] font-black uppercase tracking-wider px-2 py-2 rounded-sm border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Delete
                 </button>
@@ -569,8 +569,8 @@ export default function AdminPanelPage() {
                           }}
                           className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                             getAccountStatus(user) === 'active'
-                              ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
-                              : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                              ? 'bg-amber-500/10 border-amber-500/40 text-warning hover:bg-amber-500/20'
+                              : 'bg-emerald-500/15 border-emerald-500/40 text-success hover:bg-emerald-500/25'
                           }`}
                         >
                           {actionId === user.id ? '...' : getAccountStatus(user) === 'active' ? 'Suspend' : 'Activate'}
@@ -582,7 +582,7 @@ export default function AdminPanelPage() {
                           className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border transition-all cursor-pointer disabled:opacity-50 ${
                             user.is_verified
                               ? 'bg-slate-500/10 border-slate-500/40 text-muted-foreground hover:bg-slate-500/20'
-                              : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                              : 'bg-emerald-500/15 border-emerald-500/40 text-success hover:bg-emerald-500/25'
                           }`}
                         >
                           {actionId === user.id ? '...' : user.is_verified ? 'Unverify' : 'Verify'}
@@ -591,7 +591,7 @@ export default function AdminPanelPage() {
                           type="button"
                           disabled={actionId === user.id || user.id === adminProfile.id}
                           onClick={() => setPendingDelete(user)}
-                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-sm border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Delete
                         </button>
@@ -648,11 +648,11 @@ export default function AdminPanelPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-sm bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                          <Shield className="w-3.5 h-3.5 text-amber-400" />
+                          <Shield className="w-3.5 h-3.5 text-warning" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-card-foreground">
-                            <span className="text-amber-400">{adminNames[log.admin_id] || 'Admin'}</span>
+                            <span className="text-warning">{adminNames[log.admin_id] || 'Admin'}</span>
                             {' '}
                             <span className="text-muted-foreground">{ACTION_LABELS[log.action] || log.action}</span>
                           </p>
@@ -690,7 +690,7 @@ export default function AdminPanelPage() {
             <div className="w-12 h-12 rounded-lg bg-rose-500/15 border border-rose-500/40 flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
             <h3 className="text-center text-sm font-black text-card-foreground">Delete Farm Owner?</h3>
             <p className="text-center text-[11px] text-muted-foreground font-semibold leading-relaxed">
-              This permanently removes <span className="text-rose-400 font-black">{profileDisplayName(pendingDelete)}</span> and all
+              This permanently removes <span className="text-danger font-black">{profileDisplayName(pendingDelete)}</span> and all
               associated data:
             </p>
             <ul className="text-center text-[10px] text-muted-foreground font-medium space-y-1 list-disc list-inside">
@@ -699,7 +699,7 @@ export default function AdminPanelPage() {
               <li>Farm registration data</li>
               <li>Profile and account information</li>
             </ul>
-            <p className="text-center text-[10px] text-rose-400 font-bold">
+            <p className="text-center text-[10px] text-danger font-bold">
               This action cannot be undone. The authentication account remains but access will be revoked.
             </p>
             <div className="flex gap-2.5 pt-1">
@@ -715,7 +715,7 @@ export default function AdminPanelPage() {
                 type="button"
                 disabled={deleting}
                 onClick={handleConfirmDelete}
-                className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 text-[11px] font-black uppercase tracking-wider py-3 rounded-md bg-rose-500/20 border border-rose-500/50 text-danger hover:bg-rose-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deleting && <span className="w-3.5 h-3.5 border-2 border-rose-300 border-t-transparent rounded-full animate-spin"></span>}
                 {deleting ? 'Deleting...' : 'Delete Forever'}
@@ -812,8 +812,8 @@ export default function AdminPanelPage() {
                   }}
                   className={`flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-md border transition-all cursor-pointer disabled:opacity-50 ${
                     getAccountStatus(viewUser) === 'active'
-                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20'
-                      : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                      ? 'bg-amber-500/10 border-amber-500/40 text-warning hover:bg-amber-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/40 text-success hover:bg-emerald-500/25'
                   }`}
                 >
                   {getAccountStatus(viewUser) === 'active' ? 'Suspend' : 'Activate'}
@@ -822,7 +822,7 @@ export default function AdminPanelPage() {
                   type="button"
                   disabled={actionId === viewUser.id || viewUser.id === adminProfile.id}
                   onClick={() => handleSetStatus(viewUser, 'deactivated')}
-                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="flex-1 text-[10px] font-black uppercase tracking-wider px-3 py-2.5 rounded-md border border-rose-500/40 text-danger hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
                 >
                   Deactivate
                 </button>
@@ -835,7 +835,7 @@ export default function AdminPanelPage() {
                     <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
                   )}
                   {!viewUserFarm && !loadingFarm && (
-                    <button type="button" onClick={() => loadUserFarm(viewUser.id)} className="text-[9px] font-bold text-amber-400 hover:text-amber-300 cursor-pointer">
+                    <button type="button" onClick={() => loadUserFarm(viewUser.id)} className="text-[9px] font-bold text-warning hover:text-warning cursor-pointer">
                       Load farm info
                     </button>
                   )}

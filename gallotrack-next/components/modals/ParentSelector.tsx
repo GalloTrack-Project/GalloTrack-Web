@@ -107,7 +107,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
         value={text}
         onChange={(e) => { setText(e.target.value); onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        className={`w-full ${pad} border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-semibold`}
+        className={`w-full ${pad} border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />
       {open && (
@@ -158,7 +158,7 @@ export default function ParentSelector({ value, onChange, onPick, fowls, preferr
                            <Eye className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      <span className={`shrink-0 text-[8px] font-mono font-black px-1.5 py-0.5 rounded-full uppercase ${f.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:text-emerald-300' : 'bg-slate-100 dark:bg-muted text-muted-foreground'}`}>{f.status}</span>
+                      <span className={`shrink-0 text-[8px] font-mono font-black px-1.5 py-0.5 rounded-full uppercase ${f.status === 'Active' ? 'bg-emerald-50 text-success dark:text-emerald-300' : 'bg-slate-100 dark:bg-muted text-muted-foreground'}`}>{f.status}</span>
                     </div>
                     {isExpanded && children.length > 0 && (
                       <div className="bg-slate-50 dark:bg-muted/50 border-t border-slate-100 dark:border-border pl-4 pr-2 py-1">

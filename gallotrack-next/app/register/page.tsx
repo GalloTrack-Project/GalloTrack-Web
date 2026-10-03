@@ -40,7 +40,7 @@ const ICONS = {
 
 function FieldIcon({ which }: { which: keyof typeof ICONS }) {
   return (
-    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
+    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-success pointer-events-none">
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         {ICONS[which]}
       </svg>
@@ -203,9 +203,9 @@ export default function RegisterPage() {
         <div className="p-6 sm:p-8 space-y-5">
           {/* Header */}
           <div className="text-center space-y-2">
-            <span className="text-[9px] font-bold tracking-[0.2em] text-emerald-400/90 uppercase block">ISUFST CICT Capstone Project</span>
+            <span className="text-[9px] font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
             <p className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</p>
-            <h1 className="text-lg sm:text-xl font-black text-emerald-400 tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
+            <h1 className="text-lg sm:text-xl font-black text-success tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
             <p className="text-[10px] text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
           </div>
 
@@ -223,7 +223,7 @@ export default function RegisterPage() {
                       step > s.id
                         ? 'bg-emerald-500 text-white'
                         : step === s.id
-                        ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400'
+                        ? 'bg-emerald-500/20 border-2 border-emerald-500 text-success'
                         : 'bg-muted border border-border text-muted-foreground'
                     }`}
                   >
@@ -233,7 +233,7 @@ export default function RegisterPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS[s.icon]}</svg>
                     )}
                   </div>
-                  <span className={`text-[9px] font-bold tracking-wider ${step === s.id ? 'text-emerald-400' : 'text-muted-foreground'}`}>{s.label}</span>
+                  <span className={`text-[9px] font-bold tracking-wider ${step === s.id ? 'text-success' : 'text-muted-foreground'}`}>{s.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
                   <div className={`w-12 h-0.5 rounded-full mb-5 transition-all duration-300 ${step > s.id ? 'bg-emerald-500' : 'bg-border'}`}></div>
@@ -243,7 +243,7 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="text-xs text-rose-300 light:text-rose-600 font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-md">{error}</div>
+            <div className="text-xs text-danger light:text-danger font-bold text-center bg-rose-500/10 light:bg-rose-500/10 border border-rose-500/30 p-3 rounded-md">{error}</div>
           )}
 
           <form onSubmit={step === 3 ? handleRegister : (e) => { e.preventDefault(); handleNext(); }} className="space-y-4">
@@ -256,7 +256,7 @@ export default function RegisterPage() {
                     Personal Information
                   </h2>
                   <div>
-                    <label className={labelClass}>First Name <span className="text-rose-400">*</span></label>
+                    <label className={labelClass}>First Name <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
                       <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
@@ -270,7 +270,7 @@ export default function RegisterPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Last Name <span className="text-rose-400">*</span></label>
+                    <label className={labelClass}>Last Name <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="user" />
                       <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
@@ -289,7 +289,7 @@ export default function RegisterPage() {
                     Farm / Business Information
                   </h2>
                   <div>
-                    <label className={labelClass}>Farm / Yard Name <span className="text-rose-400">*</span></label>
+                    <label className={labelClass}>Farm / Yard Name <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="home" />
                       <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} required />
@@ -315,18 +315,18 @@ export default function RegisterPage() {
                     Account Security
                   </h2>
                   <div>
-                    <label className={labelClass}>Email Address <span className="text-rose-400">*</span></label>
+                    <label className={labelClass}>Email Address <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="mail" />
                       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="off" required />
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Password <span className="text-rose-400">*</span></label>
+                    <label className={labelClass}>Password <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
                       <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={handleKeyDown} className={`${inputIcon} pr-11`} autoComplete="new-password" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-sm transition-colors cursor-pointer">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-success p-1 rounded-sm transition-colors cursor-pointer">
                         {showPassword ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                         ) : (
@@ -336,7 +336,7 @@ export default function RegisterPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Confirm Password <span className="text-rose-400">*</span></label>
+                    <label className={labelClass}>Confirm Password <span className="text-danger">*</span></label>
                     <div className="relative">
                       <FieldIcon which="lock" />
                       <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onKeyDown={handleKeyDown} className={inputIcon} autoComplete="new-password" required />
@@ -384,7 +384,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="pt-1">
-              <Link href="/" className="text-[10px] font-bold text-muted-foreground hover:text-emerald-400 transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
+              <Link href="/" className="text-[10px] font-bold text-muted-foreground hover:text-success transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
                 Already have an account? Log In
               </Link>
             </div>

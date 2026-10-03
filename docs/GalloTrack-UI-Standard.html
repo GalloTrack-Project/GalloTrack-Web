@@ -274,6 +274,7 @@ footer a{color:var(--text2)}
       <p><strong>Status of these values:</strong> the status, motion and focus tokens shipped in PR 2; the role accent and the three-size radius scale shipped in PR 4. The radius migration was deliberately <em>deltas of two pixels or fewer</em> — <code>xl</code> 12→10, <code>2xl</code> 16→16, <code>lg</code> 8→6, <code>md</code> 6→6 — with only the oversized <code>3xl</code> (24→16) moving materially, which is the correction the audit called for. PR 3 made <code>components/ui/</code> the first consumer, so from PR 3 onward the palette re-tunes in one file rather than nine hundred.</p>
       <p><strong>Why the control border needed its own token:</strong> <code>--input</code> could not simply be darkened, because it is doing two jobs — it is the border in the few places that use <code>border-input</code>, and it is the <em>fill</em> in dark mode via <code>dark:bg-input</code>. Raising it to 3:1 would have turned every dark-theme field into a light grey box. <code>--input-border</code> separates the two, measured at <strong>4.26:1</strong> light (on white) and <strong>3.75:1</strong> dark (on the card), both clear of the 3:1 minimum in WCAG 2.2&nbsp;1.4.11.</p>
       <p><strong>On the metadata text fix:</strong> <code>text-slate-400</code> is 2.56:1 on white but 6.96:1 on the dark card — it fails in one theme and passes in the other, which is why it survived review for so long. It already carried <code>dark:text-muted-foreground</code> in 137 of 148 places, so collapsing to the single theme-aware token fixes light mode and leaves dark provably untouched.</p>
+      <p><strong>The larger pattern this exposed:</strong> the same trap runs through the whole palette. Tailwind's <code>-300</code>, <code>-400</code> and <code>-500</code> shades are built for <em>dark</em> backgrounds; used as body text on a white card they measure 1.60:1 (amber-400) to 3.77:1 (emerald-600), every one a fail. 359 such sites across 35 files now route through the four semantic tokens, and because <code>--success</code>/<code>--danger</code>/<code>--warning</code> in dark mode <em>are</em> emerald-400/rose-400/amber-400 exactly, dark rendering is unchanged — only light mode moves, and it moves from fail to 5.02–6.29:1. A further 45 sites in hues with no semantic role (teal, pink, violet, indigo, purple, red) take an explicit light/dark pairing instead of a rename, so the designer's hue survives while the contrast is corrected. 27 placeholder and neutral-400 greys went to <code>--muted-foreground</code>. Deliberately untouched: the landing hero and splash screen, which sit on permanently dark surfaces where a theme-aware token would render dark-on-dark.</p>
     </div>
 
     <h3>Motion</h3>
@@ -736,7 +737,7 @@ footer a{color:var(--text2)}
 <script>
 (function(){
   'use strict';
-  var KEY='gallotrack-ui-standard-tracker-v4';
+  var KEY='gallotrack-ui-standard-tracker-v5';
   var boxes=Array.prototype.slice.call(document.querySelectorAll('#list input[type=checkbox]'));
   var items=Array.prototype.slice.call(document.querySelectorAll('#list li'));
   var saved={};

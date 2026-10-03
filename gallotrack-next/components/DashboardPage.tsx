@@ -27,7 +27,7 @@ function TrendChip({ up, label }: { up: boolean; label: string }) {
     return <span className="text-[10px] font-bold text-muted-foreground">{label}</span>;
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
       {label}
     </span>
@@ -81,7 +81,7 @@ export default function DashboardPage() {
       {/* HEADER CARDS */}
       <div className="rounded-lg border border-border bg-card/70 p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-emerald-500" /></div>
+          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-success" /></div>
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Farm Dashboard</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-semibold mt-1">Registry, match results, milestones, and bloodline performance of your chickens</p>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
             onClick={() => setDateRangeOpen(o => !o)}
             className="bg-muted hover:bg-muted/60 text-foreground border border-border px-4 py-2.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
             <span>{dateRangeLabel}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dateRangeOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
           </button>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                   key={r.id}
                   type="button"
                   onClick={() => { setDateRangePreset(r.id); setDateRangeOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-emerald-300' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`w-full text-left px-3 py-2 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-success' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   {r.label}
                 </button>
@@ -139,17 +139,17 @@ export default function DashboardPage() {
           <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-md px-2.5 py-2">
-              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-sky-400" /></span>
+              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-info" /></span>
               <div>
-                <p className="text-base font-black text-sky-400 leading-none">{maleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-sky-400 mt-0.5">Males</p>
+                <p className="text-base font-black text-info leading-none">{maleActiveFowls.length}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-info mt-0.5">Males</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
-              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink-400" /></span>
+              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink-600 dark:text-pink-400" /></span>
               <div>
-                <p className="text-base font-black text-pink-400 leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-pink-400 mt-0.5">Females</p>
+                <p className="text-base font-black text-pink-600 dark:text-pink-400 leading-none">{femaleActiveFowls.length}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 mt-0.5">Females</p>
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={activeNewThisWeek > 0} label={activeNewThisWeek > 0 ? `${activeNewThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">Registered</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-success bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">Registered</span>
           </div>
         </div>
 
@@ -195,7 +195,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
           </div>
         </div>
 
@@ -207,9 +207,9 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
-            <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
+            <span className="text-[9px] font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
           </div>
-          <div className="text-3xl font-black text-emerald-400 tracking-tight leading-none mt-1">
+          <div className="text-3xl font-black text-success tracking-tight leading-none mt-1">
             {matchHistory.length > 0 ? `${winRatePct}%` : '—'}
           </div>
           <div className="h-12 -mx-1">
@@ -226,8 +226,8 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className="text-[10px] font-extrabold text-emerald-400">Win trend</span>
-            <span className="text-[9px] font-black text-muted-foreground group-hover:text-emerald-400 transition-colors flex items-center gap-1"><Search className="w-3 h-3" /> Breakdown</span>
+            <span className="text-[10px] font-extrabold text-success">Win trend</span>
+            <span className="text-[9px] font-black text-muted-foreground group-hover:text-success transition-colors flex items-center gap-1"><Search className="w-3 h-3" /> Breakdown</span>
           </div>
         </div>
 
@@ -243,20 +243,20 @@ export default function DashboardPage() {
               onClick={() => navigate('profiling', 'form')}
               className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-emerald-400 group-hover/btn:text-emerald-300">+ Register New Chicken</p>
-              <p className="text-[9px] text-emerald-400/70 font-semibold mt-0.5">Add to your roster</p>
+              <p className="text-[11px] font-extrabold text-success group-hover/btn:text-success">+ Register New Chicken</p>
+              <p className="text-[9px] text-success/70 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
               onClick={() => navigate('profiling', 'matchForm')}
               className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-[11px] font-extrabold text-indigo-400 group-hover/btn:text-indigo-300">+ Log Match Result</p>
-              <p className="text-[9px] text-indigo-400/70 font-semibold mt-0.5">Record fight outcome</p>
+              <p className="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 group-hover/btn:text-indigo-600 dark:text-indigo-400">+ Log Match Result</p>
+              <p className="text-[9px] text-indigo-600 dark:text-indigo-400/70 font-semibold mt-0.5">Record fight outcome</p>
             </button>
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <span className="text-[10px] font-extrabold text-muted-foreground">Start here</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
           </div>
         </div>
       </div>
@@ -269,13 +269,13 @@ export default function DashboardPage() {
           <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-emerald-400" /></span>
+                <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-success" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h3>
                   <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
               </div>
-              <span className="text-[9px] font-mono font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">AUTO</span>
+              <span className="text-[9px] font-mono font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">AUTO</span>
             </div>
             <div className="space-y-2 flex-1">
               {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {
@@ -293,7 +293,7 @@ export default function DashboardPage() {
                     <div className="text-right shrink-0">
                       {info.next ? (
                         <>
-                          <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-emerald-400' : overdue ? 'text-rose-400' : 'text-amber-400'}`}>
+                          <p className={`text-[10px] font-black uppercase tracking-wide ${soon ? 'text-success' : overdue ? 'text-danger' : 'text-warning'}`}>
                             {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
                           </p>
                           <p className="text-[9px] font-mono text-muted-foreground font-bold">
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                           </p>
                         </>
                       ) : (
-                        <p className="text-[10px] font-black text-emerald-400 uppercase">Fully mature</p>
+                        <p className="text-[10px] font-black text-success uppercase">Fully mature</p>
                       )}
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/milestones')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-success hover:text-success hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View All Milestones →
             </button>
@@ -321,13 +321,13 @@ export default function DashboardPage() {
           <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-400" /></span>
+                <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal-700 dark:text-teal-400" /></span>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
                   <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
                 </div>
               </div>
-              <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
+              <span className="text-[9px] font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
             </div>
             <div className="space-y-2 flex-1">
               {(() => {
@@ -351,14 +351,14 @@ export default function DashboardPage() {
                   <div key={strain} className="bg-muted/50 border border-border rounded-md px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-black text-card-foreground">{strain}</span>
-                      <span className="text-[9px] font-bold text-teal-400">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
+                      <span className="text-[9px] font-bold text-teal-700 dark:text-teal-400">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-[8px] font-bold text-sky-400 flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
-                      <span className="text-[8px] font-bold text-pink-400 flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
+                      <span className="text-[8px] font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
+                      <span className="text-[8px] font-bold text-pink-600 dark:text-pink-400 flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
                     </div>
                   </div>
                 ));
@@ -367,7 +367,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/lineage')}
-              className="mt-3 w-full text-center text-[10px] font-bold text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
+              className="mt-3 w-full text-center text-[10px] font-bold text-teal-700 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
             >
               View Full Lineage →
             </button>
@@ -465,7 +465,7 @@ export default function DashboardPage() {
               <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Win Ratios</h3>
               <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Win share by primary genetic strain</p>
             </div>
-            <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
+            <span className="text-[9px] font-mono bg-emerald-500/10 text-success border border-emerald-500/20 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
           </div>
           {crossbreedChartData.hasData ? (
             <>
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-emerald-400">{winRatePct}%</span>
+                  <span className="text-2xl font-black text-success">{winRatePct}%</span>
                   <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Win Rate</span>
                 </div>
               </div>
@@ -513,13 +513,13 @@ export default function DashboardPage() {
         <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-emerald-400" /></span>
+              <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-success" /></span>
               <div>
                 <h3 className="text-sm font-black text-card-foreground tracking-tight">Breeding Pair Performance Analytics</h3>
                 <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
               </div>
             </div>
-            <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
+            <span className="text-[9px] font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px] border-collapse min-w-[860px]">
@@ -544,11 +544,11 @@ export default function DashboardPage() {
                   return (
                     <tr key={p.key} className={`hover:bg-muted/30 transition-colors ${weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''}`}>
                       <td className="p-4 pl-6 whitespace-nowrap">
-                        {i === 0 ? <Medal className="w-4 h-4 text-amber-500" /> : i === 1 ? <Medal className="w-4 h-4 text-muted-foreground" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
+                        {i === 0 ? <Medal className="w-4 h-4 text-warning" /> : i === 1 ? <Medal className="w-4 h-4 text-muted-foreground" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-emerald-400" /></div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-success" /></div>
                           <div className="min-w-0">
                             <p className="font-bold text-card-foreground">{p.sire} <span className="text-muted-foreground font-black">×</span> {p.dam}</p>
                             <p className="text-[9px] font-semibold text-muted-foreground truncate">{p.members.map((m) => m.name).join(', ')}</p>
@@ -557,36 +557,36 @@ export default function DashboardPage() {
                       </td>
                       <td className="p-4 text-center font-mono font-bold">{p.members.length}</td>
                       <td className="p-4 text-center font-mono font-bold">{p.totalFights}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-emerald-400">{p.wins}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-rose-400">{p.losses}</td>
+                      <td className="p-4 text-center font-mono font-extrabold text-success">{p.wins}</td>
+                      <td className="p-4 text-center font-mono font-extrabold text-danger">{p.losses}</td>
                       <td className="p-4 text-center font-mono">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.winRate >= 50 ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
                           {p.winRate}%
                         </span>
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal-400' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-amber-400' : 'bg-rose-500/15 text-rose-400'}`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[10px] ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal-700 dark:text-teal-400' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
                             <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
                           </span>
                           {p.casualties > 0 && (
-                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
+                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-[9px] font-black text-danger bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
                           )}
                         </div>
                       </td>
                       <td className="p-4 text-center pr-6">
                         <div className="flex flex-col items-center gap-1">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
-                            elite ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                            : solid ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
-                            : weak ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                            elite ? 'bg-emerald-500/15 text-success border-emerald-500/30'
+                            : solid ? 'bg-sky-500/15 text-info border-sky-500/30'
+                            : weak ? 'bg-rose-500/15 text-danger border-rose-500/30'
                             : 'bg-muted text-muted-foreground border-border'
                           }`}>
                             {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
                           </span>
                           <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${
-                            p.verdictConfidence === 'High' ? 'bg-emerald-500/10 text-emerald-400' :
-                            p.verdictConfidence === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
+                            p.verdictConfidence === 'High' ? 'bg-emerald-500/10 text-success' :
+                            p.verdictConfidence === 'Medium' ? 'bg-amber-500/10 text-warning' :
                             'bg-muted text-muted-foreground'
                           }`}>
                             {p.verdictConfidence} Confidence
@@ -601,11 +601,11 @@ export default function DashboardPage() {
           </div>
           <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-[9px] font-bold text-muted-foreground">
             <span>Verdict logic:</span>
-            <span className="text-emerald-400">Elite = ≥70% win rate with 5+ decided fights</span>
-            <span className="text-sky-400">Solid = ≥50%</span>
-            <span className="text-rose-400">Avoid = below 50% with 5+ decided fights</span>
-            <span className="text-teal-400">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
-            <span className="text-amber-400">Confidence = Low (&lt;5 fights) · Medium (5-9) · High (10+)</span>
+            <span className="text-success">Elite = ≥70% win rate with 5+ decided fights</span>
+            <span className="text-info">Solid = ≥50%</span>
+            <span className="text-danger">Avoid = below 50% with 5+ decided fights</span>
+            <span className="text-teal-700 dark:text-teal-400">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
+            <span className="text-warning">Confidence = Low (&lt;5 fights) · Medium (5-9) · High (10+)</span>
             <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
           </div>
         </div>
@@ -619,7 +619,7 @@ export default function DashboardPage() {
             <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
+            <span className="text-[9px] font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
             <button
               type="button"
               onClick={() => navigate('profiling', 'matchForm')}
@@ -656,10 +656,10 @@ export default function DashboardPage() {
                     <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">{log.date}</td>
                     <td className="p-4">
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-emerald-400" /></div>
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-success" /></div>
                         <span className="font-bold text-card-foreground">{log.entry_name}</span>
                         {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
-                          <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                          <span className="text-[9px] font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase">
                             {formatBirdCodeForDisplay(codeByName.get((log.entry_name || '').trim().toLowerCase()))}
                           </span>
                         )}
@@ -667,20 +667,20 @@ export default function DashboardPage() {
                     </td>
                     <td className="p-4 font-bold text-card-foreground">{log.opponent || '—'}</td>
                     <td className="p-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-success border border-emerald-500/20 font-bold text-[10px] uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
                     </td>
                     <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-muted text-muted-foreground border-border'}`}>{log.outcome || '—'}</span>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-500/10 text-success border-emerald-500/20' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-500/10 text-danger border-rose-500/20' : 'bg-muted text-muted-foreground border-border'}`}>{log.outcome || '—'}</span>
                     </td>
                     <td className="p-4 text-center">
                       {log.post_fight_condition ? (
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider border whitespace-nowrap ${
                           (log.post_fight_condition || '').toLowerCase().includes('deceased')
-                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            ? 'bg-rose-500/10 text-danger border-rose-500/20'
                             : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely')
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            : 'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                            ? 'bg-amber-500/10 text-warning border-amber-500/20'
+                            : 'bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20'
                         }`}>
                           {log.post_fight_condition}
                         </span>
@@ -690,7 +690,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="p-4 text-center">
                       {log.video_url ? (
-                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/40 transition-all cursor-pointer">
+                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:text-success hover:border-emerald-500/40 transition-all cursor-pointer">
                           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
                         </a>
                       ) : (

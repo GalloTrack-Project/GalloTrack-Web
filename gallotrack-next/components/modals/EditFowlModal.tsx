@@ -156,11 +156,11 @@ export default function EditFowlModal({
             </h4>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Identifier Name</label>
-              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" required />
+              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium" required />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Behavior Trait</label>
-              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
+              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative z-30">
@@ -169,7 +169,7 @@ export default function EditFowlModal({
                   type="text"
                   value={editBreed}
                   onChange={(e) => setEditBreed(e.target.value)}
-                  className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium" 
+                  className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium" 
                   placeholder="Select or type strain"
                   required 
                 />
@@ -179,7 +179,7 @@ export default function EditFowlModal({
                       <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
                         <button type="button" onClick={() => setEditBreed(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer">{s}</button>
                         {customStrainNames.has(s) && (
-                          <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                          <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                         )}
                       </div>
                   ))}
@@ -228,7 +228,7 @@ export default function EditFowlModal({
               </div>
             </div>
             <div className="mb-2">
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Birth Date <span className="text-emerald-600 dark:text-emerald-300 font-black">· auto age</span></label>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
               <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold outline-none focus:border-emerald-500" />
               {(() => {
                 const parts = getAgeParts(editBirthdate);
@@ -241,8 +241,8 @@ export default function EditFowlModal({
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Age (Mos) {editBirthdate && <span className="text-emerald-600 dark:text-emerald-300 font-black">· auto</span>}</label>
-                <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400" required />
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Age (Mos) {editBirthdate && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
+                <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground" required />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Growth</label>
@@ -260,11 +260,11 @@ export default function EditFowlModal({
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
+                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 45.0" />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
+                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-xs text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500" placeholder="e.g. 2.0" />
               </div>
             </div>
             <div className="mt-2">
@@ -273,7 +273,7 @@ export default function EditFowlModal({
                 type="text"
                 value={editLegColor}
                 onChange={(e) => setEditLegColor(e.target.value)}
-                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-medium"
+                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-medium"
                 placeholder="Select or type a leg color..."
               />
               {availableLegColors.length > 0 && (
@@ -281,7 +281,7 @@ export default function EditFowlModal({
                   {availableLegColors.filter((s) => s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor).slice(0, 5).map((s) => (
                     <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
                       <button type="button" onClick={() => setEditLegColor(s)} className="text-[9px] font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 cursor-pointer">{s}</button>
-                      <button type="button" onClick={() => deleteCustomLegColor(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-rose-400 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                      <button type="button" onClick={() => deleteCustomLegColor(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-[7px] font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -301,7 +301,7 @@ export default function EditFowlModal({
                 type="text"
                 value={editBirdCode}
                 onChange={(e) => setEditBirdCode(e.target.value)}
-                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-mono font-bold"
+                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. 1, A, 1A1"
               />
               <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
@@ -315,7 +315,7 @@ export default function EditFowlModal({
                 value={editWingBand}
                 onChange={(e) => setEditWingBand(e.target.value)}
                 maxLength={24}
-                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-neutral-400 outline-none focus:border-emerald-500 font-mono font-bold"
+                className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. W-001"
               />
               <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Physical ID sa pakpak — dapat natatangi sa buong farm.</p>
@@ -339,14 +339,14 @@ export default function EditFowlModal({
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
                   Sire Purity (%)
                 </label>
-                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" />
+                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" />
                 <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Dam</p>
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
                   Dam Purity (%)
                 </label>
-                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-neutral-400 placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" />
+                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" />
                 <p className="text-[9px] text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Sire</p>
               </div>
             </div>
