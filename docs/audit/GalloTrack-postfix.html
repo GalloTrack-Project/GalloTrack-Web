@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>GalloTrack post-fix UI/UX report</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#050505;--text:#ededed;--text2:#B7BFCB;--muted:#8A93A0;
+  --line:rgba(255,255,255,.10);--panel:rgba(255,255,255,.045);--field:rgba(255,255,255,.06);--edge:#6B7686;
+  --accent:#22D3EE;--accent-2:#A855F7;--grad:linear-gradient(135deg,#22D3EE,#A855F7);--focus:#7DD3FC;
+  --r-sm:6px;--r-lg:16px;--topbar-h:60px;
+  --pass:#4ADE80;--pass-bg:rgba(74,222,128,.12);
+  --fail:#FB7185;--fail-bg:rgba(251,113,133,.13);
+  --na:#B4C1D4;--na-bg:rgba(180,193,212,.12);
+  --warn:#FBBF24;--warn-bg:rgba(251,191,36,.12);
+  --sans:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --prose:min(72ch,100%);
+  --wide:clamp(0px,calc(100vw - 2*clamp(24px,5vw,80px)),1160px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--topbar-h) + 20px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+h1,h2,h3,p,ul,ol,dl,dd,figure{margin:0}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.08;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(22px,3vw,30px);line-height:1.2;font-weight:800;letter-spacing:-.02em}
+h3{font-size:clamp(17px,2vw,19px);line-height:1.35;font-weight:700;letter-spacing:-.01em}
+a{color:var(--accent);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:var(--r-sm);color:var(--text)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:var(--r-sm)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:#050505;padding:10px 14px;border-radius:var(--r-sm);font-weight:700;z-index:100}
+.skip:focus{left:12px}
+
+.topbar{position:sticky;top:0;z-index:60;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 clamp(24px,5vw,80px);background:rgba(5,5,5,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.wordmark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.wordmark i{width:12px;height:12px;border-radius:3px;background:var(--grad);display:block}
+.wordmark span{color:var(--muted);font-weight:500;font-size:13px}
+.topnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav a{font:600 13.5px var(--sans);color:var(--text2);text-decoration:none;padding:8px 12px;border-radius:var(--r-sm);white-space:nowrap;min-height:40px;display:inline-flex;align-items:center}
+.topnav a:hover{background:var(--panel);color:var(--text)}
+@media (max-width:900px){.topnav{display:none}}
+
+.band{padding:clamp(40px,6vw,72px) clamp(24px,5vw,80px);border-top:1px solid var(--line)}
+.band:first-of-type{border-top:0}
+.prose{max-width:var(--prose)}
+.prose p+p{margin-top:12px}
+.prose p,.prose li{color:var(--text2)}
+.prose strong{color:var(--text)}
+.lede{font-size:clamp(16.5px,1.6vw,18px);max-width:78ch;color:var(--text2)!important}
+h2+*{margin-top:18px}
+h3{margin-top:30px}
+.wrap{width:100%;max-width:var(--wide)}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+
+.tldr{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.stat b{display:block;font-size:clamp(23px,3.2vw,30px);font-weight:800;letter-spacing:-.025em;line-height:1.05}
+.stat span{display:block;font-size:13.5px;color:var(--muted);margin-top:6px}
+.stat.bad b{color:var(--fail)}.stat.ok b{color:var(--pass)}.stat.mid b{color:var(--warn)}
+.stat.g b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.verdict-box{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px)}
+.verdict-box .big{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;color:var(--warn)}
+.verdict-box p{margin-top:8px;color:var(--text2);max-width:82ch}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(16px,2vw,24px)}
+.tablewrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+th,td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--text);white-space:nowrap;background:rgba(255,255,255,.03);font-size:13.5px}
+td{color:var(--text2)}
+td strong{color:var(--text)}
+tbody tr:last-child td{border-bottom:0}
+.mono{font-family:var(--mono);font-size:13px}
+tr.s1 td{box-shadow:inset 3px 0 0 var(--fail);background:var(--fail-bg)}
+tr.s2 td{box-shadow:inset 3px 0 0 var(--fail)}
+tr.s3 td{box-shadow:inset 3px 0 0 var(--warn)}
+tr.s4 td{box-shadow:inset 3px 0 0 var(--na)}
+
+.chip{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);font-family:var(--mono);
+  font-size:11.5px;letter-spacing:.04em;padding:3px 8px;text-transform:uppercase;color:var(--accent);line-height:1.5;white-space:nowrap}
+.chip.pass{color:var(--pass)}.chip.fail{color:var(--fail)}.chip.na{color:var(--na)}.chip.warn{color:var(--warn)}
+.chip.s1{background:var(--fail-bg);color:var(--fail)}.chip.s2{background:var(--fail-bg);color:var(--fail)}
+.chip.s3{background:var(--warn-bg);color:var(--warn)}.chip.s4{background:var(--na-bg);color:var(--na)}
+
+.stack{display:flex;height:14px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.08);border:1px solid var(--edge);max-width:620px;margin-top:8px}
+.stack i{display:block;height:100%}
+.stack .f{background:var(--fail)}.stack .n{background:var(--na)}.stack .u{background:rgba(255,255,255,.14)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.legend span{font:600 12.5px var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+.ratio-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:16px}
+.rd{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;background:var(--panel)}
+.rd .num{font:800 clamp(25px,3.4vw,33px)/1 var(--sans);letter-spacing:-.03em}
+.rd .lbl{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+.rd.ok .num{color:var(--pass)}.rd.bad .num{color:var(--fail)}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:15.5px}
+.card p{font-size:14.5px;color:var(--text2)}
+
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch;margin-top:18px}
+.note p{color:var(--text2);font-size:15.5px}
+.note p+p{margin-top:10px}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:14.5px;margin-top:6px}
+.kv dt{color:var(--muted)}
+.kv dd{color:var(--text);min-width:0}
+
+pre{margin:14px 0 0;padding:14px 16px;background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:var(--r-sm);
+  font:12.5px/1.6 var(--mono);color:var(--text);overflow-x:auto;white-space:pre}
+
+.btn{font:600 14px/1 var(--sans);min-height:40px;padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--field);color:var(--text);cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.10)}
+.btn.primary{background:var(--grad);color:#050505;border-color:transparent;font-weight:700}
+.btn.primary:hover{filter:brightness(1.1)}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.msg{font-size:13.5px;color:var(--muted);min-height:20px;margin-top:8px}
+
+/* matrix */
+.mx th,.mx td{text-align:center;padding:8px;vertical-align:middle}
+.mx th:first-child,.mx td:first-child{text-align:left;font-weight:700;color:var(--text);white-space:nowrap}
+.mx .cell{min-height:40px;min-width:96px;font:600 13.5px var(--sans);border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--field);color:var(--muted);cursor:default}
+
+/* tracker */
+.tracker{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px);margin-top:20px}
+.tracker-bar{height:12px;border-radius:var(--r-sm);background:rgba(255,255,255,.08);border:1px solid var(--edge);overflow:hidden}
+.tracker-fill{height:100%;width:0;background:var(--grad);transition:width .25s ease}
+.tracker-pct{font:800 22px var(--sans);letter-spacing:-.02em;margin-top:12px}
+.tracker-pct span{font:500 13.5px var(--sans);color:var(--muted);margin-left:8px}
+.tracker-list{list-style:none;margin:16px 0 0;padding:0}
+.tracker-list li{border-top:1px solid var(--line)}
+.tracker-list li:first-child{border-top:0}
+.tracker-list label{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:13px 6px;min-height:44px;cursor:pointer}
+.tracker-list input{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;margin-top:3px}
+.tracker-list .t{font-size:14.5px;color:var(--text2);line-height:1.55}
+.tracker-list .t strong{color:var(--text)}
+.tracker-list .t code{white-space:nowrap}
+.tracker-list input:checked+.t{color:var(--muted)}
+.tracker-list input:checked+.t strong{text-decoration:line-through}
+.tracker-list .ph{font:600 11.5px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;padding-top:4px}
+.tracker-list li.done .ph{color:var(--pass)}
+
+footer{padding:36px clamp(24px,5vw,80px) 56px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+footer a{color:var(--text2)}
+@media print{.topbar,.skip,.btnrow,.tracker{display:none}body{background:#fff;color:#000}}
+.sec-eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}.tldr-note{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch}</style>
+<body>
+
+<header class="topbar">
+  <div class="wordmark"><i></i>Syntaxure <span>/ GalloTrack post-fix report</span></div>
+</header>
+
+<section class="band" id="status">
+  <div class="wrap">
+    <div class="sec-eyebrow">01 &middot; Verdict</div>
+    <h1>GalloTrack post-fix UI/UX report</h1>
+    <p class="lede" style="margin-top:16px">What changed across the seven-PR migration, what is provably fixed, and what still needs a browser. Every figure below is measured from the working tree, not asserted.</p>
+
+    <div class="tldr">
+      <div class="stat g"><b>0</b><span>S1 and S2 findings still open. All 12 S2 units are fixed and CI-enforced.</span></div>
+      <div class="stat"><b>19/23</b><span>Units fully fixed. 3 partial, 1 open (both S4/practice or adoption work).</span></div>
+      <div class="stat"><b>210</b><span>Tests passing, up from 0 component tests at baseline.</span></div>
+      <div class="stat mid"><b>Incomplete</b><span>Verdict rule 2: the runtime units have not been reviewed. That is the only thing standing between this and <em>Approve with fixes</em>.</span></div>
+    </div>
+
+    <div class="verdict-box">
+      <h3 style="margin:0 0 8px">Where the verdict stands</h3>
+      <p class="prose" style="margin:0"><strong>Static evidence is complete and clean.</strong> All eight S2 findings and all nine S3 findings that are code-checkable now measure zero, and each is enforced by a CI gate rather than by discipline. <strong>The runtime half is not.</strong> The workbench&rsquo;s light/dark walk, keyboard pass, screen-reader pass, zoom and device checks were never performed &mdash; they need a browser. Until they are, every runtime unit reads <em>blank</em>, and a blank unit is not a pass.</p>
+      <p class="prose" style="margin:12px 0 0">Two S3 items are honestly <strong>partial</strong>: the shadow and padding scales in L2, and adoption of the Card/Badge/EmptyState/loading primitives in L4 and L5. The primitives exist and are tested; pages still hand-roll many of them. One S4 (L7, dead components) is open by decision.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="changed">
+  <div class="wrap">
+    <div class="sec-eyebrow">02 &middot; What shipped</div>
+    <h2>Seven phases, fourteen commits</h2>
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Phase</th><th>Delivered</th><th>Proof</th></tr></thead>
+        <tbody>
+          <tr><td><strong>PR 1</strong> Standard &amp; baseline</td><td>UI standard, 19-finding baseline audit, workbench seed</td><td>docs committed</td></tr>
+          <tr><td><strong>PR 2</strong> Foundations</td><td>Semantic tokens, motion scale, reduced motion, next-themes consolidation</td><td>101 tests, non-visual by construction</td></tr>
+          <tr><td><strong>PR 3</strong> Component library</td><td>19 primitives on clsx + CVA, global focus ring</td><td>90 new tests</td></tr>
+          <tr><td><strong>PR 4</strong> Shell &amp; pages</td><td>One h1 per route, merged navs, role accent, token charts, radius scale</td><td>gate 0/0</td></tr>
+          <tr><td><strong>PR 5</strong> WCAG 2.2 AA</td><td>Contrast to AAA both themes, 14px type scale, labels, dialogs, one toast</td><td>contra&nbsp;scans, jsx-a11y 109&rarr;0</td></tr>
+          <tr><td><strong>PR 6</strong> Enforcement</td><td>Six CI gates with ratchet baselines, jsx-a11y, axe, Prettier, <code>/design-kit</code></td><td>gate exit 0</td></tr>
+          <tr><td><strong>PR 7</strong> Verify</td><td><em>This report</em> &mdash; awaiting the runtime passes</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="findings">
+  <div class="wrap">
+    <div class="sec-eyebrow">03 &middot; Findings</div>
+    <h2>All 23 logged units, resolved or not</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>The baseline logged 19 findings, which resolve to 23 checkable units: C5, C6 and K4 each fail in both themes, K2/K7 and A3/K10 are distinct units, and the two S4 practice notes add their own. Nothing here is marked fixed on intent &mdash; each carries the measurement or the gate that proves it.</p>
+    </div>
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Unit</th><th>Sev</th><th>Status</th><th>Evidence</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">C2@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Metadata grey replaced by <code>--muted-foreground</code>: 2.56:1 &rarr; 4.76:1 light. 148 <code>text-slate-400</code> and 13 <code>text-slate-300</code> sites migrated.</td></tr>
+          <tr><td class="mono">C6@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Chart palette now reads live tokens via <code>lib/chart-tokens.ts</code>. The three flagged greys are gone; axis ticks use <code>--muted-foreground</code>.</td></tr>
+          <tr><td class="mono">C6@dark</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Same token pipeline in dark. The doughnut&rsquo;s <code>#065f46</code> (2.32:1) is replaced by <code>--success</code>.</td></tr>
+          <tr><td class="mono">K4@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>One unlayered global <code>:focus-visible</code> rule; all 80 <code>outline-none</code> deleted. Naked <code>outline-none</code> now measures 0 in CI.</td></tr>
+          <tr><td class="mono">K4@dark</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Ring colour is theme-aware (<code>--ring</code>), 15.76:1 against the dark background.</td></tr>
+          <tr><td class="mono">F2</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>92 real <code>htmlFor</code>/<code>id</code> pairs where there were none. jsx-a11y <code>label-has-associated-control</code>: 84 &rarr; <strong>0</strong>, suppressions pruned to zero.</td></tr>
+          <tr><td class="mono">K2</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>All 14 modal shells render through one <code>Modal</code> primitive. <code>role="dialog"</code> went from 0 occurrences to 16.</td></tr>
+          <tr><td class="mono">K7</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Same primitive: <code>aria-modal</code>, focus trap, focus restore, Escape, labelled close button.</td></tr>
+          <tr><td class="mono">A3</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>The one unnamed icon button is fixed and CI-enforced. Three sub-24px targets (16&times;16, 20&times;20) raised to 24&times;24.</td></tr>
+          <tr><td class="mono">K10</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Same three targets now clear WCAG 2.2 SC 2.5.8. Scan reports 0 under 24px.</td></tr>
+          <tr><td class="mono">T6</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>817 (in-scope) &rarr; <strong>0</strong>. Promote-then-floor gives exactly two tiers: 14px body, 12px floor. Ratchet locked at zero.</td></tr>
+          <tr><td class="mono">F10</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>One toast system. A module-level bus lets provider components dispatch; 53 legacy call sites and 5 page-local banners migrated; the old state, renderer and type deleted.</td></tr>
+          <tr><td class="mono">N2</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Shell title demoted to a <code>&lt;span&gt;</code>; each route owns exactly one <code>h1</code>. Six real violations fixed elsewhere.</td></tr>
+          <tr><td class="mono">K6</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Skip link is the first focusable element in the shell, targeting <code>#main-content</code>.</td></tr>
+          <tr><td class="mono">A4</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>A real <code>&lt;footer&gt;</code> with the colophon, completing the landmark set.</td></tr>
+          <tr><td class="mono">L2</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td>Radius collapsed from 5 arbitrary families to 3 (591 call sites). <em>Shadows still 7 levels and paddings untouched</em> &mdash; the scale exists but is only adopted by new code.</td></tr>
+          <tr><td class="mono">L4</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td>Button, Card, Badge, EmptyState, StatCard, Table, Tabs, Modal and Toast all exist in <code>components/ui/</code>, and 17 files import them. <em>Adoption is partial</em> &mdash; pages still hand-roll most buttons and cards.</td></tr>
+          <tr><td class="mono">L5</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td><code>Skeleton</code> and <code>Spinner</code> exist with tests, and the design kit documents them. <em>Page-level loading states are largely unchanged.</em></td></tr>
+          <tr><td class="mono">C5@light</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>New <code>--input-border</code> token at 4.26:1, applied across 50 control boundaries.</td></tr>
+          <tr><td class="mono">C5@dark</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Same token at 3.75:1 in dark.</td></tr>
+          <tr><td class="mono">N4</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Four nav arrays merged to two with short labels; role accent collapsed to one <code>data-role</code> + <code>--accent</code> pair.</td></tr>
+          <tr><td class="mono">L6</td><td><span class="chip s4">S4</span></td><td><span class="chip pass">fixed</span></td><td>The missing <code>fadeIn</code>/<code>enterRight</code> keyframes now exist (PR 2), so the 43 references resolve.</td></tr>
+          <tr><td class="mono">L7</td><td><span class="chip s4">S4</span></td><td><span class="chip fail">open</span></td><td><strong>Open, by decision.</strong> <code>SplashScreen</code>, <code>FarmBloodlineSummary</code> and <code>modals/index.ts</code> are all unused, and <code>showSplash</code> defaults to on with nothing rendering it. Deleting and re-wiring are both defensible, so it is left to the reviewer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="metrics">
+  <div class="wrap">
+    <div class="sec-eyebrow">04 &middot; Measured</div>
+    <h2>Baseline versus now</h2>
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Measure</th><th>Baseline d147d46</th><th>Now</th><th>Enforced by</th></tr></thead>
+        <tbody>
+          <tr><td>Arbitrary sub-12px font sizes</td><td class="mono">835</td><td class="mono">0</td><td>gate 1, ratcheted</td></tr>
+          <tr><td>Hardcoded hex in <code>.tsx</code></td><td class="mono">80</td><td class="mono">37</td><td>gate 2, ratcheted (all decorative SVG)</td></tr>
+          <tr><td>Naked <code>outline-none</code></td><td class="mono">6</td><td class="mono">0</td><td>gate 3</td></tr>
+          <tr><td>Unnamed icon-only buttons</td><td class="mono">9</td><td class="mono">0</td><td>gate 4</td></tr>
+          <tr><td>jsx-a11y violations (suppressed)</td><td class="mono">109</td><td class="mono">12</td><td>gate 5, suppressions pruned</td></tr>
+          <tr><td>Serious/critical axe violations</td><td class="mono">no component tests</td><td class="mono">0 in 12 cases</td><td>gate 6</td></tr>
+          <tr><td><code>htmlFor</code> bindings</td><td class="mono">0 / 95 labels</td><td class="mono">92</td><td>jsx-a11y rule at 0</td></tr>
+          <tr><td><code>aria-*</code> attributes</td><td class="mono">4</td><td class="mono">91</td><td>target &ge;120 &mdash; <em>not yet met</em></td></tr>
+          <tr><td><code>role="dialog"</code></td><td class="mono">0</td><td class="mono">16</td><td>one Modal primitive</td></tr>
+          <tr><td>Radius families</td><td class="mono">5</td><td class="mono">3</td><td>PR 4</td></tr>
+          <tr><td>Toast systems</td><td class="mono">3</td><td class="mono">1</td><td>one provider + bus</td></tr>
+          <tr><td>Contrast ratios below threshold</td><td class="mono">9 across 3 findings</td><td class="mono">0</td><td>all AAA, both themes</td></tr>
+          <tr><td>Component tests</td><td class="mono">0</td><td class="mono">210 in 15 files</td><td>vitest + axe</td></tr>
+          <tr><td>Lint</td><td class="mono">11 errors / 93 warnings</td><td class="mono">0 errors / 86 warnings</td><td>jsx-a11y on</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>On the two rows that are not zero.</strong> The 37 remaining hexes are <code>stroke="#ffffff"</code> and gradient stops inside decorative background SVGs on the auth pages &mdash; they cannot reference a CSS token from a presentation attribute without restructuring the artwork, and they carry no text. The 91 <code>aria-*</code> attributes are up from 4 but short of the 120 target; the gap is live regions on page-level async states rather than anything structural.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="runtime">
+  <div class="wrap">
+    <div class="sec-eyebrow">05 &middot; Your pass</div>
+    <h2>Runtime checks &mdash; the half I cannot do</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>Everything above was measured from source. The workbench also requires that the app be <em>used</em>: walked in both themes, driven by keyboard, listened to with a screen reader, zoomed, and checked on real device widths. None of that can be inferred from code, which is why the verdict reads <em>Incomplete</em> rather than <em>Approve</em>.</p>
+      <p>Work through the list and record what you find. If a check fails, note the unit and the symptom &mdash; a new failure re-opens the verdict under rule 3.</p>
+    </div>
+
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Pass</th><th>What to do</th><th>Covers</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Light walk</strong></td><td>Every route in light mode: dashboard, registry, catalog, lineage, profile, settings, admin, auth. Watch for text that reads faint, borders that vanish, focus that disappears.</td><td class="mono">C2 C5 C6 K4</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+          <tr><td><strong>Dark walk</strong></td><td>The same routes with the theme toggled. The palette is deep-in-light, luminous-in-dark, so the two themes must be judged separately.</td><td class="mono">C5 C6 K4</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+          <tr><td><strong>Keyboard</strong></td><td>Tab from page load: the skip link must appear first, <code>main</code> must take focus, every control must show a ring. Open a dialog &mdash; Tab must stay inside, Escape must close it, focus must return to the trigger.</td><td class="mono">K2 K4 K6 K7</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+          <tr><td><strong>Screen reader</strong></td><td>Announce a form (label, hint, error), a dialog (title, description), and a toast (announced without focus). Check the table headers announce their column.</td><td class="mono">F2 K2 F10 F10</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+          <tr><td><strong>Zoom 200%</strong></td><td>Browser zoom to 200% on the densest page (admin, registry). Nothing may clip, overlap or require horizontal scroll for reading.</td><td class="mono">T6</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+          <tr><td><strong>Device widths</strong></td><td>360, 768 and 1440. The mobile bottom nav, the sidebar collapse and the tables are the risk points.</td><td class="mono">N4 A3 K10</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+          <tr><td><strong>Reduce motion</strong></td><td>Toggle OS &ldquo;reduce motion&rdquo;. The float, hover-lift and entrance animations must stop; nothing may disappear with them.</td><td class="mono">L6</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="verdict">
+  <div class="wrap">
+    <div class="sec-eyebrow">06 &middot; Rules</div>
+    <h2>How the verdict is computed</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>The workbench applies these rules in order and stops at the first that matches. Nothing here is a judgement call.</p>
+    </div>
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>#</th><th>Rule</th><th>Current state</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1</td><td>Any S1 open &rarr; <strong>Reject</strong></td><td><span class="chip pass">no S1 exists</span></td></tr>
+          <tr><td class="mono">2</td><td>Any unit not reviewed &rarr; <strong>Incomplete</strong></td><td><span class="chip fail">runtime units blank &mdash; this is the live rule</span></td></tr>
+          <tr><td class="mono">3</td><td>An unrated failure &rarr; <strong>Triage</strong></td><td><span class="chip pass">not reached</span></td></tr>
+          <tr><td class="mono">4</td><td>Any S2 open &rarr; <strong>Reject</strong></td><td><span class="chip pass">0 of 12 open</span></td></tr>
+          <tr><td class="mono">5</td><td>Only S3/S4 open &rarr; <strong>Approve with fixes</strong></td><td><span class="chip warn">this is where it lands once rule 2 clears</span></td></tr>
+          <tr><td class="mono">6</td><td>Nothing open &rarr; <strong>Approve</strong></td><td><span class="chip pass">not yet</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>What to expect.</strong> Complete the runtime passes and rule 2 clears. Rule 4 is already satisfied &mdash; no S2 is open, and each is CI-enforced so none can silently return. That lands the verdict at <strong>Approve with fixes</strong> under rule 5, because L2, L4, L5 are partial and L7 is open by decision. Reaching a clean <em>Approve</em> means finishing shadow/padding adoption, adopting the surface primitives across pages, and deciding L7 &mdash; all of which are follow-up work, not defects in what shipped.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="retest">
+  <div class="wrap">
+    <div class="sec-eyebrow">07 &middot; Re-test</div>
+    <h2>Unit tracker</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>Every logged unit, including the two S4 practice notes. Tick one only once you have <em>seen</em> it correct in both themes &mdash; the baseline&rsquo;s discipline was that a fix is not a fix until it is retested. State persists in this browser.</p>
+    </div>
+    <div class="tracker">
+      <div class="tracker-bar"><div class="tracker-fill" id="fill"></div></div>
+      <div class="tracker-pct" id="pct">0 retested <span id="count">0 of 23</span></div>
+      <ul class="tracker-list" id="list">
+        <li data-id="c2-light"><label><input type="checkbox"><span class="t"><strong>C2@light</strong> <span class="mono">(S2)</span> &mdash; Metadata grey replaced by --muted-foreground: 2.56:1 &rarr; 4.76:1 light. 148 text-slate-400 and 13 text-slate-300 sites migrated.</span><span class="ph">fixed</span></label></li>
+        <li data-id="c6-light"><label><input type="checkbox"><span class="t"><strong>C6@light</strong> <span class="mono">(S2)</span> &mdash; Chart palette now reads live tokens via lib/chart-tokens.ts. The three flagged greys are gone; axis ticks use --muted-foreground.</span><span class="ph">fixed</span></label></li>
+        <li data-id="c6-dark"><label><input type="checkbox"><span class="t"><strong>C6@dark</strong> <span class="mono">(S2)</span> &mdash; Same token pipeline in dark. The doughnut&rsquo;s #065f46 (2.32:1) is replaced by --success.</span><span class="ph">fixed</span></label></li>
+        <li data-id="k4-light"><label><input type="checkbox"><span class="t"><strong>K4@light</strong> <span class="mono">(S2)</span> &mdash; One unlayered global :focus-visible rule; all 80 outline-none deleted. Naked outline-none now measures 0 in CI.</span><span class="ph">fixed</span></label></li>
+        <li data-id="k4-dark"><label><input type="checkbox"><span class="t"><strong>K4@dark</strong> <span class="mono">(S2)</span> &mdash; Ring colour is theme-aware (--ring), 15.76:1 against the dark background.</span><span class="ph">fixed</span></label></li>
+        <li data-id="f2"><label><input type="checkbox"><span class="t"><strong>F2</strong> <span class="mono">(S2)</span> &mdash; 92 real htmlFor/id pairs where there were none. jsx-a11y label-has-associated-control: 84 &rarr; 0, suppressions pruned to zero.</span><span class="ph">fixed</span></label></li>
+        <li data-id="k2"><label><input type="checkbox"><span class="t"><strong>K2</strong> <span class="mono">(S2)</span> &mdash; All 14 modal shells render through one Modal primitive. role="dialog" went from 0 occurrences to 16.</span><span class="ph">fixed</span></label></li>
+        <li data-id="k7"><label><input type="checkbox"><span class="t"><strong>K7</strong> <span class="mono">(S2)</span> &mdash; Same primitive: aria-modal, focus trap, focus restore, Escape, labelled close button.</span><span class="ph">fixed</span></label></li>
+        <li data-id="a3"><label><input type="checkbox"><span class="t"><strong>A3</strong> <span class="mono">(S2)</span> &mdash; The one unnamed icon button is fixed and CI-enforced. Three sub-24px targets (16&times;16, 20&times;20) raised to 24&times;24.</span><span class="ph">fixed</span></label></li>
+        <li data-id="k10"><label><input type="checkbox"><span class="t"><strong>K10</strong> <span class="mono">(S2)</span> &mdash; Same three targets now clear WCAG 2.2 SC 2.5.8. Scan reports 0 under 24px.</span><span class="ph">fixed</span></label></li>
+        <li data-id="t6"><label><input type="checkbox"><span class="t"><strong>T6</strong> <span class="mono">(S2)</span> &mdash; 817 (in-scope) &rarr; 0. Promote-then-floor gives exactly two tiers: 14px body, 12px floor. Ratchet locked at zero.</span><span class="ph">fixed</span></label></li>
+        <li data-id="f10"><label><input type="checkbox"><span class="t"><strong>F10</strong> <span class="mono">(S2)</span> &mdash; One toast system. A module-level bus lets provider components dispatch; 53 legacy call sites and 5 page-local banners migrated; the old state, renderer and type deleted.</span><span class="ph">fixed</span></label></li>
+        <li data-id="n2"><label><input type="checkbox"><span class="t"><strong>N2</strong> <span class="mono">(S3)</span> &mdash; Shell title demoted to a &lt;span&gt;; each route owns exactly one h1. Six real violations fixed elsewhere.</span><span class="ph">fixed</span></label></li>
+        <li data-id="k6"><label><input type="checkbox"><span class="t"><strong>K6</strong> <span class="mono">(S3)</span> &mdash; Skip link is the first focusable element in the shell, targeting #main-content.</span><span class="ph">fixed</span></label></li>
+        <li data-id="a4"><label><input type="checkbox"><span class="t"><strong>A4</strong> <span class="mono">(S3)</span> &mdash; A real &lt;footer&gt; with the colophon, completing the landmark set.</span><span class="ph">fixed</span></label></li>
+        <li data-id="l2"><label><input type="checkbox"><span class="t"><strong>L2</strong> <span class="mono">(S3)</span> &mdash; Radius collapsed from 5 arbitrary families to 3 (591 call sites). Shadows still 7 levels and paddings untouched &mdash; the scale exists but is only adopted by new code.</span><span class="ph">partial</span></label></li>
+        <li data-id="l4"><label><input type="checkbox"><span class="t"><strong>L4</strong> <span class="mono">(S3)</span> &mdash; Button, Card, Badge, EmptyState, StatCard, Table, Tabs, Modal and Toast all exist in components/ui/, and 17 files import them. Adoption is partial &mdash; pages still hand-roll most buttons and cards.</span><span class="ph">partial</span></label></li>
+        <li data-id="l5"><label><input type="checkbox"><span class="t"><strong>L5</strong> <span class="mono">(S3)</span> &mdash; Skeleton and Spinner exist with tests, and the design kit documents them. Page-level loading states are largely unchanged.</span><span class="ph">partial</span></label></li>
+        <li data-id="c5-light"><label><input type="checkbox"><span class="t"><strong>C5@light</strong> <span class="mono">(S3)</span> &mdash; New --input-border token at 4.26:1, applied across 50 control boundaries.</span><span class="ph">fixed</span></label></li>
+        <li data-id="c5-dark"><label><input type="checkbox"><span class="t"><strong>C5@dark</strong> <span class="mono">(S3)</span> &mdash; Same token at 3.75:1 in dark.</span><span class="ph">fixed</span></label></li>
+        <li data-id="n4"><label><input type="checkbox"><span class="t"><strong>N4</strong> <span class="mono">(S3)</span> &mdash; Four nav arrays merged to two with short labels; role accent collapsed to one data-role + --accent pair.</span><span class="ph">fixed</span></label></li>
+        <li data-id="l6"><label><input type="checkbox"><span class="t"><strong>L6</strong> <span class="mono">(S4)</span> &mdash; The missing fadeIn/enterRight keyframes now exist (PR 2), so the 43 references resolve.</span><span class="ph">fixed</span></label></li>
+        <li data-id="l7"><label><input type="checkbox"><span class="t"><strong>L7</strong> <span class="mono">(S4)</span> &mdash; Open, by decision. SplashScreen, FarmBloodlineSummary and modals/index.ts are all unused, and showSplash defaults to on with nothing rendering it. Deleting and re-wiring are both defensible, so it is left to the reviewer.</span><span class="ph">open</span></label></li>
+    </ul>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+      <button id="b-md" class="chip" style="cursor:pointer">Copy Markdown report</button>
+      <button id="b-json" class="chip" style="cursor:pointer">Copy JSON</button>
+      <span id="msg" style="font-size:13px;color:var(--muted);align-self:center"></span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Post-fix report generated from the working tree at branch <code>ui-improvement</code>. Baseline: commit d147d46, 19 findings, verdict Incomplete.</p>
+  </div>
+</footer>
+
+<script>
+var UNITS = [{"id":"C2@light","sev":"S2","status":"fixed"},{"id":"C6@light","sev":"S2","status":"fixed"},{"id":"C6@dark","sev":"S2","status":"fixed"},{"id":"K4@light","sev":"S2","status":"fixed"},{"id":"K4@dark","sev":"S2","status":"fixed"},{"id":"F2","sev":"S2","status":"fixed"},{"id":"K2","sev":"S2","status":"fixed"},{"id":"K7","sev":"S2","status":"fixed"},{"id":"A3","sev":"S2","status":"fixed"},{"id":"K10","sev":"S2","status":"fixed"},{"id":"T6","sev":"S2","status":"fixed"},{"id":"F10","sev":"S2","status":"fixed"},{"id":"N2","sev":"S3","status":"fixed"},{"id":"K6","sev":"S3","status":"fixed"},{"id":"A4","sev":"S3","status":"fixed"},{"id":"L2","sev":"S3","status":"partial"},{"id":"L4","sev":"S3","status":"partial"},{"id":"L5","sev":"S3","status":"partial"},{"id":"C5@light","sev":"S3","status":"fixed"},{"id":"C5@dark","sev":"S3","status":"fixed"},{"id":"N4","sev":"S3","status":"fixed"},{"id":"L6","sev":"S4","status":"fixed"},{"id":"L7","sev":"S4","status":"open"}];
+var KEY = 'gallotrack-postfix-tracker-v1';
+
+(function wireTracker() {
+  var items = document.querySelectorAll('#list li');
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function update() {
+    var done = 0;
+    for (var j = 0; j < items.length; j++) { if (items[j].querySelector('input').checked) { done++; } }
+    var pct = Math.round(100 * done / items.length);
+    var fill = document.getElementById('fill');
+    var pctEl = document.getElementById('pct');
+    var countEl = document.getElementById('count');
+    if (fill) { fill.style.width = pct + '%'; }
+    if (pctEl) { pctEl.firstChild.nodeValue = done + ' retested '; }
+    if (countEl) { countEl.textContent = done + ' of ' + items.length; }
+  }
+  for (var i = 0; i < items.length; i++) {
+    var box = items[i].querySelector('input');
+    box.checked = !!saved[items[i].dataset.id];
+    (function (item, b) {
+      b.addEventListener('change', function () {
+        var s = {};
+        try { s = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { s = {}; }
+        s[item.dataset.id] = b.checked;
+        try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+        update();
+      });
+    })(items[i], box);
+  }
+  update();
+})();
+
+function say(t) {
+  var m = document.getElementById('msg');
+  if (m) { m.textContent = t; }
+}
+
+function retested() {
+  var out = [];
+  var items = document.querySelectorAll('#list li');
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].querySelector('input').checked) { out.push(items[i].dataset.id); }
+  }
+  return out;
+}
+
+function buildMarkdown() {
+  var done = retested();
+  var lines = [];
+  lines.push('# GalloTrack post-fix UI/UX report');
+  lines.push('');
+  lines.push('Baseline: commit d147d46 (19 findings, verdict Incomplete)');
+  lines.push('Branch: ui-improvement');
+  lines.push('');
+  lines.push('## Units');
+  for (var i = 0; i < UNITS.length; i++) {
+    lines.push('- ' + UNITS[i].id + ' (' + UNITS[i].sev + ') - ' + UNITS[i].status);
+  }
+  lines.push('');
+  lines.push('## Retested in both themes: ' + done.length + ' of ' + UNITS.length);
+  lines.push(done.length ? done.join(', ') : '(none yet)');
+  return lines.join('\n');
+}
+
+function copy(text, label) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { say(label); }, fb);
+  } else { fb(); }
+}
+
+function fb() {
+  say('Clipboard blocked. Select the page text and copy manually.');
+}
+
+document.getElementById('b-md').addEventListener('click', function () { copy(buildMarkdown(), 'Markdown report copied'); });
+document.getElementById('b-json').addEventListener('click', function () { copy(JSON.stringify({ units: UNITS, retested: retested() }, null, 2), 'JSON copied'); });
+</script>
+</body>
+</html>
