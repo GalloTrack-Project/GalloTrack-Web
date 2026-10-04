@@ -538,7 +538,7 @@ export default function LineageDirectory({
             <div className="flex items-center gap-2">
               <span className="w-9 h-9 bg-emerald-600 text-white rounded-md flex items-center justify-center"><Trophy className="w-5 h-5" /></span>
               <div>
-                <h3 className="text-sm font-black text-card-foreground">Breeding Recommendation</h3>
+                <h2 className="text-sm font-black text-card-foreground">Breeding Recommendation</h2>
                 <p className="text-xs text-muted-foreground font-semibold">Based on sibling and pairing performance data</p>
               </div>
             </div>

@@ -821,7 +821,7 @@ export default function AdminPanelPage() {
 
               <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Farm Registration</h4>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Farm Registration</h3>
                   {loadingFarm && (
                     <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
                   )}

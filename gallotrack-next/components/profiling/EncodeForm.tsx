@@ -233,7 +233,7 @@ export default function EncodeForm({
                 <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-xs font-semibold px-3 py-1.5 rounded-sm group hover:border-emerald-300 transition-all">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                   {s}
-                  <button type="button" onClick={() => removeStrain(i)} className="ml-0.5 w-5 h-5 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground hover:text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
+                    <button type="button" onClick={() => removeStrain(i)} aria-label="Remove strain" className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
                 </span>
               ))}
             </div>

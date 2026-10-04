@@ -302,7 +302,7 @@ export default function ProfilePage() {
             <input type="file" ref={fileInputRef} onChange={onFileSelected} accept="image/*" className="hidden" />
           </div>
           <div className="space-y-1.5">
-            <h3 className="text-lg font-extrabold">{fullName}</h3>
+            <h2 className="text-lg font-extrabold">{fullName}</h2>
             <span className={`antigravity-badge text-xs font-mono font-black px-3 py-1 rounded-full border inline-block uppercase tracking-wider ${
               isAdmin ? 'text-amber-700 bg-amber-50 border-amber-200/60 dark:text-amber-400 dark:bg-amber-950 dark:border-amber-800' : 'text-sky-700 bg-sky-50 border-sky-200/60 dark:text-sky-400 dark:bg-sky-950 dark:border-sky-800'
             }`}>

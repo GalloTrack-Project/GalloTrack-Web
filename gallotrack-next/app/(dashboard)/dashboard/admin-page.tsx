@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
       {/* ADMIN ROLE INFO */}
       <div className="bg-card/95 border border-border rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Admin Responsibilities</h3>
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Admin Responsibilities</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <RoleCard title="User Management" description="Activate, deactivate, or delete farm owner accounts" />

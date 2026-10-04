@@ -271,7 +271,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2.5">
                 <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-success" /></span>
                 <div>
-                  <h3 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h3>
+                  <h2 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h2>
                   <p className="text-sm text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
               </div>

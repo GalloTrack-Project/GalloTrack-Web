@@ -417,7 +417,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
           <div className="w-16 h-16 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-3xl mx-auto">
             {'\uD83E\uDDEC'}
           </div>
-          <h3 className="text-base font-extrabold text-card-foreground">No Chickens Found</h3>
+          <h2 className="text-base font-extrabold text-card-foreground">No Chickens Found</h2>
           <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chickens match your current filters. Try adjusting your search or add new chickens.</p>
         </div>
       ) : (

@@ -300,7 +300,7 @@ export default function MarketplacePage() {
                   )}
                   <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-extrabold text-card-foreground leading-tight">{listing.title}</h3>
+                      <h2 className="text-sm font-extrabold text-card-foreground leading-tight">{listing.title}</h2>
                       <span className="text-sm font-black text-success whitespace-nowrap">₱{listing.price.toLocaleString()}</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">

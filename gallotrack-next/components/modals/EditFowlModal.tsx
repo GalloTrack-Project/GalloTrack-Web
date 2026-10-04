@@ -169,7 +169,7 @@ export default function EditFowlModal({
                       <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
                         <button type="button" onClick={() => setEditBreed(s)} className="text-xs font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer">{s}</button>
                         {customStrainNames.has(s) && (
-                          <button type="button" onClick={() => deleteCustomStrain(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                            <button type="button" onClick={() => deleteCustomStrain(s)} aria-label={`Delete ${s}`} className="w-6 h-6 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title={`Delete "${s}"`}>✕</button>
                         )}
                       </div>
                   ))}
@@ -271,7 +271,7 @@ export default function EditFowlModal({
                   {availableLegColors.filter((s) => s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor).slice(0, 5).map((s) => (
                     <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
                       <button type="button" onClick={() => setEditLegColor(s)} className="text-xs font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 cursor-pointer">{s}</button>
-                      <button type="button" onClick={() => deleteCustomLegColor(s)} className="w-4 h-4 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                        <button type="button" onClick={() => deleteCustomLegColor(s)} aria-label={`Delete ${s}`} className="w-6 h-6 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title={`Delete "${s}"`}>✕</button>
                     </div>
                   ))}
                 </div>
