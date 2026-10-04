@@ -119,12 +119,6 @@ export type PageId = 'login' | 'dashboard' | 'profiling' | 'marketplace' | 'line
 
 export type ProfilingSubTab = 'form' | 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring' | 'match' | 'matchForm' | 'breeds';
 
-export type ToastState = {
-  show: boolean;
-  message: string;
-  type: 'success' | 'error' | 'warning';
-};
-
 export type RolledMilestoneStage = DevelopmentStage & {
   date: Date;
   daysUntil: number;

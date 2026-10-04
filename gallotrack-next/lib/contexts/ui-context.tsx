@@ -1,6 +1,6 @@
 'use client';
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { PageId, ProfilingSubTab, ToastState, FowlRecord } from '@/lib/types';
+import React, { createContext, useContext, useState } from 'react';
+import type { PageId, ProfilingSubTab, FowlRecord } from '@/lib/types';
 
 interface UIContextValue {
   theme: string;
@@ -11,9 +11,6 @@ interface UIContextValue {
   setCurrentPage: (v: PageId) => void;
   profilingSubTab: ProfilingSubTab;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
-  toast: ToastState;
-  setToast: React.Dispatch<React.SetStateAction<ToastState>>;
-  showToastMessage: (message: string, type?: 'success' | 'error' | 'warning') => void;
 
   selectedFowlForDetails: FowlRecord | null;
   setSelectedFowlForDetails: (f: FowlRecord | null) => void;
@@ -56,7 +53,6 @@ export function UIProvider({
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<ProfilingSubTab>('form');
-  const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' });
 
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
@@ -69,19 +65,11 @@ export function UIProvider({
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
 
-  const showToastMessage = useCallback((message: string, type: 'success' | 'error' | 'warning' = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 4000);
-  }, []);
-
   const value: UIContextValue = {
     theme, setTheme,
     showSplash, setShowSplash,
     currentPage, setCurrentPage,
     profilingSubTab, setProfilingSubTab,
-    toast, setToast, showToastMessage,
     selectedFowlForDetails, setSelectedFowlForDetails,
     selectedFowlForDeceased, setSelectedFowlForDeceased,
     selectedFowlForArchive, setSelectedFowlForArchive,

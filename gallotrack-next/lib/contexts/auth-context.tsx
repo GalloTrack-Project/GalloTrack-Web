@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { ensureOwnerRecords, supabase } from '@/lib/registry';
 import { isAdminProfile } from '@/lib/admin';
 import { useUI } from './ui-context';
+import { toastMessage } from '@/lib/toast-bus';
 
 interface AuthContextValue {
   currentUserId: string | null;
@@ -259,7 +260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       ui.setCurrentPage('dashboard');
       await ensureOwnerRecords(supabase, data.user);
-      setTimeout(() => ui.showToastMessage(`Access Authenticated. Welcome back, ${finalWelcomeName}!`, 'success'), 400);
+      setTimeout(() => toastMessage(`Access Authenticated. Welcome back, ${finalWelcomeName}!`, 'success'), 400);
       window.dispatchEvent(new Event('admin-profile-update'));
     } catch (err) {
       console.error(err);
@@ -304,7 +305,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setForgotError(error.message);
       } else {
         setForgotSent(true);
-        ui.showToastMessage('Password reset link sent. Check your inbox.', 'success');
+        toastMessage('Password reset link sent. Check your inbox.', 'success');
       }
     } catch (err: unknown) {
       setForgotError(err instanceof Error ? err.message : 'Failed to send reset link. Please try again.');

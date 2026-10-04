@@ -60,6 +60,7 @@ import type {
   SiblingRelation,
   PairingAnalytics,
 } from '@/lib/types';
+import { toastMessage } from '@/lib/toast-bus';
 
 interface FowlContextValue {
   fowls: FowlRecord[];
@@ -456,7 +457,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           refreshed++;
         }
         if (refreshed > 0) {
-          ui.showToastMessage(
+          toastMessage(
             `Bloodline recomputed for ${refreshed} chicken${refreshed === 1 ? '' : 's'}.`,
             'success'
           );
@@ -482,7 +483,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   // ── Strain/leg-color CRUD ──
   const deleteCustomStrain = useCallback(async (name: string): Promise<void> => {
     if (STRAIN_LIST.includes(name)) {
-      ui.showToastMessage(`"${name}" is a built-in strain and can't be deleted.`, 'warning');
+      toastMessage(`"${name}" is a built-in strain and can't be deleted.`, 'warning');
       return;
     }
     setAvailableStrains((prev) => prev.filter((s) => s !== name));
@@ -490,22 +491,22 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setSelectedStrains((prev) => prev.filter((s) => s !== name));
     const result = await strainService.deleteStrain(name);
     if (result.error) {
-      ui.showToastMessage(`Failed to delete "${name}" from database.`, 'error');
+      toastMessage(`Failed to delete "${name}" from database.`, 'error');
     } else {
-      ui.showToastMessage(`Strain "${name}" deleted.`, 'success');
+      toastMessage(`Strain "${name}" deleted.`, 'success');
     }
   }, [ui]);
 
   const deleteCustomLegColor = useCallback(async (name: string): Promise<void> => {
     if (LEG_COLOR_LIST.includes(name)) {
-      ui.showToastMessage(`"${name}" is a built-in leg color and can't be deleted.`, 'warning');
+      toastMessage(`"${name}" is a built-in leg color and can't be deleted.`, 'warning');
       return;
     }
     const result = await strainService.deleteLegColor(name);
     if (!result.error) {
       setAvailableLegColors((prev) => prev.filter((s) => s !== name));
       setCustomLegColorNames((prev) => { const n = new Set(prev); n.delete(name); return n; });
-      ui.showToastMessage(`Leg color "${name}" deleted.`, 'success');
+      toastMessage(`Leg color "${name}" deleted.`, 'success');
     }
   }, [ui]);
 
@@ -519,7 +520,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
       setCustomStrainNames((prev) => new Set([...prev, trimmed]));
       strainService.saveCustomStrain(trimmed).then((saved) => {
-        if (!saved) ui.showToastMessage(`Strain "${trimmed}" saved locally only.`, 'warning');
+        if (!saved) toastMessage(`Strain "${trimmed}" saved locally only.`, 'warning');
       }).catch(() => {});
     }
     setStrainQuery('');
@@ -545,29 +546,29 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       birdCode,
     });
     if (!validation.success) {
-      ui.showToastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
+      toastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
       return;
     }
 
     const submittedCode = normalizeBirdCode(birdCode);
     const codeToUse = submittedCode || suggestedBirdCode;
     if (!isValidBirdCode(codeToUse)) {
-      ui.showToastMessage(`Invalid Chicken Code: use letters, numbers, x, - or . only.`, 'error');
+      toastMessage(`Invalid Chicken Code: use letters, numbers, x, - or . only.`, 'error');
       return;
     }
     if (takenCodes.has(codeToUse.toLowerCase())) {
-      ui.showToastMessage(`Chicken Code "${codeToUse}" is already in use. Pick another.`, 'error');
+      toastMessage(`Chicken Code "${codeToUse}" is already in use. Pick another.`, 'error');
       return;
     }
 
     // ── Wing band ID: physical band number, unique across the farm ──
     const bandValue = wingBand.trim();
     if (bandValue && !/^[A-Za-z0-9._-]{1,24}$/.test(bandValue)) {
-      ui.showToastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
+      toastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
       return;
     }
     if (bandValue && fowls.some((f) => (f.wing_band || '').trim().toLowerCase() === bandValue.toLowerCase())) {
-      ui.showToastMessage(`Wing Band "${bandValue}" is already in use. Pick another.`, 'error');
+      toastMessage(`Wing Band "${bandValue}" is already in use. Pick another.`, 'error');
       return;
     }
 
@@ -575,7 +576,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     const sRaw = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? null : Number(sirePct);
     const dRaw = damPct === '' || damPct === null || isNaN(Number(damPct)) ? null : Number(damPct);
     if (sRaw !== null && dRaw !== null && (sRaw < 0 || sRaw > 100 || dRaw < 0 || dRaw > 100)) {
-      ui.showToastMessage('Heritage percentages must be between 0 and 100.', 'error');
+      toastMessage('Heritage percentages must be between 0 and 100.', 'error');
       return;
     }
     if (
@@ -584,7 +585,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       !isFoundationStock(sireName) && !isFoundationStock(damName) &&
       sRaw + dRaw !== 100
     ) {
-      ui.showToastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave blank if unknown.', 'error');
+      toastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave blank if unknown.', 'error');
       return;
     }
 
@@ -604,7 +605,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
       if (!activeUserId) {
-        ui.showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
+        toastMessage('Authentication Error: Active session user ID not detected.', 'error');
         return;
       }
 
@@ -657,9 +658,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       const result = await fowlService.insertFowl(payload);
       if (result.error) {
-        ui.showToastMessage(`Database Error: ${result.error}`, 'error');
+        toastMessage(`Database Error: ${result.error}`, 'error');
       } else {
-        ui.showToastMessage('GalloTrack Registry Object saved successfully.', 'success');
+        toastMessage('GalloTrack Registry Object saved successfully.', 'success');
         for (const s of selectedStrains) {
           await strainService.saveCustomStrain(s);
         }
@@ -672,7 +673,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
       }
     } catch (err: unknown) {
-      ui.showToastMessage(`Upload Cluster Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      toastMessage(`Upload Cluster Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
     } finally {
       setLoading(false);
       setUploadingImage(false);
@@ -697,7 +698,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       derbyMatchNumber,
     });
     if (!validation.success) {
-      ui.showToastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
+      toastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
       return;
     }
 
@@ -718,7 +719,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
       if (!activeUserId) {
-        ui.showToastMessage('Authentication Error: Active session user ID not detected.', 'error');
+        toastMessage('Authentication Error: Active session user ID not detected.', 'error');
         return;
       }
 
@@ -758,14 +759,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           console.warn('Match options save skipped:', optResult.error);
         }
 
-        ui.showToastMessage('Performance match vector successfully computed and logged.', 'success');
+        toastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
         setPartnerEntry(''); setSuggestedPartners([]);
         fetchDatabaseResources();
         ui.setProfilingSubTab('males');
       }
     } catch (err: unknown) {
-      ui.showToastMessage(`Database Write Constraint Fault: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      toastMessage(`Database Write Constraint Fault: ${err instanceof Error ? err.message : String(err)}`, 'error');
     } finally {
       setLoading(false);
       setUploadingVideo(false);
@@ -776,9 +777,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(true);
     const result = await fowlService.setSireMaterial(fowl.id);
     if (result.error) {
-      ui.showToastMessage(`Failed to mark ${fowl.name} as Sire Material: ${result.error}`, 'error');
+      toastMessage(`Failed to mark ${fowl.name} as Sire Material: ${result.error}`, 'error');
     } else {
-      ui.showToastMessage(`${fowl.name} is now Sire Material — retired from fighting, available for breeding.`, 'success');
+      toastMessage(`${fowl.name} is now Sire Material — retired from fighting, available for breeding.`, 'success');
       if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
@@ -789,9 +790,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(true);
     const result = await fowlService.setFowlActive(fowl.id);
     if (result.error) {
-      ui.showToastMessage(`Failed to return ${fowl.name} to Active: ${result.error}`, 'error');
+      toastMessage(`Failed to return ${fowl.name} to Active: ${result.error}`, 'error');
     } else {
-      ui.showToastMessage(`${fowl.name} is back to Active status.`, 'success');
+      toastMessage(`${fowl.name} is back to Active status.`, 'success');
       if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
@@ -802,16 +803,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     if (!ui.selectedFowlForArchive) return;
     const typedReason = archiveReasonNote.replace(/[<>&"]/g, '').trim();
     if (archiveReasonInput === 'OTHER' && !typedReason) {
-      ui.showToastMessage('Type the archive reason before confirming (OTHER).', 'error');
+      toastMessage('Type the archive reason before confirming (OTHER).', 'error');
       return;
     }
     const finalReason = archiveReasonInput === 'OTHER' ? typedReason : archiveReasonInput;
     setLoading(true);
     const result = await fowlService.archiveFowl(ui.selectedFowlForArchive.id, finalReason);
     if (result.error) {
-      ui.showToastMessage(result.error, 'error');
+      toastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage(`Chicken archived under ${finalReason} status log.`, 'warning');
+      toastMessage(`Chicken archived under ${finalReason} status log.`, 'warning');
       setArchiveReasonNote('');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForArchive(null);
@@ -824,9 +825,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(true);
     const result = await fowlService.archiveFowl(id);
     if (result.error) {
-      ui.showToastMessage(result.error, 'error');
+      toastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage('Chicken archived successfully.', 'warning');
+      toastMessage('Chicken archived successfully.', 'warning');
       if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
@@ -837,9 +838,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(true);
     const result = await fowlService.restoreFowl(id);
     if (result.error) {
-      ui.showToastMessage(result.error, 'error');
+      toastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage('Node successfully restored to active family registry.', 'success');
+      toastMessage('Node successfully restored to active family registry.', 'success');
       if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
@@ -851,9 +852,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     ui.setPermanentDeleting(true);
     const result = await fowlService.deleteFowl(ui.pendingPermanentDelete.id);
     if (result.error) {
-      ui.showToastMessage(result.error, 'error');
+      toastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage(`${ui.pendingPermanentDelete.name} permanently deleted.`, 'success');
+      toastMessage(`${ui.pendingPermanentDelete.name} permanently deleted.`, 'success');
       if (ui.selectedFowlForDetails?.id === ui.pendingPermanentDelete.id) ui.setSelectedFowlForDetails(null);
       ui.setPendingPermanentDelete(null);
       setFowls(prev => prev.filter(f => f.id !== ui.pendingPermanentDelete!.id));
@@ -865,16 +866,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     if (!ui.selectedFowlForDeceased) return;
     const typedCause = deathReasonNote.replace(/[<>&"]/g, '').trim();
     if (deathReasonInput === 'Other' && !typedCause) {
-      ui.showToastMessage('Type the cause of death before confirming (Other).', 'error');
+      toastMessage('Type the cause of death before confirming (Other).', 'error');
       return;
     }
     const finalCause = deathReasonInput === 'Other' ? typedCause : deathReasonInput;
     setLoading(true);
     const result = await fowlService.markFowlDeceased(ui.selectedFowlForDeceased.id, finalCause);
     if (result.error) {
-      ui.showToastMessage(result.error, 'error');
+      toastMessage(result.error, 'error');
     } else {
-      ui.showToastMessage('Chicken node recorded under mortality archive log.', 'error');
+      toastMessage('Chicken node recorded under mortality archive log.', 'error');
       setDeathReasonNote('');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForDeceased.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForDeceased(null);
@@ -924,7 +925,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       // Validate the raw input — normalizing first would silently truncate oversize codes.
       const submittedCode = String(editBirdCode ?? '').replace(/\s+/g, '');
       if (!isValidBirdCode(submittedCode)) {
-        ui.showToastMessage('Invalid Chicken Code: use letters, numbers, x, - or . only (max 24 chars).', 'error');
+        toastMessage('Invalid Chicken Code: use letters, numbers, x, - or . only (max 24 chars).', 'error');
         return;
       }
       const editingId = String(ui.editingFowl.id);
@@ -932,21 +933,21 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         ([id, code]) => editingId !== id && code.toLowerCase() === submittedCode.toLowerCase()
       );
       if (duplicateCode) {
-        ui.showToastMessage(`Chicken Code "${submittedCode}" is already in use. Pick another.`, 'error');
+        toastMessage(`Chicken Code "${submittedCode}" is already in use. Pick another.`, 'error');
         return;
       }
 
       // ── Wing band ID: physical band number, unique across the farm ──
       const editBand = editWingBand.trim();
       if (editBand && !/^[A-Za-z0-9._-]{1,24}$/.test(editBand)) {
-        ui.showToastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
+        toastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
         return;
       }
       const duplicateBand = fowls.some(
         (f) => f.id !== ui.editingFowl?.id && (f.wing_band || '').trim().toLowerCase() === editBand.toLowerCase()
       );
       if (editBand && duplicateBand) {
-        ui.showToastMessage(`Wing Band "${editBand}" is already in use. Pick another.`, 'error');
+        toastMessage(`Wing Band "${editBand}" is already in use. Pick another.`, 'error');
         return;
       }
 
@@ -960,7 +961,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         !isFoundationStock(editSire) && !isFoundationStock(editDam) &&
         (sPct < 0 || sPct > 100 || dPct < 0 || dPct > 100 || sPct + dPct !== 100)
       ) {
-        ui.showToastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave unchanged if unknown.', 'error');
+        toastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave unchanged if unknown.', 'error');
         return;
       }
 
@@ -1008,7 +1009,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
       if (result.error) throw new Error(result.error);
 
-      ui.showToastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
+      toastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
       await strainService.saveCustomStrain(editBreed);
       const editedRoot = {
         ...ui.editingFowl,
@@ -1024,7 +1025,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       ui.setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: unknown) {
-      ui.showToastMessage(`Update Cluster Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      toastMessage(`Update Cluster Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
     } finally {
       setLoading(false);
     }

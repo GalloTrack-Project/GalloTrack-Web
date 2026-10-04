@@ -86,23 +86,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     >
       <SkipLink />
 
-      {ui.toast.show && (
-        <div
-          role={ui.toast.type === 'error' ? 'alert' : 'status'}
-          className="fixed top-5 right-5 z-[9999] flex items-center gap-3 p-4 px-5 max-w-sm rounded-sm shadow-lg border backdrop-blur-xl animate-fadeIn bg-card/95 border-border"
-        >
-          <div className={cn(
-            'flex items-center justify-center w-8 h-8 rounded-sm shrink-0 font-semibold text-sm shadow-sm border',
-            ui.toast.type === 'success' && 'bg-success/15 text-success border-success/40',
-            ui.toast.type === 'error' && 'bg-danger/15 text-danger border-danger/40',
-            ui.toast.type === 'warning' && 'bg-warning/15 text-warning border-warning/40',
-          )}>
-            <span aria-hidden="true">{ui.toast.type === 'success' ? '✓' : ui.toast.type === 'error' ? '✕' : '!'}</span>
-          </div>
-          <p className="text-sm font-medium text-card-foreground leading-snug">{ui.toast.message}</p>
-        </div>
-      )}
-
       {/* SIDEBAR */}
       <aside className="hidden md:flex w-64 bg-card text-card-foreground flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-border shadow-2xl h-full justify-between">
         <div>

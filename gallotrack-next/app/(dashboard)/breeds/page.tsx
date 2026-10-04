@@ -3,13 +3,11 @@ import React, { useState, useMemo } from 'react';
 import { Dna, Search, Trash2, Lock, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFowl } from '@/lib/contexts/fowl-context';
-import { useUI } from '@/lib/contexts/ui-context';
-import { STRAIN_LIST } from '@/lib/helpers';
 import * as strainService from '@/lib/services/strain-service';
+import { toastMessage } from '@/lib/toast-bus';
 
 export default function BreedsPage() {
-  const { availableStrains, customStrainNames, fowls, activeFowls, fetchDatabaseResources } = useFowl();
-  const ui = useUI();
+  const { availableStrains, customStrainNames, activeFowls, fetchDatabaseResources } = useFowl();
   const router = useRouter();
 
   const [search, setSearch] = useState('');
@@ -46,32 +44,32 @@ export default function BreedsPage() {
     const trimmed = newBreedName.trim();
     if (!trimmed) return;
     if (availableStrains.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
-      ui.showToastMessage(`"${trimmed}" already exists.`, 'error');
+      toastMessage(`"${trimmed}" already exists.`, 'error');
       return;
     }
     const ok = await strainService.saveCustomStrain(trimmed);
     if (ok) {
-      ui.showToastMessage(`Breed "${trimmed}" created.`, 'success');
+      toastMessage(`Breed "${trimmed}" created.`, 'success');
       setNewBreedName('');
       setShowAddForm(false);
       fetchDatabaseResources();
     } else {
-      ui.showToastMessage('Failed to create breed.', 'error');
+      toastMessage('Failed to create breed.', 'error');
     }
   };
 
   const handleDelete = async (name: string) => {
     if (!customStrainNames.has(name)) {
-      ui.showToastMessage(`"${name}" is a built-in breed and can't be deleted.`, 'warning');
+      toastMessage(`"${name}" is a built-in breed and can't be deleted.`, 'warning');
       setConfirmDelete(null);
       return;
     }
     setDeleting(name);
     const result = await strainService.deleteStrain(name);
     if (result.error) {
-      ui.showToastMessage(`Failed to delete "${name}": ${result.error}`, 'error');
+      toastMessage(`Failed to delete "${name}": ${result.error}`, 'error');
     } else {
-      ui.showToastMessage(`Breed "${name}" deleted.`, 'success');
+      toastMessage(`Breed "${name}" deleted.`, 'success');
       fetchDatabaseResources();
     }
     setDeleting(null);
