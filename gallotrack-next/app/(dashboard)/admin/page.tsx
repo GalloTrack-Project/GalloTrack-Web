@@ -1,8 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Modal } from '@/components/ui';
+import { Modal, useToast } from '@/components/ui';
 import {
   adminGuard,
   deleteUserRecords,
@@ -13,9 +12,8 @@ import {
 } from '@/lib/admin';
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
-import { Users, CheckCircle, Ban, Shield, Search, User, Trash2, AlertTriangle, ClipboardList, Clock, FileText } from 'lucide-react';
+import { Users, CheckCircle, Ban, Shield, Search, User, AlertTriangle, ClipboardList, Clock, FileText } from 'lucide-react';
 
-type ToastState = { type: 'success' | 'error'; message: string } | null;
 type AdminTab = 'users' | 'audit';
 
 interface AuditLog {
@@ -63,7 +61,7 @@ export default function AdminPanelPage() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminProfileRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [toast, setToast] = useState<ToastState>(null);
+  const { toast: pushToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'owner'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended' | 'deactivated'>('all');
@@ -77,10 +75,12 @@ export default function AdminPanelPage() {
   const [auditSearch, setAuditSearch] = useState('');
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
 
-  const showToast = useCallback((type: 'success' | 'error', message: string) => {
-    setToast({ type, message });
-    window.setTimeout(() => setToast(null), 3500);
-  }, []);
+  const showToast = useCallback(
+    (type: 'success' | 'error', message: string) => {
+      pushToast({ title: message, variant: type === 'error' ? 'danger' : 'success' });
+    },
+    [pushToast],
+  );
 
   const loadProfiles = useCallback(async () => {
     try {
@@ -371,18 +371,7 @@ export default function AdminPanelPage() {
             </button>
           ))}
         </div>
-
-        {toast && (
-          <div
-            className={`mb-4 text-sm font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
-              toast.type === 'success'
-                ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
-                : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
-            }`}
-          >
-            {toast.message}
-          </div>
-        )}
+
 
         {activeTab === 'users' && (<>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">

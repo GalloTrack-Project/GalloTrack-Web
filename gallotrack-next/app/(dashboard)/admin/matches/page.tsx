@@ -1,6 +1,6 @@
 'use client';
-
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useToast } from '@/components/ui';
 import { Swords, CheckCircle, XCircle, Handshake, Skull, Search, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
@@ -35,7 +35,7 @@ export default function AdminMatchAuditPage() {
   const [filterOutcome, setFilterOutcome] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const [filterHealth, setFilterHealth] = useState('all');
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { toast: pushToast } = useToast();
 
   const loadMatches = useCallback(async () => {
     try {
@@ -57,8 +57,7 @@ export default function AdminMatchAuditPage() {
         });
       }
     } catch {
-      setToast({ type: 'error', message: 'Failed to load matches' });
-      window.setTimeout(() => setToast(null), 3500);
+      pushToast({ title: 'Failed to load matches', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -133,12 +132,7 @@ export default function AdminMatchAuditPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-        {toast && (
-          <div className={`mb-4 text-sm font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
-            toast.type === 'success' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
-          }`}>{toast.message}</div>
-        )}
+      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>

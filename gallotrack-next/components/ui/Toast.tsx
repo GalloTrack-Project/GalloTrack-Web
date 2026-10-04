@@ -12,8 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { cn } from './utils';
-
-type ToastVariant = 'default' | 'success' | 'warning' | 'danger' | 'info';
+import { registerToastHandler, type ToastInput, type ToastVariant } from '@/lib/toast-bus';
 
 type ToastRecord = {
   id: number;
@@ -21,13 +20,6 @@ type ToastRecord = {
   description?: string;
   variant: ToastVariant;
   duration: number;
-};
-
-type ToastInput = {
-  title: string;
-  description?: string;
-  variant?: ToastVariant;
-  duration?: number;
 };
 
 type ToastContextValue = {
@@ -102,6 +94,13 @@ function ToastProvider({ children }: { children: ReactNode }) {
       pending.clear();
     };
   }, []);
+
+  // Publish this provider's dispatcher so non-component code (the contexts)
+  // can raise toasts without a hook.
+  useEffect(() => {
+    registerToastHandler(toast);
+    return () => registerToastHandler(null);
+  }, [toast]);
 
   const value = useMemo(() => ({ toast, dismiss }), [toast, dismiss]);
 

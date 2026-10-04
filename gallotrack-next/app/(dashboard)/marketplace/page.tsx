@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Egg, Search, Clipboard, Pencil, Plus, AlertTriangle } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
-import { Modal } from '@/components/ui';
+import { Modal, useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { useFowl } from '@/lib/contexts/fowl-context';
 
@@ -58,13 +58,15 @@ export default function MarketplacePage() {
   const [form, setForm] = useState<FormData>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { toast: pushToast } = useToast();
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const showToast = useCallback((type: 'success' | 'error', message: string) => {
-    setToast({ type, message });
-    window.setTimeout(() => setToast(null), 3500);
-  }, []);
+  const showToast = useCallback(
+    (type: 'success' | 'error', message: string) => {
+      pushToast({ title: message, variant: type === 'error' ? 'danger' : 'success' });
+    },
+    [pushToast],
+  );
 
   const loadData = useCallback(async () => {
     try {
@@ -232,12 +234,7 @@ export default function MarketplacePage() {
   const labelClass = 'block text-xs font-black text-muted-foreground mt-2 uppercase tracking-widest';
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      {toast && (
-        <div className={`fixed top-5 right-5 z-[9999] text-sm font-bold p-4 rounded-md border shadow-2xl backdrop-blur-xl animate-fadeIn ${
-          toast.type === 'success' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
-        }`}>{toast.message}</div>
-      )}
+    <div className="space-y-6 animate-fadeIn">
 
       {/* HEADER */}
       <div className="rounded-lg border border-border bg-card/70 p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
