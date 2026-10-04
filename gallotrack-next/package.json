@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gate:static": "node scripts/standard-gates.mjs",
+    "gate:mobile": "node scripts/mobile-gate.mjs",
     "gate": "node scripts/standard-gates.mjs && tsc --noEmit && eslint . --cache && vitest run"
   },
   "dependencies": {
@@ -46,6 +47,7 @@
     "eslint-config-next": "16.2.7",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "jsdom": "^29.1.1",
+    "playwright": "^1.55.0",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4",

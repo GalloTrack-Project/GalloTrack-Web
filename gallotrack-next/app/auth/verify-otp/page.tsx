@@ -189,8 +189,8 @@ function VerifyOtpCard() {
               </div>
 
               <div>
-                <label className={labelClass} htmlFor="verification-code">Verification Code</label>
-                <div className="flex items-center justify-center gap-2">
+                <label className={labelClass} htmlFor="verification-code-1">Verification Code</label>
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <input
                       key={i}
@@ -205,8 +205,8 @@ function VerifyOtpCard() {
                       onKeyDown={(e) => handleDigitKeyDown(e, i)}
                       onPaste={handlePaste}
                       aria-label={`Digit ${i + 1} of 6`}
-                      className="w-10 h-12 sm:w-11 sm:h-12 border border-input-border rounded-md text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-foreground"
-                    id="verification-code" />
+                      className="w-9 h-12 sm:w-11 border border-input-border rounded-md text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 transition-colors text-foreground"
+                      id={`verification-code-${i + 1}`} />
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground font-mono font-semibold mt-1.5">6-digit code. Check your Gmail inbox (and spam folder).</p>

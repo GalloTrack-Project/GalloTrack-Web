@@ -265,6 +265,7 @@ footer a{color:var(--text2)}
           <tr><td>Contrast failures</td><td class="mono">9 across 3 findings</td><td class="mono">0</td><td>all AAA, both themes</td></tr>
           <tr><td>Component tests</td><td class="mono">0</td><td class="mono">210 in 15 files</td><td>vitest + axe</td></tr>
           <tr><td>Lint</td><td class="mono">11 errors / 93 warnings</td><td class="mono">0 errors / 86 warnings</td><td>jsx-a11y on</td></tr>
+          <tr><td>Mobile layout at 390/360/320px</td><td class="mono">4 breaks seen by eye</td><td class="mono">63 checks, 0 issues</td><td>gate 7, browser-driven</td></tr>
         </tbody>
       </table>
     </div>
@@ -279,6 +280,7 @@ footer a{color:var(--text2)}
     <div class="sec-eyebrow">05 &middot; Your pass</div>
     <h2>What to actually do</h2>
     <div class="prose" style="margin-top:12px">
+      <p><strong>One of these is now automated.</strong> The phone-width pass below runs in a real browser via <code>npm run gate:mobile</code> &mdash; 21 routes at 390, 360 and 320px, failing on sideways scroll, content cut off by an <code>overflow: hidden</code> ancestor, text squeezed under 100px, or a footer under the bottom nav. It currently reports 63 checks and 0 issues, so treat it as a safety net rather than something to re-do by hand. The rest still need your eyes.</p>
       <p>Seven passes. Each one lists literal steps &mdash; where to go, what to click, what to look at. Work top to bottom; they build on each other. Write the outcome in the box, and if something fails note the page and what looked wrong.</p>
       <p><strong>Rules of thumb:</strong> a pass is only a pass if you saw it with your own eyes. If you are unsure, mark it as a note rather than a pass &mdash; an uncertain check re-opens triage, which is the safe outcome.</p>
     </div>
@@ -312,7 +314,7 @@ footer a{color:var(--text2)}
             <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
           </tr>
 <tr>
-            <td><strong>Phone widths</strong><div class="mono" style="margin-top:6px;font-size:12px">N4 A3 K10</div></td>
+            <td><strong>Phone widths</strong><div class="mono" style="margin-top:6px;font-size:12px">N4 A3 K10</div><div class="chip pass" style="margin-top:6px">automated</div></td>
             <td><ol class="steps"><li>Narrow the browser to about 360px wide (or use a real phone).</li><li>Check the bottom navigation bar appears and matches the sidebar items.</li><li>Try tapping the small ✕ buttons that remove a strain or a leg colour — you should hit them first try.</li><li>Repeat at tablet width (~768px) and desktop (~1440px).</li></ol></td>
             <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
           </tr>
