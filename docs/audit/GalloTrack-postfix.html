@@ -153,7 +153,8 @@ pre{margin:14px 0 0;padding:14px 16px;background:rgba(0,0,0,.45);border:1px soli
 footer{padding:36px clamp(24px,5vw,80px) 56px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
 footer a{color:var(--text2)}
 @media print{.topbar,.skip,.btnrow,.tracker{display:none}body{background:#fff;color:#000}}
-.sec-eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}.tldr-note{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch}</style>
+.sec-eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}.tldr-note{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch}.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}.steps li{line-height:1.55}.tracker-list .how{display:block;color:var(--muted);font-size:13.5px;line-height:1.55;margin-top:5px;font-weight:400}.tracker-list .t strong{font-size:14.5px}table.passes td{vertical-align:top}input.result{width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:8px;font:inherit;font-size:13.5px}input.result::placeholder{color:var(--muted)}input.result:focus{outline:2px solid var(--focus);outline-offset:1px}</style>
+
 <body>
 
 <header class="topbar">
@@ -164,19 +165,19 @@ footer a{color:var(--text2)}
   <div class="wrap">
     <div class="sec-eyebrow">01 &middot; Verdict</div>
     <h1>GalloTrack post-fix UI/UX report</h1>
-    <p class="lede" style="margin-top:16px">What changed across the seven-PR migration, what is provably fixed, and what still needs a browser. Every figure below is measured from the working tree, not asserted.</p>
+    <p class="lede" style="margin-top:16px">What changed across the seven-PR migration, what is provably fixed, and what still needs a human to look at it. Every figure below is measured from the working tree.</p>
 
     <div class="tldr">
-      <div class="stat g"><b>0</b><span>S1 and S2 findings still open. All 12 S2 units are fixed and CI-enforced.</span></div>
-      <div class="stat"><b>19/23</b><span>Units fully fixed. 3 partial, 1 open (both S4/practice or adoption work).</span></div>
-      <div class="stat"><b>210</b><span>Tests passing, up from 0 component tests at baseline.</span></div>
-      <div class="stat mid"><b>Incomplete</b><span>Verdict rule 2: the runtime units have not been reviewed. That is the only thing standing between this and <em>Approve with fixes</em>.</span></div>
+      <div class="stat g"><b>0</b><span>S1 and S2 findings still open. All 12 S2 units are fixed and enforced by CI.</span></div>
+      <div class="stat"><b>19/23</b><span>Units fixed. 3 partial, 1 open by decision.</span></div>
+      <div class="stat"><b>210</b><span>Tests passing, up from zero component tests at baseline.</span></div>
+      <div class="stat mid"><b>Incomplete</b><span>The runtime checks below have not been done yet. That is the only thing holding the verdict back.</span></div>
     </div>
 
     <div class="verdict-box">
       <h3 style="margin:0 0 8px">Where the verdict stands</h3>
-      <p class="prose" style="margin:0"><strong>Static evidence is complete and clean.</strong> All eight S2 findings and all nine S3 findings that are code-checkable now measure zero, and each is enforced by a CI gate rather than by discipline. <strong>The runtime half is not.</strong> The workbench&rsquo;s light/dark walk, keyboard pass, screen-reader pass, zoom and device checks were never performed &mdash; they need a browser. Until they are, every runtime unit reads <em>blank</em>, and a blank unit is not a pass.</p>
-      <p class="prose" style="margin:12px 0 0">Two S3 items are honestly <strong>partial</strong>: the shadow and padding scales in L2, and adoption of the Card/Badge/EmptyState/loading primitives in L4 and L5. The primitives exist and are tested; pages still hand-roll many of them. One S4 (L7, dead components) is open by decision.</p>
+      <p class="prose" style="margin:0"><strong>Everything checkable from code is clean.</strong> All eight S2 findings and every code-checkable S3 now measure zero, and each is enforced by a CI gate rather than by discipline. <strong>The half that needs eyes is not done.</strong> Nobody has walked the app in light and dark, driven it by keyboard, listened to it with a screen reader, zoomed it, or tried it on a phone. Until that happens those checks read blank, and a blank check is not a pass.</p>
+      <p class="prose" style="margin:12px 0 0">Three S3 items are honestly <strong>partial</strong>: the shadow and padding scales, and how widely the shared Card / Badge / loading primitives are adopted. The primitives exist and are tested; many pages still hand-roll their own. One S4 item is <strong>open by decision</strong> because deleting an unused splash screen and re-wiring it are both defensible.</p>
     </div>
   </div>
 </section>
@@ -190,12 +191,12 @@ footer a{color:var(--text2)}
         <thead><tr><th>Phase</th><th>Delivered</th><th>Proof</th></tr></thead>
         <tbody>
           <tr><td><strong>PR 1</strong> Standard &amp; baseline</td><td>UI standard, 19-finding baseline audit, workbench seed</td><td>docs committed</td></tr>
-          <tr><td><strong>PR 2</strong> Foundations</td><td>Semantic tokens, motion scale, reduced motion, next-themes consolidation</td><td>101 tests, non-visual by construction</td></tr>
-          <tr><td><strong>PR 3</strong> Component library</td><td>19 primitives on clsx + CVA, global focus ring</td><td>90 new tests</td></tr>
+          <tr><td><strong>PR 2</strong> Foundations</td><td>Semantic tokens, motion scale, reduced motion, one theme provider</td><td>101 tests, non-visual by construction</td></tr>
+          <tr><td><strong>PR 3</strong> Component library</td><td>19 primitives on clsx + CVA, one global focus ring</td><td>90 new tests</td></tr>
           <tr><td><strong>PR 4</strong> Shell &amp; pages</td><td>One h1 per route, merged navs, role accent, token charts, radius scale</td><td>gate 0/0</td></tr>
-          <tr><td><strong>PR 5</strong> WCAG 2.2 AA</td><td>Contrast to AAA both themes, 14px type scale, labels, dialogs, one toast</td><td>contra&nbsp;scans, jsx-a11y 109&rarr;0</td></tr>
+          <tr><td><strong>PR 5</strong> WCAG 2.2 AA</td><td>Contrast to AAA both themes, 14px type scale, labels, dialogs, one toast</td><td>jsx-a11y 109 &rarr; 0</td></tr>
           <tr><td><strong>PR 6</strong> Enforcement</td><td>Six CI gates with ratchet baselines, jsx-a11y, axe, Prettier, <code>/design-kit</code></td><td>gate exit 0</td></tr>
-          <tr><td><strong>PR 7</strong> Verify</td><td><em>This report</em> &mdash; awaiting the runtime passes</td><td>&mdash;</td></tr>
+          <tr><td><strong>PR 7</strong> Verify</td><td><em>This report</em> &mdash; awaiting the checks below</td><td>&mdash;</td></tr>
         </tbody>
       </table>
     </div>
@@ -205,37 +206,37 @@ footer a{color:var(--text2)}
 <section class="band" id="findings">
   <div class="wrap">
     <div class="sec-eyebrow">03 &middot; Findings</div>
-    <h2>All 23 logged units, resolved or not</h2>
+    <h2>All 23 logged units</h2>
     <div class="prose" style="margin-top:12px">
-      <p>The baseline logged 19 findings, which resolve to 23 checkable units: C5, C6 and K4 each fail in both themes, K2/K7 and A3/K10 are distinct units, and the two S4 practice notes add their own. Nothing here is marked fixed on intent &mdash; each carries the measurement or the gate that proves it.</p>
+      <p>The baseline logged 19 findings, which resolve to 23 checkable units: C5, C6 and K4 each fail in both themes, K2/K7 and A3/K10 are separate units, and the two practice notes add their own. Nothing is marked fixed on intent &mdash; each carries the measurement or the gate that proves it.</p>
     </div>
     <div class="tablewrap" style="margin-top:18px">
       <table>
         <thead><tr><th>Unit</th><th>Sev</th><th>Status</th><th>Evidence</th></tr></thead>
         <tbody>
-          <tr><td class="mono">C2@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Metadata grey replaced by <code>--muted-foreground</code>: 2.56:1 &rarr; 4.76:1 light. 148 <code>text-slate-400</code> and 13 <code>text-slate-300</code> sites migrated.</td></tr>
-          <tr><td class="mono">C6@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Chart palette now reads live tokens via <code>lib/chart-tokens.ts</code>. The three flagged greys are gone; axis ticks use <code>--muted-foreground</code>.</td></tr>
-          <tr><td class="mono">C6@dark</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Same token pipeline in dark. The doughnut&rsquo;s <code>#065f46</code> (2.32:1) is replaced by <code>--success</code>.</td></tr>
-          <tr><td class="mono">K4@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>One unlayered global <code>:focus-visible</code> rule; all 80 <code>outline-none</code> deleted. Naked <code>outline-none</code> now measures 0 in CI.</td></tr>
-          <tr><td class="mono">K4@dark</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Ring colour is theme-aware (<code>--ring</code>), 15.76:1 against the dark background.</td></tr>
-          <tr><td class="mono">F2</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>92 real <code>htmlFor</code>/<code>id</code> pairs where there were none. jsx-a11y <code>label-has-associated-control</code>: 84 &rarr; <strong>0</strong>, suppressions pruned to zero.</td></tr>
-          <tr><td class="mono">K2</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>All 14 modal shells render through one <code>Modal</code> primitive. <code>role="dialog"</code> went from 0 occurrences to 16.</td></tr>
-          <tr><td class="mono">K7</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Same primitive: <code>aria-modal</code>, focus trap, focus restore, Escape, labelled close button.</td></tr>
-          <tr><td class="mono">A3</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>The one unnamed icon button is fixed and CI-enforced. Three sub-24px targets (16&times;16, 20&times;20) raised to 24&times;24.</td></tr>
-          <tr><td class="mono">K10</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Same three targets now clear WCAG 2.2 SC 2.5.8. Scan reports 0 under 24px.</td></tr>
-          <tr><td class="mono">T6</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>817 (in-scope) &rarr; <strong>0</strong>. Promote-then-floor gives exactly two tiers: 14px body, 12px floor. Ratchet locked at zero.</td></tr>
-          <tr><td class="mono">F10</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>One toast system. A module-level bus lets provider components dispatch; 53 legacy call sites and 5 page-local banners migrated; the old state, renderer and type deleted.</td></tr>
-          <tr><td class="mono">N2</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Shell title demoted to a <code>&lt;span&gt;</code>; each route owns exactly one <code>h1</code>. Six real violations fixed elsewhere.</td></tr>
+          <tr><td class="mono">C2@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Metadata grey routed through <code>--muted-foreground</code>: 2.56:1 &rarr; 4.76:1. 148 <code>text-slate-400</code> and 13 <code>text-slate-300</code> sites migrated.</td></tr>
+          <tr><td class="mono">C6@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Chart palette reads live tokens via <code>lib/chart-tokens.ts</code>; axis ticks use <code>--muted-foreground</code>.</td></tr>
+          <tr><td class="mono">C6@dark</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>The doughnut&rsquo;s <code>#065f46</code> (2.32:1 on dark) is gone; slices come from <code>--success</code>, <code>--info</code>, <code>--warning</code>, <code>--danger</code>.</td></tr>
+          <tr><td class="mono">K4@light</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>One unlayered global <code>:focus-visible</code> rule; all 80 <code>outline-none</code> deleted, gated at 0.</td></tr>
+          <tr><td class="mono">K4@dark</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Ring colour is theme-aware (<code>--ring</code>), 15.76:1 on the dark background.</td></tr>
+          <tr><td class="mono">F2</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>92 real <code>htmlFor</code>/<code>id</code> pairs added. jsx-a11y <code>label-has-associated-control</code>: 84 &rarr; 0, suppressions pruned to zero.</td></tr>
+          <tr><td class="mono">K2</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>All 14 shells render through one <code>Modal</code> primitive with role, aria-modal, focus trap and Escape. <code>role="dialog"</code> went 0 &rarr; 16.</td></tr>
+          <tr><td class="mono">K7</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Focus restore is part of the shared primitive; verified in the modal test suite.</td></tr>
+          <tr><td class="mono">A3</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>The unnamed icon button is fixed and gated at 0. Three sub-24px targets raised to 24&times;24.</td></tr>
+          <tr><td class="mono">K10</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>Scan reports 0 controls under 24&times;24. The three flagged chip buttons are now 24&times;24 (WCAG 2.2 SC 2.5.8).</td></tr>
+          <tr><td class="mono">T6</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>817 in-scope sites &rarr; 0. Promote-then-floor gives two tiers only: 14px body, 12px floor. Ratchet locked at zero.</td></tr>
+          <tr><td class="mono">F10</td><td><span class="chip s2">S2</span></td><td><span class="chip pass">fixed</span></td><td>One toast system. A module-level bus lets provider code dispatch; 53 legacy calls and 5 page banners migrated; old state, renderer and type deleted.</td></tr>
+          <tr><td class="mono">N2</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Shell title demoted to a <code>&lt;span&gt;</code>. Six further violations fixed. Seven level skips &rarr; 0.</td></tr>
           <tr><td class="mono">K6</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Skip link is the first focusable element in the shell, targeting <code>#main-content</code>.</td></tr>
-          <tr><td class="mono">A4</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>A real <code>&lt;footer&gt;</code> with the colophon, completing the landmark set.</td></tr>
-          <tr><td class="mono">L2</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td>Radius collapsed from 5 arbitrary families to 3 (591 call sites). <em>Shadows still 7 levels and paddings untouched</em> &mdash; the scale exists but is only adopted by new code.</td></tr>
-          <tr><td class="mono">L4</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td>Button, Card, Badge, EmptyState, StatCard, Table, Tabs, Modal and Toast all exist in <code>components/ui/</code>, and 17 files import them. <em>Adoption is partial</em> &mdash; pages still hand-roll most buttons and cards.</td></tr>
-          <tr><td class="mono">L5</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td><code>Skeleton</code> and <code>Spinner</code> exist with tests, and the design kit documents them. <em>Page-level loading states are largely unchanged.</em></td></tr>
+          <tr><td class="mono">A4</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>A real <code>&lt;footer&gt;</code> added to the shell, completing the landmark set.</td></tr>
+          <tr><td class="mono">L2</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td>Radius collapsed from 5 arbitrary families to 3 across 591 call sites. <em>Shadow and padding scales still unmigrated.</em></td></tr>
+          <tr><td class="mono">L4</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td>Button, Card, Badge, EmptyState, StatCard, Table, Tabs, Modal and Toast all exist and are tested; 17 files import them. <em>Adoption is partial.</em></td></tr>
+          <tr><td class="mono">L5</td><td><span class="chip s3">S3</span></td><td><span class="chip warn">partial</span></td><td><code>Skeleton</code> and <code>Spinner</code> exist with tests and are shown on the design kit. <em>Page-level loading states largely unchanged.</em></td></tr>
           <tr><td class="mono">C5@light</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>New <code>--input-border</code> token at 4.26:1, applied across 50 control boundaries.</td></tr>
           <tr><td class="mono">C5@dark</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Same token at 3.75:1 in dark.</td></tr>
           <tr><td class="mono">N4</td><td><span class="chip s3">S3</span></td><td><span class="chip pass">fixed</span></td><td>Four nav arrays merged to two with short labels; role accent collapsed to one <code>data-role</code> + <code>--accent</code> pair.</td></tr>
-          <tr><td class="mono">L6</td><td><span class="chip s4">S4</span></td><td><span class="chip pass">fixed</span></td><td>The missing <code>fadeIn</code>/<code>enterRight</code> keyframes now exist (PR 2), so the 43 references resolve.</td></tr>
-          <tr><td class="mono">L7</td><td><span class="chip s4">S4</span></td><td><span class="chip fail">open</span></td><td><strong>Open, by decision.</strong> <code>SplashScreen</code>, <code>FarmBloodlineSummary</code> and <code>modals/index.ts</code> are all unused, and <code>showSplash</code> defaults to on with nothing rendering it. Deleting and re-wiring are both defensible, so it is left to the reviewer.</td></tr>
+          <tr><td class="mono">L6</td><td><span class="chip s4">S4</span></td><td><span class="chip pass">fixed</span></td><td>The missing keyframes exist (PR 2) so the 43 references resolve; a reduced-motion block neutralises float, hover lift and entrances.</td></tr>
+          <tr><td class="mono">L7</td><td><span class="chip s4">S4</span></td><td><span class="chip fail">open</span></td><td><strong>Open by decision.</strong> <code>SplashScreen</code>, <code>FarmBloodlineSummary</code> and <code>modals/index.ts</code> are unreferenced.</td></tr>
         </tbody>
       </table>
     </div>
@@ -250,25 +251,25 @@ footer a{color:var(--text2)}
       <table>
         <thead><tr><th>Measure</th><th>Baseline d147d46</th><th>Now</th><th>Enforced by</th></tr></thead>
         <tbody>
-          <tr><td>Arbitrary sub-12px font sizes</td><td class="mono">835</td><td class="mono">0</td><td>gate 1, ratcheted</td></tr>
-          <tr><td>Hardcoded hex in <code>.tsx</code></td><td class="mono">80</td><td class="mono">37</td><td>gate 2, ratcheted (all decorative SVG)</td></tr>
-          <tr><td>Naked <code>outline-none</code></td><td class="mono">6</td><td class="mono">0</td><td>gate 3</td></tr>
-          <tr><td>Unnamed icon-only buttons</td><td class="mono">9</td><td class="mono">0</td><td>gate 4</td></tr>
+          <tr><td>Text below 12px</td><td class="mono">835</td><td class="mono">0</td><td>gate 1, ratcheted</td></tr>
+          <tr><td>Hardcoded hex in <code>.tsx</code></td><td class="mono">80</td><td class="mono">37</td><td>gate 2 (all decorative SVG)</td></tr>
+          <tr><td><code>outline-none</code> without a focus style</td><td class="mono">6</td><td class="mono">0</td><td>gate 3</td></tr>
+          <tr><td>Icon buttons with no name</td><td class="mono">9</td><td class="mono">0</td><td>gate 4</td></tr>
           <tr><td>jsx-a11y violations (suppressed)</td><td class="mono">109</td><td class="mono">12</td><td>gate 5, suppressions pruned</td></tr>
           <tr><td>Serious/critical axe violations</td><td class="mono">no component tests</td><td class="mono">0 in 12 cases</td><td>gate 6</td></tr>
-          <tr><td><code>htmlFor</code> bindings</td><td class="mono">0 / 95 labels</td><td class="mono">92</td><td>jsx-a11y rule at 0</td></tr>
+          <tr><td>Form labels bound to their field</td><td class="mono">0 / 95</td><td class="mono">92</td><td>jsx-a11y rule at 0</td></tr>
           <tr><td><code>aria-*</code> attributes</td><td class="mono">4</td><td class="mono">91</td><td>target &ge;120 &mdash; <em>not yet met</em></td></tr>
-          <tr><td><code>role="dialog"</code></td><td class="mono">0</td><td class="mono">16</td><td>one Modal primitive</td></tr>
-          <tr><td>Radius families</td><td class="mono">5</td><td class="mono">3</td><td>PR 4</td></tr>
+          <tr><td>Dialogs with real dialog semantics</td><td class="mono">0 / 14</td><td class="mono">14 / 14</td><td>one Modal primitive</td></tr>
+          <tr><td>Corner-radius sizes in use</td><td class="mono">5</td><td class="mono">3</td><td>PR 4</td></tr>
           <tr><td>Toast systems</td><td class="mono">3</td><td class="mono">1</td><td>one provider + bus</td></tr>
-          <tr><td>Contrast ratios below threshold</td><td class="mono">9 across 3 findings</td><td class="mono">0</td><td>all AAA, both themes</td></tr>
+          <tr><td>Contrast failures</td><td class="mono">9 across 3 findings</td><td class="mono">0</td><td>all AAA, both themes</td></tr>
           <tr><td>Component tests</td><td class="mono">0</td><td class="mono">210 in 15 files</td><td>vitest + axe</td></tr>
           <tr><td>Lint</td><td class="mono">11 errors / 93 warnings</td><td class="mono">0 errors / 86 warnings</td><td>jsx-a11y on</td></tr>
         </tbody>
       </table>
     </div>
     <div class="tldr-note" style="margin-top:16px">
-      <p><strong>On the two rows that are not zero.</strong> The 37 remaining hexes are <code>stroke="#ffffff"</code> and gradient stops inside decorative background SVGs on the auth pages &mdash; they cannot reference a CSS token from a presentation attribute without restructuring the artwork, and they carry no text. The 91 <code>aria-*</code> attributes are up from 4 but short of the 120 target; the gap is live regions on page-level async states rather than anything structural.</p>
+      <p><strong>The two rows that are not zero.</strong> The 37 remaining hexes are <code>stroke="#ffffff"</code> and gradient stops inside decorative background artwork on the auth pages &mdash; a presentation attribute cannot read a CSS token without restructuring the SVG, and they carry no text. The 91 <code>aria-*</code> attributes are up from 4 but short of 120; the gap is live regions on page-level async states rather than anything structural.</p>
     </div>
   </div>
 </section>
@@ -276,23 +277,50 @@ footer a{color:var(--text2)}
 <section class="band" id="runtime">
   <div class="wrap">
     <div class="sec-eyebrow">05 &middot; Your pass</div>
-    <h2>Runtime checks &mdash; the half I cannot do</h2>
+    <h2>What to actually do</h2>
     <div class="prose" style="margin-top:12px">
-      <p>Everything above was measured from source. The workbench also requires that the app be <em>used</em>: walked in both themes, driven by keyboard, listened to with a screen reader, zoomed, and checked on real device widths. None of that can be inferred from code, which is why the verdict reads <em>Incomplete</em> rather than <em>Approve</em>.</p>
-      <p>Work through the list and record what you find. If a check fails, note the unit and the symptom &mdash; a new failure re-opens the verdict under rule 3.</p>
+      <p>Seven passes. Each one lists literal steps &mdash; where to go, what to click, what to look at. Work top to bottom; they build on each other. Write the outcome in the box, and if something fails note the page and what looked wrong.</p>
+      <p><strong>Rules of thumb:</strong> a pass is only a pass if you saw it with your own eyes. If you are unsure, mark it as a note rather than a pass &mdash; an uncertain check re-opens triage, which is the safe outcome.</p>
     </div>
-
     <div class="tablewrap" style="margin-top:18px">
-      <table>
-        <thead><tr><th>Pass</th><th>What to do</th><th>Covers</th><th>Result</th></tr></thead>
+      <table class="passes">
+        <thead><tr><th style="width:16%">Pass</th><th>Steps</th><th style="width:24%">Your result</th></tr></thead>
         <tbody>
-          <tr><td><strong>Light walk</strong></td><td>Every route in light mode: dashboard, registry, catalog, lineage, profile, settings, admin, auth. Watch for text that reads faint, borders that vanish, focus that disappears.</td><td class="mono">C2 C5 C6 K4</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
-          <tr><td><strong>Dark walk</strong></td><td>The same routes with the theme toggled. The palette is deep-in-light, luminous-in-dark, so the two themes must be judged separately.</td><td class="mono">C5 C6 K4</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
-          <tr><td><strong>Keyboard</strong></td><td>Tab from page load: the skip link must appear first, <code>main</code> must take focus, every control must show a ring. Open a dialog &mdash; Tab must stay inside, Escape must close it, focus must return to the trigger.</td><td class="mono">K2 K4 K6 K7</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
-          <tr><td><strong>Screen reader</strong></td><td>Announce a form (label, hint, error), a dialog (title, description), and a toast (announced without focus). Check the table headers announce their column.</td><td class="mono">F2 K2 F10 F10</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
-          <tr><td><strong>Zoom 200%</strong></td><td>Browser zoom to 200% on the densest page (admin, registry). Nothing may clip, overlap or require horizontal scroll for reading.</td><td class="mono">T6</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
-          <tr><td><strong>Device widths</strong></td><td>360, 768 and 1440. The mobile bottom nav, the sidebar collapse and the tables are the risk points.</td><td class="mono">N4 A3 K10</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
-          <tr><td><strong>Reduce motion</strong></td><td>Toggle OS &ldquo;reduce motion&rdquo;. The float, hover-lift and entrance animations must stop; nothing may disappear with them.</td><td class="mono">L6</td><td><input type="text" placeholder="pass / note the symptom" style="width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 8px;border-radius:6px"></td></tr>
+<tr>
+            <td><strong>Light walk</strong><div class="mono" style="margin-top:6px;font-size:12px">C2 C5 C6 K4</div></td>
+            <td><ol class="steps"><li>Make sure the theme is light (sun icon, top-right).</li><li>Visit each page: Dashboard, Registry, Catalog, Lineage, My Profile, Settings, and one admin page.</li><li>On each page, read the smallest grey text you can find — captions under numbers, table headings, helper text under fields.</li><li>Check that every text box has a visible outline.</li><li>Check the charts on the Dashboard are legible.</li><li>If something looks faint, note the page and what it was.</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
+<tr>
+            <td><strong>Dark walk</strong><div class="mono" style="margin-top:6px;font-size:12px">C5 C6 K4</div></td>
+            <td><ol class="steps"><li>Click the sun/moon button (top-right) to switch to dark.</li><li>Repeat exactly what you did in the light walk, on the same pages.</li><li>Pay extra attention to the doughnut chart — look for any slice that disappears into the background.</li><li>Judge dark separately; the palette is deliberately deep in light and luminous in dark.</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
+<tr>
+            <td><strong>Keyboard only</strong><div class="mono" style="margin-top:6px;font-size:12px">K2 K4 K6 K7</div></td>
+            <td><ol class="steps"><li>Put the mouse aside. Press Tab once on a fresh page load — a "Skip to main content" link should appear. Press Enter.</li><li>Keep pressing Tab. Every control you reach must show a visible focus ring.</li><li>Open a dialog (Tab to "Log Out" in the sidebar, press Enter).</li><li>Inside the dialog, press Tab repeatedly — focus must never escape to the page behind.</li><li>Press Escape to close. Now press Enter without clicking anything — the dialog should reopen, proving focus came back to the button.</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
+<tr>
+            <td><strong>Screen reader</strong><div class="mono" style="margin-top:6px;font-size:12px">F2 F10 K2 N2</div></td>
+            <td><ol class="steps"><li>Turn on NVDA, VoiceOver or Narrator.</li><li>Open a form (Register). Move through it — each field should announce its label, and any hint or error underneath it.</li><li>Open the Log Out dialog. It should announce its title and description, not just "dialog".</li><li>Open the heading list (NVDA: Insert+F7). Each page should show exactly one heading level 1.</li><li>Trigger a message (save something). It should be announced without your focus moving.</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
+<tr>
+            <td><strong>Zoom 200%</strong><div class="mono" style="margin-top:6px;font-size:12px">T6</div></td>
+            <td><ol class="steps"><li>Press Ctrl and + four times (browser zoom to ~200%).</li><li>Open the two densest pages: an admin list and the Registry.</li><li>Check nothing clips, overlaps, or forces you to scroll sideways to read a line.</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
+<tr>
+            <td><strong>Phone widths</strong><div class="mono" style="margin-top:6px;font-size:12px">N4 A3 K10</div></td>
+            <td><ol class="steps"><li>Narrow the browser to about 360px wide (or use a real phone).</li><li>Check the bottom navigation bar appears and matches the sidebar items.</li><li>Try tapping the small ✕ buttons that remove a strain or a leg colour — you should hit them first try.</li><li>Repeat at tablet width (~768px) and desktop (~1440px).</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
+<tr>
+            <td><strong>Reduce motion</strong><div class="mono" style="margin-top:6px;font-size:12px">L6</div></td>
+            <td><ol class="steps"><li>Turn on "Reduce motion" in your operating system&rsquo;s accessibility settings.</li><li>Reload the app.</li><li>Confirm the floating cards and entrance animations have stopped, and that nothing disappeared as a result.</li></ol></td>
+            <td><input type="text" placeholder="pass, or the page + what looked wrong" class="result"></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -304,23 +332,23 @@ footer a{color:var(--text2)}
     <div class="sec-eyebrow">06 &middot; Rules</div>
     <h2>How the verdict is computed</h2>
     <div class="prose" style="margin-top:12px">
-      <p>The workbench applies these rules in order and stops at the first that matches. Nothing here is a judgement call.</p>
+      <p>The workbench applies these in order and stops at the first that matches. Nothing here is a judgement call.</p>
     </div>
     <div class="tablewrap" style="margin-top:18px">
       <table>
         <thead><tr><th>#</th><th>Rule</th><th>Current state</th></tr></thead>
         <tbody>
           <tr><td class="mono">1</td><td>Any S1 open &rarr; <strong>Reject</strong></td><td><span class="chip pass">no S1 exists</span></td></tr>
-          <tr><td class="mono">2</td><td>Any unit not reviewed &rarr; <strong>Incomplete</strong></td><td><span class="chip fail">runtime units blank &mdash; this is the live rule</span></td></tr>
-          <tr><td class="mono">3</td><td>An unrated failure &rarr; <strong>Triage</strong></td><td><span class="chip pass">not reached</span></td></tr>
+          <tr><td class="mono">2</td><td>Any check not done &rarr; <strong>Incomplete</strong></td><td><span class="chip fail">the seven passes are blank &mdash; this is the live rule</span></td></tr>
+          <tr><td class="mono">3</td><td>Something failed and is not rated &rarr; <strong>Triage</strong></td><td><span class="chip pass">not reached</span></td></tr>
           <tr><td class="mono">4</td><td>Any S2 open &rarr; <strong>Reject</strong></td><td><span class="chip pass">0 of 12 open</span></td></tr>
-          <tr><td class="mono">5</td><td>Only S3/S4 open &rarr; <strong>Approve with fixes</strong></td><td><span class="chip warn">this is where it lands once rule 2 clears</span></td></tr>
+          <tr><td class="mono">5</td><td>Only S3/S4 open &rarr; <strong>Approve with fixes</strong></td><td><span class="chip warn">where it lands once rule 2 clears</span></td></tr>
           <tr><td class="mono">6</td><td>Nothing open &rarr; <strong>Approve</strong></td><td><span class="chip pass">not yet</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="tldr-note" style="margin-top:16px">
-      <p><strong>What to expect.</strong> Complete the runtime passes and rule 2 clears. Rule 4 is already satisfied &mdash; no S2 is open, and each is CI-enforced so none can silently return. That lands the verdict at <strong>Approve with fixes</strong> under rule 5, because L2, L4, L5 are partial and L7 is open by decision. Reaching a clean <em>Approve</em> means finishing shadow/padding adoption, adopting the surface primitives across pages, and deciding L7 &mdash; all of which are follow-up work, not defects in what shipped.</p>
+      <p><strong>What to expect.</strong> Finish the seven passes and rule 2 clears. Rule 4 is already satisfied &mdash; no S2 is open and each is CI-enforced, so none can quietly come back. That lands the verdict at <strong>Approve with fixes</strong> under rule 5, because three S3 items are partial and one S4 is open by decision. Reaching a clean <em>Approve</em> means finishing the shadow and padding scales, adopting the shared surface and loading primitives across pages, and settling the dead components &mdash; all follow-up work, not defects in what shipped.</p>
     </div>
   </div>
 </section>
@@ -328,38 +356,38 @@ footer a{color:var(--text2)}
 <section class="band" id="retest">
   <div class="wrap">
     <div class="sec-eyebrow">07 &middot; Re-test</div>
-    <h2>Unit tracker</h2>
+    <h2>Unit by unit, with what to look at</h2>
     <div class="prose" style="margin-top:12px">
-      <p>Every logged unit, including the two S4 practice notes. Tick one only once you have <em>seen</em> it correct in both themes &mdash; the baseline&rsquo;s discipline was that a fix is not a fix until it is retested. State persists in this browser.</p>
+      <p>All 23 units. Each says in plain words where to go and what to look at. Tick one only once you have <em>seen</em> it correct in both light and dark &mdash; a fix is not a fix until it is retested. Progress is saved in this browser.</p>
     </div>
     <div class="tracker">
       <div class="tracker-bar"><div class="tracker-fill" id="fill"></div></div>
-      <div class="tracker-pct" id="pct">0 retested <span id="count">0 of 23</span></div>
+      <div class="tracker-pct" id="pct">0 of 23 retested</div>
       <ul class="tracker-list" id="list">
-        <li data-id="c2-light"><label><input type="checkbox"><span class="t"><strong>C2@light</strong> <span class="mono">(S2)</span> &mdash; Metadata grey replaced by --muted-foreground: 2.56:1 &rarr; 4.76:1 light. 148 text-slate-400 and 13 text-slate-300 sites migrated.</span><span class="ph">fixed</span></label></li>
-        <li data-id="c6-light"><label><input type="checkbox"><span class="t"><strong>C6@light</strong> <span class="mono">(S2)</span> &mdash; Chart palette now reads live tokens via lib/chart-tokens.ts. The three flagged greys are gone; axis ticks use --muted-foreground.</span><span class="ph">fixed</span></label></li>
-        <li data-id="c6-dark"><label><input type="checkbox"><span class="t"><strong>C6@dark</strong> <span class="mono">(S2)</span> &mdash; Same token pipeline in dark. The doughnut&rsquo;s #065f46 (2.32:1) is replaced by --success.</span><span class="ph">fixed</span></label></li>
-        <li data-id="k4-light"><label><input type="checkbox"><span class="t"><strong>K4@light</strong> <span class="mono">(S2)</span> &mdash; One unlayered global :focus-visible rule; all 80 outline-none deleted. Naked outline-none now measures 0 in CI.</span><span class="ph">fixed</span></label></li>
-        <li data-id="k4-dark"><label><input type="checkbox"><span class="t"><strong>K4@dark</strong> <span class="mono">(S2)</span> &mdash; Ring colour is theme-aware (--ring), 15.76:1 against the dark background.</span><span class="ph">fixed</span></label></li>
-        <li data-id="f2"><label><input type="checkbox"><span class="t"><strong>F2</strong> <span class="mono">(S2)</span> &mdash; 92 real htmlFor/id pairs where there were none. jsx-a11y label-has-associated-control: 84 &rarr; 0, suppressions pruned to zero.</span><span class="ph">fixed</span></label></li>
-        <li data-id="k2"><label><input type="checkbox"><span class="t"><strong>K2</strong> <span class="mono">(S2)</span> &mdash; All 14 modal shells render through one Modal primitive. role="dialog" went from 0 occurrences to 16.</span><span class="ph">fixed</span></label></li>
-        <li data-id="k7"><label><input type="checkbox"><span class="t"><strong>K7</strong> <span class="mono">(S2)</span> &mdash; Same primitive: aria-modal, focus trap, focus restore, Escape, labelled close button.</span><span class="ph">fixed</span></label></li>
-        <li data-id="a3"><label><input type="checkbox"><span class="t"><strong>A3</strong> <span class="mono">(S2)</span> &mdash; The one unnamed icon button is fixed and CI-enforced. Three sub-24px targets (16&times;16, 20&times;20) raised to 24&times;24.</span><span class="ph">fixed</span></label></li>
-        <li data-id="k10"><label><input type="checkbox"><span class="t"><strong>K10</strong> <span class="mono">(S2)</span> &mdash; Same three targets now clear WCAG 2.2 SC 2.5.8. Scan reports 0 under 24px.</span><span class="ph">fixed</span></label></li>
-        <li data-id="t6"><label><input type="checkbox"><span class="t"><strong>T6</strong> <span class="mono">(S2)</span> &mdash; 817 (in-scope) &rarr; 0. Promote-then-floor gives exactly two tiers: 14px body, 12px floor. Ratchet locked at zero.</span><span class="ph">fixed</span></label></li>
-        <li data-id="f10"><label><input type="checkbox"><span class="t"><strong>F10</strong> <span class="mono">(S2)</span> &mdash; One toast system. A module-level bus lets provider components dispatch; 53 legacy call sites and 5 page-local banners migrated; the old state, renderer and type deleted.</span><span class="ph">fixed</span></label></li>
-        <li data-id="n2"><label><input type="checkbox"><span class="t"><strong>N2</strong> <span class="mono">(S3)</span> &mdash; Shell title demoted to a &lt;span&gt;; each route owns exactly one h1. Six real violations fixed elsewhere.</span><span class="ph">fixed</span></label></li>
-        <li data-id="k6"><label><input type="checkbox"><span class="t"><strong>K6</strong> <span class="mono">(S3)</span> &mdash; Skip link is the first focusable element in the shell, targeting #main-content.</span><span class="ph">fixed</span></label></li>
-        <li data-id="a4"><label><input type="checkbox"><span class="t"><strong>A4</strong> <span class="mono">(S3)</span> &mdash; A real &lt;footer&gt; with the colophon, completing the landmark set.</span><span class="ph">fixed</span></label></li>
-        <li data-id="l2"><label><input type="checkbox"><span class="t"><strong>L2</strong> <span class="mono">(S3)</span> &mdash; Radius collapsed from 5 arbitrary families to 3 (591 call sites). Shadows still 7 levels and paddings untouched &mdash; the scale exists but is only adopted by new code.</span><span class="ph">partial</span></label></li>
-        <li data-id="l4"><label><input type="checkbox"><span class="t"><strong>L4</strong> <span class="mono">(S3)</span> &mdash; Button, Card, Badge, EmptyState, StatCard, Table, Tabs, Modal and Toast all exist in components/ui/, and 17 files import them. Adoption is partial &mdash; pages still hand-roll most buttons and cards.</span><span class="ph">partial</span></label></li>
-        <li data-id="l5"><label><input type="checkbox"><span class="t"><strong>L5</strong> <span class="mono">(S3)</span> &mdash; Skeleton and Spinner exist with tests, and the design kit documents them. Page-level loading states are largely unchanged.</span><span class="ph">partial</span></label></li>
-        <li data-id="c5-light"><label><input type="checkbox"><span class="t"><strong>C5@light</strong> <span class="mono">(S3)</span> &mdash; New --input-border token at 4.26:1, applied across 50 control boundaries.</span><span class="ph">fixed</span></label></li>
-        <li data-id="c5-dark"><label><input type="checkbox"><span class="t"><strong>C5@dark</strong> <span class="mono">(S3)</span> &mdash; Same token at 3.75:1 in dark.</span><span class="ph">fixed</span></label></li>
-        <li data-id="n4"><label><input type="checkbox"><span class="t"><strong>N4</strong> <span class="mono">(S3)</span> &mdash; Four nav arrays merged to two with short labels; role accent collapsed to one data-role + --accent pair.</span><span class="ph">fixed</span></label></li>
-        <li data-id="l6"><label><input type="checkbox"><span class="t"><strong>L6</strong> <span class="mono">(S4)</span> &mdash; The missing fadeIn/enterRight keyframes now exist (PR 2), so the 43 references resolve.</span><span class="ph">fixed</span></label></li>
-        <li data-id="l7"><label><input type="checkbox"><span class="t"><strong>L7</strong> <span class="mono">(S4)</span> &mdash; Open, by decision. SplashScreen, FarmBloodlineSummary and modals/index.ts are all unused, and showSplash defaults to on with nothing rendering it. Deleting and re-wiring are both defensible, so it is left to the reviewer.</span><span class="ph">open</span></label></li>
-    </ul>
+        <li data-id="c2-light"><label><input type="checkbox"><span class="t"><strong>Faint grey captions (light mode)</strong><span class="how">Open the Dashboard. Read the small grey captions under the big numbers — "Males", "Females", "Chickens", "Matches" — and the grey sentence under the page title. They should be comfortable to read, not washed out. Then open any form and read the grey helper text under a field.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="c6-light"><label><input type="checkbox"><span class="t"><strong>Chart lines and axis numbers too pale (light mode)</strong><span class="how">On the Dashboard, look at the three line/bar charts and the doughnut. The lines, bars and the small numbers along the axes should be clearly visible against the white card — not faint grey.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="c6-dark"><label><input type="checkbox"><span class="t"><strong>Same charts, dark mode</strong><span class="how">Click the sun/moon button top-right to switch to dark. Look at the same charts. The doughnut slice colours must be clearly distinguishable from each other and from the dark background — watch for a dark green slice disappearing.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="k4-light"><label><input type="checkbox"><span class="t"><strong>Keyboard focus invisible (light mode)</strong><span class="how">Press Tab over and over from the top of the Dashboard. Every link, button, field and dropdown should show a clear ring around it as it takes focus. Nothing should be focused invisibly. Also click into a text field and confirm the cursor is visible.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="k4-dark"><label><input type="checkbox"><span class="t"><strong>Keyboard focus invisible (dark mode)</strong><span class="how">Switch to dark and Tab through the same pages. The focus ring should be light and obvious against the dark background.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="f2"><label><input type="checkbox"><span class="t"><strong>Clicking a form label does nothing</strong><span class="how">Open the Register page. Click directly on the words "Farm / Yard Name" — the cursor should jump into that field. Repeat on three or four other labels, including in a modal (Edit a chicken) and in Settings.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="k2"><label><input type="checkbox"><span class="t"><strong>Dialogs: Escape does not close, Tab escapes the box</strong><span class="how">Open any dialog — Log Out from the sidebar is easiest, or Archive a chicken. Press Escape: it must close. Open it again and press Tab several times: focus must stay inside the dialog and never reach the page behind it.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="k7"><label><input type="checkbox"><span class="t"><strong>Focus is lost after closing a dialog</strong><span class="how">Open the Log Out dialog and close it with Escape. Now press Enter without clicking anything — the dialog should reopen, because focus returned to the button you used. Try the same with Archive on a chicken.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="a3"><label><input type="checkbox"><span class="t"><strong>Icon-only buttons have no name</strong><span class="how">Hover the round icon buttons in the header — the settings gear and the theme toggle. A tooltip or screen-reader name should identify each. Then look at the small ✕ chips that remove a strain or a leg colour inside Edit-chicken: each should be a comfortable target, not a speck.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="k10"><label><input type="checkbox"><span class="t"><strong>Tap targets too small on a phone</strong><span class="how">Narrow the window to phone width (or use a phone). Try tapping the small ✕ buttons on a strain chip, and the row/close buttons in dialogs. You should be able to hit them without zooming or missing.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="t6"><label><input type="checkbox"><span class="t"><strong>Text too small to read</strong><span class="how">Walk the Dashboard, Registry and Settings. You should not find any text you have to lean in for. The smallest text should be the uppercase captions, and they should still be legible. Nothing below 12px should exist anywhere.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="f10"><label><input type="checkbox"><span class="t"><strong>Status messages are not announced</strong><span class="how">Trigger a message — save a listing, or press "Fire a toast" on the design kit page. It should slide in at the top-right and disappear on its own. With a screen reader running it should be announced without moving your focus.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="n2"><label><input type="checkbox"><span class="t"><strong>Every page had two top-level headings</strong><span class="how">With a screen reader, open its heading list (NVDA: Insert+F7, VoiceOver: rotor). On each page there should be exactly <em>one</em> "heading level 1" — the page title — and the sections below it should step down one level at a time with no gaps.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="k6"><label><input type="checkbox"><span class="t"><strong>No way to skip past the sidebar</strong><span class="how">Load any dashboard page and press Tab exactly once. A "Skip to main content" link should appear at the top-left. Press Enter — focus should jump to the page content, and a focus ring should appear around the main area.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="a4"><label><input type="checkbox"><span class="t"><strong>Page has no footer landmark</strong><span class="how">Scroll to the very bottom of any dashboard page. There should be a footer line reading "GALLOTRACK v1.0.0". In a screen reader&rsquo;s landmark list a "footer" should be present.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="l2"><label><input type="checkbox"><span class="t"><strong>Corners and shadows all different</strong><span class="how">Compare cards, dialogs and buttons across the Dashboard and Registry. Corners should now look like they come from one system — three sizes, not five. Shadows are the known gap: they are still mixed, so expect that to look uneven. Flag anything jarring.</span></span><span class="ph">partial</span></label></li>
+        <li data-id="l4"><label><input type="checkbox"><span class="t"><strong>Every page re-invents its own buttons and cards</strong><span class="how">Compare a primary button on the Dashboard with one on the Registry, and a card on Settings with one on the Marketplace. They should look like the same component. Where they still differ, that is the known partial — note which page.</span></span><span class="ph">partial</span></label></li>
+        <li data-id="l5"><label><input type="checkbox"><span class="t"><strong>Loading has no designed state</strong><span class="how">Open the Registry and the Marketplace on a cold load, and save something. You should see a skeleton or spinner rather than the layout jumping or a blank flash. Some pages still show nothing — note which.</span></span><span class="ph">partial</span></label></li>
+        <li data-id="c5-light"><label><input type="checkbox"><span class="t"><strong>Text field outlines almost invisible (light mode)</strong><span class="how">Open any form — Register, Settings, or Edit-chicken. The outline around each text box and dropdown should be clearly visible as a boundary against the white page, not a barely-there hairline.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="c5-dark"><label><input type="checkbox"><span class="t"><strong>Same field outlines, dark mode</strong><span class="how">Switch to dark and open a form. You should be able to see where each field begins and ends against the dark card without hunting.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="n4"><label><input type="checkbox"><span class="t"><strong>Navigation duplicated and inconsistent</strong><span class="how">Log in as a farm owner, then as an admin. The sidebar should show one clear set of items with the current page highlighted. On a narrow window the bottom bar should show the same destinations with short labels. The accent colour should be green for owner and amber for admin, consistently — no green item inside an amber page.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="l6"><label><input type="checkbox"><span class="t"><strong>Animations ignore reduced-motion</strong><span class="how">Turn on "Reduce motion" in your OS accessibility settings, then reload the app. The floating cards, hover lift and entrance animations should stop. Nothing should vanish because of it.</span></span><span class="ph">fixed</span></label></li>
+        <li data-id="l7"><label><input type="checkbox"><span class="t"><strong>Unused components left in the tree</strong><span class="how">Decision, not a test. Three components are unused: a splash screen, a farm bloodline summary, and a modals barrel file. The splash state still defaults to "on" but nothing renders it. Either delete them or wire the splash back up — both are reasonable, so this is yours to call.</span></span><span class="ph">open</span></label></li>
+      </ul>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
       <button id="b-md" class="chip" style="cursor:pointer">Copy Markdown report</button>
@@ -376,24 +404,23 @@ footer a{color:var(--text2)}
 </footer>
 
 <script>
-var UNITS = [{"id":"C2@light","sev":"S2","status":"fixed"},{"id":"C6@light","sev":"S2","status":"fixed"},{"id":"C6@dark","sev":"S2","status":"fixed"},{"id":"K4@light","sev":"S2","status":"fixed"},{"id":"K4@dark","sev":"S2","status":"fixed"},{"id":"F2","sev":"S2","status":"fixed"},{"id":"K2","sev":"S2","status":"fixed"},{"id":"K7","sev":"S2","status":"fixed"},{"id":"A3","sev":"S2","status":"fixed"},{"id":"K10","sev":"S2","status":"fixed"},{"id":"T6","sev":"S2","status":"fixed"},{"id":"F10","sev":"S2","status":"fixed"},{"id":"N2","sev":"S3","status":"fixed"},{"id":"K6","sev":"S3","status":"fixed"},{"id":"A4","sev":"S3","status":"fixed"},{"id":"L2","sev":"S3","status":"partial"},{"id":"L4","sev":"S3","status":"partial"},{"id":"L5","sev":"S3","status":"partial"},{"id":"C5@light","sev":"S3","status":"fixed"},{"id":"C5@dark","sev":"S3","status":"fixed"},{"id":"N4","sev":"S3","status":"fixed"},{"id":"L6","sev":"S4","status":"fixed"},{"id":"L7","sev":"S4","status":"open"}];
+var UNITS = [{"id":"C2@light","sev":"S2","status":"fixed","label":"Faint grey captions (light mode)","check":"Open the Dashboard. Read the small grey captions under the big numbers — \"Males\", \"Females\", \"Chickens\", \"Matches\" — and the grey sentence under the page title. They should be comfortable to read, not washed out. Then open any form and read the grey helper text under a field."},{"id":"C6@light","sev":"S2","status":"fixed","label":"Chart lines and axis numbers too pale (light mode)","check":"On the Dashboard, look at the three line/bar charts and the doughnut. The lines, bars and the small numbers along the axes should be clearly visible against the white card — not faint grey."},{"id":"C6@dark","sev":"S2","status":"fixed","label":"Same charts, dark mode","check":"Click the sun/moon button top-right to switch to dark. Look at the same charts. The doughnut slice colours must be clearly distinguishable from each other and from the dark background — watch for a dark green slice disappearing."},{"id":"K4@light","sev":"S2","status":"fixed","label":"Keyboard focus invisible (light mode)","check":"Press Tab over and over from the top of the Dashboard. Every link, button, field and dropdown should show a clear ring around it as it takes focus. Nothing should be focused invisibly. Also click into a text field and confirm the cursor is visible."},{"id":"K4@dark","sev":"S2","status":"fixed","label":"Keyboard focus invisible (dark mode)","check":"Switch to dark and Tab through the same pages. The focus ring should be light and obvious against the dark background."},{"id":"F2","sev":"S2","status":"fixed","label":"Clicking a form label does nothing","check":"Open the Register page. Click directly on the words \"Farm / Yard Name\" — the cursor should jump into that field. Repeat on three or four other labels, including in a modal (Edit a chicken) and in Settings."},{"id":"K2","sev":"S2","status":"fixed","label":"Dialogs: Escape does not close, Tab escapes the box","check":"Open any dialog — Log Out from the sidebar is easiest, or Archive a chicken. Press Escape: it must close. Open it again and press Tab several times: focus must stay inside the dialog and never reach the page behind it."},{"id":"K7","sev":"S2","status":"fixed","label":"Focus is lost after closing a dialog","check":"Open the Log Out dialog and close it with Escape. Now press Enter without clicking anything — the dialog should reopen, because focus returned to the button you used. Try the same with Archive on a chicken."},{"id":"A3","sev":"S2","status":"fixed","label":"Icon-only buttons have no name","check":"Hover the round icon buttons in the header — the settings gear and the theme toggle. A tooltip or screen-reader name should identify each. Then look at the small ✕ chips that remove a strain or a leg colour inside Edit-chicken: each should be a comfortable target, not a speck."},{"id":"K10","sev":"S2","status":"fixed","label":"Tap targets too small on a phone","check":"Narrow the window to phone width (or use a phone). Try tapping the small ✕ buttons on a strain chip, and the row/close buttons in dialogs. You should be able to hit them without zooming or missing."},{"id":"T6","sev":"S2","status":"fixed","label":"Text too small to read","check":"Walk the Dashboard, Registry and Settings. You should not find any text you have to lean in for. The smallest text should be the uppercase captions, and they should still be legible. Nothing below 12px should exist anywhere."},{"id":"F10","sev":"S2","status":"fixed","label":"Status messages are not announced","check":"Trigger a message — save a listing, or press \"Fire a toast\" on the design kit page. It should slide in at the top-right and disappear on its own. With a screen reader running it should be announced without moving your focus."},{"id":"N2","sev":"S3","status":"fixed","label":"Every page had two top-level headings","check":"With a screen reader, open its heading list (NVDA: Insert+F7, VoiceOver: rotor). On each page there should be exactly one \"heading level 1\" — the page title — and the sections below it should step down one level at a time with no gaps."},{"id":"K6","sev":"S3","status":"fixed","label":"No way to skip past the sidebar","check":"Load any dashboard page and press Tab exactly once. A \"Skip to main content\" link should appear at the top-left. Press Enter — focus should jump to the page content, and a focus ring should appear around the main area."},{"id":"A4","sev":"S3","status":"fixed","label":"Page has no footer landmark","check":"Scroll to the very bottom of any dashboard page. There should be a footer line reading \"GALLOTRACK v1.0.0\". In a screen reader&rsquo;s landmark list a \"footer\" should be present."},{"id":"L2","sev":"S3","status":"partial","label":"Corners and shadows all different","check":"Compare cards, dialogs and buttons across the Dashboard and Registry. Corners should now look like they come from one system — three sizes, not five. Shadows are the known gap: they are still mixed, so expect that to look uneven. Flag anything jarring."},{"id":"L4","sev":"S3","status":"partial","label":"Every page re-invents its own buttons and cards","check":"Compare a primary button on the Dashboard with one on the Registry, and a card on Settings with one on the Marketplace. They should look like the same component. Where they still differ, that is the known partial — note which page."},{"id":"L5","sev":"S3","status":"partial","label":"Loading has no designed state","check":"Open the Registry and the Marketplace on a cold load, and save something. You should see a skeleton or spinner rather than the layout jumping or a blank flash. Some pages still show nothing — note which."},{"id":"C5@light","sev":"S3","status":"fixed","label":"Text field outlines almost invisible (light mode)","check":"Open any form — Register, Settings, or Edit-chicken. The outline around each text box and dropdown should be clearly visible as a boundary against the white page, not a barely-there hairline."},{"id":"C5@dark","sev":"S3","status":"fixed","label":"Same field outlines, dark mode","check":"Switch to dark and open a form. You should be able to see where each field begins and ends against the dark card without hunting."},{"id":"N4","sev":"S3","status":"fixed","label":"Navigation duplicated and inconsistent","check":"Log in as a farm owner, then as an admin. The sidebar should show one clear set of items with the current page highlighted. On a narrow window the bottom bar should show the same destinations with short labels. The accent colour should be green for owner and amber for admin, consistently — no green item inside an amber page."},{"id":"L6","sev":"S4","status":"fixed","label":"Animations ignore reduced-motion","check":"Turn on \"Reduce motion\" in your OS accessibility settings, then reload the app. The floating cards, hover lift and entrance animations should stop. Nothing should vanish because of it."},{"id":"L7","sev":"S4","status":"open","label":"Unused components left in the tree","check":"Decision, not a test. Three components are unused: a splash screen, a farm bloodline summary, and a modals barrel file. The splash state still defaults to \"on\" but nothing renders it. Either delete them or wire the splash back up — both are reasonable, so this is yours to call."}];
 var KEY = 'gallotrack-postfix-tracker-v1';
 
 (function wireTracker() {
   var items = document.querySelectorAll('#list li');
   var saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+
   function update() {
     var done = 0;
     for (var j = 0; j < items.length; j++) { if (items[j].querySelector('input').checked) { done++; } }
-    var pct = Math.round(100 * done / items.length);
     var fill = document.getElementById('fill');
-    var pctEl = document.getElementById('pct');
-    var countEl = document.getElementById('count');
-    if (fill) { fill.style.width = pct + '%'; }
-    if (pctEl) { pctEl.firstChild.nodeValue = done + ' retested '; }
-    if (countEl) { countEl.textContent = done + ' of ' + items.length; }
+    var pct = document.getElementById('pct');
+    if (fill) { fill.style.width = Math.round(100 * done / items.length) + '%'; }
+    if (pct) { pct.textContent = done + ' of ' + items.length + ' retested'; }
   }
+
   for (var i = 0; i < items.length; i++) {
     var box = items[i].querySelector('input');
     box.checked = !!saved[items[i].dataset.id];
@@ -429,12 +456,12 @@ function buildMarkdown() {
   var lines = [];
   lines.push('# GalloTrack post-fix UI/UX report');
   lines.push('');
-  lines.push('Baseline: commit d147d46 (19 findings, verdict Incomplete)');
-  lines.push('Branch: ui-improvement');
+  lines.push('Baseline: commit d147d46 (19 findings, verdict Incomplete). Branch: ui-improvement.');
   lines.push('');
   lines.push('## Units');
   for (var i = 0; i < UNITS.length; i++) {
-    lines.push('- ' + UNITS[i].id + ' (' + UNITS[i].sev + ') - ' + UNITS[i].status);
+    lines.push('- **' + UNITS[i].label + '** (' + UNITS[i].id + ', ' + UNITS[i].sev + ') - ' + UNITS[i].status);
+    lines.push('  - How to check: ' + UNITS[i].check);
   }
   lines.push('');
   lines.push('## Retested in both themes: ' + done.length + ' of ' + UNITS.length);
