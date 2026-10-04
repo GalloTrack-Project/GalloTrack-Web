@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>GalloTrack UI/UX migration — handover</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#050505;--text:#ededed;--text2:#B7BFCB;--muted:#8A93A0;
+  --line:rgba(255,255,255,.10);--panel:rgba(255,255,255,.045);--field:rgba(255,255,255,.06);--edge:#6B7686;
+  --accent:#22D3EE;--accent-2:#A855F7;--grad:linear-gradient(135deg,#22D3EE,#A855F7);--focus:#7DD3FC;
+  --r-sm:6px;--r-lg:16px;--topbar-h:60px;
+  --pass:#4ADE80;--pass-bg:rgba(74,222,128,.12);
+  --fail:#FB7185;--fail-bg:rgba(251,113,133,.13);
+  --na:#B4C1D4;--na-bg:rgba(180,193,212,.12);
+  --warn:#FBBF24;--warn-bg:rgba(251,191,36,.12);
+  --sans:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --prose:min(72ch,100%);
+  --wide:clamp(0px,calc(100vw - 2*clamp(24px,5vw,80px)),1160px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--topbar-h) + 20px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+h1,h2,h3,p,ul,ol,dl,dd,figure{margin:0}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.08;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(22px,3vw,30px);line-height:1.2;font-weight:800;letter-spacing:-.02em}
+h3{font-size:clamp(17px,2vw,19px);line-height:1.35;font-weight:700;letter-spacing:-.01em}
+a{color:var(--accent);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:var(--r-sm);color:var(--text)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:var(--r-sm)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:#050505;padding:10px 14px;border-radius:var(--r-sm);font-weight:700;z-index:100}
+.skip:focus{left:12px}
+
+.topbar{position:sticky;top:0;z-index:60;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 clamp(24px,5vw,80px);background:rgba(5,5,5,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.wordmark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.wordmark i{width:12px;height:12px;border-radius:3px;background:var(--grad);display:block}
+.wordmark span{color:var(--muted);font-weight:500;font-size:13px}
+.topnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav a{font:600 13.5px var(--sans);color:var(--text2);text-decoration:none;padding:8px 12px;border-radius:var(--r-sm);white-space:nowrap;min-height:40px;display:inline-flex;align-items:center}
+.topnav a:hover{background:var(--panel);color:var(--text)}
+@media (max-width:900px){.topnav{display:none}}
+
+.band{padding:clamp(40px,6vw,72px) clamp(24px,5vw,80px);border-top:1px solid var(--line)}
+.band:first-of-type{border-top:0}
+.prose{max-width:var(--prose)}
+.prose p+p{margin-top:12px}
+.prose p,.prose li{color:var(--text2)}
+.prose strong{color:var(--text)}
+.lede{font-size:clamp(16.5px,1.6vw,18px);max-width:78ch;color:var(--text2)!important}
+h2+*{margin-top:18px}
+h3{margin-top:30px}
+.wrap{width:100%;max-width:var(--wide)}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+
+.tldr{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.stat b{display:block;font-size:clamp(23px,3.2vw,30px);font-weight:800;letter-spacing:-.025em;line-height:1.05}
+.stat span{display:block;font-size:13.5px;color:var(--muted);margin-top:6px}
+.stat.bad b{color:var(--fail)}.stat.ok b{color:var(--pass)}.stat.mid b{color:var(--warn)}
+.stat.g b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.verdict-box{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px)}
+.verdict-box .big{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;color:var(--warn)}
+.verdict-box p{margin-top:8px;color:var(--text2);max-width:82ch}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(16px,2vw,24px)}
+.tablewrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+th,td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--text);white-space:nowrap;background:rgba(255,255,255,.03);font-size:13.5px}
+td{color:var(--text2)}
+td strong{color:var(--text)}
+tbody tr:last-child td{border-bottom:0}
+.mono{font-family:var(--mono);font-size:13px}
+tr.s1 td{box-shadow:inset 3px 0 0 var(--fail);background:var(--fail-bg)}
+tr.s2 td{box-shadow:inset 3px 0 0 var(--fail)}
+tr.s3 td{box-shadow:inset 3px 0 0 var(--warn)}
+tr.s4 td{box-shadow:inset 3px 0 0 var(--na)}
+
+.chip{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);font-family:var(--mono);
+  font-size:11.5px;letter-spacing:.04em;padding:3px 8px;text-transform:uppercase;color:var(--accent);line-height:1.5;white-space:nowrap}
+.chip.pass{color:var(--pass)}.chip.fail{color:var(--fail)}.chip.na{color:var(--na)}.chip.warn{color:var(--warn)}
+.chip.s1{background:var(--fail-bg);color:var(--fail)}.chip.s2{background:var(--fail-bg);color:var(--fail)}
+.chip.s3{background:var(--warn-bg);color:var(--warn)}.chip.s4{background:var(--na-bg);color:var(--na)}
+
+.stack{display:flex;height:14px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.08);border:1px solid var(--edge);max-width:620px;margin-top:8px}
+.stack i{display:block;height:100%}
+.stack .f{background:var(--fail)}.stack .n{background:var(--na)}.stack .u{background:rgba(255,255,255,.14)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.legend span{font:600 12.5px var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+.ratio-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:16px}
+.rd{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;background:var(--panel)}
+.rd .num{font:800 clamp(25px,3.4vw,33px)/1 var(--sans);letter-spacing:-.03em}
+.rd .lbl{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+.rd.ok .num{color:var(--pass)}.rd.bad .num{color:var(--fail)}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:15.5px}
+.card p{font-size:14.5px;color:var(--text2)}
+
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch;margin-top:18px}
+.note p{color:var(--text2);font-size:15.5px}
+.note p+p{margin-top:10px}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:14.5px;margin-top:6px}
+.kv dt{color:var(--muted)}
+.kv dd{color:var(--text);min-width:0}
+
+pre{margin:14px 0 0;padding:14px 16px;background:rgba(0,0,0,.45);border:1px solid var(--line);border-radius:var(--r-sm);
+  font:12.5px/1.6 var(--mono);color:var(--text);overflow-x:auto;white-space:pre}
+
+.btn{font:600 14px/1 var(--sans);min-height:40px;padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--field);color:var(--text);cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.10)}
+.btn.primary{background:var(--grad);color:#050505;border-color:transparent;font-weight:700}
+.btn.primary:hover{filter:brightness(1.1)}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.msg{font-size:13.5px;color:var(--muted);min-height:20px;margin-top:8px}
+
+/* matrix */
+.mx th,.mx td{text-align:center;padding:8px;vertical-align:middle}
+.mx th:first-child,.mx td:first-child{text-align:left;font-weight:700;color:var(--text);white-space:nowrap}
+.mx .cell{min-height:40px;min-width:96px;font:600 13.5px var(--sans);border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--field);color:var(--muted);cursor:default}
+
+/* tracker */
+.tracker{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,2.4vw,26px);margin-top:20px}
+.tracker-bar{height:12px;border-radius:var(--r-sm);background:rgba(255,255,255,.08);border:1px solid var(--edge);overflow:hidden}
+.tracker-fill{height:100%;width:0;background:var(--grad);transition:width .25s ease}
+.tracker-pct{font:800 22px var(--sans);letter-spacing:-.02em;margin-top:12px}
+.tracker-pct span{font:500 13.5px var(--sans);color:var(--muted);margin-left:8px}
+.tracker-list{list-style:none;margin:16px 0 0;padding:0}
+.tracker-list li{border-top:1px solid var(--line)}
+.tracker-list li:first-child{border-top:0}
+.tracker-list label{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:13px 6px;min-height:44px;cursor:pointer}
+.tracker-list input{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;margin-top:3px}
+.tracker-list .t{font-size:14.5px;color:var(--text2);line-height:1.55}
+.tracker-list .t strong{color:var(--text)}
+.tracker-list .t code{white-space:nowrap}
+.tracker-list input:checked+.t{color:var(--muted)}
+.tracker-list input:checked+.t strong{text-decoration:line-through}
+.tracker-list .ph{font:600 11.5px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;padding-top:4px}
+.tracker-list li.done .ph{color:var(--pass)}
+
+footer{padding:36px clamp(24px,5vw,80px) 56px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+footer a{color:var(--text2)}
+@media print{.topbar,.skip,.btnrow,.tracker{display:none}body{background:#fff;color:#000}}
+.sec-eyebrow{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}.tldr-note{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-lg);padding:16px 20px;max-width:82ch}.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}.steps li{line-height:1.55}.tracker-list .how{display:block;color:var(--muted);font-size:13.5px;line-height:1.55;margin-top:5px;font-weight:400;max-width:min(78ch,100%)}.tracker-list .t strong{font-size:14.5px}table.passes td{vertical-align:top}input.result{width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:8px;font:inherit;font-size:13.5px}input.result::placeholder{color:var(--muted)}input.result:focus{outline:2px solid var(--focus);outline-offset:1px}
+.hand{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:18px}
+.hand .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.hand .card h4{margin:0 0 6px;font-size:15px;font-weight:700;color:var(--text)}
+.hand .card p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.6;max-width:70ch}
+.hand .card code{font-size:12.5px}
+.tl{position:relative;margin-top:22px;padding-left:26px}
+.tl:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl .step{position:relative;padding:0 0 22px}
+.tl .step:last-child{padding-bottom:0}
+.tl .step:before{content:"";position:absolute;left:-24px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--pass);border:2px solid var(--bg)}
+.tl .step.wip:before{background:var(--warn)}
+.tl .step.open:before{background:var(--na)}
+.tl .step h4{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--text)}
+.tl .step p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.6;max-width:80ch}
+.tl .step .meta{display:block;margin-top:6px;font:600 12px var(--mono);color:var(--muted)}
+.gates{display:grid;gap:10px;margin-top:18px}
+.gate{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 16px}
+.gate .n{font:700 13px var(--mono);color:var(--accent)}
+.gate .g{font-size:14px;font-weight:600;color:var(--text)}
+.gate .w{font-size:13px;color:var(--muted);line-height:1.55;margin-top:2px;max-width:78ch}
+.gate .s{font:600 12px var(--mono);color:var(--pass);white-space:nowrap}
+.gotcha{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r-lg);padding:16px 20px;margin-top:12px}
+.gotcha h4{margin:0 0 6px;font-size:14.5px;font-weight:700;color:var(--text)}
+.gotcha p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.65;max-width:84ch}
+.cmd{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px;margin-top:14px;overflow-x:auto}
+.cmd code{font-family:var(--mono);font-size:13px;color:var(--text);line-height:1.9;display:block;white-space:pre}
+.cmd code .c{color:var(--muted)}
+.ask{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 22px;margin-top:16px;max-width:min(84ch,100%)}
+.ask ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.ask li{font-size:14px;color:var(--text);line-height:1.6}
+.ask li span{display:block;color:var(--muted);font-size:13.5px;margin-top:3px}
+@media (max-width:640px){.gate{grid-template-columns:26px 1fr}.gate .s{grid-column:2}}
+</style>
+
+
+<body>
+
+<header class="topbar">
+  <div class="wordmark"><i></i>Syntaxure <span>/ GalloTrack handover</span></div>
+</header>
+
+<section class="band" id="tldr">
+  <div class="wrap">
+    <div class="sec-eyebrow">01 &middot; Summary</div>
+    <h1>GalloTrack UI/UX migration — handover</h1>
+    <p class="lede" style="margin-top:16px">Everything a new owner needs: what changed, how it is enforced, where the sharp edges are, and what is still open. Written for Hazel, but self-contained enough to be read cold.</p>
+
+    <div class="tldr">
+      <div class="stat g"><b>27</b><span>Commits across seven phases, all on <code>main</code> and <code>develop</code>.</span></div>
+      <div class="stat"><b>7</b><span>CI gates, six runnable with no server, one browser-driven.</span></div>
+      <div class="stat"><b>0</b><span>Open S1 or S2 findings. Every one is enforced by a gate.</span></div>
+      <div class="stat mid"><b>1</b><span>Open decision (dead components) plus three items that are deliberately partial.</span></div>
+    </div>
+
+    <div class="verdict-box">
+      <h3 style="margin:0 0 8px">Are we done? Almost — and here is the precise shape of "almost"</h3>
+      <p class="prose" style="margin:0"><strong>The engineering work is complete.</strong> All eight S2 findings are fixed and gated; six of nine S3 are fixed, three are deliberately partial; one S4 is open by decision. Type scale, contrast, labels, dialogs, toasts and mobile layout all measure zero. Nothing is held together by discipline — each fix has a gate that fails if it regresses.</p>
+      <p class="prose" style="margin:12px 0 0"><strong>What is not done is the human half of the audit.</strong> The workbench requires the app to be walked in both themes, driven by keyboard, listened to with a screen reader, and zoomed. Six of those seven passes are still blank, and a blank check is not a pass — so the formal verdict still reads <em>Incomplete</em> under its own rule 2. It cannot read <em>Approve</em> until someone does them, and the honest expected landing point is <strong>Approve with fixes</strong>, because three S3 items are partial by design.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="shipped">
+  <div class="wrap">
+    <div class="sec-eyebrow">02 &middot; What shipped</div>
+    <h2>Seven phases, each independently revertible</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>The migration was planned as seven pull requests so that any phase could be backed out alone. All are merged. The order matters: each phase assumed the one before it, which is why foundations landed before components and components before remediation.</p>
+    </div>
+
+    <div class="tl">
+      <div class="step"><h4>PR 1 — Standard &amp; baseline</h4><p>Wrote the UI standard this work is measured against, plus a baseline audit with 19 logged findings and measured contrast evidence, and a seed file that pre-loads the 21 failed units for re-testing.</p><span class="meta">docs/</span></div>
+      <div class="step"><h4>PR 2 — Foundations</h4><p>Semantic colour tokens, a motion scale, a reduced-motion block, the missing keyframes that 43 call sites already referenced, and one theme provider instead of two rival ones. Deliberately non-visual: radius and shadow were pinned to the values Tailwind already emitted so this phase could not change a pixel.</p><span class="meta">globals.css · next-themes</span></div>
+      <div class="step"><h4>PR 3 — Component library</h4><p>Nineteen primitives on <code>clsx</code> + <code>class-variance-authority</code>, with real accessibility behaviour rather than decoration: a dialog with a focus trap and focus restore, toasts in a labelled live region, the WAI-ARIA roving-tabindex tabs pattern, and form fields that actually bind their labels. 90 new tests.</p><span class="meta">components/ui/</span></div>
+      <div class="step"><h4>PR 4 — Shell &amp; pages</h4><p>One <code>h1</code> per route, four nav arrays merged into two, the role accent collapsed from about twenty inline ternaries into one token, chart colours moved onto tokens, and the radius scale migrated across 591 call sites.</p><span class="meta">shell + 43 files</span></div>
+      <div class="step"><h4>PR 5 — WCAG 2.2 AA, then past it</h4><p>Contrast normalised to AAA in both themes, the whole sub-12px type tier eliminated (817 sites), 92 real label bindings added, all 14 modal shells moved onto one dialog primitive, and three toast systems reduced to one.</p><span class="meta">remediation</span></div>
+      <div class="step"><h4>PR 6 — Enforcement</h4><p>Six CI gates with ratchet baselines, <code>jsx-a11y</code> switched on, <code>axe</code> running over the primitives, Prettier configured, and a <code>/design-kit</code> route that renders every token and primitive from the real components so the living spec cannot drift.</p><span class="meta">CI · /design-kit</span></div>
+      <div class="step wip"><h4>PR 7 — Verify</h4><p>The post-fix report is drafted and the mobile pass is now automated. The remaining six passes need a person in front of a browser. This is the only unfinished phase.</p><span class="meta">docs/audit/GalloTrack-postfix.html</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="gates">
+  <div class="wrap">
+    <div class="sec-eyebrow">03 &middot; Enforcement</div>
+    <h2>Seven gates, and why they ratchet</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>The gates exist because a standard that is not enforced decays within a sprint. Four are static scans, two are accessibility tooling, one drives a real browser.</p>
+      <p><strong>The important design choice is that the static scans ratchet rather than block.</strong> Each records the current violation count per file in a committed baseline and fails only when a file gets <em>worse</em>. That let the gates land mid-migration instead of waiting on a backlog, and it means the baseline can only ever shrink. Two are already at zero — which is stronger than baselined, because zero means a regression fails immediately rather than being absorbed by an old ceiling.</p>
+    </div>
+
+    <div class="gates">
+      <div class="gate"><span class="n">01</span><div><div class="g">No sub-12px type</div><div class="w">Fails if a <code>text-[Npx]</code> below 12px appears in app or components.</div></div><span class="s">0 outstanding</span></div>
+      <div class="gate"><span class="n">02</span><div><div class="g">No raw hex in TSX</div><div class="w">Colour must come from a token, not a literal.</div></div><span class="s">31 left</span></div>
+      <div class="gate"><span class="n">03</span><div><div class="g">No naked <code>outline-none</code></div><div class="w">Focus may only be removed if something replaces it.</div></div><span class="s">0 outstanding</span></div>
+      <div class="gate"><span class="n">04</span><div><div class="g">Icon buttons need a name</div><div class="w">An icon-only button must carry an accessible name.</div></div><span class="s">0 outstanding</span></div>
+      <div class="gate"><span class="n">05</span><div><div class="g">jsx-a11y</div><div class="w">The full recommended rule set, baselined per file per rule via ESLint bulk suppressions.</div></div><span class="s">12 suppressed</span></div>
+      <div class="gate"><span class="n">06</span><div><div class="g">vitest-axe</div><div class="w">Serious or critical axe violations fail a primitive's render test.</div></div><span class="s">0 violations</span></div>
+      <div class="gate"><span class="n">07</span><div><div class="g">No mobile layout break</div><div class="w">Every route at 390/360/320px: sideways scroll, clipped content, squeezed text, footer under the nav.</div></div><span class="s">63 checks, 0</span></div>
+    </div>
+
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>Why gate 7 exists and what it caught.</strong> Static analysis could not do this job. A regex pass produced 146 hits that were nearly all false positives — decorative blur circles that are <em>meant</em> to be clipped, tables inside their own scroller — and it was blind to the failure that mattered, because content clipped by an <code>overflow: hidden</code> ancestor produces no scrollbar and no document overflow to measure. Driving a real browser found a 4px overflow in the OTP inputs on a route my hand-written route list had never included.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="architecture">
+  <div class="wrap">
+    <div class="sec-eyebrow">04 &middot; Architecture</div>
+    <h2>The pieces you are inheriting</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>Six things carry the system. Everything else is ordinary page code.</p>
+    </div>
+
+    <div class="hand">
+      <div class="card"><h4><code>components/ui/</code></h4><p>Nineteen primitives — Button, FormField, Input, SearchInput, Modal, Toast, Badge, Card, StatCard, PageHeader, Table, EmptyState, Skeleton, Spinner, Tabs, Pagination, Tooltip, Breadcrumbs, SkipLink. Variants via CVA, named exports, one barrel. Adding a primitive means adding a test beside it — <code>axe</code> runs in the suite.</p></div>
+      <div class="card"><h4><code>app/globals.css</code></h4><p>The token layer. Every colour role resolves to a dark value in light mode and a light value in dark mode, so a component writes <code>text-success</code> once and gets 7.7:1 or 10.3:1 without a <code>dark:</code> pair. The type scale is two tiers only: 14px body, 12px floor.</p></div>
+      <div class="card"><h4><code>lib/chart-tokens.ts</code></h4><p>Chart.js draws to a canvas, so it cannot read CSS variables. This samples computed styles instead — and subscribes to the <code>class</code> attribute on <code>&lt;html&gt;</code>, because reading during render can beat next-themes writing the class and paint a light chart with dark values.</p></div>
+      <div class="card"><h4><code>lib/toast-bus.ts</code></h4><p>A module-level dispatcher. Most toast calls live inside provider components, which cannot call a hook, so the mounted provider registers itself here and non-component code calls <code>toast()</code> directly.</p></div>
+      <div class="card"><h4><code>scripts/standard-gates.mjs</code></h4><p>The four static scans plus the ratchet. <code>--update</code> re-records the baseline; do that only when you have genuinely removed violations, never to silence a regression.</p></div>
+      <div class="card"><h4><code>scripts/mobile-gate.mjs</code></h4><p>Discovers routes from <code>app/**/page.tsx</code>, so a new page is covered the moment it exists. No route list to maintain.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="commands">
+  <div class="wrap">
+    <div class="sec-eyebrow">05 &middot; Daily use</div>
+    <h2>Commands</h2>
+    <div class="cmd"><code><span class="c"># the fast loop — a second or two, no external dependencies</span>
+npm run gate:static        <span class="c"># 4 static scans against the ratchet baseline</span>
+npm run typecheck          <span class="c"># tsc --noEmit</span>
+npm test                   <span class="c"># 210 tests</span>
+
+<span class="c"># before a commit</span>
+npm run gate               <span class="c"># static + tsc + eslint + tests</span>
+
+<span class="c"># needs a running server and a browser</span>
+npm run dev                <span class="c"># in one terminal</span>
+npm run gate:mobile        <span class="c"># 63 layout checks in the other</span>
+
+<span class="c"># housekeeping</span>
+npm run lint:fix
+npm run format</code></div>
+    <div class="tldr-note" style="margin-top:16px">
+      <p><strong>One thing that will waste your time if nobody tells you.</strong> ESLint on this project costs <strong>13–20 seconds before it reads a single file</strong> — plugin-graph startup, not per-file work. It is fixed overhead, which is why <code>--cache</code> cannot remove it and why scoping the paths does not help (57s scoped vs 54s full). Use <code>gate:static</code> + <code>typecheck</code> + <code>test</code> while iterating and run <code>gate</code> once per change set. Also: do not run <code>npm run build</code> while <code>next dev</code> is running — both write to <code>.next</code>, and doing it repeatedly corrupted the dev server badly enough that every route 404'd.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="gotchas">
+  <div class="wrap">
+    <div class="sec-eyebrow">06 &middot; Sharp edges</div>
+    <h2>Things that cost time to discover</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>Each of these was found the hard way during this migration. They are written down so they cost time once.</p>
+    </div>
+
+    <div class="gotcha"><h4>Tailwind v4 has no <code>--duration-*</code> theme namespace</h4><p>A custom utility like <code>duration-base</code> silently generates nothing. Only bare numeric values work — <code>duration-150</code>, <code>duration-200</code>, <code>duration-300</code>. The motion tokens in <code>:root</code> are for hand-written CSS only. Verified against compiled output, not assumed.</p></div>
+
+    <div class="gotcha"><h4>Tailwind already defines <code>--ease-out</code> and <code>--ease-in-out</code></h4><p>Declaring your own in <code>:root</code> does not override them — whichever block lands last wins, and it is not yours. An early attempt set a custom easing that was silently ignored. The fix was to stop overriding and use Tailwind's values.</p></div>
+
+    <div class="gotcha"><h4>Unlayered CSS beats Tailwind's utilities</h4><p>Tailwind wraps utilities in <code>@layer</code>, and unlayered rules win regardless of specificity. That is why one global <code>:focus-visible</code> rule neutralises all 80 <code>outline-none</code> call sites without an <code>!important</code> — and also why adding <code>focus-visible:outline-none</code> to a component does nothing.</p></div>
+
+    <div class="gotcha"><h4><code>backdrop-filter</code> creates a stacking context and a containing block</h4><p>A dropdown inside a blurred card is trapped: its <code>z-50</code> cannot escape, and a <code>fixed inset-0</code> click-catcher positions against the card instead of the viewport. This broke the dashboard date-range picker. The blur was inert anyway — nothing scrolled behind it — so it was removed.</p></div>
+
+    <div class="gotcha"><h4><code>flex-1</code> will not shrink below a flex item's intrinsic width</h4><p>Add <code>min-w-0</code>. And <code>w-full</code> plus <code>shrink-0</code> on the same flex child is contradictory — <code>w-full</code> claims the whole row while <code>shrink-0</code> refuses to give any back. That single pair caused three separate mobile breaks.</p></div>
+
+    <div class="gotcha"><h4>Playwright's Windows host check needs a separate helper</h4><p>If <code>winldd</code> is missing or half-installed, launch fails with "Executable doesn't exist at ...PrintDeps.exe" even though the browser is fine. The mobile gate falls back to any Chromium already in the standard cache, and honours <code>PLAYWRIGHT_CHROMIUM_PATH</code>.</p></div>
+
+    <div class="gotcha"><h4>PowerShell will quietly ruin a bulk edit</h4><p>Two of them during this migration: <code>$matches</code> is an automatic variable that <code>-match</code> overwrites, and .NET numbers named regex groups <em>after</em> unnamed ones, so <code>Groups[1]</code> was not what it looked like. Both corrupted files and both were caught in the diff before commit. If you script a codebase-wide edit, verify the mechanism on a sample string first.</p></div>
+  </div>
+</section>
+
+<section class="band" id="open">
+  <div class="wrap">
+    <div class="sec-eyebrow">07 &middot; Open items</div>
+    <h2>What is left, and why each one is left</h2>
+    <div class="prose" style="margin-top:12px">
+      <p>None of these is a defect in what shipped. Each is either work that needs a human, or a decision that belongs to the team rather than the migration.</p>
+    </div>
+
+    <div class="tracker">
+      <div class="tracker-bar"><div class="tracker-fill" id="fill"></div></div>
+      <div class="tracker-pct" id="pct">0 of 9 resolved</div>
+      <ul class="tracker-list" id="list">
+        <li data-id="runtime"><label><input type="checkbox"><span class="t"><strong>Six runtime passes</strong><span class="how">Light walk, dark walk, keyboard, screen reader, zoom, reduce-motion. The phone-width pass is already automated. Each is written as literal numbered steps in the post-fix report, section 05. Until these are done the formal verdict stays Incomplete.</span></span><span class="ph">blocked on a human</span></label></li>
+        <li data-id="l2"><label><input type="checkbox"><span class="t"><strong>Shadow and padding scales (L2)</strong><span class="how">Radius was migrated to three sizes, but seven shadow levels and the padding set were not. The scale exists; adoption does not. Cosmetic, no accessibility impact.</span></span><span class="ph">partial</span></label></li>
+        <li data-id="l4"><label><input type="checkbox"><span class="t"><strong>Primitive adoption (L4)</strong><span class="how">Button, Card, Badge, EmptyState and the rest exist and are tested, and 17 files import them, but many pages still hand-roll their own. Migrating the remainder is mechanical but touches a lot of files.</span></span><span class="ph">partial</span></label></li>
+        <li data-id="l5"><label><input type="checkbox"><span class="t"><strong>Page-level loading states (L5)</strong><span class="how">Skeleton and Spinner exist with tests, but pages still mostly show nothing while loading. Same shape of work as L4.</span></span><span class="ph">partial</span></label></li>
+        <li data-id="l7"><label><input type="checkbox"><span class="t"><strong>Three unused components (L7)</strong><span class="how">SplashScreen, FarmBloodlineSummary and modals/index.ts are unreferenced, and the splash state defaults to on with nothing rendering it. Delete them, or wire the splash back up — both are defensible, which is exactly why it was left as a decision.</span></span><span class="ph">open by decision</span></label></li>
+        <li data-id="aria"><label><input type="checkbox"><span class="t"><strong><code>aria-*</code> at 91 of a 120 target</strong><span class="how">Up from 4. The gap is live regions on page-level async states rather than anything structural.</span></span><span class="ph">below target</span></label></li>
+        <li data-id="hex"><label><input type="checkbox"><span class="t"><strong>31 hex literals in TSX</strong><span class="how">All decorative SVG stroke and gradient stops on the auth pages. A presentation attribute cannot read a CSS token without restructuring the artwork, and they carry no text.</span></span><span class="ph">accepted</span></label></li>
+        <li data-id="page"><label><input type="checkbox"><span class="t"><strong>The single <code>Page</code> wrapper</strong><span class="how">Deferred from PR 4 on purpose: it restructures every page header at once, which is a visual change that deserves its own review rather than being slipped into a shell rewrite.</span></span><span class="ph">deferred</span></label></li>
+        <li data-id="prettier"><label><input type="checkbox"><span class="t"><strong>Repo-wide Prettier</strong><span class="how">Prettier and the Tailwind class-sorting plugin are configured and applied to all new code, but reformatting 130 existing files is a large unrelated diff, so <code>format:check</code> is deliberately not in the gate yet.</span></span><span class="ph">deferred</span></label></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="ask">
+  <div class="wrap">
+    <div class="sec-eyebrow">08 &middot; First week</div>
+    <h2>If you only do five things</h2>
+    <div class="ask">
+      <ol>
+        <li>Run <code>npm run gate</code> and <code>npm run gate:mobile</code> once so you have seen green yourself, then read <code>/design-kit</code> in the browser — it renders every token and primitive, so it is the fastest way to learn the system.<span>Roughly twenty minutes, and it replaces reading the standard end to end.</span></li>
+        <li>Walk the six runtime passes in the post-fix report.<span>This is the only thing standing between the migration and a formal verdict. It is also the fastest way to find anything the automation missed.</span></li>
+        <li>Decide L7 — delete the three unused components or wire the splash back up.<span>It is the last open finding and it needs a product opinion, not an engineering one.</span></li>
+        <li>Before your first codebase-wide edit, read section 06.<span>Every entry there corrupted files or wasted an hour during this migration.</span></li>
+        <li>Do not re-record a gate baseline to make a failure go away.<span><code>--update</code> is for when you have genuinely removed violations. The baselines are the reason the standard has held.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="docs">
+  <div class="wrap">
+    <div class="sec-eyebrow">09 &middot; Documents</div>
+    <h2>The four docs, and when to open each</h2>
+    <div class="tablewrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Document</th><th>Open it when</th></tr></thead>
+        <tbody>
+          <tr><td><code>docs/GalloTrack-UI-Standard.html</code></td><td>You need the rule itself — tokens, type scale, component inventory, the a11y floor, the gate table, and the seven-phase tracker.</td></tr>
+          <tr><td><code>docs/audit/GalloTrack-baseline.html</code></td><td>You want to know what was wrong before this started, with the measured contrast evidence.</td></tr>
+          <tr><td><code>docs/audit/GalloTrack-postfix.html</code></td><td>You are doing the runtime passes, or you want the before/after metrics and the verdict rules.</td></tr>
+          <tr><td><code>docs/audit/GalloTrack-workbench-seed.json</code></td><td>You are re-running the review workbench and want the 21 previously-failed units pre-loaded.</td></tr>
+          <tr><td><code>docs/GalloTrack-Handover.html</code></td><td>This document — onboarding, commands, sharp edges, open items.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Handover written at branch <code>ui-improvement</code>, merged to <code>main</code> and <code>develop</code>. Baseline: commit d147d46. 27 commits, seven phases.</p>
+  </div>
+</footer>
+
+<script>
+var KEY = 'gallotrack-handover-tracker-v1';
+(function () {
+  var items = document.querySelectorAll('#list li');
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+
+  function update() {
+    var done = 0;
+    for (var i = 0; i < items.length; i++) { if (items[i].querySelector('input').checked) { done++; } }
+    var fill = document.getElementById('fill');
+    var pct = document.getElementById('pct');
+    if (fill) { fill.style.width = Math.round(100 * done / items.length) + '%'; }
+    if (pct) { pct.textContent = done + ' of ' + items.length + ' resolved'; }
+  }
+
+  for (var i = 0; i < items.length; i++) {
+    var box = items[i].querySelector('input');
+    box.checked = !!saved[items[i].dataset.id];
+    (function (item, b) {
+      b.addEventListener('change', function () {
+        var s = {};
+        try { s = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { s = {}; }
+        s[item.dataset.id] = b.checked;
+        try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+        update();
+      });
+    })(items[i], box);
+  }
+  update();
+})();
+</script>
+</body>
+</html>
