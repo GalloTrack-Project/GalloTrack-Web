@@ -469,19 +469,21 @@ export default function LineageDirectory({
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="bg-card p-6 sm:p-7 rounded-lg border border-border shadow-sm flex flex-col gap-5">
-        <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Family Lineage Directory</h1>
+              <p className="text-sm text-muted-foreground font-semibold mt-0.5">Track sibling groups, sire & dam offspring trees to compare performance per bloodline</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight">Family Lineage Directory</h1>
-            <p className="text-sm text-muted-foreground font-semibold mt-0.5">Track sibling groups, sire & dam offspring trees to compare performance per bloodline</p>
-          </div>
-          <div className="relative w-full sm:w-72 shrink-0">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+          <div className="relative w-full sm:w-72 sm:shrink-0">
+            <span aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </span>
-            <input type="text" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30 transition-all font-semibold" />
+            <input type="text" aria-label="Search family, sire, dam or chicken name" placeholder="Search family, sire, dam or chicken name..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 transition-colors font-semibold" />
           </div>
         </div>
 

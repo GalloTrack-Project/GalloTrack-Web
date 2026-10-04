@@ -536,12 +536,12 @@ export default function EncodeForm({
           );
         })()}
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0">
               <p className="text-xs font-black text-teal uppercase tracking-widest">🧬 Generational Purity &amp; Backcrossing</p>
               <p className="text-xs text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history</p>
             </div>
-            <div className="text-right shrink-0">
+            <div className="shrink-0 sm:text-right">
               {hasAnyParent ? (
                 <>
                   <span className="inline-flex items-center gap-1.5 bg-teal-700 text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{offspringGenInfo.short} · {offspringGenInfo.label}</span>

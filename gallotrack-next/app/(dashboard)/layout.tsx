@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-16 md:pb-0">
+      <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-[65px] md:pb-0">
         <header className="h-16 bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0 flex items-center">
           <div className="w-full px-4 sm:px-6 md:px-8 flex justify-between items-center">
             <div className="flex items-center gap-3">

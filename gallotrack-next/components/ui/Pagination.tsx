@@ -36,7 +36,7 @@ function Pagination({ page, pageCount, onPageChange, siblingCount = 1, className
     'inline-flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-sm border border-border px-2 text-sm font-medium transition-colors duration-150 ease-out hover:bg-muted disabled:pointer-events-none disabled:opacity-50';
 
   return (
-    <nav aria-label="Pagination" className={cn('flex items-center gap-1', className)}>
+    <nav aria-label="Pagination" className={cn('flex flex-wrap items-center gap-1', className)}>
       <button
         type="button"
         onClick={() => onPageChange(page - 1)}
