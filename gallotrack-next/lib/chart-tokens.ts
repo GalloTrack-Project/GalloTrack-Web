@@ -1,3 +1,5 @@
+import { useMemo, useSyncExternalStore } from 'react';
+
 export type ChartTokens = {
   success: string;
   warning: string;
@@ -94,4 +96,38 @@ export function withAlpha(hex: string, alpha: number): string {
   const g = (value >> 8) & 255;
   const b = value & 255;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function subscribeToThemeClass(onChange: () => void) {
+  if (typeof MutationObserver === 'undefined') return () => {};
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  return () => observer.disconnect();
+}
+
+/**
+ * Chart tokens that stay in step with the live theme.
+ *
+ * `readChartTokens` samples computed styles, so it is only correct if it runs
+ * AFTER next-themes has written the theme class to <html>. Reading during
+ * render can beat that write and leave a light-mode chart painted with
+ * dark-mode values - bright cyan lines on a white card. This subscribes to the
+ * class attribute itself rather than trusting a React value that can lag a
+ * frame behind it.
+ */
+export function useChartTokens(theme?: string): ChartTokens {
+  const themeClass = useSyncExternalStore(
+    subscribeToThemeClass,
+    () => (typeof document === 'undefined' ? '' : document.documentElement.className),
+    () => '',
+  );
+
+  return useMemo(() => {
+    // The class on <html> is what the stylesheet actually resolved against, so
+    // prefer it over the React value when the two disagree - the React value
+    // can lag the DOM write by a frame, which is what painted dark chart
+    // colours onto a light page.
+    const domTheme = themeClass.includes('dark') ? 'dark' : themeClass ? 'light' : theme;
+    return readChartTokens(domTheme);
+  }, [theme, themeClass]);
 }

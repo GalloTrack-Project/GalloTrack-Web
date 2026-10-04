@@ -43,7 +43,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
 
   return (
     <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
             🧬 {title || 'Bloodline Percentage Breakdown'}
@@ -56,7 +56,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
             </p>
           )}
         </div>
-        <div className="text-right shrink-0">
+        <div className="shrink-0 sm:text-right">
           <span className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
             {dominant.strain} {dominant.pct}%
           </span>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, fullNameFromMetadata } from '@/lib/registry';
+import { Dna, BarChart3, Building2, ShieldCheck } from 'lucide-react';
 
 const ICONS = {
   user: (
@@ -185,28 +186,90 @@ export default function RegisterPage() {
   const labelClass = "block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest";
 
   return (
-    <div className="flex items-start justify-center min-h-screen w-full p-4 sm:p-6 bg-gradient-to-br from-[#0a1f1a] via-[#0d2b23] to-[#0a3328] light:from-emerald-50 light:via-slate-50 light:to-teal-50 overflow-hidden relative">
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="wireframe-reg" width="60" height="60" patternUnits="userSpaceOnUse">
-            <path d="M 0 0 L 60 0 L 60 60 L 0 60 Z" fill="none" stroke="#ffffff" strokeWidth="0.5" />
-            <path d="M 30 0 L 30 60 M 0 30 L 60 30" fill="none" stroke="#ffffff" strokeWidth="0.3" strokeDasharray="2 3" />
-            <circle cx="30" cy="30" r="3" fill="#ffffff" opacity="0.3" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#wireframe-reg)" />
-      </svg>
-      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen w-full flex bg-background">
+      {/* LEFT PANEL — Branding. Mirrors the login page so the two entry points read as one product. */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800">
+        <div className="absolute inset-0 opacity-[0.07]">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <pattern id="grid-reg" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-reg)" />
+          </svg>
+        </div>
+        <div className="absolute top-0 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 -right-20 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl"></div>
 
-      <div className="bg-card/95 rounded-lg shadow-2xl shadow-black/50 max-w-md w-full relative z-10 overflow-hidden border border-border my-4">
-        <div className="p-6 sm:p-8 space-y-5">
+        <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-white/15 backdrop-blur-sm border border-white/20 rounded-lg flex items-center justify-center shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-white tracking-tight">GALLO<span className="text-emerald-200">TRACK</span></p>
+              <span className="text-xs font-mono font-medium text-emerald-200/70 tracking-widest uppercase block">v1.0.0</span>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <p className="text-xs font-semibold tracking-[0.2em] text-emerald-200/80 uppercase">ISUFST CICT Capstone Project</p>
+              <h1 className="text-4xl xl:text-5xl font-semibold text-white leading-[1.1] tracking-tight">
+                Set up your<br />
+                <span className="text-emerald-200">farm</span><br />
+                in three steps
+              </h1>
+              <p className="text-sm text-emerald-100/80 font-medium max-w-md leading-relaxed">
+                Create your farm owner account to manage lineage, match performance and flock records in one place.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 max-w-lg">
+              {[
+                { icon: Dna, title: 'Lineage Tracking', desc: 'Map ancestry to the source' },
+                { icon: BarChart3, title: 'Match Analytics', desc: 'Win rates and trends' },
+                { icon: Building2, title: 'Farm Profile', desc: 'Your farm, your records' },
+                { icon: ShieldCheck, title: 'Private by Default', desc: 'Your data stays yours' },
+              ].map((f) => (
+                <div key={f.title} className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-md p-3.5 space-y-1.5">
+                  <f.icon className="w-5 h-5 text-emerald-300" aria-hidden="true" />
+                  <p className="text-sm font-semibold text-white">{f.title}</p>
+                  <p className="text-xs text-emerald-200/70 font-medium">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-emerald-200/70 font-medium">
+            Already registered?{' '}
+            <Link href="/" className="text-emerald-100 underline underline-offset-2 decoration-emerald-200/50 hover:decoration-emerald-100 transition-colors">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL — Registration form */}
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+        <div className="absolute top-1/4 -left-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-teal-400/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="bg-card rounded-lg shadow-xl border border-border max-w-md w-full relative z-10 my-4">
+          <div className="p-6 sm:p-8 space-y-5">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <span className="text-xs font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICT Capstone Project</span>
-            <p className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</p>
-            <h1 className="text-lg sm:text-xl font-black text-success tracking-tight leading-tight">FARM OWNER REGISTRATION</h1>
-            <p className="text-xs text-muted-foreground font-semibold">Create your farm owner account to manage lineage &amp; analytics</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5 lg:hidden">
+              <div className="w-9 h-9 rounded-md bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent" aria-hidden="true"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
+              </div>
+              <p className="text-base font-semibold text-card-foreground tracking-tight">GALLO<span className="text-accent">TRACK</span></p>
+            </div>
+            <div className="space-y-1.5">
+              <h1 className="text-2xl font-semibold text-card-foreground tracking-tight leading-tight">Farm Owner Registration</h1>
+              <p className="text-sm text-muted-foreground">Create your account to manage lineage, analytics and flock records.</p>
+            </div>
           </div>
 
           {maintenanceMsg && (
@@ -389,6 +452,7 @@ export default function RegisterPage() {
               </Link>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </div>

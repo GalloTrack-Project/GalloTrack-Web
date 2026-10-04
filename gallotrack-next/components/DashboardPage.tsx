@@ -6,7 +6,7 @@ import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
 import { getAgeLabel } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { readChartTokens, withAlpha } from '@/lib/chart-tokens';
+import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   const ui = useUI();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
-  const chart = React.useMemo(() => readChartTokens(resolvedTheme), [resolvedTheme]);
+  const chart = useChartTokens(resolvedTheme);
 
   const {
     fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,

@@ -204,7 +204,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="md:hidden w-8 h-8 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center"><User className="w-4 h-4 text-muted-foreground" aria-hidden="true" /></div>
               )}
               {!isAdmin && (
-                <Link href="/settings" aria-label="Settings" className={iconButtonClass}>
+                <Link href="/settings" aria-label="Settings" title="Settings" className={iconButtonClass}>
                   <Settings className="w-4 h-4" aria-hidden="true" />
                 </Link>
               )}
@@ -213,6 +213,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   type="button"
                   onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
                   aria-label={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                   className={iconButtonClass}
                 >
                   {resolvedTheme === 'dark' ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
@@ -222,6 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 type="button"
                 onClick={() => ui.setShowLogoutModal(true)}
                 aria-label="Log out"
+                title="Log out"
                 className="md:hidden bg-danger/10 text-danger hover:bg-danger/20 border border-danger/30 p-1.5 px-3 rounded-full text-sm font-semibold cursor-pointer transition-colors duration-150 flex items-center shadow-2xs"
               >
                 <LogOut className="w-4 h-4" aria-hidden="true" />

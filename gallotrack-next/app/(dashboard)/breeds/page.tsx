@@ -132,14 +132,15 @@ export default function BreedsPage() {
               onChange={(e) => setNewBreedName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
               placeholder="e.g. Roundhead, Kelso, Sweater..."
-              className="flex-1 p-3 border border-emerald-500/30 rounded-md text-sm bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
+              aria-label="New breed name"
+              className="min-w-0 flex-1 p-3 border border-emerald-500/30 rounded-md text-sm bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald-500 transition-colors font-semibold"
               autoFocus
             />
             <button
               type="button"
               onClick={handleAdd}
               disabled={!newBreedName.trim()}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-white font-bold text-sm rounded-md transition-all cursor-pointer shrink-0"
+              className="px-4 sm:px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-white font-bold text-sm rounded-md transition-colors cursor-pointer shrink-0"
             >
               Save
             </button>
