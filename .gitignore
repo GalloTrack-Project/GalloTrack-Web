@@ -53,8 +53,11 @@ venv.bak/
 instance/
 .webassets-cache
 
-# Alembic
-migrations/
+# Dependencies
+node_modules/
+
+# Alembic (root-level only — supabase/migrations/ must stay tracked)
+/migrations/
 
 # Testing
 .coverage

@@ -324,6 +324,45 @@ body {
   outline-offset: 2px;
 }
 
+/* FAMILY TREE CONNECTOR LINES (sire + dam -> offspring -> descendants)
+   Every .gt-kid draws its own trunk segment so consecutive siblings form one
+   continuous line that stops at the last child's branch. */
+.gt-kids {
+  --gt-line: #34d399;
+  padding-left: 26px;
+}
+.dark .gt-kids {
+  --gt-line: #2dd4bf99;
+}
+.gt-kid {
+  position: relative;
+  padding-top: 10px;
+}
+/* horizontal branch: trunk -> card */
+.gt-kid::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 26px;
+  width: 26px;
+  height: 2px;
+  background: var(--gt-line);
+}
+/* vertical trunk: full height, cut off at the last child */
+.gt-kid::after {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--gt-line);
+}
+.gt-kid:last-child::after {
+  bottom: auto;
+  height: 28px;
+}
+
 /* REDUCED MOTION — no floats, no hover lift, no entrance animation */
 @media (prefers-reduced-motion: reduce) {
   *,

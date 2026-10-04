@@ -40,6 +40,11 @@
       "count": 1
     }
   },
+  "components/BreedingHub.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
   "components/DashboardPage.tsx": {
     "jsx-a11y/click-events-have-key-events": {
       "count": 2

@@ -12,6 +12,7 @@ import {
 } from '@/lib/helpers';
 import Pagination from '@/components/Pagination';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { fowlMatchesQuery } from '@/lib/lineage';
 
 type Props = {
   tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring';
@@ -56,7 +57,7 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground">{fowl.name}</h4>
           <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800">{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}</span>
           {fowl.wing_band ? (
-            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the bird)">🏷 {fowl.wing_band}</span>
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
           ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{fowl.breed}</span>
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
@@ -219,6 +220,7 @@ export default function FowlLists({
   setSelectedFowlForDetails,
 }: Props) {
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
   const [filterSire, setFilterSire] = useState('all');
   const [filterDam, setFilterDam] = useState('all');
   const [filterStage, setFilterStage] = useState('all');
@@ -259,23 +261,35 @@ export default function FowlLists({
     };
   }, [baseList]);
 
-  const filtersActive = filterSire !== 'all' || filterDam !== 'all' || filterStage !== 'all';
-  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setPage(1); };
+  const filtersActive = filterSire !== 'all' || filterDam !== 'all' || filterStage !== 'all' || query.trim() !== '';
+  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setQuery(''); setPage(1); };
   const applyFilter = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
 
   const paginatedBirds = useMemo(() => {
     const list = baseList.filter((f) => {
+      const searchOk = fowlMatchesQuery(f, query);
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
-      return sireOk && damOk && stageOk;
+      return searchOk && sireOk && damOk && stageOk;
     });
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [baseList, page, filterSire, filterDam, filterStage]);
+  }, [baseList, page, query, filterSire, filterDam, filterStage]);
 
   const filterBar = (
     <div className="bg-white dark:bg-card p-3.5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">
+      <div className="flex-1 min-w-[200px]">
+        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="registry-search">Search Registry</label>
+        <input
+          id="registry-search"
+          type="search"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+          placeholder="Name, wing band, chicken code, sire, dam…"
+          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500"
+        />
+      </div>
       <div className="flex-1 min-w-[160px]">
         <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-sire">Filter by Sire</label>
         <select

@@ -1,9 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
-import { Dna, Users, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch } from 'lucide-react';
+import { Dna, Users, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch, Network } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import PedigreeTree from '@/components/PedigreeTree';
+import FamilyTree from '@/components/FamilyTree';
+import { buildBreedingPairs } from '@/lib/family-tree';
+import { fowlMatchesQuery } from '@/lib/lineage';
 import { resolveBirdCodes } from '@/lib/bird-code';
 
 const isMaleChild = (c: FowlRecord) => c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male';
@@ -158,7 +161,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
   );
 }
 
-type LineageTab = 'families' | 'sire' | 'dam' | 'pedigree';
+type LineageTab = 'tree' | 'families' | 'sire' | 'dam' | 'pedigree';
 
 export default function LineageDirectory({
   fowls,
@@ -174,6 +177,7 @@ export default function LineageDirectory({
   const [expandedDams, setExpandedDams] = useState<Set<string>>(new Set());
   const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
   const birdCodes = React.useMemo(() => resolveBirdCodes(fowls), [fowls]);
+  const breedingPairs = React.useMemo(() => buildBreedingPairs(fowls), [fowls]);
 
   const toggleSire = (name: string) => {
     setExpandedSires((prev) => {
@@ -271,8 +275,7 @@ export default function LineageDirectory({
   const q = debouncedSearch.trim().toLowerCase();
   const matchSearch = (g: FowlRecord[]) => {
     if (!q) return true;
-    const first = g[0];
-    return `${first.sire} ${first.dam}`.toLowerCase().includes(q) || g.some((f) => f.name.toLowerCase().includes(q));
+    return g.some((f) => fowlMatchesQuery(f, q));
   };
   const fullFiltered = fullFamilies.filter(matchSearch);
 
@@ -488,6 +491,11 @@ export default function LineageDirectory({
         </div>
 
         <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-lg border border-border overflow-x-auto shrink-0">
+          <button type="button" onClick={() => setActiveTab('tree')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'tree' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
+            <span className="text-sm"><Network className="w-4 h-4" /></span>
+            <span>Family Tree</span>
+            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === 'tree' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{breedingPairs.length}</span>
+          </button>
           <button type="button" onClick={() => setActiveTab('families')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === 'families' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <span className="text-sm"><Users className="w-4 h-4" /></span>
             <span>Full Siblings &amp; Families</span>
@@ -568,6 +576,24 @@ export default function LineageDirectory({
           </div>
         );
       })()}
+
+      {activeTab === 'tree' && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-md flex items-center justify-center"><Network className="w-5 h-5" /></div>
+            <div>
+              <h2 className="text-base font-black text-card-foreground tracking-tight">Family Tree</h2>
+              <p className="text-xs text-muted-foreground font-bold">Sire + Dam (breeding pair) sa itaas, mga offspring sa ibaba — para makita agad kung sino ang ama, ina, at mga anak.</p>
+            </div>
+          </div>
+          <FamilyTree
+            fowls={fowls}
+            codes={birdCodes}
+            query={debouncedSearch}
+            onPick={setSelectedFowlForDetails}
+          />
+        </section>
+      )}
 
       {activeTab === 'families' && (
         <section className="space-y-4">

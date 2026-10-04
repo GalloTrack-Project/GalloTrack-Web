@@ -3,7 +3,7 @@ import { useEffect, useState, type ComponentType } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut, FlaskConical } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
@@ -24,6 +24,7 @@ const OWNER_NAV: NavItem[] = [
   { href: '/profiling', label: 'Chicken Registry', shortLabel: 'Registry', icon: Dna },
   { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon },
   { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine },
+  { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical },
   { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User },
 ];
 

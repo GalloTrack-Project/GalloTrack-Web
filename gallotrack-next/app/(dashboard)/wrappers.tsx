@@ -4,6 +4,7 @@ import DashboardPage from '@/components/DashboardPage';
 import ProfilingPage from '@/components/ProfilingPage';
 import MarketplacePage from '@/components/MarketplacePage';
 import LineageDirectory from '@/components/LineageDirectory';
+import BreedingHub from '@/components/BreedingHub';
 import Modals from '@/components/Modals';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -52,6 +53,19 @@ export function LineageDirectoryWrapper() {
       search={fowl.search}
       setSearch={fowl.setSearch}
       debouncedSearch={fowl.debouncedSearch}
+      setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
+    />
+  );
+}
+
+export function BreedingHubWrapper() {
+  const fowl = useFowl();
+  const ui = useUI();
+  return (
+    <BreedingHub
+      fowls={fowl.fowls}
+      matchHistory={fowl.matchHistory}
+      pairingAnalytics={fowl.pairingAnalytics}
       setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
     />
   );

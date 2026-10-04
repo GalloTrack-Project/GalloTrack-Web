@@ -13,6 +13,7 @@ import {
   resolveBirdCodes,
 } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
+import { parentLinkIds } from '@/lib/lineage';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -85,6 +86,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const sireValue = body.sire ? sanitize(String(body.sire)) : 'Foundation Stock';
+    const damValue = body.dam ? sanitize(String(body.dam)) : 'Foundation Stock';
+
+    // ── Genetics: per-strain bloodline composition (50/50 inheritance rule) ──
+    const { data: registryRows } = await supabase
+      .from('fowl')
+      .select('*')
+      .eq('user_id', auth.user.id);
+    const fowls = (registryRows || []) as FowlRecord[];
+
     const payload = {
       user_id: auth.user.id,
       name: sanitize(String(body.name)),
@@ -100,8 +111,9 @@ export async function POST(request: NextRequest) {
       weight: body.weight || '',
       height: body.height || '',
       leg_color: body.leg_color || 'N/A',
-      sire: body.sire ? sanitize(String(body.sire)) : 'Foundation Stock',
-      dam: body.dam ? sanitize(String(body.dam)) : 'Foundation Stock',
+      sire: sireValue,
+      dam: damValue,
+      ...parentLinkIds({ user_id: auth.user.id }, sireValue, damValue, fowls),
       sire_pct: Number(body.sire_pct) || 0,
       dam_pct: Number(body.dam_pct) || 0,
       bloodline_pct: Number(body.bloodline_pct) || 0,
@@ -143,13 +155,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
-    // ── Genetics: per-strain bloodline composition (50/50 inheritance rule) ──
-    const { data: registryRows } = await supabase
-      .from('fowl')
-      .select('*')
-      .eq('user_id', auth.user.id);
-    const fowls = (registryRows || []) as FowlRecord[];
 
     // ── Wing band must be unique across the owner's registry ──
     if (payload.wing_band) {

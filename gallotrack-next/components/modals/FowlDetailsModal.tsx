@@ -13,6 +13,7 @@ import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf } from '@/lib/lineage';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { isMale } from '@/lib/helpers';
@@ -58,7 +59,7 @@ export default function FowlDetailsModal({
   pairingAnalytics,
 }: FowlDetailsModalProps) {
   const unitPrefs = useUnitPrefs();
-  const { handleSetSireMaterial, handleSetActiveStatus } = useFowl();
+  const { handleSetSireMaterial, handleSetActiveStatus, breedingPairs } = useFowl();
   if (!selectedFowlForDetails) return null;
 
   return (
@@ -167,6 +168,151 @@ export default function FowlDetailsModal({
             )}
           </div>
         </div>
+
+        {/* PARENTS · PARTNER · OFFSPRING */}
+        {(() => {
+          const bird = selectedFowlForDetails;
+          const sire = parentRecordOf(bird, 'sire', fowls);
+          const dam = parentRecordOf(bird, 'dam', fowls);
+          const active = activePartnerOf(bird, breedingPairs, fowls);
+          const kids = childrenOf(bird, fowls).slice().sort((a, b) => a.id - b.id);
+          const kidId = (f: FowlRecord) => formatBirdCodeForDisplay(birdCodeOf(f, fowls)) || `#${f.id}`;
+
+          const relationRow = (
+            role: string,
+            icon: string,
+            tone: string,
+            target: FowlRecord | null,
+            fallbackName: string,
+            badge?: string
+          ) => {
+            const foundation = !fallbackName || fallbackName.toLowerCase() === 'foundation stock';
+            const meta = target
+              ? [formatBirdCodeForDisplay(birdCodeOf(target, fowls)), target.wing_band ? `Band ${target.wing_band}` : null]
+                  .filter(Boolean)
+                  .join(' · ') || '—'
+              : foundation
+              ? 'Foundation'
+              : 'External / unresolved';
+            return (
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-md border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className={`w-7 h-7 rounded-sm flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{role}</p>
+                    {target ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFowlForDetails(target)}
+                        className="text-sm font-black truncate text-emerald-700 dark:text-emerald-300 hover:underline underline-offset-2 cursor-pointer text-left"
+                        title="Buksan ang profile"
+                      >
+                        {target.name}
+                      </button>
+                    ) : (
+                      <p className="text-sm font-black truncate text-slate-800 dark:text-card-foreground">
+                        {foundation ? 'Foundation Stock' : fallbackName || '—'}
+                      </p>
+                    )}
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{meta}</p>
+                  </div>
+                </div>
+                {badge ? (
+                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${tone}`}>{badge}</span>
+                ) : null}
+              </div>
+            );
+          };
+
+          const partnerFallback = active
+            ? active.pairing.sire_id === bird.id || (active.pairing.sire_id == null && active.pairing.sire_name?.trim().toLowerCase() === bird.name.trim().toLowerCase())
+              ? active.pairing.dam_name
+              : active.pairing.sire_name
+            : '';
+
+          return (
+            <div className="bg-white dark:bg-card rounded-lg border border-slate-200/80 dark:border-border shadow-sm p-4 sm:p-5">
+              <h4 className="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest flex items-center justify-between border-b pb-2 border-slate-100 mb-3">
+                <span>🌳 Lineage Relationships</span>
+                <span className="font-mono px-2 py-0.5 rounded border text-muted-foreground bg-slate-100 dark:bg-muted border-slate-200 dark:border-border">
+                  ID #{bird.id}
+                </span>
+              </h4>
+
+              <div className="space-y-2">
+                {relationRow('Sire (Father)', '♂', 'text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50', sire, bird.sire)}
+                {relationRow('Dam (Mother)', '♀', 'text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-950/50', dam, bird.dam)}
+                {active
+                  ? relationRow(
+                      `Current Partner · ${active.pairing.pairing_code || active.pairing.outcome}`,
+                      '💞',
+                      'text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/50',
+                      active.partner,
+                      partnerFallback,
+                      active.pairing.outcome
+                    )
+                  : null}
+                {(() => {
+                  const origin = originPairingOf(bird, breedingPairs);
+                  if (!origin) return null;
+                  return (
+                    <div className="flex items-center justify-between gap-3 p-2.5 rounded-md border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-7 h-7 rounded-sm flex items-center justify-center text-sm shrink-0 border text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50">🥚</span>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Born From Pairing</p>
+                          <p className="text-sm font-black truncate text-slate-800 dark:text-card-foreground font-mono">
+                            {origin.pairing_code || `#${origin.id}`}
+                          </p>
+                          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                            {origin.sire_name || '—'} × {origin.dam_name || '—'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${
+                        origin.outcome === 'Active'
+                          ? 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50'
+                          : 'text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/40'
+                      }`}>
+                        {origin.outcome}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-border">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                  Offspring ({kids.length})
+                </p>
+                {kids.length === 0 ? (
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Wala pang naka-registered na anak. I-set ang Sire/Dam ng isang chick sa profile nito para mag-link dito.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {kids.slice(0, 14).map((k) => (
+                      <button
+                        key={k.id}
+                        type="button"
+                        onClick={() => setSelectedFowlForDetails(k)}
+                        title={`Buksan ang profile ni ${k.name}`}
+                        className="text-[11px] font-bold px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                      >
+                        {kidId(k)} · {k.name}
+                      </button>
+                    ))}
+                    {kids.length > 14 ? (
+                      <span className="text-[11px] font-black px-2 py-1 rounded-full border border-slate-200 dark:border-border text-muted-foreground">
+                        +{kids.length - 14} more
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* SIBLING MATCH / LINEAGE RELATIONS */}
         {(() => {
@@ -638,7 +784,7 @@ export default function FowlDetailsModal({
                   const sireName = (selectedFowlForDetails.sire || '').trim();
                   const sireLower = sireName.toLowerCase();
                   const isFoundation = sireLower === 'foundation stock' || !sireLower;
-                  const isRegistered = !isFoundation && fowls.some((f) => f.name.trim().toLowerCase() === sireLower);
+                  const isRegistered = !!parentRecordOf(selectedFowlForDetails, 'sire', fowls);
                   return (
                     <span className={`text-xs font-black px-1.5 py-0.5 rounded-full uppercase ${isRegistered ? 'bg-sky-100 text-sky-700 border border-sky-200 dark:border-sky-800' : isFoundation ? 'bg-slate-100 dark:bg-muted text-muted-foreground border border-slate-200 dark:border-border' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}`}>
                       {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
@@ -648,9 +794,7 @@ export default function FowlDetailsModal({
               </span>
               <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.sire_pct)}% · {(() => {
                 const name = selectedFowlForDetails.sire || '';
-                const target = name.trim() && name.trim().toLowerCase() !== 'foundation stock'
-                  ? fowls.find((f) => f.name.trim().toLowerCase() === name.trim().toLowerCase())
-                  : undefined;
+                const target = parentRecordOf(selectedFowlForDetails, 'sire', fowls);
                 return target ? (
                   <button
                     type="button"
@@ -676,7 +820,7 @@ export default function FowlDetailsModal({
                   const damName = (selectedFowlForDetails.dam || '').trim();
                   const damLower = damName.toLowerCase();
                   const isFoundation = damLower === 'foundation stock' || !damLower;
-                  const isRegistered = !isFoundation && fowls.some((f) => f.name.trim().toLowerCase() === damLower);
+                  const isRegistered = !!parentRecordOf(selectedFowlForDetails, 'dam', fowls);
                   return (
                     <span className={`text-xs font-black px-1.5 py-0.5 rounded-full uppercase ${isRegistered ? 'bg-pink-100 text-pink border border-pink-200 dark:border-pink-800' : isFoundation ? 'bg-slate-100 dark:bg-muted text-muted-foreground border border-slate-200 dark:border-border' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}`}>
                       {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
@@ -686,9 +830,7 @@ export default function FowlDetailsModal({
               </span>
               <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.dam_pct)}% · {(() => {
                 const name = selectedFowlForDetails.dam || '';
-                const target = name.trim() && name.trim().toLowerCase() !== 'foundation stock'
-                  ? fowls.find((f) => f.name.trim().toLowerCase() === name.trim().toLowerCase())
-                  : undefined;
+                const target = parentRecordOf(selectedFowlForDetails, 'dam', fowls);
                 return target ? (
                   <button
                     type="button"

@@ -43,6 +43,8 @@ import {
   resolveBirdCodes,
 } from '@/lib/bird-code';
 import { generateColorReport } from '@/lib/color-genetics';
+import { nameKey } from '@/lib/family-tree';
+import { parentLinkIds } from '@/lib/lineage';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
@@ -51,6 +53,7 @@ import * as matchService from '@/lib/services/match-service';
 import * as matchOptionsService from '@/lib/services/match-options-service';
 import type { PartnerSuggestion } from '@/lib/services/match-options-service';
 import * as strainService from '@/lib/services/strain-service';
+import * as breedingService from '@/lib/services/breeding-service';
 import { useUnitPrefs, weightToStorage, heightToStorage, weightFromStorage, heightFromStorage } from '@/lib/units';
 import type { BloodlineReport } from '@/lib/bloodlines';
 import type {
@@ -59,6 +62,7 @@ import type {
   AgeParts,
   SiblingRelation,
   PairingAnalytics,
+  BreedingPairRecord,
 } from '@/lib/types';
 import { toastMessage } from '@/lib/toast-bus';
 
@@ -73,6 +77,8 @@ interface FowlContextValue {
   deceasedFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   setMatchHistory: React.Dispatch<React.SetStateAction<MatchRecord[]>>;
+  /** Pairing history for the farm — parents/partner links in bird profiles. */
+  breedingPairs: BreedingPairRecord[];
   loading: boolean;
   setLoading: (v: boolean) => void;
 
@@ -340,6 +346,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   // ── Core data state ──
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
+  const [breedingPairs, setBreedingPairs] = useState<BreedingPairRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [autoCalcAge, setAutoCalcAge] = useState(true);
 
@@ -417,14 +424,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const fetchDatabaseResources = useCallback(async () => {
     setLoading(true);
     try {
-      const [fowlData, matchData, strainNames, legColorNames] = await Promise.all([
+      const [fowlData, matchData, strainNames, legColorNames, pairings] = await Promise.all([
         fowlService.fetchFowls(),
         matchService.fetchMatches(),
         strainService.fetchStrains(),
         strainService.fetchLegColors(),
+        breedingService.fetchBreedingPairings(),
       ]);
       setFowls(fowlData);
       setMatchHistory(matchData);
+      setBreedingPairs(pairings.data);
       setAvailableStrains(strainNames);
       setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));
       setAvailableLegColors(legColorNames);
@@ -625,6 +634,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       );
       const compositionStats = getBloodlineStats(composition);
 
+      const sireValue = sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock';
+      const damValue = damName.trim() ? sanitizeInput(damName) : 'Foundation Stock';
+
       const payload = {
         user_id: activeUserId,
         name: sanitizeInput(newName),
@@ -644,8 +656,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         weight: weight ? weightToStorage(weight, unitPrefs.weightUnit) : '',
         height: height ? heightToStorage(height, unitPrefs.heightUnit) : '',
         leg_color: newLegColor.trim() ? newLegColor.trim() : 'N/A',
-        sire: sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock',
-        dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
+        sire: sireValue,
+        dam: damValue,
+        ...parentLinkIds({ user_id: activeUserId }, sireValue, damValue, fowls),
         sire_pct: sPct,
         dam_pct: dPct,
         bloodline_pct: compositionStats?.specificPct ?? computedBloodlinePct,
@@ -978,6 +991,24 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       );
       const editCompositionStats = getBloodlineStats(editComposition);
 
+      const editSireValue = editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock';
+      const editDamValue = editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock';
+      const editing = ui.editingFowl;
+      const resolvedParents = parentLinkIds(
+        { id: editing.id, user_id: editing.user_id },
+        editSireValue,
+        editDamValue,
+        fowls
+      );
+      // An unchanged parent name keeps its existing link even when the name is
+      // ambiguous; only a renamed side is re-resolved (and may drop to null).
+      const keptSireId =
+        resolvedParents.sire_id ??
+        (nameKey(editSireValue) === nameKey(editing.sire) ? editing.sire_id ?? null : null);
+      const keptDamId =
+        resolvedParents.dam_id ??
+        (nameKey(editDamValue) === nameKey(editing.dam) ? editing.dam_id ?? null : null);
+
       const payload = {
         name: sanitizeInput(editName),
         breed: sanitizeInput(editBreed),
@@ -996,8 +1027,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         weight: editWeight ? weightToStorage(editWeight, unitPrefs.weightUnit) : '',
         height: editHeight ? heightToStorage(editHeight, unitPrefs.heightUnit) : '',
         leg_color: editLegColor.trim() ? editLegColor.trim() : 'N/A',
-        sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
-        dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',
+        sire: editSireValue,
+        dam: editDamValue,
+        sire_id: keptSireId,
+        dam_id: keptDamId,
         sire_pct: sPct,
         dam_pct: dPct,
         bloodline_pct: editCompositionStats?.specificPct ?? calculatedBloodline,
@@ -1041,7 +1074,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     deleteCustomStrain,
     deleteCustomLegColor,
     fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
-    matchHistory, setMatchHistory, loading, setLoading,
+    matchHistory, setMatchHistory, breedingPairs, loading, setLoading,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,
     winRatePct: analytics.winRatePct,

@@ -16,6 +16,11 @@ export interface FowlRecord {
   leg_color: string;
   sire: string;
   dam: string;
+  /** Registry links to the sire/dam rows. Text columns above stay as display snapshots. */
+  sire_id?: number | null;
+  dam_id?: number | null;
+  /** The `breeding_pairings` row this bird was produced by (auto-filled in the DB). */
+  pairing_id?: number | null;
   sire_pct: number;
   dam_pct: number;
   bloodline_pct: number;
@@ -32,6 +37,45 @@ export interface FowlRecord {
   archive_date?: string;
   image_url?: string;
   created_at?: string;
+}
+
+/** One row of pairing history (`breeding_pairings` table). */
+export interface BreedingPairRecord {
+  id: number;
+  user_id?: string;
+  /** Optional registry links — names/codes stay authoritative so history survives renames. */
+  sire_id?: number | null;
+  dam_id?: number | null;
+  sire_name: string;
+  dam_name: string;
+  sire_code?: string | null;
+  dam_code?: string | null;
+  /** Auto: sire bird_code + dam bird_code (e.g. 1A). Unique per farm. */
+  pairing_code?: string | null;
+  /** Number of offspring recorded for this pair (maintained by a DB trigger). */
+  offspring_seq?: number;
+  pairing_date?: string | null;
+  ended_date?: string | null;
+  notes?: string | null;
+  outcome: 'Active' | 'Completed' | 'Discontinued';
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** One row of the health/safety log (`safety_incidents` table). */
+export interface SafetyIncidentRecord {
+  id: number;
+  user_id?: string;
+  fowl_id?: number | null;
+  fowl_name: string;
+  fowl_code?: string | null;
+  incident_date: string;
+  type: 'Injury' | 'Illness' | 'Accident' | 'Fight Wound' | 'Environmental';
+  severity: 'Minor' | 'Moderate' | 'Severe' | 'Critical';
+  status: 'Treated' | 'Monitoring' | 'Recovered' | 'Deceased';
+  description?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SiblingRelation {
