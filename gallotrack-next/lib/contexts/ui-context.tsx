@@ -18,6 +18,8 @@ interface UIContextValue {
   setSelectedFowlForDeceased: (f: FowlRecord | null) => void;
   selectedFowlForArchive: FowlRecord | null;
   setSelectedFowlForArchive: (f: FowlRecord | null) => void;
+  fightHistoryFowl: FowlRecord | null;
+  setFightHistoryFowl: (f: FowlRecord | null) => void;
   pendingPermanentDelete: FowlRecord | null;
   setPendingPermanentDelete: (f: FowlRecord | null) => void;
   permanentDeleting: boolean;
@@ -57,6 +59,7 @@ export function UIProvider({
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
   const [selectedFowlForArchive, setSelectedFowlForArchive] = useState<FowlRecord | null>(null);
+  const [fightHistoryFowl, setFightHistoryFowl] = useState<FowlRecord | null>(null);
   const [pendingPermanentDelete, setPendingPermanentDelete] = useState<FowlRecord | null>(null);
   const [permanentDeleting, setPermanentDeleting] = useState(false);
   const [editingFowl, setEditingFowl] = useState<FowlRecord | null>(null);
@@ -73,6 +76,7 @@ export function UIProvider({
     selectedFowlForDetails, setSelectedFowlForDetails,
     selectedFowlForDeceased, setSelectedFowlForDeceased,
     selectedFowlForArchive, setSelectedFowlForArchive,
+    fightHistoryFowl, setFightHistoryFowl,
     pendingPermanentDelete, setPendingPermanentDelete,
     permanentDeleting, setPermanentDeleting,
     editingFowl, setEditingFowl,

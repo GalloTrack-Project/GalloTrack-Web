@@ -1,13 +1,15 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
-import { Dna, Users, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch, Network } from 'lucide-react';
+import { Dna, Users, Link2, Trophy, CheckCircle, AlertTriangle, GitBranch, Network, Swords } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import PedigreeTree from '@/components/PedigreeTree';
 import FamilyTree from '@/components/FamilyTree';
 import { buildBreedingPairs } from '@/lib/family-tree';
+import { familyCounts } from '@/lib/family-stats';
 import { fowlMatchesQuery } from '@/lib/lineage';
 import { resolveBirdCodes } from '@/lib/bird-code';
+import { useUI } from '@/lib/contexts/ui-context';
 
 const isMaleChild = (c: FowlRecord) => c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male';
 
@@ -31,7 +33,7 @@ interface LineageDirectoryProps {
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }
 
-function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void }) {
+function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails, onShowFights }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void; onShowFights: (f: FowlRecord) => void }) {
   const [expanded, setExpanded] = useState(false);
   const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
 
@@ -60,35 +62,49 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
     const cs = getChildMatchStats(child.name);
     const isBest = child.id === bestId;
     return (
-      <button
+      <div
         key={child.id}
-        type="button"
-        onClick={() => setSelectedFowlForDetails(child)}
-        className="group w-full flex items-center justify-between gap-3 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-md px-3.5 py-2.5 transition-all cursor-pointer"
+        className="group w-full flex items-stretch gap-1.5 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-md pl-3.5 pr-2 py-2 transition-all"
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-xs font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
-          <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1">
-              <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
-              {isBest && cs.decided > 0 && (
-                <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
-              )}
+        <button
+          type="button"
+          onClick={() => setSelectedFowlForDetails(child)}
+          className="flex-1 flex items-center justify-between gap-3 text-left min-w-0 cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-xs font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
+                {isBest && cs.decided > 0 && (
+                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
             </div>
-            <p className="text-xs text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
           </div>
-        </div>
-        <div className="shrink-0">
-          {cs.total > 0 ? (
-            <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
-            {cs.winRate}% · {cs.wins}W-{cs.losses}L
-          </span>
-          ) : (
-            <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
-          )}
-        </div>
-      </button>
+          <div className="shrink-0">
+            {cs.total > 0 ? (
+              <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${cs.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+              {cs.winRate}% · {cs.wins}W-{cs.losses}L
+            </span>
+            ) : (
+              <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
+            )}
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => onShowFights(child)}
+          aria-label={`View all fights for ${child.name}`}
+          title="View all fights"
+          className="shrink-0 self-center flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
+        >
+          <Swords className="w-3 h-3" />
+          Fights
+        </button>
+      </div>
     );
   };
 
@@ -173,6 +189,8 @@ export default function LineageDirectory({
   setSelectedFowlForDetails,
 }: LineageDirectoryProps) {
   const [activeTab, setActiveTab] = useState<LineageTab>('families');
+  const ui = useUI();
+  const openFights = (f: FowlRecord) => ui.setFightHistoryFowl(f);
   const [expandedSires, setExpandedSires] = useState<Set<string>>(new Set());
   const [expandedDams, setExpandedDams] = useState<Set<string>>(new Set());
   const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
@@ -294,36 +312,50 @@ export default function LineageDirectory({
     const stats = getChildMatchStats(child.name);
     const isBest = child.id === bestId;
     return (
-      <button
+      <div
         key={child.id}
-        type="button"
-        onClick={() => setSelectedFowlForDetails(child)}
-        className="group w-full flex items-center justify-between gap-3 bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-md px-4 py-3 transition-all cursor-pointer"
+        className="group w-full flex items-stretch gap-1.5 bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-md pl-4 pr-2.5 py-2 transition-all"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
-              {isBest && stats.decided > 0 && (
-                <span className="text-xs font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
-              )}
+        <button
+          type="button"
+          onClick={() => setSelectedFowlForDetails(child)}
+          className="flex-1 flex items-center justify-between gap-3 text-left min-w-0 cursor-pointer"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
+                {isBest && stats.decided > 0 && (
+                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground font-semibold truncate">
+                {child.breed} · {child.gender} · {child.age || 'N/A'}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground font-semibold truncate">
-              {child.breed} · {child.gender} · {child.age || 'N/A'}
-            </p>
           </div>
-        </div>
-        <div className="shrink-0 flex items-center gap-2">
-          {stats.total > 0 ? (
-            <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${stats.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
-              {stats.winRate}% · {stats.wins}W-{stats.losses}L
-            </span>
-          ) : (
-            <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
-          )}
-        </div>
-      </button>
+          <div className="shrink-0">
+            {stats.total > 0 ? (
+              <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${stats.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                {stats.winRate}% · {stats.wins}W-{stats.losses}L
+              </span>
+            ) : (
+              <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
+            )}
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => openFights(child)}
+          aria-label={`View all fights for ${child.name}`}
+          title="View all fights"
+          className="shrink-0 self-center flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
+        >
+          <Swords className="w-3 h-3" />
+          Fights
+        </button>
+      </div>
     );
   };
 
@@ -519,8 +551,10 @@ export default function LineageDirectory({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {[
+          { label: 'Offspring (Registered Children)', value: familyCounts(fowls).offspring, icon: <ChickenIcon className="w-5 h-5 text-success dark:text-emerald-400" /> },
+          { label: 'Breeding Pairs', value: breedingPairs.length, icon: <Link2 className="w-5 h-5 text-info dark:text-sky-400" /> },
           { label: 'Full-Sibling Families', value: fullFiltered.length, icon: <Users className="w-5 h-5 text-success dark:text-emerald-400" /> },
           { label: 'Sire Offspring Groups', value: sireEntries.length, icon: <ChickenIcon className="w-5 h-5 text-info dark:text-sky-400" /> },
           { label: 'Dam Offspring Groups', value: damEntries.length, icon: <ChickenIcon className="w-5 h-5 text-pink" /> },
@@ -583,7 +617,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-md flex items-center justify-center"><Network className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Family Tree</h2>
-              <p className="text-xs text-muted-foreground font-bold">Sire + Dam (breeding pair) sa itaas, mga offspring sa ibaba — para makita agad kung sino ang ama, ina, at mga anak.</p>
+              <p className="text-xs text-muted-foreground font-bold">Breeding pair (Sire + Dam) on top, offspring below — see the sire, dam, and their children at a glance.</p>
             </div>
           </div>
           <FamilyTree
@@ -591,6 +625,7 @@ export default function LineageDirectory({
             codes={birdCodes}
             query={debouncedSearch}
             onPick={setSelectedFowlForDetails}
+            onShowFights={openFights}
           />
         </section>
       )}
@@ -601,7 +636,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-md flex items-center justify-center"><Users className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Full-Sibling Families</h2>
-              <p className="text-xs text-muted-foreground font-bold">Same Sire and same Dam — iisang tatay at iisang nanay. Ranked by win rate.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same Sire and same Dam — one father and one mother. Ranked by win rate.</p>
             </div>
           </div>
           {linked.length === 0 ? (
@@ -610,7 +645,7 @@ export default function LineageDirectory({
             <EmptyState title="No Full-Sibling Families Found" hint="Chickens need at least one sibling with the same Sire and Dam to form a family." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} />)}
+              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} onShowFights={openFights} />)}
             </div>
           )}
         </section>
@@ -622,7 +657,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 rounded-md flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Sire Offspring Tree</h2>
-              <p className="text-xs text-muted-foreground font-bold">Same Father, different Mothers — iisang tatay, magkakaibang nanay. Tap to expand and compare.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same father, different mothers — expand a sire to compare its offspring.</p>
             </div>
           </div>
           {sireEntries.length === 0 ? (
@@ -639,10 +674,10 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-teal-100 dark:bg-teal-950/50 text-teal rounded-md flex items-center justify-center"><GitBranch className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Pedigree / Ancestor Lineage</h2>
-              <p className="text-xs text-muted-foreground font-bold">Bakit kailangan: kapag namatay ang magulang, dito makikita ang buong lahi at porsyento ng mga anak na gagamiting bagong broodstock.</p>
+              <p className="text-xs text-muted-foreground font-bold">Three ancestor generations with bloodline percentages — useful when a parent has passed away and you are choosing the next broodstock from the registered offspring.</p>
             </div>
           </div>
-          <PedigreeTree fowls={fowls} codes={birdCodes} />
+          <PedigreeTree fowls={fowls} codes={birdCodes} onSelect={setSelectedFowlForDetails} />
         </section>
       )}
 
@@ -652,7 +687,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-pink-100 dark:bg-pink-950/50 text-pink rounded-md flex items-center justify-center"><ChickenIcon className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Dam Offspring Tree</h2>
-              <p className="text-xs text-muted-foreground font-bold">Same Mother, different Sires — iisang nanay, magkakaibang tatay. Tap to expand and compare.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same mother, different sires — expand a dam to compare its offspring.</p>
             </div>
           </div>
           {damEntries.length === 0 ? (

@@ -9,6 +9,7 @@ import type {
   PairingAnalytics,
   ArchiveBadge,
 } from '@/lib/types';
+import type { ArchiveDraft } from '@/lib/lifecycle';
 import FowlDetailsModal from './modals/FowlDetailsModal';
 import DeceasedModal from './modals/DeceasedModal';
 import ArchiveModal from './modals/ArchiveModal';
@@ -17,6 +18,7 @@ import EditFowlModal from './modals/EditFowlModal';
 import LogoutModal from './modals/LogoutModal';
 import ForgotPasswordModal from './modals/ForgotPasswordModal';
 import PerFowlBreakdownModal from './modals/PerFowlBreakdownModal';
+import FightHistoryModal from './modals/FightHistoryModal';
 
 type ModalsProps = {
   selectedFowlForDetails: FowlRecord | null;
@@ -32,7 +34,7 @@ type ModalsProps = {
 
   selectedFowlForArchive: FowlRecord | null;
   setSelectedFowlForArchive: (f: FowlRecord | null) => void;
-  handleArchiveFowlWithReason: () => void;
+  handleArchiveFowlWithReason: (draft?: ArchiveDraft) => void;
   archiveReasonInput: string;
   setArchiveReasonInput: (v: string) => void;
   archiveReasonNote: string;
@@ -267,6 +269,8 @@ export default function Modals(props: ModalsProps) {
         fowls={props.fowls}
         matchHistory={props.matchHistory}
       />
+
+      <FightHistoryModal />
     </>
   );
 }

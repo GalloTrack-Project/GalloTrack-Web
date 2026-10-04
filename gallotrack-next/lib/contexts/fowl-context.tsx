@@ -49,6 +49,7 @@ import { generateBreedCompliance } from '@/lib/breed-standards';
 import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
+import { archiveDraftIssue, archiveKindLabel, type ArchiveDraft } from '@/lib/lifecycle';
 import * as matchService from '@/lib/services/match-service';
 import * as matchOptionsService from '@/lib/services/match-options-service';
 import type { PartnerSuggestion } from '@/lib/services/match-options-service';
@@ -206,12 +207,15 @@ interface FowlContextValue {
   handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleArchiveFowlOnly: (id: number) => Promise<void>;
-  handleArchiveFowlWithReason: () => Promise<void>;
+  handleArchiveFowlWithReason: (draft?: ArchiveDraft) => Promise<void>;
   handleRestoreFowlOnly: (id: number) => Promise<void>;
   handlePermanentDelete: () => Promise<void>;
   handleMarkFowlDeceased: () => Promise<void>;
   handleSetSireMaterial: (fowl: FowlRecord) => Promise<void>;
   handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
+  handleSetConditionStatus: (fowl: FowlRecord, value: string) => Promise<void>;
+  handleSetBreedingRole: (fowl: FowlRecord, role: 'none' | 'breeder' | 'material') => Promise<void>;
+  handleSaveFowlNotes: (fowl: FowlRecord, notes: string) => Promise<void>;
   fetchDatabaseResources: () => Promise<void>;
 
   handleAgeChange: (val: string, genderVal?: string) => void;
@@ -361,7 +365,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
   const [deathReasonNote, setDeathReasonNote] = useState('');
-  const [archiveReasonInput, setArchiveReasonInput] = useState('SOLD');
+  const [archiveReasonInput, setArchiveReasonInput] = useState('sold');
   const [archiveReasonNote, setArchiveReasonNote] = useState('');
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain' | 'pairing'>('individual');
   const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
@@ -799,6 +803,46 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(false);
   }, [fetchDatabaseResources, ui]);
 
+  const handleSetConditionStatus = useCallback(async (fowl: FowlRecord, value: string) => {
+    setLoading(true);
+    const result = await fowlService.setConditionStatus(fowl.id, value);
+    if (result.error) {
+      toastMessage(`Failed to update ${fowl.name}'s condition: ${result.error}`, 'error');
+    } else {
+      toastMessage(`${fowl.name}'s condition set to ${value}.`, 'success');
+      fetchDatabaseResources();
+    }
+    setLoading(false);
+  }, [fetchDatabaseResources]);
+
+  const handleSetBreedingRole = useCallback(
+    async (fowl: FowlRecord, role: 'none' | 'breeder' | 'material') => {
+      setLoading(true);
+      const result = await fowlService.setBreedingRole(fowl.id, role);
+      if (result.error) {
+        toastMessage(`Failed to update ${fowl.name}'s breeding role: ${result.error}`, 'error');
+      } else {
+        const label = role === 'none' ? 'no breeding role' : role === 'breeder' ? 'Breeder' : 'Material';
+        toastMessage(`${fowl.name} is now recorded as ${label}.`, 'success');
+        fetchDatabaseResources();
+      }
+      setLoading(false);
+    },
+    [fetchDatabaseResources],
+  );
+
+  const handleSaveFowlNotes = useCallback(async (fowl: FowlRecord, notes: string) => {
+    setLoading(true);
+    const result = await fowlService.updateFowl(fowl.id, { notes });
+    if (result.error) {
+      toastMessage(`Failed to save notes: ${result.error}`, 'error');
+    } else {
+      toastMessage(`Notes saved for ${fowl.name}.`, 'success');
+      fetchDatabaseResources();
+    }
+    setLoading(false);
+  }, [fetchDatabaseResources]);
+
   const handleSetActiveStatus = useCallback(async (fowl: FowlRecord) => {
     setLoading(true);
     const result = await fowlService.setFowlActive(fowl.id);
@@ -812,20 +856,33 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(false);
   }, [fetchDatabaseResources, ui]);
 
-  const handleArchiveFowlWithReason = useCallback(async () => {
+  const handleArchiveFowlWithReason = useCallback(async (draft?: ArchiveDraft) => {
     if (!ui.selectedFowlForArchive) return;
-    const typedReason = archiveReasonNote.replace(/[<>&"]/g, '').trim();
-    if (archiveReasonInput === 'OTHER' && !typedReason) {
-      toastMessage('Type the archive reason before confirming (OTHER).', 'error');
+    const d: ArchiveDraft = {
+      kind: draft?.kind ?? archiveReasonInput,
+      note: draft?.note ?? archiveReasonNote,
+      retiredScope: draft?.retiredScope ?? null,
+      returnDate: draft?.returnDate ?? null,
+    };
+    const issue = archiveDraftIssue(d);
+    if (issue) {
+      toastMessage(issue, 'error');
       return;
     }
-    const finalReason = archiveReasonInput === 'OTHER' ? typedReason : archiveReasonInput;
     setLoading(true);
-    const result = await fowlService.archiveFowl(ui.selectedFowlForArchive.id, finalReason);
+    const result = await fowlService.archiveFowl(ui.selectedFowlForArchive.id, {
+      kind: d.kind,
+      note: d.note,
+      retiredScope: d.retiredScope,
+      returnDate: d.returnDate,
+    });
     if (result.error) {
       toastMessage(result.error, 'error');
     } else {
-      toastMessage(`Chicken archived under ${finalReason} status log.`, 'warning');
+      toastMessage(
+        `${ui.selectedFowlForArchive.name} archived — ${archiveKindLabel(d.kind)}.`,
+        'warning',
+      );
       setArchiveReasonNote('');
       if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForArchive(null);
@@ -1095,6 +1152,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,
     handleRestoreFowlOnly, handlePermanentDelete, handleMarkFowlDeceased,
     handleSetSireMaterial, handleSetActiveStatus,
+    handleSetConditionStatus, handleSetBreedingRole, handleSaveFowlNotes,
     fetchDatabaseResources,
     generationOf: generationOfLocal,
     parentBloodlinePct: parentBloodlinePctLocal,

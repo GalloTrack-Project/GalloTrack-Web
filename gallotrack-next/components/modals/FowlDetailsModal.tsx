@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import type {
   FowlRecord,
   MatchRecord,
@@ -8,16 +8,43 @@ import type {
   MilestoneInfo,
   PairingAnalytics,
   ArchiveBadge,
+  StatusHistoryEntry,
 } from '@/lib/types';
 import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf } from '@/lib/lineage';
+import { birdFamilyStats } from '@/lib/family-stats';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
 import { isMale } from '@/lib/helpers';
 import { Modal } from '@/components/ui';
+import {
+  archiveDisplay,
+  breedingRoleLabel,
+  conditionLabel,
+  mergeOptions,
+  retiredScopeLabel,
+} from '@/lib/lifecycle';
+import { fetchStatusHistory } from '@/lib/services/fowl-service';
+import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
+
+const HISTORY_FIELD_LABELS: Record<string, string> = {
+  status: 'Status',
+  condition_status: 'Condition',
+  breeding_role: 'Breeding role',
+  activity_status: 'Activity',
+  archive_kind: 'Archive reason',
+  retired_scope: 'Retired scope',
+};
+
+const ROLE_OPTIONS: { value: 'none' | 'breeder' | 'material'; label: string }[] = [
+  { value: 'none', label: 'Not a breeder' },
+  { value: 'breeder', label: 'Breeder' },
+  { value: 'material', label: 'Material' },
+];
 
 type FowlDetailsModalProps = {
   selectedFowlForDetails: FowlRecord | null;
@@ -59,8 +86,76 @@ export default function FowlDetailsModal({
   pairingAnalytics,
 }: FowlDetailsModalProps) {
   const unitPrefs = useUnitPrefs();
-  const { handleSetSireMaterial, handleSetActiveStatus, breedingPairs } = useFowl();
+  const ui = useUI();
+  const {
+    handleSetSireMaterial,
+    handleSetActiveStatus,
+    handleSetConditionStatus,
+    handleSetBreedingRole,
+    handleSaveFowlNotes,
+    handleRestoreFowlOnly,
+    setArchiveReasonInput,
+    breedingPairs,
+  } = useFowl();
+  const { rows: optionRows } = useRegistryOptions();
+
+  const fowlId = selectedFowlForDetails?.id ?? null;
+  // State is keyed by fowl id so switching birds never shows stale history
+  // or another chicken's notes draft (no effect + setState needed).
+  const [historyState, setHistoryState] = useState<{
+    fowlId: number | null;
+    open: boolean;
+    entries: StatusHistoryEntry[] | null;
+  }>({ fowlId: null, open: false, entries: null });
+  const [notesState, setNotesState] = useState<{ fowlId: number | null; draft: string }>({
+    fowlId: null,
+    draft: '',
+  });
+  const [busy, setBusy] = useState(false);
+
+  const history = historyState.fowlId === fowlId ? historyState.entries : null;
+  const historyOpen = historyState.fowlId === fowlId && historyState.open;
+  const notesDraft =
+    notesState.fowlId === fowlId ? notesState.draft : (selectedFowlForDetails?.notes ?? '');
+  const setNotesDraft = (value: string) => setNotesState({ fowlId, draft: value });
+
+  const refreshHistory = useCallback(async () => {
+    if (fowlId === null) return;
+    const entries = await fetchStatusHistory(fowlId);
+    setHistoryState((s) => ({ ...s, fowlId, entries }));
+  }, [fowlId]);
+
+  const toggleHistory = useCallback(async () => {
+    if (fowlId === null) return;
+    if (historyState.fowlId === fowlId && historyState.open) {
+      setHistoryState({ fowlId, open: false, entries: historyState.entries });
+      return;
+    }
+    const entries =
+      historyState.fowlId === fowlId && historyState.entries !== null
+        ? historyState.entries
+        : await fetchStatusHistory(fowlId);
+    setHistoryState({ fowlId, open: true, entries });
+  }, [fowlId, historyState]);
+
   if (!selectedFowlForDetails) return null;
+
+  // Fresh copy so chips/selects update right after a status change.
+  const bird = fowls.find((f) => f.id === selectedFowlForDetails.id) ?? selectedFowlForDetails;
+  const conditionOptions = mergeOptions(optionRows, 'post_match_condition', bird.condition_status).filter(
+    (o) => o.value !== 'Deceased',
+  );
+  const notesClean = notesDraft === (bird.notes ?? '');
+
+  const runAction = async (action: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await action();
+      await refreshHistory();
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <Modal
@@ -75,8 +170,8 @@ export default function FowlDetailsModal({
 
         <BloodlineBreakdown
           stats={getFowlBloodlineStats(selectedFowlForDetails, fowls)}
-          title="Bloodline Percentage (Hatian ng Dugo)"
-          subtitle="Bawat porsyento ay hati mula sa 50/50 na hatian ng Sire at Dam"
+          title="Bloodline Percentage"
+          subtitle="Each percentage is the 50/50 split contributed by the sire and the dam"
         />
 
         <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/70 dark:border-border">
@@ -115,7 +210,14 @@ export default function FowlDetailsModal({
                   );
                 }
                 if (selectedFowlForDetails.status === 'Archived') {
-                  const badge = getArchiveBadgeStyle(selectedFowlForDetails.archive_reason || 'OTHER');
+                  const kind = selectedFowlForDetails.archive_kind;
+                  const badge = getArchiveBadgeStyle(
+                    kind
+                      ? kind === 'transfer'
+                        ? 'TRANSFERRED'
+                        : kind.toUpperCase()
+                      : selectedFowlForDetails.archive_reason || 'OTHER',
+                  );
                   return (
                     <span className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase ${badge.bg} border border-white/20 shadow-2xs`}>
                       {badge.label}
@@ -148,9 +250,16 @@ export default function FowlDetailsModal({
                 {selectedFowlForDetails.death_date ? ` · Recorded ${selectedFowlForDetails.death_date}` : ''}
               </p>
             )}
-            {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.status === 'Archived' && selectedFowlForDetails.archive_reason && (
+            {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.status === 'Archived' && (
               <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                📦 Archive Reason: <strong className="text-amber-800 dark:text-amber-300">{selectedFowlForDetails.archive_reason}</strong> (Non-Mortality)
+                📦 Archived: <strong className="text-amber-800 dark:text-amber-300">{archiveDisplay(selectedFowlForDetails, optionRows)}</strong>
+                {selectedFowlForDetails.retired_scope ? (
+                  <> · {retiredScopeLabel(selectedFowlForDetails.retired_scope, optionRows)}</>
+                ) : null}
+                {selectedFowlForDetails.return_date ? (
+                  <> · Return expected {selectedFowlForDetails.return_date}</>
+                ) : null}
+                <span className="font-medium text-muted-foreground"> (Non-Mortality)</span>
               </p>
             )}
             {selectedFowlForDetails.status !== 'Deceased' && selectedFowlForDetails.status !== 'Archived' && isMale(selectedFowlForDetails.gender) && (
@@ -167,6 +276,188 @@ export default function FowlDetailsModal({
               </div>
             )}
           </div>
+        </div>
+
+        {/* STATUS & LIFECYCLE — condition, role, activity and final status are separate */}
+        <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
+              Status &amp; Lifecycle
+            </h4>
+            <button
+              type="button"
+              onClick={() => void toggleHistory()}
+              className="text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+            >
+              {historyOpen ? 'Hide Status History' : 'View Status History'}
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs font-black px-2.5 py-1 rounded-full border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300">
+              🩹 Condition: {conditionLabel(bird.condition_status)}
+            </span>
+            <span className="text-xs font-black px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300">
+              🧬 {breedingRoleLabel(bird.breeding_role)}
+            </span>
+            <span className={`text-xs font-black px-2.5 py-1 rounded-full border ${bird.activity_status === 'active' ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300' : 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300'}`}>
+              {bird.activity_status === 'active' ? '● Active' : '○ Inactive'}
+            </span>
+            {bird.status === 'Archived' && bird.retired_scope ? (
+              <span className="text-xs font-black px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300">
+                🏁 {retiredScopeLabel(bird.retired_scope, optionRows)}
+              </span>
+            ) : null}
+          </div>
+
+          {bird.status !== 'Deceased' && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              <label className="space-y-1 text-xs font-bold text-slate-600 dark:text-muted-foreground">
+                Post-Match Condition
+                <select
+                  value={bird.condition_status || 'Fit / Recovered'}
+                  disabled={busy}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === (bird.condition_status || 'Fit / Recovered')) return;
+                    void runAction(() => handleSetConditionStatus(bird, value));
+                  }}
+                  className="w-full mt-1 p-2.5 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted font-semibold text-slate-800 dark:text-card-foreground focus:border-sky-500 cursor-pointer disabled:opacity-60"
+                >
+                  {conditionOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1 text-xs font-bold text-slate-600 dark:text-muted-foreground">
+                Breeding / Material Role (manual)
+                <select
+                  value={bird.breeding_role || 'none'}
+                  disabled={busy}
+                  onChange={(e) => {
+                    const role = e.target.value as 'none' | 'breeder' | 'material';
+                    if (role === (bird.breeding_role || 'none')) return;
+                    void runAction(() => handleSetBreedingRole(bird, role));
+                  }}
+                  className="w-full mt-1 p-2.5 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted font-semibold text-slate-800 dark:text-card-foreground focus:border-violet-500 cursor-pointer disabled:opacity-60"
+                >
+                  {ROLE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {bird.status === 'Archived' ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void runAction(async () => { await handleRestoreFowlOnly(bird.id); })}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer disabled:opacity-60"
+              >
+                ↩ Return / Restore
+              </button>
+            ) : null}
+            {bird.status !== 'Archived' && bird.status !== 'Deceased' ? (
+              <>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setArchiveReasonInput('inactive');
+                    ui.setSelectedFowlForArchive(bird);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-sm transition-all cursor-pointer disabled:opacity-60"
+                >
+                  Deactivate (Archive)
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setArchiveReasonInput('sold');
+                    ui.setSelectedFowlForArchive(bird);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer disabled:opacity-60"
+                >
+                  Archive…
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => ui.setSelectedFowlForDeceased(bird)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer disabled:opacity-60"
+                >
+                  Record as Deceased…
+                </button>
+              </>
+            ) : null}
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Injuries never convert a chicken into a breeder — condition, breeding role, activity and
+            final status are changed only by your decision, and every change is logged.
+          </p>
+
+          {historyOpen ? (
+            <div className="border-t border-slate-200 dark:border-border pt-3 space-y-1.5">
+              <p className="text-xs font-black text-slate-700 dark:text-card-foreground">Status History</p>
+              {history === null ? (
+                <p className="text-xs text-muted-foreground font-semibold">Loading history…</p>
+              ) : history.length === 0 ? (
+                <p className="text-xs text-muted-foreground font-semibold">No status changes recorded yet.</p>
+              ) : (
+                <ol className="space-y-1.5">
+                  {history.map((entry) => (
+                    <li key={entry.id} className="text-xs flex flex-wrap gap-x-2 items-baseline">
+                      <span className="font-mono text-muted-foreground">
+                        {new Date(entry.changed_at).toLocaleDateString()}
+                      </span>
+                      <span className="font-bold text-slate-700 dark:text-card-foreground">
+                        {HISTORY_FIELD_LABELS[entry.field] || entry.field}:
+                      </span>
+                      <span className="font-mono">
+                        {entry.old_value ?? '—'} → {entry.new_value}
+                      </span>
+                      {entry.reason ? (
+                        <span className="text-muted-foreground">({entry.reason})</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* NOTES — add or edit any time, independent of the photo */}
+        <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
+              Notes
+            </h4>
+            <button
+              type="button"
+              disabled={busy || notesClean}
+              onClick={() => void runAction(() => handleSaveFowlNotes(bird, notesDraft))}
+              className="text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer disabled:opacity-50 disabled:no-underline"
+            >
+              {notesClean ? 'Saved' : 'Save Notes'}
+            </button>
+          </div>
+          <textarea
+            value={notesDraft}
+            onChange={(e) => setNotesDraft(e.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="Observations, temperament, medical notes, handling tips…"
+            className="w-full p-2.5 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted font-medium text-slate-800 dark:text-card-foreground focus:border-emerald-500 resize-y"
+          />
         </div>
 
         {/* PARENTS · PARTNER · OFFSPRING */}
@@ -205,7 +496,7 @@ export default function FowlDetailsModal({
                         type="button"
                         onClick={() => setSelectedFowlForDetails(target)}
                         className="text-sm font-black truncate text-emerald-700 dark:text-emerald-300 hover:underline underline-offset-2 cursor-pointer text-left"
-                        title="Buksan ang profile"
+                        title="Open profile"
                       >
                         {target.name}
                       </button>
@@ -238,6 +529,24 @@ export default function FowlDetailsModal({
                   ID #{bird.id}
                 </span>
               </h4>
+
+              {(() => {
+                const stats = birdFamilyStats(bird, fowls);
+                const chips = [
+                  { label: 'Offspring', value: stats.offspring, tone: 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50' },
+                  { label: 'Breeding Pairs', value: stats.breedingPairs, tone: 'text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50' },
+                  { label: 'Full Siblings', value: stats.fullSiblings, tone: 'text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-950/50' },
+                ];
+                return (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {chips.map((c) => (
+                      <span key={c.label} className={`text-[11px] font-black px-2.5 py-1 rounded-full border ${c.tone}`}>
+                        {c.label}: {c.value}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
 
               <div className="space-y-2">
                 {relationRow('Sire (Father)', '♂', 'text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50', sire, bird.sire)}
@@ -287,7 +596,7 @@ export default function FowlDetailsModal({
                 </p>
                 {kids.length === 0 ? (
                   <p className="text-xs text-muted-foreground font-semibold">
-                    Wala pang naka-registered na anak. I-set ang Sire/Dam ng isang chick sa profile nito para mag-link dito.
+                    No registered offspring yet. Set the Sire/Dam of a chick in its profile to link it here.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
@@ -296,7 +605,7 @@ export default function FowlDetailsModal({
                         key={k.id}
                         type="button"
                         onClick={() => setSelectedFowlForDetails(k)}
-                        title={`Buksan ang profile ni ${k.name}`}
+                        title={`Open ${k.name}&apos;s profile`}
                         className="text-[11px] font-bold px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
                       >
                         {kidId(k)} · {k.name}
@@ -339,7 +648,7 @@ export default function FowlDetailsModal({
             return (
               <div
                 key={r.id}
-                title={`${r.name} — ${badge}. ${context}.${target ? ' Klik para buksan ang profile.' : ''}`}
+                title={`${r.name} — ${badge}. ${context}.${target ? ' Click to open the profile.' : ''}`}
                 onClick={target ? () => setSelectedFowlForDetails(target) : undefined}
                 className={`flex items-center justify-between gap-3 p-3 rounded-md border border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/50 hover:border-slate-200 transition-colors ${target ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-muted' : ''}`}
               >
@@ -480,14 +789,25 @@ export default function FowlDetailsModal({
                               const target = fowls.find((f) => f.name.trim().toLowerCase() === s.name.trim().toLowerCase());
                               if (!target) return s.name;
                               return (
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedFowlForDetails(target)}
-                                  className="font-black text-emerald-700 dark:text-emerald-300 hover:underline underline-offset-2 cursor-pointer"
-                                  title="Buksan ang profile ng sibling na ito"
-                                >
-                                  {s.name}
-                                </button>
+                                <span className="inline-flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedFowlForDetails(target)}
+                                    className="font-black text-emerald-700 dark:text-emerald-300 hover:underline underline-offset-2 cursor-pointer"
+                                    title="Open this sibling&apos;s profile"
+                                  >
+                                    {s.name}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => ui.setFightHistoryFowl(target)}
+                                    aria-label={`View all fights for ${s.name}`}
+                                    title="View all fights"
+                                    className="text-xs text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300 border border-border hover:border-emerald-400 rounded px-1.5 py-0.5 transition-colors cursor-pointer"
+                                  >
+                                    ⚔
+                                  </button>
+                                </span>
                               );
                             })()}
                           </td>
@@ -624,7 +944,7 @@ export default function FowlDetailsModal({
                 </div>
               </div>
 
-              {/* PER-RASA INDIVIDUAL BREAKDOWN */}
+              {/* PER-BREED INDIVIDUAL BREAKDOWN */}
               {(() => {
                 const breedMap = new Map<string, { fights: number; wins: number; losses: number; draws: number }>();
                 fowlMatches.forEach(m => {
@@ -642,7 +962,7 @@ export default function FowlDetailsModal({
                 return (
                   <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
                     <div className="p-3 bg-slate-50 dark:bg-muted/50 border-b border-slate-200/80 dark:border-border">
-                      <h4 className="text-xs font-black text-slate-700 dark:text-card-foreground uppercase tracking-wider">🏆 Individual Per-Rasa Performance ({breeds.length} breed{breeds.length > 1 ? 's' : ''} faced)</h4>
+                      <h4 className="text-xs font-black text-slate-700 dark:text-card-foreground uppercase tracking-wider">🏆 Individual Per-Breed Performance ({breeds.length} breed{breeds.length > 1 ? 's' : ''} faced)</h4>
                       <p className="text-xs text-muted-foreground font-semibold mt-0.5">Win / Loss breakdown against each opponent breed — specific to this chicken only.</p>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 divide-x divide-y divide-slate-100">
@@ -689,7 +1009,7 @@ export default function FowlDetailsModal({
                       <tr className="bg-slate-100/70 dark:bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-slate-200 dark:border-border">
                         <th className="p-2.5 pl-4">Match Date</th>
                         <th className="p-2.5">Opponent Entry</th>
-                        <th className="p-2.5">Rasa</th>
+                        <th className="p-2.5">Breed</th>
                         <th className="p-2.5">Arena Location</th>
                         <th className="p-2.5">Match Type</th>
                         <th className="p-2.5 text-center">Outcome</th>
@@ -800,7 +1120,7 @@ export default function FowlDetailsModal({
                     type="button"
                     onClick={() => setSelectedFowlForDetails(target)}
                     className="text-sky-700 dark:text-sky-300 font-bold hover:underline underline-offset-2 cursor-pointer"
-                    title="Buksan ang Sire profile"
+                    title="Open Sire profile"
                   >
                     {name}
                   </button>
@@ -836,7 +1156,7 @@ export default function FowlDetailsModal({
                     type="button"
                     onClick={() => setSelectedFowlForDetails(target)}
                     className="text-pink font-bold hover:underline underline-offset-2 cursor-pointer"
-                    title="Buksan ang Dam profile"
+                    title="Open Dam profile"
                   >
                     {name}
                   </button>

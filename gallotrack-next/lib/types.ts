@@ -37,6 +37,47 @@ export interface FowlRecord {
   archive_date?: string;
   image_url?: string;
   created_at?: string;
+  /** Free-text notes for the registry record. */
+  notes?: string | null;
+  /** Injury/health after a match (Fit / Recovered, Injured, ..., Deceased). Never drives breeding_role. */
+  condition_status?: string;
+  /** Breeding/material role - manual only: none | breeder | material. */
+  breeding_role?: 'none' | 'breeder' | 'material';
+  /** Active/inactive flag - archived or deceased birds are inactive. */
+  activity_status?: 'active' | 'inactive';
+  /** Structured archive reason: sold | transfer | inactive | retired | other. */
+  archive_kind?: string | null;
+  /** Which career ended for retired birds: fighting | breeding | both. */
+  retired_scope?: string | null;
+  /** Expected/actual return date for Transfer / Borrowed birds. */
+  return_date?: string | null;
+}
+
+/** One append-only row in `fowl_status_history`. */
+export interface StatusHistoryEntry {
+  id: number;
+  fowl_id: number;
+  /** status | condition_status | breeding_role | activity_status | archive_kind | retired_scope */
+  field: string;
+  old_value?: string | null;
+  new_value: string;
+  reason?: string | null;
+  note?: string | null;
+  changed_at: string;
+  changed_by?: string | null;
+}
+
+/** One editable list entry in `registry_options`. */
+export interface RegistryOption {
+  id?: number;
+  user_id?: string | null;
+  list_key: string;
+  value: string;
+  label: string;
+  local_label?: string | null;
+  sort_order?: number;
+  is_default?: boolean;
+  is_active?: boolean;
 }
 
 /** One row of pairing history (`breeding_pairings` table). */

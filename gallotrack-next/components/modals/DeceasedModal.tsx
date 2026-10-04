@@ -1,8 +1,25 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Skull } from 'lucide-react';
 import { Modal } from '@/components/ui';
-import type { FowlRecord } from '@/lib/types';
+import type { FowlRecord, RegistryOption } from '@/lib/types';
+import { mergeOptions } from '@/lib/lifecycle';
+import { fetchRegistryOptions } from '@/lib/services/options-service';
+
+const FALLBACK_DEATH_REASONS = [
+  'Injury during fight',
+  'Illness',
+  'Natural causes',
+  'Old age',
+  'Slaughtered / cooked',
+  'Other',
+].map((value, i) => ({
+  list_key: 'death_reason',
+  value,
+  label: value,
+  user_id: null,
+  sort_order: i + 1,
+}));
 
 type DeceasedModalProps = {
   selectedFowlForDeceased: FowlRecord | null;
@@ -25,7 +42,25 @@ export default function DeceasedModal({
   setDeathReasonNote,
   loading,
 }: DeceasedModalProps) {
+  const [options, setOptions] = useState<RegistryOption[]>([]);
+
+  useEffect(() => {
+    let live = true;
+    fetchRegistryOptions().then((rows) => {
+      if (live) setOptions(rows);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
   if (!selectedFowlForDeceased) return null;
+
+  const reasonOptions = mergeOptions(
+    options.length ? options : FALLBACK_DEATH_REASONS,
+    'death_reason',
+    deathReasonInput,
+  );
 
   return (
     <Modal
@@ -65,10 +100,11 @@ export default function DeceasedModal({
           onChange={(e) => setDeathReasonInput(e.target.value)}
           className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted font-semibold text-slate-800 dark:text-card-foreground focus:border-rose-500 cursor-pointer"
         >
-          <option value="Illness">Illness / Disease</option>
-          <option value="Injury">Injury / Fight Trauma</option>
-          <option value="Natural">Natural Causes / Old Age</option>
-          <option value="Other">Other Unspecified Cause</option>
+          {reasonOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
         </select>
         {deathReasonInput === 'Other' && (
           <div className="space-y-1.5">

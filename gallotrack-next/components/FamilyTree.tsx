@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo, useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
+import { Swords } from 'lucide-react';
 import {
   buildBreedingPairs,
   buildOffspringIndex,
@@ -84,12 +85,14 @@ function OffspringNode({
   maxDepth,
   codes,
   onPick,
+  onShowFights,
 }: {
   node: DescendantNode;
   depth: number;
   maxDepth: Depth;
   codes: Map<string, string>;
   onPick?: (f: FowlRecord) => void;
+  onShowFights?: (f: FowlRecord) => void;
 }) {
   const fowl = node.fowl;
   const code = formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '');
@@ -98,35 +101,47 @@ function OffspringNode({
 
   return (
     <div className="gt-kid">
-      <button
-        type="button"
-        onClick={() => onPick?.(fowl)}
-        className="group w-full text-left bg-card border border-border rounded-2xl px-3.5 py-2.5 flex items-center gap-3 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all cursor-pointer"
-      >
-        <span
-          className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[fowl.status] || 'bg-muted-foreground'}`}
-          title={fowl.status}
-        ></span>
-        {code && (
-          <span className="text-[9px] font-mono font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded shrink-0">
-            {code}
+      <div className="group w-full bg-card border border-border rounded-2xl px-3.5 py-2.5 flex items-stretch gap-1.5 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all">
+        <button
+          type="button"
+          onClick={() => onPick?.(fowl)}
+          className="flex-1 flex items-center gap-3 text-left min-w-0 cursor-pointer"
+        >
+          <span
+            className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[fowl.status] || 'bg-muted-foreground'}`}
+            title={fowl.status}
+          ></span>
+          {code && (
+            <span className="text-[9px] font-mono font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded shrink-0">
+              {code}
+            </span>
+          )}
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-black text-card-foreground truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+              {fowl.name}
+            </span>
+            <span className="block text-[9px] font-semibold text-muted-foreground truncate">
+              {isMale(fowl) ? '🐓 Rooster' : '🐔 Hen'} · {fowl.breed || '—'}
+              {fowl.age ? ` · ${fowl.age}` : ''}
+            </span>
           </span>
-        )}
-        <span className="min-w-0 flex-1">
-          <span className="block text-[11px] font-black text-card-foreground truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
-            {fowl.name}
-          </span>
-          <span className="block text-[9px] font-semibold text-muted-foreground truncate">
-            {isMale(fowl) ? '🐓 Rooster' : '🐔 Hen'} · {fowl.breed || '—'}
-            {fowl.age ? ` · ${fowl.age}` : ''}
-          </span>
-        </span>
-        {totalKids > 0 && (
-          <span className="text-[8px] font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
-            {totalKids} anak
-          </span>
-        )}
-      </button>
+          {totalKids > 0 && (
+            <span className="text-[8px] font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
+              {totalKids} {totalKids === 1 ? 'child' : 'children'}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => onShowFights?.(fowl)}
+          aria-label={`View all fights for ${fowl.name}`}
+          title="View all fights"
+          className="shrink-0 self-center flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
+        >
+          <Swords className="w-3 h-3" />
+          Fights
+        </button>
+      </div>
 
       {kids.length > 0 && (
         <div className="gt-kids">
@@ -138,6 +153,7 @@ function OffspringNode({
               maxDepth={maxDepth}
               codes={codes}
               onPick={onPick}
+              onShowFights={onShowFights}
             />
           ))}
         </div>
@@ -155,6 +171,7 @@ function PairTree({
   collapsed,
   onToggleCollapse,
   onPick,
+  onShowFights,
 }: {
   pair: BreedingPair;
   codes: Map<string, string>;
@@ -164,6 +181,7 @@ function PairTree({
   collapsed: boolean;
   onToggleCollapse: () => void;
   onPick?: (f: FowlRecord) => void;
+  onShowFights?: (f: FowlRecord) => void;
 }) {
   const sireFowl = byName.get(nameKey(pair.sire));
   const damFowl = byName.get(nameKey(pair.dam));
@@ -206,6 +224,7 @@ function PairTree({
                 maxDepth={maxDepth}
                 codes={codes}
                 onPick={onPick}
+                onShowFights={onShowFights}
               />
             ))}
           </div>
@@ -220,6 +239,7 @@ type Props = {
   codes: Map<string, string>;
   query?: string;
   onPick?: (f: FowlRecord) => void;
+  onShowFights?: (f: FowlRecord) => void;
 };
 
 /**
@@ -232,7 +252,7 @@ type Props = {
  *    ├── Offspring 1A2
  *    └── Offspring 1A3
  */
-export default function FamilyTree({ fowls, codes, query = '', onPick }: Props) {
+export default function FamilyTree({ fowls, codes, query = '', onPick, onShowFights }: Props) {
   const [maxDepth, setMaxDepth] = useState<Depth>(2);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -278,8 +298,8 @@ export default function FamilyTree({ fowls, codes, query = '', onPick }: Props) 
             🌳 Family Tree — Sire + Dam → Offspring
           </p>
           <p className="text-[10px] text-muted-foreground font-semibold">
-            Bawat pair ay magpapakita ng ama, ina, at mga anak hanggang sa piniling henerasyon.
-            {normalizeParentName(query) && ' Hinahanap: "' + query + '"'}
+            Each pair shows the sire, dam, and their offspring down to the selected generation.
+            {normalizeParentName(query) && ' Searching for: "' + query + '"'}
           </p>
         </div>
         <div className="flex items-center gap-1.5 bg-muted/60 border border-border rounded-2xl p-1.5 shrink-0">
@@ -308,7 +328,7 @@ export default function FamilyTree({ fowls, codes, query = '', onPick }: Props) 
           <h3 className="text-sm font-extrabold text-card-foreground">No Breeding Pairs Found</h3>
           <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">
             {normalizeParentName(query)
-              ? 'Walang pair o manok na tumutugma sa hinahanap ninyo.'
+              ? 'No breeding pair or chicken matches your search.'
               : 'Encode chickens with both Sire and Dam names to see the sire + dam → offspring family tree.'}
           </p>
         </div>
@@ -325,6 +345,7 @@ export default function FamilyTree({ fowls, codes, query = '', onPick }: Props) 
               collapsed={collapsed.has(pair.key)}
               onToggleCollapse={() => toggleCollapse(pair.key)}
               onPick={onPick}
+              onShowFights={onShowFights}
             />
           ))}
         </div>

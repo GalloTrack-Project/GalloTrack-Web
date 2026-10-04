@@ -13,6 +13,7 @@ import {
 import Pagination from '@/components/Pagination';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { fowlMatchesQuery } from '@/lib/lineage';
+import { archiveDisplay, retiredScopeLabel } from '@/lib/lifecycle';
 
 type Props = {
   tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring';
@@ -133,7 +134,14 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
       </div>
       <div className="flex-1 w-full space-y-3">
         {(() => {
-          const badge = getArchiveBadgeStyle(fowl.archive_reason);
+          const kind = fowl.archive_kind;
+          const badge = getArchiveBadgeStyle(
+            kind
+              ? kind === 'transfer'
+                ? 'TRANSFERRED'
+                : kind.toUpperCase()
+              : fowl.archive_reason,
+          );
           return (
             <span className={`antigravity-badge absolute top-0 right-0 text-xs font-black uppercase px-3.5 py-1 ${badge.bg} rounded-bl-md tracking-widest shadow-2xs`}>
               {badge.label}
@@ -152,7 +160,7 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
           <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
           <div>Trait: <strong className="text-emerald-700 dark:text-emerald-300">{fowl.behavior_trait}</strong></div>
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
-          <div className="col-span-2">Archive Reason: <strong className="text-amber-800 dark:text-amber-300">{fowl.archive_reason || 'Unspecified'}</strong></div>
+          <div className="col-span-2">Archive Reason: <strong className="text-amber-800 dark:text-amber-300">{archiveDisplay(fowl)}</strong>{fowl.retired_scope ? <> · {retiredScopeLabel(fowl.retired_scope)}</> : null}{fowl.return_date ? <> · Return expected {fowl.return_date}</> : null}</div>
         </div>
         <div className="flex items-center gap-2 pt-1">
           <button type="button" onClick={() => onRestore(fowl.id)} className="inline-flex items-center gap-1.5 text-xs font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
@@ -224,13 +232,21 @@ export default function FowlLists({
   const [filterSire, setFilterSire] = useState('all');
   const [filterDam, setFilterDam] = useState('all');
   const [filterStage, setFilterStage] = useState('all');
+  const [filterReason, setFilterReason] = useState('all');
   const prevTabRef = React.useRef(tab);
   React.useEffect(() => {
     if (prevTabRef.current !== tab) {
       prevTabRef.current = tab;
       setPage(1);
+      setFilterReason('all');
     }
   }, [tab]);
+
+  const reasonValue = React.useCallback(
+    (f: FowlRecord) =>
+      tab === 'deceased' ? (f.death_reason || 'Unspecified') : archiveDisplay(f),
+    [tab],
+  );
 
   const baseList = useMemo(
     () =>
@@ -247,22 +263,30 @@ export default function FowlLists({
     const sires = new Set<string>();
     const dams = new Set<string>();
     const stages = new Set<string>();
+    const reasons = new Set<string>();
     for (const f of baseList) {
       const s = (f.sire || '').trim();
       const d = (f.dam || '').trim();
       if (s) sires.add(s);
       if (d) dams.add(d);
       stages.add((f.growth_stage || 'Stag').trim() || 'Stag');
+      if (tab === 'archived' || tab === 'deceased') reasons.add(reasonValue(f));
     }
     return {
       sires: Array.from(sires).sort((a, b) => a.localeCompare(b)),
       dams: Array.from(dams).sort((a, b) => a.localeCompare(b)),
       stages: Array.from(stages).sort((a, b) => a.localeCompare(b)),
+      reasons: Array.from(reasons).sort((a, b) => a.localeCompare(b)),
     };
-  }, [baseList]);
+  }, [baseList, tab, reasonValue]);
 
-  const filtersActive = filterSire !== 'all' || filterDam !== 'all' || filterStage !== 'all' || query.trim() !== '';
-  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setQuery(''); setPage(1); };
+  const filtersActive =
+    filterSire !== 'all' ||
+    filterDam !== 'all' ||
+    filterStage !== 'all' ||
+    filterReason !== 'all' ||
+    query.trim() !== '';
+  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setFilterReason('all'); setQuery(''); setPage(1); };
   const applyFilter = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
 
   const paginatedBirds = useMemo(() => {
@@ -271,11 +295,12 @@ export default function FowlLists({
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
-      return searchOk && sireOk && damOk && stageOk;
+      const reasonOk = filterReason === 'all' || reasonValue(f) === filterReason;
+      return searchOk && sireOk && damOk && stageOk && reasonOk;
     });
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [baseList, page, query, filterSire, filterDam, filterStage]);
+  }, [baseList, page, query, filterSire, filterDam, filterStage, filterReason, reasonValue]);
 
   const filterBar = (
     <div className="bg-white dark:bg-card p-3.5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">
@@ -323,6 +348,21 @@ export default function FowlLists({
           {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}
         </select>
       </div>
+      {(tab === 'archived' || tab === 'deceased') && (
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-reason">
+            {tab === 'archived' ? 'Filter by Archive Reason' : 'Filter by Cause of Death'}
+          </label>
+          <select
+            value={filterReason}
+            onChange={applyFilter(setFilterReason)}
+            className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
+            id="filter-by-reason">
+            <option value="all">{tab === 'archived' ? 'All Reasons' : 'All Causes'}</option>
+            {filterOptions.reasons.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+      )}
       <div className="flex items-center gap-2 pb-0.5">
         {filtersActive && (
           <button type="button" onClick={clearFilters} className="text-xs font-black text-danger dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-2 rounded-sm transition-all cursor-pointer">

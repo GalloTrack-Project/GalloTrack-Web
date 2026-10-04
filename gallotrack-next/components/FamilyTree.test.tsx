@@ -42,7 +42,7 @@ describe('FamilyTree', () => {
     render(<FamilyTree fowls={family} codes={new Map()} />);
     // once under Offspring 1A1, once as a member of its own pair
     expect(screen.getAllByText('Grandchild')).toHaveLength(2);
-    expect(screen.getByText('1 anak')).toBeInTheDocument();
+    expect(screen.getByText('1 child')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Offspring' }));
     expect(screen.getAllByText('Grandchild')).toHaveLength(1);

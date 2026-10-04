@@ -3,6 +3,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ArchiveModal from './ArchiveModal';
 import type { FowlRecord } from '@/lib/types';
 
+vi.mock('@/lib/services/options-service', () => ({
+  fetchRegistryOptions: vi.fn().mockResolvedValue([]),
+  addRegistryOption: vi.fn(),
+  setRegistryOptionActive: vi.fn(),
+}));
+
 const fowl = { id: 'f1', name: 'True Hatch', breed: 'Hatch' } as unknown as FowlRecord;
 
 function setup(overrides: Partial<React.ComponentProps<typeof ArchiveModal>> = {}) {

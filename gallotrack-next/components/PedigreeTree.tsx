@@ -182,7 +182,7 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
             📜 Pedigree / Lineage Map
           </p>
           <p className="text-xs text-muted-foreground font-semibold">
-            3 ancestor generations (parents → grandparents → great-grandparents). Sire sa itaas, Dam sa ibaba.
+            3 ancestor generations (parents → grandparents → great-grandparents). Sire on top, Dam below.
           </p>
         </div>
         <label className="shrink-0">
@@ -190,8 +190,8 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
           <select
             value={subject.id}
             onChange={(e) => {
-              const f = fowls.find((x) => x.id === Number(e.target.value));
-              if (f) select(f);
+              const id = Number(e.target.value);
+              if (Number.isFinite(id)) setInternalId(id);
             }}
             className="w-full sm:w-72 p-2.5 border border-border rounded-md bg-card text-card-foreground text-sm font-bold focus:border-emerald-500 cursor-pointer"
           >
@@ -208,8 +208,8 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
       {stats && (
         <BloodlineBreakdown
           stats={stats}
-          title={`Bloodline Hatian — ${subject.name}`}
-          subtitle="Bawat ninuno ay nag-aambag ng 50% sa kada henerasyon"
+          title={`Bloodline Breakdown — ${subject.name}`}
+          subtitle="Each ancestor contributes 50% per generation"
         />
       )}
 
@@ -240,8 +240,8 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
       </div>
 
       <p className="text-xs text-muted-foreground font-semibold">
-        Ang bawat porsyento ay hati mula sa magulang ({UNKNOWN_BLOODLINE} = hindi rehistrado ang magulang sa registry).
-        Kapag masyadong maraming krus at hindi na-track, bumababa ang specific bloodline percentage (“galapsaw”).
+        Each percentage is a split inherited from the parent ({UNKNOWN_BLOODLINE} = parent not registered in the registry).
+        When lines cross heavily and are not tracked, specific bloodline percentages drop (&quot;blended&quot;).
       </p>
     </div>
   );
