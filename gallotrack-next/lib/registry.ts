@@ -1,9 +1,13 @@
-import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Cookie-backed storage (via @supabase/ssr) instead of localStorage so the
+// session is readable by `proxy.ts` on every request. That is what makes
+// server-side owner/admin route enforcement possible.
+export const supabase: SupabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 interface OwnerMetadata {
   first_name?: string;
