@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { genderLabel } from '@/lib/helpers';
 import { videosFor, photosFor } from '@/lib/services/media-service';
 
 const outcomeClass = (outcome: string) => {
@@ -62,7 +63,7 @@ export default function FightHistoryModal() {
           </span>
         )}
         <span className="text-xs font-bold text-muted-foreground">
-          {bird.breed || '—'} · {bird.gender || '—'}
+          {bird.breed || '—'} · {genderLabel(bird.gender) || '—'}
           {bird.status ? ` · ${bird.status}` : ''}
         </span>
       </div>

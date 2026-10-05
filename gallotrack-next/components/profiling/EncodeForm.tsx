@@ -307,8 +307,8 @@ export default function EncodeForm({
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">Gender Class</label>
             <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required id="gender-class">
               <option value="" disabled className="bg-popover text-muted-foreground">Select Gender Class</option>
-              <option value="Rooster" className="bg-popover text-popover-foreground">Sire (Rooster)</option>
-              <option value="Hen" className="bg-popover text-popover-foreground">Dam (Hen)</option>
+              <option value="Rooster" className="bg-popover text-popover-foreground">Sire</option>
+              <option value="Hen" className="bg-popover text-popover-foreground">Dam</option>
             </select>
           </div>
         </div>
@@ -483,7 +483,7 @@ export default function EncodeForm({
                     <p className="text-xs font-black text-info dark:text-sky-300 uppercase">🐓 {sireName.trim()} Offspring</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{sireChildren.length}</p>
                     <p className="text-xs text-muted-foreground font-semibold">
-                      {sireChildren.filter((c) => c.gender === 'Male').length} cock(s) · {sireChildren.filter((c) => c.gender === 'Female').length} hen(s)
+                      {sireChildren.filter((c) => c.gender === 'Male').length} sire(s) · {sireChildren.filter((c) => c.gender === 'Female').length} dam(s)
                     </p>
                     {sireFullSibs.length > 0 && (
                       <p className="text-xs font-bold text-success dark:text-emerald-300 mt-1">✓ {sireFullSibs.length} full sibling(s) with current dam</p>
@@ -495,7 +495,7 @@ export default function EncodeForm({
                     <p className="text-xs font-black text-pink uppercase">🐔 {damName.trim()} Offspring</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{damChildren.length}</p>
                     <p className="text-xs text-muted-foreground font-semibold">
-                      {damChildren.filter((c) => c.gender === 'Male').length} cock(s) · {damChildren.filter((c) => c.gender === 'Female').length} hen(s)
+                      {damChildren.filter((c) => c.gender === 'Male').length} sire(s) · {damChildren.filter((c) => c.gender === 'Female').length} dam(s)
                     </p>
                   </div>
                 )}

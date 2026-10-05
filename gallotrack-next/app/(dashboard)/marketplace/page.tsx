@@ -6,6 +6,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 import { Modal, useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { useFowl } from '@/lib/contexts/fowl-context';
+import { genderLabel } from '@/lib/helpers';
 
 type Listing = {
   id: string;
@@ -305,7 +306,7 @@ export default function MarketplacePage() {
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.breed}</span>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.gender}</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{genderLabel(listing.gender)}</span>
                       {listing.age && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{listing.age}</span>}
                     </div>
                     {listing.description && (
@@ -358,7 +359,7 @@ export default function MarketplacePage() {
                       <h3 className="text-sm font-extrabold text-card-foreground truncate">{listing.title}</h3>
                       <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge(listing.status)}`}>{listing.status}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{listing.breed} · {listing.gender} · ₱{listing.price.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{listing.breed} · {genderLabel(listing.gender)} · ₱{listing.price.toLocaleString()}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button type="button" onClick={() => handleEdit(listing)} className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-sm border border-emerald-500/40 text-success hover:bg-emerald-500/20 transition-all cursor-pointer">Edit</button>
@@ -382,7 +383,7 @@ export default function MarketplacePage() {
               <select onChange={(e) => handleSelectFowl(e.target.value)} value={form.fowl_id} className={`${inputClass} cursor-pointer`} id="pre-fill-from-chicken-regist">
                 <option value="">-- Select a chicken --</option>
                 {fowls.filter((f) => f.status === 'Active').map((f) => (
-                  <option key={f.id} value={f.id}>{f.name} ({f.breed} · {f.gender})</option>
+                  <option key={f.id} value={f.id}>{f.name} ({f.breed} · {genderLabel(f.gender)})</option>
                 ))}
               </select>
             </div>
@@ -392,7 +393,7 @@ export default function MarketplacePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass} htmlFor="title">Title *</label>
-                <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className={inputClass} placeholder="e.g., Champion Sweater Rooster" required id="title" />
+                <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className={inputClass} placeholder="e.g., Champion Sweater Sire" required id="title" />
               </div>
               <div>
                 <label className={labelClass} htmlFor="breed">Breed *</label>
@@ -405,8 +406,8 @@ export default function MarketplacePage() {
               <div>
                 <label className={labelClass} htmlFor="gender">Gender *</label>
                 <select value={form.gender} onChange={(e) => setForm((p) => ({ ...p, gender: e.target.value }))} className={`${inputClass} cursor-pointer`} id="gender">
-                  <option value="Rooster">Rooster</option>
-                  <option value="Hen">Hen</option>
+                  <option value="Rooster">Sire</option>
+                  <option value="Hen">Dam</option>
                 </select>
               </div>
               <div>

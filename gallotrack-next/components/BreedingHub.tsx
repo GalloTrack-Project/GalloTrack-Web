@@ -7,6 +7,7 @@ import {
   X, CheckCircle2, Info, BarChart3, Eye, Loader2, RefreshCw,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { genderLabel } from '@/lib/helpers';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
 import {
@@ -401,7 +402,7 @@ function BreedingPairCard({
                     </span>
                     <div className="min-w-0">
                       <p className="text-[10px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{fowl.name}</p>
-                      <p className="text-[8px] text-muted-foreground font-semibold truncate">{fowl.gender} · {fowl.breed}</p>
+                      <p className="text-[8px] text-muted-foreground font-semibold truncate">{genderLabel(fowl.gender)} · {fowl.breed}</p>
                     </div>
                   </div>
                   {decided > 0 ? (
@@ -523,7 +524,7 @@ function AddPairingForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label htmlFor="pair-sire" className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire (Ama)</label>
+          <label htmlFor="pair-sire" className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire</label>
           <select
             id="pair-sire"
             value={sireId}
@@ -540,7 +541,7 @@ function AddPairingForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="pair-dam" className="text-[10px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam (Ina)</label>
+          <label htmlFor="pair-dam" className="text-[10px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam</label>
           <select
             id="pair-dam"
             value={damId}
@@ -910,7 +911,7 @@ function BirdIdentityCard({ fowl, codes, matchHistory, setSelectedFowlForDetails
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{fowl.name}</p>
-          <p className="text-[9px] text-muted-foreground font-semibold truncate">{fowl.breed} · {fowl.gender}</p>
+          <p className="text-[9px] text-muted-foreground font-semibold truncate">{fowl.breed} · {genderLabel(fowl.gender)}</p>
           {fowl.wing_band && (
             <p className="text-[8px] font-bold text-violet-600 dark:text-violet-400 mt-0.5">Wing Band: {fowl.wing_band}</p>
           )}
@@ -1169,8 +1170,8 @@ export default function BreedingHub({
         {/* Summary stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           {[
-            { label: 'Sires (Ama)', value: totalMales, color: 'text-sky-600 dark:text-sky-400', icon: '🐓', sub: 'Coded: 1, 2, 3...' },
-            { label: 'Dams (Ina)', value: totalFemales, color: 'text-pink-600 dark:text-pink-400', icon: '🐔', sub: 'Coded: A, B, C...' },
+            { label: 'Sires', value: totalMales, color: 'text-sky-600 dark:text-sky-400', icon: '🐓', sub: 'Coded: 1, 2, 3...' },
+            { label: 'Dams', value: totalFemales, color: 'text-pink-600 dark:text-pink-400', icon: '🐔', sub: 'Coded: A, B, C...' },
             { label: 'Offspring', value: totalOffspring, color: 'text-emerald-600 dark:text-emerald-400', icon: '🐥', sub: 'Coded: 1A₁, 1A₂...' },
             { label: 'Active Pairs', value: activePairs, color: 'text-rose-600 dark:text-rose-400', icon: '❤️', sub: 'Breeding pairs' },
           ].map(s => (

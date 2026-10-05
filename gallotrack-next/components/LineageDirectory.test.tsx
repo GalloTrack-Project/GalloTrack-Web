@@ -69,7 +69,7 @@ describe('LineageDirectory', () => {
   it('opens the chicken profile when an offspring name is clicked', () => {
     const onPick = vi.fn();
     renderDirectory(onPick);
-    fireEvent.click(screen.getByRole('button', { name: /Offspring 1A1 Rooster/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Offspring 1A1 Sire/ }));
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Offspring 1A1' }));
   });
 });

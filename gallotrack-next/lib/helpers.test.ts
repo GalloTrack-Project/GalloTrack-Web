@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isMale,
   isFemale,
+  genderLabel,
   cleanPct,
   isFoundationStock,
   generationOfName,
@@ -38,6 +39,22 @@ describe('isFemale', () => {
     expect(isFemale('rooster')).toBe(false);
     expect(isFemale('')).toBe(false);
     expect(isFemale(undefined)).toBe(false);
+  });
+});
+
+describe('genderLabel', () => {
+  it('maps rooster and hen to Sire and Dam', () => {
+    expect(genderLabel('Rooster')).toBe('Sire');
+    expect(genderLabel('rooster')).toBe('Sire');
+    expect(genderLabel('Hen')).toBe('Dam');
+    expect(genderLabel('HEN')).toBe('Dam');
+  });
+
+  it('passes through other values unchanged', () => {
+    expect(genderLabel('Male')).toBe('Male');
+    expect(genderLabel('')).toBe('');
+    expect(genderLabel(undefined)).toBe('');
+    expect(genderLabel(null)).toBe('');
   });
 });
 

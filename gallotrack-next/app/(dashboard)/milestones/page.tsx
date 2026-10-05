@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAgeLabel } from '@/lib/helpers';
+import { getAgeLabel, genderLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { Calendar, CircleDot, Activity, Crown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
@@ -88,7 +88,7 @@ export default function MilestonesPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-slate-800 dark:text-foreground truncate">{fowl.name} <span className="text-xs font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
                     <p className="text-xs text-muted-foreground font-semibold truncate">
-                      {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)} · {fowl.gender}
+                      {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)} · {genderLabel(fowl.gender)}
                     </p>
                   </div>
                   <div className="text-right shrink-0">

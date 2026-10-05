@@ -5,6 +5,7 @@ import { CheckCircle, Dna, Users, Search } from 'lucide-react';import ChickenIc
 import { useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
+import { genderLabel } from '@/lib/helpers';
 
 type Fowl = {
   id: string;
@@ -178,7 +179,7 @@ export default function AdminFlockAuditPage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-extrabold text-card-foreground truncate">{fowl.name}</p>
-                  <p className="text-sm text-muted-foreground font-medium truncate">{fowl.breed} · {fowl.gender}</p>
+                  <p className="text-sm text-muted-foreground font-medium truncate">{fowl.breed} · {genderLabel(fowl.gender)}</p>
                 </div>
                 <span className={`text-sm font-black uppercase px-2 py-0.5 rounded-full border ${statusColor(fowl.status)}`}>{fowl.status}</span>
               </div>
@@ -227,7 +228,7 @@ export default function AdminFlockAuditPage() {
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="text-sm font-bold text-card-foreground">{fowl.breed}</p>
-                      <p className="text-sm text-muted-foreground">{fowl.gender}</p>
+                      <p className="text-sm text-muted-foreground">{genderLabel(fowl.gender)}</p>
                     </td>
                     <td className="px-4 py-3.5 text-sm font-bold text-card-foreground">{fowl.growth_stage || '—'}</td>
                     <td className="px-4 py-3.5 text-sm text-muted-foreground font-medium">

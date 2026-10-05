@@ -7,6 +7,7 @@ import PedigreeTree from '@/components/PedigreeTree';
 import FamilyTree from '@/components/FamilyTree';
 import { buildBreedingPairs } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
+import { genderLabel } from '@/lib/helpers';
 import { fowlMatchesQuery } from '@/lib/lineage';
 import { resolveBirdCodes } from '@/lib/bird-code';
 import { rankFowls, bestFowl, bestYearFor, type RankingMetric } from '@/lib/ranking';
@@ -83,7 +84,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
                   <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0" title={bestTitle}>Best</span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
+              <p className="text-xs text-muted-foreground font-semibold truncate">{genderLabel(child.gender)} · {child.age || 'N/A'}</p>
             </div>
           </div>
           <div className="shrink-0">
@@ -346,7 +347,7 @@ export default function LineageDirectory({
                 )}
               </div>
               <p className="text-xs text-muted-foreground font-semibold truncate">
-                {child.breed} · {child.gender} · {child.age || 'N/A'}
+                {child.breed} · {genderLabel(child.gender)} · {child.age || 'N/A'}
               </p>
             </div>
           </div>

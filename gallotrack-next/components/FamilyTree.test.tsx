@@ -38,6 +38,20 @@ describe('FamilyTree', () => {
     expect(screen.getByText('3 offspring · 1 male · 2 female')).toBeInTheDocument();
   });
 
+  it('groups offspring into roosters and hens with counts', () => {
+    render(<FamilyTree fowls={family} codes={new Map()} />);
+    expect(screen.getAllByText(/Sire · 1/)).toHaveLength(2);
+    expect(screen.getByText(/Dam · 2/)).toBeInTheDocument();
+    const roosterGroup = screen
+      .getAllByText('Offspring 1A1')
+      .map((el) => el.closest('.gt-kids'))
+      .find((el) => el !== null);
+    const henGroup = screen.getByText('Offspring 1A2').closest('.gt-kids');
+    expect(roosterGroup).toBeTruthy();
+    expect(henGroup).toBeTruthy();
+    expect(roosterGroup).not.toBe(henGroup);
+  });
+
   it('nests grandchildren under their parent when depth allows', () => {
     render(<FamilyTree fowls={family} codes={new Map()} />);
     // once under Offspring 1A1, once as a member of its own pair

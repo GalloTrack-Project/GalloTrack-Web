@@ -6,6 +6,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 import { Modal, useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
+import { genderLabel } from '@/lib/helpers';
 
 type Listing = {
   id: string;
@@ -270,7 +271,7 @@ export default function AdminMarketplacePage() {
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="text-xs font-bold text-card-foreground">{listing.breed}</p>
-                      <p className="text-xs text-muted-foreground">{listing.gender}</p>
+                      <p className="text-xs text-muted-foreground">{genderLabel(listing.gender)}</p>
                     </td>
                     <td className="px-4 py-3.5 text-sm font-black text-success">₱{listing.price.toLocaleString()}</td>
                     <td className="px-4 py-3.5">

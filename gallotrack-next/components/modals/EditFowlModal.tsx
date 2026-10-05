@@ -179,8 +179,8 @@ export default function EditFowlModal({
               <div>
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="gender-class">Gender Class</label>
                 <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground" id="gender-class">
-                  <option value="Rooster">Sire (Rooster)</option>
-                  <option value="Hen">Dam (Hen)</option>
+                  <option value="Rooster">Sire</option>
+                  <option value="Hen">Dam</option>
                 </select>
               </div>
             </div>

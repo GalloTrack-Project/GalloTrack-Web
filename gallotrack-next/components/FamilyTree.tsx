@@ -121,7 +121,7 @@ function OffspringNode({
               {fowl.name}
             </span>
             <span className="block text-[9px] font-semibold text-muted-foreground truncate">
-              {isMale(fowl) ? '🐓 Rooster' : '🐔 Hen'} · {fowl.breed || '—'}
+              {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {fowl.breed || '—'}
               {fowl.age ? ` · ${fowl.age}` : ''}
             </span>
           </span>
@@ -185,8 +185,8 @@ function PairTree({
 }) {
   const sireFowl = byName.get(nameKey(pair.sire));
   const damFowl = byName.get(nameKey(pair.dam));
-  const males = pair.members.filter(isMale).length;
-  const females = pair.members.length - males;
+  const roosters = pair.members.filter((m) => isMale(m));
+  const hens = pair.members.filter((m) => !isMale(m));
 
   return (
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
@@ -201,7 +201,7 @@ function PairTree({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-[10px] font-bold text-muted-foreground">
-            {pair.members.length} offspring · {males} male · {females} female
+            {pair.members.length} offspring · {roosters.length} male · {hens.length} female
           </span>
           <button
             type="button"
@@ -214,20 +214,47 @@ function PairTree({
       </div>
 
       {!collapsed && (
-        <div className="px-5 pb-5">
-          <div className="gt-kids">
-            {pair.members.map((member) => (
-              <OffspringNode
-                key={member.id}
-                node={{ fowl: member, children: collectDescendants(member, index, maxDepth - 1) }}
-                depth={1}
-                maxDepth={maxDepth}
-                codes={codes}
-                onPick={onPick}
-                onShowFights={onShowFights}
-              />
-            ))}
-          </div>
+        <div className="px-5 pb-5 space-y-4">
+          {roosters.length > 0 && (
+            <div>
+              <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">
+                🐓 Sire · {roosters.length}
+              </p>
+              <div className="gt-kids">
+                {roosters.map((member) => (
+                  <OffspringNode
+                    key={member.id}
+                    node={{ fowl: member, children: collectDescendants(member, index, maxDepth - 1) }}
+                    depth={1}
+                    maxDepth={maxDepth}
+                    codes={codes}
+                    onPick={onPick}
+                    onShowFights={onShowFights}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {hens.length > 0 && (
+            <div>
+              <p className="text-xs font-black text-pink uppercase tracking-widest mb-1.5">
+                🐔 Dam · {hens.length}
+              </p>
+              <div className="gt-kids">
+                {hens.map((member) => (
+                  <OffspringNode
+                    key={member.id}
+                    node={{ fowl: member, children: collectDescendants(member, index, maxDepth - 1) }}
+                    depth={1}
+                    maxDepth={maxDepth}
+                    codes={codes}
+                    onPick={onPick}
+                    onShowFights={onShowFights}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

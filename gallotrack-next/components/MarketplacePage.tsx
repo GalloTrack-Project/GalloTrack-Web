@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { genderLabel } from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
@@ -122,7 +123,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
           </div>
           <div className="flex items-center gap-2 mt-1">
             <GenderIcon gender={fowl.gender} />
-            <span className="text-xs font-semibold text-muted-foreground">{fowl.gender}</span>
+              <span className="text-xs font-semibold text-muted-foreground">{genderLabel(fowl.gender)}</span>
             <span className="text-muted-foreground/40">{'\u00B7'}</span>
             <span className="text-xs font-semibold text-muted-foreground">{getAgeDisplay(fowl.birthdate)}</span>
           </div>
@@ -205,7 +206,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
                 <span className="text-sm font-bold text-muted-foreground">{fowl.status}</span>
                 {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
               </div>
-              <p className="text-sm text-muted-foreground font-semibold">{fowl.gender} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
+              <p className="text-sm text-muted-foreground font-semibold">{genderLabel(fowl.gender)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
               <p className="text-sm font-bold text-success">{fowl.breed}</p>
             </div>
           </div>
