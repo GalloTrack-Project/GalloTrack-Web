@@ -165,6 +165,32 @@ export interface MatchRecord {
   cock_count?: number;
   age_category?: string;
   event_type?: string;
+  opponent_bloodline?: string | null;
+  opponent_birthdate?: string | null;
+  opponent_photo_url?: string | null;
+}
+
+export interface MatchMedia {
+  videos: string[];
+  photos: string[];
+}
+
+export interface FowlPhotoRecord {
+  id: number;
+  fowl_id: number;
+  user_id?: string | number;
+  url: string;
+  caption?: string | null;
+  sort_order?: number;
+  created_at?: string;
+}
+
+export interface ShareLinkRecord {
+  id: number;
+  entity_type: 'match' | 'fowl';
+  entity_id: number;
+  token: string;
+  created_at?: string;
 }
 
 export interface AgeParts {

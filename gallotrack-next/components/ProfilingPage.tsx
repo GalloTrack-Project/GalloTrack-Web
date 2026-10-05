@@ -40,9 +40,11 @@ export default function ProfilingPage() {
     selectedFowlForMatch, setSelectedFowlForMatch,
     matchDate, setMatchDate,
     opponentName, setOpponentName, opponentBreed, setOpponentBreed,
+    opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
+    opponentPhoto, setOpponentPhoto,
     matchLocation, setMatchLocation,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
-    matchVideoFile, setMatchVideoFile,
+    matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles,
     cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
     matchType, setMatchType, matchSide, setMatchSide, matchNotes, setMatchNotes,
     handleAddFowl, handleAddMatchRecord,
@@ -206,10 +208,14 @@ export default function ProfilingPage() {
           matchDate={matchDate} setMatchDate={setMatchDate}
           opponentName={opponentName} setOpponentName={setOpponentName}
           opponentBreed={opponentBreed} setOpponentBreed={setOpponentBreed}
+          opponentBloodline={opponentBloodline} setOpponentBloodline={setOpponentBloodline}
+          opponentHatch={opponentHatch} setOpponentHatch={setOpponentHatch}
+          opponentPhoto={opponentPhoto} setOpponentPhoto={setOpponentPhoto}
           matchLocation={matchLocation} setMatchLocation={setMatchLocation}
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
-          matchVideoFile={matchVideoFile} setMatchVideoFile={setMatchVideoFile}
+          matchVideoFiles={matchVideoFiles} setMatchVideoFiles={setMatchVideoFiles}
+          matchPhotoFiles={matchPhotoFiles} setMatchPhotoFiles={setMatchPhotoFiles}
           handleAddMatchRecord={handleAddMatchRecord}
           cockCount={cockCount} setCockCount={setCockCount}
           ageCategory={ageCategory} setAgeCategory={setAgeCategory}

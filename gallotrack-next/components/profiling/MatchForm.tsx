@@ -26,14 +26,22 @@ type Props = {
   setOpponentName: (v: string) => void;
   opponentBreed: string;
   setOpponentBreed: (v: string) => void;
+  opponentBloodline: string;
+  setOpponentBloodline: (v: string) => void;
+  opponentHatch: string;
+  setOpponentHatch: (v: string) => void;
+  opponentPhoto: File | null;
+  setOpponentPhoto: (f: File | null) => void;
   matchLocation: string;
   setMatchLocation: (v: string) => void;
   matchOutcome: string;
   setMatchOutcome: (v: string) => void;
   matchPostFight: string;
   setMatchPostFight: (v: string) => void;
-  matchVideoFile: File | null;
-  setMatchVideoFile: (f: File | null) => void;
+  matchVideoFiles: File[];
+  setMatchVideoFiles: (f: File[]) => void;
+  matchPhotoFiles: File[];
+  setMatchPhotoFiles: (f: File[]) => void;
   handleAddMatchRecord: (e: React.FormEvent) => void;
   cockCount: number;
   setCockCount: (v: number) => void;
@@ -57,10 +65,14 @@ export default function MatchForm({
   matchDate, setMatchDate,
   opponentName, setOpponentName,
   opponentBreed, setOpponentBreed,
+  opponentBloodline, setOpponentBloodline,
+  opponentHatch, setOpponentHatch,
+  opponentPhoto, setOpponentPhoto,
   matchLocation, setMatchLocation,
   matchOutcome, setMatchOutcome,
   matchPostFight, setMatchPostFight,
-  matchVideoFile, setMatchVideoFile,
+  matchVideoFiles, setMatchVideoFiles,
+  matchPhotoFiles, setMatchPhotoFiles,
   handleAddMatchRecord,
   cockCount, setCockCount,
   ageCategory, setAgeCategory,
@@ -144,6 +156,25 @@ export default function MatchForm({
               <option key={o.value} value={o.value} />
             ))}
           </datalist>
+        </div>
+      </div>
+
+      {/* Row 2b: Opponent bloodline + hatch + photo */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-bloodline">Opponent Bloodline</label>
+          <input type="text" value={opponentBloodline} onChange={(e) => setOpponentBloodline(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Harold Brown" id="opponent-bloodline" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-hatch">Opponent Hatch Date</label>
+          <input type="date" value={opponentHatch} onChange={(e) => setOpponentHatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" id="opponent-hatch" />
+        </div>
+        <div>
+          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Opponent Photo</span>
+          <label className="flex items-center justify-between w-full h-[46px] px-3 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all">
+            <span className="text-xs text-slate-600 dark:text-muted-foreground font-bold truncate pr-2">{opponentPhoto ? opponentPhoto.name : 'Attach photo (optional)'}</span>
+            <input type="file" accept="image/*" onChange={(e) => setOpponentPhoto(e.target.files?.[0] || null)} className="hidden" />
+          </label>
         </div>
       </div>
 
@@ -299,13 +330,42 @@ export default function MatchForm({
         </div>
       </div>
 
-      {/* Video Upload */}
+      {/* Video Upload — up to 3 */}
       <div>
-          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Video Evidence Upload</span>
+        <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Video Evidence Upload (up to 3)</span>
         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all" htmlFor="field">
-          <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchVideoFile ? matchVideoFile.name : 'Upload fight match recording (MP4, MOV, AVI)'}</span>
-          <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" onChange={(e) => e.target.files && setMatchVideoFile(e.target.files[0])} className="hidden" id="field" />
+          <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchVideoFiles.length >= 3 ? 'Maximum 3 videos attached' : 'Add fight match recording (MP4, MOV, AVI)'}</span>
+          <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" multiple disabled={matchVideoFiles.length >= 3} onChange={(e) => { if (e.target.files) setMatchVideoFiles([...matchVideoFiles, ...Array.from(e.target.files)].slice(0, 3)); e.target.value = ''; }} className="hidden" id="field" />
         </label>
+        {matchVideoFiles.length > 0 && (
+          <ul className="mt-2 space-y-1.5">
+            {matchVideoFiles.map((file, idx) => (
+              <li key={`${file.name}-${idx}`} className="flex items-center justify-between rounded-md border border-input-border bg-slate-50 dark:bg-muted/50 px-3 py-2 text-xs font-bold text-foreground">
+                <span className="truncate pr-2">Video {idx + 1}: {file.name}</span>
+                <button type="button" onClick={() => setMatchVideoFiles(matchVideoFiles.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer">Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Match Photos */}
+      <div>
+        <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Match Photos (up to 6)</span>
+        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all" htmlFor="match-photos-field">
+          <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchPhotoFiles.length >= 6 ? 'Maximum 6 photos attached' : 'Attach photos of this match'}</span>
+          <input type="file" accept="image/*" multiple disabled={matchPhotoFiles.length >= 6} onChange={(e) => { if (e.target.files) setMatchPhotoFiles([...matchPhotoFiles, ...Array.from(e.target.files)].slice(0, 6)); e.target.value = ''; }} className="hidden" id="match-photos-field" />
+        </label>
+        {matchPhotoFiles.length > 0 && (
+          <ul className="mt-2 space-y-1.5">
+            {matchPhotoFiles.map((file, idx) => (
+              <li key={`${file.name}-${idx}`} className="flex items-center justify-between rounded-md border border-input-border bg-slate-50 dark:bg-muted/50 px-3 py-2 text-xs font-bold text-foreground">
+                <span className="truncate pr-2">Photo {idx + 1}: {file.name}</span>
+                <button type="button" onClick={() => setMatchPhotoFiles(matchPhotoFiles.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer">Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Submit */}

@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState } from 'react';
-import type { PageId, ProfilingSubTab, FowlRecord } from '@/lib/types';
+import type { PageId, ProfilingSubTab, FowlRecord, MatchRecord } from '@/lib/types';
 
 interface UIContextValue {
   theme: string;
@@ -33,6 +33,15 @@ interface UIContextValue {
   setShowForgotPasswordModal: (v: boolean) => void;
   showPerFowlBreakdownModal: boolean;
   setShowPerFowlBreakdownModal: (v: boolean) => void;
+
+  videoViewerUrl: string | null;
+  setVideoViewerUrl: (v: string | null) => void;
+  imageViewerUrl: string | null;
+  setImageViewerUrl: (v: string | null) => void;
+  editingMatch: MatchRecord | null;
+  setEditingMatch: (m: MatchRecord | null) => void;
+  shareTarget: { type: 'match' | 'fowl'; id: number; label: string } | null;
+  setShareTarget: (t: { type: 'match' | 'fowl'; id: number; label: string } | null) => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -68,6 +77,11 @@ export function UIProvider({
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
 
+  const [videoViewerUrl, setVideoViewerUrl] = useState<string | null>(null);
+  const [imageViewerUrl, setImageViewerUrl] = useState<string | null>(null);
+  const [editingMatch, setEditingMatch] = useState<MatchRecord | null>(null);
+  const [shareTarget, setShareTarget] = useState<{ type: 'match' | 'fowl'; id: number; label: string } | null>(null);
+
   const value: UIContextValue = {
     theme, setTheme,
     showSplash, setShowSplash,
@@ -83,6 +97,10 @@ export function UIProvider({
     showLogoutModal, setShowLogoutModal,
     showForgotPasswordModal, setShowForgotPasswordModal,
     showPerFowlBreakdownModal, setShowPerFowlBreakdownModal,
+    videoViewerUrl, setVideoViewerUrl,
+    imageViewerUrl, setImageViewerUrl,
+    editingMatch, setEditingMatch,
+    shareTarget, setShareTarget,
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

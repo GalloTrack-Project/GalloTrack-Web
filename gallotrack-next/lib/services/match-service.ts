@@ -18,8 +18,14 @@ export async function fetchMatches(): Promise<MatchRecord[]> {
   return data || [];
 }
 
-export async function insertMatch(payload: Record<string, unknown>): Promise<{ error?: string }> {
-  const { error } = await supabase.from('match').insert([payload]);
+export async function insertMatch(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
+  const { data, error } = await supabase.from('match').insert([payload]).select('id').single();
+  if (error) return { error: error.message };
+  return { id: data.id };
+}
+
+export async function updateMatch(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {
+  const { error } = await supabase.from('match').update(payload).eq('id', id);
   if (error) return { error: error.message };
   return {};
 }

@@ -1,5 +1,6 @@
 'use client';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Play, Image as ImageIcon, PencilLine, Share2, Plus, Trash2 } from 'lucide-react';
 import type {
   FowlRecord,
   MatchRecord,
@@ -9,6 +10,7 @@ import type {
   PairingAnalytics,
   ArchiveBadge,
   StatusHistoryEntry,
+  FowlPhotoRecord,
 } from '@/lib/types';
 import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
@@ -29,6 +31,15 @@ import {
   retiredScopeLabel,
 } from '@/lib/lifecycle';
 import { fetchStatusHistory } from '@/lib/services/fowl-service';
+import {
+  fetchFowlPhotos,
+  insertFowlPhoto,
+  deleteFowlPhoto,
+  uploadFowlGalleryFile,
+  videosFor,
+  photosFor,
+} from '@/lib/services/media-service';
+import { toastMessage } from '@/lib/toast-bus';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 
 const HISTORY_FIELD_LABELS: Record<string, string> = {
@@ -96,6 +107,7 @@ export default function FowlDetailsModal({
     handleRestoreFowlOnly,
     setArchiveReasonInput,
     breedingPairs,
+    matchMedia,
   } = useFowl();
   const { rows: optionRows } = useRegistryOptions();
 
@@ -112,6 +124,62 @@ export default function FowlDetailsModal({
     draft: '',
   });
   const [busy, setBusy] = useState(false);
+
+  const [gallery, setGallery] = useState<{ fowlId: number | null; photos: FowlPhotoRecord[] }>({
+    fowlId: null,
+    photos: [],
+  });
+  const [galleryBusy, setGalleryBusy] = useState(false);
+
+  useEffect(() => {
+    if (fowlId === null) return;
+    let cancelled = false;
+    fetchFowlPhotos(fowlId).then((photos) => {
+      if (!cancelled) setGallery({ fowlId, photos });
+    });
+    return () => { cancelled = true; };
+  }, [fowlId]);
+
+  useEffect(() => {
+    if (fowlId === null) return;
+    if (historyState.fowlId === fowlId && historyState.entries !== null) return;
+    let cancelled = false;
+    fetchStatusHistory(fowlId).then((entries) => {
+      if (!cancelled) {
+        setHistoryState((s) => ({ fowlId, open: s.open && s.fowlId === fowlId, entries }));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [fowlId, historyState.fowlId, historyState.entries]);
+
+  const galleryPhotos = gallery.fowlId === fowlId ? gallery.photos : [];
+
+  const handleAddGalleryPhoto = async (file: File) => {
+    if (fowlId === null) return;
+    setGalleryBusy(true);
+    try {
+      const up = await uploadFowlGalleryFile(file);
+      if (up.error || !up.url) throw new Error(up.error || 'Upload failed');
+      const ins = await insertFowlPhoto(fowlId, up.url);
+      if (ins.error) throw new Error(ins.error);
+      const photos = await fetchFowlPhotos(fowlId);
+      setGallery({ fowlId, photos });
+      toastMessage('Photo added to gallery.', 'success');
+    } catch (err) {
+      toastMessage(err instanceof Error ? err.message : 'Failed to add photo.', 'error');
+    } finally {
+      setGalleryBusy(false);
+    }
+  };
+
+  const handleDeleteGalleryPhoto = async (photo: FowlPhotoRecord) => {
+    const result = await deleteFowlPhoto(photo.id);
+    if (result.error) {
+      toastMessage(result.error, 'error');
+    } else if (fowlId !== null) {
+      setGallery({ fowlId, photos: gallery.photos.filter((p) => p.id !== photo.id) });
+    }
+  };
 
   const history = historyState.fowlId === fowlId ? historyState.entries : null;
   const historyOpen = historyState.fowlId === fowlId && historyState.open;
@@ -274,6 +342,67 @@ export default function FowlDetailsModal({
                   </button>
                 )}
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* CHICKEN PHOTO GALLERY */}
+        <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg p-4 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-muted-foreground">Photo Gallery</h4>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => ui.setShareTarget({ type: 'fowl', id: selectedFowlForDetails.id, label: `${selectedFowlForDetails.name} — Profile` })}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5" /> Share Profile
+              </button>
+              <label className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer disabled:opacity-50">
+                <Plus className="w-3.5 h-3.5" /> Add Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={galleryBusy}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleAddGalleryPhoto(file);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedFowlForDetails.image_url && (
+              <button
+                type="button"
+                onClick={() => ui.setImageViewerUrl(selectedFowlForDetails.image_url || '')}
+                className="relative group cursor-pointer"
+                title="View main photo"
+              >
+                <img src={selectedFowlForDetails.image_url} alt={`${selectedFowlForDetails.name} main`} className="h-16 w-16 rounded border border-border object-cover" />
+                <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] font-black text-center uppercase rounded-b">Main</span>
+              </button>
+            )}
+            {galleryPhotos.map((photo) => (
+              <div key={photo.id} className="relative group">
+                <button type="button" onClick={() => ui.setImageViewerUrl(photo.url)} className="cursor-pointer block">
+                  <img src={photo.url} alt={`${selectedFowlForDetails.name} gallery`} className="h-16 w-16 rounded border border-border object-cover" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Remove photo"
+                  onClick={() => void handleDeleteGalleryPhoto(photo)}
+                  className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-danger text-white group-hover:flex cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            {!selectedFowlForDetails.image_url && galleryPhotos.length === 0 && (
+              <p className="text-xs font-semibold text-muted-foreground">No photos yet — add the first one.</p>
             )}
           </div>
         </div>
@@ -1059,29 +1188,49 @@ export default function FowlDetailsModal({
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="bg-slate-100/70 dark:bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-slate-200 dark:border-border">
-                        <th className="p-2.5 pl-4">Match Date</th>
-                        <th className="p-2.5">Opponent Entry</th>
-                        <th className="p-2.5">Breed</th>
+                        <th className="p-2.5 pl-4">Date</th>
+                        <th className="p-2.5">Our Chicken</th>
+                        <th className="p-2.5">Opponent</th>
                         <th className="p-2.5">Arena Location</th>
                         <th className="p-2.5">Event / Match Type</th>
-                        <th className="p-2.5 text-center">Outcome</th>
-                        <th className="p-2.5 text-center">🩺 Post-Fight</th>
-                        <th className="p-2.5 text-center">Video</th>
+                        <th className="p-2.5 text-center">Result</th>
+                        <th className="p-2.5 text-center">Condition</th>
+                        <th className="p-2.5 text-center">Media</th>
+                        <th className="p-2.5 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-border text-slate-600 dark:text-muted-foreground font-semibold">
                       {fowlMatches.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="p-6 text-center text-muted-foreground text-sm">
+                          <td colSpan={9} className="p-6 text-center text-muted-foreground text-sm">
                             No derby performance logs recorded for this specific chicken node.
                           </td>
                         </tr>
                       ) : (
-                        fowlMatches.map(match => (
+                        fowlMatches.map(match => {
+                          const matchVideos = videosFor(matchMedia, match.id);
+                          const matchPhotos = photosFor(matchMedia, match.id);
+                          return (
                           <tr key={match.id} className="hover:bg-slate-50/80 dark:hover:bg-muted/50 transition-colors">
                             <td className="p-2.5 pl-4 font-mono text-xs text-muted-foreground">{match.date}</td>
-                            <td className="p-2.5 font-bold text-slate-800 dark:text-card-foreground">{match.opponent}</td>
-                            <td className="p-2.5 text-slate-600 dark:text-muted-foreground font-semibold">{match.opponent_breed || '—'}</td>
+                            <td className="p-2.5">
+                              <span className="font-black text-slate-800 dark:text-card-foreground">{match.entry_name}</span>
+                              <span className="block text-[11px] font-semibold text-muted-foreground normal-case">
+                                {match.breed || '—'}{selectedFowlForDetails.birthdate ? ` · hatch ${selectedFowlForDetails.birthdate}` : ''}
+                              </span>
+                            </td>
+                            <td className="p-2.5">
+                              <span className="flex items-center gap-1.5">
+                                {match.opponent_photo_url && (
+                                  <img src={match.opponent_photo_url} alt="Opponent" className="h-6 w-6 rounded-full border border-border object-cover shrink-0" />
+                                )}
+                                <span className="font-bold text-slate-800 dark:text-card-foreground">{match.opponent}</span>
+                              </span>
+                              <span className="block text-[11px] font-semibold text-muted-foreground normal-case">
+                                {[match.opponent_breed, match.opponent_bloodline].filter(Boolean).join(' · ') || '—'}
+                                {match.opponent_birthdate ? ` · hatch ${match.opponent_birthdate}` : ''}
+                              </span>
+                            </td>
                             <td className="p-2.5 text-slate-600 dark:text-muted-foreground">{match.location}</td>
                             <td className="p-2.5"><span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground text-xs font-bold px-2 py-0.5 rounded-full">{match.event_type || match.type}{match.event_type && match.type && match.event_type !== match.type ? ` · ${match.type}` : ''}</span></td>
                             <td className="p-2.5 text-center">
@@ -1111,14 +1260,57 @@ export default function FowlDetailsModal({
                               )}
                             </td>
                             <td className="p-2.5 text-center">
-                              {match.video_url ? (
-                                <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-black text-success dark:text-emerald-300 hover:text-emerald-800 underline underline-offset-2">▶ PLAY</a>
-                              ) : (
-                                <span className="text-xs text-muted-foreground font-bold">—</span>
-                              )}
+                              <div className="flex items-center justify-center gap-2">
+                                {matchVideos.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => ui.setVideoViewerUrl(matchVideos[0])}
+                                    className="text-xs font-black text-success dark:text-emerald-300 hover:text-emerald-800 inline-flex items-center gap-1 cursor-pointer"
+                                    title="Watch in app"
+                                  >
+                                    <Play className="w-3 h-3" /> {matchVideos.length}
+                                  </button>
+                                )}
+                                {matchPhotos.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => ui.setImageViewerUrl(matchPhotos[0])}
+                                    className="text-xs font-black text-teal dark:text-teal-300 hover:text-teal-700 inline-flex items-center gap-1 cursor-pointer"
+                                    title="View match photos"
+                                  >
+                                    <ImageIcon className="w-3 h-3" /> {matchPhotos.length}
+                                  </button>
+                                )}
+                                {matchVideos.length === 0 && matchPhotos.length === 0 && (
+                                  <span className="text-xs text-muted-foreground font-bold">—</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-2.5 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  type="button"
+                                  aria-label="Edit match"
+                                  title="Edit match"
+                                  onClick={() => ui.setEditingMatch(match)}
+                                  className="p-1 rounded border border-border bg-card text-muted-foreground hover:text-success hover:border-success/40 transition-colors cursor-pointer"
+                                >
+                                  <PencilLine className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Share match"
+                                  title="Share match record"
+                                  onClick={() => ui.setShareTarget({ type: 'match', id: match.id, label: `${match.entry_name} vs ${match.opponent || 'Opponent'} — ${match.date || ''}` })}
+                                  className="p-1 rounded border border-border bg-card text-muted-foreground hover:text-success hover:border-success/40 transition-colors cursor-pointer"
+                                >
+                                  <Share2 className="w-3 h-3" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
-                        ))
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -1127,6 +1319,48 @@ export default function FowlDetailsModal({
             </div>
           );
         })()}
+
+        {/* CONDITION & RESULT HISTORY — status changes and fight results on one timeline */}
+        <div className="space-y-3 bg-white dark:bg-card p-4 rounded-lg border border-slate-200 dark:border-border">
+          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b pb-2">Condition &amp; Result History</h4>
+          {(() => {
+            type TimelineItem = { key: string; date: string; kind: 'match' | 'status'; title: string; detail?: string };
+            const birdName = (selectedFowlForDetails.name || '').trim().toLowerCase();
+            const timelineMatches = matchHistory.filter((m) => (m.entry_name || '').trim().toLowerCase() === birdName);
+            const items: TimelineItem[] = timelineMatches.map((m) => ({
+              key: `m-${m.id}`,
+              date: m.date || '',
+              kind: 'match',
+              title: `${m.outcome || '—'} vs ${m.opponent || 'Opponent'}`,
+              detail: m.post_fight_condition,
+            }));
+            for (const entry of history || []) {
+              items.push({
+                key: `h-${entry.id}`,
+                date: (entry.changed_at || '').slice(0, 10),
+                kind: 'status',
+                title: `${HISTORY_FIELD_LABELS[entry.field] || entry.field}: ${entry.new_value}`,
+                detail: entry.reason || entry.note || undefined,
+              });
+            }
+            items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            if (items.length === 0) {
+              return <p className="text-xs font-semibold text-muted-foreground">No condition or result history yet.</p>;
+            }
+            return (
+              <ol className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                {items.map((item) => (
+                  <li key={item.key} className="flex items-baseline gap-2 text-xs">
+                    <span className="font-mono font-bold text-muted-foreground w-24 shrink-0">{item.date || '—'}</span>
+                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${item.kind === 'match' ? 'bg-emerald-500' : 'bg-sky-500'}`} aria-hidden="true" />
+                    <span className="font-bold text-foreground">{item.title}</span>
+                    {item.detail && <span className="font-semibold text-muted-foreground">· {item.detail}</span>}
+                  </li>
+                ))}
+              </ol>
+            );
+          })()}
+        </div>
 
         <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-100 dark:border-border">
           <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b pb-2">Lineage Integration Balance</h4>

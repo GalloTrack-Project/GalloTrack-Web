@@ -9,6 +9,7 @@ import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
+import { videosFor, photosFor } from '@/lib/services/media-service';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 
@@ -42,7 +43,7 @@ export default function DashboardPage() {
   const chart = useChartTokens(resolvedTheme);
 
   const {
-    fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
+    fowls, matchHistory, matchMedia, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
     monthLabels, matchesByMonth, activeSpark, trendWinRate,
     upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
     dateRangeLabel, dateRangeOpen, setDateRangeOpen,
@@ -651,8 +652,8 @@ export default function DashboardPage() {
                 <th className="p-4">Bloodline</th>
                 <th className="p-4">Arena Location</th>
                 <th className="p-4 text-center">Outcome</th>
-                <th className="p-4 text-center">Post-Fight Condition</th>
-                <th className="p-4 text-center">Video</th>
+                        <th className="p-4 text-center">Post-Fight Condition</th>
+                        <th className="p-4 text-center">Media &amp; Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-muted-foreground font-semibold">
@@ -677,9 +678,25 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-card-foreground">{log.opponent || '—'}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1.5">
+                        {log.opponent_photo_url && (
+                          <img src={log.opponent_photo_url} alt="Opponent" className="h-6 w-6 rounded-full border border-border object-cover shrink-0" />
+                        )}
+                        <span className="font-bold text-card-foreground">{log.opponent || '—'}</span>
+                      </div>
+                      <span className="block text-xs font-semibold text-muted-foreground normal-case mt-0.5">
+                        {[log.opponent_breed, log.opponent_bloodline].filter(Boolean).join(' · ')}
+                        {log.opponent_birthdate ? `${log.opponent_breed || log.opponent_bloodline ? ' · ' : ''}hatch ${log.opponent_birthdate}` : ''}
+                      </span>
+                    </td>
                     <td className="p-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-success border border-emerald-500/20 font-bold text-sm uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
+                      {fowls.find(f => f.name === log.entry_name)?.birthdate && (
+                        <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
+                          hatch {fowls.find(f => f.name === log.entry_name)?.birthdate}
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
                     <td className="p-4 text-center">
@@ -701,13 +718,48 @@ export default function DashboardPage() {
                       )}
                     </td>
                     <td className="p-4 text-center">
-                      {log.video_url ? (
-                        <a href={log.video_url} target="_blank" rel="noopener noreferrer" title="Watch match video" className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:text-success hover:border-emerald-500/40 transition-all cursor-pointer">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
-                        </a>
-                      ) : (
-                        <span className="text-sm text-muted-foreground font-bold">—</span>
-                      )}
+                      <div className="flex items-center justify-center gap-1.5">
+                        {videosFor(matchMedia, log.id).map((url, idx) => (
+                          <button
+                            key={`v-${idx}`}
+                            type="button"
+                            title="Watch match video in app"
+                            onClick={() => ui.setVideoViewerUrl(url)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:text-success hover:border-emerald-500/40 transition-all cursor-pointer"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
+                          </button>
+                        ))}
+                        {photosFor(matchMedia, log.id).length > 0 && (
+                          <button
+                            type="button"
+                            title="View match photos"
+                            onClick={() => ui.setImageViewerUrl(photosFor(matchMedia, log.id)[0])}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-teal-500/10 border border-teal-500/20 text-teal hover:bg-teal-500/20 transition-all cursor-pointer"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          title="Edit match"
+                          onClick={() => ui.setEditingMatch(log)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                        </button>
+                        <button
+                          type="button"
+                          title="Share match record"
+                          onClick={() => ui.setShareTarget({ type: 'match', id: log.id, label: `${log.entry_name} vs ${log.opponent || 'Opponent'} — ${log.date || ''}` })}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" /></svg>
+                        </button>
+                        {videosFor(matchMedia, log.id).length === 0 && photosFor(matchMedia, log.id).length === 0 && (
+                          <span className="text-sm text-muted-foreground font-bold">—</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

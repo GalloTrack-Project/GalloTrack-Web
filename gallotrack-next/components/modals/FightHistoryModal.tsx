@@ -1,10 +1,11 @@
 'use client';
 import React from 'react';
-import { Swords } from 'lucide-react';
+import { Swords, Play, Image as ImageIcon, PencilLine, Share2, Feather } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { videosFor, photosFor } from '@/lib/services/media-service';
 
 const outcomeClass = (outcome: string) => {
   const o = (outcome || '').toLowerCase();
@@ -19,7 +20,7 @@ const outcomeClass = (outcome: string) => {
  */
 export default function FightHistoryModal() {
   const ui = useUI();
-  const { matchHistory, fowls } = useFowl();
+  const { matchHistory, fowls, matchMedia } = useFowl();
 
   const bird = ui.fightHistoryFowl;
   if (!bird) return null;
@@ -83,51 +84,109 @@ export default function FightHistoryModal() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-slate-200 dark:border-border rounded-md">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-slate-100/70 dark:bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-slate-200 dark:border-border">
-                <th className="p-2.5 pl-3">Date</th>
-                <th className="p-2.5">Event</th>
-                <th className="p-2.5">Class</th>
-                <th className="p-2.5">Opponent</th>
-                <th className="p-2.5">Breed</th>
-                <th className="p-2.5">Location</th>
-                <th className="p-2.5 text-center">Outcome</th>
-                <th className="p-2.5 text-center">Post-Fight</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-border text-slate-600 dark:text-muted-foreground font-semibold">
-              {fights.map((m) => (
-                <tr key={m.id} className="hover:bg-slate-50/80 dark:hover:bg-muted/50 transition-colors">
-                  <td className="p-2.5 pl-3 font-mono text-xs text-muted-foreground">{m.date || '—'}</td>
-                  <td className="p-2.5">
-                    <span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground font-bold px-2 py-0.5 rounded-full">
-                      {m.event_type || m.type || '—'}
-                      {m.event_type && m.type && m.event_type !== m.type ? ` · ${m.type}` : ''}
-                    </span>
-                  </td>
-                  <td className="p-2.5">{m.age_category || '—'}</td>
-                  <td className="p-2.5 font-bold text-slate-800 dark:text-card-foreground">
-                    {m.opponent || '—'}
-                    {(m.side || m.notes) && (
-                      <span className="block text-[11px] font-medium text-muted-foreground normal-case">
-                        {[m.side, m.notes].filter(Boolean).join(' · ')}
-                      </span>
+        <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+          {fights.map((m) => {
+            const videos = videosFor(matchMedia, m.id);
+            const photos = photosFor(matchMedia, m.id);
+            return (
+              <div key={m.id} className="rounded-md border border-slate-200 dark:border-border bg-slate-50/70 dark:bg-card p-4 space-y-2.5">
+                {/* Header: Our Chicken vs Opponent */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Feather className="w-4 h-4 text-success shrink-0" />
+                    <span className="font-black text-sm text-card-foreground truncate">{m.entry_name || bird.name}</span>
+                    <span className="font-black text-xs text-muted-foreground">vs</span>
+                    <span className="font-black text-sm text-card-foreground truncate">{m.opponent || 'Anonymous Opponent'}</span>
+                    {m.opponent_photo_url && (
+                      <img src={m.opponent_photo_url} alt="Opponent" className="h-7 w-7 rounded-full border border-border object-cover shrink-0" />
                     )}
-                  </td>
-                  <td className="p-2.5">{m.opponent_breed || '—'}</td>
-                  <td className="p-2.5">{m.location || '—'}</td>
-                  <td className="p-2.5 text-center">
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase border ${outcomeClass(m.outcome)}`}>
                       {m.outcome || '—'}
                     </span>
-                  </td>
-                  <td className="p-2.5 text-center">{m.post_fight_condition || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <span className="text-[11px] font-bold text-muted-foreground font-mono">{m.date || '—'}</span>
+                  </div>
+                </div>
+
+                {/* Details in fixed order: bloodline/breed → hatch → condition → context */}
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <div className="flex gap-2">
+                    <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Breed</dt>
+                    <dd className="font-bold text-foreground">{m.breed || '—'}{m.opponent_breed ? ` vs ${m.opponent_breed}` : ''}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Bloodline</dt>
+                    <dd className="font-bold text-foreground">{bird.breed ? `${bird.breed} line` : '—'}{m.opponent_bloodline ? ` vs ${m.opponent_bloodline}` : ''}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Hatch</dt>
+                    <dd className="font-bold text-foreground">{bird.birthdate || '—'}{m.opponent_birthdate ? ` vs ${m.opponent_birthdate}` : ''}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Condition</dt>
+                    <dd className="font-bold text-foreground">{m.post_fight_condition || '—'}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Event</dt>
+                    <dd className="font-bold text-foreground">
+                      {[m.event_type, m.type].filter(Boolean).join(' · ') || '—'}
+                      {m.age_category ? ` · ${m.age_category}` : ''}
+                    </dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Location</dt>
+                    <dd className="font-bold text-foreground">{m.location || '—'}</dd>
+                  </div>
+                  {(m.side || m.notes) && (
+                    <div className="flex gap-2 sm:col-span-2">
+                      <dt className="font-black text-muted-foreground uppercase w-24 shrink-0">Notes</dt>
+                      <dd className="font-bold text-foreground">{[m.side, m.notes].filter(Boolean).join(' · ')}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                {/* Media + actions */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200 dark:border-border">
+                  {videos.map((url, idx) => (
+                    <button
+                      key={`v-${idx}`}
+                      type="button"
+                      onClick={() => ui.setVideoViewerUrl(url)}
+                      className="inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-[11px] font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                    >
+                      <Play className="w-3 h-3" /> Video {videos.length > 1 ? idx + 1 : ''}
+                    </button>
+                  ))}
+                  {photos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => ui.setImageViewerUrl(photos[0])}
+                      className="inline-flex items-center gap-1.5 rounded border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 px-2 py-1 text-[11px] font-black hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors cursor-pointer"
+                    >
+                      <ImageIcon className="w-3 h-3" /> {photos.length} Photo{photos.length > 1 ? 's' : ''}
+                    </button>
+                  )}
+                  <div className="ml-auto flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => ui.setEditingMatch(m)}
+                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-[11px] font-black hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <PencilLine className="w-3 h-3" /> Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => ui.setShareTarget({ type: 'match', id: m.id, label: `${m.entry_name} vs ${m.opponent || 'Opponent'} — ${m.date || ''}` })}
+                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-[11px] font-black hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <Share2 className="w-3 h-3" /> Share
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </Modal>

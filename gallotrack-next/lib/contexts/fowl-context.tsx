@@ -51,6 +51,7 @@ import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
 import { archiveDraftIssue, archiveKindLabel, type ArchiveDraft } from '@/lib/lifecycle';
 import * as matchService from '@/lib/services/match-service';
+import * as mediaService from '@/lib/services/media-service';
 import * as optionsService from '@/lib/services/options-service';
 import * as matchOptionsService from '@/lib/services/match-options-service';
 import type { PartnerSuggestion } from '@/lib/services/match-options-service';
@@ -61,6 +62,7 @@ import type { BloodlineReport } from '@/lib/bloodlines';
 import type {
   FowlRecord,
   MatchRecord,
+  MatchMedia,
   AgeParts,
   SiblingRelation,
   PairingAnalytics,
@@ -79,6 +81,7 @@ interface FowlContextValue {
   deceasedFowls: FowlRecord[];
   matchHistory: MatchRecord[];
   setMatchHistory: React.Dispatch<React.SetStateAction<MatchRecord[]>>;
+  matchMedia: Map<number, MatchMedia>;
   /** Pairing history for the farm — parents/partner links in bird profiles. */
   breedingPairs: BreedingPairRecord[];
   loading: boolean;
@@ -120,7 +123,11 @@ interface FowlContextValue {
   derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string; setMatchOutcome: (v: string) => void;
   matchPostFight: string; setMatchPostFight: (v: string) => void;
-  matchVideoFile: File | null; setMatchVideoFile: (f: File | null) => void;
+  matchVideoFiles: File[]; setMatchVideoFiles: (f: File[]) => void;
+  matchPhotoFiles: File[]; setMatchPhotoFiles: (f: File[]) => void;
+  opponentBloodline: string; setOpponentBloodline: (v: string) => void;
+  opponentHatch: string; setOpponentHatch: (v: string) => void;
+  opponentPhoto: File | null; setOpponentPhoto: (f: File | null) => void;
   uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
 
   matchOption: number; setMatchOption: (v: number) => void;
@@ -316,7 +323,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome,
     matchPostFight, setMatchPostFight,
-    matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
+    matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles,
+    opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
+    opponentPhoto, setOpponentPhoto, uploadingVideo, setUploadingVideo,
     matchOption, setMatchOption, betType, setBetType,
     targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
     suggestedPartners, setSuggestedPartners,
@@ -354,6 +363,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   // ── Core data state ──
   const [fowls, setFowls] = useState<FowlRecord[]>([]);
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
+  const [matchMedia, setMatchMedia] = useState<Map<number, MatchMedia>>(new Map());
   const [breedingPairs, setBreedingPairs] = useState<BreedingPairRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [autoCalcAge, setAutoCalcAge] = useState(true);
@@ -441,6 +451,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       ]);
       setFowls(fowlData);
       setMatchHistory(matchData);
+      setMatchMedia(await mediaService.fetchMatchMedia(matchData.map(m => m.id)));
       setBreedingPairs(pairings.data);
       setAvailableStrains(strainNames);
       setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));
@@ -450,6 +461,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       console.error('Failed to fetch database resources:', err);
       setFowls([]);
       setMatchHistory([]);
+      setMatchMedia(new Map());
     } finally {
       setLoading(false);
     }
@@ -739,13 +751,30 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const fowlBreed = matchedFowl ? matchedFowl.breed : 'Unknown';
 
       let videoUrl = '';
-      if (matchVideoFile) {
+      const videoUrls: string[] = [];
+      const photoUrls: string[] = [];
+      if (matchVideoFiles.length > 0 || matchPhotoFiles.length > 0 || opponentPhoto) {
         setUploadingVideo(true);
-        const result = await matchService.uploadMatchVideo(matchVideoFile);
-        if (result.error) throw new Error(result.error);
-        videoUrl = result.url || '';
-        setUploadingVideo(false);
       }
+      for (const videoFile of matchVideoFiles) {
+        const result = await matchService.uploadMatchVideo(videoFile);
+        if (result.error) throw new Error(result.error);
+        if (result.url) videoUrls.push(result.url);
+      }
+      videoUrl = videoUrls[0] || '';
+
+      let opponentPhotoUrl = '';
+      if (opponentPhoto) {
+        const photoResult = await mediaService.uploadMatchPhotoFile(opponentPhoto);
+        if (photoResult.error) throw new Error(photoResult.error);
+        opponentPhotoUrl = photoResult.url || '';
+      }
+      for (const photoFile of matchPhotoFiles) {
+        const result = await mediaService.uploadMatchPhotoFile(photoFile);
+        if (result.error) throw new Error(result.error);
+        if (result.url) photoUrls.push(result.url);
+      }
+      setUploadingVideo(false);
 
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
       if (!activeUserId) {
@@ -760,6 +789,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         breed: fowlBreed,
         opponent: sanitizeInput(opponentName) || 'Anonymous Opponent',
         opponent_breed: sanitizeInput(opponentBreed) || '',
+        opponent_bloodline: opponentBloodline.trim() ? sanitizeInput(opponentBloodline) : null,
+        opponent_birthdate: opponentHatch.trim() || null,
+        opponent_photo_url: opponentPhotoUrl || null,
         location: sanitizeInput(matchLocation),
         type: matchType || 'Main Event',
         derby_match_number: derbyMatchNumber,
@@ -775,9 +807,19 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       };
 
       const result = await matchService.insertMatch(payload);
-      if (result.error) {
-        throw new Error(result.error);
+      if (result.error || !result.id) {
+        throw new Error(result.error || 'Failed to save match');
       } else {
+        const newMatchId = result.id;
+        for (let i = 0; i < videoUrls.length; i++) {
+          const v = await mediaService.insertMatchVideo(newMatchId, videoUrls[i], i + 1);
+          if (v.error) console.warn('Match video save skipped:', v.error);
+        }
+        for (let i = 0; i < photoUrls.length; i++) {
+          const p = await mediaService.insertMatchPhoto(newMatchId, photoUrls[i], i + 1);
+          if (p.error) console.warn('Match photo save skipped:', p.error);
+        }
+
         // Save betting/option data to match_options table
         const optResult = await matchOptionsService.insertMatchOption({
           option_number: matchOption,
@@ -801,7 +843,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         }
 
         toastMessage('Performance match vector successfully computed and logged.', 'success');
-        setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
+        setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFiles([]); setMatchPhotoFiles([]); setMatchPostFight('Fit / Recovered');
+        setOpponentBloodline(''); setOpponentHatch(''); setOpponentPhoto(null);
         setMatchSide(''); setMatchNotes('');
         setPartnerEntry(''); setSuggestedPartners([]);
         fetchDatabaseResources();
@@ -813,7 +856,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchSide, matchNotes, derbyMatchNumber, matchOutcome, matchPostFight, eventType, cockCount, ageCategory, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchSide, matchNotes, derbyMatchNumber, matchOutcome, matchPostFight, eventType, cockCount, ageCategory, matchVideoFiles, matchPhotoFiles, opponentBloodline, opponentHatch, opponentPhoto, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
 
   const handleSetSireMaterial = useCallback(async (fowl: FowlRecord) => {
     setLoading(true);
@@ -1163,7 +1206,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     deleteCustomStrain,
     deleteCustomLegColor,
     fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
-    matchHistory, setMatchHistory, breedingPairs, loading, setLoading,
+    matchHistory, setMatchHistory, matchMedia, breedingPairs, loading, setLoading,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,
     winRatePct: analytics.winRatePct,

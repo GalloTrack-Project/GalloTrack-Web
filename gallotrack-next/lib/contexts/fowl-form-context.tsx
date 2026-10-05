@@ -38,6 +38,9 @@ interface FowlFormStateContextValue {
   matchDate: string; setMatchDate: (v: string) => void;
   opponentName: string; setOpponentName: (v: string) => void;
   opponentBreed: string; setOpponentBreed: (v: string) => void;
+  opponentBloodline: string; setOpponentBloodline: (v: string) => void;
+  opponentHatch: string; setOpponentHatch: (v: string) => void;
+  opponentPhoto: File | null; setOpponentPhoto: (f: File | null) => void;
   matchLocation: string; setMatchLocation: (v: string) => void;
   matchType: string; setMatchType: (v: string) => void;
   matchSide: string; setMatchSide: (v: string) => void;
@@ -45,7 +48,8 @@ interface FowlFormStateContextValue {
   derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string; setMatchOutcome: (v: string) => void;
   matchPostFight: string; setMatchPostFight: (v: string) => void;
-  matchVideoFile: File | null; setMatchVideoFile: (f: File | null) => void;
+  matchVideoFiles: File[]; setMatchVideoFiles: (f: File[]) => void;
+  matchPhotoFiles: File[]; setMatchPhotoFiles: (f: File[]) => void;
   uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
 
   matchOption: number; setMatchOption: (v: number) => void;
@@ -157,6 +161,9 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [matchDate, setMatchDate] = useState('');
   const [opponentName, setOpponentName] = useState('');
   const [opponentBreed, setOpponentBreed] = useState('');
+  const [opponentBloodline, setOpponentBloodline] = useState('');
+  const [opponentHatch, setOpponentHatch] = useState('');
+  const [opponentPhoto, setOpponentPhoto] = useState<File | null>(null);
   const [matchLocation, setMatchLocation] = useState('');
   const [matchType, setMatchType] = useState('Main Event');
   const [matchSide, setMatchSide] = useState('');
@@ -164,7 +171,8 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [derbyMatchNumber, setDerbyMatchNumber] = useState(1);
   const [matchOutcome, setMatchOutcome] = useState('Win');
   const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
-  const [matchVideoFile, setMatchVideoFile] = useState<File | null>(null);
+  const [matchVideoFiles, setMatchVideoFiles] = useState<File[]>([]);
+  const [matchPhotoFiles, setMatchPhotoFiles] = useState<File[]>([]);
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [matchOption, setMatchOption] = useState(1);
@@ -288,11 +296,13 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     selectedFowlForMatch, setSelectedFowlForMatch,
     matchDate, setMatchDate,
     opponentName, setOpponentName, opponentBreed, setOpponentBreed,
+    opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
+    opponentPhoto, setOpponentPhoto,
     matchLocation, setMatchLocation, matchType, setMatchType,
     matchSide, setMatchSide, matchNotes, setMatchNotes,
     derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
-    matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
+    matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles, uploadingVideo, setUploadingVideo,
     matchOption, setMatchOption, betType, setBetType,
     targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
     suggestedPartners, setSuggestedPartners,
