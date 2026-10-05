@@ -143,14 +143,14 @@ export default function DashboardPage() {
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-info" /></span>
               <div>
                 <p className="text-base font-black text-info leading-none">{maleActiveFowls.length}</p>
-                <p className="text-sm font-bold uppercase tracking-wider text-info mt-0.5">Males</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-info mt-0.5">Sires</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink" /></span>
               <div>
                 <p className="text-base font-black text-pink leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-sm font-bold uppercase tracking-wider text-pink mt-0.5">Females</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-pink mt-0.5">Dams</p>
               </div>
             </div>
           </div>
