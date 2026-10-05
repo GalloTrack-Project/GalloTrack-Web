@@ -406,14 +406,31 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-1 bg-muted rounded-md border border-border p-1 shadow-sm overflow-x-auto">
-        {tabs.map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
-            {tab.label}
-            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
-          </button>
-        ))}
+      {/* Filter Tabs + Sort */}
+      <div className="flex items-center gap-2 bg-muted rounded-md border border-border p-1 shadow-sm">
+        <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
+          {tabs.map((tab) => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
+              {tab.label}
+              <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-border">
+          <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sort</label>
+          <select
+            id="inventory-sort"
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="px-2.5 py-2 rounded-sm text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+          >
+            <option value="name">Name (A–Z)</option>
+            <option value="age">Age (youngest first)</option>
+            <option value="strain">Strain (A–Z)</option>
+            <option value="winrate">Win rate (highest)</option>
+            <option value="weight">Weight (lightest first)</option>
+          </select>
+        </div>
       </div>
 
       {/* Grid */}
