@@ -73,6 +73,7 @@ export default function ProfilePage() {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        const trimmedFarmName = farmName.trim()
         const { error } = await supabase
           .from('profiles')
           .upsert({
@@ -80,21 +81,20 @@ export default function ProfilePage() {
             full_name: fullName,
             phone_number: phoneNumber,
             avatar_url: avatarUrl,
+            farm_name: trimmedFarmName,
             updated_at: new Date().toISOString()
           })
 
         if (error) throw error
 
-        if (farmName) {
-          await supabase.from('farms').upsert(
-            {
-              owner_id: user.id,
-              farm_name: farmName,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'owner_id' }
-          )
-        }
+        await supabase.from('farms').upsert(
+          {
+            owner_id: user.id,
+            farm_name: trimmedFarmName,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'owner_id' }
+        )
 
         if (typeof window !== 'undefined') {
           localStorage.setItem('gallotrack_admin_name', fullName)
@@ -363,6 +363,15 @@ export default function ProfilePage() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 </span>
                 <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-md text-sm bg-muted/50 focus:bg-background focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:focus:ring-teal-900 transition-all font-semibold" required id="contact-communication-number" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-black text-muted-foreground uppercase mb-2 tracking-widest" htmlFor="farm-hub-name">Hub / Farm Name</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+                </span>
+                <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} maxLength={80} placeholder="e.g. ISUFST DINGLE HUB" className="w-full pl-10 pr-3.5 py-3 border border-border rounded-md text-sm bg-muted/50 focus:bg-background focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:focus:ring-teal-900 transition-all font-semibold" id="farm-hub-name" />
               </div>
             </div>
           </div>
