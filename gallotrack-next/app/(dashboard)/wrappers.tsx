@@ -74,7 +74,16 @@ export function BreedingHubWrapper() {
 export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
-  const { handleLogout } = useAuth();
+  const {
+    handleLogout,
+    handleSendResetLink,
+    forgotEmail,
+    setForgotEmail,
+    forgotLoading,
+    forgotSent,
+    forgotError,
+    setForgotSent,
+  } = useAuth();
   return (
     <Modals
       selectedFowlForDetails={ui.selectedFowlForDetails}
@@ -104,13 +113,16 @@ export function ModalsWrapper() {
       setShowLogoutModal={ui.setShowLogoutModal}
       handleLogout={handleLogout}
       showForgotPasswordModal={ui.showForgotPasswordModal}
-      setShowForgotPasswordModal={ui.setShowForgotPasswordModal}
-      handleSendResetLink={() => {}}
-      forgotEmail=""
-      setForgotEmail={() => {}}
-      forgotLoading={false}
-      forgotSent={false}
-      forgotError=""
+      setShowForgotPasswordModal={(v: boolean) => {
+        ui.setShowForgotPasswordModal(v);
+        if (!v) setForgotSent(false);
+      }}
+      handleSendResetLink={handleSendResetLink}
+      forgotEmail={forgotEmail}
+      setForgotEmail={setForgotEmail}
+      forgotLoading={forgotLoading}
+      forgotSent={forgotSent}
+      forgotError={forgotError}
       matchHistory={store.matchHistory}
       loading={store.loading}
       getAgeParts={store.getAgeParts}
