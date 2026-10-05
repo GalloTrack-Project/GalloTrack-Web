@@ -52,7 +52,7 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
             <p className="text-xs text-muted-foreground font-semibold mt-0.5">{subtitle}</p>
           ) : (
             <p className="text-xs text-muted-foreground font-semibold mt-0.5">
-              50% Sire · 50% Dam — halved bawat henerasyon
+              50% Sire · 50% Dam — halved each generation
             </p>
           )}
         </div>
@@ -101,12 +101,12 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
           {unknownPct > 0 && (
             <>
               {' '}
-              · <span className="font-black text-muted-foreground">{unknownPct}% unregistered ancestry</span> — ilagay ang
-              breed ng magulang para mabuo ang hatian.
+              · <span className="font-black text-muted-foreground">{unknownPct}% unregistered ancestry</span> — set the
+              parents&apos; breed to complete the split.
             </>
           )}
           {knownPct > 0 && unknownPct === 0 && strainCount === 1 && (
-            <> · Pure / single-bloodline ang hatian.</>
+            <> · Pure / single-bloodline split.</>
           )}
         </p>
       )}

@@ -29,13 +29,6 @@ async function verifyActiveUser(supabaseClient: SupabaseClient) {
 }
 
 const VALID_OUTCOMES = ['win', 'loss', 'draw', 'no contest'];
-const VALID_POST_FIGHT = [
-  'Fit / Recovered',
-  'Minor Injury',
-  'Severely Injured',
-  'Critical Condition',
-  'Deceased',
-];
 
 export async function GET(request: NextRequest) {
   const supabase = getSupabase(request);
@@ -83,8 +76,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Invalid outcome. Must be one of: ${VALID_OUTCOMES.join(', ')}` }, { status: 400 });
     }
 
-    if (body.post_fight_condition && !VALID_POST_FIGHT.includes(body.post_fight_condition)) {
-      return NextResponse.json({ error: `Invalid post-fight condition. Must be one of: ${VALID_POST_FIGHT.join(', ')}` }, { status: 400 });
+    // Post-fight condition comes from the editable registry list — any
+    // non-empty value is valid (legacy + farm-custom conditions included).
+    if (body.post_fight_condition && String(body.post_fight_condition).trim() === '') {
+      return NextResponse.json({ error: 'Post-fight condition cannot be blank' }, { status: 400 });
     }
 
     if (body.date) {
@@ -104,12 +99,14 @@ export async function POST(request: NextRequest) {
       breed: body.breed || 'Unknown',
       opponent: body.opponent ? sanitize(String(body.opponent)) : 'Anonymous Opponent',
       opponent_breed: body.opponent_breed ? sanitize(String(body.opponent_breed)) : '',
-      location: body.location ? sanitize(String(body.location)) : 'Local Breeding Yard',
-      type: body.type || 'Derby Match',
+      location: body.location ? sanitize(String(body.location)) : '',
+      type: body.type || 'Main Event',
       derby_match_number: body.derby_match_number || 1,
       outcome: body.outcome || 'Win',
       status: 'Verified',
       post_fight_condition: body.post_fight_condition || 'Fit / Recovered',
+      side: body.side ? sanitize(String(body.side)) : null,
+      notes: body.notes ? sanitize(String(body.notes)) : null,
       video_url: body.video_url || null,
       cock_count: body.cock_count || 2,
       age_category: body.age_category || 'Cock',

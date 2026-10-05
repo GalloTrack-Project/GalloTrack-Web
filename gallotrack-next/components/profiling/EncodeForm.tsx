@@ -221,7 +221,7 @@ export default function EncodeForm({
             placeholder="e.g. W-001"
           id="wing-band-id" />
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
-            {wingBand.trim() ? 'Ibaband ang numero na ito sa pakpak ng manok' : 'Optional — ang numero na naka-stamp sa wing band ng ibon'}
+            {wingBand.trim() ? 'This number will be banded on the chicken’s wing' : 'Optional — the number stamped on the wing band'}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -530,8 +530,8 @@ export default function EncodeForm({
               {isFoundationPair
                 ? `Foundation Stock pair — purity total: ${total}% (exempt, 100/100 auto-applied)`
                 : ok
-                  ? `✓ Purity total: ${total}% — sariwa ang dugo ng pairing na ito`
-                  : `⚠ Purity total: ${total}% — dapat mag-exactly 100% (Sire + Dam) bago i-save`}
+                  ? `✓ Purity total: ${total}% — the bloodline of this pairing is pure`
+                  : `⚠ Purity total: ${total}% — must be exactly 100% (Sire + Dam) before saving`}
             </p>
           );
         })()}
@@ -569,16 +569,16 @@ export default function EncodeForm({
         </div>
         <BloodlineBreakdown
           stats={previewBloodlineStats && previewBloodlineStats.knownPct > 0 ? previewBloodlineStats : null}
-          title="Bloodline Hatian (Live Preview)"
-          subtitle="Auto-computed mula sa magulang — 50% Sire, 50% Dam, halved bawat henerasyon"
+          title="Bloodline Split (Live Preview)"
+          subtitle="Auto-computed from the parents — 50% Sire, 50% Dam, halved each generation"
         />
         {!previewBloodlineStats || previewBloodlineStats.knownPct === 0 ? (
           <div className="bg-slate-50 dark:bg-muted/50 border border-dashed border-slate-200 dark:border-border rounded-lg p-4">
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-              🧬 Bloodline Hatian
+              🧬 Bloodline Split
             </p>
             <p className="text-xs text-muted-foreground font-semibold mt-1">
-              Pumili ng Sire at Dam (o maglagay ng strain) para makita ang porsyento ng dugo bawat lahi.
+              Select a Sire and Dam (or set a strain) to see the blood percentage per breed.
             </p>
           </div>
         ) : null}

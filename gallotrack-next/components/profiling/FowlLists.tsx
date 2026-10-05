@@ -40,6 +40,15 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
+  const cardNameKey = fowl.name.trim().toLowerCase();
+  const isRegisteredParent = allFowls.some(
+    (o) => (o.sire || '').trim().toLowerCase() === cardNameKey || (o.dam || '').trim().toLowerCase() === cardNameKey,
+  );
+  const sireName = (fowl.sire || '').trim();
+  const damName = (fowl.dam || '').trim();
+  const isRegisteredOffspring =
+    (!!sireName && sireName.toLowerCase() !== 'foundation stock') ||
+    (!!damName && damName.toLowerCase() !== 'foundation stock');
   return (
     <div
       role="button"
@@ -64,6 +73,16 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>
+          {isRegisteredParent && (
+            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-800" title="Has registered children in this farm">
+              {gender === 'Male' ? 'Sire' : 'Dam'}
+            </span>
+          )}
+          {isRegisteredOffspring && (
+            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Registered child of a sire or dam in this farm">
+              Offspring
+            </span>
+          )}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-lg border border-slate-100 dark:border-border">
@@ -71,14 +90,14 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
             const name = (fowl.sire || '').trim();
             const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
             return target ? (
-              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-sky-700 dark:text-sky-300 hover:underline underline-offset-2 cursor-pointer" title="Buksan ang Sire profile">{name}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-sky-700 dark:text-sky-300 hover:underline underline-offset-2 cursor-pointer" title="Open the Sire's profile">{name}</button>
             ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong>;
           })()}</div>
           <div>Dam: {(() => {
             const name = (fowl.dam || '').trim();
             const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
             return target ? (
-              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink hover:underline underline-offset-2 cursor-pointer" title="Buksan ang Dam profile">{name}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink hover:underline underline-offset-2 cursor-pointer" title="Open the Dam's profile">{name}</button>
             ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong>;
           })()}</div>
           <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
@@ -218,6 +237,7 @@ export default function FowlLists({
   archivedFowls,
   deceasedFowls,
   sireMaterialFowls,
+  matchHistory,
   setProfilingSubTab,
   setPendingPermanentDelete,
   handleRestoreFowlOnly,
@@ -233,6 +253,8 @@ export default function FowlLists({
   const [filterDam, setFilterDam] = useState('all');
   const [filterStage, setFilterStage] = useState('all');
   const [filterReason, setFilterReason] = useState('all');
+  const [filterBreed, setFilterBreed] = useState('all');
+  const [filterFights, setFilterFights] = useState<'all' | 'with' | 'without'>('all');
   const prevTabRef = React.useRef(tab);
   React.useEffect(() => {
     if (prevTabRef.current !== tab) {
@@ -264,12 +286,14 @@ export default function FowlLists({
     const dams = new Set<string>();
     const stages = new Set<string>();
     const reasons = new Set<string>();
+    const breeds = new Set<string>();
     for (const f of baseList) {
       const s = (f.sire || '').trim();
       const d = (f.dam || '').trim();
       if (s) sires.add(s);
       if (d) dams.add(d);
       stages.add((f.growth_stage || 'Stag').trim() || 'Stag');
+      if ((f.breed || '').trim()) breeds.add(f.breed.trim());
       if (tab === 'archived' || tab === 'deceased') reasons.add(reasonValue(f));
     }
     return {
@@ -277,6 +301,7 @@ export default function FowlLists({
       dams: Array.from(dams).sort((a, b) => a.localeCompare(b)),
       stages: Array.from(stages).sort((a, b) => a.localeCompare(b)),
       reasons: Array.from(reasons).sort((a, b) => a.localeCompare(b)),
+      breeds: Array.from(breeds).sort((a, b) => a.localeCompare(b)),
     };
   }, [baseList, tab, reasonValue]);
 
@@ -285,22 +310,28 @@ export default function FowlLists({
     filterDam !== 'all' ||
     filterStage !== 'all' ||
     filterReason !== 'all' ||
+    filterBreed !== 'all' ||
+    filterFights !== 'all' ||
     query.trim() !== '';
-  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setFilterReason('all'); setQuery(''); setPage(1); };
+  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setFilterReason('all'); setFilterBreed('all'); setFilterFights('all'); setQuery(''); setPage(1); };
   const applyFilter = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
 
   const paginatedBirds = useMemo(() => {
+    const foughtNames = new Set(matchHistory.map((m) => m.entry_name.trim().toLowerCase()));
     const list = baseList.filter((f) => {
       const searchOk = fowlMatchesQuery(f, query);
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
       const reasonOk = filterReason === 'all' || reasonValue(f) === filterReason;
-      return searchOk && sireOk && damOk && stageOk && reasonOk;
+      const breedOk = filterBreed === 'all' || (f.breed || '').trim().toLowerCase() === filterBreed.toLowerCase();
+      const hasFights = foughtNames.has(f.name.trim().toLowerCase());
+      const fightsOk = filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
+      return searchOk && sireOk && damOk && stageOk && reasonOk && breedOk && fightsOk;
     });
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [baseList, page, query, filterSire, filterDam, filterStage, filterReason, reasonValue]);
+  }, [baseList, page, query, filterSire, filterDam, filterStage, filterReason, filterBreed, filterFights, reasonValue, matchHistory]);
 
   const filterBar = (
     <div className="bg-white dark:bg-card p-3.5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">
@@ -348,6 +379,29 @@ export default function FowlLists({
           {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}
         </select>
       </div>
+      <div className="flex-1 min-w-[160px]">
+        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-breed">Filter by Breed</label>
+        <select
+          value={filterBreed}
+          onChange={applyFilter(setFilterBreed)}
+          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
+        id="filter-by-breed">
+          <option value="all">All Breeds</option>
+          {filterOptions.breeds.map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
+      <div className="flex-1 min-w-[160px]">
+        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-fights">Fight Record</label>
+        <select
+          value={filterFights}
+          onChange={(e) => { setFilterFights(e.target.value as 'all' | 'with' | 'without'); setPage(1); }}
+          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
+        id="filter-by-fights">
+          <option value="all">All Chickens</option>
+          <option value="with">With Fight Records</option>
+          <option value="without">Without Fight Records</option>
+        </select>
+      </div>
       {(tab === 'archived' || tab === 'deceased') && (
         <div className="flex-1 min-w-[160px]">
           <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-reason">
@@ -380,7 +434,7 @@ export default function FowlLists({
     <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
       <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-success flex items-center justify-center text-3xl mx-auto">🔍</div>
       <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Matching Chickens</h3>
-      <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">Walang entry na tumutugma sa napiling Sire, Dam, o Growth Stage.</p>
+      <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No registry entries match the selected filters.</p>
       <button type="button" onClick={clearFilters} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">✕ Reset Filters</button>
     </div>
   );

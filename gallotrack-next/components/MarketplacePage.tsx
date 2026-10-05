@@ -229,7 +229,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             <BloodlineBreakdown
               stats={getFowlBloodlineStats(fowl, fowls)}
               title="Bloodline Percentage"
-              subtitle="Hatian ng dugo bawat lahi — 50% Sire, 50% Dam"
+              subtitle="Blood split per breed — 50% Sire, 50% Dam"
             />
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-sky-500/10 border border-sky-500/30 rounded-md p-3">

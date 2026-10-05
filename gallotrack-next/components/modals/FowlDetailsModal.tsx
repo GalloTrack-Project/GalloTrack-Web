@@ -997,6 +997,58 @@ export default function FowlDetailsModal({
                 );
               })()}
 
+              {/* PREVIOUS OPPONENTS SUMMARY */}
+              {(() => {
+                const oppMap = new Map<string, { fights: number; wins: number; losses: number; draws: number; lastDate: string }>();
+                fowlMatches.forEach(m => {
+                  const opp = (m.opponent || '').trim() || 'Anonymous Opponent';
+                  if (!oppMap.has(opp)) oppMap.set(opp, { fights: 0, wins: 0, losses: 0, draws: 0, lastDate: '' });
+                  const o = oppMap.get(opp)!;
+                  o.fights++;
+                  const res = (m.outcome || '').toLowerCase();
+                  if (res === 'win') o.wins++;
+                  else if (res === 'loss') o.losses++;
+                  else if (res === 'draw') o.draws++;
+                  if ((m.date || '') > o.lastDate) o.lastDate = m.date || '';
+                });
+                const opponents = Array.from(oppMap.entries()).sort((a, b) => b[1].fights - a[1].fights);
+                if (opponents.length === 0) return null;
+                return (
+                  <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
+                    <div className="p-3 bg-slate-50 dark:bg-muted/50 border-b border-slate-200/80 dark:border-border">
+                      <h4 className="text-xs font-black text-slate-700 dark:text-card-foreground uppercase tracking-wider">🥊 Previous Opponents ({opponents.length} faced)</h4>
+                      <p className="text-xs text-muted-foreground font-semibold mt-0.5">Every opponent this chicken has met, with the head-to-head record — this chicken only.</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 dark:border-border bg-slate-50/70 dark:bg-muted/40">
+                            <th className="p-2.5 font-black text-slate-600 dark:text-card-foreground uppercase tracking-wider">Opponent</th>
+                            <th className="p-2.5 font-black text-slate-600 dark:text-card-foreground uppercase tracking-wider text-center">Record</th>
+                            <th className="p-2.5 font-black text-slate-600 dark:text-card-foreground uppercase tracking-wider text-center">Fights</th>
+                            <th className="p-2.5 font-black text-slate-600 dark:text-card-foreground uppercase tracking-wider text-right">Last Fought</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {opponents.map(([opp, s]) => (
+                            <tr key={opp} className="border-b border-slate-100 dark:border-border/60 last:border-0 hover:bg-slate-50/60 dark:hover:bg-muted/30">
+                              <td className="p-2.5 font-bold text-slate-800 dark:text-card-foreground">{opp}</td>
+                              <td className="p-2.5 text-center font-mono font-bold">
+                                <span className="text-success">{s.wins}W</span>
+                                <span className="text-danger"> {s.losses}L</span>
+                                {s.draws > 0 && <span className="text-warning"> {s.draws}D</span>}
+                              </td>
+                              <td className="p-2.5 text-center font-bold text-slate-600 dark:text-muted-foreground">{s.fights}</td>
+                              <td className="p-2.5 text-right font-mono font-semibold text-muted-foreground">{s.lastDate || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* DEDICATED INDIVIDUAL MATCH LOG TABLE */}
               <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden shadow-2xs">
                 <div className="p-3 bg-slate-50 dark:bg-muted/50 border-b border-slate-200/80 dark:border-border flex justify-between items-center">
@@ -1011,7 +1063,7 @@ export default function FowlDetailsModal({
                         <th className="p-2.5">Opponent Entry</th>
                         <th className="p-2.5">Breed</th>
                         <th className="p-2.5">Arena Location</th>
-                        <th className="p-2.5">Match Type</th>
+                        <th className="p-2.5">Event / Match Type</th>
                         <th className="p-2.5 text-center">Outcome</th>
                         <th className="p-2.5 text-center">🩺 Post-Fight</th>
                         <th className="p-2.5 text-center">Video</th>
@@ -1031,7 +1083,7 @@ export default function FowlDetailsModal({
                             <td className="p-2.5 font-bold text-slate-800 dark:text-card-foreground">{match.opponent}</td>
                             <td className="p-2.5 text-slate-600 dark:text-muted-foreground font-semibold">{match.opponent_breed || '—'}</td>
                             <td className="p-2.5 text-slate-600 dark:text-muted-foreground">{match.location}</td>
-                            <td className="p-2.5"><span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground text-xs font-bold px-2 py-0.5 rounded-full">{match.type}</span></td>
+                            <td className="p-2.5"><span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground text-xs font-bold px-2 py-0.5 rounded-full">{match.event_type || match.type}{match.event_type && match.type && match.event_type !== match.type ? ` · ${match.type}` : ''}</span></td>
                             <td className="p-2.5 text-center">
                               <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase border ${
                                 match.outcome.toLowerCase() === 'win' 

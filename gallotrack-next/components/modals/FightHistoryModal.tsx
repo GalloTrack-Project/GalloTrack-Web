@@ -104,10 +104,18 @@ export default function FightHistoryModal() {
                   <td className="p-2.5">
                     <span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground font-bold px-2 py-0.5 rounded-full">
                       {m.event_type || m.type || '—'}
+                      {m.event_type && m.type && m.event_type !== m.type ? ` · ${m.type}` : ''}
                     </span>
                   </td>
                   <td className="p-2.5">{m.age_category || '—'}</td>
-                  <td className="p-2.5 font-bold text-slate-800 dark:text-card-foreground">{m.opponent || '—'}</td>
+                  <td className="p-2.5 font-bold text-slate-800 dark:text-card-foreground">
+                    {m.opponent || '—'}
+                    {(m.side || m.notes) && (
+                      <span className="block text-[11px] font-medium text-muted-foreground normal-case">
+                        {[m.side, m.notes].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                  </td>
                   <td className="p-2.5">{m.opponent_breed || '—'}</td>
                   <td className="p-2.5">{m.location || '—'}</td>
                   <td className="p-2.5 text-center">

@@ -3,7 +3,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/registry'
 import type { AdminSettings } from '@/lib/admin'
-import { User, Home, Settings, Bell, Database, Monitor, X } from 'lucide-react'
+import type { RegistryOption } from '@/lib/types'
+import { User, Home, Settings, Bell, Database, Monitor, X, ListChecks } from 'lucide-react'
+import { fetchUserSettings, setUserSetting } from '@/lib/services/settings-service'
+import { RANKING_METRICS, RANKING_METRIC_LABELS, DEFAULT_SETTINGS, type UserSettings as FarmSettings, type SettingsKey } from '@/lib/settings'
+import { fetchRegistryOptions, addRegistryOption, setRegistryOptionActive } from '@/lib/services/options-service'
 
 interface UserSettings extends AdminSettings {
   farm_name?: string
@@ -12,13 +16,14 @@ interface UserSettings extends AdminSettings {
   contact_number?: string
 }
 
-type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'data' | 'system'
+type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'registry' | 'data' | 'system'
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'account', label: 'Account', icon: <User size={14} /> },
   { id: 'farm', label: 'Farm Profile', icon: <Home size={14} /> },
   { id: 'preferences', label: 'Preferences', icon: <Settings size={14} /> },
   { id: 'notifications', label: 'Notifications', icon: <Bell size={14} /> },
+  { id: 'registry', label: 'Option Lists', icon: <ListChecks size={14} /> },
   { id: 'data', label: 'Data Management', icon: <Database size={14} /> },
   { id: 'system', label: 'System Info', icon: <Monitor size={14} /> },
 ]
@@ -122,6 +127,54 @@ export default function SettingsPage() {
   const [changingPw, setChangingPw] = useState(false)
   const [pwMessage, setPwMessage] = useState('')
 
+  // Farm-level settings stored in user_settings (ranking, match rules)
+  const [farmCfg, setFarmCfg] = useState<FarmSettings>(DEFAULT_SETTINGS)
+  const [farmCfgNotice, setFarmCfgNotice] = useState('')
+  // Editable registry option lists (event types, match types, conditions, locations)
+  const [optRows, setOptRows] = useState<RegistryOption[]>([])
+  const [newOptValues, setNewOptValues] = useState<Record<string, string>>({})
+  const [optNotice, setOptNotice] = useState('')
+
+  const MANAGED_LISTS: { key: string; label: string; desc: string }[] = [
+    { key: 'event_type', label: 'Event Types', desc: 'Derby, Lusok, and any custom events offered when logging a fight' },
+    { key: 'match_type', label: 'Match Types', desc: 'Main Event, Elimination, Finals, Exhibition — the format of the match' },
+    { key: 'post_match_condition', label: 'Post-Fight Conditions', desc: 'Condition options recorded after each fight (never changes a status automatically)' },
+    { key: 'location', label: 'Arena Locations', desc: 'Arenas and venues offered in the match form' },
+  ]
+
+  async function saveFarmSetting(key: SettingsKey, value: unknown) {
+    setFarmCfg((prev) => ({ ...prev, [key]: value }) as FarmSettings)
+    const { error } = await setUserSetting(key, value as FarmSettings[SettingsKey])
+    setFarmCfgNotice(error ? `Failed to save: ${error}` : 'Farm setting saved.')
+    setTimeout(() => setFarmCfgNotice(''), 3000)
+  }
+
+  async function reloadRegistryOptions() {
+    setOptRows(await fetchRegistryOptions())
+  }
+
+  async function handleAddOption(listKey: string) {
+    const value = (newOptValues[listKey] || '').trim()
+    if (!value) return
+    const { error } = await addRegistryOption(listKey, value)
+    if (error) {
+      setOptNotice(error)
+    } else {
+      setNewOptValues((prev) => ({ ...prev, [listKey]: '' }))
+      setOptNotice(`"${value}" added.`)
+      await reloadRegistryOptions()
+    }
+    setTimeout(() => setOptNotice(''), 3000)
+  }
+
+  async function handleToggleOption(row: RegistryOption) {
+    if (row.id == null) return
+    const { error } = await setRegistryOptionActive(row.id, row.is_active === false)
+    if (error) setOptNotice(error)
+    await reloadRegistryOptions()
+    setTimeout(() => setOptNotice(''), 3000)
+  }
+
   const update = (key: keyof UserSettings, value: unknown) => setSettings((prev) => ({ ...prev, [key]: value }))
 
   const STORAGE_KEY = 'gallotrack_user_preferences'
@@ -206,6 +259,13 @@ export default function SettingsPage() {
       }
     }
     load()
+  }, [])
+
+  useEffect(() => {
+    let live = true
+    fetchUserSettings().then((s) => { if (live) setFarmCfg(s) })
+    fetchRegistryOptions().then((rows) => { if (live) setOptRows(rows) })
+    return () => { live = false }
   }, [])
 
   async function handleSave(e: React.FormEvent) {
@@ -416,6 +476,34 @@ export default function SettingsPage() {
                 ]} />
               </Field>
             </SectionCard>
+            <SectionCard title="Ranking & Match Rules" description="Saved to your farm's cloud settings — applies across the whole app">
+              {farmCfgNotice && (
+                <p className={`text-xs font-bold py-2.5 ${farmCfgNotice.startsWith('Failed') ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{farmCfgNotice}</p>
+              )}
+              <Field label="Best Ranking Metric" description="How the Best label and ranked offspring lists are decided">
+                <SelectInput value={farmCfg.ranking_metric} onChange={(v) => saveFarmSetting('ranking_metric', v as FarmSettings['ranking_metric'])} options={RANKING_METRICS.map((m) => ({ value: m, label: RANKING_METRIC_LABELS[m] }))} />
+              </Field>
+              <Field label="Minimum Decided Matches" description="Only used by the 'Win rate (minimum matches)' metric">
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={farmCfg.ranking_min_matches}
+                  onChange={(e) => saveFarmSetting('ranking_min_matches', Math.max(1, Number(e.target.value) || 1))}
+                  className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm w-24"
+                />
+              </Field>
+              <Field label="Match Location Required" description="When off, arena location can be left blank for a match">
+                <Toggle checked={farmCfg.match_location_required} onChange={(v) => saveFarmSetting('match_location_required', v)} />
+              </Field>
+              <Field label="Family View Headline" description="Which count leads the family overview">
+                <SelectInput value={farmCfg.family_headline} onChange={(v) => saveFarmSetting('family_headline', v as FarmSettings['family_headline'])} options={[
+                  { value: 'offspring', label: 'Offspring (registered children)' },
+                  { value: 'total_birds', label: 'Total chickens' },
+                  { value: 'pairs', label: 'Breeding pairs' },
+                ]} />
+              </Field>
+            </SectionCard>
           </div>
         )
 
@@ -435,6 +523,71 @@ export default function SettingsPage() {
               <Field label="Cloud Audit Logs" description="Record transaction updates to the cluster">
                 <Toggle checked={settings.cloud_logs !== false} onChange={(v) => update('cloud_logs', v)} />
               </Field>
+            </SectionCard>
+          </div>
+        )
+
+      case 'registry':
+        return (
+          <div className="space-y-4">
+            <SectionCard title="Editable Option Lists" description="Templates come from the system; add farm-specific options or hide ones you never use. History always keeps rendering.">
+              {optNotice && (
+                <p className={`text-xs font-bold py-2.5 ${optNotice.startsWith('Failed') || optNotice.includes('already') ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{optNotice}</p>
+              )}
+              {MANAGED_LISTS.map((list) => {
+                const rows = optRows.filter((r) => r.list_key === list.key).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                return (
+                  <div key={list.key} className="py-4 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                    <span className="block text-sm font-extrabold text-slate-800 dark:text-slate-100">{list.label}</span>
+                    <span className="block text-xs text-muted-foreground font-medium mb-2.5">{list.desc}</span>
+                    <div className="flex flex-wrap gap-1.5 mb-2.5">
+                      {rows.map((row) => {
+                        const isTemplate = row.user_id == null
+                        const active = row.is_active !== false
+                        return (
+                          <span
+                            key={`${row.id ?? 't'}-${row.value}`}
+                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${active ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/70 dark:border-emerald-500/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 line-through'}`}
+                          >
+                            {row.label || row.value}
+                            {isTemplate ? (
+                              <span className="text-[10px] uppercase tracking-wider opacity-70">template</span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleOption(row)}
+                                className="cursor-pointer underline underline-offset-2 hover:opacity-70"
+                                title={active ? 'Hide this option from forms' : 'Show this option again'}
+                              >
+                                {active ? 'hide' : 'show'}
+                              </button>
+                            )}
+                          </span>
+                        )
+                      })}
+                      {rows.length === 0 && <span className="text-xs font-semibold text-muted-foreground">No options yet.</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newOptValues[list.key] || ''}
+                        onChange={(e) => setNewOptValues((prev) => ({ ...prev, [list.key]: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddOption(list.key) } }}
+                        placeholder={`Add custom ${list.label.toLowerCase().replace(/s$/, '')}...`}
+                        maxLength={80}
+                        className="p-2 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm min-w-[200px]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddOption(list.key)}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </SectionCard>
           </div>
         )

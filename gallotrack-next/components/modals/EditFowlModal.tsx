@@ -294,7 +294,7 @@ export default function EditFowlModal({
                 className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
                 placeholder="e.g. 1, A, 1A1"
               id="chicken-code" />
-              <p className="text-xs text-muted-foreground mt-1 font-semibold">Auto-generated kung walang ipinasok — dapat natatangi sa bawat ibon.</p>
+              <p className="text-xs text-muted-foreground mt-1 font-semibold">Auto-generated when left blank — must be unique for each chicken.</p>
             </div>
             <div>
               <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="wing-band-id">

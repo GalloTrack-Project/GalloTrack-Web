@@ -41,7 +41,11 @@ export const matchFormSchema = z.object({
   location: z.string().optional(),
   type: z.string().default('Derby Match'),
   outcome: z.enum(['Win', 'Loss', 'Draw']).default('Win'),
-  postFightCondition: z.enum(['Fit / Recovered', 'Severely Injured / Critical', 'Deceased (Died from injuries)']).default('Fit / Recovered'),
+  // Editable registry list — any stored condition value stays valid
+  // (legacy: 'Severely Injured / Critical', 'Minor Injury', 'Deceased (Died from injuries)').
+  postFightCondition: z.string().min(1, 'Post-fight condition is required').default('Fit / Recovered'),
+  matchSide: z.string().optional(),
+  notes: z.string().optional(),
   optionNumber: z.number().min(1).max(5).default(1),
   betType: z.enum(['durbe', 'lusok', 'contra', 'bulsay']).default('durbe'),
   targetNumber: z.number().min(1).max(10).default(1),

@@ -160,6 +160,8 @@ export interface MatchRecord {
   status: string;
   video_url?: string;
   post_fight_condition?: string;
+  side?: string | null;
+  notes?: string | null;
   cock_count?: number;
   age_category?: string;
   event_type?: string;

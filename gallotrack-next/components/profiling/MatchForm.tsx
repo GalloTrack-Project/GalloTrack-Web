@@ -1,7 +1,10 @@
 'use client';
 import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
-import { POST_FIGHT_CONDITIONS, isMale } from '@/lib/helpers';
+import { isMale } from '@/lib/helpers';
+import { mergeOptions } from '@/lib/lifecycle';
+import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
 
 function SelectChevron() {
   return (
@@ -38,6 +41,12 @@ type Props = {
   setAgeCategory: (v: string) => void;
   eventType: string;
   setEventType: (v: string) => void;
+  matchType: string;
+  setMatchType: (v: string) => void;
+  matchSide: string;
+  setMatchSide: (v: string) => void;
+  matchNotes: string;
+  setMatchNotes: (v: string) => void;
 };
 
 export default function MatchForm({
@@ -56,23 +65,32 @@ export default function MatchForm({
   cockCount, setCockCount,
   ageCategory, setAgeCategory,
   eventType, setEventType,
+  matchType, setMatchType,
+  matchSide, setMatchSide,
+  matchNotes, setMatchNotes,
 }: Props) {
-  const EVENT_TYPE_PRESETS = ['Derby', 'Lusong'];
+  const { rows } = useRegistryOptions();
+  const settings = useUserSettings();
 
   const [customEventType, setCustomEventType] = useState('');
 
-  const eventTypeIsCustom = eventType === '__custom__' || !EVENT_TYPE_PRESETS.includes(eventType);
+  const eventOptions = mergeOptions(rows, 'event_type', eventType || 'Derby');
+  const eventValues = eventOptions.map((o) => o.value);
 
-  const eventTypeSelectValue = EVENT_TYPE_PRESETS.includes(eventType) ? eventType : '__custom__';
-
+  const eventTypeIsCustom = eventType === '__custom__' || !eventValues.includes(eventType);
+  const eventTypeSelectValue = eventValues.includes(eventType) ? eventType : '__custom__';
   const effectiveEventType = eventType === '__custom__' ? customEventType : eventType;
-
   const customEventTypeEmpty = eventTypeIsCustom && !effectiveEventType.trim();
+
+  const matchTypeOptions = mergeOptions(rows, 'match_type', matchType);
+  const conditionOptions = mergeOptions(rows, 'post_match_condition', matchPostFight);
+  const locationOptions = mergeOptions(rows, 'location', matchLocation);
 
   const buildPreview = () => {
     const cockText = cockCount > 0 ? `${cockCount} cocks` : '0 cocks';
     const eventLabel = effectiveEventType || 'Event Type';
-    return `${eventLabel} · ${cockText} · ${ageCategory}`;
+    const typeLabel = matchType || 'Match Type';
+    return `${eventLabel} · ${typeLabel} · ${cockText} · ${ageCategory}`;
   };
 
   const selectClass = "match-field h-10 w-full cursor-pointer rounded-md border border-input-border bg-white dark:bg-input px-3 pr-10 text-sm font-semibold text-foreground transition-colors duration-150 focus:border-success focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
@@ -112,31 +130,25 @@ export default function MatchForm({
           <input type="text" value={opponentBreed} onChange={(e) => setOpponentBreed(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Kelso, Roundhead" id="opponent-breed-rasa" />
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="arena-location-hub">Arena Location Hub</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="arena-location-hub">Arena Location Hub {settings.match_location_required && <span className="text-danger">*</span>}</label>
           <input
             list="arena-locations"
             value={matchLocation}
             onChange={(e) => setMatchLocation(e.target.value)}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
-            placeholder="Select or type arena..."
-            required
+            placeholder={settings.match_location_required ? 'Select or type arena...' : 'Select or type arena (optional)...'}
+            required={settings.match_location_required}
           id="arena-location-hub" />
           <datalist id="arena-locations">
-            <option value="Dingle Breeding Arena" />
-            <option value="Iloilo Coliseum" />
-            <option value="Passi Sports Complex" />
-            <option value="Janiuay Cockpit Arena" />
-            <option value="Pototan Coliseum" />
-            <option value="Santa Barbara Sports Complex" />
-            <option value="Dumangas Cockpit Arena" />
-            <option value="San Enrique Arena" />
-            <option value="Local Farm Pit" />
+            {locationOptions.map((o) => (
+              <option key={o.value} value={o.value} />
+            ))}
           </datalist>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MATCH CONFIGURATION — event type drives the match type         */}
+      {/* MATCH CONFIGURATION — event type and match type are separate   */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5 shadow-sm">
 
@@ -177,14 +189,15 @@ export default function MatchForm({
           </div>
         </div>
 
-        {/* Row 2: Event Type — may "Others" free text */}
+        {/* Row 2: Event Type + Match Type — event type may be "Others" free text */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
+          <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="event-type">Event Type</label>
             <div className="relative">
               <select value={eventTypeSelectValue} onChange={(e) => setEventType(e.target.value)} className={selectClass} id="event-type">
-                <option value="Derby">Derby</option>
-                <option value="Lusong">Lusong</option>
+                {eventOptions.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label || o.value}</option>
+                ))}
                 <option value="__custom__">Others (Add Custom)</option>
               </select>
               <SelectChevron />
@@ -206,6 +219,45 @@ export default function MatchForm({
             {customEventTypeEmpty && (
               <p className="mt-1 text-xs font-semibold text-danger">Enter a custom event type or pick a preset.</p>
             )}
+          </div>
+          <div>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="match-type">Match Type</label>
+            <div className="relative">
+              <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className={selectClass} id="match-type">
+                {matchTypeOptions.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label || o.value}</option>
+                ))}
+              </select>
+              <SelectChevron />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Color / Side + Notes */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="match-side">Color / Side of Entry</label>
+            <input
+              type="text"
+              value={matchSide}
+              onChange={(e) => setMatchSide(e.target.value)}
+              placeholder="e.g., Red feather, left side"
+              maxLength={100}
+              className={inputClass}
+              id="match-side"
+            />
+          </div>
+          <div>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="match-notes">Notes</label>
+            <input
+              type="text"
+              value={matchNotes}
+              onChange={(e) => setMatchNotes(e.target.value)}
+              placeholder="e.g., slow starter, strong finish"
+              maxLength={300}
+              className={inputClass}
+              id="match-notes"
+            />
           </div>
         </div>
 
@@ -239,11 +291,11 @@ export default function MatchForm({
         <div className="sm:col-span-2">
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="post-fight-condition-health-">Post-Fight Condition / Health Status</label>
           <select value={matchPostFight} onChange={(e) => setMatchPostFight(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted/50 font-bold text-slate-700 dark:text-card-foreground cursor-pointer focus:border-emerald-500 transition-all" id="post-fight-condition-health-">
-            {POST_FIGHT_CONDITIONS.map((c) => (
-              <option key={c.value} value={c.value}>{c.icon} {c.value} — {c.desc}</option>
+            {conditionOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label || o.value}</option>
             ))}
           </select>
-          <p className="mt-1.5 text-xs text-muted-foreground font-semibold leading-relaxed">Drives the bloodline <strong className="text-slate-600 dark:text-muted-foreground">Survivability / Health Resilience</strong> score — a win that ends in death or critical injury lowers the cross toughness rating even if the record shows a victory.</p>
+          <p className="mt-1.5 text-xs text-muted-foreground font-semibold leading-relaxed">Record the condition exactly as observed — <strong className="text-slate-600 dark:text-muted-foreground">it never changes the chicken&apos;s status automatically.</strong> Status updates (Recovery, Retired, Deceased) are always applied deliberately from the chicken&apos;s profile.</p>
         </div>
       </div>
 

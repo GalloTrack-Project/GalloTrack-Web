@@ -63,10 +63,10 @@ export function validatePairing(
   sire: FowlRecord | null | undefined,
   dam: FowlRecord | null | undefined
 ): string | null {
-  if (!sire || !dam) return 'Pumili ng sire at dam.';
-  if (sire.id === dam.id) return 'Ang sire at dam ay dapat magkaibang manok.';
-  if (!isSireGender(sire)) return `Si "${sire.name}" ay hindi lalaking manok (sire).`;
-  if (isSireGender(dam)) return `Si "${dam.name}" ay hindi babaeng manok (dam).`;
+  if (!sire || !dam) return 'Select a sire and a dam first.';
+  if (sire.id === dam.id) return 'The sire and dam must be different chickens.';
+  if (!isSireGender(sire)) return `"${sire.name}" is not a male chicken (sire).`;
+  if (isSireGender(dam)) return `"${dam.name}" is not a female chicken (dam).`;
   return null;
 }
 

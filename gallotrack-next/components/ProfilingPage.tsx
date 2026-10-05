@@ -44,6 +44,7 @@ export default function ProfilingPage() {
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile,
     cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
+    matchType, setMatchType, matchSide, setMatchSide, matchNotes, setMatchNotes,
     handleAddFowl, handleAddMatchRecord,
     handleOpenEditModal, handleRestoreFowlOnly,
     handleSetActiveStatus,
@@ -213,6 +214,9 @@ export default function ProfilingPage() {
           cockCount={cockCount} setCockCount={setCockCount}
           ageCategory={ageCategory} setAgeCategory={setAgeCategory}
           eventType={eventType} setEventType={setEventType}
+          matchType={matchType} setMatchType={setMatchType}
+          matchSide={matchSide} setMatchSide={setMatchSide}
+          matchNotes={matchNotes} setMatchNotes={setMatchNotes}
         />
       )}
 

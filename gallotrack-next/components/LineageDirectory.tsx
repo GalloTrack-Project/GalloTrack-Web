@@ -9,6 +9,9 @@ import { buildBreedingPairs } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
 import { fowlMatchesQuery } from '@/lib/lineage';
 import { resolveBirdCodes } from '@/lib/bird-code';
+import { rankFowls, bestFowl, bestYearFor, type RankingMetric } from '@/lib/ranking';
+import { RANKING_METRIC_LABELS } from '@/lib/settings';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
 import { useUI } from '@/lib/contexts/ui-context';
 
 const isMaleChild = (c: FowlRecord) => c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male';
@@ -33,7 +36,7 @@ interface LineageDirectoryProps {
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }
 
-function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails, onShowFights }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void; onShowFights: (f: FowlRecord) => void }) {
+function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails, onShowFights, rankingMetric, rankingMinMatches, matchHistory }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void; onShowFights: (f: FowlRecord) => void; rankingMetric: RankingMetric; rankingMinMatches: number; matchHistory: MatchRecord[] }) {
   const [expanded, setExpanded] = useState(false);
   const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
 
@@ -42,13 +45,12 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
   const decided = wins + losses;
   const groupWinRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
 
-  const ranked = [...g].sort((a, b) => {
-    const sa = getChildMatchStats(a.name);
-    const sb = getChildMatchStats(b.name);
-    if (sb.decided !== sa.decided) return sb.decided - sa.decided;
-    return sb.winRate - sa.winRate;
-  });
-  const bestId = ranked.length > 0 && ranked[0].id ? ranked[0].id : null;
+  const ranked = rankFowls(g, getChildMatchStats, rankingMetric, rankingMinMatches);
+  const bestChild = bestFowl(g, getChildMatchStats, rankingMetric, rankingMinMatches);
+  const bestId = bestChild?.id ?? null;
+  const bestTitle = bestChild
+    ? `Best by ${RANKING_METRIC_LABELS[rankingMetric] || rankingMetric}${bestYearFor(bestChild.name, matchHistory) ? ` · best year ${bestYearFor(bestChild.name, matchHistory)}` : ''}`
+    : undefined;
 
   const males = g.filter(isMaleChild).length;
   const females = g.length - males;
@@ -78,7 +80,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
               <div className="flex items-center gap-1">
                 <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
                 {isBest && cs.decided > 0 && (
-                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0" title={bestTitle}>Best</span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground font-semibold truncate">{child.gender} · {child.age || 'N/A'}</p>
@@ -190,6 +192,7 @@ export default function LineageDirectory({
 }: LineageDirectoryProps) {
   const [activeTab, setActiveTab] = useState<LineageTab>('families');
   const ui = useUI();
+  const settings = useUserSettings();
   const openFights = (f: FowlRecord) => ui.setFightHistoryFowl(f);
   const [expandedSires, setExpandedSires] = useState<Set<string>>(new Set());
   const [expandedDams, setExpandedDams] = useState<Set<string>>(new Set());
@@ -235,6 +238,17 @@ export default function LineageDirectory({
     return { total, wins, losses, decided, winRate };
   };
 
+  // Ranking compares each chicken many times — memoize per render.
+  const statsCache = new Map<string, ReturnType<typeof getChildMatchStats>>();
+  const cachedStats = (name: string) => {
+    let s = statsCache.get(name);
+    if (!s) {
+      s = getChildMatchStats(name);
+      statsCache.set(name, s);
+    }
+    return s;
+  };
+
   const groupStats = (children: FowlRecord[]) => {
     let total = 0, wins = 0, losses = 0;
     children.forEach((c) => {
@@ -246,14 +260,15 @@ export default function LineageDirectory({
     return { total, wins, losses, decided, winRate };
   };
 
-  const rankByWinRate = (children: FowlRecord[]) => {
-    return [...children].sort((a, b) => {
-      const sa = getChildMatchStats(a.name);
-      const sb = getChildMatchStats(b.name);
-      if (sb.decided !== sa.decided) return sb.decided - sa.decided;
-      return sb.winRate - sa.winRate;
-    });
-  };
+  const rankOffspring = (children: FowlRecord[]) =>
+    rankFowls(children, cachedStats, settings.ranking_metric, settings.ranking_min_matches);
+  const bestOf = (children: FowlRecord[]) =>
+    bestFowl(children, cachedStats, settings.ranking_metric, settings.ranking_min_matches);
+  const metricLabel = RANKING_METRIC_LABELS[settings.ranking_metric] || settings.ranking_metric;
+  const bestTitleFor = (f: FowlRecord | null) =>
+    f
+      ? `Best by ${metricLabel}${bestYearFor(f.name, matchHistory) ? ` · best year ${bestYearFor(f.name, matchHistory)}` : ''}`
+      : undefined;
 
   const sireMap = new Map<string, FowlRecord[]>();
   fowls.forEach((f) => {
@@ -327,7 +342,7 @@ export default function LineageDirectory({
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
                 {isBest && stats.decided > 0 && (
-                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Best</span>
+                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0" title={bestTitleFor(child)}>Best</span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground font-semibold truncate">
@@ -375,8 +390,8 @@ export default function LineageDirectory({
           const sgKey = `${prefix}|||${parentName}|||${otherParent}`;
           const sgExpanded = expandedSubgroups.has(sgKey);
           const sgStats = groupStats(members);
-          const ranked = rankByWinRate(members);
-          const bestId = ranked.length > 0 && ranked[0].id ? ranked[0].id : null;
+          const ranked = rankOffspring(members);
+          const bestId = bestOf(members)?.id ?? null;
           return (
             <div key={sgKey} className="bg-muted/50 border border-border rounded-md overflow-hidden">
               <button
@@ -436,10 +451,11 @@ export default function LineageDirectory({
           const females = children.length - males;
           const subgroups = buildSubgroups(children, kind === 'sire' ? 'dam' : 'sire');
           const multiPartner = subgroups.length > 1;
-          const ranked = rankByWinRate(children);
+          const ranked = rankOffspring(children);
           const roosters = ranked.filter(isMaleChild);
           const hens = ranked.filter((c) => !isMaleChild(c));
-          const bestId = ranked.length > 0 ? ranked[0].id : null;
+          const bestChild = bestOf(children);
+          const bestId = bestChild?.id ?? null;
           return (
             <div key={parentName} className="bg-card rounded-lg border border-border shadow-sm overflow-hidden transition-all">
               <button
@@ -472,10 +488,10 @@ export default function LineageDirectory({
               {isExpanded && (
                 <div className="border-t border-border bg-muted/30 p-4 sm:p-5 space-y-2 animate-fadeIn">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">All Offspring — Ranked by Performance</p>
-                    {bestId && ranked[0] && getChildMatchStats(ranked[0].name).decided > 0 && (
-                      <span className="text-xs font-black bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
-                        <Trophy className="w-3 h-3 inline" /> Top: {ranked[0].name}
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">All Offspring — Ranked by {metricLabel}</p>
+                    {bestChild && getChildMatchStats(bestChild.name).decided > 0 && (
+                      <span className="text-xs font-black bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full" title={bestTitleFor(bestChild)}>
+                        <Trophy className="w-3 h-3 inline" /> Top: {bestChild.name}
                       </span>
                     )}
                   </div>
@@ -636,7 +652,7 @@ export default function LineageDirectory({
             <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 rounded-md flex items-center justify-center"><Users className="w-5 h-5" /></div>
             <div>
               <h2 className="text-base font-black text-card-foreground tracking-tight">Full-Sibling Families</h2>
-              <p className="text-xs text-muted-foreground font-bold">Same Sire and same Dam — one father and one mother. Ranked by win rate.</p>
+              <p className="text-xs text-muted-foreground font-bold">Same Sire and same Dam — one father and one mother. Ranked by {metricLabel.toLowerCase()}.</p>
             </div>
           </div>
           {linked.length === 0 ? (
@@ -645,7 +661,7 @@ export default function LineageDirectory({
             <EmptyState title="No Full-Sibling Families Found" hint="Chickens need at least one sibling with the same Sire and Dam to form a family." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} onShowFights={openFights} />)}
+              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} onShowFights={openFights} rankingMetric={settings.ranking_metric} rankingMinMatches={settings.ranking_min_matches} matchHistory={matchHistory} />)}
             </div>
           )}
         </section>

@@ -51,6 +51,7 @@ import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
 import { archiveDraftIssue, archiveKindLabel, type ArchiveDraft } from '@/lib/lifecycle';
 import * as matchService from '@/lib/services/match-service';
+import * as optionsService from '@/lib/services/options-service';
 import * as matchOptionsService from '@/lib/services/match-options-service';
 import type { PartnerSuggestion } from '@/lib/services/match-options-service';
 import * as strainService from '@/lib/services/strain-service';
@@ -114,6 +115,8 @@ interface FowlContextValue {
   opponentBreed: string; setOpponentBreed: (v: string) => void;
   matchLocation: string; setMatchLocation: (v: string) => void;
   matchType: string; setMatchType: (v: string) => void;
+  matchSide: string; setMatchSide: (v: string) => void;
+  matchNotes: string; setMatchNotes: (v: string) => void;
   derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
   matchOutcome: string; setMatchOutcome: (v: string) => void;
   matchPostFight: string; setMatchPostFight: (v: string) => void;
@@ -309,7 +312,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     selectedFowlForMatch, setSelectedFowlForMatch,
     matchDate, setMatchDate, opponentName, setOpponentName,
     opponentBreed, setOpponentBreed, matchLocation, setMatchLocation,
-    matchType, derbyMatchNumber, setDerbyMatchNumber,
+    matchType, matchSide, setMatchSide, matchNotes, setMatchNotes,
+    derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome,
     matchPostFight, setMatchPostFight,
     matchVideoFile, setMatchVideoFile, uploadingVideo, setUploadingVideo,
@@ -563,6 +567,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       return;
     }
 
+    // ── Unique name: each chicken in the registry owns its name ──
+    const newKey = nameKey(sanitizeInput(newName));
+    if (newKey && fowls.some((f) => nameKey(f.name) === newKey)) {
+      toastMessage(`A chicken named "${newName.trim()}" already exists. Pick a unique name.`, 'error');
+      return;
+    }
+
     const submittedCode = normalizeBirdCode(birdCode);
     const codeToUse = submittedCode || suggestedBirdCode;
     if (!isValidBirdCode(codeToUse)) {
@@ -706,9 +717,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       opponentName,
       opponentBreed,
       location: matchLocation,
-      type: eventType || matchType,
+      type: matchType,
       outcome: matchOutcome,
       postFightCondition: matchPostFight,
+      matchSide,
+      notes: matchNotes,
       cockCount,
       ageCategory,
       eventType,
@@ -747,16 +760,18 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         breed: fowlBreed,
         opponent: sanitizeInput(opponentName) || 'Anonymous Opponent',
         opponent_breed: sanitizeInput(opponentBreed) || '',
-        location: sanitizeInput(matchLocation) || 'Local Breeding Yard',
-        type: eventType || matchType || `${cockCount}-Cock ${eventType} #${derbyMatchNumber}`,
+        location: sanitizeInput(matchLocation),
+        type: matchType || 'Main Event',
         derby_match_number: derbyMatchNumber,
         outcome: matchOutcome,
         status: 'Verified',
         post_fight_condition: matchPostFight,
+        side: matchSide.trim() ? sanitizeInput(matchSide) : null,
+        notes: matchNotes.trim() ? sanitizeInput(matchNotes) : null,
         video_url: videoUrl || null,
         cock_count: cockCount,
         age_category: ageCategory,
-        event_type: eventType,
+        event_type: eventType === '__custom__' ? '' : eventType,
       };
 
       const result = await matchService.insertMatch(payload);
@@ -776,8 +791,18 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           console.warn('Match options save skipped:', optResult.error);
         }
 
+        // Persist a custom event type once so it becomes a reusable option
+        if (eventType && eventType !== '__custom__') {
+          const opts = await optionsService.fetchRegistryOptions();
+          const known = new Set(opts.filter((o) => o.list_key === 'event_type').map((o) => o.value));
+          if (!known.has(eventType)) {
+            await optionsService.addRegistryOption('event_type', eventType);
+          }
+        }
+
         toastMessage('Performance match vector successfully computed and logged.', 'success');
         setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFile(null); setMatchPostFight('Fit / Recovered');
+        setMatchSide(''); setMatchNotes('');
         setPartnerEntry(''); setSuggestedPartners([]);
         fetchDatabaseResources();
         ui.setProfilingSubTab('males');
@@ -788,7 +813,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingVideo(false);
     }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, derbyMatchNumber, matchOutcome, matchPostFight, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
+  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchSide, matchNotes, derbyMatchNumber, matchOutcome, matchPostFight, eventType, cockCount, ageCategory, matchVideoFile, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
 
   const handleSetSireMaterial = useCallback(async (fowl: FowlRecord) => {
     setLoading(true);
@@ -1004,6 +1029,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       );
       if (duplicateCode) {
         toastMessage(`Chicken Code "${submittedCode}" is already in use. Pick another.`, 'error');
+        return;
+      }
+
+      // ── Unique name: one chicken per name (excluding the record being edited) ──
+      const editKey = nameKey(sanitizeInput(editName));
+      if (editKey && fowls.some((f) => f.id !== ui.editingFowl?.id && nameKey(f.name) === editKey)) {
+        toastMessage(`A chicken named "${editName.trim()}" already exists. Pick a unique name.`, 'error');
         return;
       }
 
