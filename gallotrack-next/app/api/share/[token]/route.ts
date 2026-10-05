@@ -79,9 +79,21 @@ export async function GET(
     .eq('fowl_id', fowl.id)
     .order('sort_order');
 
+  const parentNames = [fowl.sire, fowl.dam]
+    .map((n) => (n || '').trim())
+    .filter((n) => n && n.toLowerCase() !== 'foundation stock');
+  const parents = parentNames.length
+    ? ((await admin.from('fowl').select('name, breed').in('name', parentNames)).data || [])
+    : [];
+  const breedOf = (n?: string | null) => {
+    const key = (n || '').trim().toLowerCase();
+    if (!key || key === 'foundation stock') return '';
+    return parents.find((p) => (p.name || '').trim().toLowerCase() === key)?.breed || '';
+  };
+
   return NextResponse.json({
     type: 'fowl',
-    fowl,
+    fowl: { ...fowl, sire_breed: breedOf(fowl.sire), dam_breed: breedOf(fowl.dam) },
     photos: (photos || []).map((p) => p.url),
   });
 }

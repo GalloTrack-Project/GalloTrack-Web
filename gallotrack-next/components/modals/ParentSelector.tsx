@@ -85,6 +85,11 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
   }, []);
 
   const q = text.trim().toLowerCase();
+  const matchedKey = value.trim().toLowerCase();
+  const matchedParent =
+    matchedKey && matchedKey !== 'foundation stock'
+      ? fowls.find((f) => (f.name || '').trim().toLowerCase() === matchedKey)
+      : undefined;
   const candidates = fowls
     .filter((f) => {
       const name = (f.name || '').trim().toLowerCase();
@@ -207,6 +212,14 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
             </span>
           </button>
         </div>
+      )}
+      {matchedParent?.breed && (
+        <p className="mt-1 text-xs font-bold text-muted-foreground">
+          Breed:{' '}
+          <span className={`font-black ${accent === 'emerald' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
+            {matchedParent.breed}
+          </span>
+        </p>
       )}
     </div>
   );

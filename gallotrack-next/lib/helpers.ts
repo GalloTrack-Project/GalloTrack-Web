@@ -55,6 +55,15 @@ export const cleanPct = (v: unknown): number => {
 
 export const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
 
+export const parentBreedOf = (
+  name: string | null | undefined,
+  fowls: Array<{ name?: string | null; breed?: string | null }>,
+): string => {
+  const key = (name || '').trim().toLowerCase();
+  if (!key || key === 'foundation stock') return '';
+  return fowls.find((f) => (f.name || '').trim().toLowerCase() === key)?.breed || '';
+};
+
 export const generationOfName = (name: string, fowls: FowlRecord[], memo: Map<string, number>, chain: Set<string>): number => {
   const key = (name || '').trim().toLowerCase();
   if (!key || key === 'foundation stock') return 0;

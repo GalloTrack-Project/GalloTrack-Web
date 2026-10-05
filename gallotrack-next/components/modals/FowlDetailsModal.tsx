@@ -608,7 +608,7 @@ export default function FowlDetailsModal({
           ) => {
             const foundation = !fallbackName || fallbackName.toLowerCase() === 'foundation stock';
             const meta = target
-              ? [formatBirdCodeForDisplay(birdCodeOf(target, fowls)), target.wing_band ? `Band ${target.wing_band}` : null]
+              ? [target.breed || null, formatBirdCodeForDisplay(birdCodeOf(target, fowls)), target.wing_band ? `Band ${target.wing_band}` : null]
                   .filter(Boolean)
                   .join(' · ') || '—'
               : foundation
@@ -1401,16 +1401,21 @@ export default function FowlDetailsModal({
               <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.sire_pct)}% · {(() => {
                 const name = selectedFowlForDetails.sire || '';
                 const target = parentRecordOf(selectedFowlForDetails, 'sire', fowls);
-                return target ? (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFowlForDetails(target)}
-                    className="text-sky-700 dark:text-sky-300 font-bold hover:underline underline-offset-2 cursor-pointer"
-                    title="Open Sire profile"
-                  >
-                    {name}
-                  </button>
-                ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>;
+                return (
+                  <>
+                    {target ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFowlForDetails(target)}
+                        className="text-sky-700 dark:text-sky-300 font-bold hover:underline underline-offset-2 cursor-pointer"
+                        title="Open Sire profile"
+                      >
+                        {name}
+                      </button>
+                    ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>}
+                    {target?.breed && <span className="font-semibold"> · {target.breed}</span>}
+                  </>
+                );
               })()}</span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-muted h-2 rounded-full overflow-hidden">
@@ -1437,16 +1442,21 @@ export default function FowlDetailsModal({
               <span className="text-slate-800 dark:text-card-foreground">{cleanPct(selectedFowlForDetails.dam_pct)}% · {(() => {
                 const name = selectedFowlForDetails.dam || '';
                 const target = parentRecordOf(selectedFowlForDetails, 'dam', fowls);
-                return target ? (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFowlForDetails(target)}
-                    className="text-pink font-bold hover:underline underline-offset-2 cursor-pointer"
-                    title="Open Dam profile"
-                  >
-                    {name}
-                  </button>
-                ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>;
+                return (
+                  <>
+                    {target ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFowlForDetails(target)}
+                        className="text-pink font-bold hover:underline underline-offset-2 cursor-pointer"
+                        title="Open Dam profile"
+                      >
+                        {name}
+                      </button>
+                    ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>}
+                    {target?.breed && <span className="font-semibold"> · {target.breed}</span>}
+                  </>
+                );
               })()}</span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-muted h-2 rounded-full overflow-hidden">

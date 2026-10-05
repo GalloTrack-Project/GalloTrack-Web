@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { genderLabel } from '@/lib/helpers';
+import { genderLabel, parentBreedOf } from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
@@ -74,9 +74,11 @@ function ComplianceBadge({ grade }: { grade: string }) {
   return <span className={`text-xs font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
 }
 
-function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClick: () => void; code?: string }) {
+function FowlCard({ fowl, fowls, matches, onClick, code }: { fowl: FowlRecord; fowls: FowlRecord[]; matches: MatchRecord[]; onClick: () => void; code?: string }) {
   const unitPrefs = useUnitPrefs();
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
+  const sireBreed = parentBreedOf(fowl.sire, fowls);
+  const damBreed = parentBreedOf(fowl.dam, fowls);
   const compliance = useMemo(
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
     [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
@@ -165,7 +167,7 @@ function FowlCard({ fowl, matches, onClick, code }: { fowl: FowlRecord; matches:
         <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center gap-2">
           <span className="text-xs font-bold text-muted-foreground uppercase">Lineage:</span>
           <span className="text-xs text-muted-foreground font-semibold truncate">
-            {fowl.sire || '\u2014'} {'\u00D7'} {fowl.dam || '\u2014'}
+            {fowl.sire || '\u2014'}{sireBreed ? ` (${sireBreed})` : ''} {'\u00D7'} {fowl.dam || '\u2014'}{damBreed ? ` (${damBreed})` : ''}
           </span>
         </div>
       )}
@@ -236,11 +238,13 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
               <div className="bg-sky-500/10 border border-sky-500/30 rounded-md p-3">
                 <p className="text-xs font-black text-info uppercase">Sire</p>
                 <p className="text-sm font-black text-card-foreground mt-1">{fowl.sire || '\u2014'}</p>
+                {parentBreedOf(fowl.sire, fowls) && <p className="text-xs font-bold text-muted-foreground">{parentBreedOf(fowl.sire, fowls)}</p>}
                 {fowl.sire_pct ? <p className="text-xs text-info font-bold">{fowl.sire_pct}%</p> : null}
               </div>
               <div className="bg-pink-500/10 border border-pink-500/30 rounded-md p-3">
                 <p className="text-xs font-black text-pink uppercase">Dam</p>
                 <p className="text-sm font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
+                {parentBreedOf(fowl.dam, fowls) && <p className="text-xs font-bold text-muted-foreground">{parentBreedOf(fowl.dam, fowls)}</p>}
                 {fowl.dam_pct ? <p className="text-xs text-pink font-bold">{fowl.dam_pct}%</p> : null}
               </div>
             </div>
@@ -424,7 +428,7 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredFowls.map((fowl) => (
-            <FowlCard key={fowl.id} fowl={fowl} matches={matchHistory} code={birdCodes.get(String(fowl.id))} onClick={() => setSelectedFowl(fowl)} />
+                <FowlCard key={fowl.id} fowl={fowl} fowls={fowls} matches={matchHistory} code={birdCodes.get(String(fowl.id))} onClick={() => setSelectedFowl(fowl)} />
           ))}
         </div>
       )}

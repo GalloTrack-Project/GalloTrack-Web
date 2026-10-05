@@ -66,6 +66,9 @@ function ParentChip({
       <span className="min-w-0 flex-1">
         <span className="block text-[8px] font-black uppercase tracking-widest">{roleLabel}</span>
         <span className="block text-xs font-black text-card-foreground truncate">{name}</span>
+        {fowl?.breed && (
+          <span className="block text-[8px] font-bold text-muted-foreground truncate">{fowl.breed}</span>
+        )}
         {!fowl && (
           <span className="block text-[8px] font-bold text-muted-foreground">Not in registry</span>
         )}

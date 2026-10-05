@@ -7,7 +7,7 @@ import {
   X, CheckCircle2, Info, BarChart3, Eye, Loader2, RefreshCw,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { genderLabel } from '@/lib/helpers';
+import { genderLabel, parentBreedOf } from '@/lib/helpers';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
 import {
@@ -874,8 +874,9 @@ function AddIncidentForm({
 // BIRD IDENTITY CARD
 // ─────────────────────────────────────────────────────────────────────────────
 
-function BirdIdentityCard({ fowl, codes, matchHistory, setSelectedFowlForDetails }: {
+function BirdIdentityCard({ fowl, fowls, codes, matchHistory, setSelectedFowlForDetails }: {
   fowl: FowlRecord;
+  fowls: FowlRecord[];
   codes: Map<string, string>;
   matchHistory: MatchRecord[];
   setSelectedFowlForDetails: (f: FowlRecord) => void;
@@ -883,6 +884,8 @@ function BirdIdentityCard({ fowl, codes, matchHistory, setSelectedFowlForDetails
   const code = codeOf(fowl, codes);
   const displayCode = formatBirdCodeForDisplay(code);
   const codeType = classifyBirdCode(code);
+  const sireBreed = parentBreedOf(fowl.sire, fowls);
+  const damBreed = parentBreedOf(fowl.dam, fowls);
 
   const matches = matchHistory.filter(m => m.entry_name?.toLowerCase() === fowl.name.toLowerCase());
   const wins = matches.filter(m => m.outcome?.toLowerCase() === 'win').length;
@@ -940,8 +943,8 @@ function BirdIdentityCard({ fowl, codes, matchHistory, setSelectedFowlForDetails
       </div>
       {(fowl.sire || fowl.dam) && (
         <div className="mt-2 pt-2 border-t border-border flex items-center gap-3 text-[8px] font-semibold text-muted-foreground">
-          {fowl.sire && <span>🐓 Sire: <strong className="text-card-foreground">{fowl.sire}</strong></span>}
-          {fowl.dam && <span>🐔 Dam: <strong className="text-card-foreground">{fowl.dam}</strong></span>}
+          {fowl.sire && <span>🐓 Sire: <strong className="text-card-foreground">{fowl.sire}</strong>{sireBreed ? ` · ${sireBreed}` : ''}</span>}
+          {fowl.dam && <span>🐔 Dam: <strong className="text-card-foreground">{fowl.dam}</strong>{damBreed ? ` · ${damBreed}` : ''}</span>}
         </div>
       )}
     </button>
@@ -1481,6 +1484,7 @@ export default function BreedingHub({
                 <BirdIdentityCard
                   key={f.id}
                   fowl={f}
+                  fowls={fowls}
                   codes={codes}
                   matchHistory={matchHistory}
                   setSelectedFowlForDetails={setSelectedFowlForDetails}

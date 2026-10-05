@@ -7,7 +7,7 @@ import PedigreeTree from '@/components/PedigreeTree';
 import FamilyTree from '@/components/FamilyTree';
 import { buildBreedingPairs } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
-import { genderLabel } from '@/lib/helpers';
+import { genderLabel, parentBreedOf } from '@/lib/helpers';
 import { fowlMatchesQuery } from '@/lib/lineage';
 import { resolveBirdCodes } from '@/lib/bird-code';
 import { rankFowls, bestFowl, bestYearFor, type RankingMetric } from '@/lib/ranking';
@@ -37,9 +37,11 @@ interface LineageDirectoryProps {
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }
 
-function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails, onShowFights, rankingMetric, rankingMinMatches, matchHistory }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void; onShowFights: (f: FowlRecord) => void; rankingMetric: RankingMetric; rankingMinMatches: number; matchHistory: MatchRecord[] }) {
+function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelectedFowlForDetails, onShowFights, rankingMetric, rankingMinMatches, matchHistory, fowls }: { g: FowlRecord[]; index: number; pairingAnalytics: { all: Map<string, PairingStats> }; getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number }; setSelectedFowlForDetails: (f: FowlRecord) => void; onShowFights: (f: FowlRecord) => void; rankingMetric: RankingMetric; rankingMinMatches: number; matchHistory: MatchRecord[]; fowls: FowlRecord[] }) {
   const [expanded, setExpanded] = useState(false);
   const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
+  const sireBreed = parentBreedOf(g[0].sire, fowls);
+  const damBreed = parentBreedOf(g[0].dam, fowls);
 
   let total = 0, wins = 0, losses = 0;
   g.forEach((c) => { const s = getChildMatchStats(c.name); total += s.total; wins += s.wins; losses += s.losses; });
@@ -128,10 +130,12 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-3.5 text-center">
             <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
             <p className="text-sm font-black text-card-foreground truncate">{g[0].sire}</p>
+            {sireBreed && <p className="text-[11px] font-bold text-muted-foreground truncate">{sireBreed}</p>}
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-lg p-3.5 text-center">
             <p className="text-xs font-black text-pink uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
             <p className="text-sm font-black text-card-foreground truncate">{g[0].dam}</p>
+            {damBreed && <p className="text-[11px] font-bold text-muted-foreground truncate">{damBreed}</p>}
           </div>
         </div>
       </div>
@@ -662,7 +666,7 @@ export default function LineageDirectory({
             <EmptyState title="No Full-Sibling Families Found" hint="Chickens need at least one sibling with the same Sire and Dam to form a family." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} onShowFights={openFights} rankingMetric={settings.ranking_metric} rankingMinMatches={settings.ranking_min_matches} matchHistory={matchHistory} />)}
+              {fullFiltered.map((g, i) => <FamilyCard key={`full-${i}`} g={g} index={i} pairingAnalytics={pairingAnalytics} getChildMatchStats={getChildMatchStats} setSelectedFowlForDetails={setSelectedFowlForDetails} onShowFights={openFights} rankingMetric={settings.ranking_metric} rankingMinMatches={settings.ranking_min_matches} matchHistory={matchHistory} fowls={fowls} />)}
             </div>
           )}
         </section>

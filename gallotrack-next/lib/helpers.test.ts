@@ -3,6 +3,7 @@ import {
   isMale,
   isFemale,
   genderLabel,
+  parentBreedOf,
   cleanPct,
   isFoundationStock,
   generationOfName,
@@ -55,6 +56,25 @@ describe('genderLabel', () => {
     expect(genderLabel('')).toBe('');
     expect(genderLabel(undefined)).toBe('');
     expect(genderLabel(null)).toBe('');
+  });
+});
+
+describe('parentBreedOf', () => {
+  const fowls = [
+    { name: 'Rex', breed: 'Kelso' },
+    { name: 'Lady', breed: 'Hatch' },
+  ];
+
+  it('returns the breed of a registered parent (case-insensitive)', () => {
+    expect(parentBreedOf('Rex', fowls)).toBe('Kelso');
+    expect(parentBreedOf('  lady ', fowls)).toBe('Hatch');
+  });
+
+  it('returns empty for foundation stock, unknown, or blank names', () => {
+    expect(parentBreedOf('Foundation Stock', fowls)).toBe('');
+    expect(parentBreedOf('Unknown', fowls)).toBe('');
+    expect(parentBreedOf('', fowls)).toBe('');
+    expect(parentBreedOf(undefined, fowls)).toBe('');
   });
 });
 

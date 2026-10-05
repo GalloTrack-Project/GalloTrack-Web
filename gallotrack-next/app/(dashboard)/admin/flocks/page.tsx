@@ -5,7 +5,7 @@ import { CheckCircle, Dna, Users, Search } from 'lucide-react';import ChickenIc
 import { useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
-import { genderLabel } from '@/lib/helpers';
+import { genderLabel, parentBreedOf } from '@/lib/helpers';
 
 type Fowl = {
   id: string;
@@ -185,7 +185,7 @@ export default function AdminFlockAuditPage() {
               </div>
               <div className="text-sm text-muted-foreground font-medium space-y-0.5">
                 <p>Owner: <span className="text-card-foreground font-bold">{fowl.owner_name}</span> · {fowl.farm_name}</p>
-                <p>Stage: {fowl.growth_stage || '—'} · Sire: {fowl.sire || '—'} · Dam: {fowl.dam || '—'}</p>
+                <p>Stage: {fowl.growth_stage || '—'} · Sire: {fowl.sire || '—'}{parentBreedOf(fowl.sire, fowls) ? ` (${parentBreedOf(fowl.sire, fowls)})` : ''} · Dam: {fowl.dam || '—'}{parentBreedOf(fowl.dam, fowls) ? ` (${parentBreedOf(fowl.dam, fowls)})` : ''}</p>
                 <p>Registered: <span className="text-card-foreground font-bold">{fowl.created_at ? new Date(fowl.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date(fowl.created_at).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}</span></p>
               </div>
             </div>
@@ -232,8 +232,8 @@ export default function AdminFlockAuditPage() {
                     </td>
                     <td className="px-4 py-3.5 text-sm font-bold text-card-foreground">{fowl.growth_stage || '—'}</td>
                     <td className="px-4 py-3.5 text-sm text-muted-foreground font-medium">
-                      <span>Sire: {fowl.sire || '—'}</span><br />
-                      <span>Dam: {fowl.dam || '—'}</span>
+                      <span>Sire: {fowl.sire || '—'}{parentBreedOf(fowl.sire, fowls) ? ` (${parentBreedOf(fowl.sire, fowls)})` : ''}</span><br />
+                      <span>Dam: {fowl.dam || '—'}{parentBreedOf(fowl.dam, fowls) ? ` (${parentBreedOf(fowl.dam, fowls)})` : ''}</span>
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="text-sm font-bold text-card-foreground truncate">{fowl.owner_name}</p>

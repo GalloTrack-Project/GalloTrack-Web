@@ -36,6 +36,8 @@ type SharedFowl = {
   status: string;
   sire: string;
   dam: string;
+  sire_breed?: string | null;
+  dam_breed?: string | null;
   wing_band: string | null;
   bird_code: string | null;
 };
@@ -201,8 +203,8 @@ export default function SharePage() {
             <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
               <Detail label="Hatch Date" value={payload.fowl.birthdate} />
               <Detail label="Color" value={payload.fowl.color} />
-              <Detail label="Sire" value={payload.fowl.sire} />
-              <Detail label="Dam" value={payload.fowl.dam} />
+              <Detail label="Sire" value={payload.fowl.sire ? `${payload.fowl.sire}${payload.fowl.sire_breed ? ` (${payload.fowl.sire_breed})` : ''}` : null} />
+              <Detail label="Dam" value={payload.fowl.dam ? `${payload.fowl.dam}${payload.fowl.dam_breed ? ` (${payload.fowl.dam_breed})` : ''}` : null} />
               <Detail label="Wing Band" value={payload.fowl.wing_band} />
             </div>
 
