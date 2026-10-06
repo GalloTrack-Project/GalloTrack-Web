@@ -205,9 +205,6 @@ export default function ProfilingPage() {
           matchDate={matchDate} setMatchDate={setMatchDate}
           opponentName={opponentName} setOpponentName={setOpponentName}
           opponentBreed={opponentBreed} setOpponentBreed={setOpponentBreed}
-          opponentBloodline={opponentBloodline} setOpponentBloodline={setOpponentBloodline}
-          opponentHatch={opponentHatch} setOpponentHatch={setOpponentHatch}
-          opponentPhoto={opponentPhoto} setOpponentPhoto={setOpponentPhoto}
           matchLocation={matchLocation} setMatchLocation={setMatchLocation}
           matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
           matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
@@ -217,8 +214,6 @@ export default function ProfilingPage() {
           cockCount={cockCount} setCockCount={setCockCount}
           ageCategory={ageCategory} setAgeCategory={setAgeCategory}
           eventType={eventType} setEventType={setEventType}
-          matchType={matchType} setMatchType={setMatchType}
-          matchSide={matchSide} setMatchSide={setMatchSide}
           matchNotes={matchNotes} setMatchNotes={setMatchNotes}
         />
       )}

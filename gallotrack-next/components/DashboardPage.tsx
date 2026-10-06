@@ -760,17 +760,16 @@ export default function DashboardPage() {
                 <th className="p-4 pl-6">Match Date</th>
                 <th className="p-4">Chicken Identifier</th>
                 <th className="p-4">Opponent</th>
-                <th className="p-4">Bloodline</th>
                 <th className="p-4">Arena Location</th>
                 <th className="p-4 text-center">Outcome</th>
-                        <th className="p-4 text-center">Post-Fight Condition</th>
-                        <th className="p-4 text-center">Media &amp; Actions</th>
+                <th className="p-4 text-center">Post-Fight Condition</th>
+                <th className="p-4 text-center">Media &amp; Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-muted-foreground font-semibold">
               {matchHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground text-sm font-semibold">
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm font-semibold">
                     No data available
                   </td>
                 </tr>
@@ -788,6 +787,9 @@ export default function DashboardPage() {
                           </span>
                         )}
                       </div>
+                      <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
+                        {log.breed || '—'}{fowls.find(f => f.name === log.entry_name)?.birthdate ? ` · hatch ${fowls.find(f => f.name === log.entry_name)?.birthdate}` : ''}
+                      </span>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1.5">
@@ -797,17 +799,8 @@ export default function DashboardPage() {
                         <span className="font-bold text-card-foreground">{log.opponent || '—'}</span>
                       </div>
                       <span className="block text-xs font-semibold text-muted-foreground normal-case mt-0.5">
-                        {[log.opponent_breed, log.opponent_bloodline].filter(Boolean).join(' · ')}
-                        {log.opponent_birthdate ? `${log.opponent_breed || log.opponent_bloodline ? ' · ' : ''}hatch ${log.opponent_birthdate}` : ''}
+                        {[log.opponent_breed, log.opponent_bloodline].filter(Boolean).join(' · ') || '—'}
                       </span>
-                    </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-emerald-500/10 text-success border border-emerald-500/20 font-bold text-sm uppercase tracking-wide whitespace-nowrap">{log.breed || '—'}</span>
-                      {fowls.find(f => f.name === log.entry_name)?.birthdate && (
-                        <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
-                          hatch {fowls.find(f => f.name === log.entry_name)?.birthdate}
-                        </span>
-                      )}
                     </td>
                     <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
                     <td className="p-4 text-center">

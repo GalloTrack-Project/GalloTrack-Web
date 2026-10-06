@@ -1319,11 +1319,10 @@ export default function FowlDetailsModal({
                               </span>
                               <span className="block text-xs font-semibold text-muted-foreground normal-case">
                                 {[match.opponent_breed, match.opponent_bloodline].filter(Boolean).join(' · ') || '—'}
-                                {match.opponent_birthdate ? ` · hatch ${match.opponent_birthdate}` : ''}
                               </span>
                             </td>
                             <td className="p-2.5 text-slate-600 dark:text-muted-foreground">{match.location}</td>
-                            <td className="p-2.5"><span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground text-xs font-bold px-2 py-0.5 rounded-full">{match.event_type || match.type}{match.event_type && match.type && match.event_type !== match.type ? ` · ${match.type}` : ''}</span></td>
+                            <td className="p-2.5"><span className="bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-slate-700 dark:text-card-foreground text-xs font-bold px-2 py-0.5 rounded-full">{match.event_type || match.type || 'Derby'}</span></td>
                             <td className="p-2.5 text-center">
                               <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase border ${
                                 match.outcome.toLowerCase() === 'win' 

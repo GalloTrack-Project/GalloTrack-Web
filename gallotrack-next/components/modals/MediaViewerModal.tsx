@@ -153,9 +153,9 @@ export default function MediaViewerModal() {
                       {match.post_fight_condition}
                     </span>
                   )}
-                  {match.opponent_bloodline && (
+                  {(match.opponent_breed || match.opponent_bloodline) && (
                     <span className="px-2.5 py-0.5 rounded-full border border-white/10 bg-white/5 text-white/40 normal-case">
-                      vs {match.opponent_bloodline}
+                      vs {[match.opponent_breed, match.opponent_bloodline].filter(Boolean).join(' · ')}
                     </span>
                   )}
                 </div>

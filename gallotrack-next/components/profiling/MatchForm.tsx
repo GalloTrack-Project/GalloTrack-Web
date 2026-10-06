@@ -26,12 +26,12 @@ type Props = {
   setOpponentName: (v: string) => void;
   opponentBreed: string;
   setOpponentBreed: (v: string) => void;
-  opponentBloodline: string;
-  setOpponentBloodline: (v: string) => void;
-  opponentHatch: string;
-  setOpponentHatch: (v: string) => void;
-  opponentPhoto: File | null;
-  setOpponentPhoto: (f: File | null) => void;
+  opponentBloodline?: string;
+  setOpponentBloodline?: (v: string) => void;
+  opponentHatch?: string;
+  setOpponentHatch?: (v: string) => void;
+  opponentPhoto?: File | null;
+  setOpponentPhoto?: (f: File | null) => void;
   matchLocation: string;
   setMatchLocation: (v: string) => void;
   matchOutcome: string;
@@ -49,10 +49,10 @@ type Props = {
   setAgeCategory: (v: string) => void;
   eventType: string;
   setEventType: (v: string) => void;
-  matchType: string;
-  setMatchType: (v: string) => void;
-  matchSide: string;
-  setMatchSide: (v: string) => void;
+  matchType?: string;
+  setMatchType?: (v: string) => void;
+  matchSide?: string;
+  setMatchSide?: (v: string) => void;
   matchNotes: string;
   setMatchNotes: (v: string) => void;
 };
@@ -65,9 +65,6 @@ export default function MatchForm({
   matchDate, setMatchDate,
   opponentName, setOpponentName,
   opponentBreed, setOpponentBreed,
-  opponentBloodline, setOpponentBloodline,
-  opponentHatch, setOpponentHatch,
-  opponentPhoto, setOpponentPhoto,
   matchLocation, setMatchLocation,
   matchOutcome, setMatchOutcome,
   matchPostFight, setMatchPostFight,
@@ -77,8 +74,6 @@ export default function MatchForm({
   cockCount, setCockCount,
   ageCategory, setAgeCategory,
   eventType, setEventType,
-  matchType, setMatchType,
-  matchSide, setMatchSide,
   matchNotes, setMatchNotes,
 }: Props) {
   const { rows } = useRegistryOptions();
@@ -94,15 +89,13 @@ export default function MatchForm({
   const effectiveEventType = eventType === '__custom__' ? customEventType : eventType;
   const customEventTypeEmpty = eventTypeIsCustom && !effectiveEventType.trim();
 
-  const matchTypeOptions = mergeOptions(rows, 'match_type', matchType);
   const conditionOptions = mergeOptions(rows, 'post_match_condition', matchPostFight);
   const locationOptions = mergeOptions(rows, 'location', matchLocation);
 
   const buildPreview = () => {
     const cockText = cockCount > 0 ? `${cockCount} cocks` : '0 cocks';
     const eventLabel = effectiveEventType || 'Event Type';
-    const typeLabel = matchType || 'Match Type';
-    return `${eventLabel} · ${typeLabel} · ${cockText} · ${ageCategory}`;
+    return `${eventLabel} · ${cockText} · ${ageCategory}`;
   };
 
   const selectClass = "match-field h-10 w-full cursor-pointer rounded-md border border-input-border bg-white dark:bg-input px-3 pr-10 text-sm font-semibold text-foreground transition-colors duration-150 focus:border-success focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]";
@@ -111,7 +104,7 @@ export default function MatchForm({
   return (
     <form onSubmit={handleAddMatchRecord} className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-5 animate-fadeIn">
       <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
-        <span>&#9876;&#65039;</span> <span>Record Fight Performance Log</span>
+        <span>⚔️</span> <span>Record Fight Performance Log</span>
       </h3>
 
       {/* Row 1: Fowl + Date */}
@@ -150,7 +143,8 @@ export default function MatchForm({
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold"
             placeholder={settings.match_location_required ? 'Select or type arena...' : 'Select or type arena (optional)...'}
             required={settings.match_location_required}
-          id="arena-location-hub" />
+            id="arena-location-hub"
+          />
           <datalist id="arena-locations">
             {locationOptions.map((o) => (
               <option key={o.value} value={o.value} />
@@ -159,36 +153,17 @@ export default function MatchForm({
         </div>
       </div>
 
-      {/* Row 2b: Opponent bloodline + hatch + photo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-bloodline">Opponent Bloodline</label>
-          <input type="text" value={opponentBloodline} onChange={(e) => setOpponentBloodline(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold" placeholder="e.g., Harold Brown" id="opponent-bloodline" />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-hatch">Opponent Hatch Date</label>
-          <input type="date" value={opponentHatch} onChange={(e) => setOpponentHatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" id="opponent-hatch" />
-        </div>
-        <div>
-          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5">Opponent Photo</span>
-          <label className="flex items-center justify-between w-full h-[46px] px-3 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all">
-            <span className="text-xs text-slate-600 dark:text-muted-foreground font-bold truncate pr-2">{opponentPhoto ? opponentPhoto.name : 'Attach photo (optional)'}</span>
-            <input type="file" accept="image/*" onChange={(e) => setOpponentPhoto(e.target.files?.[0] || null)} className="hidden" />
-          </label>
-        </div>
-      </div>
-
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MATCH CONFIGURATION — event type and match type are separate   */}
+      {/* MATCH CONFIGURATION                                             */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5 shadow-sm">
 
         {/* Header */}
         <div className="mb-6">
-                <h2 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.02em] text-foreground sm:text-sm">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  Match Configuration
-                </h2>
+          <h2 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.02em] text-foreground sm:text-sm">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            Match Configuration
+          </h2>
         </div>
 
         {/* Row 1: Number of Cocks + Chicken Class */}
@@ -204,7 +179,8 @@ export default function MatchForm({
                 onChange={(e) => setCockCount(Number(e.target.value) || 0)}
                 placeholder="Enter number"
                 className={`${inputClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-              id="number-of-cocks" />
+                id="number-of-cocks"
+              />
               <span className="rounded-md bg-muted px-4 py-3 text-xs font-bold text-muted-foreground">cocks</span>
             </div>
           </div>
@@ -220,7 +196,7 @@ export default function MatchForm({
           </div>
         </div>
 
-        {/* Row 2: Event Type + Match Type — event type may be "Others" free text */}
+        {/* Row 2: Event Type + Notes */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="event-type">Event Type</label>
@@ -250,33 +226,6 @@ export default function MatchForm({
             {customEventTypeEmpty && (
               <p className="mt-1 text-xs font-semibold text-danger">Enter a custom event type or pick a preset.</p>
             )}
-          </div>
-          <div>
-            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="match-type">Match Type</label>
-            <div className="relative">
-              <select value={matchType} onChange={(e) => setMatchType(e.target.value)} className={selectClass} id="match-type">
-                {matchTypeOptions.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label || o.value}</option>
-                ))}
-              </select>
-              <SelectChevron />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Color / Side + Notes */}
-        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="match-side">Color / Side of Entry</label>
-            <input
-              type="text"
-              value={matchSide}
-              onChange={(e) => setMatchSide(e.target.value)}
-              placeholder="e.g., Red feather, left side"
-              maxLength={100}
-              className={inputClass}
-              id="match-side"
-            />
           </div>
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-[.02em] text-success" htmlFor="match-notes">Notes</label>

@@ -222,20 +222,12 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
             <input id="edit-match-opp-breed" value={fields.opponent_breed} onChange={(e) => set('opponent_breed', e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass} htmlFor="edit-match-opp-bloodline">Opponent Bloodline</label>
-            <input id="edit-match-opp-bloodline" value={fields.opponent_bloodline} onChange={(e) => set('opponent_bloodline', e.target.value)} className={inputClass} />
+            <label className={labelClass} htmlFor="edit-match-location">Arena Location</label>
+            <input id="edit-match-location" value={fields.location} onChange={(e) => set('location', e.target.value)} className={inputClass} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className={labelClass} htmlFor="edit-match-opp-hatch">Opponent Hatch Date</label>
-            <input id="edit-match-opp-hatch" type="date" value={fields.opponent_birthdate} onChange={(e) => set('opponent_birthdate', e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="edit-match-location">Arena Location</label>
-            <input id="edit-match-location" value={fields.location} onChange={(e) => set('location', e.target.value)} className={inputClass} />
-          </div>
           <div>
             <label className={labelClass} htmlFor="edit-match-outcome">Result</label>
             <select id="edit-match-outcome" value={fields.outcome} onChange={(e) => set('outcome', e.target.value)} className={inputClass}>
@@ -244,21 +236,10 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
               <option value="Draw">Draw</option>
             </select>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className={labelClass} htmlFor="edit-match-condition">Post-Fight Condition</label>
             <select id="edit-match-condition" value={fields.post_fight_condition} onChange={(e) => set('post_fight_condition', e.target.value)} className={inputClass}>
               {conditionOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label || o.value}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="edit-match-type">Match Type</label>
-            <select id="edit-match-type" value={fields.type} onChange={(e) => set('type', e.target.value)} className={inputClass}>
-              {matchTypeOptions.map((o) => (
                 <option key={o.value} value={o.value}>{o.label || o.value}</option>
               ))}
             </select>
@@ -275,10 +256,6 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className={labelClass} htmlFor="edit-match-side">Color / Side</label>
-            <input id="edit-match-side" value={fields.side} onChange={(e) => set('side', e.target.value)} className={inputClass} />
-          </div>
-          <div>
             <label className={labelClass} htmlFor="edit-match-cocks">Number of Cocks</label>
             <input id="edit-match-cocks" type="number" min={1} value={fields.cock_count} onChange={(e) => set('cock_count', Number(e.target.value) || 1)} className={inputClass} />
           </div>
@@ -289,11 +266,10 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
               <option value="Stag">Stag</option>
             </select>
           </div>
-        </div>
-
-        <div>
-          <label className={labelClass} htmlFor="edit-match-notes">Notes</label>
-          <input id="edit-match-notes" value={fields.notes} onChange={(e) => set('notes', e.target.value)} maxLength={300} className={inputClass} />
+          <div>
+            <label className={labelClass} htmlFor="edit-match-notes">Notes</label>
+            <input id="edit-match-notes" value={fields.notes} onChange={(e) => set('notes', e.target.value)} maxLength={300} className={inputClass} placeholder="e.g., slow starter" />
+          </div>
         </div>
 
         {/* Media management */}
