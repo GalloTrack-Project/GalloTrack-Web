@@ -64,17 +64,17 @@ function ParentChip({
     >
       <ChickenIcon className="w-4 h-4 shrink-0" />
       <span className="min-w-0 flex-1">
-        <span className="block text-[8px] font-black uppercase tracking-widest">{roleLabel}</span>
+        <span className="block text-xs font-black uppercase tracking-widest">{roleLabel}</span>
         <span className="block text-xs font-black text-card-foreground truncate">{name}</span>
         {fowl?.breed && (
-          <span className="block text-[8px] font-bold text-muted-foreground truncate">{fowl.breed}</span>
+          <span className="block text-xs font-bold text-muted-foreground truncate">{fowl.breed}</span>
         )}
         {!fowl && (
-          <span className="block text-[8px] font-bold text-muted-foreground">Not in registry</span>
+          <span className="block text-xs font-bold text-muted-foreground">Not in registry</span>
         )}
       </span>
       {code && (
-        <span className="text-[9px] font-mono font-black bg-card/80 border border-current/20 px-1.5 py-0.5 rounded shrink-0">
+        <span className="text-xs font-mono font-black bg-card/80 border border-current/20 px-1.5 py-0.5 rounded shrink-0">
           {code}
         </span>
       )}
@@ -115,21 +115,21 @@ function OffspringNode({
             title={fowl.status}
           ></span>
           {code && (
-            <span className="text-[9px] font-mono font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded shrink-0">
+            <span className="text-xs font-mono font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded shrink-0">
               {code}
             </span>
           )}
           <span className="min-w-0 flex-1">
-            <span className="block text-[11px] font-black text-card-foreground truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+            <span className="block text-xs font-black text-card-foreground truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
               {fowl.name}
             </span>
-            <span className="block text-[9px] font-semibold text-muted-foreground truncate">
+            <span className="block text-xs font-semibold text-muted-foreground truncate">
               {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {fowl.breed || '—'}
               {fowl.age ? ` · ${fowl.age}` : ''}
             </span>
           </span>
           {totalKids > 0 && (
-            <span className="text-[8px] font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
+            <span className="text-xs font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
               {totalKids} {totalKids === 1 ? 'child' : 'children'}
             </span>
           )}
@@ -139,7 +139,7 @@ function OffspringNode({
           onClick={() => onShowFights?.(fowl)}
           aria-label={`View all fights for ${fowl.name}`}
           title="View all fights"
-          className="shrink-0 self-center flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
+          className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
         >
           <Swords className="w-3 h-3" />
           Fights
@@ -198,18 +198,18 @@ function PairTree({
           <ParentChip roleLabel="Sire" name={pair.sire} fowl={sireFowl} codes={codes} onPick={onPick} />
           <span className="text-base font-black text-muted-foreground leading-none">+</span>
           <ParentChip roleLabel="Dam" name={pair.dam} fowl={damFowl} codes={codes} onPick={onPick} />
-          <span className="text-[8px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded-full">
+          <span className="text-xs font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded-full">
             Breeding Pair
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] font-bold text-muted-foreground">
+          <span className="text-xs font-bold text-muted-foreground">
             {pair.members.length} offspring · {roosters.length} male · {hens.length} female
           </span>
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 border border-border rounded-xl px-2.5 py-1.5 hover:bg-muted transition-colors cursor-pointer"
+            className="text-xs font-black text-emerald-600 dark:text-emerald-400 border border-border rounded-xl px-2.5 py-1.5 hover:bg-muted transition-colors cursor-pointer"
           >
             {collapsed ? 'Expand' : 'Collapse'}
           </button>
@@ -324,10 +324,10 @@ export default function FamilyTree({ fowls, codes, query = '', onPick, onShowFig
     <div className="space-y-5">
       <div className="bg-card rounded-3xl border border-border shadow-sm p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
+          <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
             🌳 Family Tree — Sire + Dam → Offspring
           </p>
-          <p className="text-[10px] text-muted-foreground font-semibold">
+          <p className="text-xs text-muted-foreground font-semibold">
             Each pair shows the sire, dam, and their offspring down to the selected generation.
             {normalizeParentName(query) && ' Searching for: "' + query + '"'}
           </p>
@@ -338,7 +338,7 @@ export default function FamilyTree({ fowls, codes, query = '', onPick, onShowFig
               key={d}
               type="button"
               onClick={() => setMaxDepth(d)}
-              className={`px-3 py-2 rounded-xl text-[10px] font-black transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-3 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer ${
                 maxDepth === d
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'

@@ -71,7 +71,7 @@ export default function FightHistoryModal() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {summary.map((s) => (
           <div key={s.label} className="bg-slate-50 dark:bg-muted/50 border border-slate-200/70 dark:border-border rounded-md p-2.5 text-center">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">{s.label}</span>
+            <span className="block text-xs font-black uppercase tracking-widest text-muted-foreground">{s.label}</span>
             <strong className={`block text-lg font-black ${s.tone}`}>{s.value}</strong>
           </div>
         ))}
@@ -106,7 +106,7 @@ export default function FightHistoryModal() {
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase border ${outcomeClass(m.outcome)}`}>
                       {m.outcome || '—'}
                     </span>
-                    <span className="text-[11px] font-bold text-muted-foreground font-mono">{m.date || '—'}</span>
+                    <span className="text-xs font-bold text-muted-foreground font-mono">{m.date || '—'}</span>
                   </div>
                 </div>
 
@@ -154,7 +154,7 @@ export default function FightHistoryModal() {
                       key={`v-${idx}`}
                       type="button"
                       onClick={() => ui.setVideoViewerUrl(url)}
-                      className="inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-[11px] font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-xs font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
                     >
                       <Play className="w-3 h-3" /> Video {videos.length > 1 ? idx + 1 : ''}
                     </button>
@@ -163,7 +163,7 @@ export default function FightHistoryModal() {
                     <button
                       type="button"
                       onClick={() => ui.setImageViewerUrl(photos[0])}
-                      className="inline-flex items-center gap-1.5 rounded border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 px-2 py-1 text-[11px] font-black hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 px-2 py-1 text-xs font-black hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors cursor-pointer"
                     >
                       <ImageIcon className="w-3 h-3" /> {photos.length} Photo{photos.length > 1 ? 's' : ''}
                     </button>
@@ -172,14 +172,14 @@ export default function FightHistoryModal() {
                     <button
                       type="button"
                       onClick={() => ui.setEditingMatch(m)}
-                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-[11px] font-black hover:bg-muted transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-xs font-black hover:bg-muted transition-colors cursor-pointer"
                     >
                       <PencilLine className="w-3 h-3" /> Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => ui.setShareTarget({ type: 'match', id: m.id, label: `${m.entry_name} vs ${m.opponent || 'Opponent'} — ${m.date || ''}` })}
-                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-[11px] font-black hover:bg-muted transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-xs font-black hover:bg-muted transition-colors cursor-pointer"
                     >
                       <Share2 className="w-3 h-3" /> Share
                     </button>

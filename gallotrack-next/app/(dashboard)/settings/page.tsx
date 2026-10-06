@@ -551,7 +551,7 @@ export default function SettingsPage() {
                           >
                             {row.label || row.value}
                             {isTemplate ? (
-                              <span className="text-[10px] uppercase tracking-wider opacity-70">template</span>
+                              <span className="text-xs uppercase tracking-wider opacity-70">template</span>
                             ) : (
                               <button
                                 type="button"

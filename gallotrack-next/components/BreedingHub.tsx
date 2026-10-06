@@ -87,7 +87,7 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
           </div>
           <div>
             <h2 className="text-sm font-black text-card-foreground">Coding System</h2>
-            <p className="text-[10px] text-muted-foreground font-semibold">Standardized tagging scheme for every chicken</p>
+            <p className="text-xs text-muted-foreground font-semibold">Standardized tagging scheme for every chicken</p>
           </div>
         </div>
       </div>
@@ -101,7 +101,7 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             </div>
             <div>
               <p className="text-xs font-black text-sky-700 dark:text-sky-400">SIRE</p>
-              <p className="text-[9px] text-sky-600/70 dark:text-sky-500 font-semibold">Male chicken</p>
+              <p className="text-xs text-sky-600/70 dark:text-sky-500 font-semibold">Male chicken</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -112,19 +112,19 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             ))}
             <span className="text-sky-600 dark:text-sky-400 text-xs font-black">···</span>
           </div>
-          <p className="text-[9px] text-sky-700 dark:text-sky-400 font-semibold">
+          <p className="text-xs text-sky-700 dark:text-sky-400 font-semibold">
             <strong>Numbers</strong> are used to identify sires
           </p>
           {sires.length > 0 && (
             <div className="pt-2 border-t border-sky-200 dark:border-sky-800">
-              <p className="text-[8px] text-sky-600 dark:text-sky-400 font-black uppercase tracking-widest mb-1.5">On your farm:</p>
+              <p className="text-xs text-sky-600 dark:text-sky-400 font-black uppercase tracking-widest mb-1.5">On your farm:</p>
               <div className="flex flex-wrap gap-1">
                 {sires.slice(0, 6).map(f => (
-                  <span key={f.id} className="text-[9px] font-black bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 px-1.5 py-0.5 rounded-md">
+                  <span key={f.id} className="text-xs font-black bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 px-1.5 py-0.5 rounded-md">
                     {formatBirdCodeForDisplay(codes.get(String(f.id)) || f.bird_code || '')} · {f.name.length > 8 ? f.name.slice(0, 8) + '…' : f.name}
                   </span>
                 ))}
-                {sires.length > 6 && <span className="text-[9px] text-sky-500 font-bold">+{sires.length - 6} more</span>}
+                {sires.length > 6 && <span className="text-xs text-sky-500 font-bold">+{sires.length - 6} more</span>}
               </div>
             </div>
           )}
@@ -138,7 +138,7 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             </div>
             <div>
               <p className="text-xs font-black text-pink-700 dark:text-pink-400">DAM</p>
-              <p className="text-[9px] text-pink-600/70 dark:text-pink-500 font-semibold">Female chicken</p>
+              <p className="text-xs text-pink-600/70 dark:text-pink-500 font-semibold">Female chicken</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -149,19 +149,19 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             ))}
             <span className="text-pink-600 dark:text-pink-400 text-xs font-black">···</span>
           </div>
-          <p className="text-[9px] text-pink-700 dark:text-pink-400 font-semibold">
+          <p className="text-xs text-pink-700 dark:text-pink-400 font-semibold">
             <strong>Letters</strong> are used to identify dams
           </p>
           {dams.length > 0 && (
             <div className="pt-2 border-t border-pink-200 dark:border-pink-800">
-              <p className="text-[8px] text-pink-600 dark:text-pink-400 font-black uppercase tracking-widest mb-1.5">On your farm:</p>
+              <p className="text-xs text-pink-600 dark:text-pink-400 font-black uppercase tracking-widest mb-1.5">On your farm:</p>
               <div className="flex flex-wrap gap-1">
                 {dams.slice(0, 6).map(f => (
-                  <span key={f.id} className="text-[9px] font-black bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-400 border border-pink-200 dark:border-pink-800 px-1.5 py-0.5 rounded-md">
+                  <span key={f.id} className="text-xs font-black bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-400 border border-pink-200 dark:border-pink-800 px-1.5 py-0.5 rounded-md">
                     {formatBirdCodeForDisplay(codes.get(String(f.id)) || f.bird_code || '')} · {f.name.length > 8 ? f.name.slice(0, 8) + '…' : f.name}
                   </span>
                 ))}
-                {dams.length > 6 && <span className="text-[9px] text-pink-500 font-bold">+{dams.length - 6} more</span>}
+                {dams.length > 6 && <span className="text-xs text-pink-500 font-bold">+{dams.length - 6} more</span>}
               </div>
             </div>
           )}
@@ -175,7 +175,7 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             </div>
             <div>
               <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">OFFSPRING</p>
-              <p className="text-[9px] text-emerald-600/70 dark:text-emerald-500 font-semibold">Sire + Dam combined</p>
+              <p className="text-xs text-emerald-600/70 dark:text-emerald-500 font-semibold">Sire + Dam combined</p>
             </div>
           </div>
           <div className="space-y-1.5">
@@ -186,20 +186,20 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             ].map(ex => (
               <div key={ex.code} className="flex items-center gap-2">
                 <span className="font-black text-sm text-emerald-700 dark:text-emerald-400 font-mono w-10">{ex.code}</span>
-                <span className="text-[9px] text-muted-foreground">{ex.label}</span>
+                <span className="text-xs text-muted-foreground">{ex.label}</span>
               </div>
             ))}
           </div>
           {offspring.length > 0 && (
             <div className="pt-2 border-t border-emerald-200 dark:border-emerald-800">
-              <p className="text-[8px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest mb-1.5">On your farm:</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest mb-1.5">On your farm:</p>
               <div className="flex flex-wrap gap-1">
                 {offspring.slice(0, 6).map(f => (
-                  <span key={f.id} className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                  <span key={f.id} className="text-xs font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
                     {formatBirdCodeForDisplay(codes.get(String(f.id)) || f.bird_code || '')}
                   </span>
                 ))}
-                {offspring.length > 6 && <span className="text-[9px] text-emerald-500 font-bold">+{offspring.length - 6} more</span>}
+                {offspring.length > 6 && <span className="text-xs text-emerald-500 font-bold">+{offspring.length - 6} more</span>}
               </div>
             </div>
           )}
@@ -208,26 +208,26 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
 
       {/* Example diagram */}
       <div className="mx-6 mb-6 bg-muted/40 rounded-2xl p-4 border border-border">
-        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-3">Pairing Example</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Pairing Example</p>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="bg-sky-100 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 rounded-xl px-3 py-2 text-center">
-              <p className="text-[8px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Sire</p>
+              <p className="text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Sire</p>
               <p className="text-base font-black text-sky-700 dark:text-sky-300 font-mono">1</p>
-              <p className="text-[8px] text-muted-foreground">Lemon 84</p>
+              <p className="text-xs text-muted-foreground">Lemon 84</p>
             </div>
             <span className="text-muted-foreground font-black">×</span>
             <div className="bg-pink-100 dark:bg-pink-950/50 border border-pink-200 dark:border-pink-800 rounded-xl px-3 py-2 text-center">
-              <p className="text-[8px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">Dam</p>
+              <p className="text-xs font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">Dam</p>
               <p className="text-base font-black text-pink-700 dark:text-pink-300 font-mono">A</p>
-              <p className="text-[8px] text-muted-foreground">Ground Red</p>
+              <p className="text-xs text-muted-foreground">Ground Red</p>
             </div>
             <span className="text-muted-foreground font-black">→</span>
           </div>
           <div className="flex gap-2">
             {['1A₁', '1A₂', '1A₃'].map((code, i) => (
               <div key={code} className="bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl px-3 py-2 text-center">
-                <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Offspring {i + 1}</p>
+                <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Offspring {i + 1}</p>
                 <p className="text-base font-black text-emerald-700 dark:text-emerald-300 font-mono">{code}</p>
               </div>
             ))}
@@ -236,7 +236,7 @@ function CodingSystemExplainer({ fowls, codes }: { fowls: FowlRecord[]; codes: M
             </div>
           </div>
         </div>
-        <p className="text-[9px] text-muted-foreground font-semibold mt-3">
+        <p className="text-xs text-muted-foreground font-semibold mt-3">
           💡 You may also add a descriptive name: <strong className="text-card-foreground">Lemon Ground Red · 1A₁</strong>
         </p>
       </div>
@@ -302,17 +302,17 @@ function BreedingPairCard({
                   <span className="text-muted-foreground mx-1">×</span>
                   <span className="text-pink-600 dark:text-pink-400 font-mono">{pair.dam_code}</span>
                 </h3>
-                <span className="text-[8px] font-black bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded-md font-mono">
+                <span className="text-xs font-black bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded-md font-mono">
                   → {offspringBaseCode}₁, {offspringBaseCode}₂···
                 </span>
               </div>
-              <p className="text-[10px] text-muted-foreground font-semibold truncate">
+              <p className="text-xs text-muted-foreground font-semibold truncate">
                 {pair.sire_name} × {pair.dam_name}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className={`text-[8px] font-black px-2 py-1 rounded-full border ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}>
+            <span className={`text-xs font-black px-2 py-1 rounded-full border ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}>
               {pair.outcome}
             </span>
             <button
@@ -330,17 +330,17 @@ function BreedingPairCard({
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p className="text-lg font-black text-card-foreground">{offspring.length}</p>
-            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Offspring</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Offspring</p>
           </div>
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p className={`text-lg font-black ${combinedWinRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : totalDecided > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}>
               {totalDecided > 0 ? `${combinedWinRate}%` : '—'}
             </p>
-            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Win Rate</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Win Rate</p>
           </div>
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p className="text-lg font-black text-card-foreground">{totalWins}W-{totalLosses}L</p>
-            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Record</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Record</p>
           </div>
         </div>
 
@@ -352,9 +352,9 @@ function BreedingPairCard({
             disabled={!sire}
             className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-xl p-2.5 text-left hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors cursor-pointer disabled:cursor-default"
           >
-            <p className="text-[8px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire</p>
-            <p className="text-[10px] font-black text-card-foreground truncate">{pair.sire_name}</p>
-            <p className="text-[8px] text-muted-foreground font-semibold">{sire?.breed || '—'} · Code: <span className="font-mono text-sky-600 dark:text-sky-400">{pair.sire_code}</span></p>
+            <p className="text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire</p>
+            <p className="text-xs font-black text-card-foreground truncate">{pair.sire_name}</p>
+            <p className="text-xs text-muted-foreground font-semibold">{sire?.breed || '—'} · Code: <span className="font-mono text-sky-600 dark:text-sky-400">{pair.sire_code}</span></p>
           </button>
           <button
             type="button"
@@ -362,14 +362,14 @@ function BreedingPairCard({
             disabled={!dam}
             className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-xl p-2.5 text-left hover:bg-pink-100 dark:hover:bg-pink-950/50 transition-colors cursor-pointer disabled:cursor-default"
           >
-            <p className="text-[8px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam</p>
-            <p className="text-[10px] font-black text-card-foreground truncate">{pair.dam_name}</p>
-            <p className="text-[8px] text-muted-foreground font-semibold">{dam?.breed || '—'} · Code: <span className="font-mono text-pink-600 dark:text-pink-400">{pair.dam_code}</span></p>
+            <p className="text-xs font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam</p>
+            <p className="text-xs font-black text-card-foreground truncate">{pair.dam_name}</p>
+            <p className="text-xs text-muted-foreground font-semibold">{dam?.breed || '—'} · Code: <span className="font-mono text-pink-600 dark:text-pink-400">{pair.dam_code}</span></p>
           </button>
         </div>
 
         {pair.notes && (
-          <p className="text-[9px] text-muted-foreground font-semibold bg-muted/30 rounded-lg px-3 py-2 mb-3">
+          <p className="text-xs text-muted-foreground font-semibold bg-muted/30 rounded-lg px-3 py-2 mb-3">
             📝 {pair.notes}
           </p>
         )}
@@ -378,7 +378,7 @@ function BreedingPairCard({
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="w-full flex items-center justify-between text-[9px] font-black text-muted-foreground hover:text-card-foreground transition-colors py-1 cursor-pointer"
+            className="w-full flex items-center justify-between text-xs font-black text-muted-foreground hover:text-card-foreground transition-colors py-1 cursor-pointer"
           >
             <span className="uppercase tracking-widest">Offspring ({offspring.length})</span>
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -397,20 +397,20 @@ function BreedingPairCard({
                   className="group w-full flex items-center justify-between gap-2 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-xl px-3 py-2 transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[9px] font-black text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-md font-mono shrink-0">
+                    <span className="text-xs font-black text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded-md font-mono shrink-0">
                       {formatBirdCodeForDisplay(code)}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{fowl.name}</p>
-                      <p className="text-[8px] text-muted-foreground font-semibold truncate">{genderLabel(fowl.gender)} · {fowl.breed}</p>
+                      <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{fowl.name}</p>
+                      <p className="text-xs text-muted-foreground font-semibold truncate">{genderLabel(fowl.gender)} · {fowl.breed}</p>
                     </div>
                   </div>
                   {decided > 0 ? (
-                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border shrink-0 ${winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                    <span className={`text-xs font-black px-2 py-0.5 rounded-full border shrink-0 ${winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
                       {winRate}% · {wins}W-{losses}L
                     </span>
                   ) : (
-                    <span className="text-[8px] text-muted-foreground/50 font-bold shrink-0">No fights</span>
+                    <span className="text-xs text-muted-foreground/50 font-bold shrink-0">No fights</span>
                   )}
                 </button>
               );
@@ -420,22 +420,22 @@ function BreedingPairCard({
       </div>
 
       <div className="px-5 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-[8px] font-bold text-muted-foreground">Pairing Date: {pair.pairing_date || 'Not set'}</span>
+        <span className="text-xs font-bold text-muted-foreground">Pairing Date: {pair.pairing_date || 'Not set'}</span>
         <div className="flex items-center gap-2">
-          <label htmlFor={`pair-outcome-${pair.id}`} className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
+          <label htmlFor={`pair-outcome-${pair.id}`} className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
             Status
           </label>
           <select
             id={`pair-outcome-${pair.id}`}
             value={pair.outcome}
             onChange={(e) => onOutcomeChange(e.target.value as PairingOutcome)}
-            className={`text-[8px] font-black px-2 py-1 rounded-full border bg-card cursor-pointer outline-none ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}
+            className={`text-xs font-black px-2 py-1 rounded-full border bg-card cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}
           >
             {PAIRING_OUTCOMES.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
-          <span className="text-[8px] font-black text-violet-600 dark:text-violet-400 font-mono">Base Code: {offspringBaseCode}</span>
+          <span className="text-xs font-black text-violet-600 dark:text-violet-400 font-mono">Base Code: {offspringBaseCode}</span>
         </div>
       </div>
     </div>
@@ -524,7 +524,7 @@ function AddPairingForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label htmlFor="pair-sire" className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire</label>
+          <label htmlFor="pair-sire" className="text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">🐓 Sire</label>
           <select
             id="pair-sire"
             value={sireId}
@@ -541,7 +541,7 @@ function AddPairingForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="pair-dam" className="text-[10px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam</label>
+          <label htmlFor="pair-dam" className="text-xs font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">🐔 Dam</label>
           <select
             id="pair-dam"
             value={damId}
@@ -563,8 +563,8 @@ function AddPairingForm({
         <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl p-3 flex items-start gap-2.5">
           <span className="text-rose-600 dark:text-rose-400 shrink-0 text-sm leading-none mt-0.5">⛔</span>
           <div>
-            <p className="text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Already Has an Active Partner</p>
-            <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+            <p className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Already Has an Active Partner</p>
+            <p className="text-xs font-semibold text-rose-700 dark:text-rose-300">
               {conflict.bird === 'sire' ? selectedSire?.name : selectedDam?.name} is currently paired with{' '}
               {conflict.partnerName} (pairing {conflict.pairing.pairing_code || `#${conflict.pairing.id}`}). 
               Set that pairing to Completed before recording a new one.
@@ -577,8 +577,8 @@ function AddPairingForm({
         <div className="bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 rounded-xl p-3 flex items-start gap-2.5">
           <span className="text-sky-600 dark:text-sky-400 shrink-0 text-sm leading-none mt-0.5">ℹ️</span>
           <div>
-            <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">This Pairing Is Already Recorded</p>
-            <p className="text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+            <p className="text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">This Pairing Is Already Recorded</p>
+            <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">
               {conflict.pairing.sire_name || 'Sire'} × {conflict.pairing.dam_name || 'Dam'} — code{' '}
               {conflict.pairing.pairing_code || `#${conflict.pairing.id}`}, status {conflict.pairing.outcome}.
               Submitting will update the existing record; no duplicate will be created.
@@ -591,11 +591,11 @@ function AddPairingForm({
         <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-xl p-3 flex items-center gap-3">
           <Combine className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
           <div>
-            <p className="text-[9px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-widest">Offspring Code Preview</p>
+            <p className="text-xs font-black text-violet-600 dark:text-violet-400 uppercase tracking-widest">Offspring Code Preview</p>
             <p className="text-sm font-black text-card-foreground font-mono">
               {previewCode}₁, {previewCode}₂, {previewCode}₃···
             </p>
-            <p className="text-[8px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Sire <span className="font-mono text-sky-600 dark:text-sky-400">{sireCode}</span> + Dam <span className="font-mono text-pink-600 dark:text-pink-400">{damCode}</span>
             </p>
           </div>
@@ -604,7 +604,7 @@ function AddPairingForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label htmlFor="pair-date" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Pairing Date</label>
+          <label htmlFor="pair-date" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Pairing Date</label>
           <input
             id="pair-date"
             type="date"
@@ -614,7 +614,7 @@ function AddPairingForm({
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="pair-status" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</label>
+          <label htmlFor="pair-status" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Status</label>
           <select
             id="pair-status"
             value={outcome}
@@ -629,7 +629,7 @@ function AddPairingForm({
       </div>
 
       <div className="space-y-1">
-          <label htmlFor="pair-notes" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Notes / Observations</label>
+          <label htmlFor="pair-notes" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Notes / Observations</label>
         <textarea
           id="pair-notes"
           value={notes}
@@ -641,7 +641,7 @@ function AddPairingForm({
       </div>
 
       {error && (
-        <p className="text-[10px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl px-3 py-2">
+        <p className="text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl px-3 py-2">
           {error}
         </p>
       )}
@@ -689,29 +689,30 @@ function SafetyIncidentCard({ incident, onRemove }: { incident: SafetyIncidentRe
               <p className="text-xs font-black text-card-foreground">
                 <span className={`font-mono ${cfg.text}`}>{formatBirdCodeForDisplay(incident.fowl_code || '')}</span> · {incident.fowl_name}
               </p>
-              <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border ${cfg.bg} ${cfg.text} ${cfg.border} uppercase tracking-wider`}>
+              <span className={`text-xs font-black px-1.5 py-0.5 rounded border ${cfg.bg} ${cfg.text} ${cfg.border} uppercase tracking-wider`}>
                 {incident.severity}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[8px] font-bold text-muted-foreground">{incident.type}</span>
-              <span className="text-[8px] text-muted-foreground">·</span>
-              <span className="text-[8px] font-bold text-muted-foreground">{incident.incident_date}</span>
-              <span className="text-[8px] text-muted-foreground">·</span>
-              <span className={`text-[8px] font-black ${statusColors[incident.status] || 'text-muted-foreground'}`}>{incident.status}</span>
+              <span className="text-xs font-bold text-muted-foreground">{incident.type}</span>
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className="text-xs font-bold text-muted-foreground">{incident.incident_date}</span>
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className={`text-xs font-black ${statusColors[incident.status] || 'text-muted-foreground'}`}>{incident.status}</span>
             </div>
           </div>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0"
+          className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
+          aria-label={`Dismiss ${incident.type} incident`}
         >
           <X className="w-3 h-3" />
         </button>
       </div>
       {incident.description && (
-        <p className="text-[9px] text-muted-foreground font-semibold bg-background/60 rounded-lg px-2.5 py-1.5 mt-2">
+        <p className="text-xs text-muted-foreground font-semibold bg-background/60 rounded-lg px-2.5 py-1.5 mt-2">
           {incident.description}
         </p>
       )}
@@ -768,7 +769,7 @@ function AddIncidentForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label htmlFor="inc-fowl" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Chicken</label>
+          <label htmlFor="inc-fowl" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Chicken</label>
           <select
             id="inc-fowl"
             value={fowlId}
@@ -785,7 +786,7 @@ function AddIncidentForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="inc-date" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Date</label>
+          <label htmlFor="inc-date" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Date</label>
           <input
             id="inc-date"
             type="date"
@@ -798,7 +799,7 @@ function AddIncidentForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-1">
-          <label htmlFor="inc-type" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Incident Type</label>
+          <label htmlFor="inc-type" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Incident Type</label>
           <select
             id="inc-type"
             value={type}
@@ -811,7 +812,7 @@ function AddIncidentForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="inc-severity" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Severity</label>
+          <label htmlFor="inc-severity" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Severity</label>
           <select
             id="inc-severity"
             value={severity}
@@ -824,7 +825,7 @@ function AddIncidentForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="inc-status" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</label>
+          <label htmlFor="inc-status" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Status</label>
           <select
             id="inc-status"
             value={status}
@@ -839,7 +840,7 @@ function AddIncidentForm({
       </div>
 
       <div className="space-y-1">
-          <label htmlFor="inc-description" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Description</label>
+          <label htmlFor="inc-description" className="text-xs font-black text-muted-foreground uppercase tracking-widest">Description</label>
         <textarea
           id="inc-description"
           value={description}
@@ -909,19 +910,19 @@ function BirdIdentityCard({ fowl, fowls, codes, matchHistory, setSelectedFowlFor
     >
       <div className="flex items-start gap-3">
         <div className={`shrink-0 w-12 h-12 rounded-xl ${codeColor.bg} ${codeColor.border} border flex flex-col items-center justify-center`}>
-          <span className={`text-[8px] font-black ${codeColor.text} uppercase tracking-widest leading-none`}>{codeColor.label}</span>
+          <span className={`text-xs font-black ${codeColor.text} uppercase tracking-widest leading-none`}>{codeColor.label}</span>
           <span className={`text-base font-black ${codeColor.text} font-mono leading-none mt-0.5`}>{displayCode || '—'}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{fowl.name}</p>
-          <p className="text-[9px] text-muted-foreground font-semibold truncate">{fowl.breed} · {genderLabel(fowl.gender)}</p>
+          <p className="text-xs text-muted-foreground font-semibold truncate">{fowl.breed} · {genderLabel(fowl.gender)}</p>
           {fowl.wing_band && (
-            <p className="text-[8px] font-bold text-violet-600 dark:text-violet-400 mt-0.5">Wing Band: {fowl.wing_band}</p>
+            <p className="text-xs font-bold text-violet-600 dark:text-violet-400 mt-0.5">Wing Band: {fowl.wing_band}</p>
           )}
           {fowl.bloodline_composition && Object.keys(fowl.bloodline_composition).length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {Object.entries(fowl.bloodline_composition).slice(0, 3).map(([strain, pct]) => (
-                <span key={strain} className="text-[7px] font-black bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800 px-1.5 py-0.5 rounded">
+                <span key={strain} className="text-xs font-black bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800 px-1.5 py-0.5 rounded">
                   {strain} {Math.round(pct as number)}%
                 </span>
               ))}
@@ -930,19 +931,19 @@ function BirdIdentityCard({ fowl, fowls, codes, matchHistory, setSelectedFowlFor
         </div>
         <div className="shrink-0 text-right">
           {decided > 0 ? (
-            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+            <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
               {winRate}%
             </span>
           ) : (
-            <span className="text-[8px] text-muted-foreground/50 font-bold">No fights</span>
+            <span className="text-xs text-muted-foreground/50 font-bold">No fights</span>
           )}
-          <p className={`text-[8px] font-bold mt-1 ${fowl.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : fowl.status === 'Deceased' ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}>
+          <p className={`text-xs font-bold mt-1 ${fowl.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : fowl.status === 'Deceased' ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}>
             {fowl.status}
           </p>
         </div>
       </div>
       {(fowl.sire || fowl.dam) && (
-        <div className="mt-2 pt-2 border-t border-border flex items-center gap-3 text-[8px] font-semibold text-muted-foreground">
+        <div className="mt-2 pt-2 border-t border-border flex items-center gap-3 text-xs font-semibold text-muted-foreground">
           {fowl.sire && <span>🐓 Sire: <strong className="text-card-foreground">{fowl.sire}</strong>{sireBreed ? ` · ${sireBreed}` : ''}</span>}
           {fowl.dam && <span>🐔 Dam: <strong className="text-card-foreground">{fowl.dam}</strong>{damBreed ? ` · ${damBreed}` : ''}</span>}
         </div>
@@ -1182,8 +1183,8 @@ export default function BreedingHub({
               <span className="text-2xl shrink-0">{s.icon}</span>
               <div className="min-w-0">
                 <p className={`text-2xl font-black ${s.color} leading-none`}>{s.value}</p>
-                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">{s.label}</p>
-                <p className="text-[8px] text-muted-foreground">{s.sub}</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mt-0.5">{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.sub}</p>
               </div>
             </div>
           ))}
@@ -1200,7 +1201,7 @@ export default function BreedingHub({
                 type="button"
                 id={`breeding-tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                   isActive
                     ? `${tab.activeClass} text-white shadow-sm`
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
@@ -1209,7 +1210,7 @@ export default function BreedingHub({
                 <Icon className="w-3.5 h-3.5" />
                 {tab.label}
                 {tab.id === 'safety' && criticalIncidents > 0 && (
-                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'}`}>
+                  <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'}`}>
                     {criticalIncidents}
                   </span>
                 )}
@@ -1231,9 +1232,9 @@ export default function BreedingHub({
         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-start gap-3">
           <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">Unable to Load Breeding Records</p>
-            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5 break-words">{loadError}</p>
-            <p className="text-[9px] text-muted-foreground font-semibold mt-1">
+            <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">Unable to Load Breeding Records</p>
+            <p className="text-xs text-muted-foreground font-semibold mt-0.5 break-words">{loadError}</p>
+            <p className="text-xs text-muted-foreground font-semibold mt-1">
               Run the migration first in the Supabase SQL editor{' '}
               <span className="font-mono text-card-foreground">20261004000000_breeding_pairings_safety_incidents.sql</span>.
             </p>
@@ -1241,7 +1242,7 @@ export default function BreedingHub({
           <button
             type="button"
             onClick={loadRecords}
-            className="flex items-center gap-1.5 text-[10px] font-black text-amber-700 dark:text-amber-400 hover:underline cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 text-xs font-black text-amber-700 dark:text-amber-400 hover:underline cursor-pointer shrink-0"
           >
             <RefreshCw className="w-3 h-3" />
             Retry
@@ -1258,7 +1259,7 @@ export default function BreedingHub({
             </div>
             <div>
               <h2 className="text-base font-black text-card-foreground">Coding System for Lineage</h2>
-              <p className="text-[11px] text-muted-foreground font-bold">Standardized tagging to track every chicken and its family lineage</p>
+              <p className="text-xs text-muted-foreground font-bold">Standardized tagging to track every chicken and its family lineage</p>
             </div>
           </div>
           <CodingSystemExplainer fowls={fowls} codes={codes} />
@@ -1271,7 +1272,7 @@ export default function BreedingHub({
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground">Pairing Performance Analysis</h3>
-                  <p className="text-[10px] text-muted-foreground font-semibold">Best and worst combinations based on offspring win rate</p>
+                  <p className="text-xs text-muted-foreground font-semibold">Best and worst combinations based on offspring win rate</p>
                 </div>
               </div>
               <div className="p-6 space-y-3">
@@ -1288,7 +1289,7 @@ export default function BreedingHub({
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-[9px] font-black text-muted-foreground/40 w-4 shrink-0">#{i + 1}</span>
+                        <span className="text-xs font-black text-muted-foreground/40 w-4 shrink-0">#{i + 1}</span>
                         {isElite && <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
                         {isWeak && <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />}
                         <div className="min-w-0">
@@ -1297,16 +1298,16 @@ export default function BreedingHub({
                             <span className="text-muted-foreground mx-1.5">×</span>
                             <span className="text-pink-600 dark:text-pink-400">{ps.dam}</span>
                           </p>
-                          <p className="text-[9px] text-muted-foreground font-semibold">{ps.members.length} offspring · {ps.totalFights} fights</p>
+                          <p className="text-xs text-muted-foreground font-semibold">{ps.members.length} offspring · {ps.totalFights} fights</p>
                         </div>
                       </div>
                       <div className="shrink-0 flex items-center gap-2">
                         {ps.decided > 0 && (
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                          <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
                             {ps.winRate}%
                           </span>
                         )}
-                        <span className="text-[8px] font-bold text-muted-foreground">{ps.wins}W-{ps.losses}L</span>
+                        <span className="text-xs font-bold text-muted-foreground">{ps.wins}W-{ps.losses}L</span>
                       </div>
                     </div>
                   );
@@ -1327,7 +1328,7 @@ export default function BreedingHub({
               </div>
               <div>
                 <h2 className="text-base font-black text-card-foreground">Breeding Pairs</h2>
-                <p className="text-[11px] text-muted-foreground font-bold">Record and monitor every pairing and the performance of their offspring</p>
+                <p className="text-xs text-muted-foreground font-bold">Record and monitor every pairing and the performance of their offspring</p>
               </div>
             </div>
             <button
@@ -1396,7 +1397,7 @@ export default function BreedingHub({
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-card-foreground">Auto-Detected Pairings</h3>
-                  <p className="text-[10px] text-muted-foreground font-semibold">Based on sire/dam records of chickens in the registry</p>
+                  <p className="text-xs text-muted-foreground font-semibold">Based on sire/dam records of chickens in the registry</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -1411,10 +1412,10 @@ export default function BreedingHub({
                         <span className="text-muted-foreground mx-1.5">×</span>
                         <span className="text-pink-600 dark:text-pink-400">{ps.dam}</span>
                       </p>
-                      <p className="text-[9px] text-muted-foreground font-semibold">{ps.members.length} offspring · {ps.totalFights} recorded fights</p>
+                      <p className="text-xs text-muted-foreground font-semibold">{ps.members.length} offspring · {ps.totalFights} recorded fights</p>
                     </div>
                     {ps.decided > 0 && (
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border shrink-0 ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-full border shrink-0 ${ps.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`}>
                         {ps.winRate}% win rate
                       </span>
                     )}
@@ -1436,7 +1437,7 @@ export default function BreedingHub({
               </div>
               <div>
                 <h2 className="text-base font-black text-card-foreground">Unique Chicken Identity</h2>
-                <p className="text-[11px] text-muted-foreground font-bold">Each chicken has a unique code based on its sire, dam, and sibling order</p>
+                <p className="text-xs text-muted-foreground font-bold">Each chicken has a unique code based on its sire, dam, and sibling order</p>
               </div>
             </div>
             <div className="relative w-full sm:w-72 shrink-0">
@@ -1466,8 +1467,8 @@ export default function BreedingHub({
                   <span className={`text-xs font-black ${l.text} font-mono`}>{l.code}</span>
                 </div>
                 <div>
-                  <p className={`text-[8px] font-black ${l.text} uppercase tracking-widest`}>{l.type}</p>
-                  <p className="text-[8px] text-muted-foreground font-semibold">{l.desc}</p>
+                  <p className={`text-xs font-black ${l.text} uppercase tracking-widest`}>{l.type}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">{l.desc}</p>
                 </div>
               </div>
             ))}
@@ -1505,7 +1506,7 @@ export default function BreedingHub({
               </div>
               <div>
                 <h2 className="text-base font-black text-card-foreground">Safety Incidents</h2>
-                <p className="text-[11px] text-muted-foreground font-bold">Record accidents, injuries, or illnesses for each chicken</p>
+                <p className="text-xs text-muted-foreground font-bold">Record accidents, injuries, or illnesses for each chicken</p>
               </div>
             </div>
             <button
@@ -1526,8 +1527,8 @@ export default function BreedingHub({
               return (
                 <div key={sev} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${cfg.bg} ${cfg.border}`}>
                   <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-                  <span className={`text-[9px] font-black ${cfg.text} uppercase tracking-widest`}>{sev}</span>
-                  {count > 0 && <span className={`text-[9px] font-black ${cfg.text}`}>({count})</span>}
+                  <span className={`text-xs font-black ${cfg.text} uppercase tracking-widest`}>{sev}</span>
+                  {count > 0 && <span className={`text-xs font-black ${cfg.text}`}>({count})</span>}
                 </div>
               );
             })}
@@ -1577,8 +1578,8 @@ export default function BreedingHub({
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/60 dark:border-amber-800/60 rounded-2xl p-4 flex items-start gap-3">
             <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">Safety Monitoring Tip</p>
-              <p className="text-[9px] text-muted-foreground font-semibold mt-0.5">
+              <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">Safety Monitoring Tip</p>
+              <p className="text-xs text-muted-foreground font-semibold mt-0.5">
                 Monitor the health of each chicken regularly, especially after a fight.
                 Critical incidents require immediate attention. Link each incident to a chicken code so its
                 health history can be traced within the family lineage.

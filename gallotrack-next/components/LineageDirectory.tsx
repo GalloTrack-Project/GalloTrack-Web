@@ -104,7 +104,7 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
           onClick={() => onShowFights(child)}
           aria-label={`View all fights for ${child.name}`}
           title="View all fights"
-          className="shrink-0 self-center flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
+          className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
         >
           <Swords className="w-3 h-3" />
           Fights
@@ -130,12 +130,12 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-3.5 text-center">
             <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Sire</p>
             <p className="text-sm font-black text-card-foreground truncate">{g[0].sire}</p>
-            {sireBreed && <p className="text-[11px] font-bold text-muted-foreground truncate">{sireBreed}</p>}
+            {sireBreed && <p className="text-xs font-bold text-muted-foreground truncate">{sireBreed}</p>}
           </div>
           <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-lg p-3.5 text-center">
             <p className="text-xs font-black text-pink uppercase tracking-widest mb-1"><ChickenIcon className="w-3 h-3 inline" /> Dam</p>
             <p className="text-sm font-black text-card-foreground truncate">{g[0].dam}</p>
-            {damBreed && <p className="text-[11px] font-bold text-muted-foreground truncate">{damBreed}</p>}
+            {damBreed && <p className="text-xs font-bold text-muted-foreground truncate">{damBreed}</p>}
           </div>
         </div>
       </div>
@@ -370,7 +370,7 @@ export default function LineageDirectory({
           onClick={() => openFights(child)}
           aria-label={`View all fights for ${child.name}`}
           title="View all fights"
-          className="shrink-0 self-center flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
+          className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
         >
           <Swords className="w-3 h-3" />
           Fights
