@@ -76,12 +76,12 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           </span>
           {isRegisteredParent && (
             <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-800" title="Has registered children in this farm">
-              {gender === 'Male' ? 'Sire' : 'Dam'}
+              {gender === 'Male' ? 'Breeding Male' : 'Breeding Female'}
             </span>
           )}
           {isRegisteredOffspring && (
-            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Registered child of a sire or dam in this farm">
-              Offspring
+            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Registered child of a breeding pair in this farm">
+              Non-Breeding
             </span>
           )}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
@@ -460,13 +460,13 @@ export default function FowlLists({
     const pagedList = paginatedBirds.pagedList;
     const totalPages = paginatedBirds.totalPages;
     const tabIcon = isMaleTab ? '🐓' : '🐔';
-    const tabLabel = isMaleTab ? 'Sire Registry' : 'Dam Registry';
-    const tabSub = isMaleTab ? 'Active breeding males — every sire in the program' : 'Active breeding females — every dam in the program';
+    const tabLabel = isMaleTab ? 'Breeding Male Registry' : 'Breeding Female Registry';
+    const tabSub = isMaleTab ? 'Active breeding males (sires) — every registered male in the program' : 'Active breeding females (dams) — every registered female in the program';
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
     const accentSoft = isMaleTab ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800' : 'bg-pink-50 dark:bg-pink-950/50 border-pink-200 dark:border-pink-800';
     const accentText = isMaleTab ? 'text-info' : 'text-pink';
-    const emptyTitle = isMaleTab ? 'No Sires Encoded' : 'No Dams Encoded';
-    const emptyHint = isMaleTab ? 'No sires are registered in the active farm inventory yet. Encode your first sire to begin populating this registry and line up its offspring.' : 'No dams are registered in the active farm inventory yet. Encode your first dam to begin populating this registry and line up its offspring.';
+    const emptyTitle = isMaleTab ? 'No Breeding Males Encoded' : 'No Breeding Females Encoded';
+    const emptyHint = isMaleTab ? 'No breeding males are registered in the active farm inventory yet. Encode your first male to begin populating this registry and line up its offspring.' : 'No breeding females are registered in the active farm inventory yet. Encode your first female to begin populating this registry and line up its offspring.';
 
     return (
       <div className="space-y-4 animate-fadeIn">
@@ -489,7 +489,7 @@ export default function FowlLists({
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">{emptyTitle}</h3>
             <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">{emptyHint}</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First {isMaleTab ? 'Sire' : 'Dam'}
+              ➕ Encode First {isMaleTab ? 'Breeding Male' : 'Breeding Female'}
             </button>
           </div>
         ) : (
@@ -572,8 +572,8 @@ export default function FowlLists({
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal">🥚</div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Offspring Registry</h2>
-              <p className="text-xs text-muted-foreground font-semibold">Every child sired or dropped by a registered sire and dam — one entry per offspring</p>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Non-Breeding Registry</h2>
+              <p className="text-xs text-muted-foreground font-semibold">Every child of a registered breeding pair — one entry per non-breeding chicken</p>
             </div>
           </div>
           <span className="shrink-0 text-xs font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{paginatedBirds.list.length} Registered</span>
@@ -584,10 +584,10 @@ export default function FowlLists({
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Offspring Yet</h3>
-            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken in the registry is linked to a registered sire or dam yet. Encode a chick with its sire and dam to line it up here.</p>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Non-Breeding Chickens Yet</h3>
+            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken in the registry is linked to a registered breeding pair yet. Encode a chick with its sire and dam to line it up here.</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First Offspring
+              ➕ Encode First Non-Breeding Chicken
             </button>
           </div>
         ) : (

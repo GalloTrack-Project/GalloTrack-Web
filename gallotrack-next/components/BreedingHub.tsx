@@ -1174,9 +1174,9 @@ export default function BreedingHub({
         {/* Summary stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           {[
-            { label: 'Sires', value: totalMales, color: 'text-sky-600 dark:text-sky-400', icon: '🐓', sub: 'Coded: 1, 2, 3...' },
-            { label: 'Dams', value: totalFemales, color: 'text-pink-600 dark:text-pink-400', icon: '🐔', sub: 'Coded: A, B, C...' },
-            { label: 'Offspring', value: totalOffspring, color: 'text-emerald-600 dark:text-emerald-400', icon: '🐥', sub: 'Coded: 1A₁, 1A₂...' },
+            { label: 'Breeding Males', value: totalMales, color: 'text-sky-600 dark:text-sky-400', icon: '🐓', sub: 'Coded: 1, 2, 3...' },
+            { label: 'Breeding Females', value: totalFemales, color: 'text-pink-600 dark:text-pink-400', icon: '🐔', sub: 'Coded: A, B, C...' },
+            { label: 'Non-Breeding', value: totalOffspring, color: 'text-emerald-600 dark:text-emerald-400', icon: '🐥', sub: 'Coded: 1A₁, 1A₂...' },
             { label: 'Active Pairs', value: activePairs, color: 'text-rose-600 dark:text-rose-400', icon: '❤️', sub: 'Breeding pairs' },
           ].map(s => (
             <div key={s.label} className="bg-muted/40 rounded-2xl p-4 flex items-center gap-3">

@@ -93,17 +93,17 @@ export default function ProfilingPage() {
           </button>
           <button type="button" onClick={() => setProfilingSubTab('males')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'males' ? 'bg-sky-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <ChickenIcon className="w-4 h-4" />
-            <span>Sire</span>
+            <span>Breeding Male</span>
             <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'males' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{maleActiveFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('females')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'females' ? 'bg-pink-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <ChickenIcon className="w-4 h-4" />
-            <span>Dam</span>
+            <span>Breeding Female</span>
             <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'females' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{femaleActiveFowls.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('offspring')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'offspring' ? 'bg-teal-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>
             <Egg className="w-4 h-4" />
-            <span>Offspring</span>
+            <span>Non-Breeding</span>
             <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${profilingSubTab === 'offspring' ? 'bg-white/20' : 'bg-border text-muted-foreground'}`}>{offspringList.length}</span>
           </button>
           <button type="button" onClick={() => setProfilingSubTab('archived')} className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${profilingSubTab === 'archived' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}>

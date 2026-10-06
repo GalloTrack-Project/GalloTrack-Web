@@ -24,6 +24,9 @@ import {
   matchSurvivability,
   STRAIN_LIST,
   LEG_COLOR_LIST,
+  dateKeyOf,
+  type DateRangeCustom,
+  type DateRangePreset,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
 import {
@@ -273,8 +276,10 @@ interface FowlContextValue {
   archiveReasonNote: string; setArchiveReasonNote: (v: string) => void;
   breakdownTab: 'individual' | 'strain' | 'pairing';
   setBreakdownTab: (v: 'individual' | 'strain' | 'pairing') => void;
-  dateRangePreset: '7d' | '30d' | 'month' | '3m' | 'all';
-  setDateRangePreset: (v: '7d' | '30d' | 'month' | '3m' | 'all') => void;
+  dateRangePreset: DateRangePreset;
+  setDateRangePreset: (v: DateRangePreset) => void;
+  dateRangeCustom: DateRangeCustom;
+  setDateRangeCustom: (v: DateRangeCustom) => void;
   dateRangeOpen: boolean;
   setDateRangeOpen: (v: boolean | ((o: boolean) => boolean)) => void;
 }
@@ -386,9 +391,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const [archiveReasonInput, setArchiveReasonInput] = useState('sold');
   const [archiveReasonNote, setArchiveReasonNote] = useState('');
   const [breakdownTab, setBreakdownTab] = useState<'individual' | 'strain' | 'pairing'>('individual');
-  const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | 'month' | '3m' | 'all'>('7d');
+  const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>('7d');
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [dateRangeCustom, setDateRangeCustom] = useState<DateRangeCustom>(() => ({
+    start: dateKeyOf(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    end: dateKeyOf(Date.now()),
+  }));
 
   useEffect(() => {
     const id = setInterval(() => setNowMs(Date.now()), 60 * 1000);
@@ -396,7 +405,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   }, []);
 
   // ── Analytics (memoized) ──
-  const analytics = useFowlAnalytics(fowls, matchHistory, dateRangePreset, nowMs, activeFowls);
+  const analytics = useFowlAnalytics(fowls, matchHistory, dateRangePreset, nowMs, activeFowls, dateRangeCustom);
 
   // ── Generation helpers for new fowl form ──
   const nextNodeId = `GT-${String(Math.max(0, ...fowls.map(f => f.id)) + 1).padStart(4, '0')}`;
@@ -1288,6 +1297,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     archiveReasonNote, setArchiveReasonNote,
     breakdownTab, setBreakdownTab,
     dateRangePreset, setDateRangePreset,
+    dateRangeCustom, setDateRangeCustom,
     dateRangeOpen, setDateRangeOpen,
   };
 

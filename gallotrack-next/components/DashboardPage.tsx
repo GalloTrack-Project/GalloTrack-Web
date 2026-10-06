@@ -12,17 +12,10 @@ import { useUI } from '@/lib/contexts/ui-context';
 import { videosFor, photosFor } from '@/lib/services/media-service';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
-
-const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[] = [
-  { id: '7d', label: 'Last 7 Days' },
-  { id: '30d', label: 'Last 30 Days' },
-  { id: 'month', label: 'This Month' },
-  { id: '3m', label: 'Last 3 Months' },
-  { id: 'all', label: 'All Time' },
-];
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -50,7 +43,9 @@ export default function DashboardPage() {
     monthLabels, matchesByMonth, activeSpark, trendWinRate,
     upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
     dateRangeLabel, dateRangeOpen, setDateRangeOpen,
-    dateRangePreset, setDateRangePreset, fetchDatabaseResources, loading,
+    dateRangePreset, setDateRangePreset,
+    dateRangeCustom, setDateRangeCustom,
+    fetchDatabaseResources, loading,
     birdCodes,
   } = fowl;
 
@@ -135,7 +130,7 @@ export default function DashboardPage() {
             { label: 'Overall win rate', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
             { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
             { label: 'Matches logged', value: String(matchHistory.length) },
-            { label: 'Active registry', value: `${activeFowls.length} (${maleActiveFowls.length} sires · ${femaleActiveFowls.length} dams)` },
+            { label: 'Active registry', value: `${activeFowls.length} (${maleActiveFowls.length} breeding males · ${femaleActiveFowls.length} breeding females)` },
           ],
         },
         {
@@ -169,65 +164,49 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* DATE RANGE SELECTOR */}
-        <div className="relative self-start md:self-auto">
-          {dateRangeOpen && (
-            <div className="fixed inset-0 z-40" onClick={() => setDateRangeOpen(false)} />
-          )}
-          <button
-            type="button"
-            onClick={() => setDateRangeOpen(o => !o)}
-            className="bg-muted hover:bg-muted/60 text-foreground border border-border px-4 py-2.5 rounded-lg text-sm font-black transition-all cursor-pointer flex items-center space-x-2 shadow-2xs"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
-            <span>{dateRangeLabel}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dateRangeOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
-          </button>
-          {dateRangeOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-popover rounded-lg border border-border shadow-xl z-50 p-1.5">
-              {DATE_RANGES.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => { setDateRangePreset(r.id); setDateRangeOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-bold transition-colors cursor-pointer ${dateRangePreset === r.id ? 'bg-emerald-500/15 text-success' : 'text-muted-foreground hover:bg-muted'}`}
-                >
-                  {r.label}
-                </button>
-              ))}
-              <div className="h-px bg-border my-1.5"></div>
-              <p className="px-3 py-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground">Reports</p>
+        <DateRangePicker
+          label={dateRangeLabel}
+          preset={dateRangePreset}
+          custom={dateRangeCustom}
+          open={dateRangeOpen}
+          onOpenChange={setDateRangeOpen}
+          onApply={(p, c) => { setDateRangePreset(p); setDateRangeCustom(c); }}
+        >
+          {(close) => (
+            <div className="space-y-0.5">
+              <p className="px-1 pt-1 text-xs font-black uppercase tracking-widest text-muted-foreground">Reports</p>
               <button
                 type="button"
-                onClick={() => { setDateRangeOpen(false); exportMatchesCsv(); }}
-                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+                onClick={() => { close(); exportMatchesCsv(); }}
+                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
               >
                 <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export matches (CSV)
               </button>
               <button
                 type="button"
-                onClick={() => { setDateRangeOpen(false); exportRegistryCsv(); }}
-                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+                onClick={() => { close(); exportRegistryCsv(); }}
+                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
               >
                 <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export registry (CSV)
               </button>
               <button
                 type="button"
-                onClick={() => { setDateRangeOpen(false); printPerformanceReport(); }}
-                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+                onClick={() => { close(); printPerformanceReport(); }}
+                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
               >
                 <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print performance report
               </button>
               <div className="h-px bg-border my-1.5"></div>
               <button
                 type="button"
-                onClick={() => { setDateRangeOpen(false); fetchDatabaseResources(); }}
-                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => { close(); fetchDatabaseResources(); }}
+                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 {loading ? '↻ Syncing...' : '↻ Refresh Data'}
               </button>
             </div>
           )}
-        </div>
+        </DateRangePicker>
       </div>
 
       {/* TOP METRICS ROW — 4 CARDS */}
@@ -246,14 +225,14 @@ export default function DashboardPage() {
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-info" /></span>
               <div>
                 <p className="text-base font-black text-info leading-none">{maleActiveFowls.length}</p>
-                <p className="text-sm font-bold uppercase tracking-wider text-info mt-0.5">Sires</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-info mt-0.5">Breeding Males</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
               <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink" /></span>
               <div>
                 <p className="text-base font-black text-pink leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-sm font-bold uppercase tracking-wider text-pink mt-0.5">Dams</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-pink mt-0.5">Breeding Females</p>
               </div>
             </div>
           </div>

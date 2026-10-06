@@ -2,9 +2,12 @@
 import { useMemo } from 'react';
 import {
   calculatePairingStats,
+  dateKeyToMs,
   formatShortDate,
   getMilestoneInfo as getMilestoneInfoHelper,
   winRateOf,
+  type DateRangeCustom,
+  type DateRangePreset,
 } from '@/lib/helpers';
 import type { FowlRecord, MatchRecord, PairingAnalytics } from '@/lib/types';
 
@@ -38,9 +41,10 @@ function monthIndex(s?: string): number {
 export function useFowlAnalytics(
   fowls: FowlRecord[],
   matchHistory: MatchRecord[],
-  dateRangePreset: '7d' | '30d' | 'month' | '3m' | 'all',
+  dateRangePreset: DateRangePreset,
   nowMs: number,
   activeFowls: FowlRecord[],
+  dateRangeCustom?: DateRangeCustom,
 ): FowlAnalytics {
   return useMemo(() => {
     const pairingAnalytics = calculatePairingStats(fowls, matchHistory);
@@ -114,10 +118,12 @@ export function useFowlAnalytics(
 
     const dateRangeLabel = (() => {
       const now = new Date(nowMs);
+      if (dateRangePreset === 'today') return `${formatShortDate(nowMs)} - ${formatShortDate(nowMs)}`;
       if (dateRangePreset === '7d') return `${formatShortDate(nowMs - 7 * DAY_MS)} - ${formatShortDate(nowMs)}`;
       if (dateRangePreset === '30d') return `${formatShortDate(nowMs - 30 * DAY_MS)} - ${formatShortDate(nowMs)}`;
       if (dateRangePreset === 'month') return `${formatShortDate(new Date(now.getFullYear(), now.getMonth(), 1).getTime())} - ${formatShortDate(nowMs)}`;
       if (dateRangePreset === '3m') return `${formatShortDate(nowMs - 90 * DAY_MS)} - ${formatShortDate(nowMs)}`;
+      if (dateRangePreset === 'custom' && dateRangeCustom) return `${formatShortDate(dateKeyToMs(dateRangeCustom.start))} - ${formatShortDate(dateKeyToMs(dateRangeCustom.end))}`;
       return 'All Time';
     })();
 
@@ -135,5 +141,5 @@ export function useFowlAnalytics(
       upcomingMilestones,
       dateRangeLabel,
     };
-  }, [fowls, matchHistory, dateRangePreset, nowMs, activeFowls]);
+  }, [fowls, matchHistory, dateRangePreset, nowMs, activeFowls, dateRangeCustom]);
 }

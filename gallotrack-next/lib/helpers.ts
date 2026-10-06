@@ -267,6 +267,35 @@ export const getSiblingRelations = (fowl: FowlRecord, fowls: FowlRecord[]): Sibl
     .filter((r): r is NonNullable<ReturnType<typeof getSiblingRelations>[number]> => r !== null);
 };
 
+export type DateRangePreset = 'today' | '7d' | '30d' | 'month' | '3m' | 'all' | 'custom';
+export type DateRangeCustom = { start: string; end: string };
+
+const RANGE_DAY_MS = 24 * 60 * 60 * 1000;
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+export const dateKeyOf = (t: number): string => {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+
+export const dateKeyToMs = (key: string): number => {
+  const [y, m, d] = (key || '').split('-').map(Number);
+  if (!y || !m || !d) return Date.now();
+  return new Date(y, m - 1, d).getTime();
+};
+
+export const presetDateKeys = (preset: DateRangePreset, nowMs: number): DateRangeCustom | null => {
+  if (preset === 'today') return { start: dateKeyOf(nowMs), end: dateKeyOf(nowMs) };
+  if (preset === '7d') return { start: dateKeyOf(nowMs - 7 * RANGE_DAY_MS), end: dateKeyOf(nowMs) };
+  if (preset === '30d') return { start: dateKeyOf(nowMs - 30 * RANGE_DAY_MS), end: dateKeyOf(nowMs) };
+  if (preset === '3m') return { start: dateKeyOf(nowMs - 90 * RANGE_DAY_MS), end: dateKeyOf(nowMs) };
+  if (preset === 'month') {
+    const now = new Date(nowMs);
+    return { start: dateKeyOf(new Date(now.getFullYear(), now.getMonth(), 1).getTime()), end: dateKeyOf(nowMs) };
+  }
+  return null;
+};
+
 export const formatShortDate = (t: number) => {
   const d = new Date(t);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
