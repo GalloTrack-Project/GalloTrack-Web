@@ -45,6 +45,7 @@ import {
   normalizeBirdCode,
   previewBirdCode,
   resolveBirdCodes,
+  validateIdentifierFormat,
 } from '@/lib/bird-code';
 import { generateColorReport } from '@/lib/color-genetics';
 import { nameKey } from '@/lib/family-tree';
@@ -633,13 +634,45 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     }
 
     const submittedCode = normalizeBirdCode(birdCode);
-    const codeToUse = submittedCode || suggestedBirdCode;
+    let codeToUse = submittedCode;
+    const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
+    const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
+    const isOffspring = hasSire || hasDam;
+    const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : isFemaleHelper(newGender) ? 'dam' : 'sire';
+
+    if (!codeToUse) {
+      // Auto-assign: query atomic sequence generator via RPC
+      const sireBird = fowls.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
+      const damBird = fowls.find((f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase());
+      const sireCode = sireBird ? (sireBird.bird_code || birdCodes.get(String(sireBird.id))) : (hasSire ? sireName.trim() : null);
+      const damCode = damBird ? (damBird.bird_code || birdCodes.get(String(damBird.id))) : (hasDam ? damName.trim() : null);
+
+      try {
+        const rpcRes = await fowlService.getNextIdentifier(role, sireCode, damCode);
+        if (rpcRes.code && !takenCodes.has(rpcRes.code.toLowerCase())) {
+          codeToUse = rpcRes.code;
+        }
+      } catch {
+        // Fallback to client-side generator
+      }
+      if (!codeToUse) {
+        codeToUse = suggestedBirdCode;
+      }
+    } else {
+      // Manual override validation
+      const formatCheck = validateIdentifierFormat(submittedCode, role);
+      if (!formatCheck.valid) {
+        toastMessage(`Identifier Format Error: ${formatCheck.error}`, 'error');
+        return;
+      }
+    }
+
     if (!isValidBirdCode(codeToUse)) {
-      toastMessage(`Invalid Chicken Code: use letters, numbers, x, - or . only.`, 'error');
+      toastMessage(`Invalid Chicken Identifier: use letters, numbers only.`, 'error');
       return;
     }
     if (takenCodes.has(codeToUse.toLowerCase())) {
-      toastMessage(`Chicken Code "${codeToUse}" is already in use. Pick another.`, 'error');
+      toastMessage(`Chicken Identifier "${codeToUse}" is already in use. Never reuse an identifier.`, 'error');
       return;
     }
 
@@ -1099,19 +1132,36 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const calculatedBloodline = generationPurity(editHasAnyParent ? Math.max(editSireGen, editDamGen) + 1 : 0);
       const editAutoParts = autoCalcAge ? getAgePartsHelper(editBirthdate) : null;
 
-      // Validate the raw input — normalizing first would silently truncate oversize codes.
+      // Validate identifier
       const submittedCode = String(editBirdCode ?? '').replace(/\s+/g, '');
-      if (!isValidBirdCode(submittedCode)) {
-        toastMessage('Invalid Chicken Code: use letters, numbers, x, - or . only (max 24 chars).', 'error');
+      const originalCode = normalizeBirdCode(ui.editingFowl.bird_code);
+      const codeToUse = submittedCode || originalCode;
+
+      if (!isValidBirdCode(codeToUse)) {
+        toastMessage('Invalid Chicken Identifier: use letters, numbers only (max 24 chars).', 'error');
         return;
       }
-      const editingId = String(ui.editingFowl.id);
-      const duplicateCode = Array.from(birdCodes.entries()).some(
-        ([id, code]) => editingId !== id && code.toLowerCase() === submittedCode.toLowerCase()
-      );
-      if (duplicateCode) {
-        toastMessage(`Chicken Code "${submittedCode}" is already in use. Pick another.`, 'error');
-        return;
+
+      const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
+      const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
+      const isOffspring = hasSire || hasDam;
+      const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : isFemaleHelper(editGender) ? 'dam' : 'sire';
+
+      if (codeToUse.toLowerCase() !== originalCode.toLowerCase()) {
+        const formatCheck = validateIdentifierFormat(codeToUse, role);
+        if (!formatCheck.valid) {
+          toastMessage(`Identifier Format Error: ${formatCheck.error}`, 'error');
+          return;
+        }
+
+        const editingId = String(ui.editingFowl.id);
+        const duplicateCode = Array.from(birdCodes.entries()).some(
+          ([id, code]) => editingId !== id && code.toLowerCase() === codeToUse.toLowerCase()
+        );
+        if (duplicateCode) {
+          toastMessage(`Chicken Identifier "${codeToUse}" is already in use by another chicken. Pick another.`, 'error');
+          return;
+        }
       }
 
       // ── Unique name: one chicken per name (excluding the record being edited) ──
@@ -1192,12 +1242,25 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam_pct: dPct,
         bloodline_pct: editCompositionStats?.specificPct ?? calculatedBloodline,
         bloodline_composition: editComposition,
-        bird_code: submittedCode,
+        bird_code: codeToUse,
         wing_band: editBand || null
       };
 
       const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
       if (result.error) throw new Error(result.error);
+
+      if (codeToUse.toLowerCase() !== originalCode.toLowerCase()) {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from('fowl_status_history').insert([{
+          fowl_id: ui.editingFowl.id,
+          field: 'bird_code',
+          old_value: originalCode || null,
+          new_value: codeToUse,
+          reason: 'Manual identifier override',
+          note: `Identifier updated from ${originalCode || 'None'} to ${codeToUse}`,
+          changed_by: user?.id ?? null,
+        }]);
+      }
 
       toastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
       await strainService.saveCustomStrain(editBreed);

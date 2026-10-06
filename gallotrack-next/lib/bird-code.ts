@@ -4,15 +4,14 @@ import type { FowlRecord } from './types';
  * Standardized bird tagging / coding scheme (adviser convention).
  *
  *   Sires     -> 1, 2, 3 ...        (number)
- *   Dams      -> A, B, C ...        (letter)
- *   Offspring -> sire number + dam letter + sibling index,
+ *   Dams      -> A, B, C ...        (letter, skipping single 'X')
+ *   Offspring -> sire number + dam letter + sequence per pair,
  *                e.g. sire 1 x dam A -> 1A1, 1A2, 1A3
  *                (displayed with a subscript: 1A₁, 1A₂, 1A₃)
+ *   Unknowns  -> 0 for unknown sire, X for unknown dam
+ *                (e.g. 1X1, 0B1, 0X1)
  *
- * Legacy tags from the old scheme (1A / 1B foundation tags) are still accepted
- * and kept as stored codes; they are converted by the companion SQL migration.
- *
- * Codes are auto-generated but may be overridden manually by the breeder.
+ * Codes are auto-generated but may be overridden manually by farm owner / admin.
  */
 
 export const BIRD_CODE_MAX_LENGTH = 24;
@@ -21,8 +20,11 @@ export const BIRD_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9x.\-]*$/;
 
 export const BIRD_CODE_HINT = 'Letters, numbers, x, - and . only. Example: 1, A, 1A1';
 
+export const UNKNOWN_SIRE_CODE = '0';
+export const UNKNOWN_DAM_CODE = 'X';
+
 /** Offspring tag: base (sire number + dam letter) followed by the sibling index. */
-const OFFSPRING_CODE_PATTERN = /^(\d+[A-Za-z])(\d+)$/;
+const OFFSPRING_CODE_PATTERN = /^(\d+[A-Za-z]+)(\d+)$/;
 
 const SUBSCRIPT_DIGITS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'] as const;
 
@@ -41,6 +43,50 @@ export const isValidBirdCode = (value: unknown): boolean => {
   if (raw.length === 0 || raw.length > BIRD_CODE_MAX_LENGTH) return false;
   return BIRD_CODE_PATTERN.test(raw);
 };
+
+export function isSireIdentifier(code: string): boolean {
+  const norm = normalizeBirdCode(code);
+  return /^[1-9]\d*$/.test(norm);
+}
+
+export function isDamIdentifier(code: string): boolean {
+  const norm = normalizeBirdCode(code).toUpperCase();
+  return /^[A-Z]+$/.test(norm) && norm !== UNKNOWN_DAM_CODE;
+}
+
+export function isOffspringIdentifier(code: string): boolean {
+  const norm = normalizeBirdCode(code);
+  return /^\d+[A-Za-z]+\d+$/.test(norm);
+}
+
+export function validateIdentifierFormat(
+  code: string,
+  role: 'sire' | 'dam' | 'offspring'
+): { valid: boolean; error?: string } {
+  const norm = normalizeBirdCode(code);
+  if (!norm) return { valid: false, error: 'Identifier cannot be blank.' };
+
+  if (role === 'sire') {
+    if (!/^[1-9]\d*$/.test(norm)) {
+      return { valid: false, error: 'Sire identifier must be numbers only (e.g. 1, 2, 3).' };
+    }
+  } else if (role === 'dam') {
+    if (!/^[A-Za-z]+$/.test(norm)) {
+      return { valid: false, error: 'Dam identifier must be letters only (e.g. A, B, C, AA).' };
+    }
+    if (norm.toUpperCase() === UNKNOWN_DAM_CODE) {
+      return { valid: false, error: 'The letter "X" is reserved for unknown dam.' };
+    }
+  } else if (role === 'offspring') {
+    if (!/^\d+[A-Za-z]+\d+$/.test(norm)) {
+      return {
+        valid: false,
+        error: 'Offspring identifier must be sire number + dam letter + sequence (e.g. 1A1, 2B1, 1X1, 0B1).',
+      };
+    }
+  }
+  return { valid: true };
+}
 
 /** Case-insensitive comparison key. */
 export const birdCodeKey = (value: unknown): string => normalizeBirdCode(value).toLowerCase();
@@ -73,15 +119,17 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Sire half of an offspring tag: his number ("1A" -> "1", "12" -> "12"). */
-function sirePart(code: string): string {
+/** Sire half of an offspring tag: his number ("1A" -> "1", "12" -> "12", "0" -> "0"). */
+export function sirePart(code: string): string {
+  if (!code || code === '0') return UNKNOWN_SIRE_CODE;
   const digits = /^(\d+)/.exec(code);
   if (digits) return digits[1];
   return code;
 }
 
-/** Dam half of an offspring tag: her number as a letter ("1B" -> "A", "A" -> "A"). */
-function damPart(code: string): string {
+/** Dam half of an offspring tag: her number as a letter ("1B" -> "A", "A" -> "A", "X" -> "X"). */
+export function damPart(code: string): string {
+  if (!code || code.toUpperCase() === 'X') return UNKNOWN_DAM_CODE;
   const digits = /^(\d+)/.exec(code);
   if (digits) return numberToLetter(Number(digits[1]));
   const letters = /^([A-Za-z]+)/.exec(code);
@@ -90,15 +138,14 @@ function damPart(code: string): string {
 }
 
 /** Offspring base tag (sire number + dam letter), or null when unusable. */
-function offspringBase(sireCode: string, damCode: string): string | null {
-  const sire = sirePart(sireCode);
-  const dam = damPart(damCode);
-  if (!sire || !dam) return null;
+export function offspringBase(sireCode?: string | null, damCode?: string | null): string {
+  const sire = sireCode ? sirePart(normalizeBirdCode(sireCode)) : UNKNOWN_SIRE_CODE;
+  const dam = damCode ? damPart(normalizeBirdCode(damCode)) : UNKNOWN_DAM_CODE;
   return `${sire}${dam}`;
 }
 
 /** Next sibling index for a base tag: 1A1, 1A2, 1A3 ... */
-function nextSiblingIndex(base: string, taken: CodeSet): number {
+export function nextSiblingIndex(base: string, taken: CodeSet): number {
   const pattern = new RegExp(`^${escapeRegExp(base.toLowerCase())}(\\d+)$`);
   let max = 0;
   taken.forEach((key) => {
@@ -113,14 +160,15 @@ function nextSiblingIndex(base: string, taken: CodeSet): number {
 
 /**
  * Foundation (no parents) tag: sires count 1, 2, 3 ... and dams letter A, B, C ...
- * Legacy tags (1A, 1B ...) still occupying a number/letter are respected so the
- * app stays collision-free before the conversion migration is run.
+ * Single letter 'X' is skipped for dams so it is exclusively reserved for Unknown Dam.
  */
-function nextFoundationCode(gender: string | null | undefined, taken: CodeSet): string {
+export function nextFoundationCode(gender: string | null | undefined, taken: CodeSet): string {
   if (isFemaleCode(gender)) {
     for (let n = 1; n < 100000; n += 1) {
-      const letter = numberToLetter(n).toLowerCase();
-      if (!taken.has(letter) && !taken.has(`${n}b`)) return letter.toUpperCase();
+      const letter = numberToLetter(n).toUpperCase();
+      if (letter === UNKNOWN_DAM_CODE) continue; // skip single 'X'
+      const lower = letter.toLowerCase();
+      if (!taken.has(lower) && !taken.has(`${n}b`)) return letter;
     }
     return 'A';
   }
@@ -139,14 +187,18 @@ export function generateBirdCode(params: {
   gender?: string | null;
   sireCode?: string | null;
   damCode?: string | null;
+  isOffspring?: boolean;
   taken: CodeSet;
 }): string {
-  const { gender, sireCode, damCode, taken } = params;
+  const { gender, sireCode, damCode, isOffspring, taken } = params;
   const sire = normalizeBirdCode(sireCode);
   const dam = normalizeBirdCode(damCode);
 
-  if (isValidBirdCode(sire) && isValidBirdCode(dam)) {
-    const base = offspringBase(sire, dam);
+  const hasSire = !!sire && sire.toLowerCase() !== 'foundation stock';
+  const hasDam = !!dam && dam.toLowerCase() !== 'foundation stock';
+
+  if (isOffspring || hasSire || hasDam) {
+    const base = offspringBase(hasSire ? sire : null, hasDam ? dam : null);
     if (base && isValidBirdCode(`${base}1`)) {
       return `${base}${nextSiblingIndex(base, taken)}`;
     }
@@ -210,12 +262,18 @@ export function resolveBirdCodes(fowls: FowlRecord[]): Map<string, string> {
       return (a.created_at || '').localeCompare(b.created_at || '') || a.id - b.id;
     })
     .forEach((f) => {
-      const sire = byName.get((f.sire || '').trim().toLowerCase());
-      const dam = byName.get((f.dam || '').trim().toLowerCase());
+      const sName = (f.sire || '').trim().toLowerCase();
+      const dName = (f.dam || '').trim().toLowerCase();
+      const sire = sName && sName !== 'foundation stock' ? byName.get(sName) : null;
+      const dam = dName && dName !== 'foundation stock' ? byName.get(dName) : null;
+      const hasSire = !!sire || (!!sName && sName !== 'foundation stock');
+      const hasDam = !!dam || (!!dName && dName !== 'foundation stock');
+
       const code = generateBirdCode({
         gender: f.gender,
-        sireCode: sire ? out.get(String(sire.id)) || sire.bird_code : null,
-        damCode: dam ? out.get(String(dam.id)) || dam.bird_code : null,
+        sireCode: sire ? out.get(String(sire.id)) || sire.bird_code : hasSire ? sName : null,
+        damCode: dam ? out.get(String(dam.id)) || dam.bird_code : hasDam ? dName : null,
+        isOffspring: hasSire || hasDam,
         taken,
       });
       taken.add(code.toLowerCase());
@@ -237,10 +295,11 @@ export function previewBirdCode(params: {
   gender?: string | null;
   sireName?: string | null;
   damName?: string | null;
+  isOffspring?: boolean;
   fowls: FowlRecord[];
   taken?: CodeSet;
 }): string {
-  const { gender, sireName, damName, fowls } = params;
+  const { gender, sireName, damName, isOffspring, fowls } = params;
   const byName = new Map<string, FowlRecord>();
   fowls.forEach((f) => {
     const key = (f.name || '').trim().toLowerCase();
@@ -248,12 +307,18 @@ export function previewBirdCode(params: {
   });
   const codes = resolveBirdCodes(fowls);
   const taken = params.taken || buildCodeSet(Array.from(codes.values()));
-  const sire = byName.get(String(sireName ?? '').trim().toLowerCase());
-  const dam = byName.get(String(damName ?? '').trim().toLowerCase());
+  const sName = (sireName || '').trim().toLowerCase();
+  const dName = (damName || '').trim().toLowerCase();
+  const sire = sName && sName !== 'foundation stock' ? byName.get(sName) : null;
+  const dam = dName && dName !== 'foundation stock' ? byName.get(dName) : null;
+  const hasSire = !!sire || (!!sName && sName !== 'foundation stock');
+  const hasDam = !!dam || (!!dName && dName !== 'foundation stock');
+
   return generateBirdCode({
     gender,
-    sireCode: sire ? codes.get(String(sire.id)) || sire.bird_code : null,
-    damCode: dam ? codes.get(String(dam.id)) || dam.bird_code : null,
+    sireCode: sire ? codes.get(String(sire.id)) || sire.bird_code : hasSire ? sName : null,
+    damCode: dam ? codes.get(String(dam.id)) || dam.bird_code : hasDam ? dName : null,
+    isOffspring: isOffspring ?? (hasSire || hasDam),
     taken,
   });
 }

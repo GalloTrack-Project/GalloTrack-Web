@@ -114,7 +114,9 @@ export default function MatchForm({
           <select value={selectedFowlForMatch} onChange={(e) => setSelectedFowlForMatch(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted/50 font-extrabold text-slate-700 dark:text-card-foreground focus:border-emerald-500 cursor-pointer" required id="select-local-chicken-entry">
             <option value="">-- Select Chicken Node --</option>
             {fowls.filter(f => f.status === 'Active' && isMale(f.gender)).map(f => (
-              <option key={f.id} value={f.name}>{f.name} ({f.breed})</option>
+              <option key={f.id} value={f.name}>
+                {f.bird_code ? `${f.bird_code} · ` : ''}{f.name} ({f.breed})
+              </option>
             ))}
           </select>
         </div>

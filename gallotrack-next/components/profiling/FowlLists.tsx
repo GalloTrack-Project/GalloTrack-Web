@@ -66,9 +66,13 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
         {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : 'NO PHOTO'}
       </div>
       <div className="flex-1 w-full space-y-3">
-        <div className="flex items-center space-x-2">
-          <h4 className="text-base font-black text-slate-900 dark:text-card-foreground">{fowl.name}</h4>
-          <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800">{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}</span>
+        <div className="flex items-center flex-wrap gap-2">
+          <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 shadow-2xs tracking-tight">
+              [{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}]
+            </span>
+            <span>{fowl.name}</span>
+          </h4>
           {fowl.wing_band ? (
             <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
           ) : null}
@@ -182,8 +186,16 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
             </span>
           );
         })()}
-        <div className="flex items-center space-x-2">
-          <h4 className="text-base font-black text-slate-700 dark:text-card-foreground">{fowl.name}</h4>
+        <div className="flex items-center flex-wrap gap-2">
+          <h4 className="text-base font-black text-slate-700 dark:text-card-foreground flex items-center gap-2">
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800 shadow-2xs tracking-tight">
+              [{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}]
+            </span>
+            <span>{fowl.name}</span>
+          </h4>
+          {fowl.wing_band ? (
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
+          ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">📦 Archived</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">{fowl.breed}</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
@@ -219,8 +231,16 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
       </div>
       <div className="flex-1 w-full space-y-3">
         <span className="antigravity-badge absolute top-0 right-0 text-xs font-black uppercase px-3.5 py-1 bg-rose-900 text-white rounded-bl-md tracking-widest shadow-2xs">● DECEASED</span>
-        <div className="flex items-center space-x-2">
-          <h4 className="text-base font-black text-slate-900 dark:text-card-foreground line-through opacity-75">{fowl.name}</h4>
+        <div className="flex items-center flex-wrap gap-2">
+          <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 shadow-2xs tracking-tight">
+              [{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}]
+            </span>
+            <span className="line-through opacity-75">{fowl.name}</span>
+          </h4>
+          {fowl.wing_band ? (
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
+          ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800">{fowl.breed}</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800">💀 Cause of Death: {fowl.death_reason || 'Unspecified'}{fowl.death_date ? ` · ${fowl.death_date}` : ''}</span>
@@ -329,6 +349,8 @@ export default function FowlLists({
     return null;
   }, [tab, maleActiveFowls, femaleActiveFowls, sireMaterialFowls, offspringFowls, fowls, archivedFowls, deceasedFowls]);
 
+  const allFowls = useMemo(() => [...fowls, ...archivedFowls, ...deceasedFowls], [fowls, archivedFowls, deceasedFowls]);
+
   const baseList = useMemo(() => {
     if (rolePool) {
       if (roleStatus === 'Archived') return rolePool.archived;
@@ -387,7 +409,8 @@ export default function FowlLists({
   const paginatedBirds = useMemo(() => {
     const foughtNames = new Set(matchHistory.map((m) => m.entry_name.trim().toLowerCase()));
     const list = baseList.filter((f) => {
-      const searchOk = fowlMatchesQuery(f, query);
+      const code = birdCodeOf(f, allFowls);
+      const searchOk = fowlMatchesQuery(f, query) || (!!code && code.toLowerCase().includes(query.trim().toLowerCase()));
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
@@ -399,7 +422,7 @@ export default function FowlLists({
     });
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [baseList, page, query, filterSire, filterDam, filterStage, filterReason, filterBreed, filterFights, reasonValue, matchHistory]);
+  }, [baseList, allFowls, page, query, filterSire, filterDam, filterStage, filterReason, filterBreed, filterFights, reasonValue, matchHistory]);
 
   const filterBar = (
     <div className="bg-white dark:bg-card p-3.5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">

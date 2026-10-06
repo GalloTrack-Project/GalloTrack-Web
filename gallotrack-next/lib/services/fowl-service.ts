@@ -222,3 +222,26 @@ export async function uploadFowlImage(file: File): Promise<{ url?: string; error
   const { data } = supabase.storage.from('fowl-images').getPublicUrl(filePath);
   return { url: data.publicUrl };
 }
+
+export async function getNextIdentifier(
+  role: 'sire' | 'dam' | 'offspring',
+  sireCode?: string | null,
+  damCode?: string | null
+): Promise<{ code?: string; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  try {
+    const { data, error } = await supabase.rpc('get_next_fowl_identifier', {
+      p_user_id: user.id,
+      p_role: role,
+      p_sire_code: sireCode ?? null,
+      p_dam_code: damCode ?? null,
+    });
+    if (error) return { error: error.message };
+    return { code: String(data) };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
+}
+

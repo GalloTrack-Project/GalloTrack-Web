@@ -93,7 +93,8 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
   const candidates = fowls
     .filter((f) => {
       const name = (f.name || '').trim().toLowerCase();
-      if (!name || name === 'foundation stock' || !name.includes(q)) return false;
+      const code = (f.bird_code || '').trim().toLowerCase();
+      if (!name || name === 'foundation stock' || (!name.includes(q) && !code.includes(q))) return false;
       if (preferredGender === 'Male' && f.gender !== 'Rooster' && f.gender !== 'Male') return false;
       if (preferredGender === 'Female' && f.gender !== 'Hen' && f.gender !== 'Female') return false;
       return true;
@@ -144,7 +145,10 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                       >
                         <span className="w-7 h-7 rounded-sm bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center shrink-0"><ChickenIcon className="w-3 h-3 text-muted-foreground" /></span>
                         <span className="flex-1 min-w-0">
-                          <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">{f.name}</span>
+                          <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">
+                            {f.bird_code ? <span className="font-mono text-xs font-black px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 mr-1.5 align-middle">[{f.bird_code}]</span> : null}
+                            {f.name}
+                          </span>
                           <span className="block text-xs font-semibold text-muted-foreground truncate">{f.breed} · {f.growth_stage || 'Stag'} · {genderLabel(f.gender) || 'Unset'}</span>
                         </span>
                       </button>

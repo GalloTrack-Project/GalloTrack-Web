@@ -6,8 +6,9 @@ import type { BloodlineStats } from '@/lib/bloodline-composition';
 import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
-import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
+import { Lock, Edit3, RotateCcw } from 'lucide-react';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
   const toneCls = tone === 'green'
@@ -137,6 +138,7 @@ export default function EncodeForm({
   const legColorInputRef = useRef<HTMLDivElement>(null);
   const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [isManualOverride, setIsManualOverride] = useState(false);
 
 
   useEffect(() => {
@@ -187,21 +189,87 @@ export default function EncodeForm({
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">Identifier Name</label>
           <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required id="identifier-name" />
         </div>
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="chicken-code">
-            Chicken Code <span className="text-muted-foreground font-normal lowercase">(standardized tag — 1, 2, 3 = sire · A, B, C = dam · 1A1 = offspring)</span>
-          </label>
-          <input
-            type="text"
-            value={birdCode}
-            onChange={(e) => setBirdCode(e.target.value)}
-            className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
-            placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
-          id="chicken-code" />
-          <p className="text-xs text-muted-foreground mt-1 font-semibold">
-            {birdCode.trim() ? 'Manually set' : <>Auto-generated: <span className="font-mono font-black text-success dark:text-emerald-300">{formatBirdCodeForDisplay(suggestedBirdCode)}</span>{suggestedBirdCode ? (/^\d+$/.test(suggestedBirdCode) ? ' · numero (sire)' : /^[A-Za-z]$/.test(suggestedBirdCode) ? ' · titik (dam)' : ' · offspring') : ''}</>}
-          </p>
-        </div>
+        {(() => {
+          const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
+          const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
+          const isOffspring = hasSire || hasDam;
+          const currentRole: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : newGender === 'Hen' || newGender === 'Female' ? 'dam' : 'sire';
+          const formatCheck = birdCode.trim() ? validateIdentifierFormat(birdCode.trim(), currentRole) : null;
+          const isDuplicate = fowls.some(f => normalizeBirdCode(f.bird_code).toLowerCase() === normalizeBirdCode(birdCode).toLowerCase());
+
+          return (
+            <div className="bg-slate-50/80 dark:bg-muted/40 p-4 rounded-lg border border-slate-200/80 dark:border-border space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
+                  Unique Chicken Identifier
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsManualOverride(!isManualOverride);
+                    if (isManualOverride) setBirdCode('');
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                >
+                  {isManualOverride ? (
+                    <>
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Use Auto-Generated Code</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit identifier manually</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {!isManualOverride ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 flex items-center justify-between p-3 rounded-md border border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identifier:</span>
+                      <span className="font-mono text-base font-extrabold tracking-wide text-emerald-800 dark:text-emerald-300">
+                        {formatBirdCodeForDisplay(suggestedBirdCode) || 'Generating...'}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                      Auto-Assigned ({currentRole === 'sire' ? 'Sire' : currentRole === 'dam' ? 'Dam' : 'Offspring'})
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={birdCode}
+                      onChange={(e) => setBirdCode(e.target.value)}
+                      className="w-full p-3 border border-emerald-500 rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-mono font-bold focus:ring-4 focus:ring-emerald-100"
+                      placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
+                      id="chicken-code"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    {birdCode.trim() ? (
+                      formatCheck && !formatCheck.valid ? (
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
+                      ) : isDuplicate ? (
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Identifier "{birdCode.trim()}" is already in use</span>
+                      ) : (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Valid format for {currentRole}</span>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground">Format: Sire (digits) · Dam (letters) · Offspring (sire + dam + sequence)</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
         <div>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="wing-band-id">
             Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>

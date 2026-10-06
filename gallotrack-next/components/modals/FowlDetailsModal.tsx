@@ -880,7 +880,14 @@ export default function FowlDetailsModal({
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`w-8 h-8 rounded-sm flex items-center justify-center text-sm shrink-0 border ${tone}`}>{icon}</span>
                   <div className="min-w-0">
-                    <p className={`text-sm font-black truncate ${target ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-card-foreground'}`}>{r.name}</p>
+                    <p className={`text-sm font-black truncate flex items-center gap-1.5 ${target ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-card-foreground'}`}>
+                      {target?.bird_code && (
+                        <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-foreground border border-border uppercase shrink-0 font-bold">
+                          [{formatBirdCodeForDisplay(target.bird_code)}]
+                        </span>
+                      )}
+                      <span className="truncate">{r.name}</span>
+                    </p>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">{context}</p>
                   </div>
                 </div>

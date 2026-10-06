@@ -780,12 +780,12 @@ export default function DashboardPage() {
                     <td className="p-4">
                       <div className="flex items-center space-x-2.5">
                         <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-success" /></div>
-                        <span className="font-bold text-card-foreground">{log.entry_name}</span>
                         {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
                           <span className="text-sm font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase">
-                            {formatBirdCodeForDisplay(codeByName.get((log.entry_name || '').trim().toLowerCase()))}
+                            [{formatBirdCodeForDisplay(codeByName.get((log.entry_name || '').trim().toLowerCase()))}]
                           </span>
                         )}
+                        <span className="font-bold text-card-foreground">{log.entry_name}</span>
                       </div>
                       <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
                         {log.breed || '—'}{fowls.find(f => f.name === log.entry_name)?.birthdate ? ` · hatch ${fowls.find(f => f.name === log.entry_name)?.birthdate}` : ''}

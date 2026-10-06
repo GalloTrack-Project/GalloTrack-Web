@@ -9,7 +9,7 @@ import { buildBreedingPairs } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
 import { genderLabel, parentBreedOf } from '@/lib/helpers';
 import { fowlMatchesQuery } from '@/lib/lineage';
-import { resolveBirdCodes } from '@/lib/bird-code';
+import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { rankFowls, bestFowl, bestYearFor, type RankingMetric } from '@/lib/ranking';
 import { RANKING_METRIC_LABELS } from '@/lib/settings';
 import { useUserSettings } from '@/lib/hooks/use-user-settings';
@@ -81,6 +81,11 @@ function FamilyCard({ g, index, pairingAnalytics, getChildMatchStats, setSelecte
             <span className={`w-2 h-2 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
             <div className="min-w-0">
               <div className="flex items-center gap-1">
+                {child.bird_code && (
+                  <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-foreground border border-border font-bold uppercase shrink-0">
+                    [{formatBirdCodeForDisplay(child.bird_code)}]
+                  </span>
+                )}
                 <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
                 {isBest && cs.decided > 0 && (
                   <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0" title={bestTitle}>Best</span>
@@ -331,6 +336,7 @@ export default function LineageDirectory({
   const renderChildRow = (child: FowlRecord, bestId: number | null) => {
     const stats = getChildMatchStats(child.name);
     const isBest = child.id === bestId;
+    const code = child.bird_code || birdCodes.get(String(child.id));
     return (
       <div
         key={child.id}
@@ -345,6 +351,11 @@ export default function LineageDirectory({
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${child.status === 'Active' ? 'bg-emerald-500' : child.status === 'Archived' ? 'bg-amber-400' : child.status === 'Deceased' ? 'bg-rose-400' : 'bg-muted-foreground'}`}></span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
+                {code && (
+                  <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-foreground border border-border font-bold uppercase shrink-0">
+                    [{formatBirdCodeForDisplay(code)}]
+                  </span>
+                )}
                 <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{child.name}</p>
                 {isBest && stats.decided > 0 && (
                   <span className="text-xs font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0" title={bestTitleFor(child)}>Best</span>

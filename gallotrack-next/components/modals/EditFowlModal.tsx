@@ -1,8 +1,9 @@
 'use client';
 import React from 'react';
-import { Pencil, Tag, Ruler, Calendar, TreePine } from 'lucide-react';
+import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3 } from 'lucide-react';
 import type { FowlRecord, AgeParts } from '@/lib/types';
 import ParentSelector from './ParentSelector';
+import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { Modal } from '@/components/ui';
 
@@ -119,6 +120,7 @@ export default function EditFowlModal({
   generationPurity,
 }: EditFowlModalProps) {
   const unitPrefs = useUnitPrefs();
+  const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
   if (!editingFowl) return null;
 
   const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
@@ -279,19 +281,70 @@ export default function EditFowlModal({
             <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-xs uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
               <TreePine className="w-3.5 h-3.5" /> <span>Ancestry Heritage Roots</span>
             </h4>
-            <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="chicken-code">
-                Chicken Code <span className="text-muted-foreground font-normal lowercase">(standardized tag — 1, 2, 3 = sire · A, B, C = dam · 1A1 = offspring)</span>
-              </label>
-              <input
-                type="text"
-                value={editBirdCode}
-                onChange={(e) => setEditBirdCode(e.target.value)}
-                className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
-                placeholder="e.g. 1, A, 1A1"
-              id="chicken-code" />
-              <p className="text-xs text-muted-foreground mt-1 font-semibold">Auto-generated when left blank — must be unique for each chicken.</p>
-            </div>
+            {(() => {
+              const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
+              const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
+              const isOffspring = hasSire || hasDam;
+              const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : editGender === 'Hen' || editGender === 'Female' ? 'dam' : 'sire';
+              const formatCheck = editBirdCode.trim() ? validateIdentifierFormat(editBirdCode.trim(), role) : null;
+              const isDuplicate = fowls.some(f => f.id !== editingFowl?.id && normalizeBirdCode(f.bird_code).toLowerCase() === normalizeBirdCode(editBirdCode).toLowerCase());
+
+              return (
+                <div className="bg-slate-50/80 dark:bg-muted/40 p-3 rounded-lg border border-slate-200/80 dark:border-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
+                      Unique Chicken Identifier
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setManualCodeOpen(!manualCodeOpen)}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>{manualCodeOpen ? 'Lock Identifier' : 'Edit identifier manually'}</span>
+                    </button>
+                  </div>
+                  {!manualCodeOpen ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card">
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="font-mono text-sm font-extrabold text-slate-800 dark:text-card-foreground">
+                          [{formatBirdCodeForDisplay(editBirdCode) || '—'}]
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-semibold">Permanent Assigned Code</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <input
+                        type="text"
+                        value={editBirdCode}
+                        onChange={(e) => setEditBirdCode(e.target.value)}
+                        className="w-full p-2.5 border border-emerald-500 rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-mono font-bold focus:border-emerald-500"
+                        placeholder="e.g. 1, A, 1A1"
+                        id="chicken-code"
+                      />
+                      <div className="flex items-center justify-between text-xs font-semibold">
+                        {editBirdCode.trim() ? (
+                          formatCheck && !formatCheck.valid ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
+                          ) : isDuplicate ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Already taken by another chicken</span>
+                          ) : (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Valid format for {role}</span>
+                          )
+                        ) : (
+                          <span className="text-muted-foreground">Code is required</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded p-1.5">
+                        ⚠️ Changing this will update the official registry code and will be logged in the history audit.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div>
               <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="wing-band-id">
                 Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band)</span>
