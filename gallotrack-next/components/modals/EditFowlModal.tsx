@@ -48,9 +48,7 @@ type EditFowlModalProps = {
   setEditSire: (v: string) => void;
   editDam: string;
   setEditDam: (v: string) => void;
-  editSirePct: number | string;
   setEditSirePct: (v: number | string) => void;
-  editDamPct: number | string;
   setEditDamPct: (v: number | string) => void;
   editBirdCode: string;
   setEditBirdCode: (v: string) => void;
@@ -105,9 +103,7 @@ export default function EditFowlModal({
   setEditSire,
   editDam,
   setEditDam,
-  editSirePct,
   setEditSirePct,
-  editDamPct,
   setEditDamPct,
   editBirdCode,
   setEditBirdCode,
@@ -322,22 +318,6 @@ export default function EditFowlModal({
                     Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
                   </label>
                   <ParentSelector id="edit-dam" value={editDam} onChange={(v) => { setEditDam(v); if (isFoundationStock(v)) setEditDamPct(100); }} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="sire-purity">
-                  Sire Purity (%)
-                </label>
-                <input type="number" value={editSirePct} onChange={(e) => { if (e.target.value === '') { setEditSirePct(''); } else { setEditSirePct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 60" min="0" max="100" id="sire-purity" />
-                <p className="text-xs text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Dam</p>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="dam-purity">
-                  Dam Purity (%)
-                </label>
-                <input type="number" value={editDamPct} onChange={(e) => { if (e.target.value === '') { setEditDamPct(''); } else { setEditDamPct(Math.min(Number(e.target.value), 100)); } }} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold placeholder:text-muted-foreground placeholder:font-normal" placeholder="e.g. 40" min="0" max="100" id="dam-purity" />
-                <p className="text-xs text-muted-foreground mt-1 font-semibold">Dapat mag-total ng 100% kasama ang Sire</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import type { FowlRecord } from './types';
 import type { ColorReport } from './color-genetics';
 import type { BreedCompliance } from './breed-standards';
+import { getFowlBloodlineStats } from './bloodline-composition';
 
 export type StrainType = 'purebred' | 'crossbred' | 'foundation' | 'unknown' | 'linebred';
 
@@ -339,9 +340,9 @@ export function generateBloodlineReport(
   })();
 
   const genInfo = getGenerationInfo(generation);
-  const sirePct = Number(fowl.sire_pct) || 0;
-  const damPct = Number(fowl.dam_pct) || 0;
-  const purityPct = Math.round(((sirePct + damPct) / 2) * 10) / 10;
+  // Engine-driven purity: dominant share of the bird's bloodline composition.
+  // The legacy `sire_pct`/`dam_pct` columns are no longer averaged in here.
+  const purityPct = getFowlBloodlineStats(fowl, fowls)?.specificPct ?? 0;
 
   // Strain type
   let strainType: StrainType;
@@ -366,6 +367,11 @@ export function generateBloodlineReport(
 
   const sireRecord = fowls.find(f => f.name === fowl.sire);
   const damRecord = fowls.find(f => f.name === fowl.dam);
+
+  // Parent "purity" for the vigor formula, read off each parent's own
+  // composition instead of the retired manual sire_pct/dam_pct inputs.
+  const sirePct = sireRecord ? (getFowlBloodlineStats(sireRecord, fowls)?.specificPct ?? 0) : 0;
+  const damPct = damRecord ? (getFowlBloodlineStats(damRecord, fowls)?.specificPct ?? 0) : 0;
 
   const hybridVigor = calculateHybridVigor(sireStrain, damStrain, generation, sirePct, damPct, crossPattern);
   const inbreedingCoefficient = calculateInbreedingCoefficient(sireStrain, damStrain, sireRecord, damRecord, fowls);

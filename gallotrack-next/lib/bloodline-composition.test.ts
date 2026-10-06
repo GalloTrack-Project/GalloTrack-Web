@@ -12,6 +12,7 @@ import {
   parseComposition,
   planLineageRefresh,
   specificBloodlinePct,
+  traceComposition,
 } from './bloodline-composition';
 
 const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -337,5 +338,148 @@ describe('planLineageRefresh', () => {
     const patches = planLineageRefresh({ root: edited, previousName: 'King', fowls });
 
     expect(patches.some((p) => p.id === edited.id)).toBe(false);
+  });
+});
+
+describe('traceComposition', () => {
+  const entry = (entries: ReturnType<typeof traceComposition>, strain: string) =>
+    entries.find((e) => e.strain === strain);
+
+  const adviserFlock = (): FowlRecord[] => [
+    bird({ id: 1, name: 'Pure Kelso', breed: 'Kelso', gender: 'Rooster' }),
+    bird({ id: 2, name: 'HR Hen', breed: 'Hatch, Roundhead', gender: 'Hen' }),
+    bird({ id: 3, name: 'F1', sire: 'Pure Kelso', dam: 'HR Hen' }),
+    bird({ id: 4, name: 'F2', sire: 'Pure Kelso', dam: 'F1' }),
+    bird({ id: 5, name: 'F3', sire: 'Pure Kelso', dam: 'F2' }),
+  ];
+
+  it('points a foundation bird at itself at depth 0', () => {
+    const flock = adviserFlock();
+    const trace = traceComposition(flock[0], flock);
+
+    expect(trace).toHaveLength(1);
+    expect(trace[0]).toMatchObject({ strain: 'Kelso', pct: 100 });
+    expect(trace[0].sources[0]).toMatchObject({
+      side: 'self',
+      depth: 0,
+      share: 100,
+      pct: 100,
+      circular: false,
+      ancestor: { id: 1, name: 'Pure Kelso' },
+    });
+  });
+
+  it('traces the adviser 50/50 cross back to each parent', () => {
+    const flock = adviserFlock();
+    const trace = traceComposition(flock[2], flock);
+
+    expect(trace.map((e) => [e.strain, e.pct])).toEqual([
+      ['Kelso', 50],
+      ['Hatch', 25],
+      ['Roundhead', 25],
+    ]);
+
+    expect(entry(trace, 'Kelso')!.sources[0]).toMatchObject({
+      side: 'sire',
+      depth: 1,
+      share: 100,
+      ancestor: { id: 1, name: 'Pure Kelso' },
+    });
+
+    const roundhead = entry(trace, 'Roundhead')!;
+    expect(roundhead.sources).toHaveLength(1);
+    expect(roundhead.sources[0]).toMatchObject({
+      side: 'dam',
+      depth: 1,
+      share: 50,
+      pct: 25,
+      ancestor: { id: 2, name: 'HR Hen' },
+    });
+  });
+
+  it('shows a grandparent contributing at depth 2 (25% → 12.5% → 6.25%)', () => {
+    const flock = adviserFlock();
+    const f1 = traceComposition(flock[2], flock);
+    const f2 = traceComposition(flock[3], flock);
+    const f3 = traceComposition(flock[4], flock);
+
+    expect(entry(f1, 'Roundhead')!.sources[0].depth).toBe(1);
+    expect(entry(f2, 'Roundhead')!.sources[0].depth).toBe(2);
+    expect(entry(f3, 'Roundhead')!.sources[0].depth).toBe(3);
+
+    expect(entry(f2, 'Roundhead')!.pct).toBe(12.5);
+    expect(entry(f3, 'Roundhead')!.pct).toBe(6.3);
+
+    // The grandparent's own share is what halves; the receipt keeps both facts.
+    expect(entry(f2, 'Roundhead')!.sources[0]).toMatchObject({ share: 50, ancestor: { id: 2 } });
+    expect(entry(f3, 'Roundhead')!.sources[0]).toMatchObject({ share: 50, ancestor: { id: 2 } });
+  });
+
+  it('records both parents when a strain arrives from each side', () => {
+    const flock: FowlRecord[] = [
+      bird({ id: 1, name: 'S', breed: 'Kelso', gender: 'Rooster' }),
+      bird({ id: 2, name: 'D', breed: 'Kelso, Hatch', gender: 'Hen' }),
+      bird({ id: 3, name: 'C', sire: 'S', dam: 'D' }),
+    ];
+    const trace = traceComposition(flock[2], flock);
+    const kelso = entry(trace, 'Kelso')!;
+
+    expect(kelso.pct).toBe(75);
+    expect(kelso.sources.map((s) => s.side)).toEqual(['sire', 'dam']);
+    expect(kelso.sources.map((s) => s.pct)).toEqual([50, 25]);
+    expect(kelso.sources.reduce((sum, s) => sum + s.pct, 0)).toBeCloseTo(kelso.pct, 1);
+  });
+
+  it('attributes an unregistered parent to Unknown without inventing blood', () => {
+    const flock = [bird({ id: 1, name: 'Pure Kelso', breed: 'Kelso' })];
+    const child = bird({ id: 2, name: 'Child', sire: 'Pure Kelso', dam: 'Some Unregistered Hen' });
+    const trace = traceComposition(child, flock);
+
+    const unknown = entry(trace, UNKNOWN_BLOODLINE)!;
+    expect(unknown.pct).toBe(50);
+    expect(unknown.sources[0]).toMatchObject({
+      side: 'dam',
+      depth: 1,
+      ancestor: { id: null, name: 'Some Unregistered Hen' },
+    });
+  });
+
+  it('stops on a circular pedigree instead of looping forever', () => {
+    const flock: FowlRecord[] = [
+      bird({ id: 1, name: 'A', breed: 'Kelso', sire: 'B', dam: 'Foundation Stock' }),
+      bird({ id: 2, name: 'B', breed: 'Hatch', sire: 'A', dam: 'Foundation Stock' }),
+    ];
+    const trace = traceComposition(flock[0], flock);
+
+    const total = trace.reduce((sum, e) => sum + e.pct, 0);
+    expect(total).toBeCloseTo(100, 1);
+    expect(trace.flatMap((e) => e.sources).some((s) => s.circular)).toBe(true);
+  });
+
+  it('matches getBloodlineStats exactly for every bird in the flock', () => {
+    const flock = adviserFlock();
+    flock.push(bird({ id: 6, name: 'Multi', breed: 'Sweater, Claret, Albany' }));
+    flock.push(bird({ id: 7, name: 'Mix', sire: 'F2', dam: 'Multi' }));
+    flock.push(bird({ id: 8, name: 'Ghost', sire: 'Never Registered', dam: 'F3' }));
+
+    for (const f of flock) {
+      const stats = getBloodlineStats(computeBloodlineComposition(f, flock))!;
+      const trace = traceComposition(f, flock);
+
+      expect(trace.map((e) => [e.strain, e.pct])).toEqual(
+        stats.entries.map((e) => [e.strain, e.pct])
+      );
+      for (const e of trace) {
+        // Individual receipts are rounded to 1 dp, so they may drift a little
+        // from the published figure; the published figure itself must not.
+        const summed = e.sources.reduce((sum, s) => sum + s.pct, 0);
+        expect(Math.abs(summed - e.pct)).toBeLessThanOrEqual(0.2);
+        expect(e.sources.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('is empty for a missing bird', () => {
+    expect(traceComposition(undefined as unknown as FowlRecord, [])).toEqual([]);
   });
 });

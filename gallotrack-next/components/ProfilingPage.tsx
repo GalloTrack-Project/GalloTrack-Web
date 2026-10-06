@@ -27,7 +27,6 @@ export default function ProfilingPage() {
     availableLegColors, customLegColorNames, deleteCustomLegColor,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     sireName, setSireName, damName, setDamName,
-    sirePct, setSirePct, damPct, setDamPct,
     birdCode, setBirdCode, suggestedBirdCode, previewBloodlineStats,
     wingBand, setWingBand,
     selectedImage, setSelectedImage, imagePreview, setImagePreview,
@@ -149,8 +148,6 @@ export default function ProfilingPage() {
           legColorOpen={legColorOpen} setLegColorOpen={setLegColorOpen}
           sireName={sireName} setSireName={setSireName}
           damName={damName} setDamName={setDamName}
-          sirePct={sirePct} setSirePct={setSirePct}
-          damPct={damPct} setDamPct={setDamPct}
           birdCode={birdCode} setBirdCode={setBirdCode}
           wingBand={wingBand} setWingBand={setWingBand}
           suggestedBirdCode={suggestedBirdCode}

@@ -253,6 +253,217 @@ export function specificBloodlinePct(composition: BloodlineComposition | null | 
   return entries.length > 0 ? entries[0].pct : 0;
 }
 
+// ── Provenance trace ────────────────────────────────────────────────────────
+//
+// Answers "saan nagmula ang bawat porsyento?" — the same ancestry walk the
+// composition engine performs, but every branch keeps a receipt:
+//
+//   Roundhead 25%  ← via Dam (depth 2)  ← her Dam "B7" contributed 100%
+//
+// Contributions are tracked alongside the engine at every generation and
+// rescaled by exactly the factor `normalizeComposition` applied, so a trace
+// entry's `pct` is *identical* to `getBloodlineStats().entries[].pct`.
+
+export type TraceAncestor = {
+  /** Registry row id, or null when the ancestor is named but not registered. */
+  id: number | null;
+  name: string;
+};
+
+export type TraceSource = {
+  /** Which side of the pedigree the contribution arrived through. */
+  side: 'sire' | 'dam' | 'self';
+  /** Generations above the subject: 0 = subject, 1 = parent, 2 = grandparent. */
+  depth: number;
+  ancestor: TraceAncestor;
+  /** Share this ancestor contributed inside its own composition (0–100). */
+  share: number;
+  /** Contribution to the subject before normalisation (share × 0.5^depth). */
+  raw: number;
+  /** Contribution to the subject after normalisation (share of the 100%). */
+  pct: number;
+  /** True when a circular pedigree stopped the walk at this ancestor. */
+  circular: boolean;
+};
+
+export type TraceEntry = {
+  strain: string;
+  /** Final share — matches `getBloodlineStats().entries[].pct` exactly. */
+  pct: number;
+  isUnknown: boolean;
+  sources: TraceSource[];
+};
+
+type RawTrace = Omit<TraceSource, 'pct'> & { strain: string };
+
+const positiveId = (id: number | null | undefined): number | null =>
+  typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null;
+
+const compValue = (comp: BloodlineComposition, strain: string): number => {
+  const key = strainKey(strain);
+  for (const [k, v] of Object.entries(comp)) {
+    if (strainKey(k) === key) return v;
+  }
+  return 0;
+};
+
+function baseTraces(fowl: FowlRecord, circular: boolean): RawTrace[] {
+  const ancestor: TraceAncestor = { id: positiveId(fowl.id), name: fowl.name || '' };
+  return Object.entries(baseComposition(fowl)).map(([strain, share]) => ({
+    strain,
+    side: 'self' as const,
+    depth: 0,
+    ancestor,
+    share,
+    raw: share,
+    circular,
+  }));
+}
+
+/**
+ * Re-express every source so its `raw` values sum to exactly what the engine
+ * stored for that strain. `comp` is the engine's already-normalised output;
+ * scaling by `comp / raw` reproduces both the 1-dp rounding and the drift
+ * absorption, so the receipts always add up to the published number.
+ */
+function rescaleTo(sources: RawTrace[], comp: BloodlineComposition): RawTrace[] {
+  const rawByStrain = new Map<string, number>();
+  for (const s of sources) {
+    const key = strainKey(s.strain);
+    rawByStrain.set(key, (rawByStrain.get(key) || 0) + s.raw);
+  }
+  return sources.map((s) => {
+    const raw = rawByStrain.get(strainKey(s.strain)) || 0;
+    const target = compValue(comp, s.strain);
+    if (!raw || !target) return s;
+    return { ...s, raw: (s.raw * target) / raw };
+  });
+}
+
+function traceNode(
+  fowl: FowlRecord,
+  fowls: FowlRecord[],
+  chain: Set<string>,
+  compMemo: Map<string, BloodlineComposition>,
+  traceMemo: Map<string, RawTrace[]>
+): { comp: BloodlineComposition; sources: RawTrace[] } {
+  const key = strainKey(fowl.name || '');
+  if (key) {
+    const c = compMemo.get(key);
+    const t = traceMemo.get(key);
+    if (c && t) return { comp: c, sources: t };
+    // A cycle stops here exactly like the engine — and is never memoised,
+    // because the stop depends on which branch of the walk reached it.
+    if (chain.has(key)) return { comp: baseComposition(fowl), sources: baseTraces(fowl, true) };
+  }
+
+  const sire = findByName(fowls, fowl.sire);
+  const dam = findByName(fowls, fowl.dam);
+
+  if (!sire && !dam) {
+    const comp = baseComposition(fowl);
+    const sources = baseTraces(fowl, false);
+    if (key) {
+      compMemo.set(key, comp);
+      traceMemo.set(key, sources);
+    }
+    return { comp, sources };
+  }
+
+  if (key) chain.add(key);
+  const sireNode = sire
+    ? traceNode(sire, fowls, chain, compMemo, traceMemo)
+    : { comp: { [UNKNOWN_BLOODLINE]: 100 } as BloodlineComposition, sources: [] as RawTrace[] };
+  const damNode = dam
+    ? traceNode(dam, fowls, chain, compMemo, traceMemo)
+    : { comp: { [UNKNOWN_BLOODLINE]: 100 } as BloodlineComposition, sources: [] as RawTrace[] };
+  if (key) chain.delete(key);
+
+  const comp = blendCompositions(sireNode.comp, damNode.comp, 0.5, 0.5);
+
+  const branch = (
+    node: { sources: RawTrace[] },
+    side: 'sire' | 'dam',
+    parent: FowlRecord | undefined,
+    parentName: string | null | undefined
+  ): RawTrace[] => {
+    const shifted: RawTrace[] = node.sources.map((s) => ({
+      ...s,
+      side,
+      depth: s.depth + 1,
+      raw: s.raw * 0.5,
+    }));
+    if (!parent) {
+      // Named but unregistered (or blank) — the engine books an Unknown share.
+      shifted.push({
+        strain: UNKNOWN_BLOODLINE,
+        side,
+        depth: 1,
+        ancestor: { id: null, name: parentName || '' },
+        share: 100,
+        raw: 50,
+        circular: false,
+      });
+    }
+    return shifted;
+  };
+
+  const sources = rescaleTo(
+    [...branch(sireNode, 'sire', sire, fowl.sire), ...branch(damNode, 'dam', dam, fowl.dam)],
+    comp
+  );
+
+  if (key) {
+    compMemo.set(key, comp);
+    traceMemo.set(key, sources);
+  }
+  return { comp, sources };
+}
+
+/**
+ * Per-strain provenance for one bird, sorted like `getBloodlineStats().entries`.
+ *
+ * Every source names the ancestor it came through, how many generations back
+ * that ancestor sits, and how much of the final percentage it accounts for —
+ * so 25% / 12.5% / 6.25% shares are traceable to the exact grandparent,
+ * great-grandparent, and so on.
+ */
+export function traceComposition(fowl: FowlRecord, fowls: FowlRecord[] = []): TraceEntry[] {
+  if (!fowl) return [];
+  const { comp, sources } = traceNode(fowl, fowls, new Set(), new Map(), new Map());
+
+  const byStrain = new Map<string, { strain: string; sources: TraceSource[] }>();
+  for (const s of sources) {
+    const key = strainKey(s.strain);
+    const bucket = byStrain.get(key) ?? { strain: s.strain, sources: [] as TraceSource[] };
+    bucket.sources.push({
+      side: s.side,
+      depth: s.depth,
+      ancestor: s.ancestor,
+      share: s.share,
+      raw: s.raw,
+      pct: round1(s.raw),
+      circular: s.circular,
+    });
+    byStrain.set(key, bucket);
+  }
+
+  const entries: TraceEntry[] = Array.from(byStrain.values()).map((b) => ({
+    strain: b.strain,
+    pct: compValue(comp, b.strain),
+    isUnknown: strainKey(b.strain) === strainKey(UNKNOWN_BLOODLINE),
+    sources: b.sources,
+  }));
+
+  return entries
+    .filter((e) => e.pct > 0)
+    .sort((a, b) => {
+      if (Math.abs(b.pct - a.pct) > 0.001) return b.pct - a.pct;
+      if (a.isUnknown !== b.isUnknown) return a.isUnknown ? 1 : -1;
+      return a.strain.localeCompare(b.strain);
+    });
+}
+
 export function compositionIsStale(stored: unknown, computed: BloodlineComposition): boolean {
   const a = parseComposition(stored);
   if (!a) return Object.keys(computed).length > 0;

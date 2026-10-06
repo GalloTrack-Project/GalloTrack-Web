@@ -22,7 +22,6 @@ import {
   getMilestoneInfo as getMilestoneInfoHelper,
   getArchiveBadgeStyle,
   matchSurvivability,
-  cleanPct as cleanPctHelper,
   STRAIN_LIST,
   LEG_COLOR_LIST,
 } from '@/lib/helpers';
@@ -242,8 +241,7 @@ interface FowlContextValue {
   getAgeMetrics: (parts: AgeParts) => string;
   generationPurity: (gen: number) => number;
   generationInfo: (gen: number) => { short: string; label: string; desc: string; tone: string };
-  bloodlineOf: (f: FowlRecord) => number;
-  cleanPct: (v: unknown) => number;
+  bloodlineOf: (f: FowlRecord, fowls?: FowlRecord[]) => number;
   getMilestoneInfo: (birthdate?: string | null, gender?: string) => ReturnType<typeof getMilestoneInfoHelper>;
   getArchiveBadgeStyle: (reason: string) => { label: string; bg: string };
   autoComputeGrowthStage: (ageMonths: number, gender: string) => string;
@@ -402,7 +400,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const sireGen = generationOfNameHelper(sireName, fowls, new Map<string, number>(), new Set<string>());
   const damGen = generationOfNameHelper(damName, fowls, new Map<string, number>(), new Set<string>());
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
-  const bloodlineVerified = hasAnyParent && sirePct !== '' && damPct !== '' && !isNaN(Number(sirePct)) && !isNaN(Number(damPct)) && Number(sirePct) > 0 && Number(damPct) > 0;
   const offspringGen = hasAnyParent ? Math.max(sireGen, damGen) + 1 : 0;
   const offspringGenInfo = generationInfo(offspringGen);
   const sireGenInfo = generationInfo(sireGen);
@@ -431,6 +428,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     return computeBloodlineComposition(draft, fowls);
   }, [newName, newBreed, selectedStrains, newGender, sireName, damName, fowls]);
   const previewBloodlineStats = useMemo(() => getBloodlineStats(previewComposition), [previewComposition]);
+  /**
+   * "Lineage verified" used to mean "the breeder typed two purity numbers that
+   * add to 100". The purity inputs are gone — the engine is the single source
+   * now, so verified means: parents are named and at least one of them maps to
+   * a registered ancestry we can compute a known share from.
+   */
+  const bloodlineVerified =
+    hasAnyParent && previewBloodlineStats !== null && previewBloodlineStats.knownPct > 0;
   const bloodlineStatsOf = useCallback(
     (f: FowlRecord) => getFowlBloodlineStats(f, fowls),
     [fowls]
@@ -608,23 +613,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       return;
     }
 
-    // ── Purity guard: heritage weights must total 100% for a registered pair ──
-    const sRaw = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? null : Number(sirePct);
-    const dRaw = damPct === '' || damPct === null || isNaN(Number(damPct)) ? null : Number(damPct);
-    if (sRaw !== null && dRaw !== null && (sRaw < 0 || sRaw > 100 || dRaw < 0 || dRaw > 100)) {
-      toastMessage('Heritage percentages must be between 0 and 100.', 'error');
-      return;
-    }
-    if (
-      sRaw !== null && dRaw !== null &&
-      sireName.trim() !== '' && damName.trim() !== '' &&
-      !isFoundationStock(sireName) && !isFoundationStock(damName) &&
-      sRaw + dRaw !== 100
-    ) {
-      toastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave blank if unknown.', 'error');
-      return;
-    }
-
     setLoading(true);
     let publicImageUrl = '';
 
@@ -635,9 +623,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         if (result.error) throw new Error(result.error);
         publicImageUrl = result.url || '';
       }
-
-      const sPct = sirePct === '' || sirePct === null || isNaN(Number(sirePct)) ? 0 : Number(sirePct);
-      const dPct = damPct === '' || damPct === null || isNaN(Number(damPct)) ? 0 : Number(damPct);
 
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
       if (!activeUserId) {
@@ -663,6 +648,12 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       const sireValue = sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock';
       const damValue = damName.trim() ? sanitizeInput(damName) : 'Foundation Stock';
+
+      // Legacy `sire_pct`/`dam_pct` columns — still written so the DB/API
+      // contract holds, but no longer user-entered, displayed, or averaged
+      // into any percentage. The composition engine is the only source of truth.
+      const sPct = isFoundationStock(sireValue) ? 100 : 50;
+      const dPct = isFoundationStock(damValue) ? 100 : 50;
 
       const payload = {
         user_id: activeUserId,
@@ -1096,20 +1087,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         return;
       }
 
-      // ── Purity guard: only when the breeder actually changed the weights ──
-      const origS = Number(ui.editingFowl.sire_pct ?? 0);
-      const origD = Number(ui.editingFowl.dam_pct ?? 0);
-      const pctChanged = sPct !== origS || dPct !== origD;
-      if (
-        pctChanged &&
-        editSire.trim() !== '' && editDam.trim() !== '' &&
-        !isFoundationStock(editSire) && !isFoundationStock(editDam) &&
-        (sPct < 0 || sPct > 100 || dPct < 0 || dPct > 100 || sPct + dPct !== 100)
-      ) {
-        toastMessage('Sire % + Dam % must total 100% (50/50 for a pure pair). Leave unchanged if unknown.', 'error');
-        return;
-      }
-
       const editComposition = computeBloodlineComposition(
         {
           id: ui.editingFowl.id,
@@ -1239,7 +1216,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     generationPurity,
     generationInfo,
     bloodlineOf,
-    cleanPct: cleanPctHelper,
     getMilestoneInfo: getMilestoneInfoHelper,
     getArchiveBadgeStyle,
     autoComputeGrowthStage,

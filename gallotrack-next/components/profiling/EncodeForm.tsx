@@ -56,10 +56,6 @@ type Props = {
   setSireName: (v: string) => void;
   damName: string;
   setDamName: (v: string) => void;
-  sirePct: number | string;
-  setSirePct: (v: number | string) => void;
-  damPct: number | string;
-  setDamPct: (v: number | string) => void;
   birdCode: string;
   setBirdCode: (v: string) => void;
   wingBand: string;
@@ -114,8 +110,6 @@ export default function EncodeForm({
   legColorOpen, setLegColorOpen,
   sireName, setSireName,
   damName, setDamName,
-  sirePct, setSirePct,
-  damPct, setDamPct,
   birdCode, setBirdCode,
   wingBand, setWingBand,
   suggestedBirdCode, previewBloodlineStats,
@@ -503,43 +497,26 @@ export default function EncodeForm({
             </div>
           );
         })()}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="sire-purity">
-              Sire Purity (%)
-            </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={sirePct === '' ? '' : String(sirePct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setSirePct(''); } else { setSirePct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-bold placeholder:font-normal" placeholder="e.g. 60" id="sire-purity" />
-            <p className="text-xs text-muted-foreground mt-1 font-semibold">Kasama ang Dam — dapat 100% lahat</p>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="dam-purity">
-              Dam Purity (%)
-            </label>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={damPct === '' ? '' : String(damPct)} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v === '') { setDamPct(''); } else { setDamPct(Math.min(Number(v), 100)); } }} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-bold placeholder:font-normal" placeholder="e.g. 40" id="dam-purity" />
-            <p className="text-xs text-muted-foreground mt-1 font-semibold">Kasama ang Sire — dapat 100% lahat</p>
-          </div>
-        </div>
-        {(() => {
-          const sNum = Number(sirePct) || 0;
-          const dNum = Number(damPct) || 0;
-          const total = sNum + dNum;
-          const isFoundationPair = isFoundationStock(sireName) || isFoundationStock(damName) || !sireName.trim() || !damName.trim();
-          const ok = total === 100;
-          return (
-            <p className={`text-xs font-black px-3 py-2 rounded-md border ${isFoundationPair ? 'bg-slate-50 dark:bg-muted/50 text-muted-foreground border-slate-200 dark:border-border' : ok ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'}`}>
-              {isFoundationPair
-                ? `Foundation Stock pair — purity total: ${total}% (exempt, 100/100 auto-applied)`
-                : ok
-                  ? `✓ Purity total: ${total}% — the bloodline of this pairing is pure`
-                  : `⚠ Purity total: ${total}% — must be exactly 100% (Sire + Dam) before saving`}
+        <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md px-3 py-2.5 space-y-1">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-wider">
+            🧬 Bloodline Split — Auto-Computed
+          </p>
+          <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+            {isFoundationStock(sireName) || isFoundationStock(damName) || !sireName.trim() || !damName.trim()
+              ? 'Foundation stock contributes 100% of its own strain to the offspring.'
+              : '50% from the Sire, 50% from the Dam — halved again each generation. Hatian ng dugo is derived from the lineage, so there is nothing to enter here.'}
+          </p>
+          {previewBloodlineStats && previewBloodlineStats.knownPct > 0 && (
+            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+              {previewBloodlineStats.summary}
             </p>
-          );
-        })()}
+          )}
+        </div>
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-black text-teal uppercase tracking-widest">🧬 Generational Purity &amp; Backcrossing</p>
-              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history</p>
+              <p className="text-xs font-black text-teal uppercase tracking-widest">🧬 Backcross Generation (F-scale)</p>
+              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history — separate from the bloodline split below</p>
             </div>
             <div className="shrink-0 sm:text-right">
               {hasAnyParent ? (
@@ -550,22 +527,22 @@ export default function EncodeForm({
               ) : (
                 <p className="text-2xl font-black text-muted-foreground mt-1.5">—</p>
               )}
-              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">{bloodlineVerified ? 'Verified' : 'Awaiting Parents'}</p>
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">{bloodlineVerified ? 'Lineage Resolved' : 'Awaiting Parents'}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
               <p className="text-xs font-black text-info dark:text-sky-300 uppercase tracking-wider">🐓 Sire Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{sireName.trim() ? sireName : '—'}</p>
-              <p className="text-xs font-bold text-muted-foreground mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% purity` : '—'}</p>
+              <p className="text-xs font-bold text-muted-foreground mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% backcross` : '—'}</p>
             </div>
             <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
               <p className="text-xs font-black text-pink uppercase tracking-wider">🐔 Dam Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{damName.trim() ? damName : '—'}</p>
-              <p className="text-xs font-bold text-muted-foreground mt-0.5">{damName.trim() ? `${damGenInfo.label} · ${generationPurity(damGen)}% purity` : '—'}</p>
+              <p className="text-xs font-bold text-muted-foreground mt-0.5">{damName.trim() ? `${damGenInfo.label} · ${generationPurity(damGen)}% backcross` : '—'}</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground font-semibold">Purity ladder: F1 (First Cross) = 50% · F2 (1st Backcross) = 75% · F3 (2nd Backcross) = 87.5% · F4+ (Stabilized) = 93.75%–96%+. Purity = 100 × (1 − 2⁻ᵍᵉⁿ) with foundation/base stock = 100%.</p>
+          <p className="text-xs text-muted-foreground font-semibold">Backcross ladder: F1 (First Cross) = 50% · F2 (1st Backcross) = 75% · F3 (2nd Backcross) = 87.5% · F4+ (Stabilized) = 93.75%–96%+. Backcross purity = 100 × (1 − 2⁻ᵍᵉⁿ) with foundation/base stock = 100%. Ito ay linya ng generasyon — hindi ito ang hatian ng dugo kada lahi.</p>
         </div>
         <BloodlineBreakdown
           stats={previewBloodlineStats && previewBloodlineStats.knownPct > 0 ? previewBloodlineStats : null}
@@ -606,7 +583,7 @@ export default function EncodeForm({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <StatusItem icon="🛡️" label="Data Integrity &amp; Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
           <StatusItem icon="✅" label="Validation" value={validationPassed ? 'Passed' : 'Pending'} tone={validationPassed ? 'green' : 'amber'} />
-          <StatusItem icon="🔗" label="Bloodline Consistency" value={bloodlineVerified ? `${computedBloodlinePct}%` : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
+          <StatusItem icon="🔗" label="Lineage Resolved" value={bloodlineVerified ? 'Resolved' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
           <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
         </div>
         <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">

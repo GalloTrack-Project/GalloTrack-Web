@@ -133,7 +133,6 @@ export function ModalsWrapper() {
       generationPurity={store.generationPurity}
       generationInfo={store.generationInfo}
       bloodlineOf={store.bloodlineOf}
-      cleanPct={store.cleanPct}
       getSiblingRelations={store.getSiblingRelations}
       getMilestoneInfo={store.getMilestoneInfo}
       getArchiveBadgeStyle={store.getArchiveBadgeStyle}

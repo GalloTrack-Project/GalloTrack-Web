@@ -1,5 +1,5 @@
 import type { FowlRecord, AgeParts, DevelopmentStage, RolledMilestoneStage, MilestoneInfo, PairingStats } from './types';
-import { getBloodlineStats, parseComposition } from './bloodline-composition';
+import { getFowlBloodlineStats, type BloodlineStats } from './bloodline-composition';
 
 export const POST_FIGHT_CONDITIONS = [
   { value: 'Fit / Recovered', icon: '🟢', short: 'FIT', desc: 'Pulled through cleanly' },
@@ -64,6 +64,21 @@ export const parentBreedOf = (
   return fowls.find((f) => (f.name || '').trim().toLowerCase() === key)?.breed || '';
 };
 
+/**
+ * Dominant bloodline share of a named parent — engine-derived, so it always
+ * matches what the parent's own profile shows. Null when the parent is not a
+ * registered bird (foundation stock, external, or unknown name).
+ */
+export const parentBloodlineOf = (
+  name: string | null | undefined,
+  fowls: FowlRecord[],
+): BloodlineStats | null => {
+  const key = (name || '').trim().toLowerCase();
+  if (!key || key === 'foundation stock') return null;
+  const parent = fowls.find((f) => (f.name || '').trim().toLowerCase() === key);
+  return parent ? getFowlBloodlineStats(parent, fowls) : null;
+};
+
 export const generationOfName = (name: string, fowls: FowlRecord[], memo: Map<string, number>, chain: Set<string>): number => {
   const key = (name || '').trim().toLowerCase();
   if (!key || key === 'foundation stock') return 0;
@@ -104,10 +119,16 @@ export const generationInfo = (gen: number): { short: string; label: string; des
 };
 
 export const parentBloodlinePct = (f: FowlRecord, fowls: FowlRecord[]): number => generationPurity(generationOf(f, fowls));
-export const bloodlineOf = (f: FowlRecord): number => {
-  const stats = getBloodlineStats(parseComposition(f.bloodline_composition));
-  if (stats) return stats.specificPct;
-  return Math.round(((cleanPct(f.sire_pct) + cleanPct(f.dam_pct)) / 2) * 10) / 10;
+/**
+ * Dominant (specific) bloodline share of a bird — 0–100.
+ *
+ * Single source of truth: the bloodline-composition engine (stored jsonb when
+ * present, otherwise recomputed from ancestry). The legacy `sire_pct`/`dam_pct`
+ * columns are write-only and are never averaged into this number.
+ */
+export const bloodlineOf = (f: FowlRecord, fowls: FowlRecord[] = []): number => {
+  const stats = getFowlBloodlineStats(f, fowls);
+  return stats ? stats.specificPct : 0;
 };
 
 export const parseFowlDate = (value?: string | null): Date | null => {

@@ -76,7 +76,6 @@ type ModalsProps = {
   generationPurity: (gen: number) => number;
   generationInfo: (gen: number) => { short: string; label: string; desc: string; tone: string };
   bloodlineOf: (f: FowlRecord) => number;
-  cleanPct: (v: unknown) => number;
   getSiblingRelations: (f: FowlRecord) => SiblingRelation[];
   getMilestoneInfo: (birthdate: string, gender: string) => MilestoneInfo | null;
   getArchiveBadgeStyle: (reason: string) => ArchiveBadge;
@@ -153,7 +152,6 @@ export default function Modals(props: ModalsProps) {
         generationPurity={props.generationPurity}
         generationInfo={props.generationInfo}
         bloodlineOf={props.bloodlineOf}
-        cleanPct={props.cleanPct}
         getSiblingRelations={props.getSiblingRelations}
         getMilestoneInfo={props.getMilestoneInfo}
         getArchiveBadgeStyle={props.getArchiveBadgeStyle}
@@ -231,9 +229,7 @@ export default function Modals(props: ModalsProps) {
         setEditSire={props.setEditSire}
         editDam={props.editDam}
         setEditDam={props.setEditDam}
-        editSirePct={props.editSirePct}
         setEditSirePct={props.setEditSirePct}
-          editDamPct={props.editDamPct}
           setEditDamPct={props.setEditDamPct}
           editBirdCode={props.editBirdCode}
           setEditBirdCode={props.setEditBirdCode}
