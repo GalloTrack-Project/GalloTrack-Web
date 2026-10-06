@@ -200,16 +200,21 @@ export default function FightHistoryModal() {
 
                 {/* Media + actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200 dark:border-border">
-                  {videos.map((url, idx) => (
+                  {videos.length > 0 && (
                     <button
-                      key={`v-${idx}`}
                       type="button"
-                      onClick={() => ui.setVideoViewerUrl(url)}
-                      className="inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-xs font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                      onClick={() => ui.openMatchVideoPlayer(m, videos)}
+                      className="relative inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-xs font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
                     >
-                      <Play className="w-3 h-3" /> Video {videos.length > 1 ? idx + 1 : ''}
+                      <Play className="w-3 h-3" />
+                      Video
+                      {videos.length > 1 && (
+                        <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-black px-1 leading-none">
+                          {videos.length}
+                        </span>
+                      )}
                     </button>
-                  ))}
+                  )}
                   {photos.length > 0 && (
                     <button
                       type="button"

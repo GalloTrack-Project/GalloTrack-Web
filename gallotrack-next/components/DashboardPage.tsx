@@ -792,17 +792,28 @@ export default function DashboardPage() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        {videosFor(matchMedia, log.id).map((url, idx) => (
-                          <button
-                            key={`v-${idx}`}
-                            type="button"
-                            title="Watch match video in app"
-                            onClick={() => ui.setVideoViewerUrl(url)}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:text-success hover:border-emerald-500/40 transition-all cursor-pointer"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
-                          </button>
-                        ))}
+                        {(() => {
+                          const vids = videosFor(matchMedia, log.id);
+                          if (vids.length > 0) {
+                            return (
+                              <button
+                                type="button"
+                                id={`play-match-${log.id}`}
+                                title={vids.length > 1 ? `Watch ${vids.length} clips` : 'Watch match video'}
+                                onClick={() => ui.openMatchVideoPlayer(log, vids)}
+                                className="relative inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
+                                {vids.length > 1 && (
+                                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-black px-1 leading-none">
+                                    {vids.length}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          }
+                          return null;
+                        })()}
                         {photosFor(matchMedia, log.id).length > 0 && (
                           <button
                             type="button"

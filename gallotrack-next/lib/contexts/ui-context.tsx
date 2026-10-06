@@ -36,6 +36,14 @@ interface UIContextValue {
 
   videoViewerUrl: string | null;
   setVideoViewerUrl: (v: string | null) => void;
+  /** Rich match video player: match metadata for the modal header. */
+  videoViewerMatch: MatchRecord | null;
+  setVideoViewerMatch: (m: MatchRecord | null) => void;
+  /** All video URLs for the match currently shown in the player. */
+  videoViewerUrls: string[];
+  setVideoViewerUrls: (urls: string[]) => void;
+  /** Convenience: open the rich video player for a match with its videos. */
+  openMatchVideoPlayer: (match: MatchRecord, urls: string[]) => void;
   imageViewerUrl: string | null;
   setImageViewerUrl: (v: string | null) => void;
   editingMatch: MatchRecord | null;
@@ -78,9 +86,18 @@ export function UIProvider({
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
 
   const [videoViewerUrl, setVideoViewerUrl] = useState<string | null>(null);
+  const [videoViewerMatch, setVideoViewerMatch] = useState<MatchRecord | null>(null);
+  const [videoViewerUrls, setVideoViewerUrls] = useState<string[]>([]);
   const [imageViewerUrl, setImageViewerUrl] = useState<string | null>(null);
   const [editingMatch, setEditingMatch] = useState<MatchRecord | null>(null);
   const [shareTarget, setShareTarget] = useState<{ type: 'match' | 'fowl'; id: number; label: string } | null>(null);
+
+  const openMatchVideoPlayer = React.useCallback((match: MatchRecord, urls: string[]) => {
+    setVideoViewerMatch(match);
+    setVideoViewerUrls(urls);
+    // Also set the legacy scalar so old callers (MediaViewerModal) still work
+    setVideoViewerUrl(urls[0] ?? null);
+  }, []);
 
   const value: UIContextValue = {
     theme, setTheme,
@@ -98,6 +115,9 @@ export function UIProvider({
     showForgotPasswordModal, setShowForgotPasswordModal,
     showPerFowlBreakdownModal, setShowPerFowlBreakdownModal,
     videoViewerUrl, setVideoViewerUrl,
+    videoViewerMatch, setVideoViewerMatch,
+    videoViewerUrls, setVideoViewerUrls,
+    openMatchVideoPlayer,
     imageViewerUrl, setImageViewerUrl,
     editingMatch, setEditingMatch,
     shareTarget, setShareTarget,
