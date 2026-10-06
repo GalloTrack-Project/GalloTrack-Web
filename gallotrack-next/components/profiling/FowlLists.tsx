@@ -37,6 +37,8 @@ type Props = {
   setPendingPermanentDelete: (fowl: FowlRecord) => void;
 };
 
+export type RoleStatusFilter = 'Active' | 'Archived' | 'Deceased';
+
 function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, onOpenDetails, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; onOpenDetails?: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
@@ -243,6 +245,16 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
 
 const PAGE_SIZE = 10;
 
+const isMaleHelper = (gender?: string) => {
+  const g = (gender || '').toLowerCase();
+  return g === 'male' || g === 'rooster' || g === 'cock' || g === 'stag';
+};
+
+const isFemaleHelper = (gender?: string) => {
+  const g = (gender || '').toLowerCase();
+  return g === 'female' || g === 'hen' || g === 'pullet';
+};
+
 export default function FowlLists({
   tab,
   offspringFowls,
@@ -270,30 +282,71 @@ export default function FowlLists({
   const [filterReason, setFilterReason] = useState('all');
   const [filterBreed, setFilterBreed] = useState('all');
   const [filterFights, setFilterFights] = useState<'all' | 'with' | 'without'>('all');
+
+  // Internal status segmented filter for roles: 'Active' | 'Archived' | 'Deceased'
+  const isRoleTab = tab === 'males' || tab === 'females' || tab === 'offspring';
+  const initialStatus: RoleStatusFilter = tab === 'archived' ? 'Archived' : tab === 'deceased' ? 'Deceased' : 'Active';
+  const [roleStatus, setRoleStatus] = useState<RoleStatusFilter>(initialStatus);
+
   const prevTabRef = React.useRef(tab);
   React.useEffect(() => {
     if (prevTabRef.current !== tab) {
       prevTabRef.current = tab;
       setPage(1);
       setFilterReason('all');
+      if (tab === 'archived') setRoleStatus('Archived');
+      else if (tab === 'deceased') setRoleStatus('Deceased');
+      else if (tab === 'males' || tab === 'females' || tab === 'offspring') setRoleStatus('Active');
     }
   }, [tab]);
 
+  // Pool of birds for current role tab across all statuses
+  const rolePool = useMemo(() => {
+    if (tab === 'males') {
+      return {
+        active: maleActiveFowls,
+        archived: archivedFowls.filter((f) => isMaleHelper(f.gender)),
+        deceased: deceasedFowls.filter((f) => isMaleHelper(f.gender)),
+      };
+    }
+    if (tab === 'females') {
+      return {
+        active: femaleActiveFowls,
+        archived: archivedFowls.filter((f) => isFemaleHelper(f.gender)),
+        deceased: deceasedFowls.filter((f) => isFemaleHelper(f.gender)),
+      };
+    }
+    if (tab === 'offspring') {
+      const parentNames = new Set([...maleActiveFowls, ...femaleActiveFowls, ...sireMaterialFowls].map((p) => p.name));
+      const isChild = (f: FowlRecord) => (f.sire && parentNames.has(f.sire)) || (f.dam && parentNames.has(f.dam));
+      const offActive = offspringFowls ?? fowls.filter((f) => (f.status === 'Active' || !f.status || f.status === 'active') && isChild(f));
+      return {
+        active: offActive,
+        archived: archivedFowls.filter(isChild),
+        deceased: deceasedFowls.filter(isChild),
+      };
+    }
+    return null;
+  }, [tab, maleActiveFowls, femaleActiveFowls, sireMaterialFowls, offspringFowls, fowls, archivedFowls, deceasedFowls]);
+
+  const baseList = useMemo(() => {
+    if (rolePool) {
+      if (roleStatus === 'Archived') return rolePool.archived;
+      if (roleStatus === 'Deceased') return rolePool.deceased;
+      return rolePool.active;
+    }
+    if (tab === 'archived') return archivedFowls;
+    if (tab === 'deceased') return deceasedFowls;
+    if (tab === 'sireMaterial') return sireMaterialFowls;
+    return maleActiveFowls;
+  }, [rolePool, roleStatus, tab, archivedFowls, deceasedFowls, sireMaterialFowls, maleActiveFowls]);
+
+  const effectiveStatus = rolePool ? roleStatus : tab === 'archived' ? 'Archived' : tab === 'deceased' ? 'Deceased' : 'Active';
+
   const reasonValue = React.useCallback(
     (f: FowlRecord) =>
-      tab === 'deceased' ? (f.death_reason || 'Unspecified') : archiveDisplay(f),
-    [tab],
-  );
-
-  const baseList = useMemo(
-    () =>
-      tab === 'males' ? maleActiveFowls
-      : tab === 'females' ? femaleActiveFowls
-      : tab === 'archived' ? archivedFowls
-      : tab === 'sireMaterial' ? sireMaterialFowls
-      : tab === 'offspring' ? offspringFowls ?? []
-      : deceasedFowls,
-    [tab, maleActiveFowls, femaleActiveFowls, archivedFowls, sireMaterialFowls, offspringFowls, deceasedFowls]
+      effectiveStatus === 'Deceased' ? (f.death_reason || 'Unspecified') : archiveDisplay(f),
+    [effectiveStatus],
   );
 
   const filterOptions = useMemo(() => {
@@ -309,7 +362,7 @@ export default function FowlLists({
       if (d) dams.add(d);
       stages.add((f.growth_stage || 'Stag').trim() || 'Stag');
       if ((f.breed || '').trim()) breeds.add(f.breed.trim());
-      if (tab === 'archived' || tab === 'deceased') reasons.add(reasonValue(f));
+      if (effectiveStatus === 'Archived' || effectiveStatus === 'Deceased') reasons.add(reasonValue(f));
     }
     return {
       sires: Array.from(sires).sort((a, b) => a.localeCompare(b)),
@@ -318,7 +371,7 @@ export default function FowlLists({
       reasons: Array.from(reasons).sort((a, b) => a.localeCompare(b)),
       breeds: Array.from(breeds).sort((a, b) => a.localeCompare(b)),
     };
-  }, [baseList, tab, reasonValue]);
+  }, [baseList, effectiveStatus, reasonValue]);
 
   const filtersActive =
     filterSire !== 'all' ||
@@ -367,7 +420,7 @@ export default function FowlLists({
           value={filterSire}
           onChange={applyFilter(setFilterSire)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        id="filter-by-sire">
+          id="filter-by-sire">
           <option value="all">All Sires</option>
           {filterOptions.sires.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -378,7 +431,7 @@ export default function FowlLists({
           value={filterDam}
           onChange={applyFilter(setFilterDam)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        id="filter-by-dam">
+          id="filter-by-dam">
           <option value="all">All Dams</option>
           {filterOptions.dams.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
@@ -389,7 +442,7 @@ export default function FowlLists({
           value={filterStage}
           onChange={applyFilter(setFilterStage)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        id="filter-by-growth-stage">
+          id="filter-by-growth-stage">
           <option value="all">All Stages</option>
           {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}
         </select>
@@ -400,7 +453,7 @@ export default function FowlLists({
           value={filterBreed}
           onChange={applyFilter(setFilterBreed)}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        id="filter-by-breed">
+          id="filter-by-breed">
           <option value="all">All Breeds</option>
           {filterOptions.breeds.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
@@ -411,23 +464,23 @@ export default function FowlLists({
           value={filterFights}
           onChange={(e) => { setFilterFights(e.target.value as 'all' | 'with' | 'without'); setPage(1); }}
           className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-        id="filter-by-fights">
+          id="filter-by-fights">
           <option value="all">All Chickens</option>
           <option value="with">With Fight Records</option>
           <option value="without">Without Fight Records</option>
         </select>
       </div>
-      {(tab === 'archived' || tab === 'deceased') && (
+      {(effectiveStatus === 'Archived' || effectiveStatus === 'Deceased') && (
         <div className="flex-1 min-w-[160px]">
           <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-reason">
-            {tab === 'archived' ? 'Filter by Archive Reason' : 'Filter by Cause of Death'}
+            {effectiveStatus === 'Archived' ? 'Filter by Archive Reason' : 'Filter by Cause of Death'}
           </label>
           <select
             value={filterReason}
             onChange={applyFilter(setFilterReason)}
             className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
             id="filter-by-reason">
-            <option value="all">{tab === 'archived' ? 'All Reasons' : 'All Causes'}</option>
+            <option value="all">{effectiveStatus === 'Archived' ? 'All Reasons' : 'All Causes'}</option>
             {filterOptions.reasons.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
@@ -454,6 +507,100 @@ export default function FowlLists({
     </div>
   );
 
+  // Status segmented control for Breeding Male, Breeding Female, and Non-Breeding
+  const statusSegmentedControl = rolePool ? (
+    <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-lg border border-border w-fit max-w-full">
+      <button
+        type="button"
+        role="button"
+        aria-pressed={roleStatus === 'Active'}
+        onClick={() => { setRoleStatus('Active'); setPage(1); setFilterReason('all'); }}
+        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+          roleStatus === 'Active'
+            ? 'bg-emerald-600 text-white shadow-sm'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+        }`}
+      >
+        <span>Active</span>
+        <span className={`text-xs px-1.5 py-0.2 rounded-full font-black ${roleStatus === 'Active' ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>
+          {rolePool.active.length}
+        </span>
+      </button>
+      <button
+        type="button"
+        role="button"
+        aria-pressed={roleStatus === 'Archived'}
+        onClick={() => { setRoleStatus('Archived'); setPage(1); setFilterReason('all'); }}
+        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+          roleStatus === 'Archived'
+            ? 'bg-amber-600 text-white shadow-sm'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+        }`}
+      >
+        <span>Archived</span>
+        <span className={`text-xs px-1.5 py-0.2 rounded-full font-black ${roleStatus === 'Archived' ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>
+          {rolePool.archived.length}
+        </span>
+      </button>
+      <button
+        type="button"
+        role="button"
+        aria-pressed={roleStatus === 'Deceased'}
+        onClick={() => { setRoleStatus('Deceased'); setPage(1); setFilterReason('all'); }}
+        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+          roleStatus === 'Deceased'
+            ? 'bg-rose-600 text-white shadow-sm'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+        }`}
+      >
+        <span>Deceased</span>
+        <span className={`text-xs px-1.5 py-0.2 rounded-full font-black ${roleStatus === 'Deceased' ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>
+          {rolePool.deceased.length}
+        </span>
+      </button>
+    </div>
+  ) : null;
+
+  const renderCard = (fowl: FowlRecord, index: number, defaultGender: 'Male' | 'Female') => {
+    if (effectiveStatus === 'Deceased') {
+      return (
+        <DeceasedCard
+          key={fowl.id}
+          fowl={fowl}
+          index={index}
+          onDelete={setPendingPermanentDelete}
+          allFowls={fowls}
+        />
+      );
+    }
+    if (effectiveStatus === 'Archived') {
+      return (
+        <ArchivedCard
+          key={fowl.id}
+          fowl={fowl}
+          index={index}
+          onRestore={handleRestoreFowlOnly}
+          allFowls={fowls}
+        />
+      );
+    }
+    return (
+      <FowlCard
+        key={fowl.id}
+        fowl={fowl}
+        index={index}
+        gender={defaultGender}
+        onEdit={handleOpenEditModal}
+        onArchive={setSelectedFowlForArchive}
+        onDeceased={setSelectedFowlForDeceased}
+        onOpenDetails={setSelectedFowlForDetails}
+        onSetActive={tab === 'sireMaterial' ? handleSetActiveStatus : undefined}
+        allFowls={fowls}
+      />
+    );
+  };
+
+  // BREEDING MALE OR BREEDING FEMALE
   if (tab === 'males' || tab === 'females') {
     const isMaleTab = tab === 'males';
     const birds = paginatedBirds.list;
@@ -465,12 +612,12 @@ export default function FowlLists({
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
     const accentSoft = isMaleTab ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800' : 'bg-pink-50 dark:bg-pink-950/50 border-pink-200 dark:border-pink-800';
     const accentText = isMaleTab ? 'text-info' : 'text-pink';
-    const emptyTitle = isMaleTab ? 'No Breeding Males Encoded' : 'No Breeding Females Encoded';
-    const emptyHint = isMaleTab ? 'No breeding males are registered in the active farm inventory yet. Encode your first male to begin populating this registry and line up its offspring.' : 'No breeding females are registered in the active farm inventory yet. Encode your first female to begin populating this registry and line up its offspring.';
+    const emptyTitle = isMaleTab ? 'No Breeding Males' : 'No Breeding Females';
+    const emptyHint = isMaleTab ? 'No breeding males found under this status.' : 'No breeding females found under this status.';
 
     return (
       <div className="space-y-4 animate-fadeIn">
-        <div className={`bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 ${isMaleTab ? 'border-l-4 border-l-sky-500' : 'border-l-4 border-l-pink-500'}`}>
+        <div className={`bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isMaleTab ? 'border-l-4 border-l-sky-500' : 'border-l-4 border-l-pink-500'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 ${accentSoft}`}>{tabIcon}</div>
             <div>
@@ -478,9 +625,13 @@ export default function FowlLists({
               <p className="text-xs text-muted-foreground font-semibold">{tabSub}</p>
             </div>
           </div>
-          <span className={`shrink-0 text-xs font-black text-white px-3 py-1.5 rounded-full ${accentBg}`}>{birds.length} Registered</span>
+          <span className={`shrink-0 self-start sm:self-center text-xs font-black text-white px-3 py-1.5 rounded-full ${accentBg}`}>{baseList.length} Total</span>
         </div>
+
+        {statusSegmentedControl}
+
         {filterBar}
+
         {filtersActive && birds.length === 0 ? (
           filteredEmpty
         ) : birds.length === 0 ? (
@@ -488,15 +639,15 @@ export default function FowlLists({
             <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto ${isMaleTab ? 'bg-sky-50 dark:bg-sky-500/10' : 'bg-pink-50 dark:bg-pink-500/10'} ${accentText}`}>{tabIcon}</div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">{emptyTitle}</h3>
             <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">{emptyHint}</p>
-            <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First {isMaleTab ? 'Breeding Male' : 'Breeding Female'}
-            </button>
+            {effectiveStatus === 'Active' && (
+              <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
+                ➕ Encode First {isMaleTab ? 'Breeding Male' : 'Breeding Female'}
+              </button>
+            )}
           </div>
         ) : (
           <>
-            {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender={isMaleTab ? 'Male' : 'Female'} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onOpenDetails={setSelectedFowlForDetails} allFowls={fowls} />
-            ))}
+            {pagedList.map((fowl, index) => renderCard(fowl, index, isMaleTab ? 'Male' : 'Female'))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -504,24 +655,45 @@ export default function FowlLists({
     );
   }
 
-  if (tab === 'archived') {
+  // NON-BREEDING (OFFSPRING)
+  if (tab === 'offspring') {
     const { pagedList, totalPages } = paginatedBirds;
     return (
       <div className="space-y-4 animate-fadeIn">
+        <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-teal-500">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal">🥚</div>
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Non-Breeding Registry</h2>
+              <p className="text-xs text-muted-foreground font-semibold">Every child of a registered breeding pair — one entry per non-breeding chicken</p>
+            </div>
+          </div>
+          <span className="shrink-0 self-start sm:self-center text-xs font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{baseList.length} Total</span>
+        </div>
+
+        {statusSegmentedControl}
+
         {filterBar}
+
         {filtersActive && paginatedBirds.list.length === 0 ? (
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-warning rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">Archived Registry Empty</h3>
-            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken records have been archived. Archived chickens are non-mortality removals (sold, transferred, retired, inactive); deaths belong under 💀 Deceased.</p>
+            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Non-Breeding Chickens</h3>
+            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken found under this status for non-breeding registry.</p>
+            {effectiveStatus === 'Active' && (
+              <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
+                ➕ Encode First Non-Breeding Chicken
+              </button>
+            )}
           </div>
         ) : (
           <>
-            {pagedList.map((fowl, index) => (
-              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />
-            ))}
+            {pagedList.map((child, index) => {
+              const childGender: 'Male' | 'Female' = child.gender === 'Male' || child.gender === 'Rooster' ? 'Male' : 'Female';
+              return renderCard(child, index, childGender);
+            })}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -529,6 +701,7 @@ export default function FowlLists({
     );
   }
 
+  // SIRE MATERIAL
   if (tab === 'sireMaterial') {
     const { pagedList, totalPages } = paginatedBirds;
     return (
@@ -564,40 +737,35 @@ export default function FowlLists({
     );
   }
 
-  if (tab === 'offspring') {
+  // FALLBACK FOR LEGACY ARCHIVED TAB DIRECT ROUTING (SAFEGUARD)
+  if (tab === 'archived') {
     const { pagedList, totalPages } = paginatedBirds;
     return (
       <div className="space-y-4 animate-fadeIn">
-        <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-teal-500">
+        <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-amber-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal">🥚</div>
+            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800 text-warning">📦</div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Non-Breeding Registry</h2>
-              <p className="text-xs text-muted-foreground font-semibold">Every child of a registered breeding pair — one entry per non-breeding chicken</p>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Archived Registry</h2>
+              <p className="text-xs text-muted-foreground font-semibold">Chickens retired, sold, or transferred</p>
             </div>
           </div>
-          <span className="shrink-0 text-xs font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{paginatedBirds.list.length} Registered</span>
+          <span className="shrink-0 text-xs font-black text-white px-3 py-1.5 rounded-full bg-amber-600">{paginatedBirds.list.length} Archived</span>
         </div>
         {filterBar}
         {filtersActive && paginatedBirds.list.length === 0 ? (
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Non-Breeding Chickens Yet</h3>
-            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken in the registry is linked to a registered breeding pair yet. Encode a chick with its sire and dam to line it up here.</p>
-            <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First Non-Breeding Chicken
-            </button>
+            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-warning rounded-full flex items-center justify-center text-3xl mx-auto">📦</div>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">Archived Registry Empty</h3>
+            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken records have been archived.</p>
           </div>
         ) : (
           <>
-            {pagedList.map((child, index) => {
-              const childGender: 'Male' | 'Female' = child.gender === 'Male' || child.gender === 'Rooster' ? 'Male' : 'Female';
-              if (child.status === 'Deceased') return <DeceasedCard key={child.id} fowl={child} index={index} onDelete={setPendingPermanentDelete} allFowls={fowls} />;
-              if (child.status === 'Archived') return <ArchivedCard key={child.id} fowl={child} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />;
-              return <FowlCard key={child.id} fowl={child} index={index} gender={childGender} onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onOpenDetails={setSelectedFowlForDetails} allFowls={fowls} />;
-            })}
+            {pagedList.map((fowl, index) => (
+              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />
+            ))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -605,10 +773,20 @@ export default function FowlLists({
     );
   }
 
-  // deceased
+  // FALLBACK FOR LEGACY DECEASED TAB DIRECT ROUTING (SAFEGUARD)
   const { pagedList: deceasedPagedList, totalPages: deceasedTotalPages } = paginatedBirds;
   return (
     <div className="space-y-4 animate-fadeIn">
+      <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex items-center justify-between gap-4 border-l-4 border-l-rose-500">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800 text-danger">💀</div>
+          <div>
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Mortality Logs</h2>
+            <p className="text-xs text-muted-foreground font-semibold">Chickens recorded under mortality logs</p>
+          </div>
+        </div>
+        <span className="shrink-0 text-xs font-black text-white px-3 py-1.5 rounded-full bg-rose-600">{paginatedBirds.list.length} Deceased</span>
+      </div>
       {filterBar}
       {filtersActive && paginatedBirds.list.length === 0 ? (
         filteredEmpty
