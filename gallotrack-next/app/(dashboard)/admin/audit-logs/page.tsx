@@ -20,7 +20,7 @@ const ACTION_LABELS: Record<string, string> = {
   marketplace_approved: 'Approved Listing',
   marketplace_flagged: 'Flagged Listing',
   marketplace_removed: 'Removed Listing',
-  marketplace_pending: 'Pending Listing',
+  marketplace_pending: 'Listing Returned to Pending',
   reset_password: 'Password Reset',
   transfer_data: 'Data Transfer',
   user_activated: 'User Activated',
@@ -28,6 +28,15 @@ const ACTION_LABELS: Record<string, string> = {
   user_suspended: 'User Suspended',
   user_deleted: 'User Deleted',
   user_verified: 'User Verified',
+  user_verification_revoked: 'Verification Revoked',
+  account_active: 'Account Reactivated',
+  account_suspended: 'Account Suspended',
+  account_deactivated: 'Account Deactivated',
+  role_changed_to_admin: 'Granted Admin Role',
+  role_changed_to_owner: 'Returned to Owner Role',
+  user_records_deleted: 'User Records Deleted',
+  system_settings_updated: 'System Settings Updated',
+  audit_logs_cleared: 'Audit Logs Cleared',
 };
 
 export default function AuditLogsPage() {
@@ -36,6 +45,35 @@ export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
+  const [clearing, setClearing] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const loadLogs = useCallback(async (): Promise<AuditLog[]> => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) return [];
+
+    const res = await fetch('/api/admin/audit-logs', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const rows: AuditLog[] = data.logs || [];
+
+    const adminIds = [...new Set(rows.map((l) => l.admin_id))];
+    if (adminIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', adminIds);
+      const names: Record<string, string> = {};
+      (profiles || []).forEach((p: { id: string; full_name?: string; email?: string }) => {
+        names[p.id] = p.full_name || p.email?.split('@')[0] || 'Admin';
+      });
+      setAdminNames(names);
+    }
+    return rows;
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -44,35 +82,34 @@ export default function AuditLogsPage() {
       setAdminProfile(profile);
 
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData?.session?.access_token;
-        if (!token) return;
-
-        const res = await fetch('/api/admin/audit-logs', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data.logs || []);
-
-          const adminIds = [...new Set((data.logs || []).map((l: AuditLog) => l.admin_id))];
-          if (adminIds.length > 0) {
-            const { data: profiles } = await supabase
-              .from('profiles')
-              .select('id, full_name, email')
-              .in('id', adminIds);
-            const names: Record<string, string> = {};
-            (profiles || []).forEach((p: { id: string; full_name?: string; email?: string }) => {
-              names[p.id] = p.full_name || p.email?.split('@')[0] || 'Admin';
-            });
-            setAdminNames(names);
-          }
-        }
+        setLogs(await loadLogs());
       } catch { /* silent */ } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [loadLogs]);
+
+  const handleClearLogs = async () => {
+    if (!window.confirm('Clear the audit log? The purge itself will be recorded as the newest entry.')) return;
+    setClearing(true);
+    setNotice(null);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) { setNotice('Not authenticated.'); return; }
+      const res = await fetch('/api/admin/audit-logs', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Clear failed');
+      setLogs(await loadLogs());
+      setNotice('Audit log cleared.');
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Clear failed.');
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const filteredLogs = logs.filter((log) => {
     if (!searchQuery.trim()) return true;
@@ -106,9 +143,25 @@ export default function AuditLogsPage() {
             </h1>
             <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Activity Trail for Admin Actions</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
-            <FileText size={14} />
-            {filteredLogs.length} entries
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            {notice && (
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{notice}</span>
+            )}
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
+                <FileText size={14} />
+                {filteredLogs.length} entries
+              </span>
+              <button
+                type="button"
+                onClick={handleClearLogs}
+                disabled={clearing || logs.length === 0}
+                className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-2 rounded-md border border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {clearing && <span className="w-3 h-3 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></span>}
+                {clearing ? 'Clearing...' : 'Clear Log'}
+              </button>
+            </div>
           </div>
         </div>
 

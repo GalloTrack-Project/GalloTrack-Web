@@ -63,12 +63,13 @@ npm install
 
 ### 2. Configure Environment
 
-Copy `.env.example` to `.env.local` and fill in your Supabase credentials:
+Copy `gallotrack-next/.env.example` to `gallotrack-next/.env.local` and fill in the values from your Supabase project (**Project Settings → API**):
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key   # server-only, never NEXT_PUBLIC_
+NEXT_PUBLIC_SITE_URL=http://localhost:3000         # public origin of this deployment
 ```
 
 ### 3. Run Development Server
@@ -79,28 +80,64 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-### 4. Run Tests (Flask Backend)
+### 4. Run Tests & Quality Gates
 
 ```bash
-cd ..
-python -m pytest tests/ -v
+npm run gate     # standard gates + tsc --noEmit + eslint + vitest
+npm test         # vitest only
 ```
+
+The legacy Flask/pytest suite is deprecated - see [FLASK_DEPRECATED.md](FLASK_DEPRECATED.md).
 
 ## Database Schema
 
-Tables: `profiles`, `fowl`, `match`, `farms`, `strains`, `system_settings`
+Migrations live in `supabase/migrations/` and are applied with the Supabase CLI:
+
+```bash
+supabase db push          # or: supabase migration up
+```
+
+Without the CLI, run each migration file's SQL in the Supabase SQL editor in filename order.
+
+Tables: `profiles`, `fowl`, `match`, `farms`, `strains`, `system_settings`, `admin_audit_logs`, `marketplace_listings`
 
 Row Level Security (RLS) enforces strict user isolation - each user can only access their own data.
 
 ## Deployment
 
-The app is deployed on Vercel. Push to `main` branch to trigger automatic deployment.
+The app runs anywhere Node.js runs; Vercel is the primary host (push to `main` to deploy).
+
+### Vercel
+
+1. Import the repository and set the **Root Directory** to `gallotrack-next/` (that is where `next.config.ts` and `vercel.json` live).
+2. Add the four environment variables above to *Project → Settings → Environment Variables* (`SUPABASE_SERVICE_ROLE_KEY` as a sensitive variable).
+3. Deploy. `next build` is used automatically.
+
+### Any other Node host (VPS, Docker, self-managed)
+
+```bash
+cd gallotrack-next
+npm ci
+npm run gate        # static gates, typecheck, lint, tests
+npm run build
+npm start           # next start, defaults to port 3000
+```
+
+Set the same environment variables in the process environment (`.env.local` also works). Reverse-proxy HTTPS in front of `next start` and point `NEXT_PUBLIC_SITE_URL` at that public origin.
+
+### Reconfiguring for a new environment
+
+Only the four variables in `.env.example` change between hosts - no code edits are needed. After moving environments:
+
+1. Update the env vars, redeploy.
+2. Apply any new migrations (`supabase db push`).
+3. Run `npm run gate` to confirm the build is healthy.
 
 ## Contributing
 
 1. Create a feature branch
 2. Make your changes
-3. Run tests: `python -m pytest tests/ -v`
+3. Run tests: `npm run gate`
 4. Submit a pull request
 
 ## License

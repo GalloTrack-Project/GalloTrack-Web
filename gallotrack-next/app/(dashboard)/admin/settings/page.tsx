@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { adminGuard, fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
 import type { AdminProfileRow, AdminSettings } from '@/lib/admin';
-import { Shield, Settings, Bell, Users, ArrowRightLeft, HardDrive, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, FileJson } from 'lucide-react';
+import { parseBackup, restoreBackup } from '@/lib/backup';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { Shield, Settings, Bell, Users, ArrowRightLeft, HardDrive, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, Upload, FileJson } from 'lucide-react';
 
 type Tab = 'general' | 'alerts' | 'users' | 'transfer' | 'backup';
 
@@ -67,6 +69,9 @@ export default function AdminSettingsPage() {
 
   const [backing, setBacking] = useState(false);
   const [backupResult, setBackupResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const restoreInputRef = useRef<HTMLInputElement | null>(null);
+  const fowl = useFowl();
 
   const update = useCallback(<K extends keyof AdminSettings>(key: K, value: AdminSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -159,6 +164,31 @@ export default function AdminSettingsPage() {
     finally { setBacking(false); }
   };
 
+  const handleRestoreFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setRestoring(true);
+    setBackupResult(null);
+    try {
+      const parsed = parseBackup(await file.text());
+      if (!parsed.ok) { setBackupResult({ type: 'error', text: `Restore failed: ${parsed.error}` }); return; }
+      const summary = `${parsed.fowls} chickens and ${parsed.matches} matches, ${parsed.profiles} profiles`;
+      if (!window.confirm(`Restore ${summary} from "${file.name}"? Records already in the system are skipped; nothing is deleted.`)) return;
+
+      const result = await restoreBackup(parsed.backup, { includeProfiles: parsed.profiles > 0 });
+      if (result.errors.length > 0) {
+        setBackupResult({ type: 'error', text: `Restored ${result.fowls} chickens and ${result.matches} matches, but ${result.errors.length} row(s) failed — ${result.errors[0]}` });
+      } else {
+        setBackupResult({ type: 'success', text: `Restore complete: ${result.fowls} chickens, ${result.matches} matches, ${result.profiles} profiles (${result.skipped} already present were skipped).` });
+      }
+      window.dispatchEvent(new Event('admin-profile-update'));
+      void fowl.fetchDatabaseResources();
+    } catch (err) {
+      setBackupResult({ type: 'error', text: `Restore failed: ${(err as Error).message}` });
+    } finally { setRestoring(false); }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-background text-foreground">
@@ -249,7 +279,6 @@ export default function AdminSettingsPage() {
             <ToggleRow label="Milestone Alerts" desc="Notify when chickens reach growth milestones" checked={settings.milestone_alerts !== false} onChange={(v) => update('milestone_alerts', v)} />
             <ToggleRow label="Overdue Alerts" desc="Notify when tasks or checkups are overdue" checked={settings.overdue_alerts !== false} onChange={(v) => update('overdue_alerts', v)} />
             <ToggleRow label="Auto-Calculate Age" desc="Automatically compute chicken age from birthdate" checked={settings.auto_calculate_age !== false} onChange={(v) => update('auto_calculate_age', v)} />
-            <ToggleRow label="Cloud Auditing Logs" desc="Record transaction updates to cluster node registries" checked={settings.cloud_logs !== false} onChange={(v) => update('cloud_logs', v)} />
             <ToggleRow label="Event Pop-up Alerts" desc="Enable dynamic pop-up notification frames" checked={settings.event_alerts !== false} onChange={(v) => update('event_alerts', v)} />
           </div>
         );
@@ -319,6 +348,20 @@ export default function AdminSettingsPage() {
               {!backing && <Download size={14} />}
               {backing ? 'Exporting...' : 'Download Full System Backup'}
             </button>
+            <input
+              ref={restoreInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleRestoreFile}
+            />
+            <button type="button" onClick={() => restoreInputRef.current?.click()} disabled={restoring || backing}
+              className="w-full text-xs font-black uppercase tracking-wider px-4 py-3 rounded-md bg-slate-900 dark:bg-slate-800 hover:bg-emerald-700 text-white shadow-md transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+              {restoring && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+              {!restoring && <Upload size={14} />}
+              {restoring ? 'Restoring...' : 'Restore from Backup File'}
+            </button>
+            <p className="text-xs text-muted-foreground font-medium">Restore re-inserts chickens and matches from a JSON backup under the current administrator. Existing records are skipped and system settings are left untouched.</p>
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-muted/25 border border-border rounded-md p-3 text-center">
                 <FileJson className="w-4 h-4 text-warning mx-auto mb-1" />

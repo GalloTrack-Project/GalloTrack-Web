@@ -13,6 +13,20 @@ import {
 import type { AdminProfileRow } from '@/lib/admin';
 import { supabase } from '@/lib/registry';
 import { Users, CheckCircle, Ban, Shield, Search, User, AlertTriangle, ClipboardList, Clock, FileText } from 'lucide-react';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Legend,
+  LinearScale,
+  Tooltip,
+} from 'chart.js';
+import { useTheme } from 'next-themes';
+import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
+
+ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 type AdminTab = 'users' | 'audit';
 
@@ -74,6 +88,48 @@ export default function AdminPanelPage() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditSearch, setAuditSearch] = useState('');
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
+  const { resolvedTheme } = useTheme();
+  const chart = useChartTokens(resolvedTheme);
+
+  /** Sign-ups per month over the last six months, derived once per profile load. */
+  const registrationChart = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of profiles) {
+      const created = p.created_at ? new Date(p.created_at) : null;
+      if (!created || isNaN(created.getTime())) continue;
+      const key = `${created.getFullYear()}-${created.getMonth()}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const now = new Date();
+    const labels: string[] = [];
+    const data: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      labels.push(d.toLocaleDateString('en-US', { month: 'short' }));
+      data.push(counts.get(`${d.getFullYear()}-${d.getMonth()}`) || 0);
+    }
+    return { labels, data };
+  }, [profiles]);
+
+  const statusChart = useMemo(() => {
+    const tallies = { active: 0, suspended: 0, deactivated: 0 };
+    for (const p of profiles) tallies[getAccountStatus(p)]++;
+    return {
+      labels: ['Active', 'Suspended', 'Deactivated'],
+      data: [tallies.active, tallies.suspended, tallies.deactivated],
+      colors: [chart.success, chart.warning, chart.danger],
+    };
+  }, [profiles, chart]);
+
+  const counts = useMemo(() => {
+    const c = { total: profiles.length, active: 0, suspended: 0, deactivated: 0, verified: 0, admins: 0 };
+    for (const p of profiles) {
+      c[getAccountStatus(p)]++;
+      if (p.is_verified === true) c.verified++;
+      if (p.is_admin || p.role === 'admin') c.admins++;
+    }
+    return c;
+  }, [profiles]);
 
   const showToast = useCallback(
     (type: 'success' | 'error', message: string) => {
@@ -294,12 +350,7 @@ export default function AdminPanelPage() {
 
   if (!adminProfile) return null;
 
-  const total = profiles.length;
-  const active = profiles.filter((p) => getAccountStatus(p) === 'active').length;
-  const suspended = profiles.filter((p) => getAccountStatus(p) === 'suspended').length;
-  const deactivated = profiles.filter((p) => getAccountStatus(p) === 'deactivated').length;
-  const verified = profiles.filter((p) => p.is_verified === true).length;
-  const admins = profiles.filter((p) => p.is_admin || p.role === 'admin').length;
+  const { total, active, suspended, deactivated, verified, admins } = counts;
 
   const statCard = (label: string, value: number, accent: string, icon: React.ReactNode) => (
     <div className="bg-card/95 border border-border rounded-lg p-4 sm:p-5 shadow-2xs">
@@ -380,6 +431,65 @@ export default function AdminPanelPage() {
           {statCard('Suspended', suspended, 'text-warning', <Ban size={20} />)}
           {statCard('Deactivated', deactivated, 'text-danger', <Ban size={20} />)}
           {statCard('Verified', verified, 'text-info', <Shield size={20} />)}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4">
+          <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4">
+            <p className="text-xs font-black uppercase tracking-widest text-card-foreground mb-3">New Accounts · Last 6 Months</p>
+            {total === 0 ? (
+              <p className="text-sm text-muted-foreground font-semibold text-center py-10">No accounts yet.</p>
+            ) : (
+              <div className="h-44">
+                <Bar
+                  data={{
+                    labels: registrationChart.labels,
+                    datasets: [{
+                      label: 'New accounts',
+                      data: registrationChart.data,
+                      backgroundColor: withAlpha(chart.warning, 0.75),
+                      borderRadius: 4,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { color: chart.mutedForeground, font: { size: 10, weight: 'bold' } } },
+                      y: { beginAtZero: true, ticks: { stepSize: 1, color: chart.mutedForeground, font: { size: 10 } } },
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </div>
+          <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4">
+            <p className="text-xs font-black uppercase tracking-widest text-card-foreground mb-3">Account Status</p>
+            {total === 0 ? (
+              <p className="text-sm text-muted-foreground font-semibold text-center py-10">No accounts yet.</p>
+            ) : (
+              <div className="h-44">
+                <Doughnut
+                  data={{
+                    labels: statusChart.labels,
+                    datasets: [{
+                      data: statusChart.data,
+                      backgroundColor: statusChart.colors,
+                      borderWidth: 0,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                      legend: { position: 'bottom', labels: { color: chart.mutedForeground, boxWidth: 10, font: { size: 11, weight: 'bold' } } },
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">

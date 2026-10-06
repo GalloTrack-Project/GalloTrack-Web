@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/registry';
+import { recordAdminAction } from '@/lib/api/audit-log';
 
 export interface AdminSettings {
   system_name?: string;
@@ -97,6 +98,7 @@ export async function setUserActive(userId: string, active: boolean): Promise<vo
     .update({ is_active: active, account_status: active ? 'active' : 'deactivated', updated_at: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw new Error(error.message);
+  await recordAdminAction({ action: active ? 'user_activated' : 'user_deactivated', targetType: 'profile', targetId: userId });
 }
 
 export async function setAccountStatus(userId: string, status: 'active' | 'suspended' | 'deactivated'): Promise<void> {
@@ -109,6 +111,7 @@ export async function setAccountStatus(userId: string, status: 'active' | 'suspe
     })
     .eq('id', userId);
   if (error) throw new Error(error.message);
+  await recordAdminAction({ action: `account_${status}`, targetType: 'profile', targetId: userId });
 }
 
 export async function setUserVerified(userId: string, verified: boolean): Promise<void> {
@@ -117,6 +120,7 @@ export async function setUserVerified(userId: string, verified: boolean): Promis
     .update({ is_verified: verified, updated_at: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw new Error(error.message);
+  await recordAdminAction({ action: verified ? 'user_verified' : 'user_verification_revoked', targetType: 'profile', targetId: userId });
 }
 
 export async function setUserRole(userId: string, role: 'owner' | 'admin'): Promise<void> {
@@ -130,6 +134,7 @@ export async function setUserRole(userId: string, role: 'owner' | 'admin'): Prom
     .update({ role, is_admin: role === 'admin', updated_at: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw new Error(error.message);
+  await recordAdminAction({ action: `role_changed_to_${role}`, targetType: 'profile', targetId: userId, details: { role } });
 }
 
 /**
@@ -145,6 +150,7 @@ export async function deleteUserRecords(userId: string): Promise<void> {
   await supabase.from('marketplace_listings').delete().eq('user_id', userId);
   const { error } = await supabase.from('profiles').delete().eq('id', userId);
   if (error) throw new Error(error.message);
+  await recordAdminAction({ action: 'user_records_deleted', targetType: 'profile', targetId: userId });
 }
 
 export async function fetchSystemSettings(): Promise<AdminSettings> {
@@ -188,4 +194,10 @@ export async function updateSystemSettings(settings: AdminSettings): Promise<voi
       { onConflict: 'key' }
     );
   if (error) throw new Error(error.message);
+  await recordAdminAction({
+    action: 'system_settings_updated',
+    targetType: 'system_settings',
+    targetId: 'app',
+    details: { keys: Object.keys(settings).sort() },
+  });
 }

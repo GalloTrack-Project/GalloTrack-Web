@@ -1,11 +1,13 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/registry'
 import type { AdminSettings } from '@/lib/admin'
 import type { RegistryOption } from '@/lib/types'
 import { User, Home, Settings, Bell, Database, Monitor, X, ListChecks } from 'lucide-react'
 import { fetchUserSettings, setUserSetting } from '@/lib/services/settings-service'
+import { parseBackup, restoreBackup } from '@/lib/backup'
+import { useFowl } from '@/lib/contexts/fowl-context'
 import { RANKING_METRICS, RANKING_METRIC_LABELS, DEFAULT_SETTINGS, type UserSettings as FarmSettings, type SettingsKey } from '@/lib/settings'
 import { fetchRegistryOptions, addRegistryOption, setRegistryOptionActive } from '@/lib/services/options-service'
 
@@ -120,6 +122,9 @@ export default function SettingsPage() {
   const [loadError, setLoadError] = useState('')
   const [clearNotice, setClearNotice] = useState('')
   const [clearing, setClearing] = useState('')
+  const [restoring, setRestoring] = useState(false)
+  const restoreInputRef = useRef<HTMLInputElement | null>(null)
+  const fowl = useFowl()
   const [userEmail, setUserEmail] = useState('')
   const [userName, setUserName] = useState('')
   const [userCreatedAt, setUserCreatedAt] = useState('')
@@ -370,6 +375,36 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleRestoreFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setRestoring(true)
+    setClearNotice('')
+    try {
+      const parsed = parseBackup(await file.text())
+      if (!parsed.ok) {
+        setClearNotice(`Error: ${parsed.error}`)
+        return
+      }
+      const summary = `${parsed.fowls} chicken${parsed.fowls === 1 ? '' : 's'} and ${parsed.matches} match${parsed.matches === 1 ? '' : 'es'}`
+      if (!window.confirm(`Restore ${summary} from "${file.name}"? Records already in the registry are skipped.`)) return
+
+      const result = await restoreBackup(parsed.backup, { includeProfiles: false })
+      if (result.errors.length > 0) {
+        setClearNotice(`Error: restored ${result.fowls} chickens and ${result.matches} matches, but ${result.errors.length} row(s) failed — ${result.errors[0]}`)
+      } else {
+        setClearNotice(`Restored ${result.fowls} chickens and ${result.matches} matches (${result.skipped} already present were skipped).`)
+      }
+      window.dispatchEvent(new Event('admin-profile-update'))
+      void fowl.fetchDatabaseResources()
+    } catch (err: unknown) {
+      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setRestoring(false)
+    }
+  }
+
   function renderTabContent() {
     switch (activeTab) {
       case 'account':
@@ -520,9 +555,9 @@ export default function SettingsPage() {
               <Field label="System Event Toasts" description="Show toast notifications on save, delete, errors">
                 <Toggle checked={settings.event_alerts !== false} onChange={(v) => update('event_alerts', v)} />
               </Field>
-              <Field label="Cloud Audit Logs" description="Record transaction updates to the cluster">
-                <Toggle checked={settings.cloud_logs !== false} onChange={(v) => update('cloud_logs', v)} />
-              </Field>
+              <p className="text-xs text-muted-foreground font-medium">
+                Administrator audit logs are always recorded and are reviewed from the admin console.
+              </p>
             </SectionCard>
           </div>
         )
@@ -600,12 +635,33 @@ export default function SettingsPage() {
                 {clearNotice}
               </div>
             )}
-            <SectionCard title="Backup & Export" description="Download your data for safekeeping">
+            <SectionCard title="Backup & Restore" description="Download your data for safekeeping, or reload an earlier backup">
               <Field label="Export All Data" description="Download a JSON backup of all chicken and match records">
                 <button type="button" onClick={handleExport} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                   Export JSON
                 </button>
+              </Field>
+              <Field label="Restore from Backup" description="Upload a GalloTrack JSON backup — records already in the registry are skipped, nothing is deleted">
+                <div className="flex flex-wrap items-center gap-3 py-1">
+                  <input
+                    ref={restoreInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    className="hidden"
+                    onChange={handleRestoreFile}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => restoreInputRef.current?.click()}
+                    disabled={restoring}
+                    className="bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {restoring && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                    {restoring ? 'Restoring...' : 'Restore JSON'}
+                  </button>
+                  <span className="text-xs font-semibold text-muted-foreground">Accepts backups exported from this tab or from the admin console.</span>
+                </div>
               </Field>
             </SectionCard>
             <SectionCard title="Danger Zone" description="Irreversible actions. Proceed with caution.">
