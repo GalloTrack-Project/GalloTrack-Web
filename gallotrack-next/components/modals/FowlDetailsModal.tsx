@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Play, Image as ImageIcon, PencilLine, Share2, Plus, Trash2 } from 'lucide-react';
+import { Play, Image as ImageIcon, PencilLine, Share2, Plus, Trash2, Printer } from 'lucide-react';
 import type {
   FowlRecord,
   MatchRecord,
@@ -15,14 +15,14 @@ import type {
 import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import BloodlineProvenance from '@/components/BloodlineProvenance';
-import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf } from '@/lib/lineage';
 import { birdFamilyStats } from '@/lib/family-stats';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { isMale, parentBloodlineOf } from '@/lib/helpers';
+import { isMale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
+import { printReport } from '@/lib/report-export';
 import { Modal } from '@/components/ui';
 import {
   archiveDisplay,
@@ -107,6 +107,7 @@ export default function FowlDetailsModal({
     setArchiveReasonInput,
     breedingPairs,
     matchMedia,
+    bloodlineStatsOf,
   } = useFowl();
   const { rows: optionRows } = useRegistryOptions();
 
@@ -214,6 +215,85 @@ export default function FowlDetailsModal({
   );
   const notesClean = notesDraft === (bird.notes ?? '');
 
+  const printProfileReport = () => {
+    const fights = matchHistory
+      .filter((m) => (m.entry_name || '').trim().toLowerCase() === (bird.name || '').trim().toLowerCase())
+      .slice()
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const wins = fights.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
+    const losses = fights.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
+    const draws = fights.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
+    const ageParts = bird.birthdate ? getAgeParts(bird.birthdate) : null;
+    const bloodlineStats = bloodlineStatsOf(bird);
+
+    printReport({
+      title: `Gamefowl Profile — ${bird.name}`,
+      meta: [
+        formatBirdCodeForDisplay(birdCodeOf(bird, fowls)),
+        bird.breed,
+        bird.gender,
+        bird.status,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      sections: [
+        {
+          heading: 'Profile',
+          fields: [
+            { label: 'Bird code', value: formatBirdCodeForDisplay(birdCodeOf(bird, fowls)) || '—' },
+            { label: 'Wing band', value: bird.wing_band || '—' },
+            { label: 'Name', value: bird.name },
+            { label: 'Gender', value: bird.gender || '—' },
+            { label: 'Breed / strain', value: bird.breed || '—' },
+            { label: 'Color', value: [bird.color, bird.color_category].filter(Boolean).join(' · ') || '—' },
+            { label: 'Birthdate', value: bird.birthdate || '—' },
+            { label: 'Age', value: ageParts ? getAgeLabel(ageParts) : '—' },
+            { label: 'Status', value: bird.status || '—' },
+            { label: 'Weight', value: bird.weight ? `${bird.weight} ${unitPrefs.weightUnit}` : '—' },
+            { label: 'Height', value: bird.height ? `${bird.height} ${unitPrefs.heightUnit}` : '—' },
+            { label: 'Leg color', value: bird.leg_color || '—' },
+            { label: 'Sire', value: bird.sire || '—' },
+            { label: 'Dam', value: bird.dam || '—' },
+            { label: 'Generation', value: `${generationInfo(generationOf(bird)).label} · ${generationPurity(generationOf(bird))}% purity` },
+            { label: 'Dominant bloodline', value: `${bloodlineOf(bird)}%` },
+          ],
+        },
+        {
+          heading: 'Bloodline Composition',
+          table: {
+            columns: ['Strain', 'Share %'],
+            rows: (bloodlineStats?.entries ?? []).map((e) => [e.strain, e.pct]),
+          },
+        },
+        {
+          heading: 'Performance Metrics',
+          fields: [
+            { label: 'Total fights', value: String(fights.length) },
+            { label: 'Wins', value: String(wins) },
+            { label: 'Losses', value: String(losses) },
+            { label: 'Draws', value: String(draws) },
+            { label: 'Win rate', value: wins + losses > 0 ? `${winRateOf(wins, losses)}%` : '—' },
+          ],
+        },
+        {
+          heading: 'Match History',
+          table: {
+            columns: ['Date', 'Opponent', 'Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition'],
+            rows: fights.map((m) => [
+              m.date,
+              m.opponent,
+              [m.breed, m.opponent_breed].filter(Boolean).join(' vs '),
+              [m.event_type, m.type].filter(Boolean).join(' · '),
+              m.outcome,
+              m.location,
+              m.post_fight_condition,
+            ]),
+          },
+        },
+      ],
+    });
+  };
+
   const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
     try {
@@ -236,7 +316,7 @@ export default function FowlDetailsModal({
         <BloodlineReportCard fowl={selectedFowlForDetails} />
 
         <BloodlineBreakdown
-          stats={getFowlBloodlineStats(selectedFowlForDetails, fowls)}
+          stats={bloodlineStatsOf(selectedFowlForDetails)}
           title="Bloodline Percentage"
           subtitle="Each percentage is the 50/50 split contributed by the sire and the dam"
         />
@@ -349,6 +429,17 @@ export default function FowlDetailsModal({
               </div>
             )}
           </div>
+        </div>
+
+        {/* REPORT ACTIONS */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={printProfileReport}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 dark:border-emerald-800 px-3 py-1.5 rounded-sm transition-all cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print / Export Profile Report
+          </button>
         </div>
 
         {/* CHICKEN PHOTO GALLERY */}
@@ -1039,12 +1130,7 @@ export default function FowlDetailsModal({
           const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
           const losses = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
           const draws = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'draw').length;
-          const decidedFights = wins + losses;
-          const winRate = decidedFights > 0 
-            ? Math.round((wins / decidedFights) * 100) 
-            : totalFights > 0 
-            ? Math.round((wins / totalFights) * 100) 
-            : 0;
+          const winRate = winRateOf(wins, losses);
 
           return (
             <div className="space-y-4">

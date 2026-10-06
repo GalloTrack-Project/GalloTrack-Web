@@ -1,12 +1,13 @@
 'use client';
 import React from 'react';
-import { Swords, Play, Image as ImageIcon, PencilLine, Share2, Feather } from 'lucide-react';
+import { Swords, Play, Image as ImageIcon, PencilLine, Share2, Feather, Download, Printer } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { genderLabel } from '@/lib/helpers';
 import { videosFor, photosFor } from '@/lib/services/media-service';
+import { downloadCsv, printReport } from '@/lib/report-export';
 
 const outcomeClass = (outcome: string) => {
   const o = (outcome || '').toLowerCase();
@@ -46,6 +47,34 @@ export default function FightHistoryModal() {
     { label: 'Win Rate', value: decided > 0 ? `${winRate}%` : '—', tone: 'text-teal dark:text-teal-400' },
   ];
 
+  const reportColumns = ['Date', 'Our Chicken', 'Opponent', 'Our Breed', 'Opponent Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition', 'Notes'];
+  const reportRows = fights.map((m) => [
+    m.date,
+    m.entry_name || bird.name,
+    m.opponent,
+    m.breed,
+    m.opponent_breed,
+    [m.event_type, m.type].filter(Boolean).join(' · '),
+    m.outcome,
+    m.location,
+    m.post_fight_condition,
+    [m.side, m.notes].filter(Boolean).join(' · '),
+  ]);
+
+  const fileStem = `${bird.name || 'fowl'}-fight-history`.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+
+  const exportCsv = () => downloadCsv(fileStem, [reportColumns, ...reportRows]);
+
+  const exportPrintable = () =>
+    printReport({
+      title: `Fight History — ${bird.name}`,
+      meta: [code, bird.breed || '', genderLabel(bird.gender) || '', bird.status || ''].filter(Boolean).join(' · '),
+      sections: [
+        { heading: 'Performance Summary', fields: summary.map((s) => ({ label: s.label, value: s.value })) },
+        { heading: 'Fight Log', table: { columns: reportColumns, rows: reportRows } },
+      ],
+    });
+
   return (
     <Modal
       open
@@ -75,6 +104,28 @@ export default function FightHistoryModal() {
             <strong className={`block text-lg font-black ${s.tone}`}>{s.value}</strong>
           </div>
         ))}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fight log</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={fights.length === 0}
+            className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2.5 py-1.5 text-xs font-black hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export CSV
+          </button>
+          <button
+            type="button"
+            onClick={exportPrintable}
+            disabled={fights.length === 0}
+            className="inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 text-xs font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print / PDF
+          </button>
+        </div>
       </div>
 
       {fights.length === 0 ? (

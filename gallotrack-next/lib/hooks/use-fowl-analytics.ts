@@ -4,6 +4,7 @@ import {
   calculatePairingStats,
   formatShortDate,
   getMilestoneInfo as getMilestoneInfoHelper,
+  winRateOf,
 } from '@/lib/helpers';
 import type { FowlRecord, MatchRecord, PairingAnalytics } from '@/lib/types';
 
@@ -45,27 +46,24 @@ export function useFowlAnalytics(
     const pairingAnalytics = calculatePairingStats(fowls, matchHistory);
 
     const crossbreedChartData = (() => {
-      const breedStats: { [key: string]: { wins: number; total: number } } = {};
+      const breedStats: { [key: string]: { wins: number; losses: number; total: number } } = {};
       matchHistory.forEach((match) => {
         const breedKey = `${match.breed || 'Unknown'} Cross`;
-        if (!breedStats[breedKey]) breedStats[breedKey] = { wins: 0, total: 0 };
+        if (!breedStats[breedKey]) breedStats[breedKey] = { wins: 0, losses: 0, total: 0 };
         breedStats[breedKey].total += 1;
-        if (match.outcome && match.outcome.toLowerCase() === 'win') breedStats[breedKey].wins += 1;
+        const outcome = (match.outcome || '').toLowerCase();
+        if (outcome === 'win') breedStats[breedKey].wins += 1;
+        if (outcome === 'loss') breedStats[breedKey].losses += 1;
       });
       const labels = Object.keys(breedStats);
-      const data = labels.map(label => {
-        const stats = breedStats[label];
-        return stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
-      });
+      const data = labels.map((label) => winRateOf(breedStats[label].wins, breedStats[label].losses));
       const hasData = labels.length > 0 && matchHistory.length > 0;
       return { labels: hasData ? labels : [], data: hasData ? data : [], hasData };
     })();
 
-    const winRatePct = matchHistory.length > 0
-      ? Math.round((matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length / matchHistory.length) * 100)
-      : 0;
     const winsCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
     const lossesCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
+    const winRatePct = winRateOf(winsCount, lossesCount);
 
     const monthLabels = (() => {
       const now = new Date();
@@ -89,6 +87,12 @@ export function useFowlAnalytics(
       return arr;
     })();
 
+    const lossesByMonth = (() => {
+      const arr = new Array(6).fill(0);
+      matchHistory.forEach(m => { const i = monthIndex(m.date); if (i >= 0 && m.outcome && m.outcome.toLowerCase() === 'loss') arr[i]++; });
+      return arr;
+    })();
+
     const activeSpark = (() => {
       const arr = new Array(6).fill(0);
       fowls.forEach(f => {
@@ -101,7 +105,7 @@ export function useFowlAnalytics(
       return arr;
     })();
 
-    const trendWinRate = monthLabels.map((_, i) => matchesByMonth[i] > 0 ? Math.round((winsByMonth[i] / matchesByMonth[i]) * 100) : 0);
+    const trendWinRate = monthLabels.map((_, i) => winRateOf(winsByMonth[i], lossesByMonth[i]));
 
     const upcomingMilestones = activeFowls
       .map((f) => ({ fowl: f, info: getMilestoneInfoHelper(f.birthdate, f.gender) }))

@@ -2,6 +2,7 @@ import type { FowlRecord } from './types';
 import type { ColorReport } from './color-genetics';
 import type { BreedCompliance } from './breed-standards';
 import { getFowlBloodlineStats } from './bloodline-composition';
+import { winRateOf } from './helpers';
 
 export type StrainType = 'purebred' | 'crossbred' | 'foundation' | 'unknown' | 'linebred';
 
@@ -276,17 +277,19 @@ function calculateStrainBenchmark(
   if (strainFowls.length === 0) return base || null;
 
   let wins = 0;
+  let losses = 0;
   let total = 0;
   const topPerformers: string[] = [];
 
   strainFowls.forEach(f => {
     const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === f.name?.trim().toLowerCase());
     const fWins = fMatches.filter(m => m.outcome?.toLowerCase() === 'win').length;
+    const fLosses = fMatches.filter(m => m.outcome?.toLowerCase() === 'loss').length;
     wins += fWins;
+    losses += fLosses;
     total += fMatches.length;
-    if (fMatches.length >= 3) {
-      const rate = fMatches.length > 0 ? (fWins / fMatches.length) : 0;
-      if (rate >= 0.7) topPerformers.push(f.name);
+    if (fWins + fLosses >= 3) {
+      if (winRateOf(fWins, fLosses) >= 70) topPerformers.push(f.name);
     }
   });
 
@@ -295,7 +298,7 @@ function calculateStrainBenchmark(
 
   return {
     strain,
-    avgWinRate: total > 0 ? Math.round((wins / total) * 100) : null,
+    avgWinRate: wins + losses > 0 ? winRateOf(wins, losses) : null,
     avgResilience: base?.avgResilience || 70,
     avgWeight: Math.round(avgWeight * 10) / 10,
     avgHeight: Math.round(avgHeight),

@@ -10,8 +10,9 @@ import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { videosFor, photosFor } from '@/lib/services/media-service';
-import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal } from 'lucide-react';
+import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import { downloadCsv, printReport } from '@/lib/report-export';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -22,6 +23,8 @@ const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[
   { id: '3m', label: 'Last 3 Months' },
   { id: 'all', label: 'All Time' },
 ];
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function TrendChip({ up, label }: { up: boolean; label: string }) {
   if (!up) {
@@ -66,15 +69,92 @@ export default function DashboardPage() {
     router.push(`/${page}`);
   };
 
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-  const isWithinThisWeek = (value?: string) => {
-    if (!value) return false;
-    const t = new Date(value).getTime();
-    // eslint-disable-next-line react-hooks/purity -- Date.now() is acceptable for relative time display
-    return !isNaN(t) && Date.now() - t < WEEK_MS;
-  };
-  const activeNewThisWeek = activeFowls.filter(f => isWithinThisWeek(f.created_at)).length;
-  const matchesThisWeek = matchHistory.filter(m => isWithinThisWeek(m.date)).length;
+  const weeklyCounts = React.useMemo(() => {
+    const isWithinThisWeek = (value?: string) => {
+      if (!value) return false;
+      const t = new Date(value).getTime();
+      // eslint-disable-next-line react-hooks/purity -- Date.now() is acceptable for relative time display
+      return !isNaN(t) && Date.now() - t < WEEK_MS;
+    };
+    return {
+      activeNewThisWeek: activeFowls.filter((f) => isWithinThisWeek(f.created_at)).length,
+      matchesThisWeek: matchHistory.filter((m) => isWithinThisWeek(m.date)).length,
+    };
+  }, [activeFowls, matchHistory]);
+  const { activeNewThisWeek, matchesThisWeek } = weeklyCounts;
+
+  const matchColumns = ['Date', 'Our Chicken', 'Opponent', 'Breed', 'Opponent Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition', 'Notes'];
+  const matchRows = React.useMemo(
+    () =>
+      matchHistory.map((m) => [
+        m.date, m.entry_name, m.opponent, m.breed, m.opponent_breed,
+        [m.event_type, m.type].filter(Boolean).join(' · '), m.outcome, m.location,
+        m.post_fight_condition, [m.side, m.notes].filter(Boolean).join(' · '),
+      ]),
+    [matchHistory],
+  );
+
+  const registryColumns = ['Bird Code', 'Name', 'Gender', 'Breed', 'Birthdate', 'Age', 'Status', 'Weight', 'Height', 'Sire', 'Dam', 'Bloodline %'];
+  const registryRows = React.useMemo(
+    () =>
+      fowls.map((f) => [
+        formatBirdCodeForDisplay(birdCodes.get(String(f.id)) || f.bird_code || ''),
+        f.name, f.gender, f.breed, f.birthdate, f.age, f.status, f.weight, f.height,
+        f.sire, f.dam, f.bloodline_pct,
+      ]),
+    [fowls, birdCodes],
+  );
+
+  const topStrains = React.useMemo(() => {
+    const strainMap = new Map<string, { count: number; males: number; females: number }>();
+    activeFowls.forEach((f) => {
+      const strains = (f.breed || 'Unspecified').split(',').map(s => s.trim()).filter(Boolean);
+      strains.forEach((strain) => {
+        const existing = strainMap.get(strain) || { count: 0, males: 0, females: 0 };
+        existing.count++;
+        if (f.gender === 'Rooster' || f.gender === 'Male') existing.males++;
+        else existing.females++;
+        strainMap.set(strain, existing);
+      });
+    });
+    return Array.from(strainMap.entries())
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 5);
+  }, [activeFowls]);
+
+  const exportMatchesCsv = () => downloadCsv('gallotrack-match-history', [matchColumns, ...matchRows]);
+  const exportRegistryCsv = () => downloadCsv('gallotrack-fowl-registry', [registryColumns, ...registryRows]);
+  const printPerformanceReport = () =>
+    printReport({
+      title: 'GalloTrack Performance Report',
+      meta: `${dateRangeLabel} · ${activeFowls.length} active birds · ${matchHistory.length} matches logged`,
+      sections: [
+        {
+          heading: 'Performance Metrics',
+          fields: [
+            { label: 'Overall win rate', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
+            { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
+            { label: 'Matches logged', value: String(matchHistory.length) },
+            { label: 'Active registry', value: `${activeFowls.length} (${maleActiveFowls.length} sires · ${femaleActiveFowls.length} dams)` },
+          ],
+        },
+        {
+          heading: 'Bloodline Win Ratios',
+          table: {
+            columns: ['Bloodline cross', 'Win rate %'],
+            rows: crossbreedChartData.labels.map((l, i) => [l, crossbreedChartData.data[i]]),
+          },
+        },
+        {
+          heading: 'Monthly Activity',
+          table: {
+            columns: ['Month', 'Matches', 'Win rate %'],
+            rows: monthLabels.map((l, i) => [l, matchesByMonth[i], trendWinRate[i]]),
+          },
+        },
+        { heading: 'Fowl Registry', table: { columns: registryColumns, rows: registryRows } },
+      ],
+    });
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -114,6 +194,29 @@ export default function DashboardPage() {
                   {r.label}
                 </button>
               ))}
+              <div className="h-px bg-border my-1.5"></div>
+              <p className="px-3 py-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground">Reports</p>
+              <button
+                type="button"
+                onClick={() => { setDateRangeOpen(false); exportMatchesCsv(); }}
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+              >
+                <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export matches (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDateRangeOpen(false); exportRegistryCsv(); }}
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+              >
+                <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export registry (CSV)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDateRangeOpen(false); printPerformanceReport(); }}
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+              >
+                <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print performance report
+              </button>
               <div className="h-px bg-border my-1.5"></div>
               <button
                 type="button"
@@ -211,8 +314,11 @@ export default function DashboardPage() {
             <span className="text-sm font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
           </div>
           <div className="text-3xl font-black text-success tracking-tight leading-none mt-1">
-            {matchHistory.length > 0 ? `${winRatePct}%` : '—'}
+            {winsCount + lossesCount > 0 ? `${winRatePct}%` : '—'}
           </div>
+          <p className="text-xs font-semibold text-muted-foreground -mt-1.5">
+            Wins ÷ (wins + losses) — draws are excluded
+          </p>
           <div className="h-12 -mx-1">
             {matchHistory.length > 0 ? (
               <Line
@@ -332,23 +438,9 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-2 flex-1">
               {(() => {
-                const strainMap = new Map<string, { count: number; males: number; females: number }>();
-                activeFowls.forEach((f) => {
-                  const strains = (f.breed || 'Unspecified').split(',').map(s => s.trim()).filter(Boolean);
-                  strains.forEach((strain) => {
-                    const existing = strainMap.get(strain) || { count: 0, males: 0, females: 0 };
-                    existing.count++;
-                    if (f.gender === 'Rooster' || f.gender === 'Male') existing.males++;
-                    else existing.females++;
-                    strainMap.set(strain, existing);
-                  });
-                });
-                const sorted = Array.from(strainMap.entries())
-                  .sort((a, b) => b[1].count - a[1].count)
-                  .slice(0, 5);
-                if (sorted.length === 0) return <p className="text-sm text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
-                const maxCount = sorted[0][1].count;
-                return sorted.map(([strain, data]) => (
+                if (topStrains.length === 0) return <p className="text-sm text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
+                const maxCount = topStrains[0][1].count;
+                return topStrains.map(([strain, data]) => (
                   <div key={strain} className="bg-muted/50 border border-border rounded-md px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-black text-card-foreground">{strain}</span>
@@ -493,7 +585,9 @@ export default function DashboardPage() {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-success">{winRatePct}%</span>
+                  <span className="text-2xl font-black text-success">
+                    {winsCount + lossesCount > 0 ? `${winRatePct}%` : '—'}
+                  </span>
                   <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Win Rate</span>
                 </div>
               </div>

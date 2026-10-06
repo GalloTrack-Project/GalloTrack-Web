@@ -131,6 +131,17 @@ export const bloodlineOf = (f: FowlRecord, fowls: FowlRecord[] = []): number => 
   return stats ? stats.specificPct : 0;
 };
 
+/**
+ * The app's single win-rate rule: a draw is neither a win nor a loss, so the
+ * denominator is *decided* fights only (wins + losses). Every view — dashboard,
+ * fight history, per-brother breakdowns, rankings, marketplace, lineage — must
+ * go through this so the same records never show two different percentages.
+ */
+export const winRateOf = (wins: number, losses: number): number => {
+  const decided = wins + losses;
+  return decided > 0 ? Math.round((wins / decided) * 100) : 0;
+};
+
 export const parseFowlDate = (value?: string | null): Date | null => {
   if (!value) return null;
   const numeric = String(value).replace(/[^0-9]/g, '').slice(0, 8);

@@ -31,8 +31,10 @@ import {
   getBloodlineStats,
   getFowlBloodlineStats,
   planLineageRefresh,
+  planLineageRefreshAfterDelete,
   type BloodlineComposition,
   type BloodlineStats,
+  type LineageRefreshPatch,
 } from '@/lib/bloodline-composition';
 import {
   buildCodeSet,
@@ -85,6 +87,8 @@ interface FowlContextValue {
   breedingPairs: BreedingPairRecord[];
   loading: boolean;
   setLoading: (v: boolean) => void;
+  /** Set when the registry fetch failed — the UI must say so instead of showing an empty farm. */
+  loadError: string | null;
 
   newName: string; setNewName: (v: string) => void;
   newBreed: string; setNewBreed: (v: string) => void;
@@ -210,6 +214,7 @@ interface FowlContextValue {
   previewComposition: BloodlineComposition;
   previewBloodlineStats: BloodlineStats | null;
   bloodlineStatsOf: (f: FowlRecord) => BloodlineStats | null;
+  bloodlineStatsById: Map<string, BloodlineStats | null>;
 
   handleAddFowl: (e: React.FormEvent) => Promise<void>;
   handleAddMatchRecord: (e: React.FormEvent) => Promise<void>;
@@ -364,6 +369,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const [matchMedia, setMatchMedia] = useState<Map<number, MatchMedia>>(new Map());
   const [breedingPairs, setBreedingPairs] = useState<BreedingPairRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [autoCalcAge, setAutoCalcAge] = useState(true);
 
   // ── Derived lists ──
@@ -436,9 +442,20 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
    */
   const bloodlineVerified =
     hasAnyParent && previewBloodlineStats !== null && previewBloodlineStats.knownPct > 0;
+  /**
+   * Bloodline trace results for every registered bird, computed in one pass
+   * whenever the registry changes. Consumers read from this map instead of
+   * re-walking each bird's ancestry on every render.
+   */
+  const bloodlineStatsById = useMemo(() => {
+    const map = new Map<string, BloodlineStats | null>();
+    for (const f of fowls) map.set(String(f.id), getFowlBloodlineStats(f, fowls));
+    return map;
+  }, [fowls]);
+
   const bloodlineStatsOf = useCallback(
-    (f: FowlRecord) => getFowlBloodlineStats(f, fowls),
-    [fowls]
+    (f: FowlRecord) => bloodlineStatsById.get(String(f.id)) ?? getFowlBloodlineStats(f, fowls),
+    [bloodlineStatsById, fowls]
   );
 
   // ── Age/birthdate handlers (from formState) ──
@@ -462,14 +479,45 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));
       setAvailableLegColors(legColorNames);
       setCustomLegColorNames(new Set(legColorNames.filter(s => !LEG_COLOR_LIST.includes(s))));
+      setLoadError(null);
     } catch (err) {
+      // Keep whatever we already had on screen: wiping the lists here made a
+      // failed request indistinguishable from a genuinely empty farm. The
+      // banner in the dashboard layout reports this instead.
       console.error('Failed to fetch database resources:', err);
-      setFowls([]);
-      setMatchHistory([]);
-      setMatchMedia(new Map());
+      const detail = err instanceof Error ? err.message : String(err ?? '');
+      setLoadError(
+        detail
+          ? `Could not refresh the chicken registry (${detail}).`
+          : 'Could not refresh the chicken registry — the network request failed.'
+      );
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  /**
+   * Push a batch of planned lineage patches to the database. Shared by every
+   * flow that invalidates stored bloodline compositions (create, edit,
+   * permanent delete) so they all report and stop the same way.
+   */
+  const applyLineagePatches = useCallback(async (patches: LineageRefreshPatch[]): Promise<number> => {
+    let refreshed = 0;
+    for (const { id, patch } of patches) {
+      const { error } = await fowlService.updateFowl(id, patch);
+      if (error) {
+        console.error('Failed to refresh lineage composition:', error);
+        break;
+      }
+      refreshed++;
+    }
+    if (refreshed > 0) {
+      toastMessage(
+        `Bloodline recomputed for ${refreshed} chicken${refreshed === 1 ? '' : 's'}.`,
+        'success'
+      );
+    }
+    return refreshed;
   }, []);
 
   /**
@@ -480,29 +528,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const refreshDescendantCompositions = useCallback(
     async (root: FowlRecord, previousName?: string | null): Promise<number> => {
       try {
-        const patches = planLineageRefresh({ root, previousName, fowls });
-        let refreshed = 0;
-        for (const { id, patch } of patches) {
-          const { error } = await fowlService.updateFowl(id, patch);
-          if (error) {
-            console.error('Failed to refresh lineage composition:', error);
-            break;
-          }
-          refreshed++;
-        }
-        if (refreshed > 0) {
-          toastMessage(
-            `Bloodline recomputed for ${refreshed} chicken${refreshed === 1 ? '' : 's'}.`,
-            'success'
-          );
-        }
-        return refreshed;
+        return await applyLineagePatches(planLineageRefresh({ root, previousName, fowls }));
       } catch (err) {
         console.error('Failed to refresh lineage composition:', err);
         return 0;
       }
     },
-    [fowls, ui]
+    [fowls, applyLineagePatches]
   );
 
   useEffect(() => {
@@ -977,19 +1009,26 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   }, [fetchDatabaseResources, ui]);
 
   const handlePermanentDelete = useCallback(async () => {
-    if (!ui.pendingPermanentDelete) return;
+    const deleted = ui.pendingPermanentDelete;
+    if (!deleted) return;
     ui.setPermanentDeleting(true);
-    const result = await fowlService.deleteFowl(ui.pendingPermanentDelete.id);
+    const result = await fowlService.deleteFowl(deleted.id);
     if (result.error) {
       toastMessage(result.error, 'error');
     } else {
-      toastMessage(`${ui.pendingPermanentDelete.name} permanently deleted.`, 'success');
-      if (ui.selectedFowlForDetails?.id === ui.pendingPermanentDelete.id) ui.setSelectedFowlForDetails(null);
+      toastMessage(`${deleted.name} permanently deleted.`, 'success');
+      if (ui.selectedFowlForDetails?.id === deleted.id) ui.setSelectedFowlForDetails(null);
       ui.setPendingPermanentDelete(null);
-      setFowls(prev => prev.filter(f => f.id !== ui.pendingPermanentDelete!.id));
+      setFowls(prev => prev.filter(f => f.id !== deleted.id));
+      // The database already dropped the FK links (sire_id/dam_id, match.fowl_id)
+      // and cascaded photos/status history, so the stored bloodline compositions
+      // of every descendant are now wrong — rebuild them, then re-sync matches,
+      // media and pairings so no orphaned rows linger on screen.
+      await applyLineagePatches(planLineageRefreshAfterDelete({ deleted, fowls }));
+      await fetchDatabaseResources();
     }
     ui.setPermanentDeleting(false);
-  }, [ui, setFowls]);
+  }, [ui, setFowls, applyLineagePatches, fowls, fetchDatabaseResources]);
 
   const handleMarkFowlDeceased = useCallback(async () => {
     if (!ui.selectedFowlForDeceased) return;
@@ -1183,7 +1222,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     deleteCustomStrain,
     deleteCustomLegColor,
     fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
-    matchHistory, setMatchHistory, matchMedia, breedingPairs, loading, setLoading,
+    matchHistory, setMatchHistory, matchMedia, breedingPairs, loading, setLoading, loadError,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,
     winRatePct: analytics.winRatePct,
@@ -1198,7 +1237,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     dateRangeLabel: analytics.dateRangeLabel,
     nextNodeId,
     dataCompleteness, validationPassed, bloodlineVerified, computedBloodlinePct,
-    birdCodes, birdCodeOf, suggestedBirdCode, previewComposition, previewBloodlineStats, bloodlineStatsOf,
+    birdCodes, birdCodeOf, suggestedBirdCode, previewComposition, previewBloodlineStats, bloodlineStatsOf, bloodlineStatsById,
     offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
     handleAddFowl, handleAddMatchRecord, handleUpdateFowl,
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,

@@ -556,3 +556,59 @@ export function planLineageRefresh(params: {
   }
   return patches;
 }
+
+/**
+ * Which descendants went stale after a bird was permanently deleted?
+ *
+ * Same downward walk as planLineageRefresh, except the removed bird is no
+ * longer part of the ancestry list: every child recomputes as if that parent
+ * had never existed, so the surviving parent takes the whole share (or the
+ * line falls back to unknown). The child's `sire`/`dam` text is left alone —
+ * it is provenance, not state — while the database already nulls the
+ * `sire_id`/`dam_id` foreign keys itself.
+ */
+export function planLineageRefreshAfterDelete(params: {
+  deleted: FowlRecord;
+  fowls: FowlRecord[];
+}): LineageRefreshPatch[] {
+  const { deleted, fowls } = params;
+  const key = (s?: string | null): string => String(s ?? '').trim().toLowerCase();
+  const deletedKey = key(deleted.name);
+  if (!deletedKey) return [];
+
+  const next = fowls.filter((f) => f.id !== deleted.id);
+  const queue: string[] = [deletedKey];
+  const visited = new Set<number>();
+  const patches: LineageRefreshPatch[] = [];
+
+  while (queue.length > 0) {
+    const parentKey = queue.shift() as string;
+    for (let i = 0; i < next.length; i++) {
+      const f = next[i];
+      if (visited.has(f.id)) continue;
+      const isChild = key(f.sire) === parentKey || key(f.dam) === parentKey;
+      if (!isChild) continue;
+      visited.add(f.id);
+
+      const childKey = key(f.name);
+      if (childKey && childKey !== parentKey) queue.push(childKey);
+
+      const fresh = computeBloodlineComposition(f, next);
+      const stats = getBloodlineStats(fresh);
+      const freshPct = stats?.specificPct ?? null;
+      const drifted =
+        compositionIsStale(f.bloodline_composition, fresh) ||
+        (freshPct !== null && Math.abs(freshPct - Number(f.bloodline_pct ?? 0)) > EPSILON);
+      if (!drifted) continue;
+
+      patches.push({
+        id: f.id,
+        patch: {
+          bloodline_composition: fresh,
+          ...(freshPct !== null ? { bloodline_pct: freshPct } : {}),
+        },
+      });
+    }
+  }
+  return patches;
+}

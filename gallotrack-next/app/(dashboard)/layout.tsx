@@ -3,10 +3,11 @@ import { useEffect, useState, type ComponentType } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut, FlaskConical } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut, FlaskConical, AlertTriangle, RefreshCw } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
+import { useFowl } from '@/lib/contexts/fowl-context';
 import { supabase } from '@/lib/registry';
 import { SkipLink, cn } from '@/components/ui';
 import { ModalsWrapper } from './wrappers';
@@ -40,6 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { resolvedTheme, setTheme } = useTheme();
   const ui = useUI();
   const auth = useAuth();
+  const fowl = useFowl();
   const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState({ total_users: 0, total_fowls: 0, total_matches: 0 });
 
@@ -232,6 +234,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </header>
+
+        {fowl.loadError && (
+          <div
+            role="alert"
+            className="shrink-0 border-b border-amber-300/70 bg-amber-50 dark:bg-amber-950/40 px-4 sm:px-6 md:px-8 py-3 flex flex-col sm:flex-row sm:items-center gap-2"
+          >
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 hidden sm:block" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                Registry sync failed
+              </p>
+              <p className="text-sm font-semibold text-muted-foreground mt-0.5 break-words">
+                {fowl.loadError} Figures on screen may be out of date.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => fowl.fetchDatabaseResources()}
+              className="flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-sm px-3 py-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer transition-colors duration-150 shrink-0"
+            >
+              <RefreshCw className="w-3 h-3" aria-hidden="true" />
+              Retry
+            </button>
+          </div>
+        )}
 
         <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6">
           <ErrorBoundary label="Dashboard Section">

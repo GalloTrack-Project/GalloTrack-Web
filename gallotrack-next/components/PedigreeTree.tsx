@@ -33,7 +33,7 @@ const ACCENT: Record<CardProps['accent'], { border: string; badge: string; text:
 
 function AncestorCard({ label, name, fowl, fowls, codes, generation, accent, onPick }: CardProps) {
   const a = ACCENT[accent];
-  const stats = fowl ? getFowlBloodlineStats(fowl, fowls) : null;
+  const stats = useMemo(() => (fowl ? getFowlBloodlineStats(fowl, fowls) : null), [fowl, fowls]);
   const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '') : '';
   const missing = isAbsent(name);
 
@@ -163,6 +163,11 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
     [fowls, activeId]
   );
 
+  const stats = useMemo(
+    () => (subject ? getFowlBloodlineStats(subject, fowls) : null),
+    [subject, fowls]
+  );
+
   if (fowls.length === 0 || !subject) {
     return (
       <div className="bg-card p-10 text-center rounded-lg border border-border shadow-sm space-y-2">
@@ -171,8 +176,6 @@ export default function PedigreeTree({ fowls, codes, selectedId, onSelect }: Pro
       </div>
     );
   }
-
-  const stats = getFowlBloodlineStats(subject, fowls);
 
   return (
     <div className="space-y-4">

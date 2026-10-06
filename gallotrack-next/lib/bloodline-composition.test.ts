@@ -11,6 +11,7 @@ import {
   normalizeComposition,
   parseComposition,
   planLineageRefresh,
+  planLineageRefreshAfterDelete,
   specificBloodlinePct,
   traceComposition,
 } from './bloodline-composition';
@@ -338,6 +339,102 @@ describe('planLineageRefresh', () => {
     const patches = planLineageRefresh({ root: edited, previousName: 'King', fowls });
 
     expect(patches.some((p) => p.id === edited.id)).toBe(false);
+  });
+});
+
+describe('planLineageRefreshAfterDelete', () => {
+  const family = (): FowlRecord[] => [
+    bird({
+      id: 1,
+      name: 'King',
+      breed: 'Kelso',
+      bloodline_composition: { Kelso: 100 },
+      bloodline_pct: 100,
+    }),
+    bird({
+      id: 2,
+      name: 'Lady',
+      gender: 'Hen',
+      breed: 'Hatch',
+      bloodline_composition: { Hatch: 100 },
+      bloodline_pct: 100,
+    }),
+    bird({
+      id: 3,
+      name: 'Chick',
+      sire: 'King',
+      dam: 'Lady',
+      bloodline_composition: { Kelso: 50, Hatch: 50 },
+      bloodline_pct: 50,
+    }),
+    bird({
+      id: 4,
+      name: 'Grand',
+      sire: 'Chick',
+      dam: 'Lady',
+      bloodline_composition: { Kelso: 25, Hatch: 75 },
+      bloodline_pct: 25,
+    }),
+  ];
+
+  it('hands the dead parent\'s share to unknown and keeps walking down', () => {
+    const fowls = family();
+    const patches = planLineageRefreshAfterDelete({ deleted: fowls[0], fowls });
+
+    expect(patches.map((p) => p.id)).toEqual([3, 4]);
+    expect(patches[0].patch.bloodline_composition).toEqual({ Hatch: 50, [UNKNOWN_BLOODLINE]: 50 });
+    expect(patches[0].patch.bloodline_pct).toBe(50);
+    expect(patches[1].patch.bloodline_composition).toEqual({ Hatch: 75, [UNKNOWN_BLOODLINE]: 25 });
+    expect(patches[1].patch.bloodline_pct).toBe(75);
+  });
+
+  it('rebuilds both the child and the grandchild when the shared dam dies', () => {
+    const fowls = family();
+    const patches = planLineageRefreshAfterDelete({ deleted: fowls[1], fowls });
+
+    expect(patches.map((p) => p.id)).toEqual([3, 4]);
+    expect(patches[0].patch.bloodline_composition).toEqual({ Kelso: 50, [UNKNOWN_BLOODLINE]: 50 });
+    expect(patches[1].patch.bloodline_composition).toEqual({ Kelso: 25, [UNKNOWN_BLOODLINE]: 75 });
+  });
+
+  it('leaves the sire/dam names and unrelated birds alone', () => {
+    const fowls = family();
+    fowls.push(
+      bird({
+        id: 9,
+        name: 'Stranger',
+        breed: 'Lemon 84',
+        bloodline_composition: { 'Lemon 84': 100 },
+        bloodline_pct: 100,
+      })
+    );
+    const patches = planLineageRefreshAfterDelete({ deleted: fowls[0], fowls });
+
+    expect(patches.some((p) => p.id === 9)).toBe(false);
+    expect(patches.some((p) => 'sire' in p.patch || 'dam' in p.patch)).toBe(false);
+  });
+
+  it('returns nothing when nothing depended on the deleted bird', () => {
+    const fowls = family();
+    fowls.push(
+      bird({
+        id: 9,
+        name: 'Stranger',
+        breed: 'Lemon 84',
+        bloodline_composition: { 'Lemon 84': 100 },
+        bloodline_pct: 100,
+      })
+    );
+    const patches = planLineageRefreshAfterDelete({ deleted: fowls[4], fowls });
+
+    expect(patches).toEqual([]);
+  });
+
+  it('returns nothing for a bird with no name', () => {
+    const fowls = family();
+    const patches = planLineageRefreshAfterDelete({ deleted: { ...fowls[0], name: '' }, fowls });
+
+    expect(patches).toEqual([]);
   });
 });
 

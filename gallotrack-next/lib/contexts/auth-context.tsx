@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ensureOwnerRecords, supabase } from '@/lib/registry';
 import { isAdminProfile } from '@/lib/admin';
 import { useUI } from './ui-context';
@@ -51,6 +51,10 @@ export function useAuth(): AuthContextValue {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const ui = useUI();
+  // Raised around every sign-out we asked for (logout button, unconfirmed
+  // email, deactivated account) so the SIGNED_OUT listener below only reacts
+  // to sessions that died on their own.
+  const quietSignOut = useRef(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminName, setAdminName] = useState('Farm Owner');
@@ -103,6 +107,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkSession();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** Sign out for a reason we already show in the UI — never as "session expired". */
+  const signOutQuietly = useCallback(async () => {
+    quietSignOut.current = true;
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      setTimeout(() => { quietSignOut.current = false; }, 1000);
+    }
+  }, []);
+
+  /**
+   * Session lifetime: Supabase only tells us the token refresh failed by
+   * emitting SIGNED_OUT. Without this listener the tab keeps rendering a farm
+   * that can no longer be read or written, so clear the local session, drop the
+   * session cookie and send the user back to the sign-in screen.
+   */
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== 'SIGNED_OUT') return;
+      if (quietSignOut.current || ui.currentPage === 'login') return;
+
+      setCurrentUserId(null);
+      setUsername('');
+      setPassword('');
+      setError('');
+      ui.setCurrentPage('login');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('gallotrack_user_id');
+        localStorage.removeItem('gallotrack_rememberMe');
+        document.cookie = 'gallotrack_session=; path=/; max-age=0';
+        toastMessage('Your session has expired. Please sign in again.', 'warning');
+        window.location.href = '/';
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [ui]);
 
   useEffect(() => {
     const handleProfileUpdate = async () => {
@@ -235,7 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!data.user.email_confirmed_at) {
-        await supabase.auth.signOut();
+        await signOutQuietly();
         setError('Please verify your email address before logging in. Check your inbox for the verification link.');
         return;
       }
@@ -247,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { profile, welcomeName } = await loadUserProfile(data.user.id);
 
       if (profile && profile.is_active === false) {
-        await supabase.auth.signOut();
+        await signOutQuietly();
         setError('This account has been deactivated by the administrator. Contact system support to restore access.');
         if (typeof window !== 'undefined') localStorage.removeItem('gallotrack_user_id');
         return;
@@ -268,7 +309,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [username, password, rememberMe, ui, loadUserProfile, syncProfileFromUser]);
+  }, [username, password, rememberMe, ui, loadUserProfile, syncProfileFromUser, signOutQuietly]);
 
   const handleLogout = useCallback(async () => {
     setCurrentUserId(null);
@@ -283,11 +324,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('gallotrack_user_id');
       document.cookie = 'gallotrack_session=; path=/; max-age=0';
     }
-    await supabase.auth.signOut();
+    await signOutQuietly();
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     }
-  }, [ui]);
+  }, [ui, signOutQuietly]);
 
   const handleSendResetLink = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

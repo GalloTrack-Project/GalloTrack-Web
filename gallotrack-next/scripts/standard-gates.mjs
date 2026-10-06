@@ -68,9 +68,14 @@ function gateSubTwelvePx(files) {
 
 // Gate 2 — no raw hex in TSX; colour must come from a token (Std §Colour).
 function gateRawHex(files) {
+  // Exception: app/global-error.tsx renders *instead of* the root layout, so
+  // globals.css (and with it every Tailwind colour token) is unavailable there.
+  // Inline colours are the only option in that file.
+  const exempt = new Set(['app/global-error.tsx']);
   const violations = {};
   for (const file of files) {
     if (!file.endsWith('.tsx')) continue;
+    if (exempt.has(rel(file))) continue;
     const source = readFileSync(file, 'utf8');
     // Hex inside an HTML entity (&#9876;) is not a colour.
     const stripped = source.replace(/&#\d+;/g, '');
