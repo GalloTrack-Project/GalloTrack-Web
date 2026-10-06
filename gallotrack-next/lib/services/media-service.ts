@@ -159,6 +159,19 @@ export async function createShareLink(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
+  // The RLS policy only checks that `user_id` is the caller — it says nothing
+  // about `entity_id`, which is chosen by the client. Prove the row is ours
+  // before minting a public URL to it, or one tenant could link to another's
+  // records.
+  const table = entityType === 'fowl' ? 'fowl' : 'match';
+  const { data: owned, error: ownedErr } = await supabase
+    .from(table)
+    .select('id')
+    .eq('id', entityId)
+    .maybeSingle();
+  if (ownedErr) return { error: ownedErr.message };
+  if (!owned) return { error: 'Record not found or not owned by you' };
+
   const token = crypto.randomUUID().replace(/-/g, '');
   const { error } = await supabase
     .from('share_links')

@@ -17,7 +17,7 @@ export async function GET(
 
   const { data: link, error: linkErr } = await admin
     .from('share_links')
-    .select('entity_type, entity_id')
+    .select('entity_type, entity_id, user_id')
     .eq('token', token)
     .maybeSingle();
   if (linkErr || !link) {
@@ -29,6 +29,7 @@ export async function GET(
       .from('match')
       .select('*')
       .eq('id', link.entity_id)
+      .eq('user_id', link.user_id)
       .maybeSingle();
     if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
@@ -70,6 +71,7 @@ export async function GET(
     .from('fowl')
     .select('id, name, breed, gender, birthdate, color, image_url, status, sire, dam, wing_band, bird_code')
     .eq('id', link.entity_id)
+    .eq('user_id', link.user_id)
     .maybeSingle();
   if (!fowl) return NextResponse.json({ error: 'Chicken not found' }, { status: 404 });
 
@@ -82,8 +84,10 @@ export async function GET(
   const parentNames = [fowl.sire, fowl.dam]
     .map((n) => (n || '').trim())
     .filter((n) => n && n.toLowerCase() !== 'foundation stock');
+  // Scoped to the same owner as the shared bird: a parent name must never
+  // resolve to another farm's record just because the names match.
   const parents = parentNames.length
-    ? ((await admin.from('fowl').select('name, breed').in('name', parentNames)).data || [])
+    ? ((await admin.from('fowl').select('name, breed').in('name', parentNames).eq('user_id', link.user_id)).data || [])
     : [];
   const breedOf = (n?: string | null) => {
     const key = (n || '').trim().toLowerCase();
