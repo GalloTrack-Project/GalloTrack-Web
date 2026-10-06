@@ -108,4 +108,33 @@ describe('DateRangePicker', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
     expect(onApply).toHaveBeenCalledWith('today', { start: key, end: key });
   });
+
+  it('renders modern header with title and arrow-formatted date range', () => {
+    renderPicker();
+    expect(screen.getByText('Select Date Range')).toBeInTheDocument();
+    expect(screen.getByText(/Oct 10, 2026 → Oct 20, 2026/)).toBeInTheDocument();
+  });
+
+  it('uses consistent primary accent color across start, end, and apply button without cyan/sky clash', () => {
+    renderPicker();
+    const startDay = day('October 10, 2026', 0);
+    const endDay = day('October 20, 2026', 1);
+    const applyBtn = screen.getByRole('button', { name: 'Apply' });
+
+    // Both start and end use emerald-600 primary accent
+    expect(startDay.className).toContain('bg-emerald-600');
+    expect(endDay.className).toContain('bg-emerald-600');
+    expect(applyBtn.className).toContain('bg-emerald-600');
+
+    // No conflicting sky-600 accent
+    expect(endDay.className).not.toContain('bg-sky-600');
+  });
+
+  it('renders all required quick date range presets', () => {
+    renderPicker();
+    const presets = ['Today', 'Last 7 days', 'Last 30 days', 'This month', 'Last 3 months', 'All Time', 'Custom'];
+    presets.forEach((label) => {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    });
+  });
 });

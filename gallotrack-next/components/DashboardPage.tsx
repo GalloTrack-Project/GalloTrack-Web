@@ -10,7 +10,7 @@ import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { videosFor, photosFor } from '@/lib/services/media-service';
-import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer } from 'lucide-react';
+import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer, ChevronDown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
@@ -48,6 +48,8 @@ export default function DashboardPage() {
     fetchDatabaseResources, loading,
     birdCodes,
   } = fowl;
+
+  const [reportsMenuOpen, setReportsMenuOpen] = React.useState(false);
 
   const codeByName = React.useMemo(() => {
     const m = new Map<string, string>();
@@ -163,50 +165,86 @@ export default function DashboardPage() {
             <p className="text-sm text-muted-foreground font-semibold mt-1">Registry, match results, milestones, and bloodline performance of your chickens</p>
           </div>
         </div>
-        {/* DATE RANGE SELECTOR */}
-        <DateRangePicker
-          label={dateRangeLabel}
-          preset={dateRangePreset}
-          custom={dateRangeCustom}
-          open={dateRangeOpen}
-          onOpenChange={setDateRangeOpen}
-          onApply={(p, c) => { setDateRangePreset(p); setDateRangeCustom(c); }}
-        >
-          {(close) => (
-            <div className="space-y-0.5">
-              <p className="px-1 pt-1 text-xs font-black uppercase tracking-widest text-muted-foreground">Reports</p>
-              <button
-                type="button"
-                onClick={() => { close(); exportMatchesCsv(); }}
-                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
+        {/* HEADER ACTIONS: DATE RANGE PICKER & DASHBOARD REPORTS */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <DateRangePicker
+            label={dateRangeLabel}
+            preset={dateRangePreset}
+            custom={dateRangeCustom}
+            open={dateRangeOpen}
+            onOpenChange={setDateRangeOpen}
+            onApply={(p, c) => { setDateRangePreset(p); setDateRangeCustom(c); }}
+          />
+
+          {/* DEDICATED REPORTS & EXPORTS MENU */}
+          <div className="relative">
+            {reportsMenuOpen && (
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setReportsMenuOpen(false)}
+                aria-hidden="true"
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-card border border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/40 shadow-2xs transition-colors cursor-pointer"
+              aria-label="Export reports and data"
+              aria-expanded={reportsMenuOpen}
+            >
+              <Download className="w-4 h-4 text-emerald-600" />
+              <span>Export & Reports</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${reportsMenuOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {reportsMenuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 z-50 w-56 rounded-xl bg-white dark:bg-card border border-slate-200/90 dark:border-border shadow-xl p-1.5 space-y-0.5"
               >
-                <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export matches (CSV)
-              </button>
-              <button
-                type="button"
-                onClick={() => { close(); exportRegistryCsv(); }}
-                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
-              >
-                <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export registry (CSV)
-              </button>
-              <button
-                type="button"
-                onClick={() => { close(); printPerformanceReport(); }}
-                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer inline-flex items-center gap-2"
-              >
-                <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print performance report
-              </button>
-              <div className="h-px bg-border my-1.5"></div>
-              <button
-                type="button"
-                onClick={() => { close(); fetchDatabaseResources(); }}
-                className="w-full text-left px-2 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
-              >
-                {loading ? '↻ Syncing...' : '↻ Refresh Data'}
-              </button>
-            </div>
-          )}
-        </DateRangePicker>
+                <div className="px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Data Exports
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setReportsMenuOpen(false); exportMatchesCsv(); }}
+                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Export matches (CSV)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setReportsMenuOpen(false); exportRegistryCsv(); }}
+                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Export registry (CSV)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setReportsMenuOpen(false); printPerformanceReport(); }}
+                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
+                >
+                  <Printer className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span>Print report</span>
+                </button>
+
+                <div className="h-px bg-slate-100 dark:bg-border my-1" />
+
+                <button
+                  type="button"
+                  onClick={() => { setReportsMenuOpen(false); fetchDatabaseResources(); }}
+                  disabled={loading}
+                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
+                >
+                  <span className={`text-xs ${loading ? "animate-spin" : ""}`}>↻</span>
+                  <span>{loading ? "Syncing..." : "Sync Data"}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* TOP METRICS ROW — 4 CARDS */}
