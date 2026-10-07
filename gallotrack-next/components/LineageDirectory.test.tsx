@@ -56,6 +56,11 @@ function renderDirectory(onPick: (f: FowlRecord) => void = vi.fn(), overrides = 
 }
 
 describe('LineageDirectory redesigned top section', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.replaceState({}, '', '/lineage');
+  });
+
   it('does NOT render the six large stat cards', () => {
     renderDirectory();
     // The previous 6 stat card labels should not exist in the document
@@ -188,120 +193,242 @@ describe('LineageDirectory redesigned top section', () => {
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Offspring 1A1' }));
   });
 
-  describe('Redesigned Sire Offspring Tree & Dam Offspring Tree (grouped by pair)', () => {
-    it('renders Level 1 sire row collapsed by default with identifier, name, offspring count, dam count, and male/female split', () => {
+  describe('Master-Detail Sire Offspring Tree & Dam Offspring Tree (grouped by pair)', () => {
+    it('renders master-detail layout with left sire list and automatically selects the first sire with full family visible in 0 clicks', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
-      // Level 1 row button exists for Sire 1
-      const sireBtn = screen.getByRole('button', { name: /Sire 1/i });
-      expect(sireBtn).toBeInTheDocument();
-      expect(sireBtn).toHaveTextContent('[1]');
-      expect(sireBtn).toHaveTextContent('3 offspring');
-      expect(sireBtn).toHaveTextContent('1 male');
-      expect(sireBtn).toHaveTextContent('2 females');
-      expect(sireBtn).toHaveTextContent('1 dam');
+      // Left pane has option for Sire 1
+      const sireOption = screen.getByRole('option', { name: /\[1\]\s*Sire 1/i });
+      expect(sireOption).toBeInTheDocument();
+      expect(sireOption).toHaveAttribute('aria-selected', 'true');
+      expect(sireOption).toHaveTextContent('[1]');
+      expect(sireOption).toHaveTextContent('Sire 1');
+      expect(sireOption).toHaveTextContent('3');
 
-      // Collapsed by default: pair header and offspring rows not rendered yet
-      expect(screen.queryByText(/pair 1A/i)).not.toBeInTheDocument();
-    });
+      // Right pane details: Sire 1 is selected automatically (0 clicks)
+      const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
+      expect(detailsRegion).toBeInTheDocument();
+      expect(within(detailsRegion).getByText('Sire 1')).toBeInTheDocument();
+      expect(within(detailsRegion).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText(/1♂ 2♀/i).length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getByText(/1 dam/i)).toBeInTheDocument();
 
-    it('expanding sire shows filter chips, status legend, and Level 2 pair group with first pair open by default', () => {
-      renderDirectory();
-      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+      // Pair header is expanded by default with 0 clicks
+      expect(within(detailsRegion).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
+      expect(within(detailsRegion).getByText(/Dam A \(A\)/i)).toBeInTheDocument();
+      expect(within(detailsRegion).getByText('1A')).toBeInTheDocument();
+      expect(within(detailsRegion).getAllByText(/1♂ 2♀/i).length).toBeGreaterThanOrEqual(1);
 
-      // Click to expand Sire 1
-      fireEvent.click(screen.getByRole('button', { name: /Sire 1/i }));
+      // Offspring rows are visible under the pair with 0 clicks
+      expect(within(detailsRegion).getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('Offspring 1A3').length).toBeGreaterThanOrEqual(1);
 
-      // Filter chips inside expanded sire
-      expect(screen.getByRole('button', { name: /^All \(3\)$/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^Males \(1\)$/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^Females \(2\)$/i })).toBeInTheDocument();
+      // Birth code badges
+      expect(within(detailsRegion).getAllByText('[1A1]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('[1A2]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
 
-      // Status legend is present
-      expect(screen.getByText('Active')).toBeInTheDocument();
+      // Table headers
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Code' })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Chicken' })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Sex' })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Age' })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Status' })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Record' })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
 
-      // Level 2 pair group header: Dam A (A) · pair 1A · 3 offspring · 1M 2F
-      expect(screen.getByText(/Dam A/i)).toBeInTheDocument();
-      expect(screen.getByText(/pair 1A/i)).toBeInTheDocument();
-      expect(screen.getByText('1M 2F')).toBeInTheDocument();
-
-      // First pair is expanded by default: Level 3 offspring rows are visible
-      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('Offspring 1A2')).toBeInTheDocument();
-      expect(screen.getByText('Offspring 1A3')).toBeInTheDocument();
-
-      const sire1Card = screen.getByRole('button', { name: /Sire 1/i }).parentElement!;
-      const sire1Scope = within(sire1Card);
-
-      // Level 3 shows birth code badges
-      expect(sire1Scope.getByText('[1A1]')).toBeInTheDocument();
-      expect(sire1Scope.getByText('[1A2]')).toBeInTheDocument();
-      expect(sire1Scope.getByText('[1A3]')).toBeInTheDocument();
-
-      // Quiet dash for no fights
-      expect(sire1Scope.getAllByTitle('No fights recorded').length).toBeGreaterThan(0);
+      // Filter chips inside pair
+      expect(within(detailsRegion).getByRole('button', { name: /^All \(3\)$/i })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('button', { name: /^♂ Males \(1\)$/i })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('button', { name: /^♀ Females \(2\)$/i })).toBeInTheDocument();
 
       // Verify NO duplicate listing sections exist
       expect(screen.queryByText(/Sibling Subgroups by Dam/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/🐓 Sire · 1/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/🐔 Dam · 2/i)).not.toBeInTheDocument();
+    });
+
+    it('switches selected sire in one click from the left list', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      // Click second sire in list (Offspring 1A1)
+      const secondSire = screen.getByRole('option', { name: /Offspring 1A1/i });
+      fireEvent.click(secondSire);
+
+      // Right pane now displays Offspring 1A1 details
+      const detailsRegion = screen.getByRole('region', { name: /Offspring 1A1 details/i });
+      expect(detailsRegion).toBeInTheDocument();
+      expect(within(detailsRegion).getAllByText('Grandchild').length).toBeGreaterThanOrEqual(1);
     });
 
     it('filters offspring by sex inside the pair groups and persists filter state', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
-      // Expand Sire 1
-      fireEvent.click(screen.getByRole('button', { name: /Sire 1/i }));
-      const sire1Card = screen.getByRole('button', { name: /Sire 1/i }).parentElement!;
-      const sire1Scope = within(sire1Card);
+      const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
 
       // Filter to Males
-      fireEvent.click(sire1Scope.getByRole('button', { name: /^Males \(1\)$/i }));
-      expect(sire1Scope.getByText('[1A1]')).toBeInTheDocument();
-      expect(sire1Scope.queryByText('[1A2]')).not.toBeInTheDocument();
-      expect(sire1Scope.queryByText('[1A3]')).not.toBeInTheDocument();
-      expect(sire1Scope.queryByText('Offspring 1A2')).not.toBeInTheDocument();
-      expect(sire1Scope.queryByText('Offspring 1A3')).not.toBeInTheDocument();
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♂ Males \(1\)$/i }));
+      expect(within(detailsRegion).getAllByText('[1A1]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).queryByText('[1A2]')).not.toBeInTheDocument();
+      expect(within(detailsRegion).queryByText('[1A3]')).not.toBeInTheDocument();
+      expect(within(detailsRegion).queryByText('Offspring 1A2')).not.toBeInTheDocument();
+      expect(within(detailsRegion).queryByText('Offspring 1A3')).not.toBeInTheDocument();
 
       // Filter to Females
-      fireEvent.click(sire1Scope.getByRole('button', { name: /^Females \(2\)$/i }));
-      expect(sire1Scope.queryByText('[1A1]')).not.toBeInTheDocument();
-      expect(sire1Scope.getByText('[1A2]')).toBeInTheDocument();
-      expect(sire1Scope.getByText('[1A3]')).toBeInTheDocument();
-      expect(sire1Scope.getByText('Offspring 1A2')).toBeInTheDocument();
-      expect(sire1Scope.getByText('Offspring 1A3')).toBeInTheDocument();
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♀ Females \(2\)$/i }));
+      expect(within(detailsRegion).queryByText('[1A1]')).not.toBeInTheDocument();
+      expect(within(detailsRegion).getAllByText('[1A2]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('Offspring 1A3').length).toBeGreaterThanOrEqual(1);
 
       // Reset to All
-      fireEvent.click(sire1Scope.getByRole('button', { name: /^All \(3\)$/i }));
-      expect(sire1Scope.getByText('[1A1]')).toBeInTheDocument();
-      expect(sire1Scope.getByText('[1A2]')).toBeInTheDocument();
-      expect(sire1Scope.getByText('[1A3]')).toBeInTheDocument();
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^All \(3\)$/i }));
+      expect(within(detailsRegion).getAllByText('[1A1]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('[1A2]').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
     });
 
-    it('mirrors the pair-grouped layout in Dam Offspring Tree (dam -> sire pairs -> offspring)', () => {
+    it('mirrors the master-detail layout in Dam Offspring Tree (dam -> sire pairs -> offspring)', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      // Level 1 Dam row
-      const damBtn = screen.getByRole('button', { name: /Dam A/i });
-      expect(damBtn).toBeInTheDocument();
-      expect(damBtn).toHaveTextContent('[A]');
-      expect(damBtn).toHaveTextContent('3 offspring');
-      expect(damBtn).toHaveTextContent('1 sire');
+      // Left pane has option for Dam A
+      const damOption = screen.getByRole('option', { name: /\[A\]\s*Dam A/i });
+      expect(damOption).toBeInTheDocument();
+      expect(damOption).toHaveAttribute('aria-selected', 'true');
 
-      // Expand Dam A
-      fireEvent.click(damBtn);
+      // Right pane displays Dam A details by default (0 clicks)
+      const detailsRegion = screen.getByRole('region', { name: /Dam A details/i });
+      expect(detailsRegion).toBeInTheDocument();
+      expect(within(detailsRegion).getByText('Dam A')).toBeInTheDocument();
+      expect(within(detailsRegion).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getByText(/1 sire/i)).toBeInTheDocument();
 
-      // Level 2 shows Sire 1 (1) · pair 1A
-      expect(screen.getByText(/Sire 1/i)).toBeInTheDocument();
-      expect(screen.getByText(/pair 1A/i)).toBeInTheDocument();
+      // Level 2 shows Sire 1 (1) × Dam A (A) · 1A
+      expect(within(detailsRegion).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
+      expect(within(detailsRegion).getByText(/Dam A \(A\)/i)).toBeInTheDocument();
+      expect(within(detailsRegion).getByText('1A')).toBeInTheDocument();
 
       // Offspring rows are visible under the pair
-      expect(screen.getByText('Offspring 1A1')).toBeInTheDocument();
-      expect(screen.getByText('Offspring 1A2')).toBeInTheDocument();
-      expect(screen.getByText('Offspring 1A3')).toBeInTheDocument();
+      expect(within(detailsRegion).getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText('Offspring 1A3').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('opens actions menu on ⋯ click and triggers View profile', () => {
+      const onPick = vi.fn();
+      renderDirectory(onPick);
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
+      const actionBtns = within(detailsRegion).getAllByRole('button', { name: /Actions for Offspring 1A1/i });
+      expect(actionBtns.length).toBeGreaterThanOrEqual(1);
+      fireEvent.click(actionBtns[0]);
+
+      const detailsBtns = within(detailsRegion).getAllByRole('button', { name: /View details/i });
+      expect(detailsBtns.length).toBeGreaterThanOrEqual(1);
+      fireEvent.click(detailsBtns[0]);
+
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Offspring 1A1' }));
+    });
+
+    it('sorts offspring rows inside pair when sort dropdown is changed', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
+      const sortSelect = within(detailsRegion).getByLabelText(/Sort pair offspring/i);
+
+      // Change sort to 'age'
+      fireEvent.change(sortSelect, { target: { value: 'age' } });
+      expect(sortSelect).toHaveValue('age');
+
+      // Change sort to 'wins'
+      fireEvent.change(sortSelect, { target: { value: 'wins' } });
+      expect(sortSelect).toHaveValue('wins');
+    });
+
+    it('verifies pair header count equals the number of rows visible inside the pair', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
+
+      // Header indicates 3 offspring
+      expect(within(detailsRegion).getAllByText(/3\s*offspring/i).length).toBeGreaterThanOrEqual(1);
+
+      // In default 'males-first' sort mode, 1 header row + 2 sex sub-header dividers + 3 offspring rows = 6 rows
+      const table = within(detailsRegion).getByRole('table');
+      const rows = within(table).getAllByRole('row');
+      expect(rows).toHaveLength(6);
+
+      // Desktop table offspring action buttons match exactly 3
+      const actionButtons = within(table).getAllByRole('button', { name: /Actions for/i });
+      expect(actionButtons).toHaveLength(3);
+    });
+
+    it('renders males before females in natural birth code order with slim sub-headers, and removes sub-headers when switched to Code only', () => {
+      const mixedFamily: FowlRecord[] = [
+        bird({ id: 10, name: 'Sire M', gender: 'Rooster', bird_code: '1' }),
+        bird({ id: 20, name: 'Dam F', gender: 'Hen', bird_code: 'A' }),
+        bird({ id: 21, name: 'Child 1A1', gender: 'Hen', sire: 'Sire M', dam: 'Dam F', bird_code: '1A1' }),
+        bird({ id: 22, name: 'Child 1A2', gender: 'Rooster', sire: 'Sire M', dam: 'Dam F', bird_code: '1A2' }),
+        bird({ id: 23, name: 'Child 1A3', gender: 'Rooster', sire: 'Sire M', dam: 'Dam F', bird_code: '1A3' }),
+        bird({ id: 24, name: 'Child 1A4', gender: 'Hen', sire: 'Sire M', dam: 'Dam F', bird_code: '1A4' }),
+        bird({ id: 25, name: 'Child 1A10', gender: 'Rooster', sire: 'Sire M', dam: 'Dam F', bird_code: '1A10' }),
+      ];
+
+      render(
+        <UIProvider theme="light" setTheme={() => {}}>
+          <LineageDirectory
+            fowls={mixedFamily}
+            matchHistory={[]}
+            pairingAnalytics={{ all: new Map<string, PairingStats>(), ranked: [] }}
+            setSelectedFowlForDetails={vi.fn()}
+          />
+        </UIProvider>
+      );
+
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      // Sire M is automatically selected in the master-detail layout
+      const detailsRegion = screen.getByRole('region', { name: /Sire M details/i });
+
+      // Verify default sort is 'males-first'
+      const sortSelect = within(detailsRegion).getByLabelText(/Sort pair offspring/i);
+      expect(sortSelect).toHaveValue('males-first');
+
+      const table = within(detailsRegion).getByRole('table');
+
+      // Verify subheaders exist in the table
+      expect(within(table).getByText('♂ Males (3)')).toBeInTheDocument();
+      expect(within(table).getByText('♀ Females (2)')).toBeInTheDocument();
+
+      // In default 'males-first' sort:
+      // Males: 1A2, 1A3, 1A10 (natural order where 1A2 < 1A10)
+      // Females: 1A1, 1A4
+      const getCodeOrder = () => {
+        const rowList = within(table).getAllByRole('row');
+        return rowList
+          .map(r => r.querySelector('span.font-mono')?.textContent?.trim())
+          .filter(Boolean);
+      };
+
+      expect(getCodeOrder()).toEqual(['[1A2]', '[1A3]', '[1A10]', '[1A1]', '[1A4]']);
+
+      // Switch sort to 'code' (Code only)
+      fireEvent.change(sortSelect, { target: { value: 'code' } });
+      expect(sortSelect).toHaveValue('code');
+
+      // Sub-headers must be removed
+      expect(within(table).queryByText('♂ Males (3)')).not.toBeInTheDocument();
+      expect(within(table).queryByText('♀ Females (2)')).not.toBeInTheDocument();
+
+      // In 'code' sort: natural birth code order 1A1, 1A2, 1A3, 1A4, 1A10
+      expect(getCodeOrder()).toEqual(['[1A1]', '[1A2]', '[1A3]', '[1A4]', '[1A10]']);
     });
   });
 });

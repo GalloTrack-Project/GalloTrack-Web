@@ -12,7 +12,7 @@ import {
   type BreedingPair,
   type DescendantNode,
 } from '@/lib/family-tree';
-import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, compareBirdCodesNatural } from '@/lib/bird-code';
 import ChickenIcon from '@/components/ChickenIcon';
 
 type Depth = 1 | 2 | 3;
@@ -188,8 +188,19 @@ function PairTree({
 }) {
   const sireFowl = byName.get(nameKey(pair.sire));
   const damFowl = byName.get(nameKey(pair.dam));
-  const roosters = pair.members.filter((m) => isMale(m));
-  const hens = pair.members.filter((m) => !isMale(m));
+
+  const sortMembersByCode = (members: FowlRecord[]) =>
+    [...members].sort((a, b) => {
+      const codeA = a.birth_code || a.chicken_code || a.bird_code || codes.get(String(a.id)) || '';
+      const codeB = b.birth_code || b.chicken_code || b.bird_code || codes.get(String(b.id)) || '';
+      if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
+      if (codeA) return -1;
+      if (codeB) return 1;
+      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) || a.id - b.id;
+    });
+
+  const roosters = sortMembersByCode(pair.members.filter((m) => isMale(m)));
+  const hens = sortMembersByCode(pair.members.filter((m) => !isMale(m)));
 
   return (
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
