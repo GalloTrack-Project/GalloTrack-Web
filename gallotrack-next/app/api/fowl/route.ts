@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
     if (requestedCode && taken.has(requestedCode.toLowerCase())) {
       return NextResponse.json({ error: `Chicken code "${requestedCode}" is already in use` }, { status: 409 });
     }
-    payload.bird_code =
+    const assignedCode =
       requestedCode ||
       previewBirdCode({
         gender: payload.gender,
@@ -210,8 +210,22 @@ export async function POST(request: NextRequest) {
         fowls,
         taken,
       });
+    payload.bird_code = assignedCode;
+    (payload as Record<string, unknown>).chicken_code = assignedCode;
 
-    const { error: insertErr } = await supabase.from('fowl').insert([payload]);
+    let { error: insertErr } = await supabase.from('fowl').insert([payload]);
+    if (insertErr && insertErr.message.includes('chicken_code')) {
+      const copy = { ...payload };
+      delete (copy as Record<string, unknown>).chicken_code;
+      const res = await supabase.from('fowl').insert([copy]);
+      insertErr = res.error;
+    } else if (insertErr && insertErr.message.includes('bird_code')) {
+      const copy = { ...payload };
+      delete (copy as Record<string, unknown>).bird_code;
+      const res = await supabase.from('fowl').insert([copy]);
+      insertErr = res.error;
+    }
+
     if (insertErr) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }

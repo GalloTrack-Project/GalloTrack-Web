@@ -24,8 +24,12 @@ export interface FowlRecord {
   sire_pct: number;
   dam_pct: number;
   bloodline_pct: number;
-  /** Standardized tag, e.g. 1 (sire) / A (dam) / 1A1 (offspring, shown 1A₁). Nullable in the DB. */
+  /** Standardized chicken identifier, e.g. 1 (sire) / A (dam) / 1A1 (offspring). */
+  chicken_code?: string | null;
+  /** Legacy alias for backwards compatibility with bird_code. */
   bird_code?: string | null;
+  /** Original birth code (e.g. 1A1) preserved when promoted to a breeder. */
+  birth_code?: string | null;
   /** Physical wing band number — unique on-farm identifier stamped on the band. */
   wing_band?: string | null;
   /** Per-strain blood percentage breakdown, e.g. { Kelso: 50, Hatch: 25, Roundhead: 25 }. */

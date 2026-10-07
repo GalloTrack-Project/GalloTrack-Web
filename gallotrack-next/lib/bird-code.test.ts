@@ -223,10 +223,10 @@ describe('previewBirdCode', () => {
 });
 
 describe('formatBirdCodeForDisplay', () => {
-  it('renders the sibling index as a subscript', () => {
-    expect(formatBirdCodeForDisplay('1A1')).toBe('1A₁');
-    expect(formatBirdCodeForDisplay('1A12')).toBe('1A₁₂');
-    expect(formatBirdCodeForDisplay('12C3')).toBe('12C₃');
+  it('renders the full identifier directly', () => {
+    expect(formatBirdCodeForDisplay('1A1')).toBe('1A1');
+    expect(formatBirdCodeForDisplay('1A12')).toBe('1A12');
+    expect(formatBirdCodeForDisplay('12C3')).toBe('12C3');
   });
 
   it('leaves foundation and legacy codes untouched', () => {

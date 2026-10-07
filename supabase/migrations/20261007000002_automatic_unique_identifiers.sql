@@ -8,6 +8,17 @@
 --   Unknowns  -> 0 for unknown sire, X for unknown dam (e.g. 1X1, 0B1, 0X1)
 -- ==============================================================================
 
+-- ── 0. Rename bird_code to chicken_code (chicken kasi hindi bird) ───────────────
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'fowl' AND column_name = 'bird_code'
+  ) THEN
+    ALTER TABLE fowl RENAME COLUMN bird_code TO chicken_code;
+  END IF;
+END $$;
+
 -- ── 1. Counter table with row-level locking for concurrent generation ─────────
 CREATE TABLE IF NOT EXISTS fowl_identifier_counters (
   user_id uuid NOT NULL,
@@ -30,9 +41,9 @@ CREATE POLICY "fowl_identifier_counters_owner_all"
   WITH CHECK (auth.uid() = user_id);
 
 -- ── 2. Unique index on fowl table (never reuse code, case-insensitive) ────────
-CREATE UNIQUE INDEX IF NOT EXISTS fowl_user_bird_code_key
-  ON fowl (user_id, lower(btrim(bird_code)))
-  WHERE bird_code IS NOT NULL AND btrim(bird_code) <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS fowl_user_chicken_code_key
+  ON fowl (user_id, lower(btrim(chicken_code)))
+  WHERE chicken_code IS NOT NULL AND btrim(chicken_code) <> '';
 
 -- ── 3. Stored function: atomic sequence generator with row locking ───────────
 CREATE OR REPLACE FUNCTION get_next_fowl_identifier(
@@ -67,33 +78,16 @@ BEGIN
       v_counter_type, 
       v_prefix,
       COALESCE((
-        SELECT MAX(bird_code::integer)
+        SELECT MAX(chicken_code::integer)
         FROM fowl
         WHERE user_id = p_user_id
-          AND bird_code ~ '^[0-9]+$'
+          AND chicken_code ~ '^[0-9]+$'
       ), 0)
     )
     ON CONFLICT (user_id, counter_type, prefix) DO NOTHING;
 
     -- Atomically lock row and increment
-    UPDATE fowl_identifier_counters
-       SET last_seq = last_seq + 1,
-           updated_at = now()
-     WHERE user_id = p_user_id
-       AND counter_type = v_counter_type
-       AND prefix = v_prefix
-    RETURNING last_seq INTO v_next_val;
-
-    -- Make sure it does not collide with any existing fowl row
     LOOP
-      IF NOT EXISTS (
-        SELECT 1 FROM fowl 
-        WHERE user_id = p_user_id 
-          AND lower(btrim(bird_code)) = v_next_val::text
-      ) THEN
-        RETURN v_next_val::text;
-      END IF;
-
       UPDATE fowl_identifier_counters
          SET last_seq = last_seq + 1,
              updated_at = now()
@@ -101,6 +95,15 @@ BEGIN
          AND counter_type = v_counter_type
          AND prefix = v_prefix
       RETURNING last_seq INTO v_next_val;
+
+      -- Make sure it does not collide with any existing fowl row
+      IF NOT EXISTS (
+        SELECT 1 FROM fowl 
+        WHERE user_id = p_user_id 
+          AND lower(btrim(chicken_code)) = v_next_val::text
+      ) THEN
+        RETURN v_next_val::text;
+      END IF;
     END LOOP;
 
   ELSIF p_role = 'dam' THEN
@@ -111,7 +114,7 @@ BEGIN
     VALUES (
       p_user_id, 
       v_counter_type, 
-      v_prefix,
+      v_prefix, 
       0
     )
     ON CONFLICT (user_id, counter_type, prefix) DO NOTHING;
@@ -139,7 +142,7 @@ BEGIN
         IF NOT EXISTS (
           SELECT 1 FROM fowl 
           WHERE user_id = p_user_id 
-            AND lower(btrim(bird_code)) = lower(v_letter)
+            AND lower(btrim(chicken_code)) = lower(v_letter)
         ) THEN
           RETURN v_letter;
         END IF;
@@ -161,10 +164,10 @@ BEGIN
       v_counter_type,
       v_prefix,
       COALESCE((
-        SELECT MAX(substring(bird_code FROM '^[0-9]+[A-Za-z]+([0-9]+)$')::integer)
+        SELECT MAX(substring(chicken_code FROM '^[0-9]+[A-Za-z]+([0-9]+)$')::integer)
         FROM fowl
         WHERE user_id = p_user_id
-          AND upper(substring(bird_code FROM '^([0-9]+[A-Za-z]+)')) = v_prefix
+          AND upper(substring(chicken_code FROM '^([0-9]+[A-Za-z]+)')) = v_prefix
       ), 0)
     )
     ON CONFLICT (user_id, counter_type, prefix) DO NOTHING;
@@ -183,7 +186,7 @@ BEGIN
       IF NOT EXISTS (
         SELECT 1 FROM fowl 
         WHERE user_id = p_user_id 
-          AND lower(btrim(bird_code)) = lower(v_code)
+          AND lower(btrim(chicken_code)) = lower(v_code)
       ) THEN
         RETURN v_code;
       END IF;
@@ -193,8 +196,3 @@ BEGIN
   END IF;
 END;
 $$;
-
--- ── 4. Reversible rollback script (reference) ─────────────────────────────────
--- To revert this migration:
--- DROP FUNCTION IF EXISTS get_next_fowl_identifier(uuid, text, text, text);
--- DROP TABLE IF EXISTS fowl_identifier_counters;

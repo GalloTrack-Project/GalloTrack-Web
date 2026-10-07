@@ -755,6 +755,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam_pct: dPct,
         bloodline_pct: compositionStats?.specificPct ?? computedBloodlinePct,
         bloodline_composition: composition,
+        chicken_code: codeToUse,
         bird_code: codeToUse,
         wing_band: bandValue || null,
         status: 'Active',
@@ -1242,6 +1243,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam_pct: dPct,
         bloodline_pct: editCompositionStats?.specificPct ?? calculatedBloodline,
         bloodline_composition: editComposition,
+        chicken_code: codeToUse,
         bird_code: codeToUse,
         wing_band: editBand || null
       };

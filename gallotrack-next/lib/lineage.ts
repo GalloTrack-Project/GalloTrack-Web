@@ -246,7 +246,7 @@ export function inspectFowlMatch(
     };
   }
 
-  const code = resolvedCode || fowl.bird_code;
+  const code = resolvedCode || fowl.chicken_code || fowl.bird_code;
   const normName = normalizeSearchTerm(fowl.name);
   const normCode = normalizeSearchTerm(code);
   const normWing = normalizeSearchTerm(fowl.wing_band);

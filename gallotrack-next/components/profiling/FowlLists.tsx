@@ -85,7 +85,10 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           </span>
           {isRegisteredParent && (
             <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-800" title="Has registered children in this farm">
-              {gender === 'Male' ? 'Breeding Male' : 'Breeding Female'}
+              {gender === 'Male' ? `Sire ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}` : `Dam ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}`}
+              {fowl.birth_code ? (
+                <span className="ml-1 opacity-90 normal-case font-bold">· born as {fowl.birth_code}</span>
+              ) : null}
             </span>
           )}
           {isRegisteredOffspring && (

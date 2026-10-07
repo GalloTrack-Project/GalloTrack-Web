@@ -26,14 +26,36 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
 }
 
 export async function insertFowl(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
-  const { data, error } = await supabase.from('fowl').insert([payload]).select('id').single();
-  if (error) return { error: error.message };
-  return { id: data?.id };
+  let res = await supabase.from('fowl').insert([payload]).select('id').single();
+  if (res.error && res.error.message.includes('chicken_code')) {
+    const copy = { ...payload };
+    copy.bird_code = copy.chicken_code;
+    delete copy.chicken_code;
+    res = await supabase.from('fowl').insert([copy]).select('id').single();
+  } else if (res.error && res.error.message.includes('bird_code')) {
+    const copy = { ...payload };
+    copy.chicken_code = copy.bird_code;
+    delete copy.bird_code;
+    res = await supabase.from('fowl').insert([copy]).select('id').single();
+  }
+  if (res.error) return { error: res.error.message };
+  return { id: res.data?.id };
 }
 
 export async function updateFowl(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {
-  const { error } = await supabase.from('fowl').update(payload).eq('id', id);
-  if (error) return { error: error.message };
+  let res = await supabase.from('fowl').update(payload).eq('id', id);
+  if (res.error && res.error.message.includes('chicken_code')) {
+    const copy = { ...payload };
+    copy.bird_code = copy.chicken_code;
+    delete copy.chicken_code;
+    res = await supabase.from('fowl').update(copy).eq('id', id);
+  } else if (res.error && res.error.message.includes('bird_code')) {
+    const copy = { ...payload };
+    copy.chicken_code = copy.bird_code;
+    delete copy.bird_code;
+    res = await supabase.from('fowl').update(copy).eq('id', id);
+  }
+  if (res.error) return { error: res.error.message };
   return {};
 }
 

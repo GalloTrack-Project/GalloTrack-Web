@@ -239,8 +239,9 @@ export function resolveBirdCodes(fowls: FowlRecord[]): Map<string, string> {
   const pending: FowlRecord[] = [];
 
   fowls.forEach((f) => {
-    if (isValidBirdCode(f.bird_code)) {
-      const code = normalizeBirdCode(f.bird_code);
+    const raw = f.chicken_code || f.bird_code;
+    if (isValidBirdCode(raw)) {
+      const code = normalizeBirdCode(raw);
       const key = code.toLowerCase();
       if (taken.has(key)) {
         pending.push(f);
@@ -286,7 +287,8 @@ export function resolveBirdCodes(fowls: FowlRecord[]): Map<string, string> {
 /** Code for one fowl (stored first, auto-derived second). */
 export function birdCodeOf(fowl: FowlRecord | null | undefined, fowls: FowlRecord[]): string {
   if (!fowl) return '';
-  if (isValidBirdCode(fowl.bird_code)) return normalizeBirdCode(fowl.bird_code);
+  const raw = fowl.chicken_code || fowl.bird_code;
+  if (isValidBirdCode(raw)) return normalizeBirdCode(raw);
   return resolveBirdCodes(fowls).get(String(fowl.id)) || '';
 }
 
@@ -324,17 +326,11 @@ export function previewBirdCode(params: {
 }
 
 /**
- * Render a tag for display: the sibling index of an offspring tag becomes a
- * subscript (1A1 -> 1A₁). Stored / editable codes stay plain text.
+ * Render a tag for display: returns the full code (e.g. 1A1, 1A4, 1, A).
+ * Editable / stored codes and display badges match directly.
  */
 export function formatBirdCodeForDisplay(value: unknown): string {
   const code = normalizeBirdCode(value);
   if (!code) return '';
-  const m = OFFSPRING_CODE_PATTERN.exec(code);
-  if (!m) return code;
-  const subscript = m[2]
-    .split('')
-    .map((d) => SUBSCRIPT_DIGITS[Number(d)] ?? d)
-    .join('');
-  return `${m[1]}${subscript}`;
+  return code;
 }
