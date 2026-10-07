@@ -1,235 +1,444 @@
 'use client';
-import React, { useState } from 'react';
-import { BarChart3 } from 'lucide-react';
-import ChickenIcon from '@/components/ChickenIcon';
+
+import React, { useState, useMemo } from 'react';
+import { BarChart3, Filter, ArrowUpDown } from 'lucide-react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 import { Modal } from '@/components/ui';
+import { useUI } from '@/lib/contexts/ui-context';
+import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { buildRegistryContext, roleOf, type RegistryRole } from '@/lib/registry-roles';
+import {
+  computeWinRate,
+  combineWinRates,
+  getWinRatePillClasses,
+  type WinRateStats,
+} from '@/lib/win-rate';
+import WinRatePill from '@/components/match/WinRatePill';
+import { formatShortDate, presetDateKeys, type DateRangePreset } from '@/lib/helpers';
 
-type Props = {
+interface Props {
   show: boolean;
   onClose: () => void;
-  fowls: FowlRecord[];
-  matchHistory: MatchRecord[];
-};
+  fowls?: FowlRecord[];
+  matchHistory?: MatchRecord[];
+}
 
-type FowlStats = {
+type SortOption = 'winrate' | 'matches' | 'name' | 'last_match';
+type RoleFilter = 'all' | RegistryRole;
+
+interface ChickenBreakdownRow {
   fowl: FowlRecord;
-  total: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  decided: number;
-  winRate: number;
-};
+  stats: WinRateStats;
+  matches: MatchRecord[];
+  lastMatchDate: string | null;
+  role: string;
+}
 
-function computeStats(fowls: FowlRecord[], matchHistory: MatchRecord[]): FowlStats[] {
-  return fowls
-    .map((f) => {
-      const matches = matchHistory.filter((m) => m.entry_name?.trim().toLowerCase() === f.name.trim().toLowerCase());
-      const total = matches.length;
-      const wins = matches.filter((m) => m.outcome?.toLowerCase() === 'win').length;
-      const losses = matches.filter((m) => m.outcome?.toLowerCase() === 'loss').length;
-      const draws = matches.filter((m) => m.outcome?.toLowerCase() === 'draw').length;
-      const decided = wins + losses;
-      const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
-      return { fowl: f, total, wins, losses, draws, decided, winRate };
-    })
-    .sort((a, b) => {
-      if (a.decided > 0 && b.decided > 0) return b.winRate - a.winRate;
-      if (a.decided > 0) return -1;
-      if (b.decided > 0) return 1;
-      return a.fowl.name.localeCompare(b.fowl.name);
+export default function PerFowlBreakdownModal({
+  show,
+  onClose,
+  fowls: propFowls = [],
+  matchHistory: propMatches = [],
+}: Props) {
+  const uiContext = useUI();
+
+  const fowls = propFowls;
+  const matchHistory = propMatches;
+  const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
+
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const [datePreset, setDatePreset] = useState<DateRangePreset>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('winrate');
+
+  const registryCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
+
+  // Filter matches based on selected datePreset
+  const filteredMatches = useMemo(() => {
+    if (datePreset === 'all') return matchHistory;
+    const nowMs = Date.now();
+    const bounds = presetDateKeys(datePreset, nowMs);
+    if (!bounds) return matchHistory;
+    return matchHistory.filter((m) => {
+      if (!m.date) return false;
+      return m.date >= bounds.start && m.date <= bounds.end;
     });
-}
+  }, [matchHistory, datePreset]);
 
-function getTierColor(winRate: number, decided: number): string {
-  if (decided === 0) return 'bg-slate-100 dark:bg-muted text-muted-foreground border-slate-200 dark:border-slate-800';
-  if (winRate >= 70) return 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
-  if (winRate >= 50) return 'bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800';
-  if (winRate >= 30) return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
-  return 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
-}
+  // Compute breakdown for all chickens that have at least one match
+  const chickenRows = useMemo(() => {
+    // 1. Group matches by fowl entry_name
+    const matchesByFowl = new Map<string, MatchRecord[]>();
+    filteredMatches.forEach((m) => {
+      const name = (m.entry_name || '').trim().toLowerCase();
+      if (!name) return;
+      const list = matchesByFowl.get(name) || [];
+      list.push(m);
+      matchesByFowl.set(name, list);
+    });
 
-function getTierLabel(winRate: number, decided: number): string {
-  if (decided === 0) return 'No Data';
-  if (winRate >= 70) return 'Elite';
-  if (winRate >= 50) return 'Strong';
-  if (winRate >= 30) return 'Average';
-  return 'Weak';
-}
+    // 2. Map every registered fowl that has matches
+    const rows: ChickenBreakdownRow[] = [];
+    const matchedFowlNames = new Set<string>();
 
-export default function PerFowlBreakdownModal({ show, onClose, fowls, matchHistory }: Props) {
-  const [filter, setFilter] = useState<'all' | 'fought' | 'nofight'>('all');
-  const [sortBy, setSortBy] = useState<'winrate' | 'name' | 'fights'>('winrate');
+    fowls.forEach((f) => {
+      const lower = f.name.trim().toLowerCase();
+      const matches = matchesByFowl.get(lower);
+      if (!matches || matches.length === 0) return;
+
+      matchedFowlNames.add(lower);
+      const wins = matches.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
+      const losses = matches.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
+      const draws = matches.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
+      const stats = computeWinRate(wins, losses, draws);
+
+      // find last match date
+      let lastMatchDate: string | null = null;
+      matches.forEach((m) => {
+        if (m.date && (!lastMatchDate || m.date > lastMatchDate)) {
+          lastMatchDate = m.date;
+        }
+      });
+
+      const role = roleOf(f, registryCtx);
+      rows.push({
+        fowl: f,
+        stats,
+        matches,
+        lastMatchDate,
+        role: role === 'Sire Material' ? 'Breeding Male' : role,
+      });
+    });
+
+    return rows;
+  }, [fowls, filteredMatches, registryCtx]);
+
+  // Apply role filter
+  const filteredRows = useMemo(() => {
+    if (roleFilter === 'all') return chickenRows;
+    return chickenRows.filter((row) => row.role === roleFilter);
+  }, [chickenRows, roleFilter]);
+
+  // Apply sorting
+  const sortedRows = useMemo(() => {
+    return [...filteredRows].sort((a, b) => {
+      if (sortBy === 'winrate') {
+        const rateA = a.stats.winRate ?? -1;
+        const rateB = b.stats.winRate ?? -1;
+        if (rateB !== rateA) return rateB - rateA;
+        if (b.stats.total !== a.stats.total) return b.stats.total - a.stats.total;
+        return a.fowl.name.localeCompare(b.fowl.name);
+      }
+      if (sortBy === 'matches') {
+        if (b.stats.total !== a.stats.total) return b.stats.total - a.stats.total;
+        return (b.stats.winRate ?? -1) - (a.stats.winRate ?? -1);
+      }
+      if (sortBy === 'name') {
+        return a.fowl.name.localeCompare(b.fowl.name);
+      }
+      if (sortBy === 'last_match') {
+        const dateA = a.lastMatchDate || '';
+        const dateB = b.lastMatchDate || '';
+        return dateB.localeCompare(dateA);
+      }
+      return 0;
+    });
+  }, [filteredRows, sortBy]);
+
+  // Overall Reconciled Totals
+  const totalStats = useMemo(() => {
+    return combineWinRates(filteredRows.map((r) => r.stats));
+  }, [filteredRows]);
 
   if (!show) return null;
 
-  let stats = computeStats(fowls, matchHistory);
+  const handleChickenClick = (f: FowlRecord) => {
+    uiContext.setSelectedFowlForDetails(f);
+  };
 
-  if (filter === 'fought') stats = stats.filter((s) => s.decided > 0);
-  if (filter === 'nofight') stats = stats.filter((s) => s.decided === 0);
-
-  if (sortBy === 'name') stats = [...stats].sort((a, b) => a.fowl.name.localeCompare(b.fowl.name));
-  if (sortBy === 'fights') stats = [...stats].sort((a, b) => b.total - a.total || b.winRate - a.winRate);
-
-  const totalFights = fowls.reduce((sum, f) => {
-    return sum + matchHistory.filter((m) => m.entry_name?.trim().toLowerCase() === f.name.trim().toLowerCase()).length;
-  }, 0);
-  const totalWins = matchHistory.filter((m) => m.outcome?.toLowerCase() === 'win').length;
-  const totalLosses = matchHistory.filter((m) => m.outcome?.toLowerCase() === 'loss').length;
-  const totalDecided = totalWins + totalLosses;
-  const overallWinRate = totalDecided > 0 ? Math.round((totalWins / totalDecided) * 100) : 0;
-
-  const foughtCount = stats.filter((s) => s.decided > 0).length;
-  const noFightCount = stats.filter((s) => s.decided === 0).length;
-  const eliteCount = stats.filter((s) => s.decided > 0 && s.winRate >= 70).length;
-  const strongCount = stats.filter((s) => s.decided > 0 && s.winRate >= 50 && s.winRate < 70).length;
-  const avgCount = stats.filter((s) => s.decided > 0 && s.winRate >= 30 && s.winRate < 50).length;
-  const weakCount = stats.filter((s) => s.decided > 0 && s.winRate < 30).length;
+  const handleFightsClick = (f: FowlRecord) => {
+    uiContext.setFightHistoryFowl(f);
+  };
 
   return (
     <Modal
       open
       onClose={onClose}
-      title="Per-Chicken Performance Breakdown"
-      description="Individual win rates and overall aggregate statistics"
+      title="Win rate by chicken"
+      description="Individual chicken win rates and reconciled farm totals"
       icon={<BarChart3 className="w-5 h-5" />}
-      className="max-w-3xl"
+      className="max-w-4xl max-h-[90vh] flex flex-col"
     >
-
-        {/* Overall Summary */}
-        <div className="px-6 pt-4 pb-3 shrink-0">
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg p-4 text-white">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-success uppercase tracking-widest">Overall Aggregate</span>
-              <span className="text-xs font-bold text-muted-foreground bg-slate-700 px-2 py-0.5 rounded-full">{totalFights} total fights</span>
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="text-center">
-                <p className="text-2xl font-black text-white">{overallWinRate}%</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase">Overall Win Rate</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-black text-success">{totalWins}</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase">Total Wins</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-black text-danger">{totalLosses}</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase">Total Losses</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-black text-info">{fowls.length}</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase">Total Chickens</p>
-              </div>
-            </div>
+      {/* Filters and Controls Bar */}
+      <div className="px-6 pt-3 pb-3 shrink-0 border-b border-border space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          {/* Role Filter Chips */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-bold text-muted-foreground mr-1 flex items-center gap-1">
+              <Filter className="w-3 h-3" /> Role:
+            </span>
+            {(['all', 'Breeding Male', 'Breeding Female', 'Non-Breeding'] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRoleFilter(r)}
+                className={`text-xs font-bold px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${
+                  roleFilter === r
+                    ? 'bg-slate-900 text-white dark:bg-emerald-600 dark:border-emerald-600 border-slate-900 shadow-2xs'
+                    : 'bg-card text-muted-foreground border-border hover:border-slate-400'
+                }`}
+              >
+                {r === 'all' ? 'All Roles' : r}
+              </button>
+            ))}
           </div>
 
-          {/* Tier Summary */}
-          <div className="grid grid-cols-5 gap-2 mt-3">
-            <div className="bg-emerald-50 dark:bg-muted/50 border border-emerald-200 dark:border-border rounded-md p-2 text-center">
-              <p className="text-lg font-black text-emerald-700 dark:text-card-foreground">{eliteCount}</p>
-              <p className="text-xs font-bold text-success dark:text-emerald-300 uppercase">Elite 70%+</p>
+          {/* Date and Sort controls */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] font-bold text-muted-foreground">Range:</span>
+              <select
+                value={datePreset}
+                onChange={(e) => setDatePreset(e.target.value as DateRangePreset)}
+                className="text-xs font-bold bg-muted/60 text-foreground border border-input-border rounded-md px-2 py-1 cursor-pointer focus:ring-1 focus:ring-emerald-500"
+                aria-label="Filter matches by date range"
+              >
+                <option value="all">All Time</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="month">This Month</option>
+                <option value="3m">Last 3 Months</option>
+                <option value="today">Today</option>
+              </select>
             </div>
-            <div className="bg-sky-50 dark:bg-muted/50 border border-sky-200 dark:border-border rounded-md p-2 text-center">
-              <p className="text-lg font-black text-sky-700 dark:text-card-foreground">{strongCount}</p>
-              <p className="text-xs font-bold text-info dark:text-sky-300 uppercase">Strong 50-69%</p>
-            </div>
-            <div className="bg-amber-50 dark:bg-muted/50 border border-amber-200 dark:border-border rounded-md p-2 text-center">
-              <p className="text-lg font-black text-amber-700 dark:text-card-foreground">{avgCount}</p>
-              <p className="text-xs font-bold text-warning dark:text-amber-300 uppercase">Average 30-49%</p>
-            </div>
-            <div className="bg-rose-50 dark:bg-muted/50 border border-rose-200 dark:border-border rounded-md p-2 text-center">
-              <p className="text-lg font-black text-rose-700 dark:text-card-foreground">{weakCount}</p>
-              <p className="text-xs font-bold text-danger dark:text-rose-300 uppercase">Weak &lt;30%</p>
-            </div>
-            <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md p-2 text-center">
-              <p className="text-lg font-black text-muted-foreground">{noFightCount}</p>
-              <p className="text-xs font-bold text-muted-foreground uppercase">No Fights</p>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-0.5">
+                <ArrowUpDown className="w-3 h-3" /> Sort:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="text-xs font-bold bg-muted/60 text-foreground border border-input-border rounded-md px-2 py-1 cursor-pointer focus:ring-1 focus:ring-emerald-500"
+                aria-label="Sort chickens"
+              >
+                <option value="winrate">Win rate (highest first)</option>
+                <option value="matches">Matches (most first)</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="last_match">Last match (recent first)</option>
+              </select>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="px-6 pb-2 flex items-center gap-2 shrink-0">
-          {(['all', 'fought', 'nofight'] as const).map((f) => (
-            <button key={f} type="button" onClick={() => setFilter(f)} className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${filter === f ? 'bg-slate-900 text-white border-slate-900' : 'bg-white dark:bg-card text-muted-foreground border-slate-200 dark:border-border hover:border-slate-400'}`}>
-              {f === 'all' ? `All (${fowls.length})` : f === 'fought' ? `Fought (${foughtCount})` : `No Fight (${noFightCount})`}
-            </button>
-          ))}
-          <div className="flex-1"></div>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="text-xs font-bold text-muted-foreground bg-white dark:bg-card border border-slate-200 dark:border-border rounded-sm px-2 py-1.5 cursor-pointer">
-            <option value="winrate">Sort: Win Rate</option>
-            <option value="name">Sort: Name</option>
-            <option value="fights">Sort: Fights</option>
-          </select>
-        </div>
-
-        {/* Individual Fowl List */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <table className="w-full text-xs">
+      {/* Main Table Area */}
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Desktop Table View (>= sm) */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-xs border-collapse" aria-label="Chickens win rate breakdown">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-border">
-                <th className="text-left py-2 font-bold text-muted-foreground uppercase tracking-wider">#</th>
-                <th className="text-left py-2 font-bold text-muted-foreground uppercase tracking-wider">Chicken</th>
-                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">Tier</th>
-                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">Fights</th>
-                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">W-L</th>
-                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">Win Rate</th>
-                <th className="text-center py-2 font-bold text-muted-foreground uppercase tracking-wider">% of Overall</th>
+              <tr className="border-b border-border text-muted-foreground font-bold">
+                <th className="py-2.5 px-3 text-left w-10">#</th>
+                <th className="py-2.5 px-3 text-left">Chicken</th>
+                <th className="py-2.5 px-3 text-center">Matches</th>
+                <th className="py-2.5 px-3 text-center">W-L(-D)</th>
+                <th className="py-2.5 px-3 text-left min-w-[140px]">Win Rate</th>
+                <th className="py-2.5 px-3 text-right">Last Match</th>
               </tr>
             </thead>
-            <tbody>
-              {stats.map((s, i) => {
-                const pctOfOverall = totalDecided > 0 ? Math.round((s.decided / totalDecided) * 100) : 0;
+            <tbody className="divide-y divide-border/50">
+              {sortedRows.map((row, index) => {
+                const code =
+                  row.fowl.birth_code ||
+                  row.fowl.chicken_code ||
+                  row.fowl.bird_code ||
+                  birdCodes?.get(String(row.fowl.id));
+                const pct = row.stats.winRate ?? 0;
+
                 return (
-                  <tr key={s.fowl.id} className="border-b border-slate-50 dark:border-border hover:bg-slate-50/50 dark:hover:bg-muted/50">
-                    <td className="py-2 font-bold text-muted-foreground">{i + 1}</td>
-                    <td className="py-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border flex items-center justify-center text-xs shrink-0">
-                           <ChickenIcon className="w-3 h-3" />
-                        </span>
-                        <div>
-                          <p className="font-black text-slate-800 dark:text-card-foreground">{s.fowl.name}</p>
-                          <p className="text-xs text-muted-foreground font-semibold">{s.fowl.breed} · {s.fowl.growth_stage || 'N/A'}</p>
+                  <tr
+                    key={row.fowl.id}
+                    className="hover:bg-muted/40 transition-colors"
+                  >
+                    <td className="py-2.5 px-3 text-muted-foreground font-bold">{index + 1}</td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-2.5">
+                        {row.fowl.image_url ? (
+                          <img
+                            src={row.fowl.image_url}
+                            alt={row.fowl.name}
+                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-border"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black text-muted-foreground shrink-0 select-none">
+                            {row.fowl.name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {code && (
+                              <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-muted text-foreground border border-border shrink-0">
+                                [{formatBirdCodeForDisplay(code)}]
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleChickenClick(row.fowl)}
+                              className="font-bold text-card-foreground hover:text-emerald-600 dark:hover:text-emerald-400 truncate text-left cursor-pointer hover:underline"
+                            >
+                              {row.fowl.name}
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground font-semibold">
+                            {row.role} · {row.fowl.breed || '—'}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-2 text-center">
-                      <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border ${getTierColor(s.winRate, s.decided)}`}>
-                        {getTierLabel(s.winRate, s.decided)}
-                      </span>
+                    <td className="py-2.5 px-3 text-center font-bold text-foreground">
+                      {row.stats.total}
                     </td>
-                    <td className="py-2 text-center font-bold text-slate-600 dark:text-muted-foreground">{s.total}</td>
-                    <td className="py-2 text-center font-bold text-slate-600 dark:text-muted-foreground">{s.wins}W-{s.losses}L</td>
-                    <td className="py-2 text-center">
-                      {s.decided > 0 ? (
-                        <span className={`font-black px-2 py-0.5 rounded-full border ${s.winRate >= 50 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'}`}>
-                          {s.winRate}%
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground font-bold">—</span>
-                      )}
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleFightsClick(row.fowl)}
+                        className="font-mono font-bold text-foreground hover:text-emerald-600 hover:underline cursor-pointer"
+                        title="View match history"
+                      >
+                        {row.stats.wins}W-{row.stats.losses}L
+                        {row.stats.draws > 0 ? `-${row.stats.draws}D` : ''}
+                      </button>
                     </td>
-                    <td className="py-2 text-center">
-                      <div className="flex items-center gap-1.5 justify-center">
-                        <div className="w-12 bg-slate-200 dark:bg-muted rounded-full h-1.5 overflow-hidden">
-                           <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${pctOfOverall}%` }}></div>
-                         </div>
-                         <span className="font-bold text-muted-foreground">{pctOfOverall}%</span>
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <WinRatePill stats={row.stats} wins={row.stats.wins} losses={row.stats.losses} />
+                        {row.stats.decided > 0 && (
+                          <div className="w-14 bg-muted rounded-full h-1.5 overflow-hidden shrink-0 hidden md:block">
+                            <div
+                              className={`h-full rounded-full ${
+                                pct >= 60 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-muted-foreground font-semibold whitespace-nowrap">
+                      {row.lastMatchDate || '—'}
                     </td>
                   </tr>
                 );
               })}
-              {stats.length === 0 && (
+              {sortedRows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-muted-foreground text-sm font-semibold">No chickens match the current filter.</td>
+                  <td colSpan={6} className="py-8 text-center text-muted-foreground text-sm font-semibold">
+                    No chickens match the current filter.
+                  </td>
                 </tr>
               )}
             </tbody>
+            {/* Pinned TOTAL Row */}
+            <tfoot>
+              <tr data-testid="breakdown-total-row" className="bg-muted/80 font-black border-t-2 border-border text-foreground">
+                <td colSpan={2} className="py-3 px-3 text-left">
+                  Total · {sortedRows.length} chickens · {totalStats.total} matches
+                </td>
+                <td className="py-3 px-3 text-center">{totalStats.total}</td>
+                <td className="py-3 px-3 text-center whitespace-nowrap">
+                  {totalStats.wins}W-{totalStats.losses}L
+                  {totalStats.draws > 0 ? `-${totalStats.draws}D` : ''}
+                </td>
+                <td colSpan={2} className="py-3 px-3 text-right whitespace-nowrap">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs ${getWinRatePillClasses(
+                      totalStats,
+                    )}`}
+                  >
+                    {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'} · {totalStats.wins}W-{totalStats.losses}L
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-      </Modal>
+
+        {/* Mobile View (< sm) */}
+        <div className="sm:hidden space-y-2.5">
+          {sortedRows.map((row, index) => {
+            const code =
+              row.fowl.birth_code ||
+              row.fowl.chicken_code ||
+              row.fowl.bird_code ||
+              birdCodes?.get(String(row.fowl.id));
+
+            return (
+              <div
+                key={row.fowl.id}
+                className="bg-card border border-border rounded-lg p-3 space-y-2 shadow-2xs"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
+                    {code && (
+                      <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-muted text-foreground border border-border shrink-0">
+                        [{formatBirdCodeForDisplay(code)}]
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleChickenClick(row.fowl)}
+                      className="text-xs font-bold text-card-foreground truncate text-left cursor-pointer hover:underline"
+                    >
+                      {row.fowl.name}
+                    </button>
+                  </div>
+                  <WinRatePill stats={row.stats} wins={row.stats.wins} losses={row.stats.losses} />
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                  <span>{row.role}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFightsClick(row.fowl)}
+                      className="font-mono font-bold text-foreground hover:underline"
+                    >
+                      {row.stats.wins}W-{row.stats.losses}L
+                    </button>
+                    {row.lastMatchDate && <span>· {row.lastMatchDate}</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {sortedRows.length === 0 && (
+            <div className="py-8 text-center text-muted-foreground text-sm font-semibold">
+              No chickens match the current filter.
+            </div>
+          )}
+
+          {/* Pinned Mobile Total Card */}
+          <div className="bg-muted/80 border-2 border-border rounded-lg p-3 font-black text-xs space-y-1.5 mt-3">
+            <div className="flex items-center justify-between gap-2">
+              <span>Total · {sortedRows.length} chickens · {totalStats.total} matches</span>
+              <span className={`px-2 py-0.5 rounded-full border ${getWinRatePillClasses(totalStats)}`}>
+                {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}
+              </span>
+            </div>
+            <div className="text-[11px] text-muted-foreground font-semibold flex items-center justify-between">
+              <span>Combined record: {totalStats.wins}W-{totalStats.losses}L{totalStats.draws > 0 ? `-${totalStats.draws}D` : ''}</span>
+              <span>Decided: {totalStats.decided} matches</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Note under the table */}
+      <div className="px-6 py-3 border-t border-border bg-muted/20 shrink-0">
+        <p className="text-xs text-muted-foreground font-medium">
+          Note: Draws are excluded. Percentages with few matches are less reliable.
+        </p>
+      </div>
+    </Modal>
   );
 }

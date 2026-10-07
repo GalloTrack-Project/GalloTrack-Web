@@ -360,10 +360,11 @@ describe('LineageDirectory redesigned top section', () => {
       // Header indicates 3 offspring
       expect(within(detailsRegion).getAllByText(/3\s*offspring/i).length).toBeGreaterThanOrEqual(1);
 
-      // In default 'males-first' sort mode, 1 header row + 2 sex sub-header dividers + 3 offspring rows = 6 rows
+      // In default 'males-first' sort mode: 1 table header row + 2 sex sub-headers + 3 offspring rows + 1 pair total footer row = 7 rows
       const table = within(detailsRegion).getByRole('table');
       const rows = within(table).getAllByRole('row');
-      expect(rows).toHaveLength(6);
+      expect(rows).toHaveLength(7);
+      expect(within(table).getByText(/Pair total/i)).toBeInTheDocument();
 
       // Desktop table offspring action buttons match exactly 3
       const actionButtons = within(table).getAllByRole('button', { name: /Actions for/i });

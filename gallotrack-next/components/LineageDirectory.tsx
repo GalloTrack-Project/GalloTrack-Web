@@ -46,8 +46,16 @@ import { RANKING_METRIC_LABELS } from '@/lib/settings';
 import { useUserSettings } from '@/lib/hooks/use-user-settings';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useDebounce } from '@/lib/use-debounce';
+import WinRatePill from '@/components/match/WinRatePill';
+import {
+  computeWinRate,
+  combineWinRates,
+  buildChickenMatchStatsMap,
+  getWinRatePillClasses,
+  type WinRateStats,
+} from '@/lib/win-rate';
 
-export type PairSortOption = 'males-first' | 'code' | 'age' | 'wins';
+export type PairSortOption = 'males-first' | 'code' | 'age' | 'wins' | 'winrate';
 
 const isMaleChild = (c: FowlRecord) =>
   c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male';
@@ -219,7 +227,7 @@ function FamilyCard({
   g: FowlRecord[];
   index: number;
   pairingAnalytics: { all: Map<string, PairingStats> };
-  getChildMatchStats: (name: string) => { total: number; wins: number; losses: number; decided: number; winRate: number };
+  getChildMatchStats: (name: string) => WinRateStats;
   setSelectedFowlForDetails: (f: FowlRecord) => void;
   onShowFights: (f: FowlRecord) => void;
   rankingMetric: RankingMetric;
@@ -237,18 +245,15 @@ function FamilyCard({
   const sireBreed = parentBreedOf(g[0].sire, fowls);
   const damBreed = parentBreedOf(g[0].dam, fowls);
 
-  let total = 0, wins = 0, losses = 0;
-  g.forEach((c) => {
-    const s = getChildMatchStats(c.name);
-    total += s.total;
-    wins += s.wins;
-    losses += s.losses;
-  });
-  const decided = wins + losses;
-  const groupWinRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+  const foughtCount = g.filter((c) => getChildMatchStats(c.name).total > 0).length;
+  const familyTotal = combineWinRates(g.map((c) => getChildMatchStats(c.name)));
 
-  const ranked = rankFowls(g, getChildMatchStats, rankingMetric, rankingMinMatches);
-  const bestChild = bestFowl(g, getChildMatchStats, rankingMetric, rankingMinMatches);
+  const rankingStatsOf = (name: string) => {
+    const s = getChildMatchStats(name);
+    return { ...s, winRate: s.winRate ?? 0 };
+  };
+  const ranked = rankFowls(g, rankingStatsOf, rankingMetric, rankingMinMatches);
+  const bestChild = bestFowl(g, rankingStatsOf, rankingMetric, rankingMinMatches);
   const bestId = bestChild?.id ?? null;
   const bestTitle = bestChild
     ? `Best by ${RANKING_METRIC_LABELS[rankingMetric] || rankingMetric}${bestYearFor(bestChild.name, matchHistory) ? ` · best year ${bestYearFor(bestChild.name, matchHistory)}` : ''}`
@@ -309,20 +314,8 @@ function FamilyCard({
               </p>
             </div>
           </div>
-          <div className="shrink-0">
-            {cs.total > 0 ? (
-              <span
-                className={`text-xs font-black px-2 py-0.5 rounded-full border ${
-                  cs.winRate >= 50
-                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                    : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'
-                }`}
-              >
-                {cs.winRate}% · {cs.wins}W-{cs.losses}L
-              </span>
-            ) : (
-              <span className="text-xs font-bold text-muted-foreground/50">No fights</span>
-            )}
+          <div className="shrink-0 flex items-center">
+            <WinRatePill stats={cs} />
           </div>
         </button>
         <button
@@ -333,7 +326,7 @@ function FamilyCard({
           className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
         >
           <Swords className="w-3 h-3" />
-          Fights
+          Fights{cs.total > 0 ? ` (${cs.total})` : ''}
         </button>
       </div>
     );
@@ -407,35 +400,28 @@ function FamilyCard({
           </button>
         )}
       </div>
-      <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2">
+      {/* Bottom Family Total Row */}
+      <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-            <Link2 className="w-3 h-3 inline" /> Pairing Win Rate
-          </span>
-          {decided > 0 && (
-            <span
-              className={`text-xs font-black px-2 py-0.5 rounded-full border ${
-                groupWinRate >= 50
-                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                  : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'
-              }`}
-            >
-              {wins}W-{losses}L
-            </span>
+          <span className="uppercase tracking-wider text-muted-foreground">Family total</span>
+          {foughtCount > 0 && (
+            <>
+              <span className="text-muted-foreground/60 select-none">·</span>
+              <span className="text-foreground">
+                {foughtCount} of {g.length} offspring have fought
+              </span>
+            </>
           )}
         </div>
-        {ps && ps.totalFights > 0 ? (
-          <span
-            className={`text-xs font-black px-2.5 py-1 rounded-full border ${
-              ps.winRate >= 50
-                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'
-            }`}
-          >
-            {ps.winRate}%
-          </span>
+        {foughtCount > 0 ? (
+          <WinRatePill
+            wins={familyTotal.wins}
+            losses={familyTotal.losses}
+            draws={familyTotal.draws}
+            stats={familyTotal}
+          />
         ) : (
-          <span className="text-xs font-bold text-muted-foreground/50">No match data yet</span>
+          <span className="text-muted-foreground/60 font-semibold">No fights recorded yet</span>
         )}
       </div>
     </div>
@@ -617,43 +603,28 @@ export default function LineageDirectory({
     return fowls.filter((f) => isKnownParent(f.sire) && isKnownParent(f.dam));
   }, [fowls]);
 
+  const matchStatsLookup = useMemo(() => buildChickenMatchStatsMap(matchHistory), [matchHistory]);
+
   const getChildMatchStats = (childName: string) => {
-    const fMatches = matchHistory.filter((x) => x.entry_name?.trim().toLowerCase() === childName.trim().toLowerCase());
-    const total = fMatches.length;
-    const wins = fMatches.filter((x) => x.outcome?.toLowerCase() === 'win').length;
-    const losses = fMatches.filter((x) => x.outcome?.toLowerCase() === 'loss').length;
-    const decided = wins + losses;
-    const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
-    return { total, wins, losses, decided, winRate };
+    return matchStatsLookup.get(childName.trim().toLowerCase()) || computeWinRate(0, 0);
   };
 
-  const statsCache = new Map<string, ReturnType<typeof getChildMatchStats>>();
   const cachedStats = (name: string) => {
-    let s = statsCache.get(name);
-    if (!s) {
-      s = getChildMatchStats(name);
-      statsCache.set(name, s);
-    }
-    return s;
+    return getChildMatchStats(name);
   };
 
   const groupStats = (children: FowlRecord[]) => {
-    let total = 0, wins = 0, losses = 0;
-    children.forEach((c) => {
-      const s = getChildMatchStats(c.name);
-      total += s.total;
-      wins += s.wins;
-      losses += s.losses;
-    });
-    const decided = wins + losses;
-    const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
-    return { total, wins, losses, decided, winRate };
+    return combineWinRates(children.map((c) => getChildMatchStats(c.name)));
   };
 
+  const rankingStatsOf = (name: string) => {
+    const s = cachedStats(name);
+    return { ...s, winRate: s.winRate ?? 0 };
+  };
   const rankOffspring = (children: FowlRecord[]) =>
-    rankFowls(children, cachedStats, settings.ranking_metric, settings.ranking_min_matches);
+    rankFowls(children, rankingStatsOf, settings.ranking_metric, settings.ranking_min_matches);
   const bestOf = (children: FowlRecord[]) =>
-    bestFowl(children, cachedStats, settings.ranking_metric, settings.ranking_min_matches);
+    bestFowl(children, rankingStatsOf, settings.ranking_metric, settings.ranking_min_matches);
   const metricLabel = RANKING_METRIC_LABELS[settings.ranking_metric] || settings.ranking_metric;
   const bestTitleFor = (f: FowlRecord | null) =>
     f ? `Best by ${metricLabel}${bestYearFor(f.name, matchHistory) ? ` · best year ${bestYearFor(f.name, matchHistory)}` : ''}` : undefined;
@@ -1097,6 +1068,16 @@ export default function LineageDirectory({
         if (ageB !== ageA) return ageB - ageA;
         return a.name.localeCompare(b.name);
       }
+      if (sortByMode === 'winrate') {
+        const sa = cachedStats(a.name);
+        const sb = cachedStats(b.name);
+        const rateA = sa.decided > 0 ? (sa.winRate ?? -1) : -1;
+        const rateB = sb.decided > 0 ? (sb.winRate ?? -1) : -1;
+        if (rateB !== rateA) return rateB - rateA;
+        if (sb.wins !== sa.wins) return sb.wins - sa.wins;
+        if (sb.total !== sa.total) return sb.total - sa.total;
+        return a.name.localeCompare(b.name);
+      }
       if (sortByMode === 'males-first') {
         const maleA = isMaleChild(a);
         const maleB = isMaleChild(b);
@@ -1364,17 +1345,7 @@ export default function LineageDirectory({
             {sortedPaneEntries.map(([name, kids]) => {
               const code = getParentCode(name, kind, kids[0]);
               const isSelected = name === activeParentName;
-              const stats = kids.reduce(
-                (acc, k) => {
-                  const s = cachedStats(k.name);
-                  return {
-                    wins: acc.wins + s.wins,
-                    losses: acc.losses + s.losses,
-                  };
-                },
-                { wins: 0, losses: 0 }
-              );
-              const decided = stats.wins + stats.losses;
+              const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
 
               return (
                 <button
@@ -1403,15 +1374,13 @@ export default function LineageDirectory({
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {decided > 0 && (
+                    {stats.decided > 0 && (
                       <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-                          stats.wins >= stats.losses
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                            : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'
-                        }`}
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${getWinRatePillClasses(
+                          stats,
+                        )}`}
                       >
-                        {stats.wins}W-{stats.losses}L
+                        {stats.winRate}% · {stats.wins}W-{stats.losses}L
                       </span>
                     )}
                     <span className="text-[11px] font-bold text-muted-foreground">
@@ -1494,19 +1463,23 @@ export default function LineageDirectory({
                     <span className={c.text}>
                       {pairGroups.length} {otherLabel}{pairGroups.length !== 1 ? 's' : ''}
                     </span>
-                    {activeParentStats.decided > 0 && (
-                      <>
-                        <span className="text-muted-foreground/50 select-none">·</span>
-                        <span
-                          className={`font-black ${
-                            activeParentStats.winRate >= 50
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-rose-600 dark:text-rose-400'
-                          }`}
-                        >
-                          {activeParentStats.wins}W-{activeParentStats.losses}L ({activeParentStats.winRate}% win rate)
-                        </span>
-                      </>
+                    <span className="text-muted-foreground/50 select-none">·</span>
+                    {activeParentStats.decided > 0 && activeParentStats.winRate !== null ? (
+                      <span
+                        className={`font-black ${
+                          activeParentStats.winRate >= 60
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : activeParentStats.winRate >= 40
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        {kind === 'sire' ? 'Sire' : 'Dam'} total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought · {activeParentStats.wins}W-{activeParentStats.losses}L ({activeParentStats.winRate}%)
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground font-semibold">
+                        No fights recorded yet
+                      </span>
                     )}
                   </div>
                 </div>
@@ -1609,15 +1582,17 @@ export default function LineageDirectory({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {pg.stats.decided > 0 && (
+                      {pg.stats.decided > 0 ? (
                         <span
-                          className={`text-xs font-black px-2 py-0.5 rounded-full border ${
-                            pg.stats.winRate >= 50
-                              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                              : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'
-                          }`}
+                          className={`text-xs font-black px-2 py-0.5 rounded-full border ${getWinRatePillClasses(
+                            pg.stats,
+                          )}`}
                         >
-                          {pg.stats.wins}W-{pg.stats.losses}L ({pg.stats.winRate}%)
+                          {pg.stats.winRate}% · {pg.stats.wins}W-{pg.stats.losses}L
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-muted-foreground/60">
+                          No fights
                         </span>
                       )}
                       {isPairOpen ? (
@@ -1678,6 +1653,7 @@ export default function LineageDirectory({
                             className="text-xs bg-muted border border-input-border rounded px-2 py-1 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
                           >
                             <option value="males-first">Males first, then code</option>
+                            <option value="winrate">Win rate</option>
                             <option value="code">Code only</option>
                             <option value="age">Age</option>
                             <option value="wins">Wins</option>
@@ -1787,17 +1763,13 @@ export default function LineageDirectory({
                                       <StatusPill status={child.status} />
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap">
-                                      {stats.total > 0 ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => openFights(child)}
-                                          className="font-mono text-xs font-bold text-foreground hover:underline cursor-pointer"
-                                        >
-                                          {stats.wins}W-{stats.losses}L
-                                        </button>
-                                      ) : (
-                                        <span className="text-muted-foreground/60">—</span>
-                                      )}
+                                      <WinRatePill
+                                        wins={stats.wins}
+                                        losses={stats.losses}
+                                        draws={stats.draws}
+                                        stats={stats}
+                                        onClick={stats.total > 0 ? () => openFights(child) : undefined}
+                                      />
                                     </td>
                                     <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
                                       <div
@@ -1888,6 +1860,28 @@ export default function LineageDirectory({
                               return rankedPairOffspring.map(renderRow);
                             })()}
                           </tbody>
+                          <tfoot>
+                            <tr className="bg-muted/40 font-bold border-t-2 border-border text-xs">
+                              <td colSpan={5} className="py-2.5 px-2.5 text-card-foreground">
+                                Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} offspring have fought
+                              </td>
+                              <td colSpan={2} className="py-2.5 px-2.5 text-right whitespace-nowrap">
+                                {pg.stats.decided > 0 ? (
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 font-black px-2.5 py-0.5 rounded-full border ${getWinRatePillClasses(
+                                      pg.stats,
+                                    )}`}
+                                  >
+                                    {pg.stats.winRate}% · {pg.stats.wins}W-{pg.stats.losses}L
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground/60 font-semibold">
+                                    No fights recorded yet
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          </tfoot>
                         </table>
                       </div>
 
@@ -2016,15 +2010,7 @@ export default function LineageDirectory({
                                     </span>
                                     <span>{formatAge(child.birthdate, child.age)}</span>
                                     {isDifferentBreed && <span>· {child.breed}</span>}
-                                    {stats.total > 0 && (
-                                      <button
-                                        type="button"
-                                        onClick={() => openFights(child)}
-                                        className="font-mono text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
-                                      >
-                                        {stats.wins}W-{stats.losses}L
-                                      </button>
-                                    )}
+                                    <WinRatePill stats={stats} onClick={() => openFights(child)} />
                                   </div>
                                   <StatusPill status={child.status} />
                                 </div>
@@ -2032,28 +2018,53 @@ export default function LineageDirectory({
                             );
                           };
 
-                          if (pairSortBy === 'males-first') {
-                            const males = rankedPairOffspring.filter(isMaleChild);
-                            const females = rankedPairOffspring.filter((ch) => !isMaleChild(ch));
-                            return (
-                              <>
-                                {males.length > 0 && (
-                                  <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-[11px] font-bold text-sky-700 dark:text-sky-400">
-                                    ♂ Males ({males.length})
-                                  </div>
-                                )}
-                                {males.map(renderCard)}
-                                {females.length > 0 && (
-                                  <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-[11px] font-bold text-pink-700 dark:text-pink-400 mt-2">
-                                    ♀ Females ({females.length})
-                                  </div>
-                                )}
-                                {females.map(renderCard)}
-                              </>
-                            );
-                          }
+                          return (
+                            <>
+                              {(() => {
+                                if (pairSortBy === 'males-first') {
+                                  const males = rankedPairOffspring.filter(isMaleChild);
+                                  const females = rankedPairOffspring.filter((ch) => !isMaleChild(ch));
+                                  return (
+                                    <>
+                                      {males.length > 0 && (
+                                        <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-[11px] font-bold text-sky-700 dark:text-sky-400">
+                                          ♂ Males ({males.length})
+                                        </div>
+                                      )}
+                                      {males.map(renderCard)}
+                                      {females.length > 0 && (
+                                        <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-[11px] font-bold text-pink-700 dark:text-pink-400 mt-2">
+                                          ♀ Females ({females.length})
+                                        </div>
+                                      )}
+                                      {females.map(renderCard)}
+                                    </>
+                                  );
+                                }
+                                return rankedPairOffspring.map(renderCard);
+                              })()}
 
-                          return rankedPairOffspring.map(renderCard);
+                              {/* Mobile Pair Total Footer */}
+                              <div className="p-2.5 bg-muted/40 rounded-md border border-border flex items-center justify-between text-xs font-semibold">
+                                <span className="text-card-foreground">
+                                  Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} fought
+                                </span>
+                                {pg.stats.decided > 0 ? (
+                                  <span
+                                    className={`inline-flex items-center gap-1 font-black px-2 py-0.5 rounded-full border text-[11px] ${getWinRatePillClasses(
+                                      pg.stats,
+                                    )}`}
+                                  >
+                                    {pg.stats.winRate}% · {pg.stats.wins}W-{pg.stats.losses}L
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground/60 text-[11px]">
+                                    No fights recorded yet
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          );
                         })()}
                       </div>
                     </div>
@@ -2450,6 +2461,7 @@ export default function LineageDirectory({
               <FamilyTree
                 fowls={fowls}
                 codes={birdCodes}
+                matchHistory={matchHistory}
                 query={debouncedSearch}
                 onPick={setSelectedFowlForDetails}
                 onShowFights={openFights}

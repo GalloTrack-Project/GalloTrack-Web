@@ -131,6 +131,8 @@ export const bloodlineOf = (f: FowlRecord, fowls: FowlRecord[] = []): number => 
   return stats ? stats.specificPct : 0;
 };
 
+export * from './win-rate';
+
 /**
  * The app's single win-rate rule: a draw is neither a win nor a loss, so the
  * denominator is *decided* fights only (wins + losses). Every view — dashboard,

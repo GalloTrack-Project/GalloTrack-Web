@@ -1,6 +1,5 @@
-'use client';
 import React, { useMemo, useState } from 'react';
-import type { FowlRecord } from '@/lib/types';
+import type { FowlRecord, MatchRecord } from '@/lib/types';
 import { Swords } from 'lucide-react';
 import {
   buildBreedingPairs,
@@ -13,6 +12,13 @@ import {
   type DescendantNode,
 } from '@/lib/family-tree';
 import { formatBirdCodeForDisplay, compareBirdCodesNatural } from '@/lib/bird-code';
+import {
+  buildChickenMatchStatsMap,
+  combineWinRates,
+  computeWinRate,
+  type WinRateStats,
+} from '@/lib/win-rate';
+import WinRatePill from '@/components/match/WinRatePill';
 import ChickenIcon from '@/components/ChickenIcon';
 
 type Depth = 1 | 2 | 3;
@@ -89,6 +95,7 @@ function OffspringNode({
   codes,
   onPick,
   onShowFights,
+  matchStatsMap,
 }: {
   node: DescendantNode;
   depth: number;
@@ -96,11 +103,13 @@ function OffspringNode({
   codes: Map<string, string>;
   onPick?: (f: FowlRecord) => void;
   onShowFights?: (f: FowlRecord) => void;
+  matchStatsMap: Map<string, WinRateStats & { matches: MatchRecord[] }>;
 }) {
   const fowl = node.fowl;
   const code = formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '');
   const kids = depth < maxDepth ? node.children : [];
   const totalKids = node.children.length;
+  const stats = matchStatsMap.get(fowl.name.trim().toLowerCase()) || computeWinRate(0, 0);
 
   return (
     <div className="gt-kid">
@@ -128,6 +137,13 @@ function OffspringNode({
               {fowl.age ? ` · ${fowl.age}` : ''}
             </span>
           </span>
+          <WinRatePill
+            wins={stats.wins}
+            losses={stats.losses}
+            draws={stats.draws}
+            stats={stats}
+            className="shrink-0"
+          />
           {totalKids > 0 && (
             <span className="text-xs font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
               {totalKids} {totalKids === 1 ? 'child' : 'children'}
@@ -142,7 +158,7 @@ function OffspringNode({
           className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
         >
           <Swords className="w-3 h-3" />
-          Fights
+          Fights{stats.total > 0 ? ` (${stats.total})` : ''}
         </button>
       </div>
 
@@ -157,6 +173,7 @@ function OffspringNode({
               codes={codes}
               onPick={onPick}
               onShowFights={onShowFights}
+              matchStatsMap={matchStatsMap}
             />
           ))}
         </div>
@@ -175,6 +192,7 @@ function PairTree({
   onToggleCollapse,
   onPick,
   onShowFights,
+  matchStatsMap,
 }: {
   pair: BreedingPair;
   codes: Map<string, string>;
@@ -185,6 +203,7 @@ function PairTree({
   onToggleCollapse: () => void;
   onPick?: (f: FowlRecord) => void;
   onShowFights?: (f: FowlRecord) => void;
+  matchStatsMap: Map<string, WinRateStats & { matches: MatchRecord[] }>;
 }) {
   const sireFowl = byName.get(nameKey(pair.sire));
   const damFowl = byName.get(nameKey(pair.dam));
@@ -201,6 +220,21 @@ function PairTree({
 
   const roosters = sortMembersByCode(pair.members.filter((m) => isMale(m)));
   const hens = sortMembersByCode(pair.members.filter((m) => !isMale(m)));
+
+  const foughtCount = pair.members.filter((m) => {
+    const s = matchStatsMap.get(m.name.trim().toLowerCase());
+    return s && s.total > 0;
+  }).length;
+  const pairTotalStats = combineWinRates(
+    pair.members.map(
+      (m) =>
+        matchStatsMap.get(m.name.trim().toLowerCase()) || {
+          wins: 0,
+          losses: 0,
+          draws: 0,
+        },
+    ),
+  );
 
   return (
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
@@ -228,7 +262,7 @@ function PairTree({
       </div>
 
       {!collapsed && (
-        <div className="px-5 pb-5 space-y-4">
+        <div className="px-5 pb-5 space-y-4 pt-4">
           {roosters.length > 0 && (
             <div>
               <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">
@@ -244,6 +278,7 @@ function PairTree({
                     codes={codes}
                     onPick={onPick}
                     onShowFights={onShowFights}
+                    matchStatsMap={matchStatsMap}
                   />
                 ))}
               </div>
@@ -264,6 +299,7 @@ function PairTree({
                     codes={codes}
                     onPick={onPick}
                     onShowFights={onShowFights}
+                    matchStatsMap={matchStatsMap}
                   />
                 ))}
               </div>
@@ -271,6 +307,31 @@ function PairTree({
           )}
         </div>
       )}
+
+      {/* Bottom Family Total Row */}
+      <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold">
+        <div className="flex items-center gap-2">
+          <span className="uppercase tracking-wider text-muted-foreground">Family total</span>
+          {foughtCount > 0 && (
+            <>
+              <span className="text-muted-foreground/60 select-none">·</span>
+              <span className="text-foreground">
+                {foughtCount} of {pair.members.length} offspring have fought
+              </span>
+            </>
+          )}
+        </div>
+        {foughtCount > 0 ? (
+          <WinRatePill
+            wins={pairTotalStats.wins}
+            losses={pairTotalStats.losses}
+            draws={pairTotalStats.draws}
+            stats={pairTotalStats}
+          />
+        ) : (
+          <span className="text-muted-foreground/60 font-semibold">No fights recorded yet</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -284,6 +345,7 @@ type Props = {
   sortBy?: 'most' | 'name' | 'newest';
   collapsedKeys?: Set<string>;
   onToggleCollapse?: (key: string) => void;
+  matchHistory?: MatchRecord[];
 };
 
 /**
@@ -305,9 +367,12 @@ export default function FamilyTree({
   sortBy = 'most',
   collapsedKeys,
   onToggleCollapse,
+  matchHistory = [],
 }: Props) {
   const [maxDepth, setMaxDepth] = useState<Depth>(2);
   const [internalCollapsed, setInternalCollapsed] = useState<Set<string>>(new Set());
+
+  const matchStatsMap = useMemo(() => buildChickenMatchStatsMap(matchHistory), [matchHistory]);
 
   const collapsed = collapsedKeys !== undefined ? collapsedKeys : internalCollapsed;
   const toggleCollapse = onToggleCollapse !== undefined
@@ -413,6 +478,7 @@ export default function FamilyTree({
               onToggleCollapse={() => toggleCollapse(pair.key)}
               onPick={onPick}
               onShowFights={onShowFights}
+              matchStatsMap={matchStatsMap}
             />
           ))}
         </div>
