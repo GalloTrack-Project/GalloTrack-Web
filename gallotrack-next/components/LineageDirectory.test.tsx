@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import type { FowlRecord, PairingStats } from '@/lib/types';
 import LineageDirectory from './LineageDirectory';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';
@@ -186,5 +186,122 @@ describe('LineageDirectory redesigned top section', () => {
     renderDirectory(onPick);
     fireEvent.click(screen.getByRole('button', { name: /Offspring 1A1 Sire/ }));
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Offspring 1A1' }));
+  });
+
+  describe('Redesigned Sire Offspring Tree & Dam Offspring Tree (grouped by pair)', () => {
+    it('renders Level 1 sire row collapsed by default with identifier, name, offspring count, dam count, and male/female split', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      // Level 1 row button exists for Sire 1
+      const sireBtn = screen.getByRole('button', { name: /Sire 1/i });
+      expect(sireBtn).toBeInTheDocument();
+      expect(sireBtn).toHaveTextContent('[1]');
+      expect(sireBtn).toHaveTextContent('3 offspring');
+      expect(sireBtn).toHaveTextContent('1 male');
+      expect(sireBtn).toHaveTextContent('2 females');
+      expect(sireBtn).toHaveTextContent('1 dam');
+
+      // Collapsed by default: pair header and offspring rows not rendered yet
+      expect(screen.queryByText(/pair 1A/i)).not.toBeInTheDocument();
+    });
+
+    it('expanding sire shows filter chips, status legend, and Level 2 pair group with first pair open by default', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      // Click to expand Sire 1
+      fireEvent.click(screen.getByRole('button', { name: /Sire 1/i }));
+
+      // Filter chips inside expanded sire
+      expect(screen.getByRole('button', { name: /^All \(3\)$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Males \(1\)$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Females \(2\)$/i })).toBeInTheDocument();
+
+      // Status legend is present
+      expect(screen.getByText('Active')).toBeInTheDocument();
+
+      // Level 2 pair group header: Dam A (A) · pair 1A · 3 offspring · 1M 2F
+      expect(screen.getByText(/Dam A/i)).toBeInTheDocument();
+      expect(screen.getByText(/pair 1A/i)).toBeInTheDocument();
+      expect(screen.getByText('1M 2F')).toBeInTheDocument();
+
+      // First pair is expanded by default: Level 3 offspring rows are visible
+      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('Offspring 1A2')).toBeInTheDocument();
+      expect(screen.getByText('Offspring 1A3')).toBeInTheDocument();
+
+      const sire1Card = screen.getByRole('button', { name: /Sire 1/i }).parentElement!;
+      const sire1Scope = within(sire1Card);
+
+      // Level 3 shows birth code badges
+      expect(sire1Scope.getByText('[1A1]')).toBeInTheDocument();
+      expect(sire1Scope.getByText('[1A2]')).toBeInTheDocument();
+      expect(sire1Scope.getByText('[1A3]')).toBeInTheDocument();
+
+      // Quiet dash for no fights
+      expect(sire1Scope.getAllByTitle('No fights recorded').length).toBeGreaterThan(0);
+
+      // Verify NO duplicate listing sections exist
+      expect(screen.queryByText(/Sibling Subgroups by Dam/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/🐓 Sire · 1/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/🐔 Dam · 2/i)).not.toBeInTheDocument();
+    });
+
+    it('filters offspring by sex inside the pair groups and persists filter state', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      // Expand Sire 1
+      fireEvent.click(screen.getByRole('button', { name: /Sire 1/i }));
+      const sire1Card = screen.getByRole('button', { name: /Sire 1/i }).parentElement!;
+      const sire1Scope = within(sire1Card);
+
+      // Filter to Males
+      fireEvent.click(sire1Scope.getByRole('button', { name: /^Males \(1\)$/i }));
+      expect(sire1Scope.getByText('[1A1]')).toBeInTheDocument();
+      expect(sire1Scope.queryByText('[1A2]')).not.toBeInTheDocument();
+      expect(sire1Scope.queryByText('[1A3]')).not.toBeInTheDocument();
+      expect(sire1Scope.queryByText('Offspring 1A2')).not.toBeInTheDocument();
+      expect(sire1Scope.queryByText('Offspring 1A3')).not.toBeInTheDocument();
+
+      // Filter to Females
+      fireEvent.click(sire1Scope.getByRole('button', { name: /^Females \(2\)$/i }));
+      expect(sire1Scope.queryByText('[1A1]')).not.toBeInTheDocument();
+      expect(sire1Scope.getByText('[1A2]')).toBeInTheDocument();
+      expect(sire1Scope.getByText('[1A3]')).toBeInTheDocument();
+      expect(sire1Scope.getByText('Offspring 1A2')).toBeInTheDocument();
+      expect(sire1Scope.getByText('Offspring 1A3')).toBeInTheDocument();
+
+      // Reset to All
+      fireEvent.click(sire1Scope.getByRole('button', { name: /^All \(3\)$/i }));
+      expect(sire1Scope.getByText('[1A1]')).toBeInTheDocument();
+      expect(sire1Scope.getByText('[1A2]')).toBeInTheDocument();
+      expect(sire1Scope.getByText('[1A3]')).toBeInTheDocument();
+    });
+
+    it('mirrors the pair-grouped layout in Dam Offspring Tree (dam -> sire pairs -> offspring)', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      // Level 1 Dam row
+      const damBtn = screen.getByRole('button', { name: /Dam A/i });
+      expect(damBtn).toBeInTheDocument();
+      expect(damBtn).toHaveTextContent('[A]');
+      expect(damBtn).toHaveTextContent('3 offspring');
+      expect(damBtn).toHaveTextContent('1 sire');
+
+      // Expand Dam A
+      fireEvent.click(damBtn);
+
+      // Level 2 shows Sire 1 (1) · pair 1A
+      expect(screen.getByText(/Sire 1/i)).toBeInTheDocument();
+      expect(screen.getByText(/pair 1A/i)).toBeInTheDocument();
+
+      // Offspring rows are visible under the pair
+      expect(screen.getByText('Offspring 1A1')).toBeInTheDocument();
+      expect(screen.getByText('Offspring 1A2')).toBeInTheDocument();
+      expect(screen.getByText('Offspring 1A3')).toBeInTheDocument();
+    });
   });
 });
