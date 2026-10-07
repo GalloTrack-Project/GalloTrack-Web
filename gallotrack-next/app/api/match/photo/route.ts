@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sniffVideoKind, validateVideoFileMeta } from '@/lib/media-format';
+import { sniffImageKind, validatePhotoFileMeta } from '@/lib/media-format';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Content types per sniffed container — the extension is never trusted.
 const CONTENT_TYPES: Record<string, string> = {
-  mp4: 'video/mp4',
-  mov: 'video/quicktime',
-  avi: 'video/x-msvideo',
-  webm: 'video/webm',
-  mkv: 'video/x-matroska',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
 };
 
+// Match photos are uploaded through this route (not straight from the browser)
+// so the type and size are validated server-side against the file's actual
+// bytes, and every object lands in the private `match-photos` bucket under the
+// caller's own folder.
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
@@ -42,41 +44,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing file' }, { status: 400 });
   }
 
-  const metaError = validateVideoFileMeta({ name: file.name, size: file.size });
+  const metaError = validatePhotoFileMeta({ name: file.name, size: file.size });
   if (metaError) {
     const status = metaError.includes('too large') ? 413 : 415;
     return NextResponse.json({ error: metaError }, { status });
   }
 
-  // Sniff the actual container from the file header — never trust the extension.
   let kind: string | null = null;
   try {
     const head = new Uint8Array(await file.slice(0, 64).arrayBuffer());
-    kind = sniffVideoKind(head);
+    kind = sniffImageKind(head);
   } catch {
     kind = null;
   }
   if (!kind) {
     return NextResponse.json(
-      { error: `"${file.name}" is not a recognized video file (the contents don't match a video format).` },
+      { error: `"${file.name}" is not a recognized image file (the contents don't match an image format).` },
       { status: 415 }
     );
   }
 
   const admin = createClient(supabaseUrl, serviceRoleKey);
-  const objectPath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${kind}`;
+  const objectPath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${kind === 'jpeg' ? 'jpg' : kind}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await admin.storage
-    .from('match-videos')
+    .from('match-photos')
     .upload(objectPath, buffer, { contentType: CONTENT_TYPES[kind] || 'application/octet-stream', upsert: false });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    const missingBucket = /bucket/i.test(uploadError.message) && /not found|exist/i.test(uploadError.message);
+    return NextResponse.json(
+      { error: missingBucket ? `${uploadError.message} — run supabase/migrations/20261008000000_match_media_privacy.sql first.` : uploadError.message },
+      { status: 500 }
+    );
   }
 
-  const { data } = admin.storage.from('match-videos').getPublicUrl(objectPath);
-  // The stored URL is only a locator — readers sign it (see lib/media-privacy.ts)
-  // because the match-videos bucket is private.
+  const { data } = admin.storage.from('match-photos').getPublicUrl(objectPath);
+  // Locator only — readers sign it (lib/media-privacy.ts); bucket is private.
   return NextResponse.json({ url: data.publicUrl, path: objectPath, kind });
 }

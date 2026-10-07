@@ -30,23 +30,41 @@ export async function updateMatch(id: number, payload: Record<string, unknown>):
   return {};
 }
 
-export async function uploadMatchVideo(file: File): Promise<{ url?: string; error?: string }> {
+export async function uploadMatchVideo(
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<{ url?: string; error?: string }> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { error: 'Not authenticated' };
 
   const form = new FormData();
   form.append('file', file);
 
-  try {
-    const res = await fetch('/api/match/upload', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${session.access_token}` },
-      body: form,
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) return { error: body.error || `Upload failed (${res.status})` };
-    return { url: body.url };
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Upload failed' };
-  }
+  // XHR instead of fetch: the record form shows a per-file progress bar and
+  // fetch cannot report upload progress.
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/match/upload');
+    xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100)));
+      }
+    };
+    xhr.onload = () => {
+      let body: { url?: string; error?: string } = {};
+      try {
+        body = JSON.parse(xhr.responseText);
+      } catch { /* non-JSON response */ }
+      if (xhr.status >= 200 && xhr.status < 300 && body.url) {
+        onProgress?.(100);
+        resolve({ url: body.url });
+      } else {
+        resolve({ error: body.error || `Upload failed (${xhr.status})` });
+      }
+    };
+    xhr.onerror = () => resolve({ error: 'Network error during video upload.' });
+    xhr.onabort = () => resolve({ error: 'Video upload was cancelled.' });
+    xhr.send(form);
+  });
 }

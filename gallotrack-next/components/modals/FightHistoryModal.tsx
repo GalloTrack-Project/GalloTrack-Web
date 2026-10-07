@@ -1,12 +1,13 @@
 'use client';
 import React from 'react';
-import { Swords, Play, Image as ImageIcon, PencilLine, Share2, Feather, Download, Printer } from 'lucide-react';
+import { Swords, Feather, Download, Printer } from 'lucide-react';
 import { Modal } from '@/components/ui';
+import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { genderLabel } from '@/lib/helpers';
-import { videosFor, photosFor } from '@/lib/services/media-service';
+import { videosFor, photosFor, postersFor } from '@/lib/services/media-service';
 import { downloadCsv, printReport } from '@/lib/report-export';
 
 const outcomeClass = (outcome: string) => {
@@ -199,47 +200,13 @@ export default function FightHistoryModal() {
                 </dl>
 
                 {/* Media + actions */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200 dark:border-border">
-                  {videos.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => ui.openMatchVideoPlayer(m, videos)}
-                      className="relative inline-flex items-center gap-1.5 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 text-xs font-black hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
-                    >
-                      <Play className="w-3 h-3" />
-                      Video
-                      {videos.length > 1 && (
-                        <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-black px-1 leading-none">
-                          {videos.length}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {photos.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => ui.setImageViewerUrl(photos[0])}
-                      className="inline-flex items-center gap-1.5 rounded border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 px-2 py-1 text-xs font-black hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors cursor-pointer"
-                    >
-                      <ImageIcon className="w-3 h-3" /> {photos.length} Photo{photos.length > 1 ? 's' : ''}
-                    </button>
-                  )}
-                  <div className="ml-auto flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => ui.setEditingMatch(m)}
-                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-xs font-black hover:bg-muted transition-colors cursor-pointer"
-                    >
-                      <PencilLine className="w-3 h-3" /> Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => ui.setShareTarget({ type: 'match', id: m.id, label: `${m.entry_name} vs ${m.opponent || 'Opponent'} — ${m.date || ''}` })}
-                      className="inline-flex items-center gap-1.5 rounded border border-border bg-card text-card-foreground px-2 py-1 text-xs font-black hover:bg-muted transition-colors cursor-pointer"
-                    >
-                      <Share2 className="w-3 h-3" /> Share
-                    </button>
-                  </div>
+                <div className="flex justify-center pt-1 border-t border-slate-200 dark:border-border">
+                  <MatchMediaButtons
+                    match={m}
+                    videos={videos}
+                    photos={photos}
+                    posters={postersFor(matchMedia, m.id)}
+                  />
                 </div>
               </div>
             );

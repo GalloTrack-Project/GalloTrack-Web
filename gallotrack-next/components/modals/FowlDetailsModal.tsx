@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Play, Image as ImageIcon, PencilLine, Share2, Plus, Trash2, Printer } from 'lucide-react';
+import { Plus, Trash2, Printer, Share2 } from 'lucide-react';
 import type {
   FowlRecord,
   MatchRecord,
@@ -39,8 +39,10 @@ import {
   uploadFowlGalleryFile,
   videosFor,
   photosFor,
+  postersFor,
 } from '@/lib/services/media-service';
 import { toastMessage } from '@/lib/toast-bus';
+import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 
 const HISTORY_FIELD_LABELS: Record<string, string> = {
@@ -1293,14 +1295,13 @@ export default function FowlDetailsModal({
                         <th className="p-2.5">Event / Match Type</th>
                         <th className="p-2.5 text-center">Result</th>
                         <th className="p-2.5 text-center">Condition</th>
-                        <th className="p-2.5 text-center">Media</th>
-                        <th className="p-2.5 text-center">Actions</th>
+                        <th className="p-2.5 text-center">Media &amp; Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-border text-slate-600 dark:text-muted-foreground font-semibold">
                       {fowlMatches.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="p-6 text-center text-muted-foreground text-sm">
+                          <td colSpan={8} className="p-6 text-center text-muted-foreground text-sm">
                             No derby performance logs recorded for this specific chicken node.
                           </td>
                         </tr>
@@ -1312,7 +1313,14 @@ export default function FowlDetailsModal({
                           <tr key={match.id} className="hover:bg-slate-50/80 dark:hover:bg-muted/50 transition-colors">
                             <td className="p-2.5 pl-4 font-mono text-xs text-muted-foreground">{match.date}</td>
                             <td className="p-2.5">
-                              <span className="font-black text-slate-800 dark:text-card-foreground">{match.entry_name}</span>
+                              <div className="flex items-center gap-1.5">
+                                {formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls)) && (
+                                  <span className="font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase text-[11px]">
+                                    [{formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls))}]
+                                  </span>
+                                )}
+                                <span className="font-black text-slate-800 dark:text-card-foreground">{match.entry_name}</span>
+                              </div>
                               <span className="block text-xs font-semibold text-muted-foreground normal-case">
                                 {match.breed || '—'}{selectedFowlForDetails.birthdate ? ` · hatch ${selectedFowlForDetails.birthdate}` : ''}
                               </span>
@@ -1357,59 +1365,12 @@ export default function FowlDetailsModal({
                               )}
                             </td>
                             <td className="p-2.5 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {matchVideos.length > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => ui.openMatchVideoPlayer(match, matchVideos)}
-                                    className="relative text-xs font-black text-success dark:text-emerald-300 hover:text-emerald-800 inline-flex items-center gap-1 cursor-pointer"
-                                    title={matchVideos.length > 1 ? `Watch ${matchVideos.length} clips` : 'Watch in app'}
-                                  >
-                                    <Play className="w-3 h-3" />
-                                    {matchVideos.length}
-                                    {matchVideos.length > 1 && (
-                                      <span className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-emerald-500 text-white text-[8px] font-black px-0.5 leading-none">
-                                        {matchVideos.length}
-                                      </span>
-                                    )}
-                                  </button>
-                                )}
-                                {matchPhotos.length > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => ui.setImageViewerUrl(matchPhotos[0])}
-                                    className="text-xs font-black text-teal dark:text-teal-300 hover:text-teal-700 inline-flex items-center gap-1 cursor-pointer"
-                                    title="View match photos"
-                                  >
-                                    <ImageIcon className="w-3 h-3" /> {matchPhotos.length}
-                                  </button>
-                                )}
-                                {matchVideos.length === 0 && matchPhotos.length === 0 && (
-                                  <span className="text-xs text-muted-foreground font-bold">—</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-2.5 text-center">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  type="button"
-                                  aria-label="Edit match"
-                                  title="Edit match"
-                                  onClick={() => ui.setEditingMatch(match)}
-                                  className="p-1 rounded border border-border bg-card text-muted-foreground hover:text-success hover:border-success/40 transition-colors cursor-pointer"
-                                >
-                                  <PencilLine className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  aria-label="Share match"
-                                  title="Share match record"
-                                  onClick={() => ui.setShareTarget({ type: 'match', id: match.id, label: `${match.entry_name} vs ${match.opponent || 'Opponent'} — ${match.date || ''}` })}
-                                  className="p-1 rounded border border-border bg-card text-muted-foreground hover:text-success hover:border-success/40 transition-colors cursor-pointer"
-                                >
-                                  <Share2 className="w-3 h-3" />
-                                </button>
-                              </div>
+                              <MatchMediaButtons
+                                match={match}
+                                videos={matchVideos}
+                                photos={matchPhotos}
+                                posters={postersFor(matchMedia, match.id)}
+                              />
                             </td>
                           </tr>
                           );

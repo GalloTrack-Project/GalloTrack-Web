@@ -183,6 +183,8 @@ export interface MatchRecord {
 export interface MatchMedia {
   videos: string[];
   photos: string[];
+  /** Poster frames captured at upload time, index-aligned with `videos` (null when unavailable). */
+  videoPosters?: (string | null)[];
 }
 
 export interface FowlPhotoRecord {

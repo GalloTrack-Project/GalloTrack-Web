@@ -9,7 +9,7 @@ import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { videosFor, photosFor } from '@/lib/services/media-service';
+import MatchLogsTable from '@/components/match/MatchLogsTable';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer, ChevronDown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   const chart = useChartTokens(resolvedTheme);
 
   const {
-    fowls, matchHistory, matchMedia, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
+    fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
     monthLabels, matchesByMonth, activeSpark, trendWinRate,
     upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
     dateRangeLabel, dateRangeOpen, setDateRangeOpen,
@@ -50,16 +50,6 @@ export default function DashboardPage() {
   } = fowl;
 
   const [reportsMenuOpen, setReportsMenuOpen] = React.useState(false);
-
-  const codeByName = React.useMemo(() => {
-    const m = new Map<string, string>();
-    fowls.forEach((f) => {
-      const code = birdCodes.get(String(f.id));
-      const k = (f.name || '').trim().toLowerCase();
-      if (code && k) m.set(k, code);
-    });
-    return m;
-  }, [fowls, birdCodes]);
 
   const navigate = (page: string, subTab?: string) => {
     if (subTab) ui.setProfilingSubTab(subTab as never);
@@ -753,135 +743,7 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[860px]">
-            <thead>
-              <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
-                <th className="p-4 pl-6">Match Date</th>
-                <th className="p-4">Chicken Identifier</th>
-                <th className="p-4">Opponent</th>
-                <th className="p-4">Arena Location</th>
-                <th className="p-4 text-center">Outcome</th>
-                <th className="p-4 text-center">Post-Fight Condition</th>
-                <th className="p-4 text-center">Media &amp; Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border text-muted-foreground font-semibold">
-              {matchHistory.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm font-semibold">
-                    No data available
-                  </td>
-                </tr>
-              ) : (
-                matchHistory.map((log) => (
-                  <tr key={log.id} className="hover:bg-muted/30 transition-colors duration-150">
-                    <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">{log.date}</td>
-                    <td className="p-4">
-                      <div className="flex items-center space-x-2.5">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-success" /></div>
-                        {codeByName.get((log.entry_name || '').trim().toLowerCase()) && (
-                          <span className="text-sm font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase">
-                            [{formatBirdCodeForDisplay(codeByName.get((log.entry_name || '').trim().toLowerCase()))}]
-                          </span>
-                        )}
-                        <span className="font-bold text-card-foreground">{log.entry_name}</span>
-                      </div>
-                      <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
-                        {log.breed || '—'}{fowls.find(f => f.name === log.entry_name)?.birthdate ? ` · hatch ${fowls.find(f => f.name === log.entry_name)?.birthdate}` : ''}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-1.5">
-                        {log.opponent_photo_url && (
-                          <img src={log.opponent_photo_url} alt="Opponent" className="h-6 w-6 rounded-full border border-border object-cover shrink-0" />
-                        )}
-                        <span className="font-bold text-card-foreground">{log.opponent || '—'}</span>
-                      </div>
-                      <span className="block text-xs font-semibold text-muted-foreground normal-case mt-0.5">
-                        {[log.opponent_breed, log.opponent_bloodline].filter(Boolean).join(' · ') || '—'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground font-normal">{log.location || '—'}</td>
-                    <td className="p-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border ${log.outcome && log.outcome.toLowerCase() === 'win' ? 'bg-emerald-500/10 text-success border-emerald-500/20' : log.outcome && log.outcome.toLowerCase() === 'loss' ? 'bg-rose-500/10 text-danger border-rose-500/20' : 'bg-muted text-muted-foreground border-border'}`}>{log.outcome || '—'}</span>
-                    </td>
-                    <td className="p-4 text-center">
-                      {log.post_fight_condition ? (
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border whitespace-nowrap ${
-                          (log.post_fight_condition || '').toLowerCase().includes('deceased')
-                            ? 'bg-rose-500/10 text-danger border-rose-500/20'
-                            : (log.post_fight_condition || '').toLowerCase().includes('critical') || (log.post_fight_condition || '').toLowerCase().includes('severely')
-                            ? 'bg-amber-500/10 text-warning border-amber-500/20'
-                            : 'bg-teal-500/10 text-teal border-teal-500/20'
-                        }`}>
-                          {log.post_fight_condition}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground font-bold">—</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        {(() => {
-                          const vids = videosFor(matchMedia, log.id);
-                          if (vids.length > 0) {
-                            return (
-                              <button
-                                type="button"
-                                id={`play-match-${log.id}`}
-                                title={vids.length > 1 ? `Watch ${vids.length} clips` : 'Watch match video'}
-                                onClick={() => ui.openMatchVideoPlayer(log, vids)}
-                                className="relative inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
-                                {vids.length > 1 && (
-                                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-black px-1 leading-none">
-                                    {vids.length}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          }
-                          return null;
-                        })()}
-                        {photosFor(matchMedia, log.id).length > 0 && (
-                          <button
-                            type="button"
-                            title="View match photos"
-                            onClick={() => ui.setImageViewerUrl(photosFor(matchMedia, log.id)[0])}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-teal-500/10 border border-teal-500/20 text-teal hover:bg-teal-500/20 transition-all cursor-pointer"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          title="Edit match"
-                          onClick={() => ui.setEditingMatch(log)}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-                        </button>
-                        <button
-                          type="button"
-                          title="Share match record"
-                          onClick={() => ui.setShareTarget({ type: 'match', id: log.id, label: `${log.entry_name} vs ${log.opponent || 'Opponent'} — ${log.date || ''}` })}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" /></svg>
-                        </button>
-                        {videosFor(matchMedia, log.id).length === 0 && photosFor(matchMedia, log.id).length === 0 && (
-                          <span className="text-sm text-muted-foreground font-bold">—</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <MatchLogsTable />
       </div>
     </div>
   );

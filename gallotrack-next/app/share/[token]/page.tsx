@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Image as ImageIcon, Feather, Share2 } from 'lucide-react';
+import { Play, Image as ImageIcon, Feather, Share2, Download, AlertTriangle } from 'lucide-react';
 import { genderLabel } from '@/lib/helpers';
+import { downloadMediaUrl, playableKind, videoFileNameFromUrl } from '@/lib/media-format';
 
 type SharedMatch = {
   date: string;
@@ -52,6 +53,48 @@ const outcomeClass = (outcome: string) => {
   if (o === 'loss') return 'bg-rose-500/10 text-rose-700 border-rose-200';
   return 'bg-amber-500/10 text-amber-700 border-amber-200';
 };
+
+/**
+ * Player for one shared match video. AVI/MKV can never play in a browser and
+ * this deployment has no converter; load failures (including MOV codec
+ * mismatches) fall back to an explicit download offer instead of a broken box.
+ */
+function SharedVideo({ url, index }: { url: string; index: number }) {
+  const [failed, setFailed] = useState(false);
+  const kind = playableKind(url);
+
+  if (kind === 'unsupported' || failed) {
+    return (
+      <div className="flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-md border border-border bg-muted/40 p-4 text-center">
+        <AlertTriangle size={18} className="text-warning" />
+        <p className="text-xs font-bold text-muted-foreground">
+          {kind === 'unsupported'
+            ? 'This file format (AVI/MKV) can\u2019t be played in a browser.'
+            : 'This video could not be loaded in your browser.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => downloadMediaUrl(url, videoFileNameFromUrl(url))}
+          className="inline-flex h-10 items-center gap-1.5 rounded-sm border border-border bg-card px-3 text-xs font-black text-foreground transition-colors hover:border-success/40 hover:text-success cursor-pointer"
+        >
+          <Download size={14} /> Download video {index + 1}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <video
+      src={url}
+      controls
+      preload="metadata"
+      onError={() => setFailed(true)}
+      className="w-full rounded-md border border-border bg-black"
+    >
+      <track kind="captions" srcLang="en" label="English" />
+    </video>
+  );
+}
 
 function Detail({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
@@ -156,9 +199,7 @@ export default function SharePage() {
                 <h2 className="text-xs font-black uppercase text-muted-foreground flex items-center gap-1.5"><Play className="w-3.5 h-3.5" /> Videos</h2>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {payload.videos.map((url, idx) => (
-                    <video key={idx} src={url} controls preload="metadata" className="w-full rounded-md border border-border bg-black">
-                      <track kind="captions" srcLang="en" label="English" />
-                    </video>
+                    <SharedVideo key={`${url}-${idx}`} url={url} index={idx} />
                   ))}
                 </div>
               </div>

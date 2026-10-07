@@ -17,6 +17,15 @@ import {
   uploadMatchPhotoFile,
 } from '@/lib/services/media-service';
 import { toastMessage } from '@/lib/toast-bus';
+import { signMediaUrls } from '@/lib/media-privacy';
+import {
+  MAX_MATCH_PHOTOS,
+  MAX_MATCH_VIDEOS,
+  captureVideoPoster,
+  uploadKey,
+  validatePhotoFile,
+  validateVideoFile,
+} from '@/lib/media-format';
 import type { MatchRecord } from '@/lib/types';
 
 type Fields = {
@@ -38,8 +47,8 @@ type Fields = {
   age_category: string;
 };
 
-const MAX_VIDEOS = 3;
-const MAX_PHOTOS = 6;
+const MAX_VIDEOS = MAX_MATCH_VIDEOS;
+const MAX_PHOTOS = MAX_MATCH_PHOTOS;
 
 export default function EditMatchModal() {
   const ui = useUI();
@@ -81,13 +90,20 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
   const [newVideos, setNewVideos] = useState<File[]>([]);
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchMatchVideoRows([match.id]), fetchMatchPhotoRows([match.id])]).then(([v, p]) => {
+    Promise.all([fetchMatchVideoRows([match.id]), fetchMatchPhotoRows([match.id])]).then(async ([v, p]) => {
       if (cancelled) return;
-      setVideoRows(v.map((r) => ({ id: r.id, url: r.url })));
-      setPhotoRows(p.map((r) => ({ id: r.id, url: r.url })));
+      // Sign private-bucket URLs so the links/thumbnails below actually load.
+      const [signedVideos, signedPhotos] = await Promise.all([
+        signMediaUrls(v.map((r) => r.url)),
+        signMediaUrls(p.map((r) => r.url)),
+      ]);
+      if (cancelled) return;
+      setVideoRows(v.map((r, i) => ({ id: r.id, url: signedVideos[i] || r.url })));
+      setPhotoRows(p.map((r, i) => ({ id: r.id, url: signedPhotos[i] || r.url })));
     });
     return () => { cancelled = true; };
   }, [match.id]);
@@ -100,15 +116,39 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
   const conditionOptions = mergeOptions(rows, 'post_match_condition', fields.post_fight_condition);
 
   const handleDeleteVideo = async (rowId: number) => {
+    if (!window.confirm('Remove this video from the match? This cannot be undone.')) return;
     const result = await deleteMatchVideo(rowId);
     if (result.error) toastMessage(result.error, 'error');
     else setVideoRows((prev) => prev.filter((r) => r.id !== rowId));
   };
 
   const handleDeletePhoto = async (rowId: number) => {
+    if (!window.confirm('Remove this photo from the match? This cannot be undone.')) return;
     const result = await deleteMatchPhoto(rowId);
     if (result.error) toastMessage(result.error, 'error');
     else setPhotoRows((prev) => prev.filter((r) => r.id !== rowId));
+  };
+
+  const handleVideoSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const accepted: File[] = [];
+    for (const file of Array.from(files)) {
+      const error = await validateVideoFile(file);
+      if (error) toastMessage(error, 'error');
+      else accepted.push(file);
+    }
+    if (accepted.length > 0) setNewVideos([...newVideos, ...accepted].slice(0, MAX_VIDEOS));
+  };
+
+  const handlePhotoSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const accepted: File[] = [];
+    for (const file of Array.from(files)) {
+      const error = await validatePhotoFile(file);
+      if (error) toastMessage(error, 'error');
+      else accepted.push(file);
+    }
+    if (accepted.length > 0) setNewPhotos([...newPhotos, ...accepted].slice(0, MAX_PHOTOS));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,10 +186,24 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
       }
       let sortOrder = videoRows.length + 1;
       for (const file of newVideos.slice(0, Math.max(videoBudget, 0))) {
-        const up = await uploadMatchVideo(file);
+        const key = uploadKey('video', file);
+        const up = await uploadMatchVideo(file, (pct) => setUploadProgress((prev) => ({ ...prev, [key]: pct })));
         if (up.error) throw new Error(up.error);
         if (up.url) {
-          const ins = await insertMatchVideo(match.id, up.url, sortOrder++);
+          let posterUrl: string | null = null;
+          try {
+            const posterBlob = await captureVideoPoster(file);
+            if (posterBlob) {
+              const posterFile = new File(
+                [posterBlob],
+                `${file.name.replace(/\.[^.]+$/, '') || 'video'}-poster.jpg`,
+                { type: 'image/jpeg' }
+              );
+              const posterUpload = await uploadMatchPhotoFile(posterFile);
+              posterUrl = posterUpload.url || null;
+            }
+          } catch { /* poster is optional */ }
+          const ins = await insertMatchVideo(match.id, up.url, sortOrder++, posterUrl);
           if (ins.error) console.warn('Match video save skipped:', ins.error);
         }
       }
@@ -160,7 +214,8 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
       }
       let photoOrder = photoRows.length + 1;
       for (const file of newPhotos.slice(0, Math.max(photoBudget, 0))) {
-        const up = await uploadMatchPhotoFile(file);
+        const key = uploadKey('photo', file);
+        const up = await uploadMatchPhotoFile(file, (pct) => setUploadProgress((prev) => ({ ...prev, [key]: pct })));
         if (up.error) throw new Error(up.error);
         if (up.url) {
           const ins = await insertMatchPhoto(match.id, up.url, photoOrder++);
@@ -175,6 +230,7 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
       toastMessage(err instanceof Error ? err.message : 'Failed to update match.', 'error');
     } finally {
       setBusy(false);
+      setUploadProgress({});
     }
   };
 
@@ -283,17 +339,27 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
                   <button type="button" onClick={() => handleDeleteVideo(row.id)} className="text-danger hover:underline shrink-0 cursor-pointer">Remove</button>
                 </li>
               ))}
-              {newVideos.map((file, idx) => (
-                <li key={`new-v-${idx}`} className="flex items-center justify-between gap-2 rounded border border-border bg-card px-2.5 py-1.5 text-xs font-bold text-foreground">
-                  <span className="truncate">New: {file.name}</span>
-                  <button type="button" onClick={() => setNewVideos(newVideos.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer">Remove</button>
-                </li>
-              ))}
+              {newVideos.map((file, idx) => {
+                const pct = uploadProgress[uploadKey('video', file)];
+                return (
+                  <li key={`new-v-${idx}`} className="rounded border border-border bg-card px-2.5 py-1.5 text-xs font-bold text-foreground">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate">New: {file.name}{pct !== undefined ? ` — ${pct}%` : ''}</span>
+                      <button type="button" disabled={pct !== undefined} onClick={() => setNewVideos(newVideos.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40">Remove</button>
+                    </div>
+                    {pct !== undefined && (
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Uploading ${file.name}`}>
+                        <div className="h-full rounded-full bg-emerald-500 transition-all duration-200" style={{ width: `${pct}%` }} />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
             {videoRows.length + newVideos.length < MAX_VIDEOS && (
               <label className="mt-2 inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold text-success hover:underline">
                 <Upload className="w-3.5 h-3.5" /> Add video
-                <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" multiple className="hidden" onChange={(e) => { if (e.target.files) setNewVideos([...newVideos, ...Array.from(e.target.files)].slice(0, MAX_VIDEOS)); e.target.value = ''; }} />
+                <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska" multiple className="hidden" onChange={(e) => { void handleVideoSelect(e.target.files); e.target.value = ''; }} />
               </label>
             )}
           </div>
@@ -309,19 +375,27 @@ function EditMatchInner({ match, onClose }: { match: MatchRecord; onClose: () =>
                   </button>
                 </div>
               ))}
-              {newPhotos.map((file, idx) => (
-                <div key={`new-p-${idx}`} className="relative">
-                  <img src={URL.createObjectURL(file)} alt="New attachment" className="h-16 w-16 rounded border border-dashed border-success object-cover" />
-                  <button type="button" aria-label="Remove new attachment" onClick={() => setNewPhotos(newPhotos.filter((_, i) => i !== idx))} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white cursor-pointer">
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+              {newPhotos.map((file, idx) => {
+                const pct = uploadProgress[uploadKey('photo', file)];
+                return (
+                  <div key={`new-p-${idx}`} className="relative">
+                    <img src={URL.createObjectURL(file)} alt="New attachment" className="h-16 w-16 rounded border border-dashed border-success object-cover" />
+                    <button type="button" aria-label="Remove new attachment" disabled={pct !== undefined} onClick={() => setNewPhotos(newPhotos.filter((_, i) => i !== idx))} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white cursor-pointer disabled:opacity-40">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                    {pct !== undefined && (
+                      <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden rounded-b bg-black/40" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Uploading ${file.name}`}>
+                        <div className="h-full bg-emerald-500 transition-all duration-200" style={{ width: `${pct}%` }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             {photoRows.length + newPhotos.length < MAX_PHOTOS && (
               <label className="mt-2 inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold text-success hover:underline">
                 <Upload className="w-3.5 h-3.5" /> Add photos
-                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files) setNewPhotos([...newPhotos, ...Array.from(e.target.files)].slice(0, MAX_PHOTOS)); e.target.value = ''; }} />
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { void handlePhotoSelect(e.target.files); e.target.value = ''; }} />
               </label>
             )}
           </div>

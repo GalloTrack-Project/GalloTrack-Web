@@ -5,6 +5,14 @@ import { isMale } from '@/lib/helpers';
 import { mergeOptions } from '@/lib/lifecycle';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { useUserSettings } from '@/lib/hooks/use-user-settings';
+import {
+  MAX_MATCH_PHOTOS,
+  MAX_MATCH_VIDEOS,
+  uploadKey,
+  validatePhotoFile,
+  validateVideoFile,
+} from '@/lib/media-format';
+import { toastMessage } from '@/lib/toast-bus';
 
 function SelectChevron() {
   return (
@@ -55,6 +63,8 @@ type Props = {
   setMatchSide?: (v: string) => void;
   matchNotes: string;
   setMatchNotes: (v: string) => void;
+  /** Per-file upload progress keyed by uploadKey(); missing = not uploading. */
+  mediaUploadProgress?: Record<string, number>;
 };
 
 export default function MatchForm({
@@ -75,11 +85,43 @@ export default function MatchForm({
   ageCategory, setAgeCategory,
   eventType, setEventType,
   matchNotes, setMatchNotes,
+  mediaUploadProgress = {},
 }: Props) {
   const { rows } = useRegistryOptions();
   const settings = useUserSettings();
 
   const [customEventType, setCustomEventType] = useState('');
+
+  // Validate type + size client-side on select (the server re-validates the
+  // actual bytes before storing anything).
+  const handleVideoSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const accepted: File[] = [];
+    for (const file of Array.from(files)) {
+      const error = await validateVideoFile(file);
+      if (error) toastMessage(error, 'error');
+      else accepted.push(file);
+    }
+    if (accepted.length > 0) {
+      setMatchVideoFiles([...matchVideoFiles, ...accepted].slice(0, MAX_MATCH_VIDEOS));
+    }
+  };
+
+  const handlePhotoSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const accepted: File[] = [];
+    for (const file of Array.from(files)) {
+      const error = await validatePhotoFile(file);
+      if (error) toastMessage(error, 'error');
+      else accepted.push(file);
+    }
+    if (accepted.length > 0) {
+      setMatchPhotoFiles([...matchPhotoFiles, ...accepted].slice(0, MAX_MATCH_PHOTOS));
+    }
+  };
+
+  const progressOf = (kind: 'video' | 'photo', file: File): number | undefined =>
+    mediaUploadProgress[uploadKey(kind, file)];
 
   const eventOptions = mergeOptions(rows, 'event_type', eventType || 'Derby');
   const eventValues = eventOptions.map((o) => o.value);
@@ -285,17 +327,27 @@ export default function MatchForm({
       <div>
         <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Video Evidence Upload (up to 3)</span>
         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all" htmlFor="field">
-          <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchVideoFiles.length >= 3 ? 'Maximum 3 videos attached' : 'Add fight match recording (MP4, MOV, AVI)'}</span>
-          <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo" multiple disabled={matchVideoFiles.length >= 3} onChange={(e) => { if (e.target.files) setMatchVideoFiles([...matchVideoFiles, ...Array.from(e.target.files)].slice(0, 3)); e.target.value = ''; }} className="hidden" id="field" />
+          <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchVideoFiles.length >= MAX_MATCH_VIDEOS ? 'Maximum 3 videos attached' : 'Add fight match recording (MP4, MOV, AVI, WebM, MKV)'}</span>
+          <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska" multiple disabled={matchVideoFiles.length >= MAX_MATCH_VIDEOS} onChange={(e) => { void handleVideoSelect(e.target.files); e.target.value = ''; }} className="hidden" id="field" />
         </label>
         {matchVideoFiles.length > 0 && (
           <ul className="mt-2 space-y-1.5">
-            {matchVideoFiles.map((file, idx) => (
-              <li key={`${file.name}-${idx}`} className="flex items-center justify-between rounded-md border border-input-border bg-slate-50 dark:bg-muted/50 px-3 py-2 text-xs font-bold text-foreground">
-                <span className="truncate pr-2">Video {idx + 1}: {file.name}</span>
-                <button type="button" onClick={() => setMatchVideoFiles(matchVideoFiles.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer">Remove</button>
-              </li>
-            ))}
+            {matchVideoFiles.map((file, idx) => {
+              const pct = progressOf('video', file);
+              return (
+                <li key={`${file.name}-${idx}`} className="rounded-md border border-input-border bg-slate-50 dark:bg-muted/50 px-3 py-2 text-xs font-bold text-foreground">
+                  <div className="flex items-center justify-between">
+                    <span className="truncate pr-2">Video {idx + 1}: {file.name}{pct !== undefined ? ` — ${pct}%` : ''}</span>
+                    <button type="button" disabled={pct !== undefined} onClick={() => setMatchVideoFiles(matchVideoFiles.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Remove</button>
+                  </div>
+                  {pct !== undefined && (
+                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Uploading ${file.name}`}>
+                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-200" style={{ width: `${pct}%` }} />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -305,16 +357,26 @@ export default function MatchForm({
         <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Match Photos (up to 6)</span>
         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all" htmlFor="match-photos-field">
           <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">{matchPhotoFiles.length >= 6 ? 'Maximum 6 photos attached' : 'Attach photos of this match'}</span>
-          <input type="file" accept="image/*" multiple disabled={matchPhotoFiles.length >= 6} onChange={(e) => { if (e.target.files) setMatchPhotoFiles([...matchPhotoFiles, ...Array.from(e.target.files)].slice(0, 6)); e.target.value = ''; }} className="hidden" id="match-photos-field" />
+          <input type="file" accept="image/*" multiple disabled={matchPhotoFiles.length >= MAX_MATCH_PHOTOS} onChange={(e) => { void handlePhotoSelect(e.target.files); e.target.value = ''; }} className="hidden" id="match-photos-field" />
         </label>
         {matchPhotoFiles.length > 0 && (
           <ul className="mt-2 space-y-1.5">
-            {matchPhotoFiles.map((file, idx) => (
-              <li key={`${file.name}-${idx}`} className="flex items-center justify-between rounded-md border border-input-border bg-slate-50 dark:bg-muted/50 px-3 py-2 text-xs font-bold text-foreground">
-                <span className="truncate pr-2">Photo {idx + 1}: {file.name}</span>
-                <button type="button" onClick={() => setMatchPhotoFiles(matchPhotoFiles.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer">Remove</button>
-              </li>
-            ))}
+            {matchPhotoFiles.map((file, idx) => {
+              const pct = progressOf('photo', file);
+              return (
+                <li key={`${file.name}-${idx}`} className="rounded-md border border-input-border bg-slate-50 dark:bg-muted/50 px-3 py-2 text-xs font-bold text-foreground">
+                  <div className="flex items-center justify-between">
+                    <span className="truncate pr-2">Photo {idx + 1}: {file.name}{pct !== undefined ? ` — ${pct}%` : ''}</span>
+                    <button type="button" disabled={pct !== undefined} onClick={() => setMatchPhotoFiles(matchPhotoFiles.filter((_, i) => i !== idx))} className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Remove</button>
+                  </div>
+                  {pct !== undefined && (
+                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Uploading ${file.name}`}>
+                      <div className="h-full rounded-full bg-teal-500 transition-all duration-200" style={{ width: `${pct}%` }} />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

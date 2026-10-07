@@ -74,6 +74,7 @@ import type {
   BreedingPairRecord,
 } from '@/lib/types';
 import { toastMessage } from '@/lib/toast-bus';
+import { captureVideoPoster, uploadKey } from '@/lib/media-format';
 import { registryTabLists, type RegistryLists } from '@/lib/registry-roles';
 
 interface FowlContextValue {
@@ -139,6 +140,9 @@ interface FowlContextValue {
   opponentHatch: string; setOpponentHatch: (v: string) => void;
   opponentPhoto: File | null; setOpponentPhoto: (f: File | null) => void;
   uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
+  /** Per-file upload progress for the record form, keyed by uploadKey(). */
+  mediaUploadProgress: Record<string, number>;
+  setMediaUploadProgress: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 
   matchOption: number; setMatchOption: (v: number) => void;
   betType: string; setBetType: (v: string) => void;
@@ -338,6 +342,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles,
     opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
     opponentPhoto, setOpponentPhoto, uploadingVideo, setUploadingVideo,
+    mediaUploadProgress, setMediaUploadProgress,
     matchOption, setMatchOption, betType, setBetType,
     targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
     suggestedPartners, setSuggestedPartners,
@@ -822,25 +827,49 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       let videoUrl = '';
       const videoUrls: string[] = [];
+      const videoPosters: (string | null)[] = [];
       const photoUrls: string[] = [];
       if (matchVideoFiles.length > 0 || matchPhotoFiles.length > 0 || opponentPhoto) {
         setUploadingVideo(true);
       }
       for (const videoFile of matchVideoFiles) {
-        const result = await matchService.uploadMatchVideo(videoFile);
+        const key = uploadKey('video', videoFile);
+        const result = await matchService.uploadMatchVideo(videoFile, (pct) => {
+          setMediaUploadProgress((prev) => ({ ...prev, [key]: pct }));
+        });
         if (result.error) throw new Error(result.error);
-        if (result.url) videoUrls.push(result.url);
+        if (result.url) {
+          videoUrls.push(result.url);
+          // Best-effort poster frame so lists don't have to load full videos.
+          let posterUrl: string | null = null;
+          try {
+            const posterBlob = await captureVideoPoster(videoFile);
+            if (posterBlob) {
+              const posterFile = new File(
+                [posterBlob],
+                `${videoFile.name.replace(/\.[^.]+$/, '') || 'video'}-poster.jpg`,
+                { type: 'image/jpeg' }
+              );
+              const posterUpload = await mediaService.uploadMatchPhotoFile(posterFile);
+              posterUrl = posterUpload.url || null;
+            }
+          } catch { /* poster is optional */ }
+          videoPosters.push(posterUrl);
+        }
       }
       videoUrl = videoUrls[0] || '';
 
       let opponentPhotoUrl = '';
       if (opponentPhoto) {
-        const photoResult = await mediaService.uploadMatchPhotoFile(opponentPhoto);
+        const photoResult = await mediaService.uploadFowlGalleryFile(opponentPhoto);
         if (photoResult.error) throw new Error(photoResult.error);
         opponentPhotoUrl = photoResult.url || '';
       }
       for (const photoFile of matchPhotoFiles) {
-        const result = await mediaService.uploadMatchPhotoFile(photoFile);
+        const key = uploadKey('photo', photoFile);
+        const result = await mediaService.uploadMatchPhotoFile(photoFile, (pct) => {
+          setMediaUploadProgress((prev) => ({ ...prev, [key]: pct }));
+        });
         if (result.error) throw new Error(result.error);
         if (result.url) photoUrls.push(result.url);
       }
@@ -882,7 +911,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       } else {
         const newMatchId = result.id;
         for (let i = 0; i < videoUrls.length; i++) {
-          const v = await mediaService.insertMatchVideo(newMatchId, videoUrls[i], i + 1);
+          const v = await mediaService.insertMatchVideo(newMatchId, videoUrls[i], i + 1, videoPosters[i] ?? null);
           if (v.error) console.warn('Match video save skipped:', v.error);
         }
         for (let i = 0; i < photoUrls.length; i++) {
@@ -918,13 +947,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         setMatchSide(''); setMatchNotes('');
         setPartnerEntry(''); setSuggestedPartners([]);
         fetchDatabaseResources();
-        ui.setProfilingSubTab('males');
+        // Stay on the match tab so the new row is visible in the logs table
+        // directly above the form.
+        ui.setProfilingSubTab('matchForm');
       }
     } catch (err: unknown) {
       toastMessage(`Database Write Constraint Fault: ${err instanceof Error ? err.message : String(err)}`, 'error');
     } finally {
       setLoading(false);
       setUploadingVideo(false);
+      setMediaUploadProgress({});
     }
   }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchSide, matchNotes, derbyMatchNumber, matchOutcome, matchPostFight, eventType, cockCount, ageCategory, matchVideoFiles, matchPhotoFiles, opponentBloodline, opponentHatch, opponentPhoto, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
 

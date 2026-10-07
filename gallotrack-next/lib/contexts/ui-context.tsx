@@ -38,23 +38,33 @@ interface UIContextValue {
   showPerFowlBreakdownModal: boolean;
   setShowPerFowlBreakdownModal: (v: boolean) => void;
 
-  videoViewerUrl: string | null;
-  setVideoViewerUrl: (v: string | null) => void;
-  /** Rich match video player: match metadata for the modal header. */
-  videoViewerMatch: MatchRecord | null;
-  setVideoViewerMatch: (m: MatchRecord | null) => void;
-  /** All video URLs for the match currently shown in the player. */
-  videoViewerUrls: string[];
-  setVideoViewerUrls: (urls: string[]) => void;
-  /** Convenience: open the rich video player for a match with its videos. */
-  openMatchVideoPlayer: (match: MatchRecord, urls: string[]) => void;
-  imageViewerUrl: string | null;
+  /** Config for the shared match/fowl media viewer (videos + photos with tabs). */
+  matchMediaViewer: MatchMediaViewerConfig | null;
+  openMatchMediaViewer: (cfg: MatchMediaViewerConfig) => void;
+  closeMatchMediaViewer: () => void;
+  /** Compat: open the viewer focused on a match's videos. */
+  openMatchVideoPlayer: (match: MatchRecord, urls: string[], posters?: (string | null)[]) => void;
+  /** Compat: open the viewer focused on a photo gallery. */
   setImageViewerUrl: (v: string | null) => void;
   editingMatch: MatchRecord | null;
   setEditingMatch: (m: MatchRecord | null) => void;
   shareTarget: { type: 'match' | 'fowl'; id: number; label: string } | null;
   setShareTarget: (t: { type: 'match' | 'fowl'; id: number; label: string } | null) => void;
 }
+
+export type MatchMediaViewerConfig = {
+  /** Match context for the viewer header (omitted for galleries like fowl photos). */
+  match?: MatchRecord;
+  /** Fallback header title when there is no match (e.g. chicken name). */
+  title?: string;
+  videos: string[];
+  photos: string[];
+  /** Poster frames index-aligned with `videos`. */
+  videoPosters?: (string | null)[];
+  tab: 'videos' | 'photos';
+  /** Set when the viewer opens — used to give the viewer fresh state per open. */
+  openedAt?: number;
+};
 
 const UIContext = createContext<UIContextValue | null>(null);
 
@@ -93,18 +103,27 @@ export function UIProvider({
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
 
-  const [videoViewerUrl, setVideoViewerUrl] = useState<string | null>(null);
-  const [videoViewerMatch, setVideoViewerMatch] = useState<MatchRecord | null>(null);
-  const [videoViewerUrls, setVideoViewerUrls] = useState<string[]>([]);
-  const [imageViewerUrl, setImageViewerUrl] = useState<string | null>(null);
+  const [matchMediaViewer, setMatchMediaViewer] = useState<MatchMediaViewerConfig | null>(null);
   const [editingMatch, setEditingMatch] = useState<MatchRecord | null>(null);
   const [shareTarget, setShareTarget] = useState<{ type: 'match' | 'fowl'; id: number; label: string } | null>(null);
 
-  const openMatchVideoPlayer = React.useCallback((match: MatchRecord, urls: string[]) => {
-    setVideoViewerMatch(match);
-    setVideoViewerUrls(urls);
-    // Also set the legacy scalar so old callers (MediaViewerModal) still work
-    setVideoViewerUrl(urls[0] ?? null);
+  const openMatchMediaViewer = React.useCallback((cfg: MatchMediaViewerConfig) => {
+    setMatchMediaViewer({ ...cfg, openedAt: Date.now() });
+  }, []);
+
+  const closeMatchMediaViewer = React.useCallback(() => {
+    setMatchMediaViewer(null);
+  }, []);
+
+  const openMatchVideoPlayer = React.useCallback(
+    (match: MatchRecord, urls: string[], posters?: (string | null)[]) => {
+      setMatchMediaViewer({ match, videos: urls, photos: [], videoPosters: posters, tab: 'videos', openedAt: Date.now() });
+    },
+    []
+  );
+
+  const setImageViewerUrl = React.useCallback((v: string | null) => {
+    setMatchMediaViewer(v ? { videos: [], photos: [v], tab: 'photos', openedAt: Date.now() } : null);
   }, []);
 
   const value: UIContextValue = {
@@ -123,11 +142,9 @@ export function UIProvider({
     showLogoutModal, setShowLogoutModal,
     showForgotPasswordModal, setShowForgotPasswordModal,
     showPerFowlBreakdownModal, setShowPerFowlBreakdownModal,
-    videoViewerUrl, setVideoViewerUrl,
-    videoViewerMatch, setVideoViewerMatch,
-    videoViewerUrls, setVideoViewerUrls,
+    matchMediaViewer, openMatchMediaViewer, closeMatchMediaViewer,
     openMatchVideoPlayer,
-    imageViewerUrl, setImageViewerUrl,
+    setImageViewerUrl,
     editingMatch, setEditingMatch,
     shareTarget, setShareTarget,
   };

@@ -51,6 +51,9 @@ interface FowlFormStateContextValue {
   matchVideoFiles: File[]; setMatchVideoFiles: (f: File[]) => void;
   matchPhotoFiles: File[]; setMatchPhotoFiles: (f: File[]) => void;
   uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
+  /** Per-file upload progress for the record form, keyed by uploadKey(). */
+  mediaUploadProgress: Record<string, number>;
+  setMediaUploadProgress: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 
   matchOption: number; setMatchOption: (v: number) => void;
   betType: string; setBetType: (v: string) => void;
@@ -174,6 +177,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [matchVideoFiles, setMatchVideoFiles] = useState<File[]>([]);
   const [matchPhotoFiles, setMatchPhotoFiles] = useState<File[]>([]);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [mediaUploadProgress, setMediaUploadProgress] = useState<Record<string, number>>({});
 
   const [matchOption, setMatchOption] = useState(1);
   const [betType, setBetType] = useState('durbe');
@@ -303,6 +307,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     derbyMatchNumber, setDerbyMatchNumber,
     matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
     matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles, uploadingVideo, setUploadingVideo,
+    mediaUploadProgress, setMediaUploadProgress,
     matchOption, setMatchOption, betType, setBetType,
     targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
     suggestedPartners, setSuggestedPartners,

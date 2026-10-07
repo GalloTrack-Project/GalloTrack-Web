@@ -19,7 +19,7 @@ import LogoutModal from './modals/LogoutModal';
 import ForgotPasswordModal from './modals/ForgotPasswordModal';
 import PerFowlBreakdownModal from './modals/PerFowlBreakdownModal';
 import FightHistoryModal from './modals/FightHistoryModal';
-import MediaViewerModal from './modals/MediaViewerModal';
+import MatchMediaViewer from './match/MatchMediaViewer';
 import ShareModal from './modals/ShareModal';
 import EditMatchModal from './modals/EditMatchModal';
 
@@ -270,7 +270,7 @@ export default function Modals(props: ModalsProps) {
       />
 
       <FightHistoryModal />
-      <MediaViewerModal />
+      <MatchMediaViewer />
       <ShareModal />
       <EditMatchModal />
     </>

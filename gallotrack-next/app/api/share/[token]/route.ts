@@ -1,8 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { PRIVATE_STORAGE_BUCKETS, storagePathFromUrl } from '@/lib/media-format';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const SHARE_SIGN_TTL_SECONDS = 60 * 60; // public viewers get a 1-hour signed URL
+
+/**
+ * Turn stored media locators into viewable URLs for anonymous share visitors:
+ * private-bucket objects (match-videos, match-photos) become signed URLs;
+ * public/legacy URLs pass through untouched. Signing failures degrade to the
+ * stored URL so a share never comes back empty.
+ */
+async function signShareUrls(
+  urls: (string | null | undefined)[]
+): Promise<(string | null)[]> {
+  const admin = createClient(supabaseUrl, serviceRoleKey);
+  return Promise.all(
+    urls.map(async (raw) => {
+      if (!raw) return raw || null;
+      const parsed = storagePathFromUrl(raw);
+      if (!parsed || !PRIVATE_STORAGE_BUCKETS.has(parsed.bucket)) return raw;
+      try {
+        const { data, error } = await admin.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, SHARE_SIGN_TTL_SECONDS);
+        return !error && data?.signedUrl ? data.signedUrl : raw;
+      } catch {
+        return raw;
+      }
+    })
+  );
+}
 
 export async function GET(
   _request: NextRequest,
@@ -38,8 +68,10 @@ export async function GET(
       admin.from('match_photos').select('url, sort_order').eq('match_id', match.id).order('sort_order'),
     ]);
 
-    const videos = (videosRes.data || []).map((v) => v.url);
-    if (match.video_url && !videos.includes(match.video_url)) videos.unshift(match.video_url);
+    const rawVideos = (videosRes.data || []).map((v) => v.url);
+    if (match.video_url && !rawVideos.includes(match.video_url)) rawVideos.unshift(match.video_url);
+    const rawPhotos = (photosRes.data || []).map((p) => p.url);
+    const [videos, photos] = [await signShareUrls(rawVideos), await signShareUrls(rawPhotos)];
 
     return NextResponse.json({
       type: 'match',
@@ -63,7 +95,7 @@ export async function GET(
         notes: match.notes,
       },
       videos,
-      photos: (photosRes.data || []).map((p) => p.url),
+      photos,
     });
   }
 
