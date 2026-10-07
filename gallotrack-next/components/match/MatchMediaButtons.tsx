@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Play, Image, Pencil, Share2 } from 'lucide-react';
+import { Play, Image as ImageIcon, Pencil, Share2 } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import type { MatchRecord } from '@/lib/types';
 
@@ -63,7 +63,7 @@ export default function MatchMediaButtons({
           onClick={openPhotos}
           className="relative inline-flex items-center justify-center w-8 h-8 rounded-sm bg-teal-500/10 border border-teal-500/20 text-teal hover:bg-teal-500/20 hover:border-teal-500/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Image size={13} />
+          <ImageIcon size={13} aria-hidden="true" />
           <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-600 text-white text-[9px] font-black px-1 leading-none">
             {photos.length}
           </span>

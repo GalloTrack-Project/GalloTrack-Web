@@ -483,18 +483,23 @@ function PhotosPane({ urls, title }: { urls: string[]; title: string }) {
             </div>
           </div>
         ) : (
-          <img
-            src={current}
-            alt={`${title || 'Match'} photo ${Math.min(index, total - 1) + 1}`}
-            loading="lazy"
-            onLoad={() => setStatus('ready')}
-            onError={() => setStatus('error')}
+          <button
+            type="button"
             onClick={() => setZoom((z) => !z)}
-            className={`max-h-[55vh] w-auto object-contain transition-transform ${
-              zoom ? 'cursor-zoom-out' : 'cursor-zoom-in'
-            }`}
-            style={zoom ? { transform: 'scale(1.6)' } : undefined}
-          />
+            aria-pressed={zoom}
+            aria-label={zoom ? `Zoom out photo ${Math.min(index, total - 1) + 1}` : `Zoom in photo ${Math.min(index, total - 1) + 1}`}
+            className="block border-0 bg-transparent p-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <img
+              src={current}
+              alt={`${title || 'Match'} — ${Math.min(index, total - 1) + 1} of ${total}`}
+              loading="lazy"
+              onLoad={() => setStatus('ready')}
+              onError={() => setStatus('error')}
+              className={`max-h-[55vh] w-auto object-contain transition-transform ${zoom ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+              style={zoom ? { transform: 'scale(1.6)' } : undefined}
+            />
+          </button>
         )}
 
         {total > 1 && (
