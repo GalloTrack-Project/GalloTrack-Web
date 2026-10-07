@@ -178,6 +178,11 @@ export interface MatchRecord {
   opponent_bloodline?: string | null;
   opponent_birthdate?: string | null;
   opponent_photo_url?: string | null;
+  video_count?: number;
+  photo_count?: number;
+  videos?: string[];
+  photos?: string[];
+  video_posters?: (string | null)[];
 }
 
 export interface MatchMedia {

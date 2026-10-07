@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { sanitize } from '@/lib/sanitize';
+import { fetchMatchMediaBatch } from '@/lib/services/media-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -51,7 +52,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data || [] });
+  const rawMatches = data || [];
+  const mediaMap = await fetchMatchMediaBatch(rawMatches, supabase);
+  const enriched = rawMatches.map((m) => {
+    const media = mediaMap.get(m.id) || { videos: [], photos: [], videoPosters: [] };
+    const videos = media.videos.length > 0 ? media.videos : (m.video_url ? [m.video_url] : []);
+    const photos = media.photos || [];
+    return {
+      ...m,
+      video_count: videos.length,
+      photo_count: photos.length,
+      videos,
+      photos,
+      video_posters: media.videoPosters,
+    };
+  });
+
+  return NextResponse.json({ data: enriched });
 }
 
 export async function POST(request: NextRequest) {

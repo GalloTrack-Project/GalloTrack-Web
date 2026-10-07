@@ -59,33 +59,44 @@ ON CONFLICT (id) DO UPDATE SET
 -- ---------------------------------------------------------------------------
 -- 4) RLS: no anonymous reads of match videos; owner-only signed reads
 -- ---------------------------------------------------------------------------
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- storage.objects is owned by supabase_storage_admin. On hosted Supabase the
+-- SQL editor / `supabase db push` connect as postgres, which CANNOT edit
+-- storage policies (ERROR 42501 must be owner of table objects). The block
+-- below therefore degrades to a NOTICE; add the policies manually in
+-- Dashboard -> Storage -> Policies (paste the two CREATE POLICY statements).
+DO $$
+BEGIN
+  ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- Anyone-with-the-URL read is no longer acceptable for match videos.
-DROP POLICY IF EXISTS "public_read_match_videos" ON storage.objects;
+  -- Anyone-with-the-URL read is no longer acceptable for match videos.
+  DROP POLICY IF EXISTS "public_read_match_videos" ON storage.objects;
 
--- createSignedUrl() checks SELECT permission on the object row, so this is
--- what lets an owner open their own private media — and nobody else's.
--- Objects are uploaded under {owner_uid}/... so folder check = ownership.
-DROP POLICY IF EXISTS "owner_select_match_videos" ON storage.objects;
-CREATE POLICY "owner_select_match_videos"
-  ON storage.objects
-  FOR SELECT
-  TO authenticated
-  USING (
-    bucket_id = 'match-videos'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
+  -- createSignedUrl() checks SELECT permission on the object row, so this is
+  -- what lets an owner open their own private media — and nobody else's.
+  -- Objects are uploaded under {owner_uid}/... so folder check = ownership.
+  DROP POLICY IF EXISTS "owner_select_match_videos" ON storage.objects;
+  CREATE POLICY "owner_select_match_videos"
+    ON storage.objects
+    FOR SELECT
+    TO authenticated
+    USING (
+      bucket_id = 'match-videos'
+      AND (storage.foldername(name))[1] = auth.uid()::text
+    );
 
-DROP POLICY IF EXISTS "owner_select_match_photos" ON storage.objects;
-CREATE POLICY "owner_select_match_photos"
-  ON storage.objects
-  FOR SELECT
-  TO authenticated
-  USING (
-    bucket_id = 'match-photos'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
+  DROP POLICY IF EXISTS "owner_select_match_photos" ON storage.objects;
+  CREATE POLICY "owner_select_match_photos"
+    ON storage.objects
+    FOR SELECT
+    TO authenticated
+    USING (
+      bucket_id = 'match-photos'
+      AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE NOTICE 'storage policies NOT applied (must be owner of storage.objects). Run in Dashboard -> Storage -> Policies: DELETE "public_read_match_videos", then CREATE "owner_select_match_videos" and "owner_select_match_photos" (statements are in this migration file, section 4).';
+END $$;
 
 -- NOTE: uploads/deletes for both buckets go through the authenticated API
 -- routes with the service role key (RLS bypassed), and the legacy

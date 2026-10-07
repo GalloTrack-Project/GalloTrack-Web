@@ -492,7 +492,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       ]);
       setFowls(fowlData);
       setMatchHistory(matchData);
-      setMatchMedia(await mediaService.fetchMatchMedia(matchData.map(m => m.id)));
+      setMatchMedia(await mediaService.fetchMatchMedia(matchData));
       setBreedingPairs(pairings.data);
       setAvailableStrains(strainNames);
       setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));

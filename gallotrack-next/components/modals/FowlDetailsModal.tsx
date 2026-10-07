@@ -1315,7 +1315,7 @@ export default function FowlDetailsModal({
                             <td className="p-2.5">
                               <div className="flex items-center gap-1.5">
                                 {formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls)) && (
-                                  <span className="font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase text-[11px]">
+                                  <span className="font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase text-xs">
                                     [{formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls))}]
                                   </span>
                                 )}

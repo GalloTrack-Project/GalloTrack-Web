@@ -117,9 +117,9 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                   <td className="p-4 text-center">
                     <MatchMediaButtons
                       match={log}
-                      videos={videosFor(matchMedia, log.id)}
-                      photos={photosFor(matchMedia, log.id)}
-                      posters={postersFor(matchMedia, log.id)}
+                      videos={videosFor(matchMedia, log.id, log)}
+                      photos={photosFor(matchMedia, log.id, log)}
+                      posters={postersFor(matchMedia, log.id, log)}
                     />
                   </td>
                 </tr>

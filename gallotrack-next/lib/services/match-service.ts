@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/registry';
 import type { MatchRecord } from '@/lib/types';
+import { fetchMatchMediaBatch, attachMatchMediaCounts } from '@/lib/services/media-service';
 
 export async function fetchMatches(): Promise<MatchRecord[]> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,7 +16,10 @@ export async function fetchMatches(): Promise<MatchRecord[]> {
     console.error('Failed to fetch matches:', error);
     return [];
   }
-  return data || [];
+  const rawMatches = data || [];
+  if (rawMatches.length === 0) return [];
+  const mediaMap = await fetchMatchMediaBatch(rawMatches);
+  return attachMatchMediaCounts(rawMatches, mediaMap);
 }
 
 export async function insertMatch(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {

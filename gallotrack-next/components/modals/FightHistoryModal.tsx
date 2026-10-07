@@ -139,8 +139,8 @@ export default function FightHistoryModal() {
       ) : (
         <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
           {fights.map((m) => {
-            const videos = videosFor(matchMedia, m.id);
-            const photos = photosFor(matchMedia, m.id);
+            const videos = videosFor(matchMedia, m.id, m);
+            const photos = photosFor(matchMedia, m.id, m);
             return (
               <div key={m.id} className="rounded-md border border-slate-200 dark:border-border bg-slate-50/70 dark:bg-card p-4 space-y-2.5">
                 {/* Header: Our Chicken vs Opponent */}
@@ -205,7 +205,7 @@ export default function FightHistoryModal() {
                     match={m}
                     videos={videos}
                     photos={photos}
-                    posters={postersFor(matchMedia, m.id)}
+                    posters={postersFor(matchMedia, m.id, m)}
                   />
                 </div>
               </div>

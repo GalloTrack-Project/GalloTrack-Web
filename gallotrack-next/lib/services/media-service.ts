@@ -1,74 +1,153 @@
 import { supabase } from '@/lib/registry';
-import type { MatchMedia, FowlPhotoRecord, ShareLinkRecord } from '@/lib/types';
+import type { MatchMedia, FowlPhotoRecord, ShareLinkRecord, MatchRecord } from '@/lib/types';
 
 const MAX_MATCH_VIDEOS = 3;
 
-export async function fetchMatchMedia(matchIds: number[]): Promise<Map<number, MatchMedia>> {
+export type MatchMediaInput = number | { id: number; video_url?: string | null };
+
+/**
+ * Shared media resolver: batch-fetches videos and photos for a list of matches,
+ * including both the dedicated `match_videos` / `match_photos` tables AND the
+ * match's own `video_url` column (the exact same data source and fallback logic
+ * used by the public Share route).
+ *
+ * Runs in exactly 2 batch queries for any number of matches (avoids N+1).
+ */
+export async function fetchMatchMediaBatch(
+  matches: MatchMediaInput[],
+  customClient?: any
+): Promise<Map<number, MatchMedia>> {
   const map = new Map<number, MatchMedia>();
-  if (matchIds.length === 0) return map;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return map;
+  if (!matches || matches.length === 0) return map;
+
+  const client = customClient ?? supabase;
+  const matchIds = matches.map((m) => (typeof m === 'number' ? m : m.id));
+
+  // Initialize entries and seed any scalar match.video_url
+  for (const m of matches) {
+    const id = typeof m === 'number' ? m : m.id;
+    const vUrl = typeof m === 'number' ? null : (m.video_url || null);
+    const videos: string[] = [];
+    const videoPosters: (string | null)[] = [];
+    if (vUrl && vUrl.trim() !== '') {
+      videos.push(vUrl.trim());
+      videoPosters.push(null);
+    }
+    map.set(id, { videos, photos: [], videoPosters });
+  }
 
   const [videosRes, photosRes] = await Promise.all([
-    supabase
+    client
       .from('match_videos')
       .select('match_id, url, sort_order, poster_url')
       .in('match_id', matchIds)
-      .eq('user_id', user.id)
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true }),
-    supabase
+    client
       .from('match_photos')
       .select('match_id, url, sort_order')
       .in('match_id', matchIds)
-      .eq('user_id', user.id)
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true }),
   ]);
 
-  // poster_url only exists after the privacy migration runs — degrade to a
-  // plain select instead of losing the whole media map.
-  let videoRows = videosRes.data as { match_id: number; url: string; poster_url?: string | null }[] | null;
-  if (videosRes.error) {
-    const fallback = await supabase
+  let videoRows = videosRes?.data as { match_id: number; url: string; poster_url?: string | null }[] | null;
+  if (videosRes?.error) {
+    const fallback = await client
       .from('match_videos')
       .select('match_id, url, sort_order')
       .in('match_id', matchIds)
-      .eq('user_id', user.id)
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true });
-    videoRows = (fallback.data as { match_id: number; url: string }[] | null)?.map((r) => ({ ...r, poster_url: null })) ?? [];
+    videoRows = (fallback?.data as { match_id: number; url: string }[] | null)?.map((r: any) => ({ ...r, poster_url: null })) ?? [];
   }
 
   for (const row of videoRows || []) {
-    const entry = map.get(row.match_id) || { videos: [], photos: [] };
-    entry.videos.push(row.url);
-    if (!entry.videoPosters) entry.videoPosters = [];
-    entry.videoPosters.push(row.poster_url || null);
+    const entry = map.get(row.match_id) || { videos: [], photos: [], videoPosters: [] };
+    if (!entry.videos.includes(row.url)) {
+      entry.videos.push(row.url);
+      if (!entry.videoPosters) entry.videoPosters = [];
+      entry.videoPosters.push(row.poster_url || null);
+    }
     map.set(row.match_id, entry);
   }
-  for (const row of photosRes.data || []) {
-    const entry = map.get(row.match_id) || { videos: [], photos: [] };
-    entry.photos.push(row.url);
+
+  for (const row of (photosRes?.data || [])) {
+    const entry = map.get(row.match_id) || { videos: [], photos: [], videoPosters: [] };
+    if (!entry.photos.includes(row.url)) {
+      entry.photos.push(row.url);
+    }
     map.set(row.match_id, entry);
   }
+
   return map;
 }
 
-export function videosFor(media: Map<number, MatchMedia>, matchId: number): string[] {
-  const entry = media.get(matchId);
-  return entry ? entry.videos : [];
+export async function fetchMatchMedia(
+  matches: MatchMediaInput[],
+  customClient?: any
+): Promise<Map<number, MatchMedia>> {
+  return fetchMatchMediaBatch(matches, customClient);
 }
 
-export function photosFor(media: Map<number, MatchMedia>, matchId: number): string[] {
-  const entry = media.get(matchId);
-  return entry ? entry.photos : [];
+/** Attach calculated video_count, photo_count, videos, photos to matches. */
+export function attachMatchMediaCounts(
+  matches: MatchRecord[],
+  mediaMap: Map<number, MatchMedia>
+): MatchRecord[] {
+  return matches.map((m) => {
+    const media = mediaMap.get(m.id);
+    const videos = media?.videos && media.videos.length > 0
+      ? media.videos
+      : m.video_url && m.video_url.trim() !== ''
+      ? [m.video_url.trim()]
+      : [];
+    const photos = media?.photos || [];
+    const videoPosters = media?.videoPosters || (videos.length > 0 ? videos.map(() => null) : []);
+    return {
+      ...m,
+      video_count: videos.length,
+      photo_count: photos.length,
+      videos,
+      photos,
+      video_posters: videoPosters,
+    };
+  });
+}
+
+export function videosFor(
+  media: Map<number, MatchMedia> | undefined,
+  matchId: number,
+  fallbackMatch?: MatchRecord
+): string[] {
+  const entry = media?.get(matchId);
+  if (entry && entry.videos.length > 0) return entry.videos;
+  if (fallbackMatch?.videos && fallbackMatch.videos.length > 0) return fallbackMatch.videos;
+  if (fallbackMatch?.video_url && fallbackMatch.video_url.trim() !== '') return [fallbackMatch.video_url.trim()];
+  return [];
+}
+
+export function photosFor(
+  media: Map<number, MatchMedia> | undefined,
+  matchId: number,
+  fallbackMatch?: MatchRecord
+): string[] {
+  const entry = media?.get(matchId);
+  if (entry && entry.photos.length > 0) return entry.photos;
+  if (fallbackMatch?.photos && fallbackMatch.photos.length > 0) return fallbackMatch.photos;
+  return [];
 }
 
 /** Poster frames index-aligned with videosFor() — empty when unavailable. */
-export function postersFor(media: Map<number, MatchMedia>, matchId: number): (string | null)[] {
-  const entry = media.get(matchId);
-  return entry?.videoPosters || [];
+export function postersFor(
+  media: Map<number, MatchMedia> | undefined,
+  matchId: number,
+  fallbackMatch?: MatchRecord
+): (string | null)[] {
+  const entry = media?.get(matchId);
+  if (entry && entry.videoPosters && entry.videoPosters.length > 0) return entry.videoPosters;
+  if (fallbackMatch?.video_posters && fallbackMatch.video_posters.length > 0) return fallbackMatch.video_posters;
+  return [];
 }
 
 export async function insertMatchVideo(

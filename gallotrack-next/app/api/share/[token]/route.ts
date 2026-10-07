@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { PRIVATE_STORAGE_BUCKETS, storagePathFromUrl } from '@/lib/media-format';
+import { fetchMatchMediaBatch } from '@/lib/services/media-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -63,15 +64,9 @@ export async function GET(
       .maybeSingle();
     if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
-    const [videosRes, photosRes] = await Promise.all([
-      admin.from('match_videos').select('url, sort_order').eq('match_id', match.id).order('sort_order'),
-      admin.from('match_photos').select('url, sort_order').eq('match_id', match.id).order('sort_order'),
-    ]);
-
-    const rawVideos = (videosRes.data || []).map((v) => v.url);
-    if (match.video_url && !rawVideos.includes(match.video_url)) rawVideos.unshift(match.video_url);
-    const rawPhotos = (photosRes.data || []).map((p) => p.url);
-    const [videos, photos] = [await signShareUrls(rawVideos), await signShareUrls(rawPhotos)];
+    const mediaMap = await fetchMatchMediaBatch([match], admin);
+    const media = mediaMap.get(match.id) || { videos: [], photos: [], videoPosters: [] };
+    const [videos, photos] = [await signShareUrls(media.videos), await signShareUrls(media.photos)];
 
     return NextResponse.json({
       type: 'match',

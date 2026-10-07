@@ -134,7 +134,7 @@ function ViewerBody({ cfg, onClose }: { cfg: MatchMediaViewerConfig; onClose: ()
             </h2>
             {match && match.outcome && (
               <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-black uppercase tracking-wider ${
                   outcome === 'win'
                     ? 'border-emerald-500/20 bg-emerald-500/10 text-success'
                     : outcome === 'loss'
@@ -234,7 +234,7 @@ function MediaTab({
       {icon}
       {label}
       <span
-        className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-black ${
+        className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-black ${
           active ? 'bg-emerald-500/15 text-success' : 'bg-muted text-muted-foreground'
         }`}
       >
@@ -524,7 +524,7 @@ function PhotosPane({ urls, title }: { urls: string[]; title: string }) {
             </button>
           </>
         )}
-        <span className="absolute bottom-2 right-2 z-20 rounded bg-black/65 px-2 py-1 text-[11px] font-black text-white">
+        <span className="absolute bottom-2 right-2 z-20 rounded bg-black/65 px-2 py-1 text-xs font-black text-white">
           {counter}
         </span>
       </div>
