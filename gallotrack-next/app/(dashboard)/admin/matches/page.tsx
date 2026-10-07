@@ -4,6 +4,7 @@ import { useToast } from '@/components/ui';
 import { Swords, CheckCircle, XCircle, Handshake, Skull, Search, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
+import { signMediaUrl } from '@/lib/media-privacy';
 
 type Match = {
   id: number;
@@ -35,7 +36,25 @@ export default function AdminMatchAuditPage() {
   const [filterOutcome, setFilterOutcome] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const [filterHealth, setFilterHealth] = useState('all');
+  const [signedVideos, setSignedVideos] = useState<Record<number, string>>({});
   const { toast: pushToast } = useToast();
+
+  // match-videos is a private bucket — resolve owner-signed URLs for the
+  // "Video Evidence" links (public/legacy URLs pass through unchanged).
+  useEffect(() => {
+    let cancelled = false;
+    const withVideo = matches.filter((m) => m.video_url);
+    if (withVideo.length === 0) return;
+    Promise.all(withVideo.map((m) => signMediaUrl(m.video_url as string))).then((urls) => {
+      if (cancelled) return;
+      const next: Record<number, string> = {};
+      withVideo.forEach((m, i) => { if (urls[i]) next[m.id] = urls[i]; });
+      setSignedVideos(next);
+    });
+    return () => { cancelled = true; };
+  }, [matches]);
+
+  const videoHref = (m: Match): string | undefined => signedVideos[m.id] || m.video_url || undefined;
 
   const loadMatches = useCallback(async () => {
     try {
@@ -210,7 +229,7 @@ export default function AdminMatchAuditPage() {
                 <p>Owner: <span className="text-card-foreground font-bold">{match.owner_name}</span> · {match.farm_name}</p>
                 {match.date && <p>Date: {new Date(match.date).toLocaleDateString()}</p>}
                 {match.video_url && (
-                  <p><a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-warning hover:text-warning underline">Video Evidence <ArrowUpRight className="inline w-3 h-3" /></a></p>
+                  <p><a href={videoHref(match)} target="_blank" rel="noopener noreferrer" className="text-warning hover:text-warning underline">Video Evidence <ArrowUpRight className="inline w-3 h-3" /></a></p>
                 )}
               </div>
             </div>
@@ -260,7 +279,7 @@ export default function AdminMatchAuditPage() {
                     <td className="px-4 py-3.5 text-xs text-muted-foreground font-semibold whitespace-nowrap">{match.date ? new Date(match.date).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3.5">
                       {match.video_url ? (
-                        <a href={match.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-warning hover:text-warning underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
+                        <a href={videoHref(match)} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-warning hover:text-warning underline">View <ArrowUpRight className="inline w-3 h-3" /></a>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

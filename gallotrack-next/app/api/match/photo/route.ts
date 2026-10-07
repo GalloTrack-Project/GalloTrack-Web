@@ -65,22 +65,36 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createClient(supabaseUrl, serviceRoleKey);
-  const objectPath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${kind === 'jpeg' ? 'jpg' : kind}`;
   const buffer = Buffer.from(await file.arrayBuffer());
+  const objectName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${kind === 'jpeg' ? 'jpg' : kind}`;
+  const contentType = CONTENT_TYPES[kind] || 'application/octet-stream';
 
-  const { error: uploadError } = await admin.storage
+  // Preferred: private match-photos bucket (created by migration
+  // 20261008000000_match_media_privacy.sql).
+  let bucket = 'match-photos';
+  let objectPath = `${user.id}/${objectName}`;
+  let { error: uploadError } = await admin.storage
     .from('match-photos')
-    .upload(objectPath, buffer, { contentType: CONTENT_TYPES[kind] || 'application/octet-stream', upsert: false });
+    .upload(objectPath, buffer, { contentType, upsert: false });
 
-  if (uploadError) {
-    const missingBucket = /bucket/i.test(uploadError.message) && /not found|exist/i.test(uploadError.message);
-    return NextResponse.json(
-      { error: missingBucket ? `${uploadError.message} — run supabase/migrations/20261008000000_match_media_privacy.sql first.` : uploadError.message },
-      { status: 500 }
-    );
+  if (uploadError && /bucket|not found|exist/i.test(uploadError.message)) {
+    // Migration not applied yet — fall back to the legacy public fowl-images
+    // bucket so recording a match never breaks. Re-run the migration later and
+    // new uploads will use the private bucket automatically.
+    bucket = 'fowl-images';
+    objectPath = `fowl/${objectName}`;
+    const retry = await admin.storage
+      .from('fowl-images')
+      .upload(objectPath, buffer, { contentType, upsert: false });
+    uploadError = retry.error;
   }
 
-  const { data } = admin.storage.from('match-photos').getPublicUrl(objectPath);
-  // Locator only — readers sign it (lib/media-privacy.ts); bucket is private.
-  return NextResponse.json({ url: data.publicUrl, path: objectPath, kind });
+  if (uploadError) {
+    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  }
+
+  const { data } = admin.storage.from(bucket).getPublicUrl(objectPath);
+  // Locator only — readers sign it (lib/media-privacy.ts) when the bucket is
+  // private; fowl-images URLs are public and pass through unchanged.
+  return NextResponse.json({ url: data.publicUrl, path: objectPath, bucket, kind });
 }
