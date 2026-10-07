@@ -18,6 +18,7 @@ import {
   validateIdentifierFormat,
   UNKNOWN_SIRE_CODE,
   UNKNOWN_DAM_CODE,
+  compareBirdCodesNatural,
 } from './bird-code';
 
 const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -399,6 +400,41 @@ describe('manual override format validation', () => {
     expect(taken.has('1a1')).toBe(true);
     expect(taken.has('2b1')).toBe(true);
     expect(taken.has('3c1')).toBe(false);
+  });
+
+  it('sorts first, second, and tenth offspring naturally (1A2 before 1A10)', () => {
+    const list = ['1A10', '1A2', '1A1', '2B1', '1B1'];
+    const sorted = [...list].sort(compareBirdCodesNatural);
+    expect(sorted).toEqual(['1A1', '1A2', '1A10', '1B1', '2B1']);
+  });
+
+  it('supports offspring of same sire with different dams (1A1, 1B1) and different sires (2B1)', () => {
+    const taken = buildCodeSet([]);
+    const code1A1 = generateBirdCode({ sireCode: '1', damCode: 'A', taken });
+    taken.add(code1A1.toLowerCase());
+    const code1B1 = generateBirdCode({ sireCode: '1', damCode: 'B', taken });
+    taken.add(code1B1.toLowerCase());
+    const code2B1 = generateBirdCode({ sireCode: '2', damCode: 'B', taken });
+    taken.add(code2B1.toLowerCase());
+
+    expect(code1A1).toBe('1A1');
+    expect(code1B1).toBe('1B1');
+    expect(code2B1).toBe('2B1');
+  });
+
+  it('preserves birth code when an offspring is promoted to breeder and receives a breeder code', () => {
+    const promotedBreeder = bird({
+      id: 42,
+      name: 'Promoted Champ',
+      gender: 'Rooster',
+      sire: 'Iron Lemon',
+      dam: 'Golden Pearl',
+      birth_code: '1A3',
+      bird_code: '12', // newly assigned sire code
+    });
+
+    expect(promotedBreeder.birth_code).toBe('1A3');
+    expect(promotedBreeder.bird_code).toBe('12');
   });
 });
 

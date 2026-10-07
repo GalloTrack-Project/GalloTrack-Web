@@ -130,7 +130,7 @@ function StatusPill({
   if (status === 'Archived') {
     return (
       <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0"
+        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0"
         title={archiveReason ? `Archived: ${archiveReason}` : 'Archived'}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
@@ -141,7 +141,7 @@ function StatusPill({
   if (status === 'Deceased') {
     return (
       <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 shrink-0"
+        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 shrink-0"
         title={deathReason ? `Deceased: ${deathReason}` : 'Deceased'}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
@@ -151,7 +151,7 @@ function StatusPill({
   }
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0"
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0"
       title="Active in flock"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
@@ -241,6 +241,8 @@ function FamilyCard({
   const expanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
   const toggleExpanded = onToggleExpand !== undefined ? onToggleExpand : () => setInternalExpanded(!internalExpanded);
 
+  const [familySortBy, setFamilySortBy] = useState<'ranked' | 'winrate' | 'name'>('ranked');
+
   const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
   const sireBreed = parentBreedOf(g[0].sire, fowls);
   const damBreed = parentBreedOf(g[0].dam, fowls);
@@ -259,13 +261,32 @@ function FamilyCard({
     ? `Best by ${RANKING_METRIC_LABELS[rankingMetric] || rankingMetric}${bestYearFor(bestChild.name, matchHistory) ? ` · best year ${bestYearFor(bestChild.name, matchHistory)}` : ''}`
     : undefined;
 
+  const sortedOffspring = useMemo(() => {
+    if (familySortBy === 'winrate') {
+      return [...g].sort((a, b) => {
+        const sa = getChildMatchStats(a.name);
+        const sb = getChildMatchStats(b.name);
+        const rateA = sa.decided > 0 ? (sa.winRate ?? -1) : -1;
+        const rateB = sb.decided > 0 ? (sb.winRate ?? -1) : -1;
+        if (rateB !== rateA) return rateB - rateA;
+        if (sb.wins !== sa.wins) return sb.wins - sa.wins;
+        if (sb.total !== sa.total) return sb.total - sa.total;
+        return a.name.localeCompare(b.name);
+      });
+    }
+    if (familySortBy === 'name') {
+      return [...g].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return ranked;
+  }, [g, familySortBy, ranked, getChildMatchStats]);
+
   const males = g.filter(isMaleChild).length;
   const females = g.length - males;
-  const roosterOffspring = ranked.filter(isMaleChild);
-  const henOffspring = ranked.filter((c) => !isMaleChild(c));
+  const roosterOffspring = sortedOffspring.filter(isMaleChild);
+  const henOffspring = sortedOffspring.filter((c) => !isMaleChild(c));
   const visibleRoosters = expanded ? roosterOffspring : roosterOffspring.slice(0, 3);
   const visibleHens = expanded ? henOffspring : henOffspring.slice(0, 3);
-  const hasMore = ranked.length > 6;
+  const hasMore = sortedOffspring.length > 6;
 
   const renderOffspringRow = (child: FowlRecord, i: number) => {
     const cs = getChildMatchStats(child.name);
@@ -340,9 +361,19 @@ function FamilyCard({
             <Users className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
           </div>
           <div>
-            <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
+              {foughtCount > 0 ? (
+                <WinRatePill stats={familyTotal} />
+              ) : (
+                <span className="text-xs font-bold text-muted-foreground/60">No fights</span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground font-semibold">
               {g.length} chickens · {males} male · {females} female
+              {foughtCount > 0
+                ? ` · Family total: ${foughtCount} of ${g.length} fought · ${familyTotal.wins}W-${familyTotal.losses}L · ${familyTotal.winRate}%`
+                : ' · No fights recorded yet'}
             </p>
           </div>
         </div>
@@ -369,7 +400,22 @@ function FamilyCard({
         </div>
       </div>
       <div className="px-5 pb-4">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Offspring</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Offspring</p>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground font-semibold">Sort:</span>
+            <select
+              value={familySortBy}
+              onChange={(e) => setFamilySortBy(e.target.value as 'ranked' | 'winrate' | 'name')}
+              aria-label={`Sort offspring for family ${index + 1}`}
+              className="text-xs bg-muted border border-input-border rounded px-2 py-0.5 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
+            >
+              <option value="ranked">Ranked</option>
+              <option value="winrate">Win rate</option>
+              <option value="name">Name</option>
+            </select>
+          </div>
+        </div>
         {roosterOffspring.length > 0 && (
           <div className="mb-3">
             <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">
@@ -404,12 +450,17 @@ function FamilyCard({
       <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold">
         <div className="flex items-center gap-2">
           <span className="uppercase tracking-wider text-muted-foreground">Family total</span>
-          {foughtCount > 0 && (
+          {foughtCount > 0 ? (
             <>
               <span className="text-muted-foreground/60 select-none">·</span>
               <span className="text-foreground">
-                {foughtCount} of {g.length} offspring have fought
+                {foughtCount} of {g.length} offspring have fought · {familyTotal.wins}W-{familyTotal.losses}L · {familyTotal.winRate}%
               </span>
+            </>
+          ) : (
+            <>
+              <span className="text-muted-foreground/60 select-none">·</span>
+              <span className="text-muted-foreground font-semibold">No fights recorded yet</span>
             </>
           )}
         </div>
@@ -1300,17 +1351,17 @@ export default function LineageDirectory({
             )}
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground px-0.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground px-0.5">
             <span className="font-bold">
               {filteredPaneEntries.length} {kind === 'sire' ? (filteredPaneEntries.length === 1 ? 'sire' : 'sires') : (filteredPaneEntries.length === 1 ? 'dam' : 'dams')}
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-semibold">Sort:</span>
+              <span className="text-xs font-semibold">Sort:</span>
               <select
                 value={paneSort}
                 onChange={(e) => setPaneSort(e.target.value as 'most' | 'code' | 'name')}
                 aria-label={`Sort ${kind === 'sire' ? 'sires' : 'dams'}`}
-                className="text-[11px] bg-transparent border-0 font-bold text-foreground focus:ring-0 p-0 cursor-pointer"
+                className="text-xs bg-transparent border-0 font-bold text-foreground focus:ring-0 p-0 cursor-pointer"
               >
                 <option value="most" className="bg-card text-card-foreground">Most offspring</option>
                 <option value="code" className="bg-card text-card-foreground">Code</option>
@@ -1328,7 +1379,7 @@ export default function LineageDirectory({
               <button
                 type="button"
                 onClick={() => setPaneFilter('')}
-                className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
               >
                 Clear filter
               </button>
@@ -1376,14 +1427,14 @@ export default function LineageDirectory({
                   <div className="flex items-center gap-1.5 shrink-0">
                     {stats.decided > 0 && (
                       <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${getWinRatePillClasses(
+                        className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${getWinRatePillClasses(
                           stats,
                         )}`}
                       >
                         {stats.winRate}% · {stats.wins}W-{stats.losses}L
                       </span>
                     )}
-                    <span className="text-[11px] font-bold text-muted-foreground">
+                    <span className="text-xs font-bold text-muted-foreground">
                       {kids.length}
                     </span>
                   </div>
@@ -1464,23 +1515,13 @@ export default function LineageDirectory({
                       {pairGroups.length} {otherLabel}{pairGroups.length !== 1 ? 's' : ''}
                     </span>
                     <span className="text-muted-foreground/50 select-none">·</span>
-                    {activeParentStats.decided > 0 && activeParentStats.winRate !== null ? (
-                      <span
-                        className={`font-black ${
-                          activeParentStats.winRate >= 60
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : activeParentStats.winRate >= 40
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-rose-600 dark:text-rose-400'
-                        }`}
-                      >
-                        {kind === 'sire' ? 'Sire' : 'Dam'} total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought · {activeParentStats.wins}W-{activeParentStats.losses}L ({activeParentStats.winRate}%)
-                      </span>
-                    ) : (
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-muted-foreground font-semibold">
-                        No fights recorded yet
+                        {kind === 'sire' ? 'Sire' : 'Dam'} total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought
+                        {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
                       </span>
-                    )}
+                      <WinRatePill stats={activeParentStats} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1552,7 +1593,7 @@ export default function LineageDirectory({
                       <span className="text-xs font-black text-card-foreground truncate">
                         {damDisplayName}{damDisplayCode ? ` (${damDisplayCode})` : ''}
                       </span>
-                      <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-card text-foreground border border-border shrink-0">
+                      <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-card text-foreground border border-border shrink-0">
                         {pg.pairCode}
                       </span>
                       <span className="text-muted-foreground/60 select-none">·</span>
@@ -1582,19 +1623,7 @@ export default function LineageDirectory({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {pg.stats.decided > 0 ? (
-                        <span
-                          className={`text-xs font-black px-2 py-0.5 rounded-full border ${getWinRatePillClasses(
-                            pg.stats,
-                          )}`}
-                        >
-                          {pg.stats.winRate}% · {pg.stats.wins}W-{pg.stats.losses}L
-                        </span>
-                      ) : (
-                        <span className="text-xs font-bold text-muted-foreground/60">
-                          No fights
-                        </span>
-                      )}
+                      <WinRatePill stats={pg.stats} />
                       {isPairOpen ? (
                         <ChevronUp className="w-4 h-4 text-muted-foreground" />
                       ) : (
@@ -1725,7 +1754,7 @@ export default function LineageDirectory({
                                             className="w-8 h-8 rounded-full object-cover shrink-0 border border-border"
                                           />
                                         ) : (
-                                          <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black text-muted-foreground shrink-0 select-none">
+                                          <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-xs font-black text-muted-foreground shrink-0 select-none">
                                             {getInitials(child.name)}
                                           </div>
                                         )}
@@ -1738,7 +1767,7 @@ export default function LineageDirectory({
                                             {child.name}
                                           </button>
                                           {isDifferentBreed && (
-                                            <span className="text-[10px] text-muted-foreground block truncate">
+                                            <span className="text-xs text-muted-foreground block truncate">
                                               {child.breed}
                                             </span>
                                           )}
@@ -1763,13 +1792,23 @@ export default function LineageDirectory({
                                       <StatusPill status={child.status} />
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap">
-                                      <WinRatePill
-                                        wins={stats.wins}
-                                        losses={stats.losses}
-                                        draws={stats.draws}
-                                        stats={stats}
-                                        onClick={stats.total > 0 ? () => openFights(child) : undefined}
-                                      />
+                                      <div className="flex items-center gap-2">
+                                        <WinRatePill
+                                          wins={stats.wins}
+                                          losses={stats.losses}
+                                          draws={stats.draws}
+                                          stats={stats}
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => openFights(child)}
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
+                                          title={`View ${child.name} fight history`}
+                                        >
+                                          <Swords className="w-3.5 h-3.5" />
+                                          <span>Fights{stats.total > 0 ? ` (${stats.total})` : ''}</span>
+                                        </button>
+                                      </div>
                                     </td>
                                     <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
                                       <div
@@ -1835,7 +1874,7 @@ export default function LineageDirectory({
                                       <tr className="bg-sky-500/5 border-y border-sky-500/10">
                                         <td
                                           colSpan={7}
-                                          className="py-1 px-2.5 text-[11px] font-bold text-sky-700 dark:text-sky-400 tracking-wide"
+                                          className="py-1 px-2.5 text-xs font-bold text-sky-700 dark:text-sky-400 tracking-wide"
                                         >
                                           ♂ Males ({males.length})
                                         </td>
@@ -1846,7 +1885,7 @@ export default function LineageDirectory({
                                       <tr className="bg-pink-500/5 border-y border-pink-500/10">
                                         <td
                                           colSpan={7}
-                                          className="py-1 px-2.5 text-[11px] font-bold text-pink-700 dark:text-pink-400 tracking-wide"
+                                          className="py-1 px-2.5 text-xs font-bold text-pink-700 dark:text-pink-400 tracking-wide"
                                         >
                                           ♀ Females ({females.length})
                                         </td>
@@ -1864,21 +1903,10 @@ export default function LineageDirectory({
                             <tr className="bg-muted/40 font-bold border-t-2 border-border text-xs">
                               <td colSpan={5} className="py-2.5 px-2.5 text-card-foreground">
                                 Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} offspring have fought
+                                {pg.stats.decided > 0 ? ` · ${pg.stats.wins}W-${pg.stats.losses}L · ${pg.stats.winRate}%` : ''}
                               </td>
                               <td colSpan={2} className="py-2.5 px-2.5 text-right whitespace-nowrap">
-                                {pg.stats.decided > 0 ? (
-                                  <span
-                                    className={`inline-flex items-center gap-1.5 font-black px-2.5 py-0.5 rounded-full border ${getWinRatePillClasses(
-                                      pg.stats,
-                                    )}`}
-                                  >
-                                    {pg.stats.winRate}% · {pg.stats.wins}W-{pg.stats.losses}L
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground/60 font-semibold">
-                                    No fights recorded yet
-                                  </span>
-                                )}
+                                <WinRatePill stats={pg.stats} />
                               </td>
                             </tr>
                           </tfoot>
@@ -1931,11 +1959,11 @@ export default function LineageDirectory({
                                         className="w-7 h-7 rounded-full object-cover shrink-0 border border-border"
                                       />
                                     ) : (
-                                      <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black text-muted-foreground shrink-0 select-none">
+                                      <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center text-xs font-black text-muted-foreground shrink-0 select-none">
                                         {getInitials(child.name)}
                                       </div>
                                     )}
-                                    <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted text-foreground border border-border font-bold uppercase shrink-0">
+                                    <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-foreground border border-border font-bold uppercase shrink-0">
                                       [{code ? formatBirdCodeForDisplay(code) : '—'}]
                                     </span>
                                     <button
@@ -1997,7 +2025,7 @@ export default function LineageDirectory({
                                   </div>
                                 </div>
 
-                                <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold pt-1 border-t border-border/40">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold pt-1 border-t border-border/40 gap-2 flex-wrap">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span
                                       className={
@@ -2010,7 +2038,16 @@ export default function LineageDirectory({
                                     </span>
                                     <span>{formatAge(child.birthdate, child.age)}</span>
                                     {isDifferentBreed && <span>· {child.breed}</span>}
-                                    <WinRatePill stats={stats} onClick={() => openFights(child)} />
+                                    <WinRatePill stats={stats} />
+                                    <button
+                                      type="button"
+                                      onClick={() => openFights(child)}
+                                      className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                                      title={`View ${child.name} fight history`}
+                                    >
+                                      <Swords className="w-3 h-3" />
+                                      <span>Fights{stats.total > 0 ? ` (${stats.total})` : ''}</span>
+                                    </button>
                                   </div>
                                   <StatusPill status={child.status} />
                                 </div>
@@ -2027,13 +2064,13 @@ export default function LineageDirectory({
                                   return (
                                     <>
                                       {males.length > 0 && (
-                                        <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-[11px] font-bold text-sky-700 dark:text-sky-400">
+                                        <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-xs font-bold text-sky-700 dark:text-sky-400">
                                           ♂ Males ({males.length})
                                         </div>
                                       )}
                                       {males.map(renderCard)}
                                       {females.length > 0 && (
-                                        <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-[11px] font-bold text-pink-700 dark:text-pink-400 mt-2">
+                                        <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-xs font-bold text-pink-700 dark:text-pink-400 mt-2">
                                           ♀ Females ({females.length})
                                         </div>
                                       )}
@@ -2045,23 +2082,12 @@ export default function LineageDirectory({
                               })()}
 
                               {/* Mobile Pair Total Footer */}
-                              <div className="p-2.5 bg-muted/40 rounded-md border border-border flex items-center justify-between text-xs font-semibold">
+                              <div className="p-2.5 bg-muted/40 rounded-md border border-border flex items-center justify-between text-xs font-semibold gap-2">
                                 <span className="text-card-foreground">
-                                  Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} fought
+                                  Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} offspring have fought
+                                  {pg.stats.decided > 0 ? ` · ${pg.stats.wins}W-${pg.stats.losses}L · ${pg.stats.winRate}%` : ''}
                                 </span>
-                                {pg.stats.decided > 0 ? (
-                                  <span
-                                    className={`inline-flex items-center gap-1 font-black px-2 py-0.5 rounded-full border text-[11px] ${getWinRatePillClasses(
-                                      pg.stats,
-                                    )}`}
-                                  >
-                                    {pg.stats.winRate}% · {pg.stats.wins}W-{pg.stats.losses}L
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground/60 text-[11px]">
-                                    No fights recorded yet
-                                  </span>
-                                )}
+                                <WinRatePill stats={pg.stats} />
                               </div>
                             </>
                           );
@@ -2072,6 +2098,15 @@ export default function LineageDirectory({
                 </div>
               );
             })}
+
+            {/* Overall Parent Total Card at bottom of all pairs */}
+            <div className="p-3 bg-muted/50 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-bold">
+              <span className="text-card-foreground">
+                {kind === 'sire' ? 'Sire' : 'Dam'} overall total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought
+                {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
+              </span>
+              <WinRatePill stats={activeParentStats} />
+            </div>
           </div>
         </main>
       );
@@ -2275,7 +2310,7 @@ export default function LineageDirectory({
                 aria-label="Matching chickens"
                 className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-border/50 max-h-80 overflow-y-auto"
               >
-                <div className="px-3 py-1.5 bg-muted/50 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="px-3 py-1.5 bg-muted/50 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Matching Chickens ({matchingChickens.length})
                 </div>
                 {matchingChickens.map((mc) => {
@@ -2305,29 +2340,29 @@ export default function LineageDirectory({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             {code && (
-                              <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-muted text-foreground">
+                              <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-muted text-foreground">
                                 [{formatBirdCodeForDisplay(code)}]
                               </span>
                             )}
                             <span className="font-bold text-xs text-foreground truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                               {mc.name}
                             </span>
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-xs text-muted-foreground">
                               {mc.gender === 'Female' ? '♀' : '♂'}
                             </span>
                           </div>
-                          <div className="text-[10px] text-muted-foreground truncate">
+                          <div className="text-xs text-muted-foreground truncate">
                             {mc.sire ? `Sire: ${mc.sire}` : ''}{' '}
                             {mc.dam ? `· Dam: ${mc.dam}` : ''}
                           </div>
                         </div>
                       </div>
                       {hasParent ? (
-                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-1">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-1">
                           View family <ChevronRight className="w-3 h-3" />
                         </span>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground shrink-0">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           No parents
                         </span>
                       )}
@@ -2406,7 +2441,7 @@ export default function LineageDirectory({
           {activeTab !== 'pedigree' && (
             <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
               <div className="flex items-center gap-1.5">
-                <label htmlFor="lineage-sort" className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">
+                <label htmlFor="lineage-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
                   Sort:
                 </label>
                 <select
@@ -2426,7 +2461,7 @@ export default function LineageDirectory({
                 <button
                   type="button"
                   onClick={handleExpandAll}
-                  className="h-7 px-2 text-[11px] font-bold rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
+                  className="h-7 px-2 text-xs font-bold rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
                   title="Expand all groups"
                 >
                   Expand all
@@ -2434,7 +2469,7 @@ export default function LineageDirectory({
                 <button
                   type="button"
                   onClick={handleCollapseAll}
-                  className="h-7 px-2 text-[11px] font-bold rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
+                  className="h-7 px-2 text-xs font-bold rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
                   title="Collapse all groups"
                 >
                   Collapse all

@@ -191,6 +191,7 @@ export function ModalsWrapper() {
       handleEditAgeChange={store.handleEditAgeChange}
       showPerFowlBreakdownModal={ui.showPerFowlBreakdownModal}
       setShowPerFowlBreakdownModal={ui.setShowPerFowlBreakdownModal}
+      dateRangePreset={store.dateRangePreset}
     />
   );
 }

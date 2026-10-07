@@ -34,14 +34,14 @@ describe('FamilyTree', () => {
     expect(screen.getAllByText('Offspring 1A1')).toHaveLength(2);
     expect(screen.getByText('Offspring 1A2')).toBeInTheDocument();
     expect(screen.getByText('Offspring 1A3')).toBeInTheDocument();
-    expect(screen.getAllByText('Breeding Pair')).toHaveLength(2);
+    expect(screen.getAllByText(/pair/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('3 offspring · 1 male · 2 female')).toBeInTheDocument();
   });
 
   it('groups offspring into roosters and hens with counts', () => {
     render(<FamilyTree fowls={family} codes={new Map()} />);
-    expect(screen.getAllByText(/Sire · 1/)).toHaveLength(2);
-    expect(screen.getByText(/Dam · 2/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Males \(1\)/i)).toHaveLength(2);
+    expect(screen.getByText(/Females \(2\)/i)).toBeInTheDocument();
     const roosterGroup = screen
       .getAllByText('Offspring 1A1')
       .map((el) => el.closest('.gt-kids'))

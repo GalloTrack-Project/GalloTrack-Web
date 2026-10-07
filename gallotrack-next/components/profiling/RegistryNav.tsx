@@ -192,7 +192,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
                   {tab.icon}
                   {typeof tab.count === 'number' && (
                     <span
-                      className={`absolute -top-1.5 -right-3 text-[10px] font-black px-1 min-w-[14px] h-3.5 flex items-center justify-center rounded-full leading-none ${
+                      className={`absolute -top-1.5 -right-3 text-xs font-black px-1 min-w-[14px] h-3.5 flex items-center justify-center rounded-full leading-none ${
                         isSelected
                           ? 'bg-emerald-600 text-white'
                           : 'bg-muted text-muted-foreground border border-border'
@@ -202,7 +202,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] font-bold tracking-tight truncate max-w-full mt-1">
+                <span className="text-xs font-bold tracking-tight truncate max-w-full mt-1">
                   {tab.shortLabel}
                 </span>
                 {isSelected && (

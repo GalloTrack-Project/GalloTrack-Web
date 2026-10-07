@@ -166,7 +166,7 @@ function FowlCard({
             </h4>
           </div>
           {parentHint && (
-            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
+            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
               <span className="opacity-80 font-normal">Matched via:</span>
               <span className="font-extrabold">{parentHint}</span>
             </div>

@@ -192,7 +192,7 @@ export default function DashboardPage() {
                 role="menu"
                 className="absolute right-0 mt-2 z-50 w-56 rounded-xl bg-white dark:bg-card border border-slate-200/90 dark:border-border shadow-xl p-1.5 space-y-0.5"
               >
-                <div className="px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div className="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   Data Exports
                 </div>
                 <button
@@ -312,8 +312,17 @@ export default function DashboardPage() {
 
         {/* OVERALL WIN RATE */}
         <div
+          role="button"
+          tabIndex={0}
+          aria-label={`Overall win rate: ${winsCount + lossesCount > 0 ? `${winRatePct}%` : 'No fights'}, ${winsCount}W ${lossesCount}L. Click to view win rate breakdown by chicken`}
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
-          className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              ui.setShowPerFowlBreakdownModal(true);
+            }
+          }}
+          className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500"
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
@@ -341,7 +350,17 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
             <span className="text-sm font-extrabold text-success">Win trend</span>
-            <span className="text-sm font-black text-muted-foreground group-hover:text-success transition-colors flex items-center gap-1"><Search className="w-3 h-3" /> Breakdown</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                ui.setShowPerFowlBreakdownModal(true);
+              }}
+              className="text-sm font-black text-muted-foreground group-hover:text-success transition-colors flex items-center gap-1 cursor-pointer focus:outline-hidden hover:underline"
+              aria-label="View win rate breakdown by chicken"
+            >
+              <Search className="w-3 h-3" /> Breakdown
+            </button>
           </div>
         </div>
 

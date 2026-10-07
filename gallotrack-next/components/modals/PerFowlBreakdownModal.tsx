@@ -21,6 +21,7 @@ interface Props {
   onClose: () => void;
   fowls?: FowlRecord[];
   matchHistory?: MatchRecord[];
+  initialDatePreset?: DateRangePreset;
 }
 
 type SortOption = 'winrate' | 'matches' | 'name' | 'last_match';
@@ -39,6 +40,7 @@ export default function PerFowlBreakdownModal({
   onClose,
   fowls: propFowls = [],
   matchHistory: propMatches = [],
+  initialDatePreset = 'all',
 }: Props) {
   const uiContext = useUI();
 
@@ -47,8 +49,14 @@ export default function PerFowlBreakdownModal({
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
 
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
-  const [datePreset, setDatePreset] = useState<DateRangePreset>('all');
+  const [datePreset, setDatePreset] = useState<DateRangePreset>(initialDatePreset || 'all');
   const [sortBy, setSortBy] = useState<SortOption>('winrate');
+
+  React.useEffect(() => {
+    if (show && initialDatePreset) {
+      setDatePreset(initialDatePreset);
+    }
+  }, [show, initialDatePreset]);
 
   const registryCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
 
@@ -106,6 +114,38 @@ export default function PerFowlBreakdownModal({
         matches,
         lastMatchDate,
         role: role === 'Sire Material' ? 'Breeding Male' : role,
+      });
+    });
+
+    // 3. Also include any matches for unregistered chickens to guarantee 100% reconciliation
+    matchesByFowl.forEach((matches, lowerName) => {
+      if (matchedFowlNames.has(lowerName)) return;
+      const wins = matches.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
+      const losses = matches.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
+      const draws = matches.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
+      const stats = computeWinRate(wins, losses, draws);
+
+      let lastMatchDate: string | null = null;
+      matches.forEach((m) => {
+        if (m.date && (!lastMatchDate || m.date > lastMatchDate)) {
+          lastMatchDate = m.date;
+        }
+      });
+
+      const synthFowl: FowlRecord = {
+        id: -1 * Math.abs(matches[0]?.id || 9999),
+        name: matches[0]?.entry_name || lowerName,
+        breed: matches[0]?.breed || '—',
+        gender: 'Rooster',
+        status: 'Active',
+      } as FowlRecord;
+
+      rows.push({
+        fowl: synthFowl,
+        stats,
+        matches,
+        lastMatchDate,
+        role: 'Non-Breeding',
       });
     });
 
@@ -173,7 +213,7 @@ export default function PerFowlBreakdownModal({
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Role Filter Chips */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-muted-foreground mr-1 flex items-center gap-1">
+            <span className="text-xs font-bold text-muted-foreground mr-1 flex items-center gap-1">
               <Filter className="w-3 h-3" /> Role:
             </span>
             {(['all', 'Breeding Male', 'Breeding Female', 'Non-Breeding'] as const).map((r) => (
@@ -195,7 +235,7 @@ export default function PerFowlBreakdownModal({
           {/* Date and Sort controls */}
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1">
-              <span className="text-[11px] font-bold text-muted-foreground">Range:</span>
+              <span className="text-xs font-bold text-muted-foreground">Range:</span>
               <select
                 value={datePreset}
                 onChange={(e) => setDatePreset(e.target.value as DateRangePreset)}
@@ -212,7 +252,7 @@ export default function PerFowlBreakdownModal({
             </div>
 
             <div className="flex items-center gap-1">
-              <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-0.5">
+              <span className="text-xs font-bold text-muted-foreground flex items-center gap-0.5">
                 <ArrowUpDown className="w-3 h-3" /> Sort:
               </span>
               <select
@@ -270,14 +310,14 @@ export default function PerFowlBreakdownModal({
                             className="w-8 h-8 rounded-full object-cover shrink-0 border border-border"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black text-muted-foreground shrink-0 select-none">
+                          <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-xs font-black text-muted-foreground shrink-0 select-none">
                             {row.fowl.name.slice(0, 2).toUpperCase()}
                           </div>
                         )}
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {code && (
-                              <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-muted text-foreground border border-border shrink-0">
+                              <span className="font-mono text-xs font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border shrink-0">
                                 [{formatBirdCodeForDisplay(code)}]
                               </span>
                             )}
@@ -289,7 +329,7 @@ export default function PerFowlBreakdownModal({
                               {row.fowl.name}
                             </button>
                           </div>
-                          <p className="text-[10px] text-muted-foreground font-semibold">
+                          <p className="text-xs text-muted-foreground font-semibold">
                             {row.role} · {row.fowl.breed || '—'}
                           </p>
                         </div>
@@ -342,7 +382,7 @@ export default function PerFowlBreakdownModal({
             <tfoot>
               <tr data-testid="breakdown-total-row" className="bg-muted/80 font-black border-t-2 border-border text-foreground">
                 <td colSpan={2} className="py-3 px-3 text-left">
-                  Total · {sortedRows.length} chickens · {totalStats.total} matches
+                  Total · {sortedRows.length} chickens · {totalStats.total} matches · {totalStats.wins}W-{totalStats.losses}L · {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}
                 </td>
                 <td className="py-3 px-3 text-center">{totalStats.total}</td>
                 <td className="py-3 px-3 text-center whitespace-nowrap">
@@ -381,7 +421,7 @@ export default function PerFowlBreakdownModal({
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
                     {code && (
-                      <span className="font-mono text-[10px] font-black px-1.5 py-0.2 rounded bg-muted text-foreground border border-border shrink-0">
+                      <span className="font-mono text-xs font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border shrink-0">
                         [{formatBirdCodeForDisplay(code)}]
                       </span>
                     )}
@@ -395,7 +435,7 @@ export default function PerFowlBreakdownModal({
                   </div>
                   <WinRatePill stats={row.stats} wins={row.stats.wins} losses={row.stats.losses} />
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/40">
                   <span>{row.role}</span>
                   <div className="flex items-center gap-2">
                     <button
@@ -418,14 +458,14 @@ export default function PerFowlBreakdownModal({
           )}
 
           {/* Pinned Mobile Total Card */}
-          <div className="bg-muted/80 border-2 border-border rounded-lg p-3 font-black text-xs space-y-1.5 mt-3">
+          <div data-testid="breakdown-mobile-total" className="bg-muted/80 border-2 border-border rounded-lg p-3 font-black text-xs space-y-1.5 mt-3">
             <div className="flex items-center justify-between gap-2">
-              <span>Total · {sortedRows.length} chickens · {totalStats.total} matches</span>
-              <span className={`px-2 py-0.5 rounded-full border ${getWinRatePillClasses(totalStats)}`}>
+              <span>Total · {sortedRows.length} chickens · {totalStats.total} matches · {totalStats.wins}W-{totalStats.losses}L · {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}</span>
+              <span className={`px-2 py-0.5 rounded-full border text-xs ${getWinRatePillClasses(totalStats)}`}>
                 {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}
               </span>
             </div>
-            <div className="text-[11px] text-muted-foreground font-semibold flex items-center justify-between">
+            <div className="text-xs text-muted-foreground font-semibold flex items-center justify-between">
               <span>Combined record: {totalStats.wins}W-{totalStats.losses}L{totalStats.draws > 0 ? `-${totalStats.draws}D` : ''}</span>
               <span>Decided: {totalStats.decided} matches</span>
             </div>

@@ -83,7 +83,7 @@ function MonthCalendar({
           <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         </button>
         <div className="text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
             {title}
           </span>
           <span className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -105,7 +105,7 @@ function MonthCalendar({
         {DOW.map((d) => (
           <span
             key={d}
-            className="text-[11px] font-medium text-slate-400 dark:text-slate-500 text-center uppercase py-1"
+            className="text-xs font-medium text-slate-400 dark:text-slate-500 text-center uppercase py-1"
           >
             {d}
           </span>
@@ -273,7 +273,7 @@ function RangePopover({ preset, custom, onOpenChange, onApply, children }: Popov
               {startText} → {endText}
             </span>
             {daysCount !== null && (
-              <span className="ml-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+              <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
                 {daysCount} {daysCount === 1 ? 'day' : 'days'}
               </span>
             )}

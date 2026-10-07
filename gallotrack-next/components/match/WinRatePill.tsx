@@ -57,10 +57,10 @@ export default function WinRatePill({
       </span>
       {stats.isLowSample && (
         <span
-          className="text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-black/5 dark:bg-white/10 text-muted-foreground select-none"
+          className="text-xs font-bold uppercase tracking-wider px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 text-muted-foreground select-none"
           title="Small sample size (< 3 decided matches)"
         >
-          {stats.decided === 1 ? '1 fight' : 'low sample'}
+          {stats.decided === 1 ? '1 match' : 'low sample'}
         </span>
       )}
     </span>

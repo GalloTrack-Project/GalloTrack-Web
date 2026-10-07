@@ -11,7 +11,7 @@ import {
   type BreedingPair,
   type DescendantNode,
 } from '@/lib/family-tree';
-import { formatBirdCodeForDisplay, compareBirdCodesNatural } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, compareBirdCodesNatural, offspringBase } from '@/lib/bird-code';
 import {
   buildChickenMatchStatsMap,
   combineWinRates,
@@ -236,21 +236,37 @@ function PairTree({
     ),
   );
 
+  const sireCode = sireFowl ? codes.get(String(sireFowl.id)) || '' : '';
+  const damCode = damFowl ? codes.get(String(damFowl.id)) || '' : '';
+  const pairCode = offspringBase(sireCode, damCode);
+
   return (
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
       <div className="px-5 pt-5 pb-0 flex items-start gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
           <ParentChip roleLabel="Sire" name={pair.sire} fowl={sireFowl} codes={codes} onPick={onPick} />
-          <span className="text-base font-black text-muted-foreground leading-none">+</span>
+          <span className="text-base font-black text-muted-foreground leading-none">×</span>
           <ParentChip roleLabel="Dam" name={pair.dam} fowl={damFowl} codes={codes} onPick={onPick} />
-          <span className="text-xs font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded-full">
-            Breeding Pair
-          </span>
+          {pairCode && (
+            <span className="text-xs font-mono font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full">
+              pair {pairCode}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <span className="text-xs font-bold text-muted-foreground">
             {pair.members.length} offspring · {roosters.length} male · {hens.length} female
           </span>
+          {foughtCount > 0 ? (
+            <WinRatePill
+              wins={pairTotalStats.wins}
+              losses={pairTotalStats.losses}
+              draws={pairTotalStats.draws}
+              stats={pairTotalStats}
+            />
+          ) : (
+            <span className="text-xs font-bold text-muted-foreground/60">No fights</span>
+          )}
           <button
             type="button"
             onClick={onToggleCollapse}
@@ -265,8 +281,8 @@ function PairTree({
         <div className="px-5 pb-5 space-y-4 pt-4">
           {roosters.length > 0 && (
             <div>
-              <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1.5">
-                🐓 Sire · {roosters.length}
+              <p className="text-xs font-black text-sky-700 dark:text-sky-400 uppercase tracking-widest mb-1.5">
+                ♂ Males ({roosters.length})
               </p>
               <div className="gt-kids">
                 {roosters.map((member) => (
@@ -286,8 +302,8 @@ function PairTree({
           )}
           {hens.length > 0 && (
             <div>
-              <p className="text-xs font-black text-pink uppercase tracking-widest mb-1.5">
-                🐔 Dam · {hens.length}
+              <p className="text-xs font-black text-pink-700 dark:text-pink-400 uppercase tracking-widest mb-1.5">
+                ♀ Females ({hens.length})
               </p>
               <div className="gt-kids">
                 {hens.map((member) => (
@@ -316,7 +332,7 @@ function PairTree({
             <>
               <span className="text-muted-foreground/60 select-none">·</span>
               <span className="text-foreground">
-                {foughtCount} of {pair.members.length} offspring have fought
+                {foughtCount} of {pair.members.length} offspring have fought · {pairTotalStats.wins}W-{pairTotalStats.losses}L · {pairTotalStats.winRate}%
               </span>
             </>
           )}

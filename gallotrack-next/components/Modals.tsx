@@ -10,6 +10,7 @@ import type {
   ArchiveBadge,
 } from '@/lib/types';
 import type { ArchiveDraft } from '@/lib/lifecycle';
+import type { DateRangePreset } from '@/lib/helpers';
 import FowlDetailsModal from './modals/FowlDetailsModal';
 import DeceasedModal from './modals/DeceasedModal';
 import ArchiveModal from './modals/ArchiveModal';
@@ -134,6 +135,7 @@ type ModalsProps = {
 
   showPerFowlBreakdownModal: boolean;
   setShowPerFowlBreakdownModal: (v: boolean) => void;
+  dateRangePreset?: DateRangePreset;
 };
 
 export default function Modals(props: ModalsProps) {
@@ -267,6 +269,7 @@ export default function Modals(props: ModalsProps) {
         onClose={() => props.setShowPerFowlBreakdownModal(false)}
         fowls={props.fowls}
         matchHistory={props.matchHistory}
+        initialDatePreset={props.dateRangePreset}
       />
 
       <FightHistoryModal />

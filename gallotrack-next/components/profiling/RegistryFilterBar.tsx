@@ -180,7 +180,7 @@ function SearchableParentDropdown({
                   >
                     <div className="flex items-center gap-1.5 truncate">
                       {opt.code && (
-                        <span className="font-mono text-[10px] font-bold px-1 py-0.2 rounded bg-muted border border-border uppercase shrink-0">
+                        <span className="font-mono text-xs font-bold px-1 py-0.2 rounded bg-muted border border-border uppercase shrink-0">
                           [{opt.code}]
                         </span>
                       )}
@@ -310,7 +310,7 @@ export default function RegistryFilterBar({
             ) : (
               <kbd
                 aria-hidden="true"
-                className="hidden sm:inline-flex items-center justify-center text-[10px] font-mono text-muted-foreground/80 bg-muted px-1.5 py-0.5 rounded border border-border"
+                className="hidden sm:inline-flex items-center justify-center text-xs font-mono text-muted-foreground/80 bg-muted px-1.5 py-0.5 rounded border border-border"
                 title="Press / anywhere to search"
               >
                 /
@@ -335,7 +335,7 @@ export default function RegistryFilterBar({
           <Filter className="w-3.5 h-3.5" />
           <span>Filters</span>
           {activeFiltersCount > (query.trim() ? 1 : 0) && (
-            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
               {activeFiltersCount - (query.trim() ? 1 : 0)}
             </span>
           )}
@@ -525,7 +525,7 @@ export default function RegistryFilterBar({
       {/* Active Filter Chips & Reset All */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 animate-fadeIn">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Active filters:
           </span>
 
