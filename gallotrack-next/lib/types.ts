@@ -55,6 +55,12 @@ export interface FowlRecord {
   retired_scope?: string | null;
   /** Expected/actual return date for Transfer / Borrowed birds. */
   return_date?: string | null;
+  /**
+   * Single registry role field — the one source of truth for Registry tab
+   * membership and the Inventory role filter. NULL means "pending backfill":
+   * membership then falls back to the legacy derivation (see lib/registry-roles.ts).
+   */
+  registry_role?: 'Breeding Male' | 'Breeding Female' | 'Non-Breeding' | null;
 }
 
 /** One append-only row in `fowl_status_history`. */

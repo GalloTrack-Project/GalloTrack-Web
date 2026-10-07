@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2 } from 'lucide-react';
+import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2, ArrowDownUp } from 'lucide-react';
 import { cn } from '@/components/ui/utils';
+import { REGISTRY_SORT_OPTIONS, type RegistrySortKey } from '@/lib/registry-roles';
 
 export interface ParentOption {
   name: string;
@@ -28,6 +29,8 @@ export interface RegistryFilterBarProps {
   filterReason?: string;
   onFilterReasonChange?: (r: string) => void;
   effectiveStatus: 'Active' | 'Archived' | 'Deceased';
+  sort: RegistrySortKey;
+  onSortChange: (key: RegistrySortKey) => void;
   sireOptions: ParentOption[];
   damOptions: ParentOption[];
   stageOptions: string[];
@@ -213,6 +216,8 @@ export default function RegistryFilterBar({
   filterReason = 'all',
   onFilterReasonChange,
   effectiveStatus,
+  sort,
+  onSortChange,
   sireOptions,
   damOptions,
   stageOptions,
@@ -355,7 +360,7 @@ export default function RegistryFilterBar({
           isMobilePanelOpen ? 'block' : 'hidden md:block'
         )}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
           {/* 1. Father (Sire) */}
           <SearchableParentDropdown
             id="filter-by-sire"
@@ -452,6 +457,34 @@ export default function RegistryFilterBar({
                 <option value="all">All Chickens</option>
                 <option value="with">With Fight Records</option>
                 <option value="without">Without Fight Records</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+
+          {/* 6. Sort (Task B — applied before pagination) */}
+          <div className="flex flex-col gap-1 w-full">
+            <label htmlFor="registry-sort" className="text-xs font-semibold text-muted-foreground">
+              Sort
+            </label>
+            <div className="relative">
+              <ArrowDownUp className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <select
+                id="registry-sort"
+                value={sort}
+                onChange={(e) => onSortChange(e.target.value as RegistrySortKey)}
+                className={cn(
+                  'h-9 w-full pl-8 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                  sort !== 'identifier'
+                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                    : 'border-border bg-background text-foreground hover:bg-muted/50'
+                )}
+              >
+                {REGISTRY_SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>

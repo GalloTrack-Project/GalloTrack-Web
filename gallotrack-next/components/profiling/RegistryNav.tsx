@@ -104,7 +104,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
         - Thin divider line running under the whole tab row.
       */}
       <div className="hidden md:block w-full border-b border-border/70">
-        <nav
+        <div
           role="tablist"
           aria-label="Chicken Registry Main Sections"
           className="flex items-center gap-1 sm:gap-2 -mb-px overflow-x-visible"
@@ -150,7 +150,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
               </button>
             );
           })}
-        </nav>
+        </div>
       </div>
 
       {/* 
@@ -161,7 +161,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
         - Stays above the global app nav when active, accessible & thumb-friendly.
       */}
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border shadow-lg px-2 py-1">
-        <nav
+        <div
           role="tablist"
           aria-label="Chicken Registry Mobile Navigation"
           className="grid grid-cols-5 items-center gap-1"
@@ -211,7 +211,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
               </button>
             );
           })}
-        </nav>
+        </div>
       </div>
     </>
   );

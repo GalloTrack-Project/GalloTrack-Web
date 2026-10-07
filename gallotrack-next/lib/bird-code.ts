@@ -91,6 +91,38 @@ export function validateIdentifierFormat(
 /** Case-insensitive comparison key. */
 export const birdCodeKey = (value: unknown): string => normalizeBirdCode(value).toLowerCase();
 
+/**
+ * Natural-order comparison for identifiers: 1A2 sorts before 1A10, 2 before 10,
+ * numeric segments compare numerically, letters compare case-insensitively,
+ * and blanks always sort last. Used by every Sort control (Task B).
+ */
+export function compareBirdCodesNatural(a: unknown, b: unknown): number {
+  const sa = normalizeBirdCode(a);
+  const sb = normalizeBirdCode(b);
+  if (sa === sb) return 0;
+  if (!sa) return 1;
+  if (!sb) return -1;
+  const ta = sa.match(/\d+|\D+/g) || [];
+  const tb = sb.match(/\d+|\D+/g) || [];
+  const len = Math.min(ta.length, tb.length);
+  for (let i = 0; i < len; i += 1) {
+    const x = ta[i];
+    const y = tb[i];
+    const xNum = /^\d+$/.test(x);
+    const yNum = /^\d+$/.test(y);
+    if (xNum && yNum) {
+      const nx = Number(x);
+      const ny = Number(y);
+      if (nx !== ny) return nx < ny ? -1 : 1;
+      continue;
+    }
+    const lx = x.toLowerCase();
+    const ly = y.toLowerCase();
+    if (lx !== ly) return lx < ly ? -1 : 1;
+  }
+  return ta.length - tb.length;
+}
+
 export type CodeSet = Set<string>;
 
 /** Build the set of codes already in use (case-insensitive keys). */

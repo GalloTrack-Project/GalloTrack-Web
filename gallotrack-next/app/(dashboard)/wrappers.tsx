@@ -23,6 +23,7 @@ export function MarketplacePageWrapper() {
   const fowl = useFowl();
   const ui = useUI();
   const router = useRouter();
+  const { isAdmin } = useAuth();
 
   const navigate = (page: string, subTab?: string) => {
     if (subTab) ui.setProfilingSubTab(subTab as never);
@@ -38,6 +39,9 @@ export function MarketplacePageWrapper() {
       debouncedSearch={fowl.debouncedSearch}
       setCurrentPage={(v: string) => navigate(v)}
       setProfilingSubTab={(v: string) => ui.setProfilingSubTab(v as never)}
+      onRestore={(id) => fowl.handleRestoreFowlOnly(id)}
+      canRestoreDeceased={isAdmin}
+      setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
     />
   );
 }

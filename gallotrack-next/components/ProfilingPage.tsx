@@ -17,7 +17,7 @@ export default function ProfilingPage() {
   const router = useRouter();
 
   const {
-    fowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
+    fowls, registryLists,
     matchHistory,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newBirthdate, handleNewBirthdateChange,
@@ -48,7 +48,7 @@ export default function ProfilingPage() {
     cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
     matchType, setMatchType, matchSide, setMatchSide, matchNotes, setMatchNotes,
     handleAddFowl, handleAddMatchRecord,
-    handleOpenEditModal, handleRestoreFowlOnly,
+    handleOpenEditModal,
     handleSetActiveStatus,
     generationPurity,
     autoCalcAge,
@@ -57,11 +57,6 @@ export default function ProfilingPage() {
 
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
-
-  const parentNames = new Set([...maleActiveFowls, ...femaleActiveFowls, ...sireMaterialFowls].map((p) => p.name));
-  const offspringList = fowls
-    .filter((f) => (f.sire && parentNames.has(f.sire)) || (f.dam && parentNames.has(f.dam)))
-    .sort((a, b) => a.id - b.id);
 
   const listTab =
     profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'sireMaterial' || profilingSubTab === 'offspring'
@@ -113,10 +108,10 @@ export default function ProfilingPage() {
           currentTab={profilingSubTab}
           onSelectTab={setProfilingSubTab}
           counts={{
-            males: maleActiveFowls.length,
-            females: femaleActiveFowls.length,
-            offspring: offspringList.length,
-            sireMaterial: sireMaterialFowls.length,
+            males: registryLists.males.length,
+            females: registryLists.females.length,
+            offspring: registryLists.nonBreeding.length,
+            sireMaterial: registryLists.sireMaterial.length,
           }}
         />
       </div>
@@ -168,23 +163,18 @@ export default function ProfilingPage() {
       {listTab && (
         <FowlLists
           tab={listTab}
-          offspringFowls={offspringList}
           fowls={fowls}
-          maleActiveFowls={maleActiveFowls}
-          femaleActiveFowls={femaleActiveFowls}
-          archivedFowls={archivedFowls}
-          deceasedFowls={deceasedFowls}
-          sireMaterialFowls={sireMaterialFowls}
           matchHistory={matchHistory}
           loading={loading}
+          sortKey={ui.registrySortBy[listTab] ?? 'identifier'}
+          onSortChange={(k) => ui.setRegistrySort(listTab, k)}
           setProfilingSubTab={setProfilingSubTab}
+          onGoToInventory={() => ui.setCurrentPage('marketplace')}
           handleOpenEditModal={handleOpenEditModal}
-          handleRestoreFowlOnly={handleRestoreFowlOnly}
           handleSetActiveStatus={handleSetActiveStatus}
           setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
           setSelectedFowlForArchive={ui.setSelectedFowlForArchive}
           setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}
-          setPendingPermanentDelete={ui.setPendingPermanentDelete}
         />
       )}
 

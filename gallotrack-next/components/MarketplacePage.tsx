@@ -2,19 +2,32 @@
 import React, { useState, useMemo } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
-import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, resolveBirdCodes, compareBirdCodesNatural } from '@/lib/bird-code';
 import { genderLabel, parentBreedOf, parentBloodlineOf } from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
+import StatusBadge from '@/components/ui/StatusBadge';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
 import { inspectFowlMatch, compareFowlSearchRelevance, type FowlMatchResult } from '@/lib/lineage';
+import {
+  inventoryCounts,
+  isBreedingReady,
+  isActiveStatus,
+  isArchivedStatus,
+  isDeceasedStatus,
+  roleOf,
+  buildRegistryContext,
+  ROLE_FILTER_OPTIONS,
+  type RoleKey,
+} from '@/lib/registry-roles';
 import { Search, X } from 'lucide-react';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
-type SortKey = 'name' | 'age' | 'strain' | 'winrate' | 'weight';
+type SortKey = 'name' | 'age' | 'strain' | 'winrate' | 'weight' | 'identifier';
+type RoleFilter = 'all' | RoleKey;
 
 type Props = {
   fowls: FowlRecord[];
@@ -24,6 +37,12 @@ type Props = {
   debouncedSearch?: string;
   setCurrentPage: (v: PageId) => void;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
+  /** Restore an Archived (or, with canRestoreDeceased, Deceased) chicken back to Active. */
+  onRestore?: (id: number) => Promise<void> | void;
+  /** Deceased restore is owner-only. */
+  canRestoreDeceased?: boolean;
+  /** Open the full profile modal (Registry details) from a card. */
+  setSelectedFowlForDetails?: (fowl: FowlRecord) => void;
 };
 
 function getWinRate(fowlName: string, matches: MatchRecord[]) {
@@ -64,12 +83,6 @@ function GenderIcon({ gender }: { gender: string }) {
   return <span className="text-muted-foreground text-sm">{'\u2014'}</span>;
 }
 
-function StatusDot({ status }: { status: string }) {
-  const s = status?.toLowerCase();
-  const color = s === 'active' ? 'bg-emerald-500' : s === 'archived' ? 'bg-amber-400' : s === 'deceased' ? 'bg-rose-400' : 'bg-muted-foreground/50';
-  return <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${color}`}></span>;
-}
-
 function ComplianceBadge({ grade }: { grade: string }) {
   const cls = grade.startsWith('A') ? 'bg-emerald-500/15 text-success border-emerald-500/30'
     : grade.startsWith('B') ? 'bg-sky-500/15 text-info border-sky-500/30'
@@ -86,6 +99,8 @@ function FowlCard({
   code,
   query,
   parentHint,
+  onOpenProfile,
+  onRestore,
 }: {
   fowl: FowlRecord;
   fowls: FowlRecord[];
@@ -94,6 +109,8 @@ function FowlCard({
   code?: string;
   query?: string;
   parentHint?: string;
+  onOpenProfile?: () => void;
+  onRestore?: () => void;
 }) {
   const unitPrefs = useUnitPrefs();
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
@@ -103,28 +120,32 @@ function FowlCard({
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
     [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
   );
+  const accent = isActiveStatus(fowl)
+    ? 'from-emerald-400 to-emerald-500'
+    : isArchivedStatus(fowl)
+      ? 'from-amber-400 to-amber-500'
+      : 'from-rose-400 to-rose-500';
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group bg-card p-5 rounded-lg border border-border shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all duration-200 text-left w-full relative overflow-hidden"
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; onClick(); }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+      className="group bg-card p-5 rounded-lg border border-border shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all duration-200 text-left w-full relative overflow-hidden cursor-pointer focus:ring-2 focus:ring-emerald-400/60"
     >
       {/* Top accent */}
-      <div className={`absolute top-0 left-0 right-0 h-1 ${fowl.status === 'Active' ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : fowl.status === 'Archived' ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-500'}`}></div>
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent}`}></div>
 
       {/* Status + Compliance */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <StatusDot status={fowl.status} />
-          <span className="text-xs font-bold text-muted-foreground uppercase">{fowl.status}</span>
-        </div>
+        <StatusBadge status={fowl.status} />
         {compliance.complianceGrade && compliance.matchedStandard && (
           <ComplianceBadge grade={compliance.complianceGrade} />
         )}
       </div>
 
-      {/* Photo + Name + Breed */}
+      {/* Photo + Identifier + Name + Breed */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-16 h-16 rounded-md bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
           {fowl.image_url ? (
@@ -135,14 +156,14 @@ function FowlCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">
-              <HighlightText text={fowl.name} query={query} />
-            </h4>
             {code && (
               <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">
                 <HighlightText text={formatBirdCodeForDisplay(code)} query={query} />
               </span>
             )}
+            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">
+              <HighlightText text={fowl.name} query={query} />
+            </h4>
           </div>
           {parentHint && (
             <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
@@ -199,14 +220,41 @@ function FowlCard({
 
       {/* Lineage */}
       {(fowl.sire || fowl.dam) && (
-        <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center gap-2">
-          <span className="text-xs font-bold text-muted-foreground uppercase">Lineage:</span>
-          <span className="text-xs text-muted-foreground font-semibold truncate">
-            {fowl.sire || '\u2014'}{sireBreed ? ` (${sireBreed})` : ''} {'\u00D7'} {fowl.dam || '\u2014'}{damBreed ? ` (${damBreed})` : ''}
-          </span>
+        <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs font-bold text-muted-foreground uppercase">Lineage:</span>
+            <span className="text-xs text-muted-foreground font-semibold truncate">
+              {fowl.sire || '—'}{sireBreed ? ` (${sireBreed})` : ''} {'×'} {fowl.dam || '—'}{damBreed ? ` (${damBreed})` : ''}
+            </span>
+          </div>
         </div>
       )}
-    </button>
+
+      {/* Card actions: profile link + restore */}
+      {(onOpenProfile || onRestore) && (
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
+          {onOpenProfile && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile(); }}
+              className="text-xs font-black text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+            >
+              Full profile →
+            </button>
+          )}
+          {onRestore && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRestore(); }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer ml-auto"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Restore to Active
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -239,8 +287,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <StatusDot status={fowl.status} />
-                <span className="text-sm font-bold text-muted-foreground">{fowl.status}</span>
+                <StatusBadge status={fowl.status} />
                 {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
               </div>
               <p className="text-sm text-muted-foreground font-semibold">{genderLabel(fowl.gender)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
@@ -370,34 +417,44 @@ export default function MarketplacePage({
   debouncedSearch: propDebouncedSearch,
   setCurrentPage,
   setProfilingSubTab,
+  onRestore,
+  canRestoreDeceased = false,
+  setSelectedFowlForDetails,
 }: Props) {
   const [internalSearch, setInternalSearch] = useState('');
   const search = propSearch !== undefined ? propSearch : internalSearch;
   const setSearch = propSetSearch !== undefined ? propSetSearch : setInternalSearch;
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [selectedFowl, setSelectedFowl] = useState<FowlRecord | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<FowlRecord | null>(null);
+  const [restoring, setRestoring] = useState(false);
   const [includeParents, setIncludeParents] = useState(false);
   const internalDebouncedQuery = useDebounce(search || '', 250);
   const debouncedQuery = (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedQuery) || '';
 
+  const registryCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
+  const counts = useMemo(() => inventoryCounts(fowls), [fowls]);
+
   const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
-    { id: 'all', label: 'All Chickens', count: fowls.length },
-    { id: 'active', label: 'Active', count: fowls.filter((f) => f.status === 'Active').length },
-    { id: 'breeding', label: 'Breeding Ready', count: fowls.filter((f) => f.status === 'Active' && (f.growth_stage === 'Mature' || f.growth_stage === 'Broodcock' || f.growth_stage === 'Broodhen')).length },
-    { id: 'archived', label: 'Archived', count: fowls.filter((f) => f.status === 'Archived').length },
-    { id: 'deceased', label: 'Deceased', count: fowls.filter((f) => f.status === 'Deceased').length },
-  ], [fowls]);
+    { id: 'all', label: 'All Chickens', count: counts.all },
+    { id: 'active', label: 'Active', count: counts.active },
+    { id: 'breeding', label: 'Breeding Ready', count: counts.breedingReady },
+    { id: 'archived', label: 'Archived', count: counts.archived },
+    { id: 'deceased', label: 'Deceased', count: counts.deceased },
+  ], [counts]);
 
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
 
   const { filteredFowls, matchMap } = useMemo(() => {
     let pool = fowls;
-    if (activeTab === 'active') pool = pool.filter((f) => f.status === 'Active');
-    else if (activeTab === 'breeding') pool = pool.filter((f) => f.status === 'Active' && (f.growth_stage === 'Mature' || f.growth_stage === 'Broodcock' || f.growth_stage === 'Broodhen'));
-    else if (activeTab === 'archived') pool = pool.filter((f) => f.status === 'Archived');
-    else if (activeTab === 'deceased') pool = pool.filter((f) => f.status === 'Deceased');
+    if (activeTab === 'active') pool = pool.filter((f) => isActiveStatus(f));
+    else if (activeTab === 'breeding') pool = pool.filter((f) => isBreedingReady(f));
+    else if (activeTab === 'archived') pool = pool.filter((f) => isArchivedStatus(f));
+    else if (activeTab === 'deceased') pool = pool.filter((f) => isDeceasedStatus(f));
+    if (roleFilter !== 'all') pool = pool.filter((f) => roleOf(f, registryCtx) === roleFilter);
 
     const matches = new Map<number, FowlMatchResult>();
     let result: FowlRecord[] = [];
@@ -425,6 +482,11 @@ export default function MarketplacePage({
         }
       }
 
+      if (sortKey === 'identifier') {
+        const r = compareBirdCodesNatural(birdCodes.get(String(a.id)) || '', birdCodes.get(String(b.id)) || '');
+        if (r !== 0) return r;
+        return a.id - b.id;
+      }
       if (sortKey === 'name') return a.name.localeCompare(b.name);
       if (sortKey === 'age') return getAgeDays(a.birthdate) - getAgeDays(b.birthdate);
       if (sortKey === 'strain') return a.breed.localeCompare(b.breed);
@@ -438,7 +500,18 @@ export default function MarketplacePage({
     });
 
     return { filteredFowls: result, matchMap: matches };
-  }, [fowls, debouncedQuery, includeParents, activeTab, sortKey, matchHistory, birdCodes]);
+  }, [fowls, debouncedQuery, includeParents, activeTab, roleFilter, registryCtx, sortKey, matchHistory, birdCodes]);
+
+  const confirmRestore = async () => {
+    if (!restoreTarget || !onRestore) return;
+    setRestoring(true);
+    try {
+      await onRestore(restoreTarget.id);
+      setRestoreTarget(null);
+    } finally {
+      setRestoring(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -504,13 +577,25 @@ export default function MarketplacePage({
       <div className="flex items-center gap-2 bg-muted rounded-md border border-border p-1 shadow-sm">
         <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
+            <button key={tab.id} onClick={() => { setActiveTab(tab.id); setRoleFilter('all'); }} className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
               {tab.label}
               <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-border">
+          <label htmlFor="inventory-role" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Role</label>
+          <select
+            id="inventory-role"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+            className={`px-2.5 py-2 rounded-sm text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all ${roleFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'}`}
+          >
+            <option value="all">All roles</option>
+            {ROLE_FILTER_OPTIONS.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
           <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sort</label>
           <select
             id="inventory-sort"
@@ -519,6 +604,7 @@ export default function MarketplacePage({
             className="px-2.5 py-2 rounded-sm text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
           >
             <option value="name">Name (A–Z)</option>
+            <option value="identifier">Identifier (1A2 before 1A10)</option>
             <option value="age">Age (youngest first)</option>
             <option value="strain">Strain (A–Z)</option>
             <option value="winrate">Win rate (highest)</option>
@@ -578,6 +664,7 @@ export default function MarketplacePage({
           {filteredFowls.map((fowl) => {
             const m = matchMap.get(fowl.id);
             const parentHint = m?.reason === 'sire' || m?.reason === 'dam' ? m.parentHint : undefined;
+            const restorable = isArchivedStatus(fowl) || (isDeceasedStatus(fowl) && canRestoreDeceased);
             return (
               <FowlCard
                 key={fowl.id}
@@ -588,6 +675,8 @@ export default function MarketplacePage({
                 onClick={() => setSelectedFowl(fowl)}
                 query={debouncedQuery}
                 parentHint={parentHint}
+                onOpenProfile={setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined}
+                onRestore={onRestore && restorable ? () => setRestoreTarget(fowl) : undefined}
               />
             );
           })}
@@ -603,6 +692,42 @@ export default function MarketplacePage({
           code={birdCodes.get(String(selectedFowl.id))}
           onClose={() => setSelectedFowl(null)}
         />
+      )}
+
+      {/* Restore confirmation */}
+      {restoreTarget && (
+        <Modal
+          open
+          onClose={() => { if (!restoring) setRestoreTarget(null); }}
+          title="Restore to Active?"
+          className="max-w-md"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Move <strong className="text-foreground">{restoreTarget.name}</strong> back to the active
+              registry? It will reappear in the Chicken Registry tabs, count as Active, and a history
+              entry will be logged.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={restoring}
+                onClick={() => setRestoreTarget(null)}
+                className="px-4 py-2 rounded-md text-xs font-bold bg-muted text-foreground hover:bg-muted/80 transition-all cursor-pointer disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={restoring}
+                onClick={() => { void confirmRestore(); }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all cursor-pointer disabled:opacity-60"
+              >
+                {restoring ? 'Restoring…' : 'Restore to Active'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

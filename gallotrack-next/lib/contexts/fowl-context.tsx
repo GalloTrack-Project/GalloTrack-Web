@@ -74,6 +74,7 @@ import type {
   BreedingPairRecord,
 } from '@/lib/types';
 import { toastMessage } from '@/lib/toast-bus';
+import { registryTabLists, type RegistryLists } from '@/lib/registry-roles';
 
 interface FowlContextValue {
   fowls: FowlRecord[];
@@ -84,6 +85,8 @@ interface FowlContextValue {
   femaleActiveFowls: FowlRecord[];
   archivedFowls: FowlRecord[];
   deceasedFowls: FowlRecord[];
+  /** Single-source Registry tab lists (status + role selectors, see lib/registry-roles.ts). */
+  registryLists: RegistryLists;
   matchHistory: MatchRecord[];
   setMatchHistory: React.Dispatch<React.SetStateAction<MatchRecord[]>>;
   matchMedia: Map<number, MatchMedia>;
@@ -385,6 +388,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const deceasedFowls = fowls.filter(f => f.status === 'Deceased');
   const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemaleHelper(f.gender));
+  const registryLists = useMemo(() => registryTabLists(fowls), [fowls]);
 
   // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
@@ -1295,7 +1299,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     ...formState,
     deleteCustomStrain,
     deleteCustomLegColor,
-    fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls,
+    fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, registryLists,
     matchHistory, setMatchHistory, matchMedia, breedingPairs, loading, setLoading, loadError,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,

@@ -257,7 +257,7 @@ export default function EncodeForm({
                       formatCheck && !formatCheck.valid ? (
                         <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
                       ) : isDuplicate ? (
-                        <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Identifier "{birdCode.trim()}" is already in use</span>
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Identifier &quot;{birdCode.trim()}&quot; is already in use</span>
                       ) : (
                         <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Valid format for {currentRole}</span>
                       )

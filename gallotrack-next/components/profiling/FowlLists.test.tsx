@@ -23,16 +23,9 @@ function renderFowlLists(overrides = {}) {
     <FowlLists
       tab="males"
       fowls={mockFowls}
-      maleActiveFowls={mockFowls}
-      femaleActiveFowls={[]}
-      archivedFowls={[]}
-      deceasedFowls={[]}
-      sireMaterialFowls={[]}
       matchHistory={[]}
       loading={false}
       setProfilingSubTab={vi.fn()}
-      setPendingPermanentDelete={vi.fn()}
-      handleRestoreFowlOnly={vi.fn()}
       setSelectedFowlForArchive={vi.fn()}
       setSelectedFowlForDeceased={vi.fn()}
       handleOpenEditModal={vi.fn()}

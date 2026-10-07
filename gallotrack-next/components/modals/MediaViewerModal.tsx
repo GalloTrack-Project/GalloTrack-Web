@@ -40,18 +40,20 @@ export default function MediaViewerModal() {
   const activeUrl = urls[activeIdx] ?? null;
   const isOpen = Boolean(activeUrl || imageViewerUrl);
 
-  /* ── Reset state when modal opens ── */
-  useEffect(() => {
-    if (isOpen) {
-      setActiveIdx(0);
-      setVideoState('loading');
-    }
-  }, [isOpen]);
-
-  /* ── Reset video state when switching clips ── */
-  useEffect(() => {
+  /* ── Reset state when modal opens / clip switches (adjusted during render) ── */
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  const [prevIdx, setPrevIdx] = useState(activeIdx);
+  if (isOpen && !wasOpen) {
+    setWasOpen(true);
+    setActiveIdx(0);
+    setPrevIdx(0);
     setVideoState('loading');
-  }, [activeIdx]);
+  } else if (!isOpen && wasOpen) {
+    setWasOpen(false);
+  } else if (activeIdx !== prevIdx) {
+    setPrevIdx(activeIdx);
+    setVideoState('loading');
+  }
 
   /* ── Stop & unload video on close ── */
   const close = useCallback(() => {
@@ -85,6 +87,7 @@ export default function MediaViewerModal() {
   const showNav = urls.length > 1;
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click-to-close is handled by the global Escape listener for keyboard users
     <div
       role="dialog"
       aria-modal="true"
@@ -95,7 +98,6 @@ export default function MediaViewerModal() {
       {/* ── Modal panel ── */}
       <div
         className="relative flex flex-col w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-4xl sm:rounded-xl bg-[#0d0f14] shadow-2xl overflow-hidden ring-1 ring-white/10"
-        onClick={e => e.stopPropagation()}
       >
         {/* ── Close button ── */}
         <button
@@ -110,7 +112,7 @@ export default function MediaViewerModal() {
         {/* ── IMAGE VIEWER ── */}
         {imageViewerUrl ? (
           <div className="flex-1 flex items-center justify-center p-4 min-h-[50vh]">
-            <img src={imageViewerUrl} alt="Match photo" className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl" />
+            <img src={imageViewerUrl} alt={match ? `${match.entry_name}${match.opponent ? ` vs ${match.opponent}` : ''}` : 'Selected media'} className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl" />
           </div>
         ) : (
           <>

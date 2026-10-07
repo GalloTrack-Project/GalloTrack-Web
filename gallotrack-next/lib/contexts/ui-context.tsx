@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState } from 'react';
 import type { PageId, ProfilingSubTab, FowlRecord, MatchRecord } from '@/lib/types';
+import type { RegistrySortKey } from '@/lib/registry-roles';
 
 interface UIContextValue {
   theme: string;
@@ -11,6 +12,9 @@ interface UIContextValue {
   setCurrentPage: (v: PageId) => void;
   profilingSubTab: ProfilingSubTab;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
+  /** Per-tab sort choice in the Registry (Task B). Identifier = natural order. */
+  registrySortBy: Partial<Record<ProfilingSubTab, RegistrySortKey>>;
+  setRegistrySort: (tab: ProfilingSubTab, key: RegistrySortKey) => void;
 
   selectedFowlForDetails: FowlRecord | null;
   setSelectedFowlForDetails: (f: FowlRecord | null) => void;
@@ -72,6 +76,10 @@ export function UIProvider({
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<ProfilingSubTab>('form');
+  const [registrySortBy, setRegistrySortBy] = useState<Partial<Record<ProfilingSubTab, RegistrySortKey>>>({});
+  const setRegistrySort = React.useCallback((tab: ProfilingSubTab, key: RegistrySortKey) => {
+    setRegistrySortBy((prev) => ({ ...prev, [tab]: key }));
+  }, []);
 
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
@@ -104,6 +112,7 @@ export function UIProvider({
     showSplash, setShowSplash,
     currentPage, setCurrentPage,
     profilingSubTab, setProfilingSubTab,
+    registrySortBy, setRegistrySort,
     selectedFowlForDetails, setSelectedFowlForDetails,
     selectedFowlForDeceased, setSelectedFowlForDeceased,
     selectedFowlForArchive, setSelectedFowlForArchive,
