@@ -196,17 +196,136 @@ export function originPairingOf(
   return pairings.find((p) => p.id === bird.pairing_id) ?? null;
 }
 
-/** Text search across identity fields: name, wing band, codes, parents, breed. */
-export function fowlMatchesQuery(fowl: FowlRecord, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  return [
-    fowl.name,
-    fowl.wing_band,
-    fowl.bird_code,
-    fowl.sire,
-    fowl.dam,
-    fowl.breed,
-    fowl.color,
-  ].some((field) => String(field ?? '').toLowerCase().includes(q));
+/**
+ * Normalizes text for search: removes excess whitespace, converts subscripts to digits, and lowercases.
+ */
+export function normalizeSearchTerm(text?: string | null): string {
+  if (!text) return '';
+  return String(text)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[\u2080-\u2089]/g, (c) => String(c.charCodeAt(0) - 0x2080));
+}
+
+export interface FowlMatchOptions {
+  includeParents?: boolean;
+}
+
+export type FowlMatchReason = 'self' | 'sire' | 'dam' | null;
+
+export interface FowlMatchResult {
+  matched: boolean;
+  reason: FowlMatchReason;
+  parentHint?: string;
+  nameStarts: boolean;
+  nameContains: boolean;
+}
+
+/**
+ * Detailed inspection of how a fowl matches a search query.
+ * By default, matches ONLY the chicken's own fields:
+ * - Chicken name
+ * - Unique identifier (e.g. 1A1; "1A" matches offspring of that pair)
+ * - Wing band number
+ * If includeParents is true, also matches sire and dam.
+ */
+export function inspectFowlMatch(
+  fowl: FowlRecord,
+  query: string,
+  resolvedCode?: string | null,
+  options?: FowlMatchOptions
+): FowlMatchResult {
+  const q = normalizeSearchTerm(query);
+  if (!q) {
+    return {
+      matched: true,
+      reason: null,
+      nameStarts: false,
+      nameContains: false,
+    };
+  }
+
+  const code = resolvedCode || fowl.bird_code;
+  const normName = normalizeSearchTerm(fowl.name);
+  const normCode = normalizeSearchTerm(code);
+  const normWing = normalizeSearchTerm(fowl.wing_band);
+
+  const nameStarts = normName.startsWith(q);
+  const nameContains = normName.includes(q);
+  const codeMatches = normCode ? normCode.includes(q) : false;
+  const wingMatches = normWing ? normWing.includes(q) : false;
+
+  // 1. Own fields have highest priority
+  if (nameContains || codeMatches || wingMatches) {
+    return {
+      matched: true,
+      reason: 'self',
+      nameStarts,
+      nameContains,
+    };
+  }
+
+  // 2. Optional: Parents search
+  if (options?.includeParents) {
+    const normDam = normalizeSearchTerm(fowl.dam);
+    if (normDam && normDam.includes(q)) {
+      return {
+        matched: true,
+        reason: 'dam',
+        parentHint: `Dam: ${fowl.dam}`,
+        nameStarts: false,
+        nameContains: false,
+      };
+    }
+    const normSire = normalizeSearchTerm(fowl.sire);
+    if (normSire && normSire.includes(q)) {
+      return {
+        matched: true,
+        reason: 'sire',
+        parentHint: `Sire: ${fowl.sire}`,
+        nameStarts: false,
+        nameContains: false,
+      };
+    }
+  }
+
+  return {
+    matched: false,
+    reason: null,
+    nameStarts: false,
+    nameContains: false,
+  };
+}
+
+/** Text search across chicken own fields (name, code/identifier, wing band). */
+export function fowlMatchesQuery(
+  fowl: FowlRecord,
+  query: string,
+  resolvedCode?: string | null,
+  options?: FowlMatchOptions
+): boolean {
+  return inspectFowlMatch(fowl, query, resolvedCode, options).matched;
+}
+
+/**
+ * Relevance comparator:
+ * 1. Names that START with query
+ * 2. Names that merely CONTAIN query
+ * 3. Other own-field matches (identifier, wing band)
+ * 4. Parent matches (when includeParents is true)
+ */
+export function compareFowlSearchRelevance(
+  matchA: FowlMatchResult,
+  matchB: FowlMatchResult
+): number {
+  const rank = (m: FowlMatchResult) => {
+    if (!m.matched) return 99;
+    if (m.nameStarts) return 1;
+    if (m.nameContains) return 2;
+    if (m.reason === 'self') return 3;
+    if (m.reason === 'sire' || m.reason === 'dam') return 4;
+    return 5;
+  };
+  return rank(matchA) - rank(matchB);
 }

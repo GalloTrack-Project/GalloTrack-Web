@@ -7,6 +7,10 @@ import { genderLabel, parentBreedOf, parentBloodlineOf } from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
+import { useDebounce } from '@/lib/use-debounce';
+import { HighlightText } from '@/components/ui/HighlightText';
+import { inspectFowlMatch, compareFowlSearchRelevance, type FowlMatchResult } from '@/lib/lineage';
+import { Search, X } from 'lucide-react';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
@@ -15,9 +19,9 @@ type SortKey = 'name' | 'age' | 'strain' | 'winrate' | 'weight';
 type Props = {
   fowls: FowlRecord[];
   matchHistory: MatchRecord[];
-  search: string;
-  setSearch: (v: string) => void;
-  debouncedSearch: string;
+  search?: string;
+  setSearch?: (v: string) => void;
+  debouncedSearch?: string;
   setCurrentPage: (v: PageId) => void;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
 };
@@ -74,7 +78,23 @@ function ComplianceBadge({ grade }: { grade: string }) {
   return <span className={`text-xs font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
 }
 
-function FowlCard({ fowl, fowls, matches, onClick, code }: { fowl: FowlRecord; fowls: FowlRecord[]; matches: MatchRecord[]; onClick: () => void; code?: string }) {
+function FowlCard({
+  fowl,
+  fowls,
+  matches,
+  onClick,
+  code,
+  query,
+  parentHint,
+}: {
+  fowl: FowlRecord;
+  fowls: FowlRecord[];
+  matches: MatchRecord[];
+  onClick: () => void;
+  code?: string;
+  query?: string;
+  parentHint?: string;
+}) {
   const unitPrefs = useUnitPrefs();
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
   const sireBreed = parentBreedOf(fowl.sire, fowls);
@@ -115,13 +135,28 @@ function FowlCard({ fowl, fowls, matches, onClick, code }: { fowl: FowlRecord; f
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">{fowl.name}</h4>
+            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">
+              <HighlightText text={fowl.name} query={query} />
+            </h4>
             {code && (
-              <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">{formatBirdCodeForDisplay(code)}</span>
+              <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">
+                <HighlightText text={formatBirdCodeForDisplay(code)} query={query} />
+              </span>
             )}
           </div>
+          {parentHint && (
+            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
+              <span className="opacity-80 font-normal">Matched via:</span>
+              <span className="font-extrabold">{parentHint}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2 mt-1">
             <span className="text-xs font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
+            {fowl.wing_band ? (
+              <span className="text-xs font-mono font-bold text-muted-foreground">
+                🏷 <HighlightText text={fowl.wing_band} query={query} />
+              </span>
+            ) : null}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <GenderIcon gender={fowl.gender} />
@@ -327,10 +362,25 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
   );
 }
 
-export default function MarketplacePage({ fowls, matchHistory, search, setSearch, debouncedSearch, setCurrentPage, setProfilingSubTab }: Props) {
+export default function MarketplacePage({
+  fowls,
+  matchHistory,
+  search: propSearch,
+  setSearch: propSetSearch,
+  debouncedSearch: propDebouncedSearch,
+  setCurrentPage,
+  setProfilingSubTab,
+}: Props) {
+  const [internalSearch, setInternalSearch] = useState('');
+  const search = propSearch !== undefined ? propSearch : internalSearch;
+  const setSearch = propSetSearch !== undefined ? propSetSearch : setInternalSearch;
+
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [selectedFowl, setSelectedFowl] = useState<FowlRecord | null>(null);
+  const [includeParents, setIncludeParents] = useState(false);
+  const internalDebouncedQuery = useDebounce(search || '', 250);
+  const debouncedQuery = (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedQuery) || '';
 
   const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
     { id: 'all', label: 'All Chickens', count: fowls.length },
@@ -342,29 +392,39 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
 
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
 
-  const filteredFowls = useMemo(() => {
-    let result = fowls;
+  const { filteredFowls, matchMap } = useMemo(() => {
+    let pool = fowls;
+    if (activeTab === 'active') pool = pool.filter((f) => f.status === 'Active');
+    else if (activeTab === 'breeding') pool = pool.filter((f) => f.status === 'Active' && (f.growth_stage === 'Mature' || f.growth_stage === 'Broodcock' || f.growth_stage === 'Broodhen'));
+    else if (activeTab === 'archived') pool = pool.filter((f) => f.status === 'Archived');
+    else if (activeTab === 'deceased') pool = pool.filter((f) => f.status === 'Deceased');
 
-    const q = search.trim().toLowerCase();
-    if (q) {
-      result = result.filter((f) =>
-        f.name.toLowerCase().includes(q) ||
-        f.breed.toLowerCase().includes(q) ||
-        f.gender.toLowerCase().includes(q) ||
-        f.color?.toLowerCase().includes(q) ||
-        f.sire?.toLowerCase().includes(q) ||
-        f.dam?.toLowerCase().includes(q) ||
-        f.wing_band?.toLowerCase().includes(q) ||
-        f.bird_code?.toLowerCase().includes(q)
-      );
+    const matches = new Map<number, FowlMatchResult>();
+    let result: FowlRecord[] = [];
+
+    if (debouncedQuery.trim()) {
+      for (const f of pool) {
+        const code = birdCodes.get(String(f.id)) || null;
+        const res = inspectFowlMatch(f, debouncedQuery, code, { includeParents });
+        if (res.matched) {
+          matches.set(f.id, res);
+          result.push(f);
+        }
+      }
+    } else {
+      result = [...pool];
     }
 
-    if (activeTab === 'active') result = result.filter((f) => f.status === 'Active');
-    else if (activeTab === 'breeding') result = result.filter((f) => f.status === 'Active' && (f.growth_stage === 'Mature' || f.growth_stage === 'Broodcock' || f.growth_stage === 'Broodhen'));
-    else if (activeTab === 'archived') result = result.filter((f) => f.status === 'Archived');
-    else if (activeTab === 'deceased') result = result.filter((f) => f.status === 'Deceased');
+    result.sort((a, b) => {
+      if (debouncedQuery.trim()) {
+        const mA = matches.get(a.id);
+        const mB = matches.get(b.id);
+        if (mA && mB) {
+          const rel = compareFowlSearchRelevance(mA, mB);
+          if (rel !== 0) return rel;
+        }
+      }
 
-    result = [...result].sort((a, b) => {
       if (sortKey === 'name') return a.name.localeCompare(b.name);
       if (sortKey === 'age') return getAgeDays(a.birthdate) - getAgeDays(b.birthdate);
       if (sortKey === 'strain') return a.breed.localeCompare(b.breed);
@@ -377,8 +437,8 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
       return 0;
     });
 
-    return result;
-  }, [fowls, search, activeTab, sortKey, matchHistory]);
+    return { filteredFowls: result, matchMap: matches };
+  }, [fowls, debouncedQuery, includeParents, activeTab, sortKey, matchHistory, birdCodes]);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -391,14 +451,48 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
             <p className="text-sm text-muted-foreground font-semibold mt-1">All your chickens in one list — status, age, weight, stage, and lineage</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-none md:w-72">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </span>
-            <input type="text" placeholder="Search name, strain, sire, dam, wing band..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-col gap-1.5 flex-1 md:flex-none">
+            <div className="relative flex-1 md:w-72">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                <Search className="w-4 h-4" />
+              </span>
+              <input
+                type="search"
+                aria-label="Search Inventory"
+                placeholder="Search name, ID, or wing band…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setSearch('');
+                  }
+                }}
+                className="w-full pl-10 pr-9 py-2.5 sm:py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-semibold [&::-webkit-search-cancel-button]:appearance-none"
+              />
+              {search.length > 0 && (
+                <button
+                  type="button"
+                  aria-label="Clear search input"
+                  onClick={() => setSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer select-none pl-1">
+              <input
+                type="checkbox"
+                checked={includeParents}
+                onChange={(e) => setIncludeParents(e.target.checked)}
+                className="w-3.5 h-3.5 rounded border-border text-emerald-600 focus:ring-emerald-500/20 cursor-pointer accent-emerald-600"
+              />
+              <span>Include parents</span>
+            </label>
           </div>
-          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
+          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="self-start sm:self-auto shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span className="hidden sm:inline">Add Chicken</span>
             <span className="sm:hidden">Add</span>
@@ -433,20 +527,70 @@ export default function MarketplacePage({ fowls, matchHistory, search, setSearch
         </div>
       </div>
 
+      {/* Search Result Count Banner */}
+      {debouncedQuery.trim() && (
+        <div
+          data-testid="search-results-banner"
+          className="flex items-center justify-between bg-muted/60 px-3.5 py-2 rounded-lg border border-border text-xs font-medium animate-fadeIn"
+        >
+          <span className="text-muted-foreground">
+            Showing <strong className="text-foreground font-black">{filteredFowls.length}</strong> {filteredFowls.length === 1 ? 'result' : 'results'} for &ldquo;<span className="text-emerald-700 dark:text-emerald-400 font-bold">{debouncedQuery}</span>&rdquo;
+            {includeParents && <span className="ml-1 opacity-75">(including parents)</span>}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+          >
+            Clear search
+          </button>
+        </div>
+      )}
+
       {/* Grid */}
       {filteredFowls.length === 0 ? (
-        <div className="bg-card p-14 text-center rounded-lg border border-border shadow-sm space-y-3">
-          <div className="w-16 h-16 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-3xl mx-auto">
-            {'\uD83E\uDDEC'}
+        <div className="bg-card p-12 text-center rounded-lg border border-border shadow-sm space-y-3.5 max-w-md mx-auto my-6">
+          <div className="w-14 h-14 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/20">
+            🔍
           </div>
-          <h2 className="text-base font-extrabold text-card-foreground">No Chickens Found</h2>
-          <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chickens match your current filters. Try adjusting your search or add new chickens.</p>
+          <div className="space-y-1">
+            <h2 className="text-base font-extrabold text-card-foreground">
+              {debouncedQuery.trim() ? `No chickens found for "${debouncedQuery}"` : 'No Chickens Found'}
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium max-w-sm mx-auto">
+              {debouncedQuery.trim()
+                ? 'No chickens match your search in this tab. Check the spelling or enable "Include parents" to search lineage.'
+                : 'No chickens match your current filters. Try adjusting your search or add new chickens.'}
+            </p>
+          </div>
+          {debouncedQuery.trim() && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all cursor-pointer"
+            >
+              Clear search
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredFowls.map((fowl) => (
-                <FowlCard key={fowl.id} fowl={fowl} fowls={fowls} matches={matchHistory} code={birdCodes.get(String(fowl.id))} onClick={() => setSelectedFowl(fowl)} />
-          ))}
+          {filteredFowls.map((fowl) => {
+            const m = matchMap.get(fowl.id);
+            const parentHint = m?.reason === 'sire' || m?.reason === 'dam' ? m.parentHint : undefined;
+            return (
+              <FowlCard
+                key={fowl.id}
+                fowl={fowl}
+                fowls={fowls}
+                matches={matchHistory}
+                code={birdCodes.get(String(fowl.id))}
+                onClick={() => setSelectedFowl(fowl)}
+                query={debouncedQuery}
+                parentHint={parentHint}
+              />
+            );
+          })}
         </div>
       )}
 

@@ -12,9 +12,12 @@ import {
   parentBreedOf,
 } from '@/lib/helpers';
 import Pagination from '@/components/Pagination';
-import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { fowlMatchesQuery } from '@/lib/lineage';
+import { birdCodeOf, formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { fowlMatchesQuery, inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { archiveDisplay, retiredScopeLabel } from '@/lib/lifecycle';
+import { useDebounce } from '@/lib/use-debounce';
+import { HighlightText } from '@/components/ui/HighlightText';
+import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
 
 type Props = {
   tab: 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring';
@@ -39,7 +42,7 @@ type Props = {
 
 export type RoleStatusFilter = 'Active' | 'Archived' | 'Deceased';
 
-function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, onOpenDetails, allFowls }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; onOpenDetails?: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, onOpenDetails, allFowls, highlightQuery }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; onOpenDetails?: (f: FowlRecord) => void; allFowls: FowlRecord[]; highlightQuery?: string }) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
@@ -69,12 +72,12 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
         <div className="flex items-center flex-wrap gap-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">
             <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 shadow-2xs tracking-tight">
-              [{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}]
+              [<HighlightText text={formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'} query={highlightQuery} />]
             </span>
-            <span>{fowl.name}</span>
+            <HighlightText text={fowl.name} query={highlightQuery} />
           </h4>
           {fowl.wing_band ? (
-            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{fowl.breed}</span>
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
@@ -160,7 +163,7 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
   );
 }
 
-function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; index: number; onRestore: (id: number) => void; allFowls: FowlRecord[] }) {
+function ArchivedCard({ fowl, index, onRestore, allFowls, highlightQuery }: { fowl: FowlRecord; index: number; onRestore: (id: number) => void; allFowls: FowlRecord[]; highlightQuery?: string }) {
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   const sireBreed = parentBreedOf(fowl.sire, allFowls);
@@ -189,14 +192,14 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
         <div className="flex items-center flex-wrap gap-2">
           <h4 className="text-base font-black text-slate-700 dark:text-card-foreground flex items-center gap-2">
             <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800 shadow-2xs tracking-tight">
-              [{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}]
+              [<HighlightText text={formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'} query={highlightQuery} />]
             </span>
-            <span>{fowl.name}</span>
+            <HighlightText text={fowl.name} query={highlightQuery} />
           </h4>
           {fowl.wing_band ? (
-            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
-          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">📦 Archived</span>
+          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">{fowl.breed}</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800">{fowl.breed}</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
         </div>
@@ -219,7 +222,7 @@ function ArchivedCard({ fowl, index, onRestore, allFowls }: { fowl: FowlRecord; 
   );
 }
 
-function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void; allFowls: FowlRecord[] }) {
+function DeceasedCard({ fowl, index, onDelete, allFowls, highlightQuery }: { fowl: FowlRecord; index: number; onDelete: (f: FowlRecord) => void; allFowls: FowlRecord[]; highlightQuery?: string }) {
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   const sireBreed = parentBreedOf(fowl.sire, allFowls);
@@ -234,12 +237,12 @@ function DeceasedCard({ fowl, index, onDelete, allFowls }: { fowl: FowlRecord; i
         <div className="flex items-center flex-wrap gap-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">
             <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 shadow-2xs tracking-tight">
-              [{formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'}]
+              [<HighlightText text={formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'} query={highlightQuery} />]
             </span>
-            <span className="line-through opacity-75">{fowl.name}</span>
+            <HighlightText text={fowl.name} query={highlightQuery} className="line-through opacity-75" />
           </h4>
           {fowl.wing_band ? (
-            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 {fowl.wing_band}</span>
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800">{fowl.breed}</span>
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
@@ -296,6 +299,7 @@ export default function FowlLists({
 }: Props) {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 250);
   const [filterSire, setFilterSire] = useState('all');
   const [filterDam, setFilterDam] = useState('all');
   const [filterStage, setFilterStage] = useState('all');
@@ -313,7 +317,14 @@ export default function FowlLists({
     if (prevTabRef.current !== tab) {
       prevTabRef.current = tab;
       setPage(1);
+      // Cleanly reset tab-specific dropdowns so user isn't trapped with 0 results,
+      // while keeping query intact so user's active search persists across tabs.
+      setFilterSire('all');
+      setFilterDam('all');
       setFilterReason('all');
+      setFilterStage('all');
+      setFilterBreed('all');
+      setFilterFights('all');
       if (tab === 'archived') setRoleStatus('Archived');
       else if (tab === 'deceased') setRoleStatus('Deceased');
       else if (tab === 'males' || tab === 'females' || tab === 'offspring') setRoleStatus('Active');
@@ -350,6 +361,18 @@ export default function FowlLists({
   }, [tab, maleActiveFowls, femaleActiveFowls, sireMaterialFowls, offspringFowls, fowls, archivedFowls, deceasedFowls]);
 
   const allFowls = useMemo(() => [...fowls, ...archivedFowls, ...deceasedFowls], [fowls, archivedFowls, deceasedFowls]);
+  const birdCodesMap = useMemo(() => resolveBirdCodes(allFowls), [allFowls]);
+
+  const birdNameCodeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const f of allFowls) {
+      const code = birdCodesMap.get(String(f.id));
+      if (code) {
+        map.set(f.name.trim().toLowerCase(), code);
+      }
+    }
+    return map;
+  }, [allFowls, birdCodesMap]);
 
   const baseList = useMemo(() => {
     if (rolePool) {
@@ -372,28 +395,50 @@ export default function FowlLists({
   );
 
   const filterOptions = useMemo(() => {
-    const sires = new Set<string>();
-    const dams = new Set<string>();
+    const sires = new Map<string, ParentOption>();
+    const dams = new Map<string, ParentOption>();
     const stages = new Set<string>();
     const reasons = new Set<string>();
     const breeds = new Set<string>();
     for (const f of baseList) {
       const s = (f.sire || '').trim();
       const d = (f.dam || '').trim();
-      if (s) sires.add(s);
-      if (d) dams.add(d);
+      if (s) {
+        const existing = sires.get(s);
+        if (existing) {
+          existing.count = (existing.count || 0) + 1;
+        } else {
+          sires.set(s, {
+            name: s,
+            code: birdNameCodeMap.get(s.toLowerCase()) || null,
+            count: 1,
+          });
+        }
+      }
+      if (d) {
+        const existing = dams.get(d);
+        if (existing) {
+          existing.count = (existing.count || 0) + 1;
+        } else {
+          dams.set(d, {
+            name: d,
+            code: birdNameCodeMap.get(d.toLowerCase()) || null,
+            count: 1,
+          });
+        }
+      }
       stages.add((f.growth_stage || 'Stag').trim() || 'Stag');
       if ((f.breed || '').trim()) breeds.add(f.breed.trim());
       if (effectiveStatus === 'Archived' || effectiveStatus === 'Deceased') reasons.add(reasonValue(f));
     }
     return {
-      sires: Array.from(sires).sort((a, b) => a.localeCompare(b)),
-      dams: Array.from(dams).sort((a, b) => a.localeCompare(b)),
+      sires: Array.from(sires.values()).sort((a, b) => a.name.localeCompare(b.name)),
+      dams: Array.from(dams.values()).sort((a, b) => a.name.localeCompare(b.name)),
       stages: Array.from(stages).sort((a, b) => a.localeCompare(b)),
       reasons: Array.from(reasons).sort((a, b) => a.localeCompare(b)),
       breeds: Array.from(breeds).sort((a, b) => a.localeCompare(b)),
     };
-  }, [baseList, effectiveStatus, reasonValue]);
+  }, [baseList, effectiveStatus, reasonValue, birdNameCodeMap]);
 
   const filtersActive =
     filterSire !== 'all' ||
@@ -403,14 +448,33 @@ export default function FowlLists({
     filterBreed !== 'all' ||
     filterFights !== 'all' ||
     query.trim() !== '';
-  const clearFilters = () => { setFilterSire('all'); setFilterDam('all'); setFilterStage('all'); setFilterReason('all'); setFilterBreed('all'); setFilterFights('all'); setQuery(''); setPage(1); };
-  const applyFilter = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
+
+  const clearFilters = () => {
+    setFilterSire('all');
+    setFilterDam('all');
+    setFilterStage('all');
+    setFilterReason('all');
+    setFilterBreed('all');
+    setFilterFights('all');
+    setQuery('');
+    setPage(1);
+  };
+
+  const foughtNames = useMemo(
+    () => new Set(matchHistory.map((m) => m.entry_name.trim().toLowerCase())),
+    [matchHistory],
+  );
 
   const paginatedBirds = useMemo(() => {
-    const foughtNames = new Set(matchHistory.map((m) => m.entry_name.trim().toLowerCase()));
-    const list = baseList.filter((f) => {
-      const code = birdCodeOf(f, allFowls);
-      const searchOk = fowlMatchesQuery(f, query) || (!!code && code.toLowerCase().includes(query.trim().toLowerCase()));
+    const qTrim = debouncedQuery.trim();
+    type ItemWithMatch = { fowl: FowlRecord; match: ReturnType<typeof inspectFowlMatch> };
+    const matchedList: ItemWithMatch[] = [];
+
+    for (const f of baseList) {
+      const code = birdCodesMap.get(String(f.id)) || null;
+      const match = inspectFowlMatch(f, qTrim, code);
+      if (!match.matched) continue;
+
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
@@ -418,115 +482,86 @@ export default function FowlLists({
       const breedOk = filterBreed === 'all' || (f.breed || '').trim().toLowerCase() === filterBreed.toLowerCase();
       const hasFights = foughtNames.has(f.name.trim().toLowerCase());
       const fightsOk = filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
-      return searchOk && sireOk && damOk && stageOk && reasonOk && breedOk && fightsOk;
-    });
+
+      if (sireOk && damOk && stageOk && reasonOk && breedOk && fightsOk) {
+        matchedList.push({ fowl: f, match });
+      }
+    }
+
+    if (qTrim) {
+      matchedList.sort((a, b) => compareFowlSearchRelevance(a.match, b.match));
+    }
+
+    const list = matchedList.map((item) => item.fowl);
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [baseList, allFowls, page, query, filterSire, filterDam, filterStage, filterReason, filterBreed, filterFights, reasonValue, matchHistory]);
+  }, [baseList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterReason, filterBreed, filterFights, reasonValue, foughtNames, page]);
 
   const filterBar = (
-    <div className="bg-white dark:bg-card p-3.5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-wrap items-end gap-3">
-      <div className="flex-1 min-w-[200px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="registry-search">Search Registry</label>
-        <input
-          id="registry-search"
-          type="search"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-          placeholder="Name, wing band, chicken code, sire, dam…"
-          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500"
-        />
-      </div>
-      <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-sire">Filter by Sire</label>
-        <select
-          value={filterSire}
-          onChange={applyFilter(setFilterSire)}
-          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-          id="filter-by-sire">
-          <option value="all">All Sires</option>
-          {filterOptions.sires.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-      <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-dam">Filter by Dam</label>
-        <select
-          value={filterDam}
-          onChange={applyFilter(setFilterDam)}
-          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-          id="filter-by-dam">
-          <option value="all">All Dams</option>
-          {filterOptions.dams.map((d) => <option key={d} value={d}>{d}</option>)}
-        </select>
-      </div>
-      <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-growth-stage">Filter by Growth Stage</label>
-        <select
-          value={filterStage}
-          onChange={applyFilter(setFilterStage)}
-          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-          id="filter-by-growth-stage">
-          <option value="all">All Stages</option>
-          {filterOptions.stages.map((st) => <option key={st} value={st}>{st}</option>)}
-        </select>
-      </div>
-      <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-breed">Filter by Breed</label>
-        <select
-          value={filterBreed}
-          onChange={applyFilter(setFilterBreed)}
-          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-          id="filter-by-breed">
-          <option value="all">All Breeds</option>
-          {filterOptions.breeds.map((b) => <option key={b} value={b}>{b}</option>)}
-        </select>
-      </div>
-      <div className="flex-1 min-w-[160px]">
-        <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-fights">Fight Record</label>
-        <select
-          value={filterFights}
-          onChange={(e) => { setFilterFights(e.target.value as 'all' | 'with' | 'without'); setPage(1); }}
-          className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-          id="filter-by-fights">
-          <option value="all">All Chickens</option>
-          <option value="with">With Fight Records</option>
-          <option value="without">Without Fight Records</option>
-        </select>
-      </div>
-      {(effectiveStatus === 'Archived' || effectiveStatus === 'Deceased') && (
-        <div className="flex-1 min-w-[160px]">
-          <label className="block text-xs font-black text-muted-foreground uppercase tracking-wider mb-1" htmlFor="filter-by-reason">
-            {effectiveStatus === 'Archived' ? 'Filter by Archive Reason' : 'Filter by Cause of Death'}
-          </label>
-          <select
-            value={filterReason}
-            onChange={applyFilter(setFilterReason)}
-            className="w-full p-2.5 border border-input-border rounded-md text-xs bg-white dark:bg-input text-neutral-900 dark:text-foreground font-bold focus:border-emerald-500 cursor-pointer"
-            id="filter-by-reason">
-            <option value="all">{effectiveStatus === 'Archived' ? 'All Reasons' : 'All Causes'}</option>
-            {filterOptions.reasons.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </div>
-      )}
-      <div className="flex items-center gap-2 pb-0.5">
-        {filtersActive && (
-          <button type="button" onClick={clearFilters} className="text-xs font-black text-danger dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-2 rounded-sm transition-all cursor-pointer">
-            ✕ Reset
-          </button>
-        )}
-        <span className="text-xs font-bold text-muted-foreground">
-          {paginatedBirds.list.length} of {baseList.length}
-        </span>
-      </div>
-    </div>
+    <RegistryFilterBar
+      query={query}
+      onQueryChange={(q) => { setQuery(q); setPage(1); }}
+      debouncedQuery={debouncedQuery}
+      isDebouncing={query.trim() !== debouncedQuery.trim()}
+      filterSire={filterSire}
+      onFilterSireChange={(s) => { setFilterSire(s); setPage(1); }}
+      filterDam={filterDam}
+      onFilterDamChange={(d) => { setFilterDam(d); setPage(1); }}
+      filterStage={filterStage}
+      onFilterStageChange={(st) => { setFilterStage(st); setPage(1); }}
+      filterBreed={filterBreed}
+      onFilterBreedChange={(b) => { setFilterBreed(b); setPage(1); }}
+      filterFights={filterFights}
+      onFilterFightsChange={(f) => { setFilterFights(f); setPage(1); }}
+      filterReason={filterReason}
+      onFilterReasonChange={(r) => { setFilterReason(r); setPage(1); }}
+      effectiveStatus={effectiveStatus as 'Active' | 'Archived' | 'Deceased'}
+      sireOptions={filterOptions.sires}
+      damOptions={filterOptions.dams}
+      stageOptions={filterOptions.stages}
+      breedOptions={filterOptions.breeds}
+      reasonOptions={filterOptions.reasons}
+      filteredCount={paginatedBirds.list.length}
+      totalCount={baseList.length}
+      onResetAll={clearFilters}
+    />
   );
 
   const filteredEmpty = (
-    <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-      <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-success flex items-center justify-center text-3xl mx-auto">🔍</div>
-      <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Matching Chickens</h3>
-      <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No registry entries match the selected filters.</p>
-      <button type="button" onClick={clearFilters} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">✕ Reset Filters</button>
+    <div className="bg-white dark:bg-card p-8 sm:p-12 text-center rounded-xl border border-slate-200/80 dark:border-border shadow-sm space-y-4 max-w-lg mx-auto my-6 animate-fadeIn">
+      <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto shadow-xs border border-emerald-100 dark:border-emerald-900/40">
+        🔍
+      </div>
+      <div className="space-y-1.5">
+        <h3 className="text-base font-bold text-slate-900 dark:text-foreground">
+          {debouncedQuery.trim()
+            ? `No chickens found for "${debouncedQuery}"`
+            : 'No chickens match your filters'}
+        </h3>
+        <p className="text-xs sm:text-sm text-muted-foreground font-normal max-w-sm mx-auto">
+          {debouncedQuery.trim()
+            ? 'Check the spelling or try searching by unique identifier (e.g. 1A), wing band number, sire, or dam.'
+            : 'Try adjusting your dropdown filters or resetting them to view chickens in this category.'}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+        {debouncedQuery.trim() && (
+          <button
+            type="button"
+            onClick={() => { setQuery(''); setPage(1); }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all cursor-pointer"
+          >
+            Clear search
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-muted dark:hover:bg-muted/80 text-foreground transition-all cursor-pointer"
+        >
+          Reset all filters
+        </button>
+      </div>
     </div>
   );
 
@@ -593,6 +628,7 @@ export default function FowlLists({
           index={index}
           onDelete={setPendingPermanentDelete}
           allFowls={fowls}
+          highlightQuery={debouncedQuery}
         />
       );
     }
@@ -604,6 +640,7 @@ export default function FowlLists({
           index={index}
           onRestore={handleRestoreFowlOnly}
           allFowls={fowls}
+          highlightQuery={debouncedQuery}
         />
       );
     }
@@ -619,6 +656,7 @@ export default function FowlLists({
         onOpenDetails={setSelectedFowlForDetails}
         onSetActive={tab === 'sireMaterial' ? handleSetActiveStatus : undefined}
         allFowls={fowls}
+        highlightQuery={debouncedQuery}
       />
     );
   };
@@ -750,9 +788,7 @@ export default function FowlLists({
           </div>
         ) : (
           <>
-            {pagedList.map((fowl, index) => (
-              <FowlCard key={fowl.id} fowl={fowl} index={index} gender="Male" onEdit={handleOpenEditModal} onArchive={setSelectedFowlForArchive} onDeceased={setSelectedFowlForDeceased} onSetActive={handleSetActiveStatus} onOpenDetails={setSelectedFowlForDetails} allFowls={fowls} />
-            ))}
+            {pagedList.map((fowl, index) => renderCard(fowl, index, 'Male'))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -786,9 +822,7 @@ export default function FowlLists({
           </div>
         ) : (
           <>
-            {pagedList.map((fowl, index) => (
-              <ArchivedCard key={fowl.id} fowl={fowl} index={index} onRestore={handleRestoreFowlOnly} allFowls={fowls} />
-            ))}
+            {pagedList.map((fowl, index) => renderCard(fowl, index, 'Male'))}
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -821,9 +855,7 @@ export default function FowlLists({
         </div>
       ) : (
         <>
-          {deceasedPagedList.map((fowl, index) => (
-            <DeceasedCard key={fowl.id} fowl={fowl} index={index} onDelete={setPendingPermanentDelete} allFowls={fowls} />
-          ))}
+          {deceasedPagedList.map((fowl, index) => renderCard(fowl, index, 'Male'))}
           <Pagination currentPage={page} totalPages={deceasedTotalPages} onPageChange={setPage} />
         </>
       )}

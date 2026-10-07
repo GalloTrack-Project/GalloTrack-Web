@@ -194,9 +194,10 @@ function findMatchingStandards(strain: string): BreedStandard[] {
   return BREED_STANDARDS.filter(s => normalized.includes(s.strain));
 }
 
-function parseNumericValue(val: number | string): number {
+function parseNumericValue(val: number | string | undefined | null): number {
   if (typeof val === 'number') return val;
-  return Number(val.replace(/[^0-9.]/g, '')) || 0;
+  if (!val) return 0;
+  return Number(String(val).replace(/[^0-9.]/g, '')) || 0;
 }
 
 function checkWeightCompliance(weight: number | string, standard: BreedStandard | null): BreedCompliance['weightCompliance'] {

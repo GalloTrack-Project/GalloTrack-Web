@@ -189,13 +189,30 @@ describe('pairingCodeFor', () => {
 });
 
 describe('fowlMatchesQuery', () => {
-  it('matches name, wing band, codes, parents, breed and color', () => {
+  it('matches only name, wing band, and codes by default', () => {
     expect(fowlMatchesQuery(chick, 'spur')).toBe(true);
     expect(fowlMatchesQuery(chick, 'wb-003')).toBe(true);
     expect(fowlMatchesQuery(chick, '1A1')).toBe(true);
-    expect(fowlMatchesQuery(chick, 'blue king')).toBe(true);
-    expect(fowlMatchesQuery(chick, 'kelso')).toBe(true);
-    expect(fowlMatchesQuery(chick, 'red')).toBe(true);
+    expect(fowlMatchesQuery(chick, '1A')).toBe(true);
+  });
+
+  it('does NOT match parents, breed, traits, or color by default', () => {
+    expect(fowlMatchesQuery(chick, 'blue king')).toBe(false);
+    expect(fowlMatchesQuery(chick, 'gold hen')).toBe(false);
+    expect(fowlMatchesQuery(chick, 'kelso')).toBe(false);
+    expect(fowlMatchesQuery(chick, 'red')).toBe(false);
+    expect(fowlMatchesQuery(chick, 'aggressive')).toBe(false);
+  });
+
+  it('matches parents only when includeParents option is true', () => {
+    expect(fowlMatchesQuery(chick, 'blue king', null, { includeParents: true })).toBe(true);
+    expect(fowlMatchesQuery(chick, 'gold hen', null, { includeParents: true })).toBe(true);
+    expect(fowlMatchesQuery(chick, 'kelso', null, { includeParents: true })).toBe(false);
+  });
+
+  it('ignores extra whitespace and case differences', () => {
+    expect(fowlMatchesQuery(chick, '   SPUR   ')).toBe(true);
+    expect(fowlMatchesQuery(chick, '  wb-003  ')).toBe(true);
   });
 
   it('does not match unrelated text', () => {
