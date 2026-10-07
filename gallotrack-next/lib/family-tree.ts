@@ -136,7 +136,7 @@ export function filterBreedingPairs(pairs: BreedingPair[], query: string): Breed
       out.push(pair);
       return;
     }
-    const members = pair.members.filter((m) => matchesQuery(query, m.name));
+    const members = pair.members.filter((m) => matchesQuery(query, m.name, m.bird_code, m.wing_band));
     if (members.length > 0) out.push({ ...pair, members });
   });
   return out;

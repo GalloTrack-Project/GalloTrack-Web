@@ -270,6 +270,9 @@ type Props = {
   query?: string;
   onPick?: (f: FowlRecord) => void;
   onShowFights?: (f: FowlRecord) => void;
+  sortBy?: 'most' | 'name' | 'newest';
+  collapsedKeys?: Set<string>;
+  onToggleCollapse?: (key: string) => void;
 };
 
 /**
@@ -282,9 +285,30 @@ type Props = {
  *    ├── Offspring 1A2
  *    └── Offspring 1A3
  */
-export default function FamilyTree({ fowls, codes, query = '', onPick, onShowFights }: Props) {
+export default function FamilyTree({
+  fowls,
+  codes,
+  query = '',
+  onPick,
+  onShowFights,
+  sortBy = 'most',
+  collapsedKeys,
+  onToggleCollapse,
+}: Props) {
   const [maxDepth, setMaxDepth] = useState<Depth>(2);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [internalCollapsed, setInternalCollapsed] = useState<Set<string>>(new Set());
+
+  const collapsed = collapsedKeys !== undefined ? collapsedKeys : internalCollapsed;
+  const toggleCollapse = onToggleCollapse !== undefined
+    ? onToggleCollapse
+    : (key: string) => {
+        setInternalCollapsed((prev) => {
+          const next = new Set(prev);
+          if (next.has(key)) next.delete(key);
+          else next.add(key);
+          return next;
+        });
+      };
 
   const byName = useMemo(() => {
     const m = new Map<string, FowlRecord>();
@@ -296,18 +320,20 @@ export default function FamilyTree({ fowls, codes, query = '', onPick, onShowFig
   }, [fowls]);
 
   const index = useMemo(() => buildOffspringIndex(fowls), [fowls]);
-  const pairs = useMemo(
-    () => filterBreedingPairs(buildBreedingPairs(fowls), query),
-    [fowls, query]
-  );
-
-  const toggleCollapse = (key: string) =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  const pairs = useMemo(() => {
+    const list = filterBreedingPairs(buildBreedingPairs(fowls), query);
+    if (sortBy === 'name') {
+      return [...list].sort((a, b) => `${a.sire} ${a.dam}`.localeCompare(`${b.sire} ${b.dam}`));
+    }
+    if (sortBy === 'newest') {
+      return [...list].sort((a, b) => {
+        const maxA = a.members.length ? Math.max(...a.members.map((m) => m.id)) : 0;
+        const maxB = b.members.length ? Math.max(...b.members.map((m) => m.id)) : 0;
+        return maxB - maxA;
+      });
+    }
+    return list;
+  }, [fowls, query, sortBy]);
 
   if (fowls.length === 0) {
     return (
