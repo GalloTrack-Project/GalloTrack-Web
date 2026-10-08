@@ -8,69 +8,29 @@ import { useUI } from '@/lib/contexts/ui-context';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import ChickenIcon from '@/components/ChickenIcon';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Button } from '@/components/ui/Button';
 import { SkipLink } from '@/components/ui/SkipLink';
-import StatusBadge from '@/components/ui/StatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, Printer, ExternalLink, Plus, UserPlus, Search, X } from 'lucide-react';
-
-const MAX_ANCESTOR_GENERATIONS = 3;
-const CARD_WIDTH = 190;
+import { ArrowLeft, ChevronLeft, ChevronRight, Printer, ExternalLink, Plus, UserPlus, Search, X } from 'lucide-react';
 
 const keyFn = (v?: string | null) => String(v ?? '').trim().toLowerCase();
 
-type Accent = 'emerald' | 'sky' | 'amber' | 'violet';
-
-const ACCENT: Record<Accent, { border: string; badge: string; text: string; ring: string }> = {
-  emerald: {
-    border: 'border-emerald-300 dark:border-emerald-700',
-    badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    ring: 'focus-visible:ring-emerald-500',
-  },
-  sky: {
-    border: 'border-sky-300 dark:border-sky-700',
-    badge: 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400',
-    text: 'text-sky-700 dark:text-sky-400',
-    ring: 'focus-visible:ring-sky-500',
-  },
-  amber: {
-    border: 'border-amber-300 dark:border-amber-700',
-    badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400',
-    text: 'text-amber-700 dark:text-amber-400',
-    ring: 'focus-visible:ring-amber-500',
-  },
-  violet: {
-    border: 'border-violet-300 dark:border-violet-700',
-    badge: 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-400',
-    text: 'text-violet-700 dark:text-violet-400',
-    ring: 'focus-visible:ring-violet-500',
-  },
-};
-
-const GEN_ACCENT: Accent[] = ['emerald', 'sky', 'amber', 'violet'];
-
-const ROLE_LABEL = (gen: number, side: 'sire' | 'dam' | 'self'): string => {
-  if (gen === 0) return 'Subject';
-  if (side === 'self') return 'Subject';
-  const prefix = gen === 1 ? '' : gen === 2 ? 'Grand' : 'Great-Grand';
-  return `${prefix}${side === 'sire' ? 'Sire' : 'Dam'}`;
-};
-
-type ResolvedNode = {
+export type PedigreeNode = {
+  id: string;
+  gen: number;
+  startRow: number;
+  rowSpan: number;
   fowl: FowlRecord | null;
   name: string;
   isMerged?: boolean;
-  sideHint?: 'sire' | 'dam' | 'both';
+  role: 'subject' | 'sire' | 'dam' | 'unknown';
+  sireName?: string;
+  damName?: string;
   childBreedHint?: string;
   childName?: string;
 };
-
-type GridCell = ResolvedNode | null;
-type AncestorGrid = GridCell[][];
 
 function resolveFowlByName(
   fowls: FowlRecord[],
@@ -81,25 +41,35 @@ function resolveFowlByName(
   return byName.get(keyFn(name));
 }
 
-function buildAncestorGrid(subject: FowlRecord, fowls: FowlRecord[], byName: Map<string, FowlRecord>): AncestorGrid {
-  const cols: AncestorGrid = Array.from({ length: MAX_ANCESTOR_GENERATIONS + 1 }, () => []);
+export function buildPedigreeGrid(
+  subject: FowlRecord,
+  fowls: FowlRecord[],
+  byName: Map<string, FowlRecord>,
+  numGens: number
+): { nodes: PedigreeNode[]; totalRows: number } {
+  const totalRows = Math.pow(2, numGens - 1);
+  const nodes: PedigreeNode[] = [];
 
-  cols[0][0] = { fowl: subject, name: subject.name };
+  // Generation 0: Subject
+  nodes.push({
+    id: `g0-r0`,
+    gen: 0,
+    startRow: 1,
+    rowSpan: totalRows,
+    fowl: subject,
+    name: subject.name,
+    role: 'subject',
+  });
 
-  for (let gen = 0; gen < MAX_ANCESTOR_GENERATIONS; gen++) {
-    const rowsInGen = cols[gen].length;
-    for (let r = 0; r < rowsInGen; r++) {
-      const cell = cols[gen][r];
-      const nextRowBase = r * 2;
-      while (cols[gen + 1].length < nextRowBase + 2) cols[gen + 1].push(null);
+  let currentLevelNodes: PedigreeNode[] = [nodes[0]];
 
-      if (!cell || !cell.fowl || cell.isMerged) {
-        cols[gen + 1][nextRowBase] = null;
-        cols[gen + 1][nextRowBase + 1] = null;
-        continue;
-      }
+  for (let gen = 1; gen < numGens; gen++) {
+    const nextLevelNodes: PedigreeNode[] = [];
 
-      const f = cell.fowl;
+    for (const parentNode of currentLevelNodes) {
+      if (!parentNode.fowl || parentNode.isMerged) continue;
+
+      const f = parentNode.fowl;
       const sireName = f.sire;
       const damName = f.dam;
       const sireFowl = resolveFowlByName(fowls, byName, sireName);
@@ -107,95 +77,115 @@ function buildAncestorGrid(subject: FowlRecord, fowls: FowlRecord[], byName: Map
       const sireAbsent = !sireFowl;
       const damAbsent = !damFowl;
 
+      const childSpan = parentNode.rowSpan;
+      const halfSpan = childSpan / 2;
+      const sireStartRow = parentNode.startRow;
+      const damStartRow = parentNode.startRow + halfSpan;
+
       if (sireAbsent && damAbsent) {
-        cols[gen + 1][nextRowBase] = {
+        const mergedNode: PedigreeNode = {
+          id: `g${gen}-merged-${parentNode.startRow}`,
+          gen,
+          startRow: parentNode.startRow,
+          rowSpan: childSpan,
           fowl: null,
           name: 'Foundation stock',
           isMerged: true,
-          sideHint: 'both',
+          role: 'unknown',
           childBreedHint: f.breed || undefined,
           childName: f.name,
         };
-        cols[gen + 1][nextRowBase + 1] = null;
+        nodes.push(mergedNode);
+        nextLevelNodes.push(mergedNode);
       } else {
-        cols[gen + 1][nextRowBase] = {
+        const sireNode: PedigreeNode = {
+          id: `g${gen}-sire-${sireStartRow}`,
+          gen,
+          startRow: sireStartRow,
+          rowSpan: halfSpan,
           fowl: sireFowl ?? null,
           name: sireFowl ? sireFowl.name : (sireName || 'Foundation stock'),
-          sideHint: 'sire',
+          role: 'sire',
           childBreedHint: f.breed || undefined,
           childName: f.name,
         };
-        cols[gen + 1][nextRowBase + 1] = {
+        const damNode: PedigreeNode = {
+          id: `g${gen}-dam-${damStartRow}`,
+          gen,
+          startRow: damStartRow,
+          rowSpan: halfSpan,
           fowl: damFowl ?? null,
           name: damFowl ? damFowl.name : (damName || 'Foundation stock'),
-          sideHint: 'dam',
+          role: 'dam',
           childBreedHint: f.breed || undefined,
           childName: f.name,
         };
+        nodes.push(sireNode);
+        nodes.push(damNode);
+        nextLevelNodes.push(sireNode);
+        nextLevelNodes.push(damNode);
       }
     }
+
+    currentLevelNodes = nextLevelNodes;
   }
 
-  return cols;
+  return { nodes, totalRows };
 }
 
-type Connector = {
+type ConnectorPath = {
   id: string;
-  fromGen: number;
-  fromRow: number;
-  toGen: number;
-  toRowSire: number;
-  toRowDam: number;
-  merged: boolean;
-  toRowSingle?: number;
+  path: string;
+  isDashed: boolean;
 };
 
-function computeConnectors(grid: AncestorGrid): Connector[] {
-  const out: Connector[] = [];
-  for (let gen = 0; gen < MAX_ANCESTOR_GENERATIONS; gen++) {
-    for (let row = 0; row < grid[gen].length; row++) {
-      const cell = grid[gen][row];
-      if (!cell || !cell.fowl || cell.isMerged) continue;
-      const sireRow = row * 2;
-      const damRow = row * 2 + 1;
-      const sireCell = grid[gen + 1]?.[sireRow];
-      const damCell = grid[gen + 1]?.[damRow];
-      if (!sireCell && !damCell) continue;
-      if (sireCell?.isMerged) {
-        out.push({
-          id: `c-${gen}-${row}`,
-          fromGen: gen,
-          fromRow: row,
-          toGen: gen + 1,
-          toRowSire: sireRow,
-          toRowDam: damRow,
-          merged: true,
-          toRowSingle: sireRow,
-        });
-      } else {
-        out.push({
-          id: `c-${gen}-${row}`,
-          fromGen: gen,
-          fromRow: row,
-          toGen: gen + 1,
-          toRowSire: sireRow,
-          toRowDam: damRow,
-          merged: false,
-        });
-      }
+function computeGridConnectors(
+  nodes: PedigreeNode[],
+  numGens: number,
+  totalRows: number,
+  colWidth = 220,
+  colGap = 48,
+  rowHeight = 76,
+  paddingLeft = 20,
+  paddingTop = 20
+): ConnectorPath[] {
+  const paths: ConnectorPath[] = [];
+
+  for (const node of nodes) {
+    if (!node.fowl || node.isMerged || node.gen >= numGens - 1) continue;
+
+    const gen = node.gen;
+    const childCenterX = paddingLeft + gen * (colWidth + colGap) + colWidth;
+    const childCenterY = paddingTop + (node.startRow - 1 + node.rowSpan / 2) * rowHeight;
+    const midX = childCenterX + colGap / 2;
+    const parentLeftX = paddingLeft + (gen + 1) * (colWidth + colGap);
+
+    const childNextGenNodes = nodes.filter(
+      (n) => n.gen === gen + 1 && n.startRow >= node.startRow && n.startRow < node.startRow + node.rowSpan
+    );
+
+    for (const pNode of childNextGenNodes) {
+      const parentCenterY = paddingTop + (pNode.startRow - 1 + pNode.rowSpan / 2) * rowHeight;
+      const pathD = `M ${childCenterX} ${childCenterY} H ${midX} V ${parentCenterY} H ${parentLeftX}`;
+      paths.push({
+        id: `c-${node.id}-to-${pNode.id}`,
+        path: pathD,
+        isDashed: Boolean(pNode.isMerged),
+      });
     }
   }
-  return out;
+
+  return paths;
 }
 
-function AncestorAvatar({ image_url, gender, className }: { image_url?: string | null; gender?: string; className?: string }) {
+function AncestorAvatar({ image_url, gender }: { image_url?: string | null; gender?: string }) {
   if (image_url) {
     return (
       <img
         src={image_url}
         alt=""
         aria-hidden="true"
-        className={`rounded-md object-cover bg-muted ${className ?? ''}`}
+        className="w-8 h-8 rounded-full object-cover bg-muted shrink-0 border border-border"
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = 'none';
         }}
@@ -206,18 +196,15 @@ function AncestorAvatar({ image_url, gender, className }: { image_url?: string |
   return (
     <div
       aria-hidden="true"
-      className={`rounded-md bg-muted flex items-center justify-center ${className ?? ''}`}
+      className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border"
     >
-      <ChickenIcon className={`w-1/2 h-1/2 ${tone}`} />
+      <ChickenIcon className={`w-4 h-4 ${tone}`} />
     </div>
   );
 }
 
-type AncestorCardProps = {
-  node: ResolvedNode;
-  generation: number;
-  rowIndex: number;
-  accent: Accent;
+type CompactNodeCardProps = {
+  node: PedigreeNode;
   fowls: FowlRecord[];
   codes: Map<string, string>;
   canRegisterAncestor: boolean;
@@ -227,74 +214,65 @@ type AncestorCardProps = {
   onRegisterSingle: (hint: { side: 'sire' | 'dam'; breed?: string; childName: string; placeholderName: string }) => void;
 };
 
-function AncestorCard(props: AncestorCardProps) {
+function CompactNodeCard(props: CompactNodeCardProps) {
   const {
-    node, generation, rowIndex, accent, fowls, codes,
-    canRegisterAncestor, onRecenter, onViewProfile,
-    onRegisterMerged, onRegisterSingle,
+    node, fowls, codes, canRegisterAncestor,
+    onRecenter, onViewProfile, onRegisterMerged, onRegisterSingle
   } = props;
-  const a = ACCENT[accent];
-  const { fowl, name, isMerged, sideHint, childBreedHint, childName } = node;
+  const { fowl, name, isMerged, role, childBreedHint, childName } = node;
+
+  const roleBorder =
+    role === 'subject'
+      ? 'border-l-4 border-l-emerald-500 border-border bg-card'
+      : role === 'sire'
+      ? 'border-l-4 border-l-sky-500 border-border bg-card'
+      : role === 'dam'
+      ? 'border-l-4 border-l-pink-500 border-border bg-card'
+      : 'border-l-4 border-l-slate-400 border-dashed border-border bg-card/85';
 
   if (isMerged) {
-    const roleLabel = generation === 1
-      ? 'Parents'
-      : generation === 2 ? 'Grandparents' : 'Great-Grandparents';
-
-    const card = (
+    return (
       <div
-        data-merged="1"
-        data-gen={generation}
-        data-row={rowIndex}
-        className={`w-[190px] shrink-0 text-left rounded-md border border-dashed ${a.border} bg-card/75 shadow-2xs px-3 py-2 space-y-1.5 transition-all hover:shadow-xs`}
+        data-node-box="true"
+        data-gen={node.gen}
+        data-start-row={node.startRow}
+        data-row-span={node.rowSpan}
+        className={`w-[220px] h-[64px] shrink-0 text-left rounded-md border ${roleBorder} shadow-2xs px-2.5 py-1.5 flex items-center justify-between gap-2 self-center transition-all`}
       >
-        <div className="flex items-center justify-between gap-1.5">
-          <span className={`text-[10px] font-black uppercase tracking-widest ${a.text}`}>{roleLabel}</span>
-          <span className="text-[10px] font-black text-muted-foreground tabular-nums">G{generation}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 shrink-0 rounded-md bg-muted/70 border border-dashed border-border flex items-center justify-center text-muted-foreground">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-full bg-muted/80 flex items-center justify-center text-muted-foreground shrink-0 border border-border">
             <UserPlus className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-black text-card-foreground leading-tight truncate">Foundation stock</p>
-            <p className="text-[10px] font-semibold text-muted-foreground truncate">Not in registry</p>
+            <p className="text-[10px] font-semibold text-muted-foreground truncate">Not registered</p>
           </div>
         </div>
         {canRegisterAncestor && (
-          <Button
-            variant="secondary"
-            size="sm"
-            fullWidth
-            onClick={() => onRegisterMerged({ breed: childBreedHint, childName: childName || '' })}
-            aria-label={`Register ${roleLabel} foundation ancestors`}
-            className="text-[11px] h-7 gap-1"
-          >
-            <Plus className="w-3 h-3" /> Register ancestor
-          </Button>
+          <Tooltip content="Register foundation ancestor">
+            <button
+              type="button"
+              onClick={() => onRegisterMerged({ breed: childBreedHint, childName: childName || '' })}
+              aria-label="Register foundation ancestor"
+              className="w-7 h-7 rounded-md bg-muted hover:bg-emerald-500/20 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </Tooltip>
         )}
       </div>
     );
-
-    return (
-      <Tooltip content="Both sides of this ancestor's lineage are unregistered foundation stock.">
-        {card}
-      </Tooltip>
-    );
   }
 
-  const stats = useMemo(
-    () => (fowl ? getFowlBloodlineStats(fowl, fowls) : null),
-    [fowl, fowls],
-  );
+  const stats = useMemo(() => (fowl ? getFowlBloodlineStats(fowl, fowls) : null), [fowl, fowls]);
   const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || birdCodeOf(fowl, fowls)) : '';
   const missing = !fowl;
-  const resolvedSide = sideHint === 'both' ? (rowIndex % 2 === 0 ? 'sire' : 'dam') : sideHint;
-  const roleRaw: 'sire' | 'dam' | 'self' = generation === 0 ? 'self' : (resolvedSide ?? (rowIndex % 2 === 0 ? 'sire' : 'dam'));
-  const roleLabel = ROLE_LABEL(generation, roleRaw);
-  const ariaLabel = `${roleLabel}${name ? `: ${name}` : ''}${code ? `, code ${code}` : ''}${fowl ? `, breed ${fowl.breed || 'unspecified'}` : ''}`;
 
-  const summaryText = stats ? stats.summary : (fowl?.breed ? fowl.breed : 'Not in registry');
+  const summaryText = stats
+    ? stats.summary
+    : fowl?.breed
+    ? fowl.breed
+    : 'Not registered';
 
   const recenter = useCallback(() => {
     if (fowl) onRecenter(fowl);
@@ -315,105 +293,103 @@ function AncestorCard(props: AncestorCardProps) {
     }
   };
 
-  const registerSide: 'sire' | 'dam' | undefined = !fowl ? (resolvedSide ?? (rowIndex % 2 === 0 ? 'sire' : 'dam')) : undefined;
-
   if (missing) {
-    const registerHandler = () => {
-      if (registerSide) {
-        onRegisterSingle({
-          side: registerSide,
-          breed: childBreedHint,
-          childName: childName || '',
-          placeholderName: name,
-        });
-      }
-    };
     return (
       <div
-        data-gen={generation}
-        data-row={rowIndex}
-        className={`w-[190px] shrink-0 text-left rounded-md border border-dashed ${a.border} bg-card/75 shadow-2xs px-3 py-2 space-y-1.5`}
+        data-node-box="true"
+        data-gen={node.gen}
+        data-start-row={node.startRow}
+        data-row-span={node.rowSpan}
+        className={`w-[220px] h-[64px] shrink-0 text-left rounded-md border ${roleBorder} shadow-2xs px-2.5 py-1.5 flex items-center justify-between gap-2 self-center transition-all`}
       >
-        <div className="flex items-center justify-between gap-1.5">
-          <span className={`text-[10px] font-black uppercase tracking-widest ${a.text}`}>{roleLabel}</span>
-          <span className="text-[10px] font-black text-muted-foreground tabular-nums">G{generation}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <AncestorAvatar gender={registerSide === 'dam' ? 'Hen' : 'Rooster'} className="w-9 h-9 shrink-0 opacity-70" />
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <AncestorAvatar gender={role === 'dam' ? 'Hen' : 'Rooster'} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black text-card-foreground truncate leading-tight">{name || 'Foundation stock'}</p>
-            <p className="text-[10px] font-semibold text-muted-foreground truncate">Not in registry</p>
+            <p className="text-xs font-black text-card-foreground leading-tight truncate" title={name}>
+              {name || 'Foundation stock'}
+            </p>
+            <p className="text-[10px] font-semibold text-muted-foreground truncate">Not registered</p>
           </div>
         </div>
         {canRegisterAncestor && (
-          <Button
-            variant="secondary"
-            size="sm"
-            fullWidth
-            onClick={registerHandler}
-            aria-label={`Register ${roleLabel} ancestor ${name || ''}`.trim()}
-            className="text-[11px] h-7 gap-1"
-          >
-            <Plus className="w-3 h-3" /> Register ancestor
-          </Button>
+          <Tooltip content={`Register ancestor ${name || ''}`}>
+            <button
+              type="button"
+              onClick={() =>
+                onRegisterSingle({
+                  side: role === 'dam' ? 'dam' : 'sire',
+                  breed: childBreedHint,
+                  childName: childName || '',
+                  placeholderName: name,
+                })
+              }
+              aria-label={`Register ancestor ${name || ''}`}
+              className="w-7 h-7 rounded-md bg-muted hover:bg-emerald-500/20 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </Tooltip>
         )}
       </div>
     );
   }
 
+  const ariaLabel = `${node.role.toUpperCase()}: ${name}${code ? `, code ${code}` : ''}, ${summaryText}`;
+
   return (
     <div
-      data-gen={generation}
-      data-row={rowIndex}
+      data-node-box="true"
+      data-gen={node.gen}
+      data-start-row={node.startRow}
+      data-row-span={node.rowSpan}
       role="treeitem"
       tabIndex={0}
       aria-label={ariaLabel}
-      aria-level={generation + 1}
+      aria-level={node.gen + 1}
       onClick={recenter}
       onKeyDown={onKey}
-      className={`w-[190px] shrink-0 text-left rounded-md border ${a.border} bg-card shadow-2xs px-3 py-2 space-y-1.5 transition-all hover:shadow-xs hover:-translate-y-0.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${a.ring}`}
+      className={`group w-[220px] h-[64px] shrink-0 text-left rounded-md border ${roleBorder} shadow-2xs px-2.5 py-1.5 flex items-center justify-between gap-2 self-center transition-all hover:shadow-xs hover:border-emerald-400/80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500`}
     >
-      <div className="flex items-center justify-between gap-1.5">
-        <span className={`text-[10px] font-black uppercase tracking-widest ${a.text}`}>{roleLabel}</span>
-        <span className="text-[10px] font-black text-muted-foreground tabular-nums">G{generation}</span>
-      </div>
-
-      <div className="flex items-start gap-2">
-        <AncestorAvatar
-          image_url={fowl.image_url}
-          gender={fowl.gender}
-          className="w-9 h-9 shrink-0"
-        />
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <AncestorAvatar image_url={fowl.image_url} gender={fowl.gender} />
         <div className="min-w-0 flex-1 space-y-0.5">
-          <div className="flex items-center gap-1 min-w-0 flex-wrap">
+          <div className="flex items-center gap-1 min-w-0">
             {code && (
-              <span className={`text-[10px] font-mono font-black px-1.5 py-0.5 rounded shrink-0 ${a.badge}`}>[{code}]</span>
+              <span className="font-mono text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-1 py-0.2 rounded shrink-0">
+                [{code}]
+              </span>
             )}
-            <span className="text-xs font-black text-card-foreground truncate leading-tight">
+            <span className="text-xs font-black text-card-foreground truncate leading-tight" title={name}>
               {name}
             </span>
           </div>
-          {fowl.status && <StatusBadge status={fowl.status} showDot className="scale-75 origin-left" />}
+          <p className="text-[11px] font-bold text-muted-foreground truncate" title={summaryText}>
+            {summaryText}
+          </p>
         </div>
       </div>
 
-      <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 truncate">
-        {summaryText}
-      </p>
-
-      <div className="flex items-center justify-between gap-1.5 pt-0.5 border-t border-border/40">
-        <Button
-          variant="ghost"
-          size="sm"
+      <div className="flex items-center gap-1 shrink-0">
+        {fowl.status === 'Archived' ? (
+          <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100 dark:bg-amber-950/80 dark:text-amber-300 px-1 rounded uppercase">
+            Archived
+          </span>
+        ) : fowl.status === 'Deceased' ? (
+          <span className="text-[9px] font-extrabold text-rose-700 bg-rose-100 dark:bg-rose-950/80 dark:text-rose-300 px-1 rounded uppercase">
+            Deceased
+          </span>
+        ) : (
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Active" />
+        )}
+        <button
+          type="button"
           onClick={viewProfile}
           aria-label={`View profile of ${name}`}
-          className="h-6 px-1.5 text-[11px] gap-1 text-primary hover:text-primary font-bold"
+          title={`View profile of ${name}`}
+          className="p-1 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 rounded transition-colors cursor-pointer"
         >
-          <ExternalLink className="w-3 h-3" /> Profile
-        </Button>
-        <Badge variant="neutral" size="sm" className="scale-90 text-[10px] font-bold">
-          {roleRaw === 'self' ? 'G0 Subject' : `${(100 / Math.pow(2, generation)).toFixed(0)}% share`}
-        </Badge>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -438,24 +414,6 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
       return compareBirdCodesNatural(ca, cb);
     });
   }, [fowls, codes]);
-
-  const currentIndex = useMemo(() => {
-    return sortedFowls.findIndex((f) => f.id === subject.id);
-  }, [sortedFowls, subject]);
-
-  const goPrev = useCallback(() => {
-    if (sortedFowls.length === 0) return;
-    const idx = currentIndex >= 0 ? currentIndex : 0;
-    const prevIdx = idx === 0 ? sortedFowls.length - 1 : idx - 1;
-    onSelect(sortedFowls[prevIdx]);
-  }, [sortedFowls, currentIndex, onSelect]);
-
-  const goNext = useCallback(() => {
-    if (sortedFowls.length === 0) return;
-    const idx = currentIndex >= 0 ? currentIndex : 0;
-    const nextIdx = idx === sortedFowls.length - 1 ? 0 : idx + 1;
-    onSelect(sortedFowls[nextIdx]);
-  }, [sortedFowls, currentIndex, onSelect]);
 
   const matchingFowls = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -484,187 +442,97 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
-  const statusPillClass = (status?: string | null) => {
-    const s = String(status || '').toLowerCase();
-    if (s === 'deceased') return 'bg-rose-900 text-white border border-rose-950';
-    if (s === 'archived') return 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
-    return 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
-  };
-
-  const statusLabel = (status?: string | null) => {
-    const s = String(status || 'Active').toLowerCase();
-    if (s === 'deceased') return 'Deceased';
-    if (s === 'archived') return 'Archived';
-    return 'Active';
-  };
-
-  const rolePillClass = (role?: string | null) => {
-    const r = String(role || '').toLowerCase();
-    if (r === 'breeding male') return 'bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800';
-    if (r === 'breeding female') return 'bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink border border-pink-200 dark:border-pink-800';
-    if (r === 'non-breeding') return 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
-    return 'bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
-  };
+  const subjectCode = codes.get(String(subject.id)) || birdCodeOf(subject, fowls);
+  const displayLabel = `${formatBirdCodeForDisplay(subjectCode) ? `${formatBirdCodeForDisplay(subjectCode)} · ` : ''}${subject.name}`;
 
   return (
-    <div ref={dropdownRef} className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center gap-1">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={goPrev}
-          aria-label="Previous subject by code order"
-          title="Previous"
-          className="h-8 w-8 p-0"
+    <div ref={dropdownRef} className="relative min-w-[260px] sm:min-w-[320px] flex-1">
+      <div className="relative">
+        <span
+          aria-hidden="true"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10"
         >
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-
-        <div className="relative min-w-[280px] sm:min-w-[340px]">
-          <span
-            aria-hidden="true"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10"
+          <Search className="w-3.5 h-3.5" />
+        </span>
+        <input
+          type="search"
+          aria-label="Search pedigree subject"
+          placeholder={displayLabel || 'Search subject by code, name, wing band…'}
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setDropdownOpen(true);
+          }}
+          onFocus={() => setDropdownOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setSearchQuery('');
+              setDropdownOpen(false);
+            }
+          }}
+          className="w-full pl-9 pr-8 py-2 h-9 border border-input-border rounded-md bg-card text-card-foreground placeholder:text-foreground/90 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-bold [&::-webkit-search-cancel-button]:appearance-none"
+        />
+        {searchQuery.length > 0 && (
+          <button
+            type="button"
+            aria-label="Clear subject search"
+            onClick={() => {
+              setSearchQuery('');
+              setDropdownOpen(false);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
           >
-            <Search className="w-3.5 h-3.5" />
-          </span>
-          <input
-            type="search"
-            aria-label="Search pedigree subject"
-            placeholder="Search subject by code, name, or wing band…"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setDropdownOpen(true);
-            }}
-            onFocus={() => setDropdownOpen(true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.preventDefault();
-                setSearchQuery('');
-                setDropdownOpen(false);
-              }
-            }}
-            className="w-full pl-9 pr-8 py-2 h-9 border border-input-border rounded-md bg-card text-card-foreground placeholder:text-muted-foreground text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-semibold [&::-webkit-search-cancel-button]:appearance-none"
-          />
-          {searchQuery.length > 0 && (
-            <button
-              type="button"
-              aria-label="Clear subject search"
-              onClick={() => {
-                setSearchQuery('');
-                setDropdownOpen(false);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
 
-          {dropdownOpen && matchingFowls.length > 0 && (
-            <div
-              role="listbox"
-              aria-label="Matching chickens"
-              className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-border/50 max-h-80 overflow-y-auto"
-            >
-              <div className="px-3 py-1.5 bg-muted/50 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Matching ({matchingFowls.length} of {fowls.length})
-              </div>
-              {matchingFowls.slice(0, 100).map((f) => {
-                const code = codes.get(String(f.id)) || birdCodeOf(f, fowls);
-                const isSelected = f.id === subject.id;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    onClick={() => {
-                      onSelect(f);
-                      setDropdownOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors cursor-pointer group ${isSelected ? 'bg-emerald-500/10 dark:bg-emerald-950/30' : 'hover:bg-emerald-500/10 dark:hover:bg-emerald-950/30'}`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      {code && (
-                        <span className="font-mono text-[11px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
-                          [{formatBirdCodeForDisplay(code)}]
-                        </span>
-                      )}
-                      <span className="font-bold text-xs text-card-foreground truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                        {f.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {f.registry_role && (
-                        <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full ${rolePillClass(f.registry_role)}`}>
-                          {f.registry_role}
-                        </span>
-                      )}
-                      <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full ${statusPillClass(f.status)}`}>
-                        {statusLabel(f.status)}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-              {matchingFowls.length > 100 && (
-                <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/30">
-                  Showing first 100 matches — narrow your search.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={goNext}
-          aria-label="Next subject by code order"
-          title="Next"
-          className="h-8 w-8 p-0"
+      {dropdownOpen && matchingFowls.length > 0 && (
+        <div
+          role="listbox"
+          aria-label="Matching chickens"
+          className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-border/50 max-h-80 overflow-y-auto"
         >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-1 text-[10px] font-semibold text-muted-foreground">
-        <span className="inline-flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-sm border-2 border-emerald-500/50 bg-emerald-500/10" aria-hidden="true" /> G0
-        </span>
-        <span>→</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-sm border-2 border-sky-500/50 bg-sky-500/10" aria-hidden="true" /> G1
-        </span>
-        <span>→</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-sm border-2 border-amber-500/50 bg-amber-500/10" aria-hidden="true" /> G2
-        </span>
-        <span>→</span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-sm border-2 border-violet-500/50 bg-violet-500/10" aria-hidden="true" /> G3
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function CardSkeleton() {
-  return (
-    <div className="w-[190px] shrink-0 rounded-md border border-border bg-card shadow-2xs px-3 py-2 space-y-2">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-3 w-6" />
-      </div>
-      <div className="flex items-start gap-2">
-        <Skeleton className="w-9 h-9 rounded-md shrink-0" />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <Skeleton className="h-3 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
+          <div className="px-3 py-1.5 bg-muted/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            Matching Chickens ({matchingFowls.length})
+          </div>
+          {matchingFowls.slice(0, 100).map((f) => {
+            const code = codes.get(String(f.id)) || birdCodeOf(f, fowls);
+            const isSelected = f.id === subject.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => {
+                  onSelect(f);
+                  setDropdownOpen(false);
+                  setSearchQuery('');
+                }}
+                className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors cursor-pointer group ${isSelected ? 'bg-emerald-500/10 dark:bg-emerald-950/30' : 'hover:bg-emerald-500/10 dark:hover:bg-emerald-950/30'}`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {code && (
+                    <span className="font-mono text-[11px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
+                      [{formatBirdCodeForDisplay(code)}]
+                    </span>
+                  )}
+                  <span className="font-bold text-xs text-card-foreground truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                    {f.name}
+                  </span>
+                </div>
+                {f.registry_role && (
+                  <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                    {f.registry_role}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
-      <Skeleton className="h-3 w-full" />
+      )}
     </div>
   );
 }
@@ -690,13 +558,8 @@ export default function PedigreeTree({
 }: Props) {
   const ui = useUI();
   const [internalId, setInternalId] = useState<number | null>(null);
+  const [numGens, setNumGens] = useState<number>(3);
   const [breadcrumb, setBreadcrumb] = useState<{ id: number; name: string }[]>([]);
-  const [fitScale, setFitScale] = useState(1);
-  const gridWrapRef = useRef<HTMLDivElement | null>(null);
-  const gridInnerRef = useRef<HTMLDivElement | null>(null);
-  const [, setSizes] = useState<{ wrapW: number; innerW: number; rowH: number }>({
-    wrapW: 0, innerW: 0, rowH: 115,
-  });
 
   const activeId = selectedId != null ? selectedId : internalId;
 
@@ -719,45 +582,37 @@ export default function PedigreeTree({
     [subject, fowls],
   );
 
-  const grid = useMemo<AncestorGrid>(() => {
-    if (!subject) return [];
-    return buildAncestorGrid(subject, fowls, byName);
-  }, [subject, fowls, byName]);
+  const sortedFowls = useMemo(() => {
+    return [...fowls].sort((a, b) => {
+      const ca = codes.get(String(a.id)) || birdCodeOf(a, fowls);
+      const cb = codes.get(String(b.id)) || birdCodeOf(b, fowls);
+      return compareBirdCodesNatural(ca, cb);
+    });
+  }, [fowls, codes]);
 
-  const connectors = useMemo(() => computeConnectors(grid), [grid]);
+  const currentIndex = useMemo(() => {
+    if (!subject) return -1;
+    return sortedFowls.findIndex((f) => f.id === subject.id);
+  }, [sortedFowls, subject]);
 
-  const maxRows = useMemo(() => Math.max(1, ...grid.map((c) => c.length)), [grid]);
-  const rowHeight = 115;
-  const gapX = 48;
+  const { nodes, totalRows } = useMemo(() => {
+    if (!subject) return { nodes: [], totalRows: 4 };
+    return buildPedigreeGrid(subject, fowls, byName, numGens);
+  }, [subject, fowls, byName, numGens]);
+
+  const rowHeight = 76;
+  const colWidth = 220;
+  const colGap = 48;
   const paddingX = 20;
-  const paddingY = 20;
+  const paddingTop = 20;
 
-  const recomputeFit = useCallback(() => {
-    const wrap = gridWrapRef.current;
-    const inner = gridInnerRef.current;
-    if (!wrap || !inner) return;
-    const wrapW = wrap.clientWidth;
-    const innerW = inner.scrollWidth;
-    setSizes({ wrapW, innerW, rowH: rowHeight });
-    if (wrapW > 80 && innerW > wrapW) {
-      const s = Math.max(0.5, Math.min(1, (wrapW - 16) / innerW));
-      setFitScale(s);
-    } else {
-      setFitScale(1);
-    }
-  }, [rowHeight]);
+  const innerWidth = numGens * colWidth + (numGens - 1) * colGap + paddingX * 2;
+  const innerHeight = totalRows * rowHeight + paddingTop * 2;
 
-  useEffect(() => {
-    const t = window.setTimeout(recomputeFit, 10);
-    const onResize = () => recomputeFit();
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.clearTimeout(t);
-      window.removeEventListener('resize', onResize);
-    };
-  }, [recomputeFit, grid, subject]);
-
-  const resetScale = useCallback(() => setFitScale(1), []);
+  const connectorPaths = useMemo(
+    () => computeGridConnectors(nodes, numGens, totalRows, colWidth, colGap, rowHeight, paddingX, paddingTop),
+    [nodes, numGens, totalRows, colWidth, colGap, rowHeight, paddingX, paddingTop],
+  );
 
   const updateUrlForSubject = useCallback(
     (f: FowlRecord) => {
@@ -825,20 +680,37 @@ export default function PedigreeTree({
     [subject, onSelect, updateUrlForSubject],
   );
 
-  const doRecenter = useCallback((f: FowlRecord) => {
-    if (!subject) return;
-    if (f.id === subject.id) return;
-    setBreadcrumb((prev) => {
-      const next = [...prev];
-      if (next.length === 0 || next[next.length - 1].id !== subject.id) {
-        next.push({ id: subject.id, name: subject.name });
-      }
-      return next;
-    });
-    setInternalId(f.id);
-    onSelect?.(f);
-    updateUrlForSubject(f);
-  }, [subject, onSelect, updateUrlForSubject]);
+  const doRecenter = useCallback(
+    (f: FowlRecord) => {
+      if (!subject) return;
+      if (f.id === subject.id) return;
+      setBreadcrumb((prev) => {
+        const next = [...prev];
+        if (next.length === 0 || next[next.length - 1].id !== subject.id) {
+          next.push({ id: subject.id, name: subject.name });
+        }
+        return next;
+      });
+      setInternalId(f.id);
+      onSelect?.(f);
+      updateUrlForSubject(f);
+    },
+    [subject, onSelect, updateUrlForSubject],
+  );
+
+  const goPrev = useCallback(() => {
+    if (sortedFowls.length === 0) return;
+    const idx = currentIndex >= 0 ? currentIndex : 0;
+    const prevIdx = idx === 0 ? sortedFowls.length - 1 : idx - 1;
+    handleSubjectSelect(sortedFowls[prevIdx]);
+  }, [sortedFowls, currentIndex, handleSubjectSelect]);
+
+  const goNext = useCallback(() => {
+    if (sortedFowls.length === 0) return;
+    const idx = currentIndex >= 0 ? currentIndex : 0;
+    const nextIdx = idx === sortedFowls.length - 1 ? 0 : idx + 1;
+    handleSubjectSelect(sortedFowls[nextIdx]);
+  }, [sortedFowls, currentIndex, handleSubjectSelect]);
 
   const goBack = useCallback(() => {
     setBreadcrumb((prev) => {
@@ -901,38 +773,8 @@ export default function PedigreeTree({
     return (
       <Card>
         <CardContent className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Skeleton className="h-4 w-60" />
-              <Skeleton className="h-3 w-96 mt-1" />
-            </div>
-            <Skeleton className="h-9 w-48" />
-          </div>
-          <div className="grid md:grid-cols-[1fr_320px] gap-4">
-            <Card>
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-8 w-40" />
-                  <Skeleton className="h-9 w-28" />
-                </div>
-                <div className="overflow-x-auto">
-                  <div className="flex gap-10 min-w-max p-2">
-                    <div className="space-y-2"><CardSkeleton /></div>
-                    <div className="space-y-2"><CardSkeleton /><CardSkeleton /></div>
-                    <div className="space-y-2"><CardSkeleton /><CardSkeleton /><CardSkeleton /><CardSkeleton /></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-5/6" />
-              </CardContent>
-            </Card>
-          </div>
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
     );
@@ -948,279 +790,238 @@ export default function PedigreeTree({
     );
   }
 
-  const cols = MAX_ANCESTOR_GENERATIONS + 1;
-  const innerWidth = cols * CARD_WIDTH + (cols - 1) * gapX + paddingX * 2;
-  const innerHeight = maxRows * rowHeight + paddingY * 2;
-
-  const renderOutlineItem = (gen: number, row: number, node: ResolvedNode) => {
-    if (!node) return null;
-    const indent = '\u00A0\u00A0'.repeat(gen);
-    const resolvedSide = node.sideHint === 'both' ? (row % 2 === 0 ? 'sire' : 'dam') : node.sideHint;
-    const roleRaw: 'sire' | 'dam' | 'self' = gen === 0 ? 'self' : (resolvedSide ?? (row % 2 === 0 ? 'sire' : 'dam'));
-    const label = ROLE_LABEL(gen, roleRaw);
-    const code = node.fowl ? formatBirdCodeForDisplay(codes.get(String(node.fowl.id)) || birdCodeOf(node.fowl, fowls)) : '';
-    return (
-      <li key={`o-${gen}-${row}`} className="text-sm py-1 border-b border-border last:border-b-0">
-        <span className="font-mono text-xs text-muted-foreground">{indent}</span>
-        <span className={`text-[10px] font-black uppercase tracking-wider ${ACCENT[GEN_ACCENT[gen]].text} mr-1`}>{label}</span>
-        {code && <Badge variant="neutral" size="sm" className="mr-1">{code}</Badge>}
-        <span className="font-black text-card-foreground">{node.isMerged ? 'Foundation stock (merged)' : node.name}</span>
-        {node.fowl && (
-          <button
-            type="button"
-            className="ml-2 text-xs text-primary underline-offset-2 hover:underline font-bold"
-            onClick={() => handleViewProfile(node.fowl!)}
-          >
-            profile
-          </button>
-        )}
-      </li>
-    );
-  };
-
   return (
     <div className="space-y-4 print:space-y-2">
-      <SkipLink href="#pedigree-main">Skip to pedigree tree</SkipLink>
+      <SkipLink href="#pedigree-main">Skip to pedigree chart</SkipLink>
 
-      <Card className="print:shadow-none print:border-none">
-        <CardContent className="p-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="min-w-0">
-              <p className={`text-xs font-black uppercase tracking-widest ${ACCENT.emerald.text}`}>
-                📜 Pedigree / Lineage Map
-              </p>
-              <p className="text-xs text-muted-foreground font-semibold">
-                3 ancestor generations (parents → grandparents → great-grandparents). Sire on top, Dam below.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              {breadcrumb.length > 0 && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={goBack}
-                  aria-label={`Back to ${breadcrumb[breadcrumb.length - 1].name}`}
-                  className="no-print"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="max-w-[140px] truncate">Back to {breadcrumb[breadcrumb.length - 1].name}</span>
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  if (fitScale < 1) resetScale();
-                  else recomputeFit();
-                }}
-                aria-label={fitScale < 1 ? 'Reset zoom to 100%' : 'Fit pedigree tree to width'}
-                className="no-print"
-              >
-                <Maximize2 className="w-4 h-4" />
-                Fit
-                {fitScale < 1 && <span className="text-[10px] text-muted-foreground ml-1 tabular-nums">{Math.round(fitScale * 100)}%</span>}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handlePrint}
-                aria-label="Print or export pedigree as PDF"
-                className="no-print"
-              >
-                <Printer className="w-4 h-4" />
-                Print / PDF
-              </Button>
-            </div>
-          </div>
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
+        <div id="pedigree-main" className="min-w-0 flex-1 space-y-3 w-full">
+          <Card className="print:shadow-none print:border-none overflow-hidden">
+            <CardContent className="p-3 sm:p-4 space-y-3">
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 bg-muted/30 p-2.5 rounded-lg border border-border no-print">
+                <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+                  <SubjectSelector
+                    fowls={fowls}
+                    codes={codes}
+                    subject={subject}
+                    onSelect={handleSubjectSelect}
+                  />
 
-          <div className="grid md:grid-cols-[1fr_320px] gap-4 print:grid-cols-[1fr_280px] print:gap-3">
-            <div id="pedigree-main" className="min-w-0 space-y-3">
-              <Card className="overflow-hidden print:shadow-none">
-                <CardContent className="p-3 sm:p-4 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 no-print">
-                    <SubjectSelector
-                      fowls={fowls}
-                      codes={codes}
-                      subject={subject}
-                      onSelect={handleSubjectSelect}
-                    />
-                  </div>
-
-                  <div className="md:hidden">
-                    <details className="sm:hidden rounded-md border border-border bg-card/60">
-                      <summary className="px-3 py-2 text-xs font-bold text-muted-foreground cursor-pointer select-none">
-                        Vertical outline view (tap to expand)
-                      </summary>
-                      <ul className="px-3 pb-3 pt-1 border-t border-border divide-y divide-border">
-                        {grid.map((col, g) =>
-                          col.map((n, r) => (n ? renderOutlineItem(g, r, n) : null)),
-                        )}
-                      </ul>
-                    </details>
-                  </div>
-
-                  <div
-                    ref={gridWrapRef}
-                    className="relative overflow-x-auto md:overflow-x-hidden no-scrollbar print:overflow-visible border border-border rounded-md bg-muted/20 print:bg-white print:border-0"
-                    style={{ minHeight: Math.max(260, Math.min(innerHeight + 16, 480)) }}
-                    aria-label="Pedigree ancestor tree"
-                    role="tree"
-                  >
-                    <div className="sr-only" aria-live="polite">
-                      Pedigree rooted at {subject.name}. Showing {MAX_ANCESTOR_GENERATIONS + 1} generations.
-                      Click any ancestor card or press Enter while focused to re-center the tree on that chicken.
-                    </div>
-
-                    <div
-                      ref={gridInnerRef}
-                      className="relative origin-top-left"
-                      style={{
-                        width: innerWidth,
-                        minWidth: innerWidth,
-                        height: innerHeight,
-                        transform: `scale(${fitScale})`,
-                        transformOrigin: 'top left',
-                        transition: 'transform 150ms ease-out',
-                      }}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={goPrev}
+                      aria-label="Previous chicken"
+                      title="Previous chicken"
+                      className="h-9 w-9 p-0"
                     >
-                      <svg
-                        className="absolute inset-0 pointer-events-none"
-                        width={innerWidth}
-                        height={innerHeight}
-                        viewBox={`0 0 ${innerWidth} ${innerHeight}`}
-                        aria-hidden="true"
-                      >
-                        <defs>
-                          <marker
-                            id="ped-arrow"
-                            viewBox="0 0 10 10"
-                            refX="9"
-                            refY="5"
-                            markerWidth="5"
-                            markerHeight="5"
-                            orient="auto-start-reverse"
-                          >
-                            <path d="M 0 0 L 10 5 L 0 10 z" className="fill-border" />
-                          </marker>
-                        </defs>
-                        {connectors.map((c) => {
-                          const fromX = paddingX + c.fromGen * (CARD_WIDTH + gapX) + CARD_WIDTH;
-                          const fromCenterY = paddingY + c.fromRow * rowHeight + rowHeight / 2;
-                          const toX = paddingX + c.toGen * (CARD_WIDTH + gapX);
-                          const midX = fromX + (toX - fromX) / 2;
-
-                          if (c.merged && typeof c.toRowSingle === 'number') {
-                            const toY = paddingY + c.toRowSingle * rowHeight + rowHeight / 2;
-                            const path = `M ${fromX} ${fromCenterY} C ${midX} ${fromCenterY}, ${midX} ${toY}, ${toX} ${toY}`;
-                            return (
-                              <path
-                                key={c.id}
-                                d={path}
-                                className="stroke-border dark:stroke-border/70"
-                                fill="none"
-                                strokeWidth={1.5}
-                                strokeDasharray="4 3"
-                              />
-                            );
-                          }
-
-                          const toSireY = paddingY + c.toRowSire * rowHeight + rowHeight / 2;
-                          const toDamY = paddingY + c.toRowDam * rowHeight + rowHeight / 2;
-                          return (
-                            <g key={c.id}>
-                              <path
-                                d={`M ${fromX} ${fromCenterY} H ${midX} V ${toSireY} H ${toX}`}
-                                className="stroke-border dark:stroke-border/70"
-                                fill="none"
-                                strokeWidth={1.5}
-                              />
-                              <path
-                                d={`M ${fromX} ${fromCenterY} H ${midX} V ${toDamY} H ${toX}`}
-                                className="stroke-border dark:stroke-border/70"
-                                fill="none"
-                                strokeWidth={1.5}
-                              />
-                            </g>
-                          );
-                        })}
-                      </svg>
-
-                      <div
-                        className="absolute grid"
-                        style={{
-                          left: 0,
-                          top: 0,
-                          width: innerWidth,
-                          height: innerHeight,
-                          gridTemplateColumns: `repeat(${cols}, ${CARD_WIDTH}px)`,
-                          columnGap: `${gapX}px`,
-                          paddingLeft: paddingX,
-                          paddingRight: paddingX,
-                          paddingTop: paddingY,
-                          paddingBottom: paddingY,
-                        }}
-                      >
-                        {grid.map((col, g) => (
-                          <div
-                            key={`col-${g}`}
-                            className="relative"
-                            style={{
-                              display: 'grid',
-                              gridTemplateRows: `repeat(${maxRows}, ${rowHeight}px)`,
-                            }}
-                          >
-                            {col.map((cell, r) => {
-                              if (!cell) return <div key={`c-${g}-${r}`} />;
-                              const accent = GEN_ACCENT[g];
-                              return (
-                                <div
-                                  key={`c-${g}-${r}`}
-                                  className="flex items-center justify-start"
-                                  style={{ gridRow: r + 1 }}
-                                >
-                                  <AncestorCard
-                                    node={cell}
-                                    generation={g}
-                                    rowIndex={r}
-                                    accent={accent}
-                                    fowls={fowls}
-                                    codes={codes}
-                                    canRegisterAncestor={canRegisterAncestor}
-                                    onRecenter={doRecenter}
-                                    onViewProfile={handleViewProfile}
-                                    onRegisterMerged={handleRegisterMerged}
-                                    onRegisterSingle={handleRegisterSingle}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={goNext}
+                      aria-label="Next chicken"
+                      title="Next chicken"
+                      className="h-9 w-9 p-0"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
                   </div>
 
-                  <p className="text-xs text-muted-foreground font-semibold pt-1">
-                    Each ancestor contributes 50% per generation ({UNKNOWN_BLOODLINE} = parent not registered).
-                    Click any card or press Enter while focused to re-center the pedigree on that chicken.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                  {breadcrumb.length > 0 && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={goBack}
+                      aria-label={`Back to ${breadcrumb[breadcrumb.length - 1].name}`}
+                      className="h-9 text-xs gap-1 max-w-[160px] truncate"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Back to {breadcrumb[breadcrumb.length - 1].name}</span>
+                    </Button>
+                  )}
+                </div>
 
-            <div className="min-w-0">
-              <BloodlineBreakdown
-                stats={stats ?? undefined}
-                title={`Bloodline — ${subject.name}`}
-                subtitle="Compact summary · 50% sire · 50% dam, halved each generation"
-                fowl={subject}
-                fowls={fowls}
-                compact
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="inline-flex items-center p-0.5 rounded-md bg-muted border border-border text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setNumGens(3)}
+                      className={`px-2.5 py-1 rounded text-xs font-black transition-colors cursor-pointer ${
+                        numGens === 3
+                          ? 'bg-card text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      3 Gens
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNumGens(4)}
+                      className={`px-2.5 py-1 rounded text-xs font-black transition-colors cursor-pointer ${
+                        numGens === 4
+                          ? 'bg-card text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      4 Gens
+                    </button>
+                  </div>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handlePrint}
+                    aria-label="Print or export pedigree as PDF"
+                    className="h-9 text-xs gap-1.5"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    Print / PDF
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mobile Outline View (<768px) */}
+              <div className="block md:hidden">
+                <details className="rounded-md border border-border bg-card/60">
+                  <summary className="px-3 py-2 text-xs font-bold text-muted-foreground cursor-pointer select-none">
+                    📜 Mobile Pedigree Lineage List (tap to view)
+                  </summary>
+                  <ul className="px-3 pb-3 pt-1 border-t border-border divide-y divide-border space-y-1">
+                    {nodes.map((node) => (
+                      <li key={node.id} className="text-xs py-1.5 flex items-center justify-between">
+                        <span className="font-semibold text-muted-foreground">
+                          {'\u00A0\u00A0'.repeat(node.gen)}
+                          <span className="font-bold text-card-foreground">{node.role.toUpperCase()}: {node.name}</span>
+                        </span>
+                        {node.fowl && (
+                          <button
+                            type="button"
+                            onClick={() => handleViewProfile(node.fowl!)}
+                            className="text-[11px] font-bold text-primary hover:underline"
+                          >
+                            Profile
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+
+              {/* Desktop CSS Grid Pedigree Chart (≥768px) */}
+              <div className="hidden md:block overflow-x-auto no-scrollbar border border-border rounded-md bg-muted/20 print:bg-white print:border-0 p-4">
+                {/* Column Headers */}
+                <div
+                  className="grid font-mono text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-2 mb-3"
+                  style={{
+                    gridTemplateColumns: `repeat(${numGens}, ${colWidth}px)`,
+                    columnGap: `${colGap}px`,
+                    paddingLeft: `${paddingX}px`,
+                  }}
+                >
+                  <div>Subject (G0)</div>
+                  <div>Parents (G1)</div>
+                  <div>Grandparents (G2)</div>
+                  {numGens >= 4 && <div>Great-Grandparents (G3)</div>}
+                </div>
+
+                <div
+                  className="relative"
+                  style={{
+                    width: innerWidth,
+                    minWidth: innerWidth,
+                    height: innerHeight,
+                  }}
+                  aria-label="Pedigree ancestor tree chart"
+                  role="tree"
+                >
+                  <div className="sr-only" aria-live="polite">
+                    Pedigree chart for {subject.name}. Showing {numGens} generations.
+                  </div>
+
+                  {/* SVG Connector Overlay */}
+                  <svg
+                    className="absolute inset-0 pointer-events-none z-0"
+                    width={innerWidth}
+                    height={innerHeight}
+                    viewBox={`0 0 ${innerWidth} ${innerHeight}`}
+                    aria-hidden="true"
+                  >
+                    {connectorPaths.map((c) => (
+                      <path
+                        key={c.id}
+                        d={c.path}
+                        className="stroke-slate-400 dark:stroke-slate-600"
+                        fill="none"
+                        strokeWidth={1.5}
+                        strokeDasharray={c.isDashed ? '4 3' : undefined}
+                      />
+                    ))}
+                  </svg>
+
+                  {/* Mathematical CSS Grid */}
+                  <div
+                    className="absolute grid z-10"
+                    style={{
+                      left: 0,
+                      top: 0,
+                      width: innerWidth,
+                      height: innerHeight,
+                      gridTemplateColumns: `repeat(${numGens}, ${colWidth}px)`,
+                      gridTemplateRows: `repeat(${totalRows}, ${rowHeight}px)`,
+                      columnGap: `${colGap}px`,
+                      paddingLeft: `${paddingX}px`,
+                      paddingTop: `${paddingTop}px`,
+                    }}
+                  >
+                    {nodes.map((node) => {
+                      const gridCol = node.gen + 1;
+                      return (
+                        <div
+                          key={node.id}
+                          className="flex items-center justify-center"
+                          style={{
+                            gridColumn: gridCol,
+                            gridRow: `${node.startRow} / span ${node.rowSpan}`,
+                            alignSelf: 'center',
+                          }}
+                        >
+                          <CompactNodeCard
+                            node={node}
+                            fowls={fowls}
+                            codes={codes}
+                            canRegisterAncestor={canRegisterAncestor}
+                            onRecenter={doRecenter}
+                            onViewProfile={handleViewProfile}
+                            onRegisterMerged={handleRegisterMerged}
+                            onRegisterSingle={handleRegisterSingle}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Compact Right Bloodline Panel */}
+        <div className="w-full lg:w-[320px] shrink-0">
+          <BloodlineBreakdown
+            stats={stats ?? undefined}
+            title={`Bloodline — ${subject.name}`}
+            subtitle="Compact summary · 50% sire · 50% dam, halved each generation"
+            fowl={subject}
+            fowls={fowls}
+            compact
+          />
+        </div>
+      </div>
 
       <style>{`
         @media print {
