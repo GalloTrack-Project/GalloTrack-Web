@@ -35,8 +35,8 @@ export default function IdentifierBadge({
   if (!resolvedCode && fowl) {
     if (codes && codes.has(String(fowl.id))) {
       resolvedCode = codes.get(String(fowl.id));
-    } else if (fowl.birth_code || fowl.chicken_code || fowl.bird_code) {
-      resolvedCode = fowl.birth_code || fowl.chicken_code || fowl.bird_code;
+    } else if (fowl.chicken_code || fowl.bird_code || fowl.birth_code) {
+      resolvedCode = fowl.chicken_code || fowl.bird_code || fowl.birth_code;
     } else if (allFowls.length > 0) {
       resolvedCode = birdCodeOf(fowl, allFowls);
     }

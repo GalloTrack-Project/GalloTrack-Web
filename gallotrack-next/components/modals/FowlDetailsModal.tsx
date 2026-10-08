@@ -345,6 +345,12 @@ export default function FowlDetailsModal({
               <span className="text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase">
                 {formatBirdCodeForDisplay(birdCodeOf(selectedFowlForDetails, fowls)) || '—'}
               </span>
+              {selectedFowlForDetails.birth_code &&
+                selectedFowlForDetails.birth_code !== birdCodeOf(selectedFowlForDetails, fowls) && (
+                  <span className="text-xs font-mono text-muted-foreground bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border px-2 py-0.5 rounded-full font-semibold">
+                    born as {formatBirdCodeForDisplay(selectedFowlForDetails.birth_code)}
+                  </span>
+                )}
               {selectedFowlForDetails.wing_band ? (
                 <span className="text-xs font-mono font-black text-teal bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 px-2.5 py-0.5 rounded-full uppercase" title="Wing Band ID">
                   ⌁ {selectedFowlForDetails.wing_band}

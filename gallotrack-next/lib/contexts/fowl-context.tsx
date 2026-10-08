@@ -42,6 +42,7 @@ import {
 import {
   buildCodeSet,
   isValidBirdCode,
+  nextFoundationCode,
   normalizeBirdCode,
   previewBirdCode,
   resolveBirdCodes,
@@ -240,6 +241,11 @@ interface FowlContextValue {
   handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
   handleSetConditionStatus: (fowl: FowlRecord, value: string) => Promise<void>;
   handleSetBreedingRole: (fowl: FowlRecord, role: 'none' | 'breeder' | 'material') => Promise<void>;
+  handlePromoteToBreeder: (
+    fowl: FowlRecord,
+    targetRole: 'Breeding Male' | 'Breeding Female',
+    customCode?: string,
+  ) => Promise<{ success: boolean; breederCode?: string; error?: string }>;
   handleSaveFowlNotes: (fowl: FowlRecord, notes: string) => Promise<void>;
   fetchDatabaseResources: () => Promise<void>;
 
@@ -1001,6 +1007,61 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     [fetchDatabaseResources],
   );
 
+  const handlePromoteToBreeder = useCallback(
+    async (
+      fowl: FowlRecord,
+      targetRole: 'Breeding Male' | 'Breeding Female',
+      customCode?: string,
+    ): Promise<{ success: boolean; breederCode?: string; error?: string }> => {
+      setLoading(true);
+      const takenCodes = buildCodeSet(
+        fowls.map((f) => f.chicken_code || f.bird_code).filter(Boolean) as string[],
+      );
+      const isMaleTarget = targetRole === 'Breeding Male';
+      const assignedCode =
+        (customCode || '').trim() || nextFoundationCode(isMaleTarget ? 'Male' : 'Female', takenCodes);
+      const birthCode = (fowl.birth_code || fowl.bird_code || fowl.chicken_code || '').trim();
+
+      const result = await fowlService.promoteToBreeder(fowl.id, {
+        targetRole,
+        breederCode: assignedCode,
+        birthCode,
+      });
+
+      if (result.error) {
+        toastMessage(`Failed to promote ${fowl.name}: ${result.error}`, 'error');
+        setLoading(false);
+        return { success: false, error: result.error };
+      }
+
+      setFowls((prev) =>
+        prev.map((f) =>
+          f.id === fowl.id
+            ? {
+                ...f,
+                registry_role: targetRole,
+                breeding_role: 'breeder',
+                bird_code: assignedCode,
+                chicken_code: assignedCode,
+                birth_code: birthCode,
+                status: 'Active',
+                activity_status: 'active',
+              }
+            : f,
+        ),
+      );
+
+      toastMessage(
+        `${fowl.name} promoted to ${targetRole} (${assignedCode})! Birth code preserved as ${birthCode}.`,
+        'success',
+      );
+      await fetchDatabaseResources();
+      setLoading(false);
+      return { success: true, breederCode: assignedCode };
+    },
+    [fowls, fetchDatabaseResources, setFowls],
+  );
+
   const handleSaveFowlNotes = useCallback(async (fowl: FowlRecord, notes: string) => {
     setLoading(true);
     const result = await fowlService.updateFowl(fowl.id, { notes });
@@ -1353,7 +1414,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,
     handleRestoreFowlOnly, handlePermanentDelete, handleMarkFowlDeceased,
     handleSetSireMaterial, handleSetActiveStatus,
-    handleSetConditionStatus, handleSetBreedingRole, handleSaveFowlNotes,
+    handleSetConditionStatus, handleSetBreedingRole, handlePromoteToBreeder, handleSaveFowlNotes,
     fetchDatabaseResources,
     generationOf: generationOfLocal,
     parentBloodlinePct: parentBloodlinePctLocal,

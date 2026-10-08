@@ -18,6 +18,7 @@ import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
 import {
   registryTabLists,
   makeRegistryComparator,
+  roleOf,
   type RegistryLists,
   type RegistrySortKey,
 } from '@/lib/registry-roles';
@@ -45,14 +46,9 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
   const cardNameKey = fowl.name.trim().toLowerCase();
-  const isRegisteredParent = allFowls.some(
-    (o) => (o.sire || '').trim().toLowerCase() === cardNameKey || (o.dam || '').trim().toLowerCase() === cardNameKey,
-  );
-  const sireName = (fowl.sire || '').trim();
-  const damName = (fowl.dam || '').trim();
-  const isRegisteredOffspring =
-    (!!sireName && sireName.toLowerCase() !== 'foundation stock') ||
-    (!!damName && damName.toLowerCase() !== 'foundation stock');
+  const cardRole = roleOf(fowl);
+  const isBreeder = cardRole === 'Breeding Male' || cardRole === 'Breeding Female';
+  const isNonBreeding = cardRole === 'Non-Breeding';
   return (
     <div
       role="button"
@@ -81,16 +77,16 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>
-          {isRegisteredParent && (
-            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-800" title="Has registered children in this farm">
-              {gender === 'Male' ? `Sire ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}` : `Dam ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}`}
+          {isBreeder && (
+            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-800" title="Registered breeding bird in this farm">
+              {cardRole === 'Breeding Male' ? `Sire ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}` : `Dam ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}`}
               {fowl.birth_code ? (
                 <span className="ml-1 opacity-90 normal-case font-bold">· born as {fowl.birth_code}</span>
               ) : null}
             </span>
           )}
-          {isRegisteredOffspring && (
-            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Registered child of a breeding pair in this farm">
+          {isNonBreeding && (
+            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Non-breeding offspring in this farm">
               Non-Breeding
             </span>
           )}

@@ -54,63 +54,104 @@ export const storedRegistryRole = (f: Pick<FowlRecord, 'registry_role'>): Regist
 
 export interface RegistryContext {
   /**
-   * Names of active registered parents (active males + active females,
-   * including Sire Material birds — their children are still Non-Breeding).
+   * Lowercase names of birds that have registered offspring in this farm.
    */
   parentNames: Set<string>;
 }
 
-/** Child of a registered active parent (legacy Non-Breeding membership rule). */
+/** Child of a registered active parent. */
 export const isRegisteredChild = (
   f: Pick<FowlRecord, 'sire' | 'dam'>,
-  ctx: RegistryContext,
-): boolean =>
-  (!!f.sire && ctx.parentNames.has(f.sire)) || (!!f.dam && ctx.parentNames.has(f.dam));
+  ctx?: RegistryContext,
+): boolean => {
+  const s = (f.sire || '').trim().toLowerCase();
+  const d = (f.dam || '').trim().toLowerCase();
+  if (ctx) {
+    return (!!s && ctx.parentNames.has(s)) || (!!d && ctx.parentNames.has(d));
+  }
+  return (!!s && s !== 'foundation stock') || (!!d && d !== 'foundation stock');
+};
 
 /**
- * Exclusive role for one bird. Used for badges and "which role is this" logic.
- * Order: Sire Material role → stored registry_role → legacy derivation
- * (child → Non-Breeding, else by gender) → NULL (foundation, undecided).
- * Status never changes the role: an archived Non-Breeding stays Non-Breeding.
+ * Exclusive role for one bird (hard rule: one chicken has exactly one role).
+ *
+ * Source of truth: stored registry_role.
+ * Fallback (deterministic single-role derivation):
+ * - If the bird is a registered parent of offspring in this farm OR
+ *   is Foundation Stock (no registered parents):
+ *   Male -> 'Breeding Male', Female -> 'Breeding Female'
+ * - Else (offspring of a breeding pair without registered children of its own):
+ *   'Non-Breeding'
  */
 export function roleOf(
   f: FowlRecord,
-  ctx: RegistryContext,
-): RoleKey | 'Undecided' {
-  if (isSireMaterialRole(f)) return 'Sire Material';
+  ctx?: RegistryContext,
+): RegistryRole {
   const stored = storedRegistryRole(f);
   if (stored) return stored;
-  if (isRegisteredChild(f, ctx)) return 'Non-Breeding';
-  if (isMale(f.gender)) return 'Breeding Male';
-  if (isFemale(f.gender)) return 'Breeding Female';
-  return 'Undecided';
+
+  const s = (f.sire || '').trim().toLowerCase();
+  const d = (f.dam || '').trim().toLowerCase();
+  const hasParents = (!!s && s !== 'foundation stock') || (!!d && d !== 'foundation stock');
+  const nameKey = (f.name || '').trim().toLowerCase();
+  const isParent = ctx ? ctx.parentNames.has(nameKey) : false;
+
+  if (!hasParents || isParent) {
+    return isMale(f.gender) ? 'Breeding Male' : 'Breeding Female';
+  }
+  return 'Non-Breeding';
+}
+
+/**
+ * Startup / CI assertion: fails if the same chicken ID appears in more than one tab's results.
+ */
+export function assertTabExclusivity(
+  males: FowlRecord[],
+  females: FowlRecord[],
+  nonBreeding: FowlRecord[],
+): void {
+  const seen = new Map<number, string>();
+  for (const m of males) {
+    if (seen.has(m.id)) {
+      throw new Error(
+        `Tab exclusivity hard rule violated: Chicken #${m.id} ("${m.name}") appears in multiple tabs (${seen.get(m.id)} and Breeding Male)`,
+      );
+    }
+    seen.set(m.id, 'Breeding Male');
+  }
+  for (const f of females) {
+    if (seen.has(f.id)) {
+      throw new Error(
+        `Tab exclusivity hard rule violated: Chicken #${f.id} ("${f.name}") appears in multiple tabs (${seen.get(f.id)} and Breeding Female)`,
+      );
+    }
+    seen.set(f.id, 'Breeding Female');
+  }
+  for (const nb of nonBreeding) {
+    if (seen.has(nb.id)) {
+      throw new Error(
+        `Tab exclusivity hard rule violated: Chicken #${nb.id} ("${nb.name}") appears in multiple tabs (${seen.get(nb.id)} and Non-Breeding)`,
+      );
+    }
+    seen.set(nb.id, 'Non-Breeding');
+  }
 }
 
 /**
  * Tab membership for the Registry (and the Inventory role filter).
  *
- * While registry_role is NULL the legacy (possibly overlapping) derivation is
- * used so no chicken changes tabs before the backfill is approved. Once stored,
- * each bird sits in exactly one tab.
+ * Hard rule:
+ * - Active only (status = Active)
+ * - Filter strictly by role = X. Roles are mutually exclusive.
+ * - A chicken in Breeding Male or Breeding Female NEVER appears in Non-Breeding.
+ * - An offspring in Non-Breeding NEVER appears in Breeding Male or Female.
  */
 export function inRegistryTab(f: FowlRecord, tab: RoleKey, ctx: RegistryContext): boolean {
   if (tab === 'Sire Material') {
-    // Material designation wins the tab. Active rows are the steady state;
-    // legacy status='Sire Material' rows stay visible until normalization runs.
     return isSireMaterialRole(f) && (isActiveStatus(f) || isLegacySireMaterialStatus(f));
   }
-  // Non-material tabs are active-only (the Registry shows live birds only) and
-  // never contain material birds (they live in the Sire Material tab).
-  if (!isActiveStatus(f) || isSireMaterialRole(f)) return false;
-
-  const stored = storedRegistryRole(f);
-  if (stored) return stored === tab;
-
-  // Legacy fallback pending backfill (overlaps allowed — current behaviour).
-  if (tab === 'Non-Breeding') return isRegisteredChild(f, ctx);
-  if (tab === 'Breeding Male') return isMale(f.gender);
-  if (tab === 'Breeding Female') return isFemale(f.gender);
-  return false;
+  if (!isActiveStatus(f)) return false;
+  return roleOf(f, ctx) === tab;
 }
 
 // ── selectors (both pages read from here) ─────────────────────────────────
@@ -123,7 +164,6 @@ export interface RegistryLists {
   females: FowlRecord[];
   nonBreeding: FowlRecord[];
   sireMaterial: FowlRecord[];
-  /** Active birds with no assignable role yet (foundation birds pending decision). */
   undecided: FowlRecord[];
   parentNames: Set<string>;
   ctx: RegistryContext;
@@ -132,14 +172,15 @@ export interface RegistryLists {
 export function buildRegistryContext(fowls: FowlRecord[]): RegistryContext {
   const parentNames = new Set<string>();
   fowls.forEach((f) => {
-    if (isActiveStatus(f) && (isMale(f.gender) || isFemale(f.gender))) {
-      if (f.name) parentNames.add(f.name);
-    }
+    const s = (f.sire || '').trim().toLowerCase();
+    const d = (f.dam || '').trim().toLowerCase();
+    if (s && s !== 'foundation stock') parentNames.add(s);
+    if (d && d !== 'foundation stock') parentNames.add(d);
   });
   return { parentNames };
 }
 
-/** Every list the Chicken Registry renders — one call, no per-page copies. */
+/** Every list the Chicken Registry renders — one call, strict mutual exclusivity. */
 export function registryTabLists(fowls: FowlRecord[]): RegistryLists {
   const ctx = buildRegistryContext(fowls);
   const active: FowlRecord[] = [];
@@ -154,7 +195,11 @@ export function registryTabLists(fowls: FowlRecord[]): RegistryLists {
   const females = active.filter((f) => inRegistryTab(f, 'Breeding Female', ctx));
   const nonBreeding = active.filter((f) => inRegistryTab(f, 'Non-Breeding', ctx));
   const sireMaterial = active.filter((f) => inRegistryTab(f, 'Sire Material', ctx));
-  const undecided = active.filter((f) => roleOf(f, ctx) === 'Undecided');
+  const undecided: FowlRecord[] = [];
+
+  // Exclusivity check: hard assertion fails if any chicken ID appears in > 1 tab
+  assertTabExclusivity(males, females, nonBreeding);
+
   return { active, archived, deceased, males, females, nonBreeding, sireMaterial, undecided, parentNames: ctx.parentNames, ctx };
 }
 
@@ -164,10 +209,7 @@ const BREEDING_READY_MIN_DAYS = 240; // ~8 months: mature enough to breed
 const MATURE_STAGES = new Set(['cock', 'hen', 'bull stag', 'senior hen', 'broodcock', 'broodhen', 'mature']);
 
 /**
- * PROPOSED rule for the "Breeding Ready" tab (the old one matched growth-stage
- * values that do not exist in this farm's vocabulary, so it was always 0):
- * Active + at least 8 months old; when no birthdate is recorded, fall back to a
- * mature growth stage. Easy to change or remove in one place.
+ * Active + at least 8 months old; when no birthdate is recorded, fall back to a mature growth stage.
  */
 export function isBreedingReady(f: FowlRecord): boolean {
   if (!isActiveStatus(f)) return false;
@@ -202,8 +244,8 @@ export function inventoryCounts(fowls: FowlRecord[]): InventoryCounts {
 export interface CountRuleReport {
   /** M + F + Non-Breeding as the Registry shows them. */
   registryTabSum: number;
-  /** ACTIVE chickens excluding Sire Material birds and legacy status rows. */
-  activeExcludingSireMaterial: number;
+  /** Total active chickens. */
+  activeCount: number;
   registryRuleOk: boolean;
   /** Active birds whose registry_role is still NULL (backfill pending). */
   pendingRoleCount: number;
@@ -213,26 +255,41 @@ export interface CountRuleReport {
   inventoryRuleOk: boolean;
   /** Rows still carrying the legacy 'Sire Material' status (normalization pending). */
   legacySireMaterialStatusCount: number;
+  overlappingChickenIds: number[];
 }
 
 export function countRuleCheck(fowls: FowlRecord[]): CountRuleReport {
   const lists = registryTabLists(fowls);
   const registryTabSum = lists.males.length + lists.females.length + lists.nonBreeding.length;
-  const activeExcludingSireMaterial =
-    lists.active.filter((f) => !isSireMaterialRole(f) && !isLegacySireMaterialStatus(f)).length;
+  const activeCount = lists.active.length;
   const pendingRoleCount = lists.active.filter((f) => !storedRegistryRole(f)).length;
   const inventoryLifecycleSum =
     lists.active.length + lists.archived.length + lists.deceased.length;
   const legacySireMaterialStatusCount = fowls.filter(isLegacySireMaterialStatus).length;
+
+  const maleIds = new Set(lists.males.map((f) => f.id));
+  const femaleIds = new Set(lists.females.map((f) => f.id));
+  const nbIds = new Set(lists.nonBreeding.map((f) => f.id));
+
+  const overlaps: number[] = [];
+  lists.active.forEach((f) => {
+    let hits = 0;
+    if (maleIds.has(f.id)) hits++;
+    if (femaleIds.has(f.id)) hits++;
+    if (nbIds.has(f.id)) hits++;
+    if (hits > 1) overlaps.push(f.id);
+  });
+
   return {
     registryTabSum,
-    activeExcludingSireMaterial,
-    registryRuleOk: registryTabSum === activeExcludingSireMaterial,
+    activeCount,
+    registryRuleOk: registryTabSum === activeCount && overlaps.length === 0,
     pendingRoleCount,
     inventoryLifecycleSum,
     inventoryAll: fowls.length,
     inventoryRuleOk: inventoryLifecycleSum === fowls.length,
     legacySireMaterialStatusCount,
+    overlappingChickenIds: overlaps,
   };
 }
 

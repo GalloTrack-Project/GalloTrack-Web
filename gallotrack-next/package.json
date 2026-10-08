@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:exclusivity": "tsx scripts/check-tab-exclusivity.ts",
     "gate:static": "node scripts/standard-gates.mjs",
     "gate:mobile": "node scripts/mobile-gate.mjs",
     "gate": "node scripts/standard-gates.mjs && tsc --noEmit && eslint . --cache && vitest run"

@@ -89,7 +89,20 @@ async function changeLifecycle(
     .single();
   if (readError) return { error: readError.message };
 
-  const { error } = await supabase.from('fowl').update(patch).eq('id', id);
+  let { error } = await supabase.from('fowl').update(patch).eq('id', id);
+  if (error && error.message.includes('registry_role')) {
+    const copy = { ...patch };
+    delete copy.registry_role;
+    const retry = await supabase.from('fowl').update(copy).eq('id', id);
+    error = retry.error;
+  }
+  if (error && error.message.includes('birth_code')) {
+    const copy = { ...patch };
+    delete copy.birth_code;
+    delete copy.registry_role;
+    const retry = await supabase.from('fowl').update(copy).eq('id', id);
+    error = retry.error;
+  }
   if (error) return { error: error.message };
 
   if (history.length) {
@@ -228,6 +241,36 @@ export async function setFowlActive(
       { field: 'activity_status', newValue: 'active' },
     ],
   );
+}
+
+/**
+ * Promote an offspring chicken to a breeder (Breeding Male or Breeding Female).
+ * Preserves its birth code as birth_code, assigns its breeder code,
+ * sets its registry_role, and logs the change into fowl_status_history.
+ */
+export async function promoteToBreeder(
+  id: number,
+  opts: {
+    targetRole: 'Breeding Male' | 'Breeding Female';
+    breederCode: string;
+    birthCode: string;
+  },
+): Promise<{ error?: string; historyError?: string }> {
+  const patch: Record<string, unknown> = {
+    registry_role: opts.targetRole,
+    bird_code: opts.breederCode,
+    chicken_code: opts.breederCode,
+    birth_code: opts.birthCode,
+    breeding_role: 'breeder',
+    status: 'Active',
+    activity_status: 'active',
+  };
+  const history: HistoryEntry[] = [
+    { field: 'registry_role', newValue: opts.targetRole, reason: 'promote_to_breeder', note: `Promoted to ${opts.targetRole} (${opts.breederCode})` },
+    { field: 'bird_code', newValue: opts.breederCode, reason: 'promote_to_breeder' },
+    { field: 'birth_code', newValue: opts.birthCode, reason: 'promote_to_breeder' },
+  ];
+  return changeLifecycle(id, patch, history);
 }
 
 export async function uploadFowlImage(file: File): Promise<{ url?: string; error?: string }> {
