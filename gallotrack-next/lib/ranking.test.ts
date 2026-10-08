@@ -40,6 +40,54 @@ describe('rankFowls', () => {
     const ranked = rankFowls([c, a], statsOf, 'total_wins');
     expect(ranked[0].name).toBe('Alpha');
   });
+
+  it('orders by win rate, then decided matches, then birth code natural order (3C family order)', () => {
+    // 3C family:
+    // 3C4 Hatch Mountain: 1 fight (1W-0L = 100%, Rooster)
+    // 3C1 Hatch Thunder: 0 fights (Rooster)
+    // 3C2 Hatch Storm: 0 fights (Rooster)
+    // 3C3 Hatch Rose: 0 fights (Hen)
+    const c1 = { id: 9, name: 'Hatch Thunder', gender: 'Rooster', bird_code: '3C1' } as FowlRecord;
+    const c2 = { id: 10, name: 'Hatch Storm', gender: 'Rooster', bird_code: '3C2' } as FowlRecord;
+    const c3 = { id: 12, name: 'Hatch Rose', gender: 'Hen', bird_code: '3C3' } as FowlRecord;
+    const c4 = { id: 11, name: 'Hatch Mountain', gender: 'Rooster', bird_code: '3C4' } as FowlRecord;
+
+    const statsTable: Record<string, RankingStats> = {
+      'Hatch Thunder': stats(0, 0),
+      'Hatch Storm': stats(0, 0),
+      'Hatch Rose': stats(0, 0),
+      'Hatch Mountain': stats(1, 0), // 100% win rate
+    };
+
+    // Pass in reverse/scrambled order: [c2, c1, c3, c4]
+    const ranked = rankFowls([c2, c1, c3, c4], (n) => statsTable[n], 'win_rate');
+
+    // Overall family ranked order: 3C4 (fought) first, then 3C1, 3C2, 3C3
+    expect(ranked.map((f) => f.bird_code)).toEqual(['3C4', '3C1', '3C2', '3C3']);
+
+    // Within Males group: 3C4 (fought), 3C1, 3C2
+    const males = ranked.filter((f) => f.gender === 'Rooster');
+    expect(males.map((f) => f.bird_code)).toEqual(['3C4', '3C1', '3C2']);
+
+    // Within Females group: 3C3
+    const females = ranked.filter((f) => f.gender === 'Hen');
+    expect(females.map((f) => f.bird_code)).toEqual(['3C3']);
+  });
+
+  it('breaks ties between same win rate by decided matches count, then birth code', () => {
+    const f1 = { id: 21, name: 'Fighter One', bird_code: '1A1' } as FowlRecord;
+    const f2 = { id: 22, name: 'Fighter Two', bird_code: '1A2' } as FowlRecord;
+    const f3 = { id: 23, name: 'Fighter Three', bird_code: '1A3' } as FowlRecord;
+
+    const statsTable: Record<string, RankingStats> = {
+      'Fighter One': stats(2, 0),   // 100% (2 matches)
+      'Fighter Two': stats(4, 0),   // 100% (4 matches -> should come first)
+      'Fighter Three': stats(2, 0), // 100% (2 matches -> tie with f1, f1 has 1A1 vs 1A3)
+    };
+
+    const ranked = rankFowls([f3, f1, f2], (n) => statsTable[n], 'win_rate');
+    expect(ranked.map((f) => f.name)).toEqual(['Fighter Two', 'Fighter One', 'Fighter Three']);
+  });
 });
 
 describe('bestFowl', () => {
@@ -56,10 +104,21 @@ describe('bestFowl', () => {
     expect(bestFowl([c], (n) => onlyUndecided[n])).toBeNull();
   });
 
-  it('applies the minimum-matches rule', () => {
-    const oneMatch: Record<string, RankingStats> = { Alpha: stats(1, 0) };
-    expect(bestFowl([a], (n) => oneMatch[n], 'win_rate_min', 3)).toBeNull();
-    expect(isEligible(oneMatch.Alpha, 'win_rate_min', 3)).toBe(false);
+  it('applies the minimum-matches rule (requires at least 3 matches)', () => {
+    const twoMatches: Record<string, RankingStats> = { Alpha: stats(2, 0) };
+    expect(bestFowl([a], (n) => twoMatches[n])).toBeNull();
+
+    const threeMatches: Record<string, RankingStats> = { Alpha: stats(3, 0) };
+    expect(bestFowl([a], (n) => threeMatches[n])?.name).toBe('Alpha');
+  });
+
+  it('breaks ties between equal win rates by the one with more matches', () => {
+    const b = bird(2, 'Bravo');
+    const table2: Record<string, RankingStats> = {
+      Alpha: stats(3, 0), // 100%, 3 matches
+      Bravo: stats(5, 0), // 100%, 5 matches -> should win
+    };
+    expect(bestFowl([a, b], (n) => table2[n])?.name).toBe('Bravo');
   });
 });
 

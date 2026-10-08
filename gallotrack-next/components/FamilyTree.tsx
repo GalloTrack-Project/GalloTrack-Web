@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
-import { Swords } from 'lucide-react';
+import { Swords, ChevronDown } from 'lucide-react';
 import {
   buildBreedingPairs,
   buildOffspringIndex,
@@ -158,7 +158,7 @@ function OffspringNode({
           className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
         >
           <Swords className="w-3 h-3" />
-          Fights{stats.total > 0 ? ` (${stats.total})` : ''}
+          Fights
         </button>
       </div>
 
@@ -208,8 +208,22 @@ function PairTree({
   const sireFowl = byName.get(nameKey(pair.sire));
   const damFowl = byName.get(nameKey(pair.dam));
 
+  const [isTotalExpanded, setIsTotalExpanded] = useState(false);
+
   const sortMembersByCode = (members: FowlRecord[]) =>
     [...members].sort((a, b) => {
+      const sa = matchStatsMap.get(a.name.trim().toLowerCase());
+      const sb = matchStatsMap.get(b.name.trim().toLowerCase());
+      const foughtA = Boolean(sa && sa.decided > 0);
+      const foughtB = Boolean(sb && sb.decided > 0);
+      if (foughtA !== foughtB) return foughtA ? -1 : 1;
+      if (foughtA && foughtB && sa && sb) {
+        const rateA = sa.winRate ?? 0;
+        const rateB = sb.winRate ?? 0;
+        if (rateB !== rateA) return rateB - rateA;
+        if (sb.decided !== sa.decided) return sb.decided - sa.decided;
+        if (sb.wins !== sa.wins) return sb.wins - sa.wins;
+      }
       const codeA = a.birth_code || a.chicken_code || a.bird_code || codes.get(String(a.id)) || '';
       const codeB = b.birth_code || b.chicken_code || b.bird_code || codes.get(String(b.id)) || '';
       if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
@@ -324,9 +338,28 @@ function PairTree({
         </div>
       )}
 
-      {/* Bottom Family Total Row */}
-      <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold">
-        <div className="flex items-center gap-2">
+      {/* Bottom Family Total Row (expandable to show contributors) */}
+      <div
+        role={foughtCount > 0 ? 'button' : undefined}
+        tabIndex={foughtCount > 0 ? 0 : undefined}
+        aria-expanded={foughtCount > 0 ? isTotalExpanded : undefined}
+        onClick={foughtCount > 0 ? () => setIsTotalExpanded(!isTotalExpanded) : undefined}
+        onKeyDown={
+          foughtCount > 0
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsTotalExpanded(!isTotalExpanded);
+                }
+              }
+            : undefined
+        }
+        title="Total wins ÷ total decided matches. Draws excluded."
+        className={`px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold transition-colors select-none ${
+          foughtCount > 0 ? 'cursor-pointer hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-emerald-500' : ''
+        }`}
+      >
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="uppercase tracking-wider text-muted-foreground">Family total</span>
           {foughtCount > 0 && (
             <>
@@ -337,17 +370,71 @@ function PairTree({
             </>
           )}
         </div>
-        {foughtCount > 0 ? (
-          <WinRatePill
-            wins={pairTotalStats.wins}
-            losses={pairTotalStats.losses}
-            draws={pairTotalStats.draws}
-            stats={pairTotalStats}
-          />
-        ) : (
-          <span className="text-muted-foreground/60 font-semibold">No fights recorded yet</span>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {foughtCount > 0 ? (
+            <>
+              <WinRatePill
+                wins={pairTotalStats.wins}
+                losses={pairTotalStats.losses}
+                draws={pairTotalStats.draws}
+                stats={pairTotalStats}
+              />
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
+                  isTotalExpanded ? 'rotate-180' : ''
+                }`}
+              />
+            </>
+          ) : (
+            <span className="text-muted-foreground/60 font-semibold">No fights recorded yet</span>
+          )}
+        </div>
       </div>
+
+      {/* Expandable Breakdown of Contributor Chickens */}
+      {isTotalExpanded && foughtCount > 0 && (
+        <div className="px-5 py-2.5 bg-muted/50 border-t border-border/60 space-y-1.5 text-xs animate-fadeIn">
+          <p className="text-muted-foreground font-semibold text-xs mb-1">
+            Contributors ({foughtCount} of {pair.members.length}):
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {pair.members
+              .filter((m) => {
+                const s = matchStatsMap.get(m.name.trim().toLowerCase());
+                return s && s.total > 0;
+              })
+              .sort((a, b) => {
+                const sa = matchStatsMap.get(a.name.trim().toLowerCase());
+                const sb = matchStatsMap.get(b.name.trim().toLowerCase());
+                if ((sb?.winRate ?? 0) !== (sa?.winRate ?? 0)) return (sb?.winRate ?? 0) - (sa?.winRate ?? 0);
+                if ((sb?.decided ?? 0) !== (sa?.decided ?? 0)) return (sb?.decided ?? 0) - (sa?.decided ?? 0);
+                const codeA = a.birth_code || a.chicken_code || a.bird_code || codes.get(String(a.id)) || '';
+                const codeB = b.birth_code || b.chicken_code || b.bird_code || codes.get(String(b.id)) || '';
+                if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
+                return a.name.localeCompare(b.name);
+              })
+              .map((m) => {
+                const cs = matchStatsMap.get(m.name.trim().toLowerCase())!;
+                const code = m.birth_code || m.chicken_code || m.bird_code || codes.get(String(m.id)) || '';
+                return (
+                  <div
+                    key={m.id}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-card border border-border font-bold text-card-foreground shadow-2xs"
+                  >
+                    {code && <span className="font-mono text-xs text-muted-foreground">[{formatBirdCodeForDisplay(code)}]</span>}
+                    <span>{m.name}</span>
+                    <span className="text-muted-foreground select-none">·</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-black">
+                      {cs.wins}W-{cs.losses}L{cs.draws > 0 ? `-${cs.draws}D` : ''}
+                    </span>
+                    <span className="text-muted-foreground/60 select-none">·</span>
+                    <span className="text-muted-foreground">{cs.winRate}%</span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

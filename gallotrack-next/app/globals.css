@@ -386,4 +386,39 @@ body {
   }
 }
 
+/* PRINT STYLES — pedigree / certificate / profile printable views */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .pedigree-node {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-subject-header {
+    display: block !important;
+  }
+}
+
 

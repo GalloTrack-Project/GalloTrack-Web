@@ -10,6 +10,8 @@ import type { FowlRecord, MatchRecord } from '@/lib/types';
  * Every metric keeps the same base eligibility: at least one decided match.
  */
 
+import { compareBirdCodesNatural } from './bird-code';
+
 export type RankingMetric = 'total_wins' | 'win_rate' | 'win_rate_min';
 
 export interface RankingStats {
@@ -32,11 +34,7 @@ export function isEligible(
   return true;
 }
 
-function scoreOf(stats: RankingStats, metric: RankingMetric): number {
-  return metric === 'total_wins' ? stats.wins : stats.winRate;
-}
-
-/** Descending ranking; ineligible chickens always sink to the bottom. */
+/** Descending ranking; ineligible chickens always sink to the bottom in birth code order. */
 export function rankFowls(
   children: FowlRecord[],
   statsOf: StatsOf,
@@ -50,27 +48,52 @@ export function rankFowls(
     const eb = isEligible(sb, metric, minMatches);
     if (ea !== eb) return ea ? -1 : 1;
     if (ea) {
-      const diff = scoreOf(sb, metric) - scoreOf(sa, metric);
-      if (diff !== 0) return diff;
-      if (sb.winRate !== sa.winRate) return sb.winRate - sa.winRate;
-      if (sb.wins !== sa.wins) return sb.wins - sa.wins;
-      if (sb.decided !== sa.decided) return sb.decided - sa.decided;
+      if (metric === 'total_wins') {
+        const diff = sb.wins - sa.wins;
+        if (diff !== 0) return diff;
+        if (sb.winRate !== sa.winRate) return sb.winRate - sa.winRate;
+        if (sb.decided !== sa.decided) return sb.decided - sa.decided;
+      } else {
+        // 'win_rate' or 'win_rate_min': win rate desc, then decided matches desc
+        if (sb.winRate !== sa.winRate) return sb.winRate - sa.winRate;
+        if (sb.decided !== sa.decided) return sb.decided - sa.decided;
+        if (sb.wins !== sa.wins) return sb.wins - sa.wins;
+      }
     }
-    return a.name.localeCompare(b.name);
+    // Tie-breaker (and order for unfought/ineligible chickens): birth code ascending (natural order)
+    const codeA = a.birth_code || a.chicken_code || a.bird_code || '';
+    const codeB = b.birth_code || b.chicken_code || b.bird_code || '';
+    if (codeA && codeB) {
+      const cmp = compareBirdCodesNatural(codeA, codeB);
+      if (cmp !== 0) return cmp;
+    } else if (codeA) {
+      return -1;
+    } else if (codeB) {
+      return 1;
+    }
+    return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) || a.id - b.id;
   });
 }
 
-/** Ranked leader when it qualifies; otherwise null (no Best badge). */
+/**
+ * Ranked leader when it qualifies with at least 3 decided matches; otherwise null (no Best badge).
+ * Highest win rate in group, with ties broken by the one with more matches.
+ */
 export function bestFowl(
   children: FowlRecord[],
   statsOf: StatsOf,
-  metric: RankingMetric = 'total_wins',
-  minMatches = 1,
+  metric: RankingMetric = 'win_rate',
+  minMatches = 3,
 ): FowlRecord | null {
-  const ranked = rankFowls(children, statsOf, metric, minMatches);
-  const first = ranked[0];
-  if (!first) return null;
-  return isEligible(statsOf(first.name), metric, minMatches) ? first : null;
+  const requiredMin = Math.max(3, minMatches);
+  const eligible = children.filter((ch) => {
+    const s = statsOf(ch.name);
+    return isEligible(s, metric, requiredMin) && s.decided >= 3;
+  });
+  if (eligible.length === 0) return null;
+
+  const ranked = rankFowls(eligible, statsOf, 'win_rate', requiredMin);
+  return ranked[0] || null;
 }
 
 /** Year with the most wins for a chicken (ties → most recent year). */

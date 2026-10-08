@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Trash2, Printer, Share2 } from 'lucide-react';
+import { Plus, Trash2, Printer, Share2, GitBranch } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type {
   FowlRecord,
   MatchRecord,
@@ -112,6 +113,7 @@ export default function FowlDetailsModal({
     bloodlineStatsOf,
   } = useFowl();
   const { rows: optionRows } = useRegistryOptions();
+  const router = useRouter();
 
   const fowlId = selectedFowlForDetails?.id ?? null;
   // State is keyed by fowl id so switching birds never shows stale history
@@ -349,6 +351,14 @@ export default function FowlDetailsModal({
                 </span>
               ) : null}
               <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
+              <a
+                href={`/lineage?tab=pedigree&chicken=${encodeURIComponent(birdCodeOf(selectedFowlForDetails, fowls) || String(selectedFowlForDetails.id))}`}
+                onClick={() => setSelectedFowlForDetails(null)}
+                className="inline-flex items-center gap-1 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase transition-colors"
+                title="Open 3-generation pedigree tree for this chicken"
+              >
+                📜 View pedigree
+              </a>
               {(() => {
                 if (selectedFowlForDetails.status === 'Deceased') {
                   return (
@@ -435,6 +445,17 @@ export default function FowlDetailsModal({
 
         {/* REPORT ACTIONS */}
         <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const code = (bird.bird_code || bird.chicken_code || bird.birth_code || String(bird.id)).trim();
+              const qs = new URLSearchParams({ tab: 'pedigree', chicken: code }).toString();
+              router.push(`/lineage?${qs}`);
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/50 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200/80 dark:border-violet-800 px-3 py-1.5 rounded-sm transition-all cursor-pointer"
+          >
+            <GitBranch className="w-3.5 h-3.5" aria-hidden="true" /> View pedigree
+          </button>
           <button
             type="button"
             onClick={printProfileReport}
