@@ -50,7 +50,7 @@ export default function PromoteToBreederModal({
 
   return (
     <Modal
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       title="Promote Offspring to Breeding Stock"
       icon={<Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}

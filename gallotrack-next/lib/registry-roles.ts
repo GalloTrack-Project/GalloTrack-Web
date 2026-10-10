@@ -203,6 +203,61 @@ export function registryTabLists(fowls: FowlRecord[]): RegistryLists {
   return { active, archived, deceased, males, females, nonBreeding, sireMaterial, undecided, parentNames: ctx.parentNames, ctx };
 }
 
+// ── Shared role-based counts (Dashboard & Registry tabs single source) ────
+
+export interface RegistryCounts {
+  /** Total active chickens (the three mutually exclusive roles sum to this). */
+  total: number;
+  /** Role: Breeding Male (sires). */
+  breedingMales: number;
+  /** Role: Breeding Female (dams). */
+  breedingFemales: number;
+  /** Role: Non-Breeding (offspring). */
+  nonBreeding: number;
+  /** Breeding designation: Sire Material (breeding potential tag, never a fourth role). */
+  sireMaterial: number;
+  /** Sex: Males (all active roosters/cocks/stags/males). */
+  maleSex: number;
+  /** Sex: Females (all active hens/pullets/females). */
+  femaleSex: number;
+  /** Whole flock total (all chickens in database: Active + Archived + Deceased). */
+  flockTotal: number;
+  /** Whole flock: Archived chickens count. */
+  archived: number;
+  /** Whole flock: Deceased chickens count. */
+  deceased: number;
+}
+
+/**
+ * Single shared function called by both the Dashboard and the Registry tabs,
+ * ensuring role, flock status, and sex counts can never drift out of sync.
+ *
+ * Invariants:
+ * 1. breedingMales + breedingFemales + nonBreeding === total (Active: 3 + 7 + 19 = 29)
+ * 2. total + archived + deceased === flockTotal (Total: 29 + 1 + 1 = 31)
+ * 3. maleSex + femaleSex === total (Sex: 15 + 14 = 29)
+ * 4. breedingMales === registryTabLists(fowls).males.length
+ * 5. breedingFemales === registryTabLists(fowls).females.length
+ * 6. nonBreeding === registryTabLists(fowls).nonBreeding.length
+ */
+export function getRegistryCounts(fowls: FowlRecord[]): RegistryCounts {
+  const lists = registryTabLists(fowls);
+  const maleSex = lists.active.filter((f) => isMale(f.gender)).length;
+  const femaleSex = lists.active.filter((f) => isFemale(f.gender)).length;
+  return {
+    total: lists.active.length,
+    breedingMales: lists.males.length,
+    breedingFemales: lists.females.length,
+    nonBreeding: lists.nonBreeding.length,
+    sireMaterial: lists.sireMaterial.length,
+    maleSex,
+    femaleSex,
+    flockTotal: fowls.length,
+    archived: lists.archived.length,
+    deceased: lists.deceased.length,
+  };
+}
+
 // ── Inventory tab counts (single vocabulary with the Registry) ─────────────
 
 const BREEDING_READY_MIN_DAYS = 240; // ~8 months: mature enough to breed

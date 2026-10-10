@@ -24,7 +24,6 @@ import {
   buildRegistryContext,
 } from '../lib/registry-roles';
 import type { FowlRecord } from '../lib/types';
-import * as fs from 'fs';
 
 async function main() {
   console.log('=== GalloTrack Tab Membership Exclusivity Check ===\n');

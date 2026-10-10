@@ -1,9 +1,9 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useContext } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { formatBirdCodeForDisplay, resolveBirdCodes, compareBirdCodesNatural } from '@/lib/bird-code';
-import { genderLabel, parentBreedOf, parentBloodlineOf } from '@/lib/helpers';
+import { genderLabel, parentBreedOf, parentBloodlineOf, isMale, isFemale } from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
@@ -24,10 +24,12 @@ import {
 } from '@/lib/registry-roles';
 import { Search, X } from 'lucide-react';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import { UIContext } from '@/lib/contexts/ui-context';
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
 type SortKey = 'name' | 'age' | 'strain' | 'winrate' | 'weight' | 'identifier';
 type RoleFilter = 'all' | RoleKey;
+type SexFilter = 'all' | 'male' | 'female';
 
 type Props = {
   fowls: FowlRecord[];
@@ -35,6 +37,10 @@ type Props = {
   search?: string;
   setSearch?: (v: string) => void;
   debouncedSearch?: string;
+  genderFilter?: SexFilter;
+  setGenderFilter?: (v: SexFilter) => void;
+  statusFilter?: FilterTab;
+  setStatusFilter?: (v: FilterTab) => void;
   setCurrentPage: (v: PageId) => void;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
   /** Restore an Archived (or, with canRestoreDeceased, Deceased) chicken back to Active. */
@@ -415,6 +421,10 @@ export default function MarketplacePage({
   search: propSearch,
   setSearch: propSetSearch,
   debouncedSearch: propDebouncedSearch,
+  genderFilter: propGenderFilter,
+  setGenderFilter: propSetGenderFilter,
+  statusFilter: propStatusFilter,
+  setStatusFilter: propSetStatusFilter,
   setCurrentPage,
   setProfilingSubTab,
   onRestore,
@@ -425,8 +435,15 @@ export default function MarketplacePage({
   const search = propSearch !== undefined ? propSearch : internalSearch;
   const setSearch = propSetSearch !== undefined ? propSetSearch : setInternalSearch;
 
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const ui = useContext(UIContext);
+  const [internalActiveTab, setInternalActiveTab] = useState<FilterTab>('all');
+  const activeTab = propStatusFilter ?? ui?.inventoryStatusFilter ?? internalActiveTab;
+  const setActiveTab = propSetStatusFilter ?? ui?.setInventoryStatusFilter ?? setInternalActiveTab;
+
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const [internalGenderFilter, setInternalGenderFilter] = useState<SexFilter>('all');
+  const sexFilter = propGenderFilter ?? ui?.inventoryGenderFilter ?? internalGenderFilter;
+  const setSexFilter = propSetGenderFilter ?? ui?.setInventoryGenderFilter ?? setInternalGenderFilter;
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [selectedFowl, setSelectedFowl] = useState<FowlRecord | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<FowlRecord | null>(null);
@@ -455,6 +472,8 @@ export default function MarketplacePage({
     else if (activeTab === 'archived') pool = pool.filter((f) => isArchivedStatus(f));
     else if (activeTab === 'deceased') pool = pool.filter((f) => isDeceasedStatus(f));
     if (roleFilter !== 'all') pool = pool.filter((f) => roleOf(f, registryCtx) === roleFilter);
+    if (sexFilter === 'male') pool = pool.filter((f) => isMale(f.gender));
+    else if (sexFilter === 'female') pool = pool.filter((f) => isFemale(f.gender));
 
     const matches = new Map<number, FowlMatchResult>();
     let result: FowlRecord[] = [];
@@ -500,7 +519,7 @@ export default function MarketplacePage({
     });
 
     return { filteredFowls: result, matchMap: matches };
-  }, [fowls, debouncedQuery, includeParents, activeTab, roleFilter, registryCtx, sortKey, matchHistory, birdCodes]);
+  }, [fowls, debouncedQuery, includeParents, activeTab, roleFilter, sexFilter, registryCtx, sortKey, matchHistory, birdCodes]);
 
   const confirmRestore = async () => {
     if (!restoreTarget || !onRestore) return;
@@ -595,6 +614,18 @@ export default function MarketplacePage({
             {ROLE_FILTER_OPTIONS.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
+          </select>
+          <label htmlFor="inventory-sex" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sex</label>
+          <select
+            id="inventory-sex"
+            aria-label="Filter by sex"
+            value={sexFilter}
+            onChange={(e) => setSexFilter(e.target.value as SexFilter)}
+            className={`px-2.5 py-2 rounded-sm text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all ${sexFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'}`}
+          >
+            <option value="all">All sexes</option>
+            <option value="male">Male (Roosters)</option>
+            <option value="female">Female (Hens)</option>
           </select>
           <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sort</label>
           <select

@@ -18,7 +18,7 @@ export default function ProfilingPage() {
   const router = useRouter();
 
   const {
-    fowls, registryLists,
+    fowls, registryLists, registryCounts,
     matchHistory,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newBirthdate, handleNewBirthdateChange,
@@ -110,10 +110,10 @@ export default function ProfilingPage() {
           currentTab={profilingSubTab}
           onSelectTab={setProfilingSubTab}
           counts={{
-            males: registryLists.males.length,
-            females: registryLists.females.length,
-            offspring: registryLists.nonBreeding.length,
-            sireMaterial: registryLists.sireMaterial.length,
+            males: registryCounts.breedingMales,
+            females: registryCounts.breedingFemales,
+            offspring: registryCounts.nonBreeding,
+            sireMaterial: registryCounts.sireMaterial,
           }}
         />
       </div>

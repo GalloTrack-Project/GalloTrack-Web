@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
-import { getAgeLabel } from '@/lib/helpers';
+import { getAgeLabel, isMale, isFemale } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   const chart = useChartTokens(resolvedTheme);
 
   const {
-    fowls, matchHistory, pairingAnalytics, activeFowls, maleActiveFowls, femaleActiveFowls,
+    fowls, matchHistory, pairingAnalytics, activeFowls, registryCounts,
     monthLabels, matchesByMonth, activeSpark, trendWinRate,
     upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
     dateRangeLabel, dateRangeOpen, setDateRangeOpen,
@@ -56,19 +56,41 @@ export default function DashboardPage() {
     router.push(`/${page}`);
   };
 
-  const weeklyCounts = React.useMemo(() => {
+  const navigateToInventoryWithSex = (gender: 'male' | 'female') => {
+    ui.setInventoryGenderFilter(gender);
+    ui.setInventoryStatusFilter('active');
+    router.push('/catalog');
+  };
+
+  const navigateToInventoryWithStatus = (status: 'all' | 'active' | 'archived' | 'deceased') => {
+    ui.setInventoryStatusFilter(status);
+    ui.setInventoryGenderFilter('all');
+    router.push('/catalog');
+  };
+
+  const activityCounts = React.useMemo(() => {
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth();
+    const nowMs = now.getTime();
+
+    const isWithinThisMonth = (value?: string) => {
+      if (!value) return false;
+      const d = new Date(value);
+      return !isNaN(d.getTime()) && d.getFullYear() === curYear && d.getMonth() === curMonth;
+    };
     const isWithinThisWeek = (value?: string) => {
       if (!value) return false;
       const t = new Date(value).getTime();
-      // eslint-disable-next-line react-hooks/purity -- Date.now() is acceptable for relative time display
-      return !isNaN(t) && Date.now() - t < WEEK_MS;
+      return !isNaN(t) && nowMs - t < WEEK_MS;
     };
     return {
+      activeNewThisMonth: activeFowls.filter((f) => isWithinThisMonth(f.created_at)).length,
       activeNewThisWeek: activeFowls.filter((f) => isWithinThisWeek(f.created_at)).length,
       matchesThisWeek: matchHistory.filter((m) => isWithinThisWeek(m.date)).length,
     };
   }, [activeFowls, matchHistory]);
-  const { activeNewThisWeek, matchesThisWeek } = weeklyCounts;
+  const { activeNewThisMonth, activeNewThisWeek, matchesThisWeek } = activityCounts;
 
   const matchColumns = ['Date', 'Our Chicken', 'Opponent', 'Breed', 'Opponent Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition', 'Notes'];
   const matchRows = React.useMemo(
@@ -99,8 +121,8 @@ export default function DashboardPage() {
       strains.forEach((strain) => {
         const existing = strainMap.get(strain) || { count: 0, males: 0, females: 0 };
         existing.count++;
-        if (f.gender === 'Rooster' || f.gender === 'Male') existing.males++;
-        else existing.females++;
+        if (isMale(f.gender)) existing.males++;
+        else if (isFemale(f.gender)) existing.females++;
         strainMap.set(strain, existing);
       });
     });
@@ -122,7 +144,7 @@ export default function DashboardPage() {
             { label: 'Overall win rate', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
             { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
             { label: 'Matches logged', value: String(matchHistory.length) },
-            { label: 'Active registry', value: `${activeFowls.length} (${maleActiveFowls.length} breeding males · ${femaleActiveFowls.length} breeding females)` },
+            { label: 'Active registry', value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} non-breeding | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)` },
           ],
         },
         {
@@ -247,23 +269,128 @@ export default function DashboardPage() {
             <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
-          <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{activeFowls.length}</div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-md px-2.5 py-2">
-              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-info" /></span>
-              <div>
-                <p className="text-base font-black text-info leading-none">{maleActiveFowls.length}</p>
-                <p className="text-sm font-bold uppercase tracking-wider text-info mt-0.5">Breeding Males</p>
-              </div>
+          {/* Main Total: 29 Active chickens (tooltip: Breeding Male + Breeding Female + Non-Breeding) */}
+          <div className="flex flex-col gap-1 mt-1">
+            <div className="flex items-baseline gap-2">
+              <button
+                type="button"
+                onClick={() => navigate('profiling', 'males')}
+                className="text-left text-3xl font-black text-card-foreground tracking-tight leading-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                title="Breeding Male + Breeding Female + Non-Breeding"
+                aria-label={`29 Active chickens. Breeding Male + Breeding Female + Non-Breeding. Click to view Chicken Registry`}
+              >
+                {registryCounts.total}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('profiling', 'males')}
+                className="text-left text-sm font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                title="Breeding Male + Breeding Female + Non-Breeding"
+                aria-label="Active chickens: Breeding Male + Breeding Female + Non-Breeding"
+              >
+                Active chickens
+              </button>
             </div>
-            <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-md px-2.5 py-2">
-              <span className="text-sm"><ChickenIcon className="w-4 h-4 text-pink" /></span>
-              <div>
-                <p className="text-base font-black text-pink leading-none">{femaleActiveFowls.length}</p>
-                <p className="text-sm font-bold uppercase tracking-wider text-pink mt-0.5">Breeding Females</p>
-              </div>
+
+            {/* Whole Flock secondary line: 31 total · 1 archived · 1 deceased (links to Inventory status filters) */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
+              <button
+                type="button"
+                onClick={() => navigateToInventoryWithStatus('all')}
+                className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors cursor-pointer"
+                title="View all 31 chickens in Chicken Inventory"
+                aria-label={`View all ${registryCounts.flockTotal} chickens in Chicken Inventory`}
+              >
+                {registryCounts.flockTotal} total
+              </button>
+              <span className="text-muted-foreground/40 font-normal">·</span>
+              <button
+                type="button"
+                onClick={() => navigateToInventoryWithStatus('archived')}
+                className="hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors cursor-pointer"
+                title="View archived chickens in Chicken Inventory"
+                aria-label={`View ${registryCounts.archived} archived chickens in Chicken Inventory`}
+              >
+                {registryCounts.archived} archived
+              </button>
+              <span className="text-muted-foreground/40 font-normal">·</span>
+              <button
+                type="button"
+                onClick={() => navigateToInventoryWithStatus('deceased')}
+                className="hover:text-rose-600 dark:hover:text-rose-400 hover:underline transition-colors cursor-pointer"
+                title="View deceased chickens in Chicken Inventory"
+                aria-label={`View ${registryCounts.deceased} deceased chickens in Chicken Inventory`}
+              >
+                {registryCounts.deceased} deceased
+              </button>
             </div>
           </div>
+
+          {/* Role Breakdown (Matches Chicken Registry tabs) */}
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              type="button"
+              onClick={() => navigate('profiling', 'males')}
+              className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all cursor-pointer group/m"
+              title="View Breeding Males in Chicken Registry"
+              aria-label={`Breeding Male: ${registryCounts.breedingMales} sires`}
+            >
+              <p className="text-base font-black text-info leading-none">{registryCounts.breedingMales}</p>
+              <p className="text-xs font-black uppercase tracking-wider text-info mt-1 leading-tight group-hover/m:underline">Breeding Male</p>
+              <p className="text-xs font-semibold text-info/80 leading-tight">(sires)</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('profiling', 'females')}
+              className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20 hover:border-pink-500/40 transition-all cursor-pointer group/f"
+              title="View Breeding Females in Chicken Registry"
+              aria-label={`Breeding Female: ${registryCounts.breedingFemales} dams`}
+            >
+              <p className="text-base font-black text-pink leading-none">{registryCounts.breedingFemales}</p>
+              <p className="text-xs font-black uppercase tracking-wider text-pink mt-1 leading-tight group-hover/f:underline">Breeding Female</p>
+              <p className="text-xs font-semibold text-pink/80 leading-tight">(dams)</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('profiling', 'offspring')}
+              className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer group/nb"
+              title="View Non-Breeding (Offspring) in Chicken Registry"
+              aria-label={`Non-Breeding: ${registryCounts.nonBreeding} offspring`}
+            >
+              <p className="text-base font-black text-amber-700 dark:text-amber-400 leading-none">{registryCounts.nonBreeding}</p>
+              <p className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 mt-1 leading-tight group-hover/nb:underline">Non-Breeding</p>
+              <p className="text-xs font-semibold text-amber-700/80 dark:text-amber-400/80 leading-tight">(offspring)</p>
+            </button>
+          </div>
+
+          {/* Sex Split (Clearly labeled as sex, links to Inventory with sex filter applied) */}
+          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-2.5 py-1.5">
+            <span className="uppercase tracking-wider font-extrabold text-xs text-muted-foreground/90">By sex:</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => navigateToInventoryWithSex('male')}
+                className="hover:text-info hover:underline transition-colors cursor-pointer font-bold inline-flex items-center gap-1"
+                title="View male chickens in Inventory"
+                aria-label={`Filter inventory by ${registryCounts.maleSex} male chickens`}
+              >
+                <ChickenIcon className="w-3 h-3 text-info inline" />
+                <span>{registryCounts.maleSex} male</span>
+              </button>
+              <span className="text-muted-foreground/40 font-normal">·</span>
+              <button
+                type="button"
+                onClick={() => navigateToInventoryWithSex('female')}
+                className="hover:text-pink hover:underline transition-colors cursor-pointer font-bold inline-flex items-center gap-1"
+                title="View female chickens in Inventory"
+                aria-label={`Filter inventory by ${registryCounts.femaleSex} female chickens`}
+              >
+                <ChickenIcon className="w-3 h-3 text-pink inline" />
+                <span>{registryCounts.femaleSex} female</span>
+              </button>
+            </div>
+          </div>
+
           <div className="h-12 -mx-1">
             {activeFowls.length > 0 ? (
               <Line
@@ -278,7 +405,16 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
-            <TrendChip up={activeNewThisWeek > 0} label={activeNewThisWeek > 0 ? `${activeNewThisWeek} this week` : 'No change'} />
+            <TrendChip
+              up={activeNewThisMonth > 0 || activeNewThisWeek > 0}
+              label={
+                activeNewThisMonth > 0
+                  ? `+${activeNewThisMonth} this month`
+                  : activeNewThisWeek > 0
+                  ? `+${activeNewThisWeek} this week`
+                  : '0 added this month'
+              }
+            />
             <span className="text-sm font-bold uppercase tracking-widest text-success bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">Registered</span>
           </div>
         </div>
@@ -418,7 +554,17 @@ export default function DashboardPage() {
                   <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
                     <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-card-foreground truncate">{fowl.name} <span className="text-sm font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
+                      <p className="text-sm font-black text-card-foreground truncate">
+                        {fowl.name}
+                        {(() => {
+                          const code = formatBirdCodeForDisplay(birdCodes.get(String(fowl.id)) || fowl.bird_code || fowl.chicken_code || '');
+                          return code ? (
+                            <span className="ml-1.5 inline-flex items-center text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-sm uppercase">
+                              {code}
+                            </span>
+                          ) : null;
+                        })()}
+                      </p>
                       <p className="text-sm text-muted-foreground font-semibold truncate">
                         {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
                       </p>
@@ -476,8 +622,8 @@ export default function DashboardPage() {
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-sm font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males}</span>
-                      <span className="text-sm font-bold text-pink flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females}</span>
+                      <span className="text-xs font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males} male</span>
+                      <span className="text-xs font-bold text-pink flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females} female</span>
                     </div>
                   </div>
                 ));

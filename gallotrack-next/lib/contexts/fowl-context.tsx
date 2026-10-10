@@ -76,7 +76,7 @@ import type {
 } from '@/lib/types';
 import { toastMessage } from '@/lib/toast-bus';
 import { captureVideoPoster, uploadKey } from '@/lib/media-format';
-import { registryTabLists, type RegistryLists } from '@/lib/registry-roles';
+import { registryTabLists, getRegistryCounts, type RegistryLists, type RegistryCounts } from '@/lib/registry-roles';
 
 interface FowlContextValue {
   fowls: FowlRecord[];
@@ -89,6 +89,8 @@ interface FowlContextValue {
   deceasedFowls: FowlRecord[];
   /** Single-source Registry tab lists (status + role selectors, see lib/registry-roles.ts). */
   registryLists: RegistryLists;
+  /** Single-source role and sex counts (see lib/registry-roles.ts getRegistryCounts). */
+  registryCounts: RegistryCounts;
   matchHistory: MatchRecord[];
   setMatchHistory: React.Dispatch<React.SetStateAction<MatchRecord[]>>;
   matchMedia: Map<number, MatchMedia>;
@@ -400,6 +402,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const maleActiveFowls = activeFowls.filter(f => isMaleHelper(f.gender));
   const femaleActiveFowls = activeFowls.filter(f => isFemaleHelper(f.gender));
   const registryLists = useMemo(() => registryTabLists(fowls), [fowls]);
+  const registryCounts = useMemo(() => getRegistryCounts(fowls), [fowls]);
 
   // ── UI state ──
   const [deathReasonInput, setDeathReasonInput] = useState('Illness');
@@ -1392,7 +1395,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     ...formState,
     deleteCustomStrain,
     deleteCustomLegColor,
-    fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, registryLists,
+    fowls, setFowls, activeFowls, sireMaterialFowls, maleActiveFowls, femaleActiveFowls, archivedFowls, deceasedFowls, registryLists, registryCounts,
     matchHistory, setMatchHistory, matchMedia, breedingPairs, loading, setLoading, loadError,
     pairingAnalytics: analytics.pairingAnalytics,
     crossbreedChartData: analytics.crossbreedChartData,

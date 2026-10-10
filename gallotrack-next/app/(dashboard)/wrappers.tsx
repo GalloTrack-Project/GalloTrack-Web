@@ -37,6 +37,10 @@ export function MarketplacePageWrapper() {
       search={fowl.search}
       setSearch={fowl.setSearch}
       debouncedSearch={fowl.debouncedSearch}
+      genderFilter={ui.inventoryGenderFilter}
+      setGenderFilter={ui.setInventoryGenderFilter}
+      statusFilter={ui.inventoryStatusFilter}
+      setStatusFilter={ui.setInventoryStatusFilter}
       setCurrentPage={(v: string) => navigate(v)}
       setProfilingSubTab={(v: string) => ui.setProfilingSubTab(v as never)}
       onRestore={(id) => fowl.handleRestoreFowlOnly(id)}

@@ -99,10 +99,28 @@ export function useFowlAnalytics(
 
     const activeSpark = (() => {
       const arr = new Array(6).fill(0);
-      fowls.forEach(f => {
+      const now = new Date();
+      fowls.forEach((f) => {
         if (f.status === 'Active' || !f.status || f.status === 'active') {
-          const i = monthIndex(f.created_at);
-          if (i >= 0) arr[i]++;
+          if (!f.created_at) {
+            arr[0]++;
+            return;
+          }
+          const d = new Date(f.created_at);
+          if (isNaN(d.getTime())) {
+            arr[0]++;
+            return;
+          }
+          const diff = (now.getFullYear() * 12 + now.getMonth()) - (d.getFullYear() * 12 + d.getMonth());
+          const idx = 5 - diff;
+          if (idx < 0) {
+            // Created before the 6-month window: belongs to initial baseline
+            arr[0]++;
+          } else if (idx < 6) {
+            arr[idx]++;
+          } else {
+            arr[5]++;
+          }
         }
       });
       for (let i = 1; i < 6; i++) arr[i] += arr[i - 1];

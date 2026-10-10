@@ -113,7 +113,7 @@ export default function PerFowlBreakdownModal({
         stats,
         matches,
         lastMatchDate,
-        role: role === 'Sire Material' ? 'Breeding Male' : role,
+        role,
       });
     });
 

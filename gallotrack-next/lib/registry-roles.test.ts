@@ -12,6 +12,7 @@ import {
   inventoryCounts,
   isBreedingReady,
   countRuleCheck,
+  getRegistryCounts,
   makeRegistryComparator,
 } from './registry-roles';
 
@@ -290,5 +291,98 @@ describe('sort comparators', () => {
     expect(byKids[0].name).toBe('Bee');
     const byWins = [...fowls].sort(makeRegistryComparator('wins', { fowls, matchHistory }));
     expect(byWins[0].name).toBe('Bee');
+  });
+});
+
+describe('getRegistryCounts invariant (Dashboard & Registry tab single source of truth)', () => {
+  it('Dashboard role counts equal Registry tab counts; three role counts add up to total; sex counts add up to total', () => {
+    const fowls: FowlRecord[] = [
+      // 3 Breeding Males (foundation sires)
+      f({ id: 30, name: 'Iron Lemon', gender: 'Rooster', status: 'Active', breeding_role: 'material' }),
+      f({ id: 31, name: 'Titan Sweater', gender: 'Rooster', status: 'Active' }),
+      f({ id: 32, name: 'True Hatch', gender: 'Rooster', status: 'Active' }),
+      // 7 Breeding Females (foundation dams)
+      f({ id: 35, name: 'Golden Pearl', gender: 'Hen', status: 'Active' }),
+      f({ id: 36, name: 'Sunrise Queen', gender: 'Hen', status: 'Active' }),
+      f({ id: 37, name: 'Mountain Rose', gender: 'Hen', status: 'Active' }),
+      f({ id: 38, name: 'Silver Princess', gender: 'Hen', status: 'Active' }),
+      f({ id: 39, name: 'Crimson Belle', gender: 'Hen', status: 'Active' }),
+      f({ id: 40, name: 'White Flame', gender: 'Hen', status: 'Active' }),
+      f({ id: 41, name: 'Alta daw', gender: 'Hen', status: 'Active' }),
+      // 19 Non-Breeding Offspring (12 male + 7 female)
+      // 12 male offspring (including 3 with breeding_role: 'material')
+      f({ id: 42, name: 'Lemon Storm', sire: 'Iron Lemon', dam: 'Golden Pearl', gender: 'Rooster', status: 'Active' }),
+      f({ id: 43, name: 'Lemon Blaze', sire: 'Iron Lemon', dam: 'Golden Pearl', gender: 'Rooster', status: 'Active' }),
+      f({ id: 45, name: 'Lemon Duke', sire: 'Iron Lemon', dam: 'Golden Pearl', gender: 'Rooster', status: 'Active' }),
+      f({ id: 47, name: 'Sweater Flash', sire: 'Titan Sweater', dam: 'Sunrise Queen', gender: 'Rooster', status: 'Active' }),
+      f({ id: 48, name: 'Sweater Bolt', sire: 'Titan Sweater', dam: 'Sunrise Queen', gender: 'Rooster', status: 'Active', breeding_role: 'material' }),
+      f({ id: 51, name: 'Hatch Thunder', sire: 'True Hatch', dam: 'Mountain Rose', gender: 'Rooster', status: 'Active' }),
+      f({ id: 52, name: 'Hatch Storm', sire: 'True Hatch', dam: 'Mountain Rose', gender: 'Rooster', status: 'Active' }),
+      f({ id: 54, name: 'Hatch Mountain', sire: 'True Hatch', dam: 'Mountain Rose', gender: 'Rooster', status: 'Active' }),
+      f({ id: 55, name: 'Hatch Silver', sire: 'True Hatch', dam: 'Silver Princess', gender: 'Rooster', status: 'Active', breeding_role: 'material' }),
+      f({ id: 57, name: 'Hatch Crown', sire: 'True Hatch', dam: 'Silver Princess', gender: 'Rooster', status: 'Active' }),
+      f({ id: 58, name: 'Lemon Roundhead King', sire: 'Iron Lemon', dam: 'Silver Princess', gender: 'Rooster', status: 'Active' }),
+      f({ id: 62, name: 'Sweater Red Storm', sire: 'Titan Sweater', dam: 'Crimson Belle', gender: 'Rooster', status: 'Active', breeding_role: 'material' }),
+      // 7 female offspring
+      f({ id: 44, name: 'Lemon Grace', sire: 'Iron Lemon', dam: 'Golden Pearl', gender: 'Hen', status: 'Active' }),
+      f({ id: 46, name: 'Lemon Queen', sire: 'Iron Lemon', dam: 'Golden Pearl', gender: 'Hen', status: 'Active' }),
+      f({ id: 49, name: 'Sweater Belle', sire: 'Titan Sweater', dam: 'Sunrise Queen', gender: 'Hen', status: 'Active' }),
+      f({ id: 50, name: 'Sweater Pearl', sire: 'Titan Sweater', dam: 'Sunrise Queen', gender: 'Hen', status: 'Active' }),
+      f({ id: 53, name: 'Hatch Rose', sire: 'True Hatch', dam: 'Mountain Rose', gender: 'Hen', status: 'Active' }),
+      f({ id: 56, name: 'Hatch Ruby', sire: 'True Hatch', dam: 'Silver Princess', gender: 'Hen', status: 'Active' }),
+      f({ id: 59, name: 'Lemon Princess', sire: 'Iron Lemon', dam: 'Crimson Belle', gender: 'Hen', status: 'Active' }),
+      // Inactive birds (1 Archived, 1 Deceased) that must NOT be counted in active registry
+      f({ id: 60, name: 'Lemon Duke II', sire: 'Iron Lemon', dam: 'Golden Pearl', gender: 'Rooster', status: 'Deceased' }),
+      f({ id: 61, name: 'Sweater Crimson', sire: 'Titan Sweater', dam: 'Crimson Belle', gender: 'Rooster', status: 'Archived' }),
+    ];
+
+    const tabLists = registryTabLists(fowls);
+    const counts = getRegistryCounts(fowls);
+
+    // 1. Dashboard role counts equal Registry tab counts
+    expect(counts.breedingMales).toBe(tabLists.males.length);
+    expect(counts.breedingFemales).toBe(tabLists.females.length);
+    expect(counts.nonBreeding).toBe(tabLists.nonBreeding.length);
+    expect(counts.sireMaterial).toBe(tabLists.sireMaterial.length);
+
+    // Concrete numbers match the user scenario exactly
+    expect(counts.total).toBe(29);
+    expect(counts.breedingMales).toBe(3);
+    expect(counts.breedingFemales).toBe(7);
+    expect(counts.nonBreeding).toBe(19);
+    expect(counts.sireMaterial).toBe(4);
+
+    // 2. The three role counts add up to the active total:
+    // Breeding Male + Breeding Female + Non-Breeding = Active (3 + 7 + 19 = 29)
+    expect(counts.breedingMales + counts.breedingFemales + counts.nonBreeding).toBe(counts.total);
+    expect(counts.total).toBe(tabLists.active.length);
+
+    // 3. Whole flock reconciliation:
+    // Active + Archived + Deceased = Total (29 + 1 + 1 = 31)
+    expect(counts.archived).toBe(1);
+    expect(counts.deceased).toBe(1);
+    expect(counts.flockTotal).toBe(31);
+    expect(counts.total + counts.archived + counts.deceased).toBe(counts.flockTotal);
+
+    // 4. Sex counts add up to the active total:
+    // Male + Female = Active (15 + 14 = 29)
+    expect(counts.maleSex).toBe(15);
+    expect(counts.femaleSex).toBe(14);
+    expect(counts.maleSex + counts.femaleSex).toBe(counts.total);
+
+    // 5. Sire Material location verification (never counted as an additive 4th role):
+    // Out of the 4 Sire Material chickens:
+    // - 1 is counted inside Breeding Male (Iron Lemon, foundation sire)
+    // - 3 are counted inside Non-Breeding (Sweater Bolt, Hatch Silver, Sweater Red Storm)
+    const sireMaterialIds = new Set(tabLists.sireMaterial.map((x) => x.id));
+    expect(sireMaterialIds.size).toBe(4);
+    const inBreedingMales = tabLists.males.filter((x) => sireMaterialIds.has(x.id)).length;
+    const inNonBreeding = tabLists.nonBreeding.filter((x) => sireMaterialIds.has(x.id)).length;
+    const inBreedingFemales = tabLists.females.filter((x) => sireMaterialIds.has(x.id)).length;
+    expect(inBreedingMales).toBe(1);
+    expect(inNonBreeding).toBe(3);
+    expect(inBreedingFemales).toBe(0);
+    // Confirm no double counting occurs
+    expect(inBreedingMales + inNonBreeding).toBe(4);
   });
 });

@@ -15,6 +15,12 @@ interface UIContextValue {
   /** Per-tab sort choice in the Registry (Task B). Identifier = natural order. */
   registrySortBy: Partial<Record<ProfilingSubTab, RegistrySortKey>>;
   setRegistrySort: (tab: ProfilingSubTab, key: RegistrySortKey) => void;
+  /** Sex/gender filter applied in Chicken Inventory ('all' | 'male' | 'female'). */
+  inventoryGenderFilter: 'all' | 'male' | 'female';
+  setInventoryGenderFilter: (v: 'all' | 'male' | 'female') => void;
+  /** Lifecycle/status filter applied in Chicken Inventory ('all' | 'active' | 'breeding' | 'archived' | 'deceased'). */
+  inventoryStatusFilter: 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
+  setInventoryStatusFilter: (v: 'all' | 'active' | 'breeding' | 'archived' | 'deceased') => void;
 
   selectedFowlForDetails: FowlRecord | null;
   setSelectedFowlForDetails: (f: FowlRecord | null) => void;
@@ -66,7 +72,7 @@ export type MatchMediaViewerConfig = {
   openedAt?: number;
 };
 
-const UIContext = createContext<UIContextValue | null>(null);
+export const UIContext = createContext<UIContextValue | null>(null);
 
 export function useUI(): UIContextValue {
   const ctx = useContext(UIContext);
@@ -90,6 +96,8 @@ export function UIProvider({
   const setRegistrySort = React.useCallback((tab: ProfilingSubTab, key: RegistrySortKey) => {
     setRegistrySortBy((prev) => ({ ...prev, [tab]: key }));
   }, []);
+  const [inventoryGenderFilter, setInventoryGenderFilter] = useState<'all' | 'male' | 'female'>('all');
+  const [inventoryStatusFilter, setInventoryStatusFilter] = useState<'all' | 'active' | 'breeding' | 'archived' | 'deceased'>('all');
 
   const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
@@ -132,6 +140,8 @@ export function UIProvider({
     currentPage, setCurrentPage,
     profilingSubTab, setProfilingSubTab,
     registrySortBy, setRegistrySort,
+    inventoryGenderFilter, setInventoryGenderFilter,
+    inventoryStatusFilter, setInventoryStatusFilter,
     selectedFowlForDetails, setSelectedFowlForDetails,
     selectedFowlForDeceased, setSelectedFowlForDeceased,
     selectedFowlForArchive, setSelectedFowlForArchive,
