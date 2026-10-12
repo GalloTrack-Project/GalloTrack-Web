@@ -203,7 +203,7 @@ export default function AdminSettingsPage() {
     switch (activeTab) {
       case 'general':
         return (
-          <div className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-2">
             <div>
               <label className={labelClass} htmlFor="system-name">System Name</label>
               <div className="relative">
@@ -211,60 +211,54 @@ export default function AdminSettingsPage() {
                 <input type="text" value={settings.system_name || ''} onChange={(e) => update('system_name', e.target.value)} className={`${inputClass} pl-9`} placeholder="e.g., GalloTrack" required id="system-name" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass} htmlFor="system-status">System Status</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><CircleDot size={14} /></span>
-                  <select value={settings.system_status || 'Operational'} onChange={(e) => update('system_status', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="system-status">
-                    <option value="Operational">Operational</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Degraded">Degraded</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="default-strain">Default Strain</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Dna size={14} /></span>
-                  <select value={settings.default_strain || 'Sweater'} onChange={(e) => update('default_strain', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="default-strain">
-                    <option value="Sweater">Sweater</option>
-                    <option value="Roundhead">Roundhead</option>
-                    <option value="Hatch">Hatch</option>
-                    <option value="Kelso">Kelso</option>
-                    <option value="Lemon 84">Lemon 84</option>
-                    <option value="Albany">Albany</option>
-                    <option value="Claret">Claret</option>
-                    <option value="Brood">Brood</option>
-                    <option value="Classic">Classic</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass} htmlFor="default-arena">Default Arena</label>
-                <input type="text" value={settings.default_arena || ''} onChange={(e) => update('default_arena', e.target.value)} className={inputClass} placeholder="e.g., Main Arena" id="default-arena" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass} htmlFor="weight-unit">Weight Unit</label>
-                <select value={settings.weight_unit || 'kg'} onChange={(e) => update('weight_unit', e.target.value as 'kg' | 'lbs')} className={`${inputClass} cursor-pointer`} id="weight-unit">
-                  <option value="kg">Kilograms (kg)</option>
-                  <option value="lbs">Pounds (lbs)</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="height-unit">Height Unit</label>
-                <select value={settings.height_unit || 'cm'} onChange={(e) => update('height_unit', e.target.value as 'cm' | 'inches')} className={`${inputClass} cursor-pointer`} id="height-unit">
-                  <option value="cm">Centimeters (cm)</option>
-                  <option value="inches">Inches</option>
+            <div>
+              <label className={labelClass} htmlFor="system-status">System Status</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><CircleDot size={14} /></span>
+                <select value={settings.system_status || 'Operational'} onChange={(e) => update('system_status', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="system-status">
+                  <option value="Operational">Operational</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Degraded">Degraded</option>
                 </select>
               </div>
             </div>
             <div>
+              <label className={labelClass} htmlFor="default-strain">Default Strain</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Dna size={14} /></span>
+                <select value={settings.default_strain || 'Sweater'} onChange={(e) => update('default_strain', e.target.value)} className={`${inputClass} pl-9 cursor-pointer`} id="default-strain">
+                  <option value="Sweater">Sweater</option>
+                  <option value="Roundhead">Roundhead</option>
+                  <option value="Hatch">Hatch</option>
+                  <option value="Kelso">Kelso</option>
+                  <option value="Lemon 84">Lemon 84</option>
+                  <option value="Albany">Albany</option>
+                  <option value="Claret">Claret</option>
+                  <option value="Brood">Brood</option>
+                  <option value="Classic">Classic</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="default-arena">Default Arena</label>
+              <input type="text" value={settings.default_arena || ''} onChange={(e) => update('default_arena', e.target.value)} className={inputClass} placeholder="e.g., Main Arena" id="default-arena" />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="weight-unit">Weight Unit</label>
+              <select value={settings.weight_unit || 'kg'} onChange={(e) => update('weight_unit', e.target.value as 'kg' | 'lbs')} className={`${inputClass} cursor-pointer`} id="weight-unit">
+                <option value="kg">Kilograms (kg)</option>
+                <option value="lbs">Pounds (lbs)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="height-unit">Height Unit</label>
+              <select value={settings.height_unit || 'cm'} onChange={(e) => update('height_unit', e.target.value as 'cm' | 'inches')} className={`${inputClass} cursor-pointer`} id="height-unit">
+                <option value="cm">Centimeters (cm)</option>
+                <option value="inches">Inches (in)</option>
+              </select>
+            </div>
+            <div className="xl:col-span-2">
               <label className={labelClass} htmlFor="maintenance-message">Maintenance Message <span className="opacity-60">(optional)</span></label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warning pointer-events-none text-sm"><Megaphone size={14} /></span>
@@ -385,72 +379,76 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background relative overflow-hidden">
+    <div className="w-full bg-background relative">
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
+      <div className="relative z-10 w-full space-y-4">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
               System <span className="text-warning">Settings</span>
             </h1>
             <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Admin-Controlled Application Configuration</p>
           </div>
+          <button type="submit" form="system-settings-form" disabled={saving}
+            className="self-start sm:self-auto text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
+            {saving && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+            {saving ? 'Saving...' : 'Save'}
+          </button>
         </div>
 
         {message && (
-          <div className={`mb-4 text-sm font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
+          <div className={`text-sm font-bold text-center p-3.5 rounded-md border animate-fadeIn ${
             message.type === 'success'
               ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
               : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
           }`}>{message.text}</div>
         )}
 
-        {/* ADMIN IDENTITY */}
-        <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center"><Shield size={18} /></div>
-              <div>
-                <p className="text-sm font-extrabold text-card-foreground">{adminProfile.full_name || 'Administrator'}</p>
-                <p className="text-xs text-muted-foreground font-semibold">{adminProfile.email || ''} · Admin session</p>
+        <div className="flex flex-col lg:flex-row gap-4 items-start">
+          {/* TAB RAIL — vertical on desktop, scrollable row on mobile */}
+          <nav aria-label="Settings sections" className="lg:w-56 shrink-0 bg-card/95 border border-border rounded-lg shadow-2xs p-2 flex lg:flex-col gap-1.5 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* PANEL — fills remaining width */}
+          <div className="flex-1 min-w-0 w-full space-y-4">
+            {/* ADMIN IDENTITY */}
+            <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center"><Shield size={18} /></div>
+                <div className="min-w-0">
+                  <p className="text-sm font-extrabold text-card-foreground truncate">{adminProfile.full_name || 'Administrator'}</p>
+                  <p className="text-xs text-muted-foreground font-semibold truncate">{adminProfile.email || ''} · Admin session</p>
+                </div>
               </div>
             </div>
-            <button type="submit" form="system-settings-form" disabled={saving}
-              className="text-xs font-black uppercase tracking-wider px-3 py-2 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
-              {saving && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+
+            {/* TAB CONTENT */}
+            <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 border border-border rounded-lg shadow-2xs p-5">
+              {renderTab()}
+            </form>
           </div>
         </div>
 
-        {/* TAB BAR — matches LineageDirectory pattern */}
-        <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded-lg border border-border overflow-x-auto shrink-0 mb-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-md text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
-                activeTab === tab.id
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* TAB CONTENT */}
-        <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 border border-border rounded-lg shadow-2xs p-5">
-          {renderTab()}
-        </form>
-
-        <p className="mt-4 text-center text-xs font-mono text-muted-foreground tracking-widest uppercase">
+        <p className="text-center text-xs font-mono text-muted-foreground tracking-widest uppercase">
           Admin-only settings panel
         </p>
       </div>
