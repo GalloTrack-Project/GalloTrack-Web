@@ -86,6 +86,9 @@ describe('PerFowlBreakdownModal', () => {
     const breedingMaleFilter = screen.getByRole('button', { name: /Breeding Male/i });
     fireEvent.click(breedingMaleFilter);
 
+    // The stored filter value stays 'Non-Breeding' but the chip reads the label
+    expect(screen.getByRole('button', { name: 'Fight Prospects' })).toBeInTheDocument();
+
     // Breeding males are Sweater Red Storm and Iron Lemon
     expect(screen.getAllByText('Sweater Red Storm').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Iron Lemon').length).toBeGreaterThanOrEqual(1);

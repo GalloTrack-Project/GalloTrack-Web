@@ -19,6 +19,7 @@ import {
   registryTabLists,
   makeRegistryComparator,
   roleOf,
+  ROLE_LABEL,
   type RegistryLists,
   type RegistrySortKey,
 } from '@/lib/registry-roles';
@@ -86,8 +87,8 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
             </span>
           )}
           {isNonBreeding && (
-            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Non-breeding offspring in this farm">
-              Non-Breeding
+            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title="Fight prospects (offspring) in this farm">
+              {ROLE_LABEL['Non-Breeding']}
             </span>
           )}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
@@ -531,7 +532,7 @@ function FowlListsBody({
     );
   }
 
-  // NON-BREEDING (OFFSPRING)
+  // FIGHT PROSPECTS (OFFSPRING)
   if (tab === 'offspring') {
     const { pagedList, totalPages } = paginatedBirds;
     return (
@@ -540,8 +541,8 @@ function FowlListsBody({
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal">🥚</div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Non-Breeding Registry</h2>
-              <p className="text-xs text-muted-foreground font-semibold">Every child of a registered breeding pair — one entry per non-breeding chicken</p>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Fight Prospects Registry</h2>
+              <p className="text-xs text-muted-foreground font-semibold">Every child of a registered breeding pair — one entry per fight prospect</p>
             </div>
           </div>
           <span className="shrink-0 self-start sm:self-center text-xs font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{baseList.length} Total</span>
@@ -556,10 +557,10 @@ function FowlListsBody({
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Non-Breeding Chickens</h3>
-            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken found under this status for non-breeding registry.</p>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Fight Prospects</h3>
+            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken found under this status for the Fight Prospects registry.</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First Non-Breeding Chicken
+              ➕ Encode First Fight Prospect Chicken
             </button>
           </div>
         ) : (

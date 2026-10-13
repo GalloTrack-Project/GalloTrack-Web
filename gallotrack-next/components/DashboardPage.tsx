@@ -14,6 +14,7 @@ import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChar
 import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
+import { ROLE_LABEL } from '@/lib/registry-roles';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -144,7 +145,7 @@ export default function DashboardPage() {
             { label: 'Overall win rate', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
             { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
             { label: 'Matches logged', value: String(matchHistory.length) },
-            { label: 'Active registry', value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} non-breeding | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)` },
+            { label: 'Active registry', value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} fight prospects | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)` },
           ],
         },
         {
@@ -269,15 +270,15 @@ export default function DashboardPage() {
             <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Active Chicken Registry</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
-          {/* Main Total: 29 Active chickens (tooltip: Breeding Male + Breeding Female + Non-Breeding) */}
+          {/* Main Total: 29 Active chickens (tooltip: Breeding Male + Breeding Female + Fight Prospects) */}
           <div className="flex flex-col gap-1 mt-1">
             <div className="flex items-baseline gap-2">
               <button
                 type="button"
                 onClick={() => navigate('profiling', 'males')}
                 className="text-left text-3xl font-black text-card-foreground tracking-tight leading-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                title="Breeding Male + Breeding Female + Non-Breeding"
-                aria-label={`29 Active chickens. Breeding Male + Breeding Female + Non-Breeding. Click to view Chicken Registry`}
+                title="Breeding Male + Breeding Female + Fight Prospects"
+                aria-label={`29 Active chickens. Breeding Male + Breeding Female + Fight Prospects. Click to view Chicken Registry`}
               >
                 {registryCounts.total}
               </button>
@@ -285,8 +286,8 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => navigate('profiling', 'males')}
                 className="text-left text-sm font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                title="Breeding Male + Breeding Female + Non-Breeding"
-                aria-label="Active chickens: Breeding Male + Breeding Female + Non-Breeding"
+                title="Breeding Male + Breeding Female + Fight Prospects"
+                aria-label="Active chickens: Breeding Male + Breeding Female + Fight Prospects"
               >
                 Active chickens
               </button>
@@ -354,11 +355,11 @@ export default function DashboardPage() {
               type="button"
               onClick={() => navigate('profiling', 'offspring')}
               className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer group/nb"
-              title="View Non-Breeding (Offspring) in Chicken Registry"
-              aria-label={`Non-Breeding: ${registryCounts.nonBreeding} offspring`}
+              title="View Fight Prospects (Offspring) in Chicken Registry"
+              aria-label={`Fight Prospects: ${registryCounts.nonBreeding} offspring`}
             >
               <p className="text-base font-black text-amber-700 dark:text-amber-400 leading-none">{registryCounts.nonBreeding}</p>
-              <p className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 mt-1 leading-tight group-hover/nb:underline">Non-Breeding</p>
+              <p className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 mt-1 leading-tight group-hover/nb:underline">{ROLE_LABEL['Non-Breeding']}</p>
               <p className="text-xs font-semibold text-amber-700/80 dark:text-amber-400/80 leading-tight">(offspring)</p>
             </button>
           </div>

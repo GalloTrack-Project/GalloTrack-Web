@@ -32,7 +32,7 @@ describe('RegistryNav', () => {
     expect(desktopTabs[1]).toHaveTextContent(/Breeding Female/i);
     expect(desktopTabs[1]).toHaveTextContent('14');
 
-    expect(desktopTabs[2]).toHaveTextContent(/Non-Breeding/i);
+    expect(desktopTabs[2]).toHaveTextContent(/Fight Prospects/i);
     expect(desktopTabs[2]).toHaveTextContent('20');
 
     expect(desktopTabs[3]).toHaveTextContent(/Match Logs/i);
@@ -117,7 +117,7 @@ describe('RegistryNav', () => {
     // Check short labels
     expect(mobileButtons?.[0]).toHaveTextContent('Male');
     expect(mobileButtons?.[1]).toHaveTextContent('Female');
-    expect(mobileButtons?.[2]).toHaveTextContent('Non-Breeding');
+    expect(mobileButtons?.[2]).toHaveTextContent('Fight Prospects');
     expect(mobileButtons?.[3]).toHaveTextContent('Matches');
     expect(mobileButtons?.[4]).toHaveTextContent('Sire Mat.');
   });

@@ -6,7 +6,7 @@ import type { FowlRecord, MatchRecord } from '@/lib/types';
 import { Modal } from '@/components/ui';
 import { useUI } from '@/lib/contexts/ui-context';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { buildRegistryContext, roleOf, type RegistryRole } from '@/lib/registry-roles';
+import { buildRegistryContext, roleOf, roleLabel, type RegistryRole } from '@/lib/registry-roles';
 import {
   computeWinRate,
   combineWinRates,
@@ -227,7 +227,7 @@ export default function PerFowlBreakdownModal({
                     : 'bg-card text-muted-foreground border-border hover:border-slate-400'
                 }`}
               >
-                {r === 'all' ? 'All Roles' : r}
+                {r === 'all' ? 'All Roles' : roleLabel(r)}
               </button>
             ))}
           </div>
@@ -330,7 +330,7 @@ export default function PerFowlBreakdownModal({
                             </button>
                           </div>
                           <p className="text-xs text-muted-foreground font-semibold">
-                            {row.role} · {row.fowl.breed || '—'}
+                            {roleLabel(row.role)} · {row.fowl.breed || '—'}
                           </p>
                         </div>
                       </div>
@@ -436,7 +436,7 @@ export default function PerFowlBreakdownModal({
                   <WinRatePill stats={row.stats} wins={row.stats.wins} losses={row.stats.losses} />
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/40">
-                  <span>{row.role}</span>
+                  <span>{roleLabel(row.role)}</span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"

@@ -23,6 +23,24 @@ export const LIFECYCLE_STATUSES: LifecycleStatus[] = ['Active', 'Archived', 'Dec
 export const REGISTRY_ROLES: RegistryRole[] = ['Breeding Male', 'Breeding Female', 'Non-Breeding'];
 export const ROLE_FILTER_OPTIONS: RoleKey[] = [...REGISTRY_ROLES, 'Sire Material'];
 
+/**
+ * Display-only labels. The stored value `registry_role = 'Non-Breeding'` (and
+ * every tab id, filter value and API payload built from it) never changes —
+ * only what the user reads changes. The offspring tab is shown as
+ * "Fight Prospects" per the agriculturist's terminology review.
+ */
+export const ROLE_LABEL: Record<RegistryRole, string> = {
+  'Breeding Male': 'Breeding Male',
+  'Breeding Female': 'Breeding Female',
+  'Non-Breeding': 'Fight Prospects',
+};
+
+/** Display label for a stored role; unknown values pass through unchanged. */
+export const roleLabel = (role: string | null | undefined): string => {
+  if (!role) return '';
+  return ROLE_LABEL[role as RegistryRole] ?? role;
+};
+
 // ── status predicates (single lifecycle status vocabulary) ─────────────────
 
 export const isActiveStatus = (f: Pick<FowlRecord, 'status'>): boolean =>

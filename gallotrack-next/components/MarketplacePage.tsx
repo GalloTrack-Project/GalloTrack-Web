@@ -20,6 +20,7 @@ import {
   roleOf,
   buildRegistryContext,
   ROLE_FILTER_OPTIONS,
+  roleLabel,
   type RoleKey,
 } from '@/lib/registry-roles';
 import { Search, X } from 'lucide-react';
@@ -612,7 +613,7 @@ export default function MarketplacePage({
           >
             <option value="all">All roles</option>
             {ROLE_FILTER_OPTIONS.map((r) => (
-              <option key={r} value={r}>{r}</option>
+              <option key={r} value={r}>{roleLabel(r)}</option>
             ))}
           </select>
           <label htmlFor="inventory-sex" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sex</label>

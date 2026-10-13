@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Award, ShieldAlert, ArrowRight } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import type { FowlRecord } from '@/lib/types';
+import { ROLE_LABEL } from '@/lib/registry-roles';
 import ChickenIcon from '@/components/ChickenIcon';
 
 type PromoteToBreederModalProps = {
@@ -76,7 +77,7 @@ export default function PromoteToBreederModal({
           <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-200/60 dark:border-border/60">
             <div>
               <span className="text-muted-foreground font-medium block">Current Role:</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">Non-Breeding</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">{ROLE_LABEL['Non-Breeding']}</span>
             </div>
             <div>
               <span className="text-muted-foreground font-medium block">Birth Code:</span>
@@ -96,7 +97,7 @@ export default function PromoteToBreederModal({
             </span>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-300">
-            This chicken will leave the <strong>Non-Breeding</strong> tab and appear strictly in the{' '}
+            This chicken will leave the <strong>{ROLE_LABEL['Non-Breeding']}</strong> tab and appear strictly in the{' '}
             <strong>Breeding</strong> tab. Its birth code (<code className="font-mono">{birthCode}</code>) will remain
             preserved as historical reference.
           </p>

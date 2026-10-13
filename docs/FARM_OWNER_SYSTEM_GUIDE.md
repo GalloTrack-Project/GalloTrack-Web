@@ -43,7 +43,7 @@
 │  │    ├── Top Action: "Breeds" (Manages Custom Strains & Leg Colors)            │
 │  │    ├── Tab: Breeding Male (Active Foundation & Promoted Sires)               │
 │  │    ├── Tab: Breeding Female (Active Foundation & Promoted Dams)              │
-│  │    ├── Tab: Non-Breeding (Active Offspring with Parentage)                   │
+│  │    ├── Tab: Fight Prospects (Active Offspring with Parentage)                │
 │  │    ├── Tab: Match Logs (Record Fight Form & Historical Battle Log)           │
 │  │    ├── Tab: Sire Material (Prospect Birds for Future Breeding)               │
 │  │    └── Controls: Search Filter, Parent Filter, Sort by Code/Name/Age         │
@@ -261,7 +261,7 @@ Tab switching is coordinated by [RegistryNav.tsx](file:///c:/Users/angelica/Desk
    - Contains: Active broodhens designated for breeding.
    - Decided by: `fowl.status = 'Active'` AND (`fowl.registry_role = 'Breeding Female'` OR fallback role calculation where the female is Foundation Stock or has recorded children).
    - Expected identifier: Letters (`A, B, C, ... AA`).
-3. **Non-Breeding**:
+3. **Fight Prospects**:
    - Contains: Active chicks, stags, pullets, and battlecocks produced from your breeding pens that are not yet parents themselves.
    - Decided by: `fowl.status = 'Active'` AND (`fowl.registry_role = 'Non-Breeding'` OR fallback role calculation where the bird has registered parents but no children of its own).
    - Expected identifier: Family combination codes (`1A1, 1A2, 2B1`).
@@ -331,7 +331,7 @@ Each card in the registry list shows the bird’s code, wing band tag, strain, g
 - **Set as Sire Material Button**:
   - Updates `fowl.breeding_role = 'material'` and `fowl.status = 'Sire Material'`. Moves the bird into the Sire Material evaluation tab.
 - **Promote to Breeder Button** (On Offspring Cards):
-  - Accessible on non-breeding offspring.
+  - Accessible on offspring in the Fight Prospects tab.
   - Prompts whether to promote to **Breeding Male** (assigns next sire number `1, 2, ...`) or **Breeding Female** (assigns next dam letter `A, B, ...`).
   - Preserves the original birth code in column `fowl.birth_code` (e.g. "born as 1A1"), updates `fowl.chicken_code`, sets `fowl.registry_role = 'Breeding Male'` or `'Breeding Female'`, and sets `breeding_role = 'breeder'`.
 
@@ -629,7 +629,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 5. Step 3 displays live 50% Butcher / 50% Kelso bloodline breakdown.
 6. Click **REGISTER**.
 7. Offspring is saved with `chicken_code = '1A1'`, `sire_id = [Black Butcher ID]`, `dam_id = [Kelso Lady ID]`.
-8. The bird is placed in the **Non-Breeding** tab.
+8. The bird is placed in the **Fight Prospects** tab.
 
 ### c) Record a Match, Watch Media, and Share It
 1. Click **Chicken Registry $\rightarrow$ Match Logs** tab.
@@ -649,7 +649,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 5. If a chicken dies: Click **Deceased** on its card, choose cause: *"Illness / Disease"*, and confirm. It moves to the **Deceased** inventory archive.
 
 ### e) Promote an Offspring to Breeder
-1. In the **Non-Breeding** tab, locate a mature stag with birth code `1A1`.
+1. In the **Fight Prospects** tab, locate a mature stag with birth code `1A1`.
 2. Click **Promote to Breeder** on its profile.
 3. Choose **Breeding Male**.
 4. System assigns the next available sire number (e.g. `5`), preserves `birth_code = '1A1'`, and sets `registry_role = 'Breeding Male'`.
@@ -685,15 +685,15 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 | :--- | :--- | :--- | :--- |
 | **Breeding Male Tab** | Sires only (Numbers: `1, 2, 3`) | **Complies** (with minor manual edit risk) | Filtered in [registry-roles.ts:194](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L194). Only males with sire roles appear. |
 | **Breeding Female Tab** | Dams only (Letters: `A, B, C`) | **Complies** (with minor manual edit risk) | Filtered in [registry-roles.ts:195](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L195). Only females with dam roles appear. |
-| **Non-Breeding Tab** | Offspring only (Codes: `1A1, 1A2`) | **Complies** | Filtered in [registry-roles.ts:196](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L196). Offspring birds appear here. |
-| **One Role per Chicken** | No chicken appears in >1 tab | **Partially Breached by Sire Material** | `assertTabExclusivity` enforces mutual exclusivity for Males, Females, and Non-Breeding. However, Sire Material birds simultaneously exist in either Males or Non-Breeding. |
+| **Fight Prospects Tab** | Offspring only (Codes: `1A1, 1A2`) | **Complies** | Filtered in [registry-roles.ts:196](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L196). Offspring birds appear here. |
+| **One Role per Chicken** | No chicken appears in >1 tab | **Partially Breached by Sire Material** | `assertTabExclusivity` enforces mutual exclusivity for Males, Females, and Fight Prospects. However, Sire Material birds simultaneously exist in either Males or Fight Prospects. |
 | **One Source of Truth for Counts** | All pages report identical numbers | **Minor Discrepancies Observed** | Dashboard reports active chickens from `activeFowls.length`, whereas Inventory reports counts through `inventoryCounts()`. If legacy statuses exist, numbers can vary slightly. |
 | **Unique, Permanent Identifiers** | Never reused, unique per farm | **Complies** | Enforced by database unique index `fowl_user_chicken_code_key` in [20261007000002_automatic_unique_identifiers.sql](file:///c:/Users/angelica/Desktop/GalloTrack-Web/supabase/migrations/20261007000002_automatic_unique_identifiers.sql). |
 | **Internal IDs Hidden from Users** | Only show bird codes / wing bands | **Minor Inconsistency** | The registration form header still displays `ID: GT-0063` (the predicted database row ID), which can confuse owners into thinking it is a chicken identifier. |
 | **Warn Before Archiving Active Parents** | Warn if bird has living offspring | **Missing Confirmation Warning** | Archiving a sire or dam with existing offspring proceeds without a prompt warning the owner that the bird is an active parent of registered progeny. |
 
 ### Known Quirks & Inconsistencies
-1. **Offspring Post-Registration Redirect Quirk**: In [fowl-context.tsx:794](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/contexts/fowl-context.tsx#L794), after registering an offspring, the screen redirects you to the Breeding Male or Breeding Female tab instead of the Non-Breeding tab. The chick is safely saved in Non-Breeding, but you have to click that tab to see it.
+1. **Offspring Post-Registration Redirect Quirk**: In [fowl-context.tsx:794](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/contexts/fowl-context.tsx#L794), after registering an offspring, the screen redirects you to the Breeding Male or Breeding Female tab instead of the Fight Prospects tab. The chick is safely saved in Fight Prospects, but you have to click that tab to see it.
 2. **Identifier Defaults to "Sire" on Blank Form**: Opening the registration form displays `"4 · Auto-Assigned (Sire)"` before you select gender because blank gender defaults to male.
 3. **Database Column `registry_role` Saved as NULL**: When inserting new chickens, `registry_role` is omitted from the initial SQL payload, causing the database column to sit as `NULL`. The frontend relies on fallback rules in [registry-roles.ts](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts) to sort the tabs.
 

@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { Shield, Egg, FileText } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import type { ProfilingSubTab } from '@/lib/types';
+import { ROLE_LABEL } from '@/lib/registry-roles';
 
 export interface MainRegistryTabItem {
   id: 'males' | 'females' | 'offspring' | 'matchForm' | 'sireMaterial';
@@ -26,7 +27,7 @@ interface RegistryNavProps {
 
 export default function RegistryNav({ currentTab, onSelectTab, counts }: RegistryNavProps) {
   // 5 MAIN TABS in strict order requested:
-  // Breeding Male | Breeding Female | Non-Breeding | Match Logs | Sire Material
+  // Breeding Male | Breeding Female | Fight Prospects | Match Logs | Sire Material
   const tabs: MainRegistryTabItem[] = [
     {
       id: 'males',
@@ -44,8 +45,8 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
     },
     {
       id: 'offspring',
-      label: 'Non-Breeding',
-      shortLabel: 'Non-Breeding',
+      label: ROLE_LABEL['Non-Breeding'],
+      shortLabel: ROLE_LABEL['Non-Breeding'],
       icon: <Egg className="w-4 h-4 shrink-0" />,
       count: counts.offspring,
     },
