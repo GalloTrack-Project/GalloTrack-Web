@@ -10,8 +10,10 @@ import {
   BREEDING_TABS,
   MARKETPLACE_TABS,
   LINEAGE_TABS,
+  MOBILE_PRIMARY_COUNT,
   isActiveNav,
   findActiveNav,
+  groupNavItems,
   getPageTitle,
 } from './nav-manifest';
 
@@ -98,5 +100,26 @@ describe('nav-manifest', () => {
     expect([...BREEDING_TABS]).toEqual(['coding', 'pairs', 'identity', 'safety']);
     expect([...MARKETPLACE_TABS]).toEqual(['browse', 'my', 'create']);
     expect([...LINEAGE_TABS]).toEqual(['tree', 'families', 'sire', 'dam', 'pedigree']);
+  });
+
+  it('groups consecutive sidebar items by their group label', () => {
+    const ownerGroups = groupNavItems(OWNER_NAV);
+    expect(ownerGroups.map((g) => g.group)).toEqual(['Farm', 'Trade', 'Account']);
+    expect(ownerGroups[0].items.map((i) => i.href)).toEqual([
+      '/dashboard',
+      '/profiling',
+      '/catalog',
+      '/lineage',
+      '/breeding',
+    ]);
+    expect(ownerGroups[1].items.map((i) => i.href)).toEqual(['/marketplace']);
+    const adminGroups = groupNavItems(ADMIN_NAV);
+    expect(adminGroups.map((g) => g.group)).toEqual(['Console', 'Account']);
+  });
+
+  it('keeps 4 primary mobile items so owner nav needs a More overflow', () => {
+    expect(MOBILE_PRIMARY_COUNT).toBe(4);
+    expect(OWNER_NAV.length).toBeGreaterThan(MOBILE_PRIMARY_COUNT);
+    expect(ADMIN_NAV.length).toBe(MOBILE_PRIMARY_COUNT);
   });
 });

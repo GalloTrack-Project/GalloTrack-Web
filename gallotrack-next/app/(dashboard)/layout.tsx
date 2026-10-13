@@ -10,8 +10,9 @@ import { useAuth } from '@/lib/contexts/auth-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { supabase } from '@/lib/registry';
 import { SkipLink, cn } from '@/components/ui';
-import { OWNER_NAV, ADMIN_NAV, isActiveNav, findActiveNav, getPageTitle, type NavItem } from '@/lib/nav-manifest';
+import { OWNER_NAV, ADMIN_NAV, isActiveNav, findActiveNav, groupNavItems, getPageTitle, type NavItem } from '@/lib/nav-manifest';
 import GlobalSearch from '@/components/nav/GlobalSearch';
+import MobileNav from '@/components/nav/MobileNav';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
@@ -69,22 +70,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
           </div>
-          <nav aria-label="Primary" className="p-4 space-y-1.5 mt-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
-                className={cn(
-                  'w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-sm text-sm tracking-wide transition-colors duration-150',
-                  isActiveNav(item, pathname)
-                    ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
-                    : 'text-muted-foreground font-medium hover:bg-muted/70 hover:text-foreground',
-                )}
-              >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </Link>
+          <nav aria-label="Primary" className="p-4 space-y-4 mt-2">
+            {groupNavItems(navItems).map(({ group, items }) => (
+              <div key={group}>
+                <p className="px-4 pb-1.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">{group}</p>
+                <div className="space-y-1.5">
+                  {items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
+                      className={cn(
+                        'w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-sm text-sm tracking-wide transition-colors duration-150',
+                        isActiveNav(item, pathname)
+                          ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
+                          : 'text-muted-foreground font-medium hover:bg-muted/70 hover:text-foreground',
+                      )}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
         </div>
@@ -242,26 +250,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <ModalsWrapper />
 
         {/* MOBILE BOTTOM NAV */}
-        <nav aria-label="Mobile" className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-2xl md:hidden pb-[env(safe-area-inset-bottom,0px)]">
-          <div className="flex justify-around items-center h-16 px-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
-                className={cn(
-                  'flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors duration-150 active:scale-95',
-                  isActiveNav(item, pathname)
-                    ? 'text-accent font-semibold'
-                    : 'text-muted-foreground font-medium hover:text-foreground',
-                )}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-sm tracking-tight">{item.shortLabel}</span>
-              </Link>
-            ))}
-          </div>
-        </nav>
+        <MobileNav navItems={navItems} pathname={pathname} />
       </div>
     </div>
   );

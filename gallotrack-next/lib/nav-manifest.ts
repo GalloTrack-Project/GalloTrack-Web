@@ -25,7 +25,12 @@ export type NavItem = {
   icon: ComponentType<{ className?: string }>;
   /** 'exact' matches only the bare path; 'prefix' also matches child paths. */
   match: 'exact' | 'prefix';
+  /** Sidebar group label; consecutive items with the same group are grouped. */
+  group: string;
 };
+
+/** Mobile bottom bar keeps this many primary items; the rest live under More. */
+export const MOBILE_PRIMARY_COUNT = 4;
 
 /** URL tab contracts per page. Values are shareable; ids must stay stable. */
 export const REGISTRY_TABS = [
@@ -52,20 +57,20 @@ export const MARKETPLACE_TABS = ['browse', 'my', 'create'] as const;
 export const LINEAGE_TABS = ['tree', 'families', 'sire', 'dam', 'pedigree'] as const;
 
 export const OWNER_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: LayoutDashboard, match: 'exact' },
-  { href: '/profiling', label: 'Chicken Registry', shortLabel: 'Registry', icon: Dna, match: 'prefix' },
-  { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon, match: 'prefix' },
-  { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine, match: 'prefix' },
-  { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical, match: 'prefix' },
-  { href: '/marketplace', label: 'Marketplace', shortLabel: 'Market', icon: Store, match: 'prefix' },
-  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix' },
+  { href: '/dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: LayoutDashboard, match: 'exact', group: 'Farm' },
+  { href: '/profiling', label: 'Chicken Registry', shortLabel: 'Registry', icon: Dna, match: 'prefix', group: 'Farm' },
+  { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon, match: 'prefix', group: 'Farm' },
+  { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine, match: 'prefix', group: 'Farm' },
+  { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical, match: 'prefix', group: 'Farm' },
+  { href: '/marketplace', label: 'Marketplace', shortLabel: 'Market', icon: Store, match: 'prefix', group: 'Trade' },
+  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account' },
 ];
 
 export const ADMIN_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'System Overview', shortLabel: 'Overview', icon: LayoutDashboard, match: 'exact' },
-  { href: '/admin', label: 'User Registry', shortLabel: 'Users', icon: Users, match: 'exact' },
-  { href: '/admin/settings', label: 'System Config', shortLabel: 'Config', icon: Settings, match: 'prefix' },
-  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix' },
+  { href: '/dashboard', label: 'System Overview', shortLabel: 'Overview', icon: LayoutDashboard, match: 'exact', group: 'Console' },
+  { href: '/admin', label: 'User Registry', shortLabel: 'Users', icon: Users, match: 'exact', group: 'Console' },
+  { href: '/admin/settings', label: 'System Config', shortLabel: 'Config', icon: Settings, match: 'prefix', group: 'Console' },
+  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account' },
 ];
 
 /** Secondary admin pages: not sidebar items, but titled in the header. */
@@ -104,6 +109,17 @@ export function isActiveNav(item: NavItem, pathname: string): boolean {
 
 export function findActiveNav(navItems: NavItem[], pathname: string): NavItem | undefined {
   return navItems.find((item) => isActiveNav(item, pathname));
+}
+
+/** Groups consecutive same-group items, preserving manifest order. */
+export function groupNavItems(navItems: NavItem[]): { group: string; items: NavItem[] }[] {
+  const groups: { group: string; items: NavItem[] }[] = [];
+  for (const item of navItems) {
+    const last = groups[groups.length - 1];
+    if (last && last.group === item.group) last.items.push(item);
+    else groups.push({ group: item.group, items: [item] });
+  }
+  return groups;
 }
 
 export function getPageTitle(pathname: string): string {
