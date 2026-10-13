@@ -278,20 +278,43 @@ export function getRegistryCounts(fowls: FowlRecord[]): RegistryCounts {
 
 // ── Inventory tab counts (single vocabulary with the Registry) ─────────────
 
-const BREEDING_READY_MIN_DAYS = 240; // ~8 months: mature enough to breed
+export const BREEDING_READY_MIN_DAYS = 240; // ~8 months: mature enough to breed
+export const BREEDING_READY_LOOKAHEAD_DAYS = 30;
 const MATURE_STAGES = new Set(['cock', 'hen', 'bull stag', 'senior hen', 'broodcock', 'broodhen', 'mature']);
+
+function ageInDays(f: FowlRecord, now: number): number | null {
+  const birth = (f.birthdate || '').trim();
+  if (!birth) return null;
+  const days = (now - new Date(birth).getTime()) / 86400000;
+  return Number.isFinite(days) ? days : null;
+}
 
 /**
  * Active + at least 8 months old; when no birthdate is recorded, fall back to a mature growth stage.
  */
 export function isBreedingReady(f: FowlRecord): boolean {
   if (!isActiveStatus(f)) return false;
-  const birth = (f.birthdate || '').trim();
-  if (birth) {
-    const days = (Date.now() - new Date(birth).getTime()) / 86400000;
-    if (Number.isFinite(days)) return days >= BREEDING_READY_MIN_DAYS;
-  }
+  const days = ageInDays(f, Date.now());
+  if (days !== null) return days >= BREEDING_READY_MIN_DAYS;
   return MATURE_STAGES.has((f.growth_stage || '').trim().toLowerCase());
+}
+
+/**
+ * Whole days left before the 240-day maturity threshold (1 = ready tomorrow).
+ * null when the chicken is not active, has no usable birthdate, or is already ready.
+ */
+export function daysUntilBreedingReady(f: FowlRecord, now: number = Date.now()): number | null {
+  if (!isActiveStatus(f)) return null;
+  const days = ageInDays(f, now);
+  if (days === null) return null;
+  const remaining = Math.ceil(BREEDING_READY_MIN_DAYS - days);
+  return remaining > 0 ? remaining : null;
+}
+
+/** True when the chicken becomes ready to breed within BREEDING_READY_LOOKAHEAD_DAYS (inclusive). */
+export function isBreedingReadySoon(f: FowlRecord, now: number = Date.now()): boolean {
+  const remaining = daysUntilBreedingReady(f, now);
+  return remaining !== null && remaining >= 1 && remaining <= BREEDING_READY_LOOKAHEAD_DAYS;
 }
 
 export interface InventoryCounts {

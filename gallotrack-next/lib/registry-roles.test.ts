@@ -11,6 +11,8 @@ import {
   buildRegistryContext,
   inventoryCounts,
   isBreedingReady,
+  daysUntilBreedingReady,
+  isBreedingReadySoon,
   countRuleCheck,
   getRegistryCounts,
   makeRegistryComparator,
@@ -257,6 +259,31 @@ describe('Breeding Ready (proposed rule)', () => {
     expect(isBreedingReady(f({ id: 3, name: 'C', growth_stage: 'Hen' }))).toBe(true);
     expect(isBreedingReady(f({ id: 4, name: 'D', growth_stage: 'Chick' }))).toBe(false);
     expect(isBreedingReady(f({ id: 5, name: 'E', status: 'Archived', growth_stage: 'Hen' }))).toBe(false);
+  });
+});
+
+describe('daysUntilBreedingReady / isBreedingReadySoon (30-day countdown)', () => {
+  const NOW = new Date('2026-10-13T00:00:00Z').getTime();
+  const day = (n: number) => new Date(NOW - n * 86400000).toISOString().slice(0, 10);
+
+  it('counts down to the 240-day threshold and returns null once ready', () => {
+    expect(daysUntilBreedingReady(f({ id: 1, name: 'A', birthdate: day(239) }), NOW)).toBe(1);
+    expect(daysUntilBreedingReady(f({ id: 2, name: 'B', birthdate: day(240) }), NOW)).toBeNull();
+    expect(daysUntilBreedingReady(f({ id: 3, name: 'C', birthdate: day(250) }), NOW)).toBeNull();
+  });
+
+  it('flags chickens inside the 30-day window (inclusive) only', () => {
+    expect(daysUntilBreedingReady(f({ id: 4, name: 'D', birthdate: day(210) }), NOW)).toBe(30);
+    expect(isBreedingReadySoon(f({ id: 4, name: 'D', birthdate: day(210) }), NOW)).toBe(true);
+    expect(daysUntilBreedingReady(f({ id: 5, name: 'E', birthdate: day(209) }), NOW)).toBe(31);
+    expect(isBreedingReadySoon(f({ id: 5, name: 'E', birthdate: day(209) }), NOW)).toBe(false);
+  });
+
+  it('returns null without a usable birthdate or when not active', () => {
+    expect(daysUntilBreedingReady(f({ id: 6, name: 'F', growth_stage: 'Hen' }), NOW)).toBeNull();
+    expect(daysUntilBreedingReady(f({ id: 7, name: 'G', birthdate: 'not-a-date' }), NOW)).toBeNull();
+    expect(daysUntilBreedingReady(f({ id: 8, name: 'H', birthdate: day(220), status: 'Archived' }), NOW)).toBeNull();
+    expect(isBreedingReadySoon(f({ id: 9, name: 'I', birthdate: day(220), status: 'Deceased' }), NOW)).toBe(false);
   });
 });
 

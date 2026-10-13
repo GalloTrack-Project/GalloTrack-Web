@@ -21,6 +21,8 @@ import {
   buildRegistryContext,
   ROLE_FILTER_OPTIONS,
   roleLabel,
+  daysUntilBreedingReady,
+  isBreedingReadySoon,
   type RoleKey,
 } from '@/lib/registry-roles';
 import { Search, X } from 'lucide-react';
@@ -132,6 +134,7 @@ function FowlCard({
     : isArchivedStatus(fowl)
       ? 'from-amber-400 to-amber-500'
       : 'from-rose-400 to-rose-500';
+  const readyInDays = isBreedingReadySoon(fowl) ? daysUntilBreedingReady(fowl) : null;
 
   return (
     <div
@@ -191,6 +194,11 @@ function FowlCard({
               <span className="text-xs font-semibold text-muted-foreground">{genderLabel(fowl.gender)}</span>
             <span className="text-muted-foreground/40">{'\u00B7'}</span>
             <span className="text-xs font-semibold text-muted-foreground">{getAgeDisplay(fowl.birthdate)}</span>
+            {readyInDays !== null && (
+              <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                Ready in {readyInDays} {readyInDays === 1 ? 'day' : 'days'}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -272,6 +280,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
     [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
   );
+  const readyInDays = isBreedingReadySoon(fowl) ? daysUntilBreedingReady(fowl) : null;
 
   return (
     <Modal
@@ -295,6 +304,11 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <StatusBadge status={fowl.status} />
+                {readyInDays !== null && (
+                  <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                    Ready in {readyInDays} {readyInDays === 1 ? 'day' : 'days'}
+                  </span>
+                )}
                 {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
               </div>
               <p className="text-sm text-muted-foreground font-semibold">{genderLabel(fowl.gender)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
