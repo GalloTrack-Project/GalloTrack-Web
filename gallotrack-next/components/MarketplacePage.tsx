@@ -472,7 +472,7 @@ export default function MarketplacePage({
 
   const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
     { id: 'all', label: 'All Chickens', count: counts.all },
-    { id: 'active', label: 'Active', count: counts.active },
+    { id: 'active', label: 'Breeders Stock', count: counts.active },
     { id: 'breeding', label: 'Ready to Breed', count: counts.breedingReady },
     { id: 'archived', label: 'Archived', count: counts.archived },
     { id: 'deceased', label: 'Deceased', count: counts.deceased },
