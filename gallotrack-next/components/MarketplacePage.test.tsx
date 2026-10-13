@@ -207,3 +207,44 @@ describe('MarketplacePage (Chicken Inventory) search and filtering', () => {
     });
   });
 });
+
+describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to Breed / Breeders Stock)', () => {
+  it('renders the Breeders Stock and Ready to Breed inventory tabs', () => {
+    renderMarketplace();
+    expect(screen.getByRole('button', { name: /^Breeders Stock/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Ready to Breed/ })).toBeInTheDocument();
+  });
+
+  it('Breeders Stock tab lists only the breeding herd — fight prospects excluded', () => {
+    renderMarketplace();
+    fireEvent.click(screen.getByRole('button', { name: /^Breeders Stock/ }));
+
+    // Foundation-stock parents are the breeding herd…
+    expect(screen.getByRole('heading', { level: 4, name: /Sweater Crimson/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 4, name: /Crimson Belle/i })).toBeInTheDocument();
+    // …while their offspring (fight prospects) are not.
+    expect(screen.queryByRole('heading', { level: 4, name: /Sweater Red Storm/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Iron Thunder/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a "Ready in N days" badge only inside the 30-day window', () => {
+    const born = (days: number) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    renderMarketplace({
+      fowls: [
+        {
+          id: 11, name: 'Soon Hen', gender: 'Hen', breed: 'Kelso', status: 'Active',
+          growth_stage: 'Hen', birthdate: born(220), sire: 'Foundation Stock', dam: 'Foundation Stock',
+          bird_code: '1A1',
+        } as FowlRecord,
+        {
+          id: 12, name: 'Baby Chick', gender: 'Hen', breed: 'Kelso', status: 'Active',
+          growth_stage: 'Chick', birthdate: born(30), sire: 'Foundation Stock', dam: 'Foundation Stock',
+          bird_code: '1A2',
+        } as FowlRecord,
+      ],
+    });
+
+    expect(screen.getByText(/Ready in 20 days/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Ready in \d+ days?/i)).toHaveLength(1);
+  });
+});

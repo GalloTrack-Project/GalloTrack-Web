@@ -317,18 +317,34 @@ export function isBreedingReadySoon(f: FowlRecord, now: number = Date.now()): bo
   return remaining !== null && remaining >= 1 && remaining <= BREEDING_READY_LOOKAHEAD_DAYS;
 }
 
+/**
+ * The breeding herd behind the "Breeders Stock" inventory tab: living birds
+ * with a breeding registry role (Breeding Male / Breeding Female) or an
+ * explicit `breeding_role = 'breeder'` designation. Fight Prospects (offspring)
+ * and Material prospects are not part of the breeding herd and are excluded.
+ */
+export function isBreederStock(f: FowlRecord, ctx?: RegistryContext): boolean {
+  if (!isActiveStatus(f)) return false;
+  if (f.breeding_role === 'breeder') return true;
+  const role = roleOf(f, ctx);
+  return role === 'Breeding Male' || role === 'Breeding Female';
+}
+
 export interface InventoryCounts {
   all: number;
   active: number;
+  /** Living breeding herd (Breeders Stock tab): excludes Fight Prospects. */
+  breedersStock: number;
   breedingReady: number;
   archived: number;
   deceased: number;
 }
 
-export function inventoryCounts(fowls: FowlRecord[]): InventoryCounts {
+export function inventoryCounts(fowls: FowlRecord[], ctx?: RegistryContext): InventoryCounts {
   return {
     all: fowls.length,
     active: fowls.filter(isActiveStatus).length,
+    breedersStock: fowls.filter((f) => isBreederStock(f, ctx)).length,
     breedingReady: fowls.filter(isBreedingReady).length,
     archived: fowls.filter(isArchivedStatus).length,
     deceased: fowls.filter(isDeceasedStatus).length,

@@ -23,6 +23,7 @@ import {
   roleLabel,
   daysUntilBreedingReady,
   isBreedingReadySoon,
+  isBreederStock,
   type RoleKey,
 } from '@/lib/registry-roles';
 import { Search, X } from 'lucide-react';
@@ -468,11 +469,11 @@ export default function MarketplacePage({
   const debouncedQuery = (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedQuery) || '';
 
   const registryCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
-  const counts = useMemo(() => inventoryCounts(fowls), [fowls]);
+  const counts = useMemo(() => inventoryCounts(fowls, registryCtx), [fowls, registryCtx]);
 
   const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
     { id: 'all', label: 'All Chickens', count: counts.all },
-    { id: 'active', label: 'Breeders Stock', count: counts.active },
+    { id: 'active', label: 'Breeders Stock', count: counts.breedersStock },
     { id: 'breeding', label: 'Ready to Breed', count: counts.breedingReady },
     { id: 'archived', label: 'Archived', count: counts.archived },
     { id: 'deceased', label: 'Deceased', count: counts.deceased },
@@ -482,7 +483,7 @@ export default function MarketplacePage({
 
   const { filteredFowls, matchMap } = useMemo(() => {
     let pool = fowls;
-    if (activeTab === 'active') pool = pool.filter((f) => isActiveStatus(f));
+    if (activeTab === 'active') pool = pool.filter((f) => isBreederStock(f, registryCtx));
     else if (activeTab === 'breeding') pool = pool.filter((f) => isBreedingReady(f));
     else if (activeTab === 'archived') pool = pool.filter((f) => isArchivedStatus(f));
     else if (activeTab === 'deceased') pool = pool.filter((f) => isDeceasedStatus(f));

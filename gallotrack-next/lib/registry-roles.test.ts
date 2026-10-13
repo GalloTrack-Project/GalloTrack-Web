@@ -10,6 +10,7 @@ import {
   registryTabLists,
   buildRegistryContext,
   inventoryCounts,
+  isBreederStock,
   isBreedingReady,
   daysUntilBreedingReady,
   isBreedingReadySoon,
@@ -284,6 +285,43 @@ describe('daysUntilBreedingReady / isBreedingReadySoon (30-day countdown)', () =
     expect(daysUntilBreedingReady(f({ id: 7, name: 'G', birthdate: 'not-a-date' }), NOW)).toBeNull();
     expect(daysUntilBreedingReady(f({ id: 8, name: 'H', birthdate: day(220), status: 'Archived' }), NOW)).toBeNull();
     expect(isBreedingReadySoon(f({ id: 9, name: 'I', birthdate: day(220), status: 'Deceased' }), NOW)).toBe(false);
+  });
+});
+
+describe('isBreederStock (Breeders Stock tab)', () => {
+  it('includes breeding-role birds and explicit Breeder designations', () => {
+    expect(isBreederStock(f({ id: 1, name: 'Iron', registry_role: 'Breeding Male' }))).toBe(true);
+    expect(isBreederStock(f({ id: 2, name: 'Golden', gender: 'Hen', registry_role: 'Breeding Female' }))).toBe(true);
+    expect(isBreederStock(f({ id: 3, name: 'Picked', breeding_role: 'breeder', registry_role: 'Non-Breeding' }))).toBe(true);
+  });
+
+  it('excludes fight prospects, material prospects and non-active birds', () => {
+    expect(isBreederStock(f({ id: 4, name: 'Kid', registry_role: 'Non-Breeding' }))).toBe(false);
+    expect(isBreederStock(f({ id: 5, name: 'Pro', breeding_role: 'material', registry_role: 'Non-Breeding' }))).toBe(false);
+    expect(isBreederStock(f({ id: 6, name: 'Old', registry_role: 'Breeding Male', status: 'Archived' }))).toBe(false);
+    expect(isBreederStock(f({ id: 7, name: 'Gone', registry_role: 'Breeding Female', status: 'Deceased' }))).toBe(false);
+  });
+
+  it('derives NULL roles through the registry context (parents in, offspring out)', () => {
+    const dam = f({ id: 8, name: 'Mom', gender: 'Hen', dam: 'Base Hen' });
+    const kid = f({ id: 9, name: 'Kid', gender: 'Rooster', dam: 'Mom' });
+    const ctx = buildRegistryContext([dam, kid]);
+    expect(isBreederStock(dam, ctx)).toBe(true);
+    expect(isBreederStock(dam)).toBe(false);
+    expect(isBreederStock(kid, ctx)).toBe(false);
+  });
+
+  it('inventoryCounts reports breedersStock separately from the active total', () => {
+    const fowls = [
+      f({ id: 10, name: 'Sire', registry_role: 'Breeding Male' }),
+      f({ id: 11, name: 'Dam', gender: 'Hen', registry_role: 'Breeding Female' }),
+      f({ id: 12, name: 'Chick', registry_role: 'Non-Breeding' }),
+      f({ id: 13, name: 'Sold', registry_role: 'Breeding Male', status: 'Archived' }),
+    ];
+    const counts = inventoryCounts(fowls);
+    expect(counts.active).toBe(3);
+    expect(counts.breedersStock).toBe(2);
+    expect(counts.archived).toBe(1);
   });
 });
 
