@@ -6,13 +6,19 @@ import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 // Mock UI context
 const mockSetFightHistoryFowl = vi.fn();
-const mockSetSelectedFowlForDetails = vi.fn();
 
 vi.mock('@/lib/contexts/ui-context', () => ({
   useUI: () => ({
     setFightHistoryFowl: mockSetFightHistoryFowl,
-    setSelectedFowlForDetails: mockSetSelectedFowlForDetails,
   }),
+}));
+
+vi.mock('@/lib/hooks/use-open-fowl', () => ({
+  useOpenFowl: () => vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
 }));
 
 const mockFowls: FowlRecord[] = [

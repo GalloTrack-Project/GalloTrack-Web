@@ -30,7 +30,7 @@ function renderFowlLists(overrides = {}) {
       setSelectedFowlForDeceased={vi.fn()}
       handleOpenEditModal={vi.fn()}
       handleSetActiveStatus={vi.fn()}
-      setSelectedFowlForDetails={vi.fn()}
+      openFowlProfile={vi.fn()}
       {...overrides}
     />
   );

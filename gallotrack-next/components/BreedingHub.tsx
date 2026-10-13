@@ -41,7 +41,7 @@ interface BreedingHubProps {
   fowls: FowlRecord[];
   matchHistory: MatchRecord[];
   pairingAnalytics: { all: Map<string, PairingStats>; ranked: PairingStats[] };
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
+  openFowlProfile: (f: FowlRecord) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ function BreedingPairCard({
   matchHistory,
   onRemove,
   onOutcomeChange,
-  setSelectedFowlForDetails,
+  openFowlProfile,
 }: {
   pair: BreedingPairRecord;
   fowls: FowlRecord[];
@@ -263,7 +263,7 @@ function BreedingPairCard({
   matchHistory: MatchRecord[];
   onRemove: () => void;
   onOutcomeChange: (outcome: PairingOutcome) => void;
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
+  openFowlProfile: (f: FowlRecord) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const sire = fowls.find(f => f.id === pair.sire_id);
@@ -348,7 +348,7 @@ function BreedingPairCard({
         <div className="grid grid-cols-2 gap-2 mb-3">
           <button
             type="button"
-            onClick={() => sire && setSelectedFowlForDetails(sire)}
+            onClick={() => sire && openFowlProfile(sire)}
             disabled={!sire}
             className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-xl p-2.5 text-left hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors cursor-pointer disabled:cursor-default"
           >
@@ -358,7 +358,7 @@ function BreedingPairCard({
           </button>
           <button
             type="button"
-            onClick={() => dam && setSelectedFowlForDetails(dam)}
+            onClick={() => dam && openFowlProfile(dam)}
             disabled={!dam}
             className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-xl p-2.5 text-left hover:bg-pink-100 dark:hover:bg-pink-950/50 transition-colors cursor-pointer disabled:cursor-default"
           >
@@ -393,7 +393,7 @@ function BreedingPairCard({
                 <button
                   key={fowl.id}
                   type="button"
-                  onClick={() => setSelectedFowlForDetails(fowl)}
+                  onClick={() => openFowlProfile(fowl)}
                   className="group w-full flex items-center justify-between gap-2 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-xl px-3 py-2 transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -875,12 +875,12 @@ function AddIncidentForm({
 // BIRD IDENTITY CARD
 // ─────────────────────────────────────────────────────────────────────────────
 
-function BirdIdentityCard({ fowl, fowls, codes, matchHistory, setSelectedFowlForDetails }: {
+function BirdIdentityCard({ fowl, fowls, codes, matchHistory, openFowlProfile }: {
   fowl: FowlRecord;
   fowls: FowlRecord[];
   codes: Map<string, string>;
   matchHistory: MatchRecord[];
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
+  openFowlProfile: (f: FowlRecord) => void;
 }) {
   const code = codeOf(fowl, codes);
   const displayCode = formatBirdCodeForDisplay(code);
@@ -905,7 +905,7 @@ function BirdIdentityCard({ fowl, fowls, codes, matchHistory, setSelectedFowlFor
   return (
     <button
       type="button"
-      onClick={() => setSelectedFowlForDetails(fowl)}
+      onClick={() => openFowlProfile(fowl)}
       className="group w-full bg-card rounded-2xl border border-border shadow-sm p-4 text-left hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all cursor-pointer"
     >
       <div className="flex items-start gap-3">
@@ -962,7 +962,7 @@ export default function BreedingHub({
   fowls,
   matchHistory,
   pairingAnalytics,
-  setSelectedFowlForDetails,
+  openFowlProfile,
 }: BreedingHubProps) {
 
   const [activeTab, setActiveTab] = useState<BreedingTab>('coding');
@@ -1383,7 +1383,7 @@ export default function BreedingHub({
                   matchHistory={matchHistory}
                   onRemove={() => removePair(pair.id)}
                   onOutcomeChange={(outcome) => changePairOutcome(pair.id, outcome)}
-                  setSelectedFowlForDetails={setSelectedFowlForDetails}
+                  openFowlProfile={openFowlProfile}
                 />
               ))}
             </div>
@@ -1488,7 +1488,7 @@ export default function BreedingHub({
                   fowls={fowls}
                   codes={codes}
                   matchHistory={matchHistory}
-                  setSelectedFowlForDetails={setSelectedFowlForDetails}
+                  openFowlProfile={openFowlProfile}
                 />
               ))}
             </div>

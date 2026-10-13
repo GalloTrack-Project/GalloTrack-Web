@@ -1,4 +1,3 @@
-export { default as FowlDetailsModal } from './FowlDetailsModal';
 export { default as DeceasedModal } from './DeceasedModal';
 export { default as ArchiveModal } from './ArchiveModal';
 export { default as PermanentDeleteModal } from './PermanentDeleteModal';

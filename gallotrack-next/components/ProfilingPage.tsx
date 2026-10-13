@@ -5,6 +5,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useRouter } from 'next/navigation';
+import { useOpenFowl } from '@/lib/hooks/use-open-fowl';
 import EncodeForm from '@/components/profiling/EncodeForm';
 import FowlLists from '@/components/profiling/FowlLists';
 import MatchForm from '@/components/profiling/MatchForm';
@@ -16,6 +17,7 @@ export default function ProfilingPage() {
   const fowl = useFowl();
   const ui = useUI();
   const router = useRouter();
+  const openFowlProfile = useOpenFowl();
 
   const {
     fowls, registryLists, registryCounts,
@@ -174,7 +176,7 @@ export default function ProfilingPage() {
           onGoToInventory={() => ui.setCurrentPage('marketplace')}
           handleOpenEditModal={handleOpenEditModal}
           handleSetActiveStatus={handleSetActiveStatus}
-          setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
+          openFowlProfile={openFowlProfile}
           setSelectedFowlForArchive={ui.setSelectedFowlForArchive}
           setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}
         />

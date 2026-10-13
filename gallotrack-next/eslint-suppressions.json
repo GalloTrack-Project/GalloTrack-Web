@@ -53,14 +53,6 @@
       "count": 2
     }
   },
-  "components/modals/FowlDetailsModal.tsx": {
-    "jsx-a11y/click-events-have-key-events": {
-      "count": 1
-    },
-    "jsx-a11y/no-static-element-interactions": {
-      "count": 1
-    }
-  },
   "components/ui/Card.tsx": {
     "jsx-a11y/heading-has-content": {
       "count": 1

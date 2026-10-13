@@ -36,7 +36,7 @@ type Props = {
   onGoToInventory?: () => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
-  setSelectedFowlForDetails: (fowl: FowlRecord) => void;
+  openFowlProfile: (fowl: FowlRecord) => void;
   setSelectedFowlForArchive: (fowl: FowlRecord) => void;
   setSelectedFowlForDeceased: (fowl: FowlRecord) => void;
 };
@@ -234,7 +234,7 @@ type BodyProps = {
   onGoToInventory?: () => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
-  setSelectedFowlForDetails: (fowl: FowlRecord) => void;
+  openFowlProfile: (fowl: FowlRecord) => void;
   setSelectedFowlForArchive: (fowl: FowlRecord) => void;
   setSelectedFowlForDeceased: (fowl: FowlRecord) => void;
 };
@@ -253,7 +253,7 @@ function FowlListsBody({
   onGoToInventory,
   handleOpenEditModal,
   handleSetActiveStatus,
-  setSelectedFowlForDetails,
+  openFowlProfile,
   setSelectedFowlForArchive,
   setSelectedFowlForDeceased,
 }: BodyProps) {
@@ -471,7 +471,7 @@ function FowlListsBody({
       onEdit={handleOpenEditModal}
       onArchive={setSelectedFowlForArchive}
       onDeceased={setSelectedFowlForDeceased}
-      onOpenDetails={setSelectedFowlForDetails}
+      onOpenDetails={openFowlProfile}
       onSetActive={fowl.status !== 'Active' ? handleSetActiveStatus : undefined}
       allFowls={allFowls}
       highlightQuery={debouncedQuery}
@@ -642,7 +642,7 @@ export default function FowlLists(props: Props) {
       onGoToInventory={props.onGoToInventory}
       handleOpenEditModal={props.handleOpenEditModal}
       handleSetActiveStatus={props.handleSetActiveStatus}
-      setSelectedFowlForDetails={props.setSelectedFowlForDetails}
+      openFowlProfile={props.openFowlProfile}
       setSelectedFowlForArchive={props.setSelectedFowlForArchive}
       setSelectedFowlForDeceased={props.setSelectedFowlForDeceased}
     />

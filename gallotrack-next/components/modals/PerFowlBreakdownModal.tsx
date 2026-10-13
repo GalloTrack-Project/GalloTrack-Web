@@ -5,6 +5,7 @@ import { BarChart3, Filter, ArrowUpDown } from 'lucide-react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 import { Modal } from '@/components/ui';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useOpenFowl } from '@/lib/hooks/use-open-fowl';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
 import { buildRegistryContext, roleOf, type RegistryRole } from '@/lib/registry-roles';
 import {
@@ -43,6 +44,7 @@ export default function PerFowlBreakdownModal({
   initialDatePreset = 'all',
 }: Props) {
   const uiContext = useUI();
+  const openFowlProfile = useOpenFowl();
 
   const fowls = propFowls;
   const matchHistory = propMatches;
@@ -192,7 +194,7 @@ export default function PerFowlBreakdownModal({
   if (!show) return null;
 
   const handleChickenClick = (f: FowlRecord) => {
-    uiContext.setSelectedFowlForDetails(f);
+    openFowlProfile(f);
   };
 
   const handleFightsClick = (f: FowlRecord) => {

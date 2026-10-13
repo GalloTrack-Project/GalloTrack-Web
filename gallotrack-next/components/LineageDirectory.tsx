@@ -204,7 +204,7 @@ interface LineageDirectoryProps {
   search?: string;
   setSearch?: (v: string) => void;
   debouncedSearch?: string;
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
+  openFowlProfile: (f: FowlRecord) => void;
 }
 
 type LineageTab = 'tree' | 'families' | 'sire' | 'dam' | 'pedigree';
@@ -215,7 +215,7 @@ function FamilyCard({
   index,
   pairingAnalytics,
   getChildMatchStats,
-  setSelectedFowlForDetails,
+  openFowlProfile,
   onShowFights,
   rankingMetric,
   rankingMinMatches,
@@ -228,7 +228,7 @@ function FamilyCard({
   index: number;
   pairingAnalytics: { all: Map<string, PairingStats> };
   getChildMatchStats: (name: string) => WinRateStats;
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
+  openFowlProfile: (f: FowlRecord) => void;
   onShowFights: (f: FowlRecord) => void;
   rankingMetric: RankingMetric;
   rankingMinMatches: number;
@@ -304,7 +304,7 @@ function FamilyCard({
       >
         <button
           type="button"
-          onClick={() => setSelectedFowlForDetails(child)}
+          onClick={() => openFowlProfile(child)}
           className="flex-1 flex items-center justify-between gap-3 text-left min-w-0 cursor-pointer"
         >
           <div className="flex items-center gap-2.5 min-w-0">
@@ -558,7 +558,7 @@ export default function LineageDirectory({
   search: propSearch,
   setSearch: propSetSearch,
   debouncedSearch: propDebouncedSearch,
-  setSelectedFowlForDetails,
+  openFowlProfile,
 }: LineageDirectoryProps) {
   const [internalSearch, setInternalSearch] = useState('');
   const search = propSearch !== undefined ? propSearch : internalSearch;
@@ -1658,7 +1658,7 @@ export default function LineageDirectory({
                 {activeParentFowl && (
                   <button
                     type="button"
-                    onClick={() => setSelectedFowlForDetails(activeParentFowl)}
+                    onClick={() => openFowlProfile(activeParentFowl)}
                     className="text-xs font-bold bg-muted hover:bg-muted/80 text-foreground px-3 py-1.5 rounded-md border border-border transition-colors cursor-pointer"
                   >
                     View profile
@@ -1880,7 +1880,7 @@ export default function LineageDirectory({
                                         <div className="min-w-0">
                                           <button
                                             type="button"
-                                            onClick={() => setSelectedFowlForDetails(child)}
+                                            onClick={() => openFowlProfile(child)}
                                             className="font-bold text-card-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate block text-left cursor-pointer"
                                           >
                                             {child.name}
@@ -1953,7 +1953,7 @@ export default function LineageDirectory({
                                               type="button"
                                               onClick={() => {
                                                 setActiveMenuChildId(null);
-                                                setSelectedFowlForDetails(child);
+                                                openFowlProfile(child);
                                               }}
                                               className="w-full text-left px-3 py-1.5 hover:bg-muted transition-colors cursor-pointer font-semibold"
                                             >
@@ -2090,7 +2090,7 @@ export default function LineageDirectory({
                                     </span>
                                     <button
                                       type="button"
-                                      onClick={() => setSelectedFowlForDetails(child)}
+                                      onClick={() => openFowlProfile(child)}
                                       className="text-xs font-black text-card-foreground hover:text-emerald-600 dark:hover:text-emerald-400 truncate text-left cursor-pointer"
                                     >
                                       {child.name}
@@ -2119,7 +2119,7 @@ export default function LineageDirectory({
                                           type="button"
                                           onClick={() => {
                                             setActiveMenuChildId(null);
-                                            setSelectedFowlForDetails(child);
+                                            openFowlProfile(child);
                                           }}
                                           className="w-full text-left px-3 py-1.5 hover:bg-muted transition-colors cursor-pointer font-semibold"
                                         >
@@ -2626,7 +2626,7 @@ export default function LineageDirectory({
                 codes={birdCodes}
                 matchHistory={matchHistory}
                 query={debouncedSearch}
-                onPick={setSelectedFowlForDetails}
+                onPick={openFowlProfile}
                 onShowFights={openFights}
                 sortBy={sortBy}
                 collapsedKeys={treeCollapsed}
@@ -2667,7 +2667,7 @@ export default function LineageDirectory({
                     index={i}
                     pairingAnalytics={pairingAnalytics}
                     getChildMatchStats={getChildMatchStats}
-                    setSelectedFowlForDetails={setSelectedFowlForDetails}
+                    openFowlProfile={openFowlProfile}
                     onShowFights={openFights}
                     rankingMetric={settings.ranking_metric}
                     rankingMinMatches={settings.ranking_min_matches}
@@ -2783,7 +2783,7 @@ export default function LineageDirectory({
                 codes={birdCodes}
                 selectedId={selectedPedigreeId}
                 onSelect={(f) => setSelectedPedigreeId(f.id)}
-                onViewProfile={setSelectedFowlForDetails}
+                onViewProfile={openFowlProfile}
                 canRegisterAncestor={true}
               />
             )}

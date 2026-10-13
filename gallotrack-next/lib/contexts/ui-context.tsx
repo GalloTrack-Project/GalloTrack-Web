@@ -22,8 +22,6 @@ interface UIContextValue {
   inventoryStatusFilter: 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
   setInventoryStatusFilter: (v: 'all' | 'active' | 'breeding' | 'archived' | 'deceased') => void;
 
-  selectedFowlForDetails: FowlRecord | null;
-  setSelectedFowlForDetails: (f: FowlRecord | null) => void;
   selectedFowlForDeceased: FowlRecord | null;
   setSelectedFowlForDeceased: (f: FowlRecord | null) => void;
   selectedFowlForArchive: FowlRecord | null;
@@ -99,7 +97,6 @@ export function UIProvider({
   const [inventoryGenderFilter, setInventoryGenderFilter] = useState<'all' | 'male' | 'female'>('all');
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<'all' | 'active' | 'breeding' | 'archived' | 'deceased'>('all');
 
-  const [selectedFowlForDetails, setSelectedFowlForDetails] = useState<FowlRecord | null>(null);
   const [selectedFowlForDeceased, setSelectedFowlForDeceased] = useState<FowlRecord | null>(null);
   const [selectedFowlForArchive, setSelectedFowlForArchive] = useState<FowlRecord | null>(null);
   const [fightHistoryFowl, setFightHistoryFowl] = useState<FowlRecord | null>(null);
@@ -142,7 +139,6 @@ export function UIProvider({
     registrySortBy, setRegistrySort,
     inventoryGenderFilter, setInventoryGenderFilter,
     inventoryStatusFilter, setInventoryStatusFilter,
-    selectedFowlForDetails, setSelectedFowlForDetails,
     selectedFowlForDeceased, setSelectedFowlForDeceased,
     selectedFowlForArchive, setSelectedFowlForArchive,
     fightHistoryFowl, setFightHistoryFowl,

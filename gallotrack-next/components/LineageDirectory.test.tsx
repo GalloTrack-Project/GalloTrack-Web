@@ -4,6 +4,10 @@ import type { FowlRecord, PairingStats } from '@/lib/types';
 import LineageDirectory from './LineageDirectory';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';
 
+vi.mock('@/lib/hooks/use-open-fowl', () => ({
+  useOpenFowl: () => vi.fn(),
+}));
+
 const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
   ({
     breed: 'Kelso',
@@ -47,7 +51,7 @@ function renderDirectory(onPick: (f: FowlRecord) => void = vi.fn(), overrides = 
         fowls={family}
         matchHistory={[]}
         pairingAnalytics={{ all: new Map<string, PairingStats>(), ranked: [] }}
-        setSelectedFowlForDetails={onPick}
+        openFowlProfile={onPick}
         {...overrides}
       />
       <FightProbe />
@@ -388,7 +392,7 @@ describe('LineageDirectory redesigned top section', () => {
             fowls={mixedFamily}
             matchHistory={[]}
             pairingAnalytics={{ all: new Map<string, PairingStats>(), ranked: [] }}
-            setSelectedFowlForDetails={vi.fn()}
+            openFowlProfile={vi.fn()}
           />
         </UIProvider>
       );

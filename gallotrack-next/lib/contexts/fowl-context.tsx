@@ -976,7 +976,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       toastMessage(`Failed to mark ${fowl.name} as Sire Material: ${result.error}`, 'error');
     } else {
       toastMessage(`${fowl.name} is now Sire Material — retired from fighting, available for breeding.`, 'success');
-      if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
     setLoading(false);
@@ -1084,7 +1083,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       toastMessage(`Failed to return ${fowl.name} to Active: ${result.error}`, 'error');
     } else {
       toastMessage(`${fowl.name} is back to Active status.`, 'success');
-      if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
     setLoading(false);
@@ -1118,7 +1116,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         'warning',
       );
       setArchiveReasonNote('');
-      if (ui.selectedFowlForDetails?.id === ui.selectedFowlForArchive.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForArchive(null);
       fetchDatabaseResources();
     }
@@ -1132,7 +1129,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       toastMessage(result.error, 'error');
     } else {
       toastMessage('Chicken archived successfully.', 'warning');
-      if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
     setLoading(false);
@@ -1145,7 +1141,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       toastMessage(result.error, 'error');
     } else {
       toastMessage('Node successfully restored to active family registry.', 'success');
-      if (ui.selectedFowlForDetails?.id === id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }
     setLoading(false);
@@ -1160,7 +1155,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       toastMessage(result.error, 'error');
     } else {
       toastMessage(`${deleted.name} permanently deleted.`, 'success');
-      if (ui.selectedFowlForDetails?.id === deleted.id) ui.setSelectedFowlForDetails(null);
       ui.setPendingPermanentDelete(null);
       setFowls(prev => prev.filter(f => f.id !== deleted.id));
       // The database already dropped the FK links (sire_id/dam_id, match.fowl_id)
@@ -1188,7 +1182,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } else {
       toastMessage('Chicken node recorded under mortality archive log.', 'error');
       setDeathReasonNote('');
-      if (ui.selectedFowlForDetails?.id === ui.selectedFowlForDeceased.id) ui.setSelectedFowlForDetails(null);
       ui.setSelectedFowlForDeceased(null);
       fetchDatabaseResources();
     }

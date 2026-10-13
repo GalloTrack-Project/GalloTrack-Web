@@ -5,6 +5,7 @@ import type { FowlRecord } from '@/lib/types';
 import { getFowlBloodlineStats, UNKNOWN_BLOODLINE, isFoundationName } from '@/lib/bloodline-composition';
 import { birdCodeOf, compareBirdCodesNatural, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useOpenFowl } from '@/lib/hooks/use-open-fowl';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import ChickenIcon from '@/components/ChickenIcon';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -557,6 +558,7 @@ export default function PedigreeTree({
   canRegisterAncestor = false,
 }: Props) {
   const ui = useUI();
+  const openFowlProfile = useOpenFowl();
   const [internalId, setInternalId] = useState<number | null>(null);
   const [numGens, setNumGens] = useState<number>(3);
   const [breadcrumb, setBreadcrumb] = useState<{ id: number; name: string }[]>([]);
@@ -728,10 +730,10 @@ export default function PedigreeTree({
       if (onViewProfile) {
         onViewProfile(f);
       } else {
-        ui.setSelectedFowlForDetails(f);
+        openFowlProfile(f);
       }
     },
-    [onViewProfile, ui],
+    [onViewProfile, openFowlProfile],
   );
 
   const handleRegisterMerged = useCallback(

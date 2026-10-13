@@ -9,6 +9,7 @@ import Modals from '@/components/Modals';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
+import { useOpenFowl } from '@/lib/hooks/use-open-fowl';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPageWrapper() {
@@ -23,6 +24,7 @@ export function MarketplacePageWrapper() {
   const fowl = useFowl();
   const ui = useUI();
   const router = useRouter();
+  const openFowlProfile = useOpenFowl();
   const { isAdmin } = useAuth();
 
   const navigate = (page: string, subTab?: string) => {
@@ -45,14 +47,14 @@ export function MarketplacePageWrapper() {
       setProfilingSubTab={(v: string) => ui.setProfilingSubTab(v as never)}
       onRestore={(id) => fowl.handleRestoreFowlOnly(id)}
       canRestoreDeceased={isAdmin}
-      setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
+      openFowlProfile={openFowlProfile}
     />
   );
 }
 
 export function LineageDirectoryWrapper() {
   const fowl = useFowl();
-  const ui = useUI();
+  const openFowlProfile = useOpenFowl();
   return (
     <LineageDirectory
       fowls={fowl.fowls}
@@ -61,20 +63,20 @@ export function LineageDirectoryWrapper() {
       search={fowl.search}
       setSearch={fowl.setSearch}
       debouncedSearch={fowl.debouncedSearch}
-      setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
+      openFowlProfile={openFowlProfile}
     />
   );
 }
 
 export function BreedingHubWrapper() {
   const fowl = useFowl();
-  const ui = useUI();
+  const openFowlProfile = useOpenFowl();
   return (
     <BreedingHub
       fowls={fowl.fowls}
       matchHistory={fowl.matchHistory}
       pairingAnalytics={fowl.pairingAnalytics}
-      setSelectedFowlForDetails={(f) => ui.setSelectedFowlForDetails(f)}
+      openFowlProfile={openFowlProfile}
     />
   );
 }
@@ -94,8 +96,6 @@ export function ModalsWrapper() {
   } = useAuth();
   return (
     <Modals
-      selectedFowlForDetails={ui.selectedFowlForDetails}
-      setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
       selectedFowlForDeceased={ui.selectedFowlForDeceased}
       setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}
       handleMarkFowlDeceased={store.handleMarkFowlDeceased}
@@ -135,18 +135,11 @@ export function ModalsWrapper() {
       loading={store.loading}
       getAgeParts={store.getAgeParts}
       getAgeLabel={store.getAgeLabel}
-      getAgeExact={store.getAgeExact}
       getAgeMetrics={store.getAgeMetrics}
       generationOf={store.generationOf}
       generationPurity={store.generationPurity}
-      generationInfo={store.generationInfo}
-      bloodlineOf={store.bloodlineOf}
-      getSiblingRelations={store.getSiblingRelations}
-      getMilestoneInfo={store.getMilestoneInfo}
-      getArchiveBadgeStyle={store.getArchiveBadgeStyle}
       autoComputeGrowthStage={store.autoComputeGrowthStage}
       fowls={store.fowls}
-      pairingAnalytics={store.pairingAnalytics}
       availableStrains={store.availableStrains}
       customStrainNames={store.customStrainNames}
       deleteCustomStrain={store.deleteCustomStrain}

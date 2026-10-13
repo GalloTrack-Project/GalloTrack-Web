@@ -6,6 +6,14 @@ import type { FowlRecord } from '@/lib/types';
 import { resolveBirdCodes } from '@/lib/bird-code';
 import { UIProvider } from '@/lib/contexts/ui-context';
 
+vi.mock('@/lib/hooks/use-open-fowl', () => ({
+  useOpenFowl: () => vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+}));
+
 const sampleFowls = [
   {
     id: 1,

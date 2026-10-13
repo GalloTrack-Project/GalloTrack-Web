@@ -3,15 +3,10 @@ import React from 'react';
 import type {
   FowlRecord,
   MatchRecord,
-  SiblingRelation,
   AgeParts,
-  MilestoneInfo,
-  PairingAnalytics,
-  ArchiveBadge,
 } from '@/lib/types';
 import type { ArchiveDraft } from '@/lib/lifecycle';
 import type { DateRangePreset } from '@/lib/helpers';
-import FowlDetailsModal from './modals/FowlDetailsModal';
 import DeceasedModal from './modals/DeceasedModal';
 import ArchiveModal from './modals/ArchiveModal';
 import PermanentDeleteModal from './modals/PermanentDeleteModal';
@@ -25,9 +20,6 @@ import ShareModal from './modals/ShareModal';
 import EditMatchModal from './modals/EditMatchModal';
 
 type ModalsProps = {
-  selectedFowlForDetails: FowlRecord | null;
-  setSelectedFowlForDetails: (f: FowlRecord | null) => void;
-
   selectedFowlForDeceased: FowlRecord | null;
   setSelectedFowlForDeceased: (f: FowlRecord | null) => void;
   handleMarkFowlDeceased: () => void;
@@ -71,19 +63,12 @@ type ModalsProps = {
 
   getAgeParts: (birthdate: string) => AgeParts | null;
   getAgeLabel: (parts: AgeParts) => string;
-  getAgeExact: (parts: AgeParts) => string;
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
-  generationInfo: (gen: number) => { short: string; label: string; desc: string; tone: string };
-  bloodlineOf: (f: FowlRecord) => number;
-  getSiblingRelations: (f: FowlRecord) => SiblingRelation[];
-  getMilestoneInfo: (birthdate: string, gender: string) => MilestoneInfo | null;
-  getArchiveBadgeStyle: (reason: string) => ArchiveBadge;
   autoComputeGrowthStage: (ageMonths: number, gender: string) => string;
 
   fowls: FowlRecord[];
-  pairingAnalytics: PairingAnalytics;
   availableStrains: string[];
   customStrainNames: Set<string>;
   deleteCustomStrain: (name: string) => Promise<void>;
@@ -141,25 +126,6 @@ type ModalsProps = {
 export default function Modals(props: ModalsProps) {
   return (
     <>
-      <FowlDetailsModal
-        selectedFowlForDetails={props.selectedFowlForDetails}
-        setSelectedFowlForDetails={props.setSelectedFowlForDetails}
-        matchHistory={props.matchHistory}
-        fowls={props.fowls}
-        getAgeParts={props.getAgeParts}
-        getAgeLabel={props.getAgeLabel}
-        getAgeExact={props.getAgeExact}
-        getAgeMetrics={props.getAgeMetrics}
-        generationOf={props.generationOf}
-        generationPurity={props.generationPurity}
-        generationInfo={props.generationInfo}
-        bloodlineOf={props.bloodlineOf}
-        getSiblingRelations={props.getSiblingRelations}
-        getMilestoneInfo={props.getMilestoneInfo}
-        getArchiveBadgeStyle={props.getArchiveBadgeStyle}
-        pairingAnalytics={props.pairingAnalytics}
-      />
-
       <DeceasedModal
         selectedFowlForDeceased={props.selectedFowlForDeceased}
         setSelectedFowlForDeceased={props.setSelectedFowlForDeceased}

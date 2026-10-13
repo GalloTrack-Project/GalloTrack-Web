@@ -48,7 +48,7 @@ type Props = {
   /** Deceased restore is owner-only. */
   canRestoreDeceased?: boolean;
   /** Open the full profile modal (Registry details) from a card. */
-  setSelectedFowlForDetails?: (fowl: FowlRecord) => void;
+  openFowlProfile?: (fowl: FowlRecord) => void;
 };
 
 function getWinRate(fowlName: string, matches: MatchRecord[]) {
@@ -429,7 +429,7 @@ export default function MarketplacePage({
   setProfilingSubTab,
   onRestore,
   canRestoreDeceased = false,
-  setSelectedFowlForDetails,
+  openFowlProfile,
 }: Props) {
   const [internalSearch, setInternalSearch] = useState('');
   const search = propSearch !== undefined ? propSearch : internalSearch;
@@ -706,7 +706,7 @@ export default function MarketplacePage({
                 onClick={() => setSelectedFowl(fowl)}
                 query={debouncedQuery}
                 parentHint={parentHint}
-                onOpenProfile={setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined}
+                onOpenProfile={openFowlProfile ? () => openFowlProfile(fowl) : undefined}
                 onRestore={onRestore && restorable ? () => setRestoreTarget(fowl) : undefined}
               />
             );
