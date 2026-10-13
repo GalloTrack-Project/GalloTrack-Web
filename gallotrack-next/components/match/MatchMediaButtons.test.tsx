@@ -32,7 +32,7 @@ const PHOTO_URL = 'https://cdn.test/match-photos/hatch-mountain.jpg';
 
 function renderRow() {
   return render(
-    <UIProvider>
+    <UIProvider theme="dark" setTheme={() => {}}>
       <MatchMediaButtons match={match} videos={[VIDEO_URL]} photos={[PHOTO_URL]} />
       <MatchMediaViewer />
     </UIProvider>
