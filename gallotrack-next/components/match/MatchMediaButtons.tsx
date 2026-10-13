@@ -53,10 +53,12 @@ export default function MatchMediaButtons({
       ? match.video_posters
       : [];
 
+  type ProcessingFlags = { video_status?: string; video_processing?: boolean };
+  const flags = match as MatchRecord & Partial<ProcessingFlags>;
   const isProcessing = Boolean(
-    (match as any).video_status === 'processing' ||
-    (match as any).status === 'processing' ||
-    (match as any).video_processing ||
+    flags.video_status === 'processing' ||
+    flags.status === 'processing' ||
+    flags.video_processing ||
     (typeof match.video_url === 'string' && /processing|converting|transcoding/i.test(match.video_url)) ||
     effectiveVideos.some((v) => typeof v === 'string' && /processing|converting|transcoding/i.test(v))
   );
