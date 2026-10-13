@@ -51,7 +51,7 @@
 │  ├── 3. Chicken Inventory (/catalog)                                            │
 │  │    ├── Status Tab: All (Complete Headcount across all statuses)              │
 │  │    ├── Status Tab: Active (Alive, Active Roster on Farm)                     │
-│  │    ├── Status Tab: Breeding Ready (Active + Mature ≥8 Months)                │
+│  │    ├── Status Tab: Ready to Breed (Active + Mature ≥8 Months)                │
 │  │    ├── Status Tab: Archived (Sold, Transferred, or Retired Birds)            │
 │  │    ├── Status Tab: Deceased (Mortality Log with Documented Causes)           │
 │  │    └── Controls: Role Filters, Search Bar, Natural Sort, Restore Buttons     │
@@ -391,7 +391,7 @@ The Inventory page is located at `/catalog` ([gallotrack-next/components/Marketp
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │                             CHICKEN INVENTORY                                  │
-│  [All (48)] [Active (42)] [Breeding Ready (24)] [Archived (4)] [Deceased (2)]  │
+│  [All (48)] [Active (42)] [Ready to Breed (24)] [Archived (4)] [Deceased (2)]  │
 │  [Role Filter: All Roles ▾]           [Search chicken, band, strain...       ] │
 ├────────────────────────────────────────────────────────────────────────────────┤
 │  [ CARD: Roundhead Storm ]              [ CARD: Iron Lemon ]                   │
@@ -410,7 +410,7 @@ While the Chicken Registry focuses on active breeding pens and registration, the
 
 1. **All**: Shows all birds in your database regardless of status.
 2. **Active**: Living chickens currently roaming the pens (`fowl.status = 'Active'`).
-3. **Breeding Ready**:
+3. **Ready to Breed**:
    - **What it means**: Living birds that are biologically mature enough to breed.
    - **Formula in [registry-roles.ts:208-223](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L208-L223)**: `status = 'Active'` AND (age $\ge 240$ days / ~8 months, OR mature growth stage: Cock, Hen, Bull Stag, Broodcock, Broodhen).
 4. **Archived**: Birds that were sold to other breeders, transferred, or retired from duty (`fowl.status = 'Archived'`).
