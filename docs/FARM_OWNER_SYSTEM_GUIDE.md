@@ -50,7 +50,7 @@
 │  │                                                                              │
 │  ├── 3. Chicken Inventory (/catalog)                                            │
 │  │    ├── Status Tab: All (Complete Headcount across all statuses)              │
-│  │    ├── Status Tab: Active (Alive, Active Roster on Farm)                     │
+│  │    ├── Status Tab: Breeders Stock (Alive, Breeding Herd)                     │
 │  │    ├── Status Tab: Ready to Breed (Active + Mature ≥8 Months)                │
 │  │    ├── Status Tab: Archived (Sold, Transferred, or Retired Birds)            │
 │  │    ├── Status Tab: Deceased (Mortality Log with Documented Causes)           │
@@ -265,6 +265,7 @@ Tab switching is coordinated by [RegistryNav.tsx](file:///c:/Users/angelica/Desk
    - Contains: Active chicks, stags, pullets, and battlecocks produced from your breeding pens that are not yet parents themselves.
    - Decided by: `fowl.status = 'Active'` AND (`fowl.registry_role = 'Non-Breeding'` OR fallback role calculation where the bird has registered parents but no children of its own).
    - Expected identifier: Family combination codes (`1A1, 1A2, 2B1`).
+   - Display name: The tab is titled **Fight Prospects** per the agriculturist terminology review; the stored value stays `fowl.registry_role = 'Non-Breeding'`.
 4. **Match Logs**:
    - Contains: The derby and arena combat log recorder and historical fight tables.
 5. **Sire Material**:
@@ -391,7 +392,8 @@ The Inventory page is located at `/catalog` ([gallotrack-next/components/Marketp
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │                             CHICKEN INVENTORY                                  │
-│  [All (48)] [Active (42)] [Ready to Breed (24)] [Archived (4)] [Deceased (2)]  │
+│  [All (48)] [Breeders Stock (42)] [Ready to Breed (24)]                        │
+│  [Archived (4)] [Deceased (2)]                                                 │
 │  [Role Filter: All Roles ▾]           [Search chicken, band, strain...       ] │
 ├────────────────────────────────────────────────────────────────────────────────┤
 │  [ CARD: Roundhead Storm ]              [ CARD: Iron Lemon ]                   │
@@ -409,10 +411,11 @@ The Inventory page is located at `/catalog` ([gallotrack-next/components/Marketp
 While the Chicken Registry focuses on active breeding pens and registration, the Inventory page tracks every bird that has ever existed on your farm, including past champions and retired birds.
 
 1. **All**: Shows all birds in your database regardless of status.
-2. **Active**: Living chickens currently roaming the pens (`fowl.status = 'Active'`).
+2. **Breeders Stock**: Living birds kept in the breeding program — Breeding Males, Breeding Females, and any bird you designated as **Breeder** (`fowl.breeding_role = 'breeder'`), decided by `isBreederStock()` in [registry-roles.ts](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L320-L331). Fight Prospects (your pens' offspring) and Material prospects are not part of the breeding herd — browse them under **All** or in the Chicken Registry's Fight Prospects tab.
 3. **Ready to Breed**:
    - **What it means**: Living birds that are biologically mature enough to breed.
-   - **Formula in [registry-roles.ts:208-223](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L208-L223)**: `status = 'Active'` AND (age $\ge 240$ days / ~8 months, OR mature growth stage: Cock, Hen, Bull Stag, Broodcock, Broodhen).
+   - **Formula in [registry-roles.ts:281-318](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L281-L318)**: `status = 'Active'` AND (age $\ge 240$ days / ~8 months, OR mature growth stage: Cock, Hen, Bull Stag, Broodcock, Broodhen).
+   - **Countdown badge**: When a bird is 1–30 days away from the 240-day threshold, its card and details modal show an amber **Ready in N days** badge (`daysUntilBreedingReady` / `isBreedingReadySoon` in registry-roles.ts). Birds without a birthdate never show the countdown.
 4. **Archived**: Birds that were sold to other breeders, transferred, or retired from duty (`fowl.status = 'Archived'`).
 5. **Deceased**: Mortality archive of deceased birds (`fowl.status = 'Deceased'`).
 
@@ -683,11 +686,11 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 
 | Rule | Expected Behavior | Current System Status | Verification / File Reference |
 | :--- | :--- | :--- | :--- |
-| **Breeding Male Tab** | Sires only (Numbers: `1, 2, 3`) | **Complies** (with minor manual edit risk) | Filtered in [registry-roles.ts:194](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L194). Only males with sire roles appear. |
-| **Breeding Female Tab** | Dams only (Letters: `A, B, C`) | **Complies** (with minor manual edit risk) | Filtered in [registry-roles.ts:195](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L195). Only females with dam roles appear. |
-| **Fight Prospects Tab** | Offspring only (Codes: `1A1, 1A2`) | **Complies** | Filtered in [registry-roles.ts:196](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L196). Offspring birds appear here. |
+| **Breeding Male Tab** | Sires only (Numbers: `1, 2, 3`) | **Complies** (with minor manual edit risk) | Filtered in [registry-roles.ts:167-173](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L167-L173). Only males with sire roles appear. |
+| **Breeding Female Tab** | Dams only (Letters: `A, B, C`) | **Complies** (with minor manual edit risk) | Filtered in [registry-roles.ts:167-173](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L167-L173). Only females with dam roles appear. |
+| **Fight Prospects Tab** | Offspring only (Codes: `1A1, 1A2`) | **Complies** | Filtered in [registry-roles.ts:167-173](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L167-L173). Offspring birds appear here. |
 | **One Role per Chicken** | No chicken appears in >1 tab | **Partially Breached by Sire Material** | `assertTabExclusivity` enforces mutual exclusivity for Males, Females, and Fight Prospects. However, Sire Material birds simultaneously exist in either Males or Fight Prospects. |
-| **One Source of Truth for Counts** | All pages report identical numbers | **Minor Discrepancies Observed** | Dashboard reports active chickens from `activeFowls.length`, whereas Inventory reports counts through `inventoryCounts()`. If legacy statuses exist, numbers can vary slightly. |
+| **One Source of Truth for Counts** | All pages report identical numbers | **Minor Discrepancies Observed** | Dashboard reports active chickens from `activeFowls.length`, whereas Inventory reports counts through `inventoryCounts()`. If legacy statuses exist, numbers can vary slightly. The Inventory **Breeders Stock** tab deliberately counts only the breeding herd (`isBreederStock()`), so it is smaller than the dashboard's active total — the rest of the living roster sits with Fight Prospects under **All**. |
 | **Unique, Permanent Identifiers** | Never reused, unique per farm | **Complies** | Enforced by database unique index `fowl_user_chicken_code_key` in [20261007000002_automatic_unique_identifiers.sql](file:///c:/Users/angelica/Desktop/GalloTrack-Web/supabase/migrations/20261007000002_automatic_unique_identifiers.sql). |
 | **Internal IDs Hidden from Users** | Only show bird codes / wing bands | **Minor Inconsistency** | The registration form header still displays `ID: GT-0063` (the predicted database row ID), which can confuse owners into thinking it is a chicken identifier. |
 | **Warn Before Archiving Active Parents** | Warn if bird has living offspring | **Missing Confirmation Warning** | Archiving a sire or dam with existing offspring proceeds without a prompt warning the owner that the bird is an active parent of registered progeny. |
