@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { formatBirdCodeForDisplay, resolveBirdCodes, compareBirdCodesNatural } from '@/lib/bird-code';
@@ -27,6 +27,8 @@ import {
   type RoleKey,
 } from '@/lib/registry-roles';
 import { Search, X } from 'lucide-react';
+import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { INVENTORY_STATUS_TABS } from '@/lib/nav-manifest';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { UIContext } from '@/lib/contexts/ui-context';
 
@@ -455,6 +457,26 @@ export default function MarketplacePage({
   const [internalActiveTab, setInternalActiveTab] = useState<FilterTab>('all');
   const activeTab = propStatusFilter ?? ui?.inventoryStatusFilter ?? internalActiveTab;
   const setActiveTab = propSetStatusFilter ?? ui?.setInventoryStatusFilter ?? setInternalActiveTab;
+
+  // URL-driven status filter: ?status=<INVENTORY_STATUS_TABS> (default 'all'
+  // omitted from the URL). This surface only renders at /catalog.
+  const [urlStatus, setUrlStatus, urlStatusMeta] = useUrlTab<FilterTab>({
+    param: 'status',
+    values: INVENTORY_STATUS_TABS,
+    defaultValue: 'all',
+  });
+  const prevUrlSyncStatusRef = useRef(activeTab);
+  useEffect(() => {
+    if (urlStatusMeta.change === 'popstate' || urlStatusMeta.paramPresent) {
+      if (urlStatus !== activeTab) setActiveTab(urlStatus);
+    }
+  }, [urlStatus, urlStatusMeta, activeTab, setActiveTab]);
+  useEffect(() => {
+    if (prevUrlSyncStatusRef.current === activeTab) return;
+    prevUrlSyncStatusRef.current = activeTab;
+    if (activeTab === urlStatus) return;
+    setUrlStatus(activeTab);
+  }, [activeTab, urlStatus, setUrlStatus]);
 
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [internalGenderFilter, setInternalGenderFilter] = useState<SexFilter>('all');

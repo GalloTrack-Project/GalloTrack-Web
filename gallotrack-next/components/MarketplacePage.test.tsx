@@ -4,6 +4,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MarketplacePage from './MarketplacePage';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 
+// MarketplacePage syncs its status filter to ?status= via useUrlTab, which
+// needs the App Router context that this unit test does not mount.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/catalog',
+}));
+
 // Mock chickens matching the exact scenario described by user:
 // 1. "Sweater Crimson" (name contains "crim")
 // 2. "Crimson Belle" (dam, name starts with "crim")

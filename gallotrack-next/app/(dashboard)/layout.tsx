@@ -1,40 +1,18 @@
 'use client';
-import { useEffect, useState, type ComponentType } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, LayoutDashboard, Dna, TreePine, User, Users, Settings, Shield, LogOut, FlaskConical, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Sun, Moon, User, Settings, Shield, LogOut, AlertTriangle, RefreshCw } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { supabase } from '@/lib/registry';
 import { SkipLink, cn } from '@/components/ui';
+import { OWNER_NAV, ADMIN_NAV, isActiveNav, findActiveNav, getPageTitle, type NavItem } from '@/lib/nav-manifest';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
-
-type NavItem = {
-  href: string;
-  label: string;
-  shortLabel: string;
-  icon: ComponentType<{ className?: string }>;
-};
-
-const OWNER_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: LayoutDashboard },
-  { href: '/profiling', label: 'Chicken Registry', shortLabel: 'Registry', icon: Dna },
-  { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon },
-  { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine },
-  { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical },
-  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User },
-];
-
-const ADMIN_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'System Overview', shortLabel: 'Overview', icon: LayoutDashboard },
-  { href: '/admin', label: 'User Registry', shortLabel: 'Users', icon: Users },
-  { href: '/admin/settings', label: 'System Config', shortLabel: 'Config', icon: Settings },
-  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User },
-];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -61,23 +39,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [auth.isAdmin]);
 
   const isAdmin = auth.isAdmin;
-  const navItems = isAdmin ? ADMIN_NAV : OWNER_NAV;
+  const navItems: NavItem[] = isAdmin ? ADMIN_NAV : OWNER_NAV;
 
-  function isActive(href: string) {
-    if (href === '/admin') return pathname === '/admin';
-    if (href === '/dashboard') return pathname === '/dashboard';
-    return pathname.startsWith(href);
-  }
-
-  const currentNav = navItems.find((item) => isActive(item.href));
-  const activeTitle = currentNav?.label || (
-    pathname === '/settings' ? 'Settings' :
-    pathname.startsWith('/admin/audit') ? 'Audit Logs' :
-    pathname.startsWith('/admin/flocks') ? 'Flocks' :
-    pathname.startsWith('/admin/matches') ? 'Match History' :
-    pathname.startsWith('/admin/marketplace') ? 'Marketplace' :
-    pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Dashboard'
-  );
+  const currentNav = findActiveNav(navItems, pathname);
+  const activeTitle = currentNav?.label || getPageTitle(pathname);
 
   const iconButtonClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground shadow-2xs transition-colors duration-150 hover:border-accent/50 hover:bg-muted/60 hover:text-accent cursor-pointer';
@@ -108,10 +73,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.href}
                 href={item.href}
-                aria-current={isActive(item.href) ? 'page' : undefined}
+                aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
                 className={cn(
                   'w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-sm text-sm tracking-wide transition-colors duration-150',
-                  isActive(item.href)
+                  isActiveNav(item, pathname)
                     ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
                     : 'text-muted-foreground font-medium hover:bg-muted/70 hover:text-foreground',
                 )}
@@ -281,10 +246,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.href}
                 href={item.href}
-                aria-current={isActive(item.href) ? 'page' : undefined}
+                aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
                 className={cn(
                   'flex flex-col items-center justify-center flex-1 h-full py-1 gap-1 transition-colors duration-150 active:scale-95',
-                  isActive(item.href)
+                  isActiveNav(item, pathname)
                     ? 'text-accent font-semibold'
                     : 'text-muted-foreground font-medium hover:text-foreground',
                 )}

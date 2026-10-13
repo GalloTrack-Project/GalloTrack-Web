@@ -1,9 +1,10 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Archive, Skull, Dna, Shield, Egg, Plus } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
+import type { ProfilingSubTab } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
 import FowlLists from '@/components/profiling/FowlLists';
@@ -11,6 +12,8 @@ import MatchForm from '@/components/profiling/MatchForm';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
 import RegistryNav from '@/components/profiling/RegistryNav';
 import BreedsPage from '@/app/(dashboard)/breeds/page';
+import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { REGISTRY_TABS } from '@/lib/nav-manifest';
 
 export default function ProfilingPage() {
   const fowl = useFowl();
@@ -59,6 +62,27 @@ export default function ProfilingPage() {
 
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
+
+  // URL-driven sub-tab: ?tab=<REGISTRY_TABS>. Opening a shareable link with a
+  // valid tab applies it (clean navigations keep whatever navigate(page,
+  // subTab) already set); any later change is written back to the URL.
+  const [urlTab, setUrlTab, urlTabMeta] = useUrlTab<ProfilingSubTab>({
+    param: 'tab',
+    values: REGISTRY_TABS,
+    defaultValue: 'form',
+  });
+  const prevUrlSyncTabRef = useRef(profilingSubTab);
+  useEffect(() => {
+    if (urlTabMeta.change === 'popstate' || urlTabMeta.paramPresent) {
+      if (urlTab !== profilingSubTab) setProfilingSubTab(urlTab);
+    }
+  }, [urlTab, urlTabMeta, profilingSubTab, setProfilingSubTab]);
+  useEffect(() => {
+    if (prevUrlSyncTabRef.current === profilingSubTab) return;
+    prevUrlSyncTabRef.current = profilingSubTab;
+    if (profilingSubTab === urlTab) return;
+    setUrlTab(profilingSubTab);
+  }, [profilingSubTab, urlTab, setUrlTab]);
 
   const listTab =
     profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'sireMaterial' || profilingSubTab === 'offspring'

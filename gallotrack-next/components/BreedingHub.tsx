@@ -33,6 +33,8 @@ import {
   insertSafetyIncident,
   updateBreedingPairingOutcome,
 } from '@/lib/services/breeding-service';
+import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { BREEDING_TABS } from '@/lib/nav-manifest';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -966,7 +968,11 @@ export default function BreedingHub({
   setSelectedFowlForDetails,
 }: BreedingHubProps) {
 
-  const [activeTab, setActiveTab] = useState<BreedingTab>('coding');
+  const [activeTab, setActiveTab] = useUrlTab<BreedingTab>({
+    param: 'tab',
+    values: BREEDING_TABS,
+    defaultValue: 'coding',
+  });
   const [breedingPairs, setBreedingPairs] = useState<BreedingPairRecord[]>([]);
   const [incidents, setIncidents] = useState<SafetyIncidentRecord[]>([]);
   const [showAddPairing, setShowAddPairing] = useState(false);

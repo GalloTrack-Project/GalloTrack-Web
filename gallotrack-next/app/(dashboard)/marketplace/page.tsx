@@ -7,6 +7,8 @@ import { Modal, useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { genderLabel } from '@/lib/helpers';
+import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { MARKETPLACE_TABS } from '@/lib/nav-manifest';
 
 type Listing = {
   id: string;
@@ -54,7 +56,11 @@ export default function MarketplacePage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'browse' | 'my' | 'create'>('browse');
+  const [activeTab, setActiveTab] = useUrlTab<'browse' | 'my' | 'create'>({
+    param: 'tab',
+    values: MARKETPLACE_TABS,
+    defaultValue: 'browse',
+  });
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<FormData>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
