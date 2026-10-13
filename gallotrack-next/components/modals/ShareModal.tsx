@@ -37,7 +37,11 @@ function ShareInner({ target, onClose }: { target: ShareTarget; onClose: () => v
     return () => { cancelled = true; };
   }, [target.type, target.id]);
 
-  const url = token ? `${window.location.origin}/share/${token}` : '';
+  // Prefer the deployment's canonical URL (NEXT_PUBLIC_SITE_URL) so links
+  // keep working when the app is opened through an unexpected host; fall back
+  // to the browser origin. Never hardcode a domain.
+  const shareOrigin = (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/+$/, '');
+  const url = token ? `${shareOrigin}/share/${token}` : '';
 
   const handleCreate = async () => {
     setLoading(true);

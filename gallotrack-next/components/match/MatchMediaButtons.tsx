@@ -147,7 +147,7 @@ export default function MatchMediaButtons({
           </button>
           <button
             type="button"
-            title="Share match record"
+            title="Share link"
             aria-label={`Share match ${match.entry_name} vs ${match.opponent || 'opponent'}`}
             onClick={() =>
               onShare
