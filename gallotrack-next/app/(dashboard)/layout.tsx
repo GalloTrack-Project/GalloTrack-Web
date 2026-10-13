@@ -11,6 +11,7 @@ import { useFowl } from '@/lib/contexts/fowl-context';
 import { supabase } from '@/lib/registry';
 import { SkipLink, cn } from '@/components/ui';
 import { OWNER_NAV, ADMIN_NAV, isActiveNav, findActiveNav, getPageTitle, type NavItem } from '@/lib/nav-manifest';
+import GlobalSearch from '@/components/nav/GlobalSearch';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
@@ -171,6 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ) : (
                 <div className="md:hidden w-8 h-8 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center"><User className="w-4 h-4 text-muted-foreground" aria-hidden="true" /></div>
               )}
+              <GlobalSearch />
               {!isAdmin && (
                 <Link href="/settings" aria-label="Settings" title="Settings" className={iconButtonClass}>
                   <Settings className="w-4 h-4" aria-hidden="true" />

@@ -77,6 +77,26 @@ export const ADMIN_SUBPAGES: { href: string; label: string }[] = [
   { href: '/admin/marketplace', label: 'Marketplace' },
 ];
 
+/** Deep links surfaced as quick actions in the global search palette. */
+export type QuickAction = { id: string; label: string; hint: string; href: string };
+
+export const OWNER_QUICK_ACTIONS: QuickAction[] = [
+  { id: 'register', label: 'Register a chicken', hint: 'Registry form', href: '/profiling?tab=form' },
+  { id: 'log-match', label: 'Log a match', hint: 'Match logs', href: '/profiling?tab=matchForm' },
+  { id: 'fight-prospects', label: 'View Fight Prospects', hint: 'Registry tab', href: '/profiling?tab=offspring' },
+  { id: 'breeders-stock', label: 'Browse Breeders Stock', hint: 'Inventory tab', href: '/catalog?status=active' },
+  { id: 'ready-to-breed', label: 'View Ready to Breed', hint: 'Inventory tab', href: '/catalog?status=breeding' },
+  { id: 'create-listing', label: 'Create a marketplace listing', hint: 'Marketplace', href: '/marketplace?tab=create' },
+  { id: 'my-listings', label: 'Manage my listings', hint: 'Marketplace', href: '/marketplace?tab=my' },
+];
+
+export const ADMIN_QUICK_ACTIONS: QuickAction[] = [
+  { id: 'audit-logs', label: 'Open Audit Logs', hint: '/admin/audit-logs', href: '/admin/audit-logs' },
+  { id: 'flocks', label: 'Open Flocks', hint: '/admin/flocks', href: '/admin/flocks' },
+  { id: 'admin-matches', label: 'Open Match History', hint: '/admin/matches', href: '/admin/matches' },
+  { id: 'admin-marketplace', label: 'Open Marketplace moderation', hint: '/admin/marketplace', href: '/admin/marketplace' },
+];
+
 export function isActiveNav(item: NavItem, pathname: string): boolean {
   if (item.match === 'exact') return pathname === item.href;
   return pathname.startsWith(item.href);
