@@ -29,7 +29,7 @@ describe('MobileNav', () => {
     expect(dialog).toBeInTheDocument();
     const links = screen.getAllByRole('link');
     expect(links.map((a) => a.getAttribute('href'))).toEqual(
-      expect.arrayContaining(['/breeding', '/marketplace', '/profile']),
+      expect.arrayContaining(['/breeding', '/profile']),
     );
     fireEvent.click(screen.getByRole('link', { name: 'Breeding Hub' }));
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -48,7 +48,7 @@ describe('MobileNav', () => {
   });
 
   it('marks More as active when the current page lives in the overflow', () => {
-    render(<MobileNav navItems={OWNER_NAV} pathname="/marketplace" />);
+    render(<MobileNav navItems={OWNER_NAV} pathname="/profile" />);
     expect(screen.getByRole('button', { name: 'More navigation pages' })).toHaveAttribute('data-active', 'true');
   });
 });

@@ -195,7 +195,7 @@ export default function ProfilingPage() {
           sortKey={ui.registrySortBy[listTab] ?? 'identifier'}
           onSortChange={(k) => ui.setRegistrySort(listTab, k)}
           setProfilingSubTab={setProfilingSubTab}
-          onGoToInventory={() => ui.setCurrentPage('marketplace')}
+          onGoToInventory={() => router.push('/catalog')}
           handleOpenEditModal={handleOpenEditModal}
           handleSetActiveStatus={handleSetActiveStatus}
           setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
