@@ -6,6 +6,10 @@ import { Modal } from '@/components/ui';
 import { cn } from '@/components/ui/utils';
 import { HighlightText } from '@/components/ui/HighlightText';
 import { useAuth } from '@/lib/contexts/auth-context';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
+import ChickenIcon from '@/components/ChickenIcon';
+import type { FowlRecord } from '@/lib/types';
 import {
   OWNER_NAV,
   ADMIN_NAV,
@@ -13,14 +17,27 @@ import {
   ADMIN_QUICK_ACTIONS,
   type QuickAction,
 } from '@/lib/nav-manifest';
-import { matchSearchItems, type SearchableItem } from '@/lib/nav-search';
+import { matchSearchItems, matchBirds, birdSearchHint, type SearchableItem } from '@/lib/nav-search';
+import { resolveBirdCodes } from '@/lib/bird-code';
 
-type ResultItem = SearchableItem & {
+type PageActionItem = SearchableItem & {
   section: 'Pages' | 'Actions';
   icon: ComponentType<{ className?: string }>;
 };
 
-export function buildSearchResults(isAdmin: boolean): ResultItem[] {
+type BirdItem = {
+  id: string;
+  section: 'Chickens';
+  label: string;
+  hint: string;
+  href: '';
+  icon: ComponentType<{ className?: string }>;
+  fowl: FowlRecord;
+};
+
+type PaletteItem = PageActionItem | BirdItem;
+
+export function buildSearchResults(isAdmin: boolean): PageActionItem[] {
   const nav = isAdmin ? ADMIN_NAV : OWNER_NAV;
   const actions: QuickAction[] = isAdmin ? ADMIN_QUICK_ACTIONS : OWNER_QUICK_ACTIONS;
   return [
@@ -53,8 +70,28 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
   const listRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = auth.isAdmin;
+  const fowl = useFowl();
+  const ui = useUI();
   const allItems = useMemo(() => buildSearchResults(isAdmin), [isAdmin]);
-  const results = useMemo(() => matchSearchItems(allItems, query), [allItems, query]);
+  const pageActionResults = useMemo(() => matchSearchItems(allItems, query), [allItems, query]);
+  const birdCodes = useMemo(() => resolveBirdCodes(fowl.fowls), [fowl.fowls]);
+  const results = useMemo<PaletteItem[]>(() => {
+    const pages = pageActionResults.filter((item) => item.section === 'Pages');
+    const actions = pageActionResults.filter((item) => item.section === 'Actions');
+    // Admin palette stays page/action only - no bird data.
+    const birds: BirdItem[] = isAdmin
+      ? []
+      : matchBirds(fowl.fowls, query).map((bird) => ({
+          id: `bird:${bird.id}`,
+          section: 'Chickens' as const,
+          label: bird.name,
+          hint: birdSearchHint(bird, birdCodes),
+          href: '' as const,
+          icon: ChickenIcon,
+          fowl: bird,
+        }));
+    return [...pages, ...birds, ...actions];
+  }, [pageActionResults, fowl.fowls, birdCodes, query, isAdmin]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -89,9 +126,13 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
     option?.scrollIntoView?.({ block: 'nearest' });
   }, [activeIndex, results]);
 
-  function go(item: ResultItem) {
+  function go(item: PaletteItem) {
     setOpen(false);
-    router.push(item.href);
+    if ('fowl' in item) {
+      ui.setSelectedFowlForDetails(item.fowl);
+    } else {
+      router.push(item.href);
+    }
   }
 
   function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -132,7 +173,7 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
         open={open}
         onClose={() => setOpen(false)}
         title="Search"
-        description="Jump to a page or run a quick action"
+        description={isAdmin ? 'Jump to a page or run a quick action' : 'Jump to a page, chicken, or quick action'}
         icon={<Search className="w-4 h-4" aria-hidden="true" />}
         iconClassName="border-accent/30 bg-accent/10 text-accent"
         className="max-w-xl"
@@ -150,8 +191,8 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
           aria-expanded="true"
           aria-controls="global-search-listbox"
           aria-activedescendant={results[activeIndex] ? `global-search-option-${activeIndex}` : undefined}
-          aria-label="Search pages and actions"
-          placeholder="Search pages and actions..."
+          aria-label="Search"
+          placeholder="Search pages, chickens, and actions..."
           autoComplete="off"
           className="w-full rounded-sm border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
         />
@@ -168,7 +209,7 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
             aria-label="Search results"
             className="max-h-[45vh] overflow-y-auto -mx-1"
           >
-            {(['Pages', 'Actions'] as const).map((section) => {
+            {(['Pages', 'Chickens', 'Actions'] as const).map((section) => {
               const sectionItems = results.filter((item) => item.section === section);
               if (sectionItems.length === 0) return null;
               return (
