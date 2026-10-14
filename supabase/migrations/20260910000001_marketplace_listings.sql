@@ -1,3 +1,7 @@
+-- ⚠️  DEPRECATED: This migration created the marketplace_listings table.
+-- Marketplace has been removed from GalloTrack (deprecated 2026-10-14).
+-- See migration 20261014000000_deprecate_marketplace.sql for the deprecation migration.
+-- -----------------------------------------------------------------------
 -- Marketplace listings table
 CREATE TABLE IF NOT EXISTS marketplace_listings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

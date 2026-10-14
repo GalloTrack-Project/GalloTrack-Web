@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   description: "Optimizing Chicken Management through In-Depth Analytics",
 };
 
+import StagingBanner from "@/components/StagingBanner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,6 +36,7 @@ export default function RootLayout({
             <GalloTrackProvider>
               <RootErrorBoundary>
                 <div className="min-h-full w-full flex flex-col">
+                  <StagingBanner />
                   {children}
                 </div>
               </RootErrorBoundary>

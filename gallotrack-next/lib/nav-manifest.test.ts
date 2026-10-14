@@ -24,14 +24,13 @@ describe('nav-manifest', () => {
     const labels = OWNER_NAV.map((item) => item.label);
     expect(labels).toContain('Chicken Registry');
     expect(labels).toContain('Chicken Inventory');
-    expect(labels).toContain('Marketplace');
+    expect(labels).not.toContain('Marketplace');
     expect(labels).toContain('Breeding Hub');
     expect(labels).toContain('Lineage Directory');
     expect(labels).not.toContain('Fight Prospects'); // registry-internal label, not a page
   });
 
-  it('marketplace is in the owner menu and every owner href has a page.tsx', () => {
-    expect(OWNER_NAV.map((i) => i.href)).toContain('/marketplace');
+  it('every owner href has a page.tsx', () => {
     for (const item of OWNER_NAV) {
       expect(fs.existsSync(path.join(appDir, item.href, 'page.tsx')), `missing page for ${item.href}`).toBe(true);
     }
@@ -104,7 +103,7 @@ describe('nav-manifest', () => {
 
   it('groups consecutive sidebar items by their group label', () => {
     const ownerGroups = groupNavItems(OWNER_NAV);
-    expect(ownerGroups.map((g) => g.group)).toEqual(['Farm', 'Trade', 'Account']);
+    expect(ownerGroups.map((g) => g.group)).toEqual(['Farm', 'Account']);
     expect(ownerGroups[0].items.map((i) => i.href)).toEqual([
       '/dashboard',
       '/profiling',
@@ -112,7 +111,7 @@ describe('nav-manifest', () => {
       '/lineage',
       '/breeding',
     ]);
-    expect(ownerGroups[1].items.map((i) => i.href)).toEqual(['/marketplace']);
+    expect(ownerGroups[1].items.map((i) => i.href)).toEqual(['/profile']);
     const adminGroups = groupNavItems(ADMIN_NAV);
     expect(adminGroups.map((g) => g.group)).toEqual(['Console', 'Account']);
   });

@@ -589,7 +589,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 ### Where Media Files Are Stored & Who Can View Them
 - **`fowl-images` (Public Storage Bucket)**:
   - Stores chicken attachment photos.
-  - Access: Publicly viewable image URLs so gallery profile cards and public marketplace listings render without token overhead.
+  - Access: Publicly viewable image URLs so gallery profile cards and chicken photos render without token overhead.
 - **`match-videos` (Private Storage Bucket)**:
   - Stores derby fight videos.
   - Access: **Private / Owner-Only**. Anonymous or direct HTTP access is blocked by storage policies. The logged-in Farm Owner is issued a short-lived 1-hour signed URL via [media-privacy.ts](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/media-privacy.ts).

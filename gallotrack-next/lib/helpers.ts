@@ -136,7 +136,7 @@ export * from './win-rate';
 /**
  * The app's single win-rate rule: a draw is neither a win nor a loss, so the
  * denominator is *decided* fights only (wins + losses). Every view — dashboard,
- * fight history, per-brother breakdowns, rankings, marketplace, lineage — must
+ * fight history, per-brother breakdowns, rankings, lineage — must
  * go through this so the same records never show two different percentages.
  */
 export const winRateOf = (wins: number, losses: number): number => {

@@ -41,10 +41,7 @@ interface AuditLog {
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  marketplace_approved: 'Approved Listing',
-  marketplace_flagged: 'Flagged Listing',
-  marketplace_removed: 'Removed Listing',
-  marketplace_pending: 'Pending Listing',
+  // marketplace_* keys intentionally removed — Marketplace is deprecated
   reset_password: 'Password Reset',
   transfer_data: 'Data Transfer',
   user_activated: 'User Activated',

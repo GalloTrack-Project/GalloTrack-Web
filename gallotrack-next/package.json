@@ -14,6 +14,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:exclusivity": "tsx scripts/check-tab-exclusivity.ts",
+    "db:backup": "tsx scripts/backup-production.ts",
+    "db:restore": "tsx scripts/restore-database.ts",
+    "db:compare": "tsx scripts/compare-row-counts.ts",
+    "db:audit": "tsx scripts/verify-production-counts.ts",
     "gate:static": "node scripts/standard-gates.mjs",
     "gate:mobile": "node scripts/mobile-gate.mjs",
     "gate": "node scripts/standard-gates.mjs && tsc --noEmit && eslint . --cache && vitest run"
