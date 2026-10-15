@@ -158,6 +158,8 @@ export interface PairingStats {
 export interface MatchRecord {
   id: number;
   user_id?: string | number;
+  fowl_id?: number | null;
+  opponent_id?: number | null;
   date: string;
   entry_name: string;
   breed: string;

@@ -21,6 +21,10 @@ import {
   getProspectCategoryCounts,
   filterProspectsByCategory,
   ROLE_LABEL,
+  getOffspringClassificationCounts,
+  filterOffspringByClassification,
+  extractFoughtLookups,
+  hasFightRecord,
 } from './registry-roles';
 
 const f = (over: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -510,4 +514,48 @@ describe('Offspring category helpers', () => {
     expect(filterProspectsByCategory(prospects, 'fight-prospects', foughtNames).map((p) => p.name)).toEqual(['Chick-2']);
     expect(filterProspectsByCategory(prospects, 'no-fight', foughtNames).map((p) => p.name)).toEqual(['Chick-2']);
   });
+
+  it('enforces Breeding Stock + Non-Breeding = All Offspring invariant with zero overlap', () => {
+    const offspring = [
+      f({ id: 1, name: 'Offspring A', breeding_role: 'material' }),
+      f({ id: 2, name: 'Offspring B', breeding_role: 'breeder' }),
+      f({ id: 3, name: 'Offspring C', breeding_role: 'none' }),
+      f({ id: 4, name: 'Offspring D' }), // unassigned
+      f({ id: 5, name: 'Offspring E', breeding_role: 'material' }),
+    ];
+
+    const counts = getOffspringClassificationCounts(offspring);
+    expect(counts.all).toBe(5);
+    expect(counts.breedingStock).toBe(3);
+    expect(counts.nonBreeding).toBe(2);
+    expect(counts.breedingStock + counts.nonBreeding).toBe(counts.all);
+
+    const bsList = filterOffspringByClassification(offspring, 'breeding-stock');
+    const nbList = filterOffspringByClassification(offspring, 'non-breeding');
+    expect(bsList.length).toBe(3);
+    expect(nbList.length).toBe(2);
+
+    // Mutual exclusivity check
+    const bsIds = new Set(bsList.map((x) => x.id));
+    for (const nb of nbList) {
+      expect(bsIds.has(nb.id)).toBe(false);
+    }
+  });
+
+  it('determines fight status by fowl ID foreign key', () => {
+    const matches: MatchRecord[] = [
+      { id: 101, fowl_id: 42, entry_name: 'Lemon Storm' } as MatchRecord,
+      { id: 102, fowl_id: 55, entry_name: 'Hatch Silver' } as MatchRecord,
+    ];
+    const { foughtFowlIds, foughtNames } = extractFoughtLookups(matches);
+    expect(foughtFowlIds.has(42)).toBe(true);
+    expect(foughtFowlIds.has(55)).toBe(true);
+    expect(foughtFowlIds.has(43)).toBe(false);
+
+    const birdWithFight = f({ id: 42, name: 'Lemon Storm' });
+    const birdWithoutFight = f({ id: 43, name: 'Lemon Blaze' });
+    expect(hasFightRecord(birdWithFight, foughtFowlIds, foughtNames)).toBe(true);
+    expect(hasFightRecord(birdWithoutFight, foughtFowlIds, foughtNames)).toBe(false);
+  });
 });
+

@@ -512,87 +512,209 @@ export function makeRegistryComparator(
   };
 }
 
-// ── Offspring Category Filter ───────────────────────────────────────
+// ── Offspring Breeding Classification & Fighting Status ─────────────
 
 /**
- * Categories inside the Offspring tab:
- * 1. all: All Offspring (default)
- * 2. non-breeding: Offspring that can no longer be bred
- * 3. fight-prospects: Offspring with zero match records
- */
-export type ProspectCategory = 'all' | 'non-breeding' | 'fight-prospects';
-export const PROSPECT_CATEGORIES: readonly ProspectCategory[] = ['all', 'non-breeding', 'fight-prospects'] as const;
-
-export interface ProspectCategoryCounts {
-  all: number;
-  nonBreeding: number;
-  fightProspects: number;
-  /** @deprecated backward-compatibility alias for fightProspects */
-  noFight: number;
-}
-
-/**
- * Rule for "Fight Prospects" category inside Offspring:
- * Offspring chickens that have zero match records in the `match` table
- * (entry_name not found in match history). These are birds being prepared
- * for combat who have not yet had their arena debut.
- */
-export function isFightProspect(fowl: FowlRecord, foughtNames: Set<string>): boolean {
-  return !foughtNames.has((fowl.name || '').trim().toLowerCase());
-}
-
-/**
- * Rule for "Non-Breeding" offspring in Offspring tab:
- * Offspring that cannot or can no longer be bred (derived from existing fowl fields):
- * 1. Explicitly retired from breeding: `retired_scope` is 'breeding' or 'both'
- * 2. Archive reason indicating breeding cessation: `archive_kind` is 'retired', 'inactive', or 'sold'
- * 3. Lifecycle/activity status: `status` is 'Archived' or 'Deceased', or `activity_status` is 'inactive'
- * 4. Breeding role unassigned or none: `breeding_role` is 'none' or unassigned (not 'breeder' and not 'material')
+ * Mutually exclusive breeding classifications for Offspring:
+ * - 'all': All registered offspring (default)
+ * - 'breeding-stock': Offspring designated as future breeders (Sire Material or breeding_role === 'breeder')
+ * - 'non-breeding': Offspring not designated for breeding
  *
- * Offspring with breeding_role === 'material' (Sire Material) or breeding_role === 'breeder' are
- * retained/eligible for breeding and are NOT non-breeding.
+ * Invariant: breedingStock + nonBreeding === all.
+ * Every offspring chicken has exactly one classification.
  */
-export function isNonBreedingProspect(fowl: FowlRecord): boolean {
-  if (fowl.retired_scope === 'breeding' || fowl.retired_scope === 'both') return true;
-  if (fowl.archive_kind === 'retired' || fowl.archive_kind === 'inactive' || fowl.archive_kind === 'sold') return true;
-  if (fowl.status === 'Archived' || fowl.status === 'Deceased' || fowl.activity_status === 'inactive') return true;
-  if (fowl.breeding_role === 'none' || !fowl.breeding_role) return true;
+export type BreedingClassification = 'all' | 'breeding-stock' | 'non-breeding';
+export const BREEDING_CLASSIFICATIONS: readonly BreedingClassification[] = [
+  'all',
+  'breeding-stock',
+  'non-breeding',
+] as const;
+
+export interface BreedingClassificationCounts {
+  all: number;
+  breedingStock: number;
+  nonBreeding: number;
+}
+
+/**
+ * Fighting status filter values (independent dimension from breeding classification):
+ * - 'all': All chickens (default)
+ * - 'without': No fight record (0 rows in match table)
+ * - 'with': Has fight record (>= 1 row in match table)
+ */
+export type FightStatusFilter = 'all' | 'with' | 'without';
+export const FIGHT_STATUS_FILTERS: readonly FightStatusFilter[] = ['all', 'with', 'without'] as const;
+
+/**
+ * Backward compatibility type alias for any legacy imports.
+ */
+export type ProspectCategory = BreedingClassification | 'fight-prospects';
+export const PROSPECT_CATEGORIES = BREEDING_CLASSIFICATIONS;
+
+export interface ProspectCategoryCounts extends BreedingClassificationCounts {
+  /** @deprecated legacy alias */
+  fightProspects?: number;
+  /** @deprecated legacy alias */
+  noFight?: number;
+}
+
+/**
+ * Rule for "Breeding Stock" offspring in the Offspring tab:
+ * Offspring chickens designated as future breeders:
+ * - Stored via breeding_role === 'material' (Sire Material prospect) or
+ *   breeding_role === 'breeder'
+ * - Status is Active (archived/deceased are in Inventory).
+ */
+export function isBreedingStockOffspring(fowl: FowlRecord): boolean {
+  if (!isActiveStatus(fowl)) return false;
+  if (fowl.retired_scope === 'breeding' || fowl.retired_scope === 'both') return false;
+  if (fowl.archive_kind === 'retired' || fowl.archive_kind === 'inactive' || fowl.archive_kind === 'sold') return false;
+  if (fowl.activity_status === 'inactive') return false;
+  return fowl.breeding_role === 'material' || fowl.breeding_role === 'breeder';
+}
+
+/**
+ * Rule for "Non-Breeding" offspring in the Offspring tab:
+ * Offspring chickens not designated for breeding.
+ * Strictly mutually exclusive with isBreedingStockOffspring:
+ * breedingStock + nonBreeding = all offspring.
+ * Safe default: NULL/unassigned breeding_role defaults to non-breeding.
+ */
+export function isNonBreedingOffspring(fowl: FowlRecord): boolean {
+  return !isBreedingStockOffspring(fowl);
+}
+
+/**
+ * Backward-compatible alias for isNonBreedingOffspring.
+ */
+export const isNonBreedingProspect = isNonBreedingOffspring;
+
+/**
+ * Extract set of fought fowl IDs (and names fallback) from match records.
+ * Primary foreign key is match.fowl_id.
+ */
+export function extractFoughtLookups(matchHistory: MatchRecord[]): {
+  foughtFowlIds: Set<number>;
+  foughtNames: Set<string>;
+} {
+  const foughtFowlIds = new Set<number>();
+  const foughtNames = new Set<string>();
+  for (const m of matchHistory) {
+    if (m.fowl_id != null && typeof m.fowl_id === 'number') {
+      foughtFowlIds.add(m.fowl_id);
+    }
+    const name = (m.entry_name || '').trim().toLowerCase();
+    if (name) foughtNames.add(name);
+  }
+  return { foughtFowlIds, foughtNames };
+}
+
+/**
+ * Determines whether a chicken has a fight record in `match`.
+ * Evaluates `fowl_id` (foreign key in match). If match records in test mocks lack
+ * fowl_id, falls back to entry_name.
+ */
+export function hasFightRecord(
+  fowl: FowlRecord,
+  foughtFowlIds: Set<number>,
+  foughtNames?: Set<string>,
+): boolean {
+  if (foughtFowlIds.has(fowl.id)) return true;
+  if (foughtNames && foughtNames.has((fowl.name || '').trim().toLowerCase())) {
+    return true;
+  }
   return false;
 }
 
 /**
- * Filter a list of offspring chickens by ProspectCategory (supporting legacy 'no-fight' alias).
+ * Predicate: true if chicken has NO fight record.
+ */
+export function isFightProspect(
+  fowl: FowlRecord,
+  foughtFowlIdsOrNames: Set<number | string>,
+  fallbackNames?: Set<string>,
+): boolean {
+  for (const item of foughtFowlIdsOrNames) {
+    if (typeof item === 'number') {
+      return !hasFightRecord(fowl, foughtFowlIdsOrNames as unknown as Set<number>, fallbackNames);
+    }
+    break;
+  }
+  const nameSet = (fallbackNames || foughtFowlIdsOrNames) as unknown as Set<string>;
+  return !nameSet.has((fowl.name || '').trim().toLowerCase());
+}
+
+/**
+ * Filter a list of offspring chickens by BreedingClassification.
+ */
+export function filterOffspringByClassification(
+  offspring: FowlRecord[],
+  classification: BreedingClassification | string,
+): FowlRecord[] {
+  if (classification === 'breeding-stock') {
+    return offspring.filter(isBreedingStockOffspring);
+  }
+  if (classification === 'non-breeding') {
+    return offspring.filter(isNonBreedingOffspring);
+  }
+  return offspring;
+}
+
+/**
+ * Backward compatibility alias for filterProspectsByCategory.
  */
 export function filterProspectsByCategory(
   prospects: FowlRecord[],
-  category: ProspectCategory | 'no-fight',
-  foughtNames: Set<string>,
+  category: string,
+  foughtNames?: Set<string>,
 ): FowlRecord[] {
-  if (category === 'non-breeding') {
-    return prospects.filter(isNonBreedingProspect);
-  }
+  if (category === 'breeding-stock') return filterOffspringByClassification(prospects, 'breeding-stock');
+  if (category === 'non-breeding') return filterOffspringByClassification(prospects, 'non-breeding');
   if (category === 'fight-prospects' || category === 'no-fight') {
-    return prospects.filter((f) => isFightProspect(f, foughtNames));
+    return prospects.filter((f) => isFightProspect(f, foughtNames || new Set<string>()));
   }
   return prospects;
 }
 
 /**
- * Compute counts for all 3 categories in a single pass.
+ * Compute counts for all offspring breeding classifications in a single pass.
+ * Strictly guarantees: breedingStock + nonBreeding === all.
+ */
+export function getOffspringClassificationCounts(
+  offspring: FowlRecord[],
+): BreedingClassificationCounts {
+  let breedingStock = 0;
+  let nonBreeding = 0;
+  for (const f of offspring) {
+    if (isBreedingStockOffspring(f)) {
+      breedingStock++;
+    } else {
+      nonBreeding++;
+    }
+  }
+  return {
+    all: offspring.length,
+    breedingStock,
+    nonBreeding,
+  };
+}
+
+/**
+ * Backward compatibility alias for getProspectCategoryCounts.
  */
 export function getProspectCategoryCounts(
   prospects: FowlRecord[],
-  foughtNames: Set<string>,
+  foughtNames?: Set<string>,
 ): ProspectCategoryCounts {
-  let nonBreeding = 0;
+  const counts = getOffspringClassificationCounts(prospects);
   let fightProspects = 0;
-  for (const f of prospects) {
-    if (isNonBreedingProspect(f)) nonBreeding++;
-    if (isFightProspect(f, foughtNames)) fightProspects++;
+  if (foughtNames) {
+    for (const f of prospects) {
+      if (!foughtNames.has((f.name || '').trim().toLowerCase())) fightProspects++;
+    }
   }
   return {
-    all: prospects.length,
-    nonBreeding,
+    ...counts,
     fightProspects,
     noFight: fightProspects,
   };

@@ -22,10 +22,12 @@ import {
   ROLE_LABEL,
   type RegistryLists,
   type RegistrySortKey,
-  type ProspectCategory,
-  PROSPECT_CATEGORIES,
-  filterProspectsByCategory,
-  getProspectCategoryCounts,
+  type BreedingClassification,
+  BREEDING_CLASSIFICATIONS,
+  filterOffspringByClassification,
+  getOffspringClassificationCounts,
+  extractFoughtLookups,
+  hasFightRecord,
 } from '@/lib/registry-roles';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { cn } from '@/components/ui/utils';
@@ -34,8 +36,8 @@ type ListTab = 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 
 
 type Props = {
   tab: ListTab;
-  category?: ProspectCategory;
-  onCategoryChange?: (category: ProspectCategory) => void;
+  category?: BreedingClassification;
+  onCategoryChange?: (category: BreedingClassification) => void;
   fowls: FowlRecord[];
   matchHistory: MatchRecord[];
   loading?: boolean;
@@ -242,8 +244,8 @@ type BodyProps = {
   setProfilingSubTab: (tab: ProfilingSubTab) => void;
   onGoToInventory?: () => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
-  category?: ProspectCategory;
-  onCategoryChange?: (category: ProspectCategory) => void;
+  category?: BreedingClassification;
+  onCategoryChange?: (category: BreedingClassification) => void;
   handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
   setSelectedFowlForDetails: (fowl: FowlRecord) => void;
   setSelectedFowlForArchive: (fowl: FowlRecord) => void;
@@ -280,16 +282,20 @@ function FowlListsBody({
   const sort = sortKey ?? internalSort;
   const changeSort = onSortChange ?? setInternalSort;
 
-const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
-  'no-fight': 'fight-prospects',
+const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
+  'breeding_stock': 'breeding-stock',
+  'material': 'breeding-stock',
+  'fight-prospects': 'all',
+  'no-fight': 'all',
 };
 
-// URL-driven category filter for Offspring (?category=all | non-breeding | fight-prospects)
-  const [internalCategory, setInternalCategory] = useUrlTab<ProspectCategory>({
-    param: 'category',
-    values: PROSPECT_CATEGORIES,
+// URL-driven breeding classification for Offspring (?class=all | breeding-stock | non-breeding, with ?category= backward compat)
+  const [internalCategory, setInternalCategory] = useUrlTab<BreedingClassification>({
+    param: 'class',
+    legacyParams: ['category'],
+    values: BREEDING_CLASSIFICATIONS,
     defaultValue: 'all',
-    aliases: CATEGORY_ALIASES,
+    aliases: CLASSIFICATION_ALIASES,
   });
   const category = categoryProp ?? internalCategory;
   const setCategory = onCategoryChangeProp ?? setInternalCategory;
@@ -315,21 +321,21 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
     return map;
   }, [allFowls, birdCodesMap]);
 
-  const foughtNames = useMemo(
-    () => new Set(matchHistory.map((m) => (m.entry_name || '').trim().toLowerCase())),
+  const { foughtFowlIds, foughtNames } = useMemo(
+    () => extractFoughtLookups(matchHistory),
     [matchHistory],
   );
 
-  // Single-source category counts and active category list for Offspring
+  // Single-source breeding classification counts and active category list for Offspring
   const categoryCounts = useMemo(() => {
-    if (tab !== 'offspring') return { all: baseList.length, nonBreeding: 0, fightProspects: 0, noFight: 0 };
-    return getProspectCategoryCounts(baseList, foughtNames);
-  }, [tab, baseList, foughtNames]);
+    if (tab !== 'offspring') return { all: baseList.length, breedingStock: 0, nonBreeding: 0 };
+    return getOffspringClassificationCounts(baseList);
+  }, [tab, baseList]);
 
   const categoryList = useMemo(() => {
     if (tab !== 'offspring') return baseList;
-    return filterProspectsByCategory(baseList, category, foughtNames);
-  }, [tab, baseList, category, foughtNames]);
+    return filterOffspringByClassification(baseList, category);
+  }, [tab, baseList, category]);
 
   const filterOptions = useMemo(() => {
     const sires = new Map<string, ParentOption>();
@@ -411,9 +417,8 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
       const breedOk = filterBreed === 'all' || (f.breed || '').trim().toLowerCase() === filterBreed.toLowerCase();
-      const hasFights = foughtNames.has((f.name || '').trim().toLowerCase());
-      const fightsDisabled = tab === 'offspring' && category === 'fight-prospects';
-      const fightsOk = fightsDisabled || filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
+      const hasFights = hasFightRecord(f, foughtFowlIds, foughtNames);
+      const fightsOk = filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
 
       if (sireOk && damOk && stageOk && breedOk && fightsOk) {
         matchedList.push({ fowl: f, match });
@@ -432,9 +437,7 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
     const list = matchedList.map((item) => item.fowl);
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterFights, foughtNames, comparator, page]);
-
-  const fightsDisabled = tab === 'offspring' && category === 'fight-prospects';
+  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterFights, foughtFowlIds, foughtNames, comparator, page]);
 
   const filterBar = (
     <RegistryFilterBar
@@ -452,17 +455,9 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
       onFilterBreedChange={(b) => { setFilterBreed(b); setPage(1); }}
       filterFights={filterFights}
       onFilterFightsChange={(f) => {
-        if (f === 'without' && tab === 'offspring') {
-          // Reconcile: selecting "without fight records" aligns with the Fight Prospects category
-          setCategory('fight-prospects');
-          setFilterFights('all');
-        } else {
-          setFilterFights(f);
-        }
+        setFilterFights(f);
         setPage(1);
       }}
-      fightsDisabled={fightsDisabled}
-      fightsDisabledTooltip="Fight Prospects category shows offspring with zero recorded matches."
       effectiveStatus="Active"
       sort={sort}
       onSortChange={(k) => { changeSort(k); setPage(1); }}
@@ -587,10 +582,10 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
   if (tab === 'offspring') {
     const { pagedList, totalPages } = paginatedBirds;
 
-    const categoryTabs: { id: ProspectCategory; label: string; count: number }[] = [
+    const categoryTabs: { id: BreedingClassification; label: string; count: number }[] = [
       { id: 'all', label: 'All Offspring', count: categoryCounts.all },
+      { id: 'breeding-stock', label: 'Breeding Stock', count: categoryCounts.breedingStock },
       { id: 'non-breeding', label: 'Non-Breeding', count: categoryCounts.nonBreeding },
-      { id: 'fight-prospects', label: 'Fight Prospects', count: categoryCounts.fightProspects },
     ];
 
     return (
@@ -606,10 +601,10 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
           <span className="shrink-0 self-start sm:self-center text-xs font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{baseList.length} Total</span>
         </div>
 
-        {/* Category Segmented Control (Pill-style tabs) */}
+        {/* Breeding Classification Segmented Control (Pill-style tabs) */}
         <div
           role="tablist"
-          aria-label="Offspring categories"
+          aria-label="Offspring breeding classifications"
           className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-slate-100 dark:bg-muted/70 rounded-lg border border-slate-200/80 dark:border-border scrollbar-none"
         >
           {categoryTabs.map((cat) => {
@@ -623,9 +618,6 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
                 aria-selected={isActive}
                 onClick={() => {
                   setCategory(cat.id);
-                  if (cat.id === 'fight-prospects' && filterFights === 'with') {
-                    setFilterFights('all');
-                  }
                   setPage(1);
                 }}
                 className={cn(
@@ -660,20 +652,20 @@ const CATEGORY_ALIASES: Record<string, ProspectCategory> = {
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">
-              {category === 'fight-prospects' ? '🥊' : category === 'non-breeding' ? '🧬' : '🥚'}
+              {category === 'breeding-stock' ? '🧬' : category === 'non-breeding' ? '🚫' : '🥚'}
             </div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">
-              {category === 'fight-prospects'
-                ? 'No Fight Prospects'
+              {category === 'breeding-stock'
+                ? 'No Breeding Stock'
                 : category === 'non-breeding'
                 ? 'No Non-Breeding Offspring'
                 : 'No Offspring'}
             </h3>
             <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">
-              {category === 'fight-prospects'
-                ? 'All registered offspring currently have recorded matches in the system.'
+              {category === 'breeding-stock'
+                ? 'No offspring are currently designated as future breeding stock.'
                 : category === 'non-breeding'
-                ? 'No offspring match this category yet.'
+                ? 'No offspring match the non-breeding classification.'
                 : 'No offspring chickens found in the registry.'}
             </p>
             {category === 'all' && (

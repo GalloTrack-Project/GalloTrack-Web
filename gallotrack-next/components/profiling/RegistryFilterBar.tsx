@@ -441,10 +441,10 @@ export default function RegistryFilterBar({
             </div>
           </div>
 
-          {/* 5. Fight Record */}
+          {/* 5. Fighting Status */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="filter-by-fights" className="text-xs font-semibold text-muted-foreground">
-              Fight Record
+              Fighting Status
             </label>
             <div className="relative">
               <select
@@ -462,9 +462,9 @@ export default function RegistryFilterBar({
                     : 'border-border bg-background text-foreground hover:bg-muted/50 cursor-pointer'
                 )}
               >
-                <option value="all">{fightsDisabled ? 'Fight Prospects (0 matches)' : 'All Chickens'}</option>
-                <option value="with">With Fight Records</option>
-                <option value="without">Fight Prospects (No Fights)</option>
+                <option value="all">All</option>
+                <option value="without">No Fight Record</option>
+                <option value="with">Has Fight Record</option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>
