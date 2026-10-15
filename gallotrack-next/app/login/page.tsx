@@ -104,21 +104,21 @@ export default function LoginPage() {
             <div className="space-y-4">
               <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] tracking-tight">
                 Advanced<br/>
-                <span className="text-emerald-200">Chicken</span><br/>
-                Analytics Platform
+                <span className="text-emerald-200">Gamefowl Breeding</span><br/>
+                &amp; Match Analytics
               </h1>
               <p className="text-sm text-emerald-100/70 font-medium max-w-md leading-relaxed">
-                Optimize your breeding program with data-driven lineage tracking, match performance analytics, and comprehensive flock management.
+                Optimize your breeding program with lineage tracking, fight performance logs, and real-time flock management.
               </p>
             </div>
 
             {/* Feature cards */}
             <div className="grid grid-cols-2 gap-3 max-w-lg">
               {[
-                { icon: Dna, title: 'Lineage Tracking', desc: 'Deep ancestry mapping' },
-                { icon: Swords, title: 'Match Analytics', desc: 'Performance insights' },
-                { icon: BarChart3, title: 'Flock Dashboard', desc: 'Real-time overview' },
-                { icon: Building2, title: 'Farm Registry', desc: 'Multi-farm support' },
+                { icon: Dna, title: 'Lineage Tracking', desc: 'Breeding Male, Female & Offspring' },
+                { icon: Swords, title: 'Match Logs', desc: 'Fight records & win rates' },
+                { icon: BarChart3, title: 'Flock Dashboard', desc: 'Active flock overview' },
+                { icon: Building2, title: 'Farm Registry', desc: 'Breeding classifications' },
               ].map((f) => (
                 <div key={f.title} className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-md p-3.5 space-y-1.5 hover:bg-white/15 transition-colors">
                   <f.icon className="w-5 h-5 text-emerald-300" />

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Menu, X, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
 
 export default function LandingNavbar() {
@@ -10,9 +10,34 @@ export default function LandingNavbar() {
   const auth = useAuth();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
+
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    const sectionIds = ['features', 'how-it-works', 'about'];
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: '-20% 0px -60% 0px',
+        threshold: 0,
+      }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   const isLoggedIn = !!auth.currentUserId;
@@ -37,16 +62,46 @@ export default function LandingNavbar() {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-8 text-sm font-bold text-muted-foreground">
-          <a href="#features" className="hover:text-foreground transition-colors">
+        {/* Desktop Navigation Links with Active Scroll Indicator */}
+        <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-8 text-sm font-bold">
+          <a
+            href="#features"
+            className={`transition-colors py-1 relative ${
+              activeSection === 'features'
+                ? 'text-emerald-600 dark:text-emerald-400 font-extrabold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             Features
+            {activeSection === 'features' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
+            )}
           </a>
-          <a href="#how-it-works" className="hover:text-foreground transition-colors">
+          <a
+            href="#how-it-works"
+            className={`transition-colors py-1 relative ${
+              activeSection === 'how-it-works'
+                ? 'text-emerald-600 dark:text-emerald-400 font-extrabold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             How it works
+            {activeSection === 'how-it-works' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
+            )}
           </a>
-          <a href="#about" className="hover:text-foreground transition-colors">
+          <a
+            href="#about"
+            className={`transition-colors py-1 relative ${
+              activeSection === 'about'
+                ? 'text-emerald-600 dark:text-emerald-400 font-extrabold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             About
+            {activeSection === 'about' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
+            )}
           </a>
         </nav>
 
@@ -117,25 +172,37 @@ export default function LandingNavbar() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border bg-card px-4 pt-3 pb-6 space-y-4 animate-in slide-in-from-top duration-200">
-          <nav aria-label="Mobile Navigation" className="flex flex-col space-y-3 font-bold text-sm">
+          <nav aria-label="Mobile Navigation" className="flex flex-col space-y-2 font-bold text-sm">
             <a
               href="#features"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-muted text-foreground transition-colors"
+              className={`px-3 py-2 rounded-md transition-colors ${
+                activeSection === 'features'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold'
+                  : 'hover:bg-muted text-foreground'
+              }`}
             >
               Features
             </a>
             <a
               href="#how-it-works"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-muted text-foreground transition-colors"
+              className={`px-3 py-2 rounded-md transition-colors ${
+                activeSection === 'how-it-works'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold'
+                  : 'hover:bg-muted text-foreground'
+              }`}
             >
               How it works
             </a>
             <a
               href="#about"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-muted text-foreground transition-colors"
+              className={`px-3 py-2 rounded-md transition-colors ${
+                activeSection === 'about'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold'
+                  : 'hover:bg-muted text-foreground'
+              }`}
             >
               About
             </a>

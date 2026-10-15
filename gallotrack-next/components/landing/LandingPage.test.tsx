@@ -9,6 +9,7 @@ import HowItWorksSection from './HowItWorksSection';
 import AboutSection from './AboutSection';
 import CtaSection from './CtaSection';
 import Footer from './Footer';
+import ProductPreviewMockup from './ProductPreviewMockup';
 
 // Mock useAuth
 const mockUseAuth = vi.fn();
@@ -40,9 +41,9 @@ describe('GalloTrack Public Landing Page', () => {
 
       // Section headings
       expect(screen.getByText(/Core Capabilities/i)).toBeInTheDocument();
-      expect(screen.getByText(/How GalloTrack Powers Your Breeding Operation/i)).toBeInTheDocument();
+      expect(screen.getByText(/How GalloTrack Works/i)).toBeInTheDocument();
       expect(screen.getByText(/About GalloTrack/i)).toBeInTheDocument();
-      expect(screen.getByText(/Take Control of Your Farm's Breeding Legacy/i)).toBeInTheDocument();
+      expect(screen.getByText(/Start Managing Your Breeding Records with GalloTrack/i)).toBeInTheDocument();
 
       // Brand Logo in navbar and footer
       const brandLogos = screen.getAllByText(/GALLO/i);
@@ -72,8 +73,30 @@ describe('GalloTrack Public Landing Page', () => {
 
       expect(screen.getByRole('heading', { name: /Register Your Breeders/i })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /Track Offspring & Lineage/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: /Record Match Encounters/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Record Match Logs/i })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /Review Performance & Insights/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Hero Preview Card Generic Sample Data', () => {
+    it('uses neutral generic sample data and displays a Sample Data badge', () => {
+      render(<ProductPreviewMockup />);
+
+      // Badge
+      expect(screen.getByText(/Sample Data/i)).toBeInTheDocument();
+
+      // Neutral placeholders
+      expect(screen.getByText(/Sample Rooster/i)).toBeInTheDocument();
+      expect(screen.getByText(/Sample Sire/i)).toBeInTheDocument();
+      expect(screen.getByText(/Sample Dam/i)).toBeInTheDocument();
+      expect(screen.getByText(/Won vs Opponent A/i)).toBeInTheDocument();
+      expect(screen.getByText(/Sample Arena/i)).toBeInTheDocument();
+
+      // No real names or venues
+      expect(screen.queryByText(/Iron Storm/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Iron Lemon/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Kelso Express/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/San Juan Coliseum/i)).not.toBeInTheDocument();
     });
   });
 
@@ -164,6 +187,11 @@ describe('GalloTrack Public Landing Page', () => {
       expect(container.textContent).not.toMatch(/32\+\s*chickens/i);
       expect(container.textContent).not.toMatch(/4\+\s*active farms/i);
       expect(container.textContent).not.toMatch(/100%\s*open source/i);
+
+      // Must NOT contain exaggerated unsupported claims
+      expect(container.textContent).not.toMatch(/unalterable generational records/i);
+      expect(container.textContent).not.toMatch(/indisputable, digitized pedigree database/i);
+      expect(container.textContent).not.toMatch(/seamless multi-farm support/i);
     });
   });
 });
