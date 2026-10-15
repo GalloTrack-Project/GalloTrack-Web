@@ -34,36 +34,6 @@ interface FowlFormStateContextValue {
   uploadingImage: boolean; setUploadingImage: (v: boolean) => void;
   imagePreview: string; setImagePreview: (v: string) => void;
 
-  selectedFowlForMatch: string; setSelectedFowlForMatch: (v: string) => void;
-  matchDate: string; setMatchDate: (v: string) => void;
-  opponentName: string; setOpponentName: (v: string) => void;
-  opponentBreed: string; setOpponentBreed: (v: string) => void;
-  opponentBloodline: string; setOpponentBloodline: (v: string) => void;
-  opponentHatch: string; setOpponentHatch: (v: string) => void;
-  opponentPhoto: File | null; setOpponentPhoto: (f: File | null) => void;
-  matchLocation: string; setMatchLocation: (v: string) => void;
-  matchType: string; setMatchType: (v: string) => void;
-  matchSide: string; setMatchSide: (v: string) => void;
-  matchNotes: string; setMatchNotes: (v: string) => void;
-  derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
-  matchOutcome: string; setMatchOutcome: (v: string) => void;
-  matchPostFight: string; setMatchPostFight: (v: string) => void;
-  matchVideoFiles: File[]; setMatchVideoFiles: (f: File[]) => void;
-  matchPhotoFiles: File[]; setMatchPhotoFiles: (f: File[]) => void;
-  uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
-  /** Per-file upload progress for the record form, keyed by uploadKey(). */
-  mediaUploadProgress: Record<string, number>;
-  setMediaUploadProgress: React.Dispatch<React.SetStateAction<Record<string, number>>>;
-
-  matchOption: number; setMatchOption: (v: number) => void;
-  betType: string; setBetType: (v: string) => void;
-  targetNumber: number; setTargetNumber: (v: number) => void;
-  partnerEntry: string; setPartnerEntry: (v: string) => void;
-  suggestedPartners: PartnerSuggestion[]; setSuggestedPartners: (v: PartnerSuggestion[]) => void;
-
-  cockCount: number; setCockCount: (v: number) => void;
-  ageCategory: string; setAgeCategory: (v: string) => void;
-  eventType: string; setEventType: (v: string) => void;
 
   editName: string; setEditName: (v: string) => void;
   editBreed: string; setEditBreed: (v: string) => void;
@@ -160,34 +130,6 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
 
-  const [selectedFowlForMatch, setSelectedFowlForMatch] = useState('');
-  const [matchDate, setMatchDate] = useState('');
-  const [opponentName, setOpponentName] = useState('');
-  const [opponentBreed, setOpponentBreed] = useState('');
-  const [opponentBloodline, setOpponentBloodline] = useState('');
-  const [opponentHatch, setOpponentHatch] = useState('');
-  const [opponentPhoto, setOpponentPhoto] = useState<File | null>(null);
-  const [matchLocation, setMatchLocation] = useState('');
-  const [matchType, setMatchType] = useState('Main Event');
-  const [matchSide, setMatchSide] = useState('');
-  const [matchNotes, setMatchNotes] = useState('');
-  const [derbyMatchNumber, setDerbyMatchNumber] = useState(1);
-  const [matchOutcome, setMatchOutcome] = useState('Win');
-  const [matchPostFight, setMatchPostFight] = useState('Fit / Recovered');
-  const [matchVideoFiles, setMatchVideoFiles] = useState<File[]>([]);
-  const [matchPhotoFiles, setMatchPhotoFiles] = useState<File[]>([]);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [mediaUploadProgress, setMediaUploadProgress] = useState<Record<string, number>>({});
-
-  const [matchOption, setMatchOption] = useState(1);
-  const [betType, setBetType] = useState('durbe');
-  const [targetNumber, setTargetNumber] = useState(1);
-  const [partnerEntry, setPartnerEntry] = useState('');
-  const [suggestedPartners, setSuggestedPartners] = useState<PartnerSuggestion[]>([]);
-
-  const [cockCount, setCockCount] = useState(2);
-  const [ageCategory, setAgeCategory] = useState('Cock');
-  const [eventType, setEventType] = useState('Derby');
 
   const [editName, setEditName] = useState('');
   const [editBreed, setEditBreed] = useState('');
@@ -297,21 +239,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
-    selectedFowlForMatch, setSelectedFowlForMatch,
-    matchDate, setMatchDate,
-    opponentName, setOpponentName, opponentBreed, setOpponentBreed,
-    opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
-    opponentPhoto, setOpponentPhoto,
-    matchLocation, setMatchLocation, matchType, setMatchType,
-    matchSide, setMatchSide, matchNotes, setMatchNotes,
-    derbyMatchNumber, setDerbyMatchNumber,
-    matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
-    matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles, uploadingVideo, setUploadingVideo,
-    mediaUploadProgress, setMediaUploadProgress,
-    matchOption, setMatchOption, betType, setBetType,
-    targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
-    suggestedPartners, setSuggestedPartners,
-    cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
+
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
     editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,

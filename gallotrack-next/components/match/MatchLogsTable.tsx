@@ -1,5 +1,8 @@
 'use client';
 import React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Edit2 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
@@ -19,6 +22,7 @@ type Props = {
  * identifier chips, and media buttons.
  */
 export default function MatchLogsTable({ matches, emptyText = 'No data available' }: Props) {
+  const router = useRouter();
   const { fowls, matchHistory, matchMedia, birdCodes } = useFowl();
   const rows = matches ?? matchHistory;
 
@@ -68,7 +72,11 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
               const code = codeByName.get(nameKey);
               const hatch = hatchByName.get((log.entry_name || '').trim());
               return (
-                <tr key={log.id} className="hover:bg-muted/30 transition-colors duration-150">
+                <tr
+                  key={log.id}
+                  onClick={() => router.push(`/match-logs/${log.id}/edit`)}
+                  className="hover:bg-muted/30 transition-colors duration-150 cursor-pointer group"
+                >
                   <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">{log.date}</td>
                   <td className="p-4">
                     <div className="flex items-center space-x-2.5">
@@ -78,7 +86,7 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                           [{formatBirdCodeForDisplay(code)}]
                         </span>
                       )}
-                      <span className="font-bold text-card-foreground">{log.entry_name}</span>
+                      <span className="font-bold text-card-foreground group-hover:text-emerald-600 transition-colors">{log.entry_name}</span>
                     </div>
                     <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
                       {log.breed || '—'}{hatch ? ` · hatch ${hatch}` : ''}
@@ -114,13 +122,23 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                       <span className="text-sm text-muted-foreground font-bold">—</span>
                     )}
                   </td>
-                  <td className="p-4 text-center">
-                    <MatchMediaButtons
-                      match={log}
-                      videos={videosFor(matchMedia, log.id, log)}
-                      photos={photosFor(matchMedia, log.id, log)}
-                      posters={postersFor(matchMedia, log.id, log)}
-                    />
+                  <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-2">
+                      <MatchMediaButtons
+                        match={log}
+                        videos={videosFor(matchMedia, log.id, log)}
+                        photos={photosFor(matchMedia, log.id, log)}
+                        posters={postersFor(matchMedia, log.id, log)}
+                      />
+                      <Link
+                        href={`/match-logs/${log.id}/edit`}
+                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        title="Edit Match Record"
+                        aria-label={`Edit Match #${log.id}`}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               );

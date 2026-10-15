@@ -22,6 +22,27 @@ export async function fetchMatches(): Promise<MatchRecord[]> {
   return attachMatchMediaCounts(rawMatches, mediaMap);
 }
 
+export async function fetchMatchById(id: number): Promise<MatchRecord | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('match')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error) console.error('Failed to fetch match:', error);
+    return null;
+  }
+
+  const mediaMap = await fetchMatchMediaBatch([data]);
+  const attached = attachMatchMediaCounts([data], mediaMap);
+  return attached[0] || null;
+}
+
 export async function insertMatch(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
   const { data, error } = await supabase.from('match').insert([payload]).select('id').single();
   if (error) return { error: error.message };

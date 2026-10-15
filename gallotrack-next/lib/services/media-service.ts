@@ -202,15 +202,14 @@ export async function insertFowlPhoto(fowlId: number, url: string): Promise<{ er
   return error ? { error: error.message } : {};
 }
 
-export async function deleteMatchVideo(id: number): Promise<{ error?: string }> {
-  const { error } = await supabase.from('match_videos').delete().eq('id', id);
-  return error ? { error: error.message } : {};
+export async function deleteMatchVideo(id: number): Promise<{ success?: boolean; error?: string }> {
+  return deleteMatchMedia('video', id);
 }
 
-export async function deleteMatchPhoto(id: number): Promise<{ error?: string }> {
-  const { error } = await supabase.from('match_photos').delete().eq('id', id);
-  return error ? { error: error.message } : {};
+export async function deleteMatchPhoto(id: number): Promise<{ success?: boolean; error?: string }> {
+  return deleteMatchMedia('photo', id);
 }
+
 
 export async function deleteFowlPhoto(id: number): Promise<{ error?: string }> {
   const { error } = await supabase.from('fowl_photos').delete().eq('id', id);
@@ -337,4 +336,64 @@ export async function revokeShareLink(id: number): Promise<{ error?: string }> {
   const { error } = await supabase.from('share_links').delete().eq('id', id);
   return error ? { error: error.message } : {};
 }
+
+export interface MatchMediaDetailItem {
+  id: number;
+  match_id: number;
+  url: string;
+  sort_order: number;
+  poster_url?: string | null;
+}
+
+export async function fetchMatchMediaDetails(matchId: number): Promise<{
+  videos: MatchMediaDetailItem[];
+  photos: MatchMediaDetailItem[];
+}> {
+  const { data: vData } = await supabase
+    .from('match_videos')
+    .select('id, match_id, url, sort_order, poster_url')
+    .eq('match_id', matchId)
+    .order('sort_order', { ascending: true });
+
+  const { data: pData } = await supabase
+    .from('match_photos')
+    .select('id, match_id, url, sort_order')
+    .eq('match_id', matchId)
+    .order('sort_order', { ascending: true });
+
+  return {
+    videos: (vData || []) as MatchMediaDetailItem[],
+    photos: (pData || []) as MatchMediaDetailItem[],
+  };
+}
+
+export async function deleteMatchMedia(
+  mediaType: 'photo' | 'video',
+  mediaId: number
+): Promise<{ success?: boolean; error?: string }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  try {
+    const res = await fetch('/api/match/media', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ mediaType, mediaId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: data.error || `Failed to delete media (${res.status})` };
+    }
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Network error deleting media.' };
+  }
+}
+
+
+
+
 

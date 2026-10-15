@@ -19,6 +19,15 @@ import * as path from 'path';
 import type { FowlRecord } from '../lib/types';
 import { computeAllCompositions, getBloodlineStats } from '../lib/bloodline-composition';
 import { resolveBirdCodes } from '../lib/bird-code';
+import { assertSafeExecution } from './safety-guard';
+
+// Guard: Refuse to run against production or without explicit development/staging authorization
+assertSafeExecution('seed-supabase.ts');
+if (process.env.ALLOW_SEED !== 'true' && !process.argv.includes('--allow-seed')) {
+  console.error('\n⛔ SEED BLOCKED: seed-supabase.ts is a destructive script and will overwrite/insert seed data.');
+  console.error('To run in development or staging, explicitly set ALLOW_SEED=true or pass --allow-seed.\n');
+  process.exit(1);
+}
 
 const envPath = path.resolve(__dirname, '../.env.local');
 const envContent = fs.readFileSync(envPath, 'utf-8');

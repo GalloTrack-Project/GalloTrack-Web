@@ -8,9 +8,9 @@ import type { ProfilingSubTab } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
 import FowlLists from '@/components/profiling/FowlLists';
-import MatchForm from '@/components/profiling/MatchForm';
-import MatchLogsTable from '@/components/match/MatchLogsTable';
+import MatchLogsView from '@/components/match/MatchLogsView';
 import RegistryNav from '@/components/profiling/RegistryNav';
+
 import BreedsPage from '@/app/(dashboard)/breeds/page';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { REGISTRY_TABS } from '@/lib/nav-manifest';
@@ -38,23 +38,13 @@ export default function ProfilingPage() {
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     availableStrains, customStrainNames, deleteCustomStrain,
     selectedStrains, addStrain, removeStrain,
-    loading, uploadingImage, uploadingVideo,
+    loading, uploadingImage,
     nextNodeId, dataCompleteness, validationPassed, bloodlineVerified,
     computedBloodlinePct, offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
-    selectedFowlForMatch, setSelectedFowlForMatch,
-    matchDate, setMatchDate,
-    opponentName, setOpponentName, opponentBreed, setOpponentBreed,
-    opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
-    opponentPhoto, setOpponentPhoto,
-    matchLocation, setMatchLocation,
-    matchOutcome, setMatchOutcome, matchPostFight, setMatchPostFight,
-    matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles,
-    mediaUploadProgress,
-    cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
-    matchType, setMatchType, matchSide, setMatchSide, matchNotes, setMatchNotes,
-    handleAddFowl, handleAddMatchRecord,
+    handleAddFowl,
     handleOpenEditModal,
     handleSetActiveStatus,
+
     generationPurity,
     autoCalcAge,
     getAutoCalcAge,
@@ -209,39 +199,9 @@ export default function ProfilingPage() {
       )}
 
       {profilingSubTab === 'matchForm' && (
-        <>
-          <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
-              <div>
-                <h3 className="text-sm font-black text-card-foreground tracking-tight">Historical Analytics Match Logs</h3>
-                <p className="text-sm text-muted-foreground font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
-              </div>
-              <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
-            </div>
-            <MatchLogsTable />
-          </div>
-          <MatchForm
-          fowls={fowls}
-          loading={loading}
-          uploadingVideo={uploadingVideo}
-          selectedFowlForMatch={selectedFowlForMatch} setSelectedFowlForMatch={setSelectedFowlForMatch}
-          matchDate={matchDate} setMatchDate={setMatchDate}
-          opponentName={opponentName} setOpponentName={setOpponentName}
-          opponentBreed={opponentBreed} setOpponentBreed={setOpponentBreed}
-          matchLocation={matchLocation} setMatchLocation={setMatchLocation}
-          matchOutcome={matchOutcome} setMatchOutcome={setMatchOutcome}
-          matchPostFight={matchPostFight} setMatchPostFight={setMatchPostFight}
-          matchVideoFiles={matchVideoFiles} setMatchVideoFiles={setMatchVideoFiles}
-          matchPhotoFiles={matchPhotoFiles} setMatchPhotoFiles={setMatchPhotoFiles}
-          handleAddMatchRecord={handleAddMatchRecord}
-          cockCount={cockCount} setCockCount={setCockCount}
-          ageCategory={ageCategory} setAgeCategory={setAgeCategory}
-          eventType={eventType} setEventType={setEventType}
-          matchNotes={matchNotes} setMatchNotes={setMatchNotes}
-          mediaUploadProgress={mediaUploadProgress}
-        />
-        </>
+        <MatchLogsView />
       )}
+
 
       {profilingSubTab === 'breeds' && (
         <BreedsPage />

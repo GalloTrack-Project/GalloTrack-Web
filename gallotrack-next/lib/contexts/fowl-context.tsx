@@ -126,36 +126,6 @@ interface FowlContextValue {
   uploadingImage: boolean; setUploadingImage: (v: boolean) => void;
   imagePreview: string; setImagePreview: (v: string) => void;
 
-  selectedFowlForMatch: string; setSelectedFowlForMatch: (v: string) => void;
-  matchDate: string; setMatchDate: (v: string) => void;
-  opponentName: string; setOpponentName: (v: string) => void;
-  opponentBreed: string; setOpponentBreed: (v: string) => void;
-  matchLocation: string; setMatchLocation: (v: string) => void;
-  matchType: string; setMatchType: (v: string) => void;
-  matchSide: string; setMatchSide: (v: string) => void;
-  matchNotes: string; setMatchNotes: (v: string) => void;
-  derbyMatchNumber: number; setDerbyMatchNumber: (v: number) => void;
-  matchOutcome: string; setMatchOutcome: (v: string) => void;
-  matchPostFight: string; setMatchPostFight: (v: string) => void;
-  matchVideoFiles: File[]; setMatchVideoFiles: (f: File[]) => void;
-  matchPhotoFiles: File[]; setMatchPhotoFiles: (f: File[]) => void;
-  opponentBloodline: string; setOpponentBloodline: (v: string) => void;
-  opponentHatch: string; setOpponentHatch: (v: string) => void;
-  opponentPhoto: File | null; setOpponentPhoto: (f: File | null) => void;
-  uploadingVideo: boolean; setUploadingVideo: (v: boolean) => void;
-  /** Per-file upload progress for the record form, keyed by uploadKey(). */
-  mediaUploadProgress: Record<string, number>;
-  setMediaUploadProgress: React.Dispatch<React.SetStateAction<Record<string, number>>>;
-
-  matchOption: number; setMatchOption: (v: number) => void;
-  betType: string; setBetType: (v: string) => void;
-  targetNumber: number; setTargetNumber: (v: number) => void;
-  partnerEntry: string; setPartnerEntry: (v: string) => void;
-  suggestedPartners: PartnerSuggestion[]; setSuggestedPartners: (v: PartnerSuggestion[]) => void;
-
-  cockCount: number; setCockCount: (v: number) => void;
-  ageCategory: string; setAgeCategory: (v: string) => void;
-  eventType: string; setEventType: (v: string) => void;
 
   editName: string; setEditName: (v: string) => void;
   editBreed: string; setEditBreed: (v: string) => void;
@@ -231,7 +201,6 @@ interface FowlContextValue {
   bloodlineStatsById: Map<string, BloodlineStats | null>;
 
   handleAddFowl: (e: React.FormEvent) => Promise<void>;
-  handleAddMatchRecord: (e: React.FormEvent) => Promise<void>;
   handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleArchiveFowlOnly: (id: number) => Promise<void>;
@@ -340,21 +309,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
-    selectedFowlForMatch, setSelectedFowlForMatch,
-    matchDate, setMatchDate, opponentName, setOpponentName,
-    opponentBreed, setOpponentBreed, matchLocation, setMatchLocation,
-    matchType, matchSide, setMatchSide, matchNotes, setMatchNotes,
-    derbyMatchNumber, setDerbyMatchNumber,
-    matchOutcome, setMatchOutcome,
-    matchPostFight, setMatchPostFight,
-    matchVideoFiles, setMatchVideoFiles, matchPhotoFiles, setMatchPhotoFiles,
-    opponentBloodline, setOpponentBloodline, opponentHatch, setOpponentHatch,
-    opponentPhoto, setOpponentPhoto, uploadingVideo, setUploadingVideo,
-    mediaUploadProgress, setMediaUploadProgress,
-    matchOption, setMatchOption, betType, setBetType,
-    targetNumber, setTargetNumber, partnerEntry, setPartnerEntry,
-    suggestedPartners, setSuggestedPartners,
-    cockCount, setCockCount, ageCategory, setAgeCategory, eventType, setEventType,
+
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
     editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,
@@ -373,12 +328,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
   } = formState;
 
-  // Load system defaults for arena and age on mount
+  // Load system defaults for age on mount
   useEffect(() => {
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
       .then((s) => {
-        if (s.default_arena) setMatchLocation(s.default_arena);
         if (s.auto_calculate_age === false) setAutoCalcAge(false);
       })
       .catch(() => {});
@@ -804,170 +758,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     }
   }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
 
-  const handleAddMatchRecord = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
 
-    const validation = validateMatchForm({
-      selectedFowl: selectedFowlForMatch,
-      date: matchDate,
-      opponentName,
-      opponentBreed,
-      location: matchLocation,
-      type: matchType,
-      outcome: matchOutcome,
-      postFightCondition: matchPostFight,
-      matchSide,
-      notes: matchNotes,
-      cockCount,
-      ageCategory,
-      eventType,
-      derbyMatchNumber,
-    });
-    if (!validation.success) {
-      toastMessage(`Validation Error: ${validation.errors[0]}`, 'error');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const matchedFowl = fowls.find(f => f.name === selectedFowlForMatch);
-      const fowlBreed = matchedFowl ? matchedFowl.breed : 'Unknown';
-
-      let videoUrl = '';
-      const videoUrls: string[] = [];
-      const videoPosters: (string | null)[] = [];
-      const photoUrls: string[] = [];
-      if (matchVideoFiles.length > 0 || matchPhotoFiles.length > 0 || opponentPhoto) {
-        setUploadingVideo(true);
-      }
-      for (const videoFile of matchVideoFiles) {
-        const key = uploadKey('video', videoFile);
-        const result = await matchService.uploadMatchVideo(videoFile, (pct) => {
-          setMediaUploadProgress((prev) => ({ ...prev, [key]: pct }));
-        });
-        if (result.error) throw new Error(result.error);
-        if (result.url) {
-          videoUrls.push(result.url);
-          // Best-effort poster frame so lists don't have to load full videos.
-          let posterUrl: string | null = null;
-          try {
-            const posterBlob = await captureVideoPoster(videoFile);
-            if (posterBlob) {
-              const posterFile = new File(
-                [posterBlob],
-                `${videoFile.name.replace(/\.[^.]+$/, '') || 'video'}-poster.jpg`,
-                { type: 'image/jpeg' }
-              );
-              const posterUpload = await mediaService.uploadMatchPhotoFile(posterFile);
-              posterUrl = posterUpload.url || null;
-            }
-          } catch { /* poster is optional */ }
-          videoPosters.push(posterUrl);
-        }
-      }
-      videoUrl = videoUrls[0] || '';
-
-      let opponentPhotoUrl = '';
-      if (opponentPhoto) {
-        const photoResult = await mediaService.uploadFowlGalleryFile(opponentPhoto);
-        if (photoResult.error) throw new Error(photoResult.error);
-        opponentPhotoUrl = photoResult.url || '';
-      }
-      for (const photoFile of matchPhotoFiles) {
-        const key = uploadKey('photo', photoFile);
-        const result = await mediaService.uploadMatchPhotoFile(photoFile, (pct) => {
-          setMediaUploadProgress((prev) => ({ ...prev, [key]: pct }));
-        });
-        if (result.error) throw new Error(result.error);
-        if (result.url) photoUrls.push(result.url);
-      }
-      setUploadingVideo(false);
-
-      const activeUserId = (await supabase.auth.getUser()).data.user?.id;
-      if (!activeUserId) {
-        toastMessage('Authentication Error: Active session user ID not detected.', 'error');
-        return;
-      }
-
-      const payload = {
-        user_id: activeUserId,
-        date: matchDate || new Date().toISOString().split('T')[0],
-        entry_name: selectedFowlForMatch,
-        breed: fowlBreed,
-        opponent: sanitizeInput(opponentName) || 'Anonymous Opponent',
-        opponent_breed: sanitizeInput(opponentBreed) || '',
-        opponent_bloodline: opponentBloodline.trim() ? sanitizeInput(opponentBloodline) : null,
-        opponent_birthdate: opponentHatch.trim() || null,
-        opponent_photo_url: opponentPhotoUrl || null,
-        location: sanitizeInput(matchLocation),
-        type: matchType || 'Main Event',
-        derby_match_number: derbyMatchNumber,
-        outcome: matchOutcome,
-        status: 'Verified',
-        post_fight_condition: matchPostFight,
-        side: matchSide.trim() ? sanitizeInput(matchSide) : null,
-        notes: matchNotes.trim() ? sanitizeInput(matchNotes) : null,
-        video_url: videoUrl || null,
-        cock_count: cockCount,
-        age_category: ageCategory,
-        event_type: eventType === '__custom__' ? '' : eventType,
-      };
-
-      const result = await matchService.insertMatch(payload);
-      if (result.error || !result.id) {
-        throw new Error(result.error || 'Failed to save match');
-      } else {
-        const newMatchId = result.id;
-        for (let i = 0; i < videoUrls.length; i++) {
-          const v = await mediaService.insertMatchVideo(newMatchId, videoUrls[i], i + 1, videoPosters[i] ?? null);
-          if (v.error) console.warn('Match video save skipped:', v.error);
-        }
-        for (let i = 0; i < photoUrls.length; i++) {
-          const p = await mediaService.insertMatchPhoto(newMatchId, photoUrls[i], i + 1);
-          if (p.error) console.warn('Match photo save skipped:', p.error);
-        }
-
-        // Save betting/option data to match_options table
-        const optResult = await matchOptionsService.insertMatchOption({
-          option_number: matchOption,
-          fowl_entry: selectedFowlForMatch,
-          partner_entry: partnerEntry || undefined,
-          bet_type: betType,
-          target_number: targetNumber,
-          status: partnerEntry ? 'matched' : 'pending',
-        });
-        if (optResult.error) {
-          console.warn('Match options save skipped:', optResult.error);
-        }
-
-        // Persist a custom event type once so it becomes a reusable option
-        if (eventType && eventType !== '__custom__') {
-          const opts = await optionsService.fetchRegistryOptions();
-          const known = new Set(opts.filter((o) => o.list_key === 'event_type').map((o) => o.value));
-          if (!known.has(eventType)) {
-            await optionsService.addRegistryOption('event_type', eventType);
-          }
-        }
-
-        toastMessage('Performance match vector successfully computed and logged.', 'success');
-        setOpponentName(''); setOpponentBreed(''); setMatchLocation(''); setMatchVideoFiles([]); setMatchPhotoFiles([]); setMatchPostFight('Fit / Recovered');
-        setOpponentBloodline(''); setOpponentHatch(''); setOpponentPhoto(null);
-        setMatchSide(''); setMatchNotes('');
-        setPartnerEntry(''); setSuggestedPartners([]);
-        fetchDatabaseResources();
-        // Stay on the match tab so the new row is visible in the logs table
-        // directly above the form.
-        ui.setProfilingSubTab('matchForm');
-      }
-    } catch (err: unknown) {
-      toastMessage(`Database Write Constraint Fault: ${err instanceof Error ? err.message : String(err)}`, 'error');
-    } finally {
-      setLoading(false);
-      setUploadingVideo(false);
-      setMediaUploadProgress({});
-    }
-  }, [selectedFowlForMatch, fowls, matchDate, opponentName, opponentBreed, matchLocation, matchType, matchSide, matchNotes, derbyMatchNumber, matchOutcome, matchPostFight, eventType, cockCount, ageCategory, matchVideoFiles, matchPhotoFiles, opponentBloodline, opponentHatch, opponentPhoto, matchOption, betType, targetNumber, partnerEntry, setSuggestedPartners, fetchDatabaseResources, ui]);
 
   const handleSetSireMaterial = useCallback(async (fowl: FowlRecord) => {
     setLoading(true);
@@ -1413,7 +1204,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     dataCompleteness, validationPassed, bloodlineVerified, computedBloodlinePct,
     birdCodes, birdCodeOf, suggestedBirdCode, previewComposition, previewBloodlineStats, bloodlineStatsOf, bloodlineStatsById,
     offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
-    handleAddFowl, handleAddMatchRecord, handleUpdateFowl,
+    handleAddFowl, handleUpdateFowl,
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,
     handleRestoreFowlOnly, handlePermanentDelete, handleMarkFowlDeceased,
     handleSetSireMaterial, handleSetActiveStatus,

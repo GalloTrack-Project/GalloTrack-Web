@@ -7,6 +7,12 @@ import type { MatchRecord, MatchMedia } from '@/lib/types';
 
 const mockOpenMatchMediaViewer = vi.fn();
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/match-logs',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock('@/lib/contexts/ui-context', () => ({
   useUI: () => ({
     openMatchMediaViewer: mockOpenMatchMediaViewer,
@@ -14,6 +20,7 @@ vi.mock('@/lib/contexts/ui-context', () => ({
     setShareTarget: vi.fn(),
   }),
 }));
+
 
 const mockFowlContext = {
   fowls: [],
