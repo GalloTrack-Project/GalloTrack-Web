@@ -27,7 +27,7 @@ interface RegistryNavProps {
 
 export default function RegistryNav({ currentTab, onSelectTab, counts }: RegistryNavProps) {
   // 5 MAIN TABS in strict order requested:
-  // Breeding Male | Breeding Female | Fight Prospects | Match Logs | Sire Material
+  // Breeding Male | Breeding Female | Offspring | Match Logs | Sire Material
   const tabs: MainRegistryTabItem[] = [
     {
       id: 'males',

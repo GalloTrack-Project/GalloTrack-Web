@@ -118,7 +118,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // 2. Offspring Candidates: Active chickens in the Fight Prospects tab matching the gender
+  // 2. Offspring Candidates: Active chickens in the Offspring tab matching the gender
   const offspringCandidates = fowls
     .filter((f) => {
       if (!isActiveStatus(f)) return false;
@@ -274,12 +274,12 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
             </div>
           )}
 
-          {/* SECTION 2: Fight Prospects Offspring (Offer promotion) */}
+          {/* SECTION 2: Offspring (Offer promotion) */}
           {offspringCandidates.length > 0 && (
             <div className="border-t-2 border-slate-200 dark:border-border bg-amber-50/30 dark:bg-amber-950/20">
               <div className="px-3 py-2 bg-amber-50/80 dark:bg-amber-950/40 border-b border-amber-200/60 dark:border-amber-900/50 flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                  {ROLE_LABEL['Non-Breeding']} Offspring ({offspringCandidates.length})
+                  {ROLE_LABEL['Non-Breeding']} ({offspringCandidates.length})
                 </span>
                 <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
                   Promote to use as parent

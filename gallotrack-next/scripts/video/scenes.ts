@@ -86,7 +86,7 @@ export const SCENES: Scene[] = [
     steps: [
       { type: 'goto', path: '/dashboard', label: 'load dashboard' },
       { type: 'hold', ms: 1500, label: 'settle' },
-      { type: 'hover', target: { text: /Active Chicken Registry/i }, label: 'point: Active Chicken Registry card' },
+      { type: 'hover', target: { text: /Chicken Registry/i }, label: 'point: Chicken Registry card' },
       { type: 'hold', ms: 3600 },
       { type: 'hover', target: { css: '[title*="Breeding Males"]' }, label: 'point: role breakdown (males/females/prospects)' },
       { type: 'hold', ms: 3400 },
@@ -113,7 +113,7 @@ export const SCENES: Scene[] = [
       { type: 'hold', ms: 3500 },
       { type: 'click', target: { role: 'tab', name: /Breeding Female/i }, label: 'tab: Breeding Female' },
       { type: 'hold', ms: 3500 },
-      { type: 'click', target: { role: 'tab', name: /Fight Prospects/i }, label: 'tab: Fight Prospects (non-breeding)' },
+      { type: 'click', target: { role: 'tab', name: /Offspring/i }, label: 'tab: Offspring' },
       { type: 'hold', ms: 3500 },
       { type: 'click', target: { role: 'tab', name: /Match Logs/i }, label: 'tab: Match Logs' },
       { type: 'hold', ms: 3500 },

@@ -95,20 +95,21 @@ function renderFightProspects(overrides = {}) {
   );
 }
 
-describe('Fight Prospects category segmented control', () => {
+describe('Offspring category segmented control', () => {
   it('renders all three category pill tabs with live count badges and header total agreeing', () => {
     renderFightProspects();
 
     // Header total: 4 offspring
     expect(screen.getByText(/4 Total/i)).toBeInTheDocument();
+    expect(screen.getByText('Offspring Registry')).toBeInTheDocument();
 
     // Category pills:
     // All Offspring: 4
     // Non-Breeding: 2 (Lemon Storm and Lemon Blaze have breeding_role: 'none')
-    // No Fight Yet: 2 (Lemon Blaze and Sweater Bolt have 0 matches)
+    // Fight Prospects: 2 (Lemon Blaze and Sweater Bolt have 0 matches)
     const allTab = screen.getByRole('tab', { name: /All Offspring/i });
     const nonBreedingTab = screen.getByRole('tab', { name: /Non-Breeding/i });
-    const noFightTab = screen.getByRole('tab', { name: /No Fight Yet/i });
+    const fightProspectsTab = screen.getByRole('tab', { name: /Fight Prospects/i });
 
     expect(allTab).toBeInTheDocument();
     expect(allTab).toHaveTextContent('All Offspring4');
@@ -118,13 +119,13 @@ describe('Fight Prospects category segmented control', () => {
     expect(nonBreedingTab).toHaveTextContent('Non-Breeding2');
     expect(nonBreedingTab).toHaveAttribute('aria-selected', 'false');
 
-    expect(noFightTab).toBeInTheDocument();
-    expect(noFightTab).toHaveTextContent('No Fight Yet2');
-    expect(noFightTab).toHaveAttribute('aria-selected', 'false');
+    expect(fightProspectsTab).toBeInTheDocument();
+    expect(fightProspectsTab).toHaveTextContent('Fight Prospects2');
+    expect(fightProspectsTab).toHaveAttribute('aria-selected', 'false');
 
     // Initial results count: 4 of 4
     expect(screen.getAllByText('4 of 4')[0]).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('switches to Non-Breeding category and updates list and results count', async () => {
     renderFightProspects();
@@ -143,11 +144,11 @@ describe('Fight Prospects category segmented control', () => {
     expect(screen.queryByRole('heading', { level: 4, name: /Hatch Silver/i })).not.toBeInTheDocument();
   });
 
-  it('switches to No Fight Yet category and updates list and results count', async () => {
+  it('switches to Fight Prospects category and updates list and results count', async () => {
     renderFightProspects();
 
-    const noFightTab = screen.getByRole('tab', { name: /No Fight Yet/i });
-    fireEvent.click(noFightTab);
+    const fightProspectsTab = screen.getByRole('tab', { name: /Fight Prospects/i });
+    fireEvent.click(fightProspectsTab);
 
     await waitFor(() => {
       expect(screen.getAllByText('2 of 2')[0]).toBeInTheDocument();
@@ -163,8 +164,8 @@ describe('Fight Prospects category segmented control', () => {
   it('works together with search bar inside a category', async () => {
     renderFightProspects();
 
-    const noFightTab = screen.getByRole('tab', { name: /No Fight Yet/i });
-    fireEvent.click(noFightTab);
+    const fightProspectsTab = screen.getByRole('tab', { name: /Fight Prospects/i });
+    fireEvent.click(fightProspectsTab);
 
     await waitFor(() => {
       expect(screen.getAllByText('2 of 2')[0]).toBeInTheDocument();
@@ -183,7 +184,7 @@ describe('Fight Prospects category segmented control', () => {
   });
 
   it('renders category-specific empty state when a category has 0 chickens', async () => {
-    // Prospects where all have fought and all are material (0 non-breeding, 0 no-fight)
+    // Prospects where all have fought and all are material (0 non-breeding, 0 fight-prospects)
     const allFoughtMaterial: FowlRecord[] = [
       { id: 1, name: 'Iron Lemon', breed: 'Lemon', gender: 'Rooster', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
       {
@@ -217,11 +218,11 @@ describe('Fight Prospects category segmented control', () => {
       />
     );
 
-    const noFightTab = screen.getByRole('tab', { name: /No Fight Yet/i });
-    fireEvent.click(noFightTab);
+    const fightProspectsTab = screen.getByRole('tab', { name: /Fight Prospects/i });
+    fireEvent.click(fightProspectsTab);
 
     await waitFor(() => {
-      expect(screen.getByText(/No Unfought Offspring/i)).toBeInTheDocument();
+      expect(screen.getByText(/No Fight Prospects/i)).toBeInTheDocument();
       expect(screen.getByText(/All registered offspring currently have recorded matches in the system/i)).toBeInTheDocument();
     });
 

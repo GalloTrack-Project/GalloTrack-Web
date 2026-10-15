@@ -1,11 +1,12 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 export type UseUrlTabOptions<T extends string> = {
   param: string;
   values: readonly T[];
   defaultValue: T;
+  aliases?: Record<string, T>;
 };
 
 /** How the current value came to be. 'mount' + paramPresent distinguishes
@@ -30,16 +31,23 @@ export function useUrlTab<T extends string>({
   param,
   values,
   defaultValue,
+  aliases,
 }: UseUrlTabOptions<T>): [T, (next: T) => void, UrlTabMeta] {
   const pathname = usePathname();
   const router = useRouter();
 
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
+  const aliasesRef = useRef(aliases);
+  aliasesRef.current = aliases;
+
   const read = useCallback((): { value: T; paramPresent: boolean } => {
     if (typeof window === 'undefined') return { value: defaultValue, paramPresent: false };
     const raw = new URLSearchParams(window.location.search).get(param);
-    const valid = raw !== null && (values as readonly string[]).includes(raw);
-    return { value: valid ? (raw as T) : defaultValue, paramPresent: valid };
-  }, [param, values, defaultValue]);
+    const resolved = raw !== null && aliasesRef.current && raw in aliasesRef.current ? aliasesRef.current[raw] : raw;
+    const valid = resolved !== null && (valuesRef.current as readonly string[]).includes(resolved);
+    return { value: valid ? (resolved as T) : defaultValue, paramPresent: valid };
+  }, [param, defaultValue]);
 
   const [state, setState] = useState<{ value: T; paramPresent: boolean; change: UrlTabChange }>(() => ({
     value: defaultValue,

@@ -26,6 +26,8 @@ export interface RegistryFilterBarProps {
   onFilterBreedChange: (b: string) => void;
   filterFights: 'all' | 'with' | 'without';
   onFilterFightsChange: (f: 'all' | 'with' | 'without') => void;
+  fightsDisabled?: boolean;
+  fightsDisabledTooltip?: string;
   filterReason?: string;
   onFilterReasonChange?: (r: string) => void;
   effectiveStatus: 'Active' | 'Archived' | 'Deceased';
@@ -213,6 +215,8 @@ export default function RegistryFilterBar({
   onFilterBreedChange,
   filterFights,
   onFilterFightsChange,
+  fightsDisabled = false,
+  fightsDisabledTooltip,
   filterReason = 'all',
   onFilterReasonChange,
   effectiveStatus,
@@ -446,17 +450,21 @@ export default function RegistryFilterBar({
               <select
                 id="filter-by-fights"
                 value={filterFights}
+                disabled={fightsDisabled}
+                title={fightsDisabled ? fightsDisabledTooltip : undefined}
                 onChange={(e) => onFilterFightsChange(e.target.value as 'all' | 'with' | 'without')}
                 className={cn(
-                  'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
-                  filterFights !== 'all'
-                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
-                    : 'border-border bg-background text-foreground hover:bg-muted/50'
+                  'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all',
+                  fightsDisabled
+                    ? 'opacity-70 cursor-not-allowed bg-muted/60 border-border text-muted-foreground'
+                    : filterFights !== 'all'
+                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold cursor-pointer'
+                    : 'border-border bg-background text-foreground hover:bg-muted/50 cursor-pointer'
                 )}
               >
-                <option value="all">All Chickens</option>
+                <option value="all">{fightsDisabled ? 'Fight Prospects (0 matches)' : 'All Chickens'}</option>
                 <option value="with">With Fight Records</option>
-                <option value="without">Without Fight Records</option>
+                <option value="without">Fight Prospects (No Fights)</option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>

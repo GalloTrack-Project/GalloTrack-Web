@@ -91,4 +91,18 @@ describe('useUrlTab', () => {
     expect(result.current[0]).toBe('form');
     expect(result.current[2].paramPresent).toBe(false);
   });
+
+  it('maps an aliased param to the canonical value on mount and popstate', () => {
+    window.history.replaceState(null, '', '/profiling?category=no-fight');
+    const { result } = renderHook(() =>
+      useUrlTab<'all' | 'fight-prospects'>({
+        param: 'category',
+        values: ['all', 'fight-prospects'],
+        defaultValue: 'all',
+        aliases: { 'no-fight': 'fight-prospects' },
+      }),
+    );
+    expect(result.current[0]).toBe('fight-prospects');
+    expect(result.current[2].paramPresent).toBe(true);
+  });
 });

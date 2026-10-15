@@ -85,7 +85,7 @@ export type QuickAction = { id: string; label: string; hint: string; href: strin
 export const OWNER_QUICK_ACTIONS: QuickAction[] = [
   { id: 'register', label: 'Register a chicken', hint: 'Registry form', href: '/profiling?tab=form' },
   { id: 'log-match', label: 'Log a match', hint: 'Match logs', href: '/profiling?tab=matchForm' },
-  { id: 'fight-prospects', label: 'View Fight Prospects', hint: 'Registry tab', href: '/profiling?tab=offspring' },
+  { id: 'fight-prospects', label: 'View Offspring', hint: 'Registry tab', href: '/profiling?tab=offspring' },
   { id: 'breeders-stock', label: 'Browse Breeders Stock', hint: 'Inventory tab', href: '/catalog?status=active' },
   { id: 'ready-to-breed', label: 'View Ready to Breed', hint: 'Inventory tab', href: '/catalog?status=breeding' },
 ];

@@ -20,6 +20,7 @@ import {
   isNonBreedingProspect,
   getProspectCategoryCounts,
   filterProspectsByCategory,
+  ROLE_LABEL,
 } from './registry-roles';
 
 const f = (over: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -455,7 +456,11 @@ describe('getRegistryCounts invariant (Dashboard & Registry tab single source of
   });
 });
 
-describe('Fight Prospects category helpers', () => {
+describe('Offspring category helpers', () => {
+  it('ROLE_LABEL maps Non-Breeding to Offspring', () => {
+    expect(ROLE_LABEL['Non-Breeding']).toBe('Offspring');
+  });
+
   it('isNonBreedingProspect returns true for none or retired birds, and false for material/breeder', () => {
     // 1. None / unassigned -> true
     expect(isNonBreedingProspect(f({ id: 1, name: 'Offspring 1', breeding_role: 'none' }))).toBe(true);
@@ -475,7 +480,7 @@ describe('Fight Prospects category helpers', () => {
     expect(isNonBreedingProspect(f({ id: 9, name: 'Offspring 9', activity_status: 'inactive' }))).toBe(true);
   });
 
-  it('getProspectCategoryCounts computes all, nonBreeding, and noFight counts', () => {
+  it('getProspectCategoryCounts computes all, nonBreeding, and fightProspects counts', () => {
     const foughtNames = new Set(['chick-1', 'chick-3']);
     const prospects = [
       f({ id: 1, name: 'Chick-1', breeding_role: 'none' }),
@@ -489,10 +494,11 @@ describe('Fight Prospects category helpers', () => {
     // Chick-1 and Chick-4 have breeding_role: 'none'
     expect(counts.nonBreeding).toBe(2);
     // Chick-2 and Chick-4 have not fought
+    expect(counts.fightProspects).toBe(2);
     expect(counts.noFight).toBe(2);
   });
 
-  it('filterProspectsByCategory filters properly by category', () => {
+  it('filterProspectsByCategory filters properly by category including fight-prospects and legacy no-fight alias', () => {
     const foughtNames = new Set(['chick-1']);
     const prospects = [
       f({ id: 1, name: 'Chick-1', breeding_role: 'none' }),
@@ -501,6 +507,7 @@ describe('Fight Prospects category helpers', () => {
 
     expect(filterProspectsByCategory(prospects, 'all', foughtNames)).toHaveLength(2);
     expect(filterProspectsByCategory(prospects, 'non-breeding', foughtNames).map((p) => p.name)).toEqual(['Chick-1']);
+    expect(filterProspectsByCategory(prospects, 'fight-prospects', foughtNames).map((p) => p.name)).toEqual(['Chick-2']);
     expect(filterProspectsByCategory(prospects, 'no-fight', foughtNames).map((p) => p.name)).toEqual(['Chick-2']);
   });
 });

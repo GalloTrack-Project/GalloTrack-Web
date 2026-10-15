@@ -27,12 +27,12 @@ export const ROLE_FILTER_OPTIONS: RoleKey[] = [...REGISTRY_ROLES, 'Sire Material
  * Display-only labels. The stored value `registry_role = 'Non-Breeding'` (and
  * every tab id, filter value and API payload built from it) never changes —
  * only what the user reads changes. The offspring tab is shown as
- * "Fight Prospects" per the agriculturist's terminology review.
+ * "Offspring" across the UI.
  */
 export const ROLE_LABEL: Record<RegistryRole, string> = {
   'Breeding Male': 'Breeding Male',
   'Breeding Female': 'Breeding Female',
-  'Non-Breeding': 'Fight Prospects',
+  'Non-Breeding': 'Offspring',
 };
 
 /** Display label for a stored role; unknown values pass through unchanged. */
@@ -512,23 +512,42 @@ export function makeRegistryComparator(
   };
 }
 
-// ── Fight Prospects Category Filter ───────────────────────────────────────
+// ── Offspring Category Filter ───────────────────────────────────────
 
-export type ProspectCategory = 'all' | 'non-breeding' | 'no-fight';
-export const PROSPECT_CATEGORIES: readonly ProspectCategory[] = ['all', 'non-breeding', 'no-fight'] as const;
+/**
+ * Categories inside the Offspring tab:
+ * 1. all: All Offspring (default)
+ * 2. non-breeding: Offspring that can no longer be bred
+ * 3. fight-prospects: Offspring with zero match records
+ */
+export type ProspectCategory = 'all' | 'non-breeding' | 'fight-prospects';
+export const PROSPECT_CATEGORIES: readonly ProspectCategory[] = ['all', 'non-breeding', 'fight-prospects'] as const;
 
 export interface ProspectCategoryCounts {
   all: number;
   nonBreeding: number;
+  fightProspects: number;
+  /** @deprecated backward-compatibility alias for fightProspects */
   noFight: number;
 }
 
 /**
- * Rule for "Non-Breeding" offspring in Fight Prospects:
- * Offspring that cannot or can no longer be bred:
- * 1. Explicitly retired from breeding (retired_scope is 'breeding' or 'both')
- * 2. Inactive lifecycle or archive status (Archived, Deceased, inactive, or archive_kind of retired/inactive/sold)
- * 3. Breeding role is 'none' (or unassigned, i.e. not 'breeder' and not 'material')
+ * Rule for "Fight Prospects" category inside Offspring:
+ * Offspring chickens that have zero match records in the `match` table
+ * (entry_name not found in match history). These are birds being prepared
+ * for combat who have not yet had their arena debut.
+ */
+export function isFightProspect(fowl: FowlRecord, foughtNames: Set<string>): boolean {
+  return !foughtNames.has((fowl.name || '').trim().toLowerCase());
+}
+
+/**
+ * Rule for "Non-Breeding" offspring in Offspring tab:
+ * Offspring that cannot or can no longer be bred (derived from existing fowl fields):
+ * 1. Explicitly retired from breeding: `retired_scope` is 'breeding' or 'both'
+ * 2. Archive reason indicating breeding cessation: `archive_kind` is 'retired', 'inactive', or 'sold'
+ * 3. Lifecycle/activity status: `status` is 'Archived' or 'Deceased', or `activity_status` is 'inactive'
+ * 4. Breeding role unassigned or none: `breeding_role` is 'none' or unassigned (not 'breeder' and not 'material')
  *
  * Offspring with breeding_role === 'material' (Sire Material) or breeding_role === 'breeder' are
  * retained/eligible for breeding and are NOT non-breeding.
@@ -542,18 +561,18 @@ export function isNonBreedingProspect(fowl: FowlRecord): boolean {
 }
 
 /**
- * Filter a list of offspring chickens by ProspectCategory.
+ * Filter a list of offspring chickens by ProspectCategory (supporting legacy 'no-fight' alias).
  */
 export function filterProspectsByCategory(
   prospects: FowlRecord[],
-  category: ProspectCategory,
+  category: ProspectCategory | 'no-fight',
   foughtNames: Set<string>,
 ): FowlRecord[] {
   if (category === 'non-breeding') {
     return prospects.filter(isNonBreedingProspect);
   }
-  if (category === 'no-fight') {
-    return prospects.filter((f) => !foughtNames.has((f.name || '').trim().toLowerCase()));
+  if (category === 'fight-prospects' || category === 'no-fight') {
+    return prospects.filter((f) => isFightProspect(f, foughtNames));
   }
   return prospects;
 }
@@ -566,14 +585,15 @@ export function getProspectCategoryCounts(
   foughtNames: Set<string>,
 ): ProspectCategoryCounts {
   let nonBreeding = 0;
-  let noFight = 0;
+  let fightProspects = 0;
   for (const f of prospects) {
     if (isNonBreedingProspect(f)) nonBreeding++;
-    if (!foughtNames.has((f.name || '').trim().toLowerCase())) noFight++;
+    if (isFightProspect(f, foughtNames)) fightProspects++;
   }
   return {
     all: prospects.length,
     nonBreeding,
-    noFight,
+    fightProspects,
+    noFight: fightProspects,
   };
 }
