@@ -18,7 +18,7 @@ export default function NotFound() {
           href="/"
           className="inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold py-3 px-6 rounded-md text-sm transition-all shadow-lg shadow-emerald-500/30"
         >
-          Return to Dashboard
+          Return to Home
         </Link>
       </div>
     </div>

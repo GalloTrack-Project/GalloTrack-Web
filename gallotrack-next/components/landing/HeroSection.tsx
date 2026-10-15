@@ -1,0 +1,87 @@
+'use client';
+import React from 'react';
+import Link from 'next/link';
+import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { useAuth } from '@/lib/contexts/auth-context';
+import ProductPreviewMockup from './ProductPreviewMockup';
+
+export default function HeroSection() {
+  const auth = useAuth();
+  const isLoggedIn = !!auth.currentUserId;
+
+  return (
+    <section className="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24 lg:pt-20 lg:pb-32">
+      {/* Background radial gradient accent */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          {/* Left Column: Copy & Actions */}
+          <div className="lg:col-span-6 space-y-6 sm:space-y-8 text-center lg:text-left">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>ISUFST CICT Capstone Project</span>
+            </div>
+
+            {/* Main Headline */}
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl xl:text-6xl font-black text-foreground tracking-tight leading-[1.12]">
+                Advanced Gamefowl <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 bg-clip-text text-transparent">Breeding &amp; Match</span> Analytics
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Optimize your breeding program with verified lineage tracking, fight performance insights, and real-time flock management.
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
+              {isLoggedIn ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+                >
+                  <span>Open Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/register"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+                  >
+                    <span>Get Started</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-lg border border-border bg-card/80 hover:bg-muted text-foreground font-bold text-sm sm:text-base transition-colors cursor-pointer"
+                  >
+                    Log in
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Micro Trust Indicators */}
+            <div className="pt-4 border-t border-border/60 flex flex-wrap items-center justify-center lg:justify-start gap-y-2 gap-x-6 text-xs font-semibold text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                Role-based Access &amp; Farm Privacy
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                Verified F1/F2 Lineage Math
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column: Visual Mockup */}
+          <div className="lg:col-span-6 w-full flex justify-center">
+            <ProductPreviewMockup />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://gallotrack.vercel.app'),
   title: "GalloTrack",
   description: "Optimizing Chicken Management through In-Depth Analytics",
 };

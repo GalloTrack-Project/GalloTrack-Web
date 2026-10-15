@@ -244,7 +244,7 @@ export default function RegisterPage() {
 
           <p className="text-xs text-emerald-200/70 font-medium">
             Already registered?{' '}
-            <Link href="/" className="text-emerald-100 underline underline-offset-2 decoration-emerald-200/50 hover:decoration-emerald-100 transition-colors">
+            <Link href="/login" className="text-emerald-100 underline underline-offset-2 decoration-emerald-200/50 hover:decoration-emerald-100 transition-colors">
               Sign in
             </Link>
           </p>
@@ -447,7 +447,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="pt-1">
-              <Link href="/" className="text-xs font-bold text-muted-foreground hover:text-success transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
+              <Link href="/login" className="text-xs font-bold text-muted-foreground hover:text-success transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
                 Already have an account? Log In
               </Link>
             </div>

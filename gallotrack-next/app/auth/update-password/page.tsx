@@ -193,7 +193,7 @@ function UpdateCard() {
                 Your GalloTrack password has been changed. You can now sign in with your new password.
               </p>
               <Link
-                href="/"
+                href="/login"
                 className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2 text-center"
               >
                 <span className="text-sm tracking-widest">PROCEED TO LOGIN</span>
@@ -209,7 +209,7 @@ function UpdateCard() {
               <h2 className="text-2xl sm:text-3xl font-black text-danger tracking-tight text-center">Recovery Link Invalid</h2>
               <p className="text-sm text-muted-foreground font-semibold leading-relaxed text-center">{errorMessage}</p>
               <Link
-                href="/"
+                href="/login"
                 className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2 text-center"
               >
                 <span className="text-sm tracking-widest">BACK TO LOGIN</span>

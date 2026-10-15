@@ -166,7 +166,7 @@ function VerifyOtpCard() {
                 Your account is now active and your farm profile has been linked to your inventory. You can now sign in.
               </p>
               <Link
-                href="/"
+                href="/login"
                 className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">PROCEED TO LOGIN</span>
@@ -233,7 +233,7 @@ function VerifyOtpCard() {
                 <button type="button" onClick={handleResend} disabled={resending} className="text-muted-foreground hover:text-success transition-colors cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 disabled:opacity-50">
                   {resending ? 'Sending...' : 'Resend Code'}
                 </button>
-                <Link href="/" className="text-muted-foreground hover:text-success transition-colors cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">
+                <Link href="/login" className="text-muted-foreground hover:text-success transition-colors cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400">
                   Back to Login
                 </Link>
               </div>

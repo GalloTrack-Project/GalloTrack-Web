@@ -120,7 +120,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
                 Your account is now verified.
               </p>
               <Link
-                href="/"
+                href="/login"
                 className="inline-block w-full bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-emerald-950/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">PROCEED TO LOGIN</span>
@@ -136,7 +136,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               <h2 className="text-2xl sm:text-3xl font-black text-danger tracking-tight">Confirmation Link Invalid</h2>
               <p className="text-sm text-muted-foreground font-semibold leading-relaxed">{errorMessage}</p>
               <Link
-                href="/"
+                href="/login"
                 className="inline-block w-full bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 active:scale-[0.99] text-white font-black py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-black/50 cursor-pointer mt-2"
               >
                 <span className="text-sm tracking-widest">BACK TO LOGIN</span>
