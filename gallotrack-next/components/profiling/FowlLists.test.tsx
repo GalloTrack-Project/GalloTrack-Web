@@ -4,18 +4,23 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import FowlLists from './FowlLists';
 import type { FowlRecord } from '@/lib/types';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/profiling',
+}));
+
 const mockFowls: FowlRecord[] = [
-  { id: 1, name: 'Iron Lemon', breed: 'Lemon', gender: 'Rooster', sire: '', dam: '', bird_code: '1', wing_band: 'WB-1', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 2, name: 'Titan Sweater', breed: 'Sweater', gender: 'Rooster', sire: '', dam: '', bird_code: '2', wing_band: 'WB-2', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 3, name: 'True Hatch', breed: 'Hatch', gender: 'Rooster', sire: '', dam: '', bird_code: '3', wing_band: 'WB-3', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 4, name: 'Lemon Storm', breed: 'Lemon', gender: 'Rooster', sire: 'Iron Lemon', dam: 'Golden Pearl', bird_code: '1A1', wing_band: 'WB-4', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 5, name: 'Lemon Blaze', breed: 'Lemon', gender: 'Rooster', sire: 'Iron Lemon', dam: 'Golden Pearl', bird_code: '1A2', wing_band: 'WB-5', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 6, name: 'Lemon Duke', breed: 'Lemon', gender: 'Rooster', sire: 'Iron Lemon', dam: 'Golden Pearl', bird_code: '1A4', wing_band: 'WB-6', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 7, name: 'Sweater Flash', breed: 'Sweater', gender: 'Rooster', sire: 'Titan Sweater', dam: 'Sunrise Queen', bird_code: '2B1', wing_band: 'WB-7', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 8, name: 'Sweater Bolt', breed: 'Sweater', gender: 'Rooster', sire: 'Titan Sweater', dam: 'Sunrise Queen', bird_code: '2B2', wing_band: 'WB-8', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 9, name: 'Hatch Thunder', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Mountain Rose', bird_code: '3C1', wing_band: 'WB-9', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 10, name: 'Hatch Storm', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Mountain Rose', bird_code: '3C2', wing_band: 'WB-10', status: 'Active', bloodline_pct: 100 } as FowlRecord,
-  { id: 11, name: 'Hatch Mountain', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Mountain Rose', bird_code: '3C4', wing_band: 'WB-11', status: 'Active', bloodline_pct: 100 } as FowlRecord,
+  { id: 1, name: 'Iron Lemon', breed: 'Lemon', gender: 'Rooster', sire: '', dam: '', bird_code: '1', wing_band: 'WB-1', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 2, name: 'Titan Sweater', breed: 'Sweater', gender: 'Rooster', sire: '', dam: '', bird_code: '2', wing_band: 'WB-2', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 3, name: 'True Hatch', breed: 'Hatch', gender: 'Rooster', sire: '', dam: '', bird_code: '3', wing_band: 'WB-3', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 4, name: 'Lemon Storm', breed: 'Lemon', gender: 'Rooster', sire: 'Iron Lemon', dam: 'Golden Pearl', bird_code: '1A1', wing_band: 'WB-4', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 5, name: 'Lemon Blaze', breed: 'Lemon', gender: 'Rooster', sire: 'Iron Lemon', dam: 'Golden Pearl', bird_code: '1A2', wing_band: 'WB-5', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 6, name: 'Lemon Duke', breed: 'Lemon', gender: 'Rooster', sire: 'Iron Lemon', dam: 'Golden Pearl', bird_code: '1A4', wing_band: 'WB-6', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 7, name: 'Sweater Flash', breed: 'Sweater', gender: 'Rooster', sire: 'Titan Sweater', dam: 'Sunrise Queen', bird_code: '2B1', wing_band: 'WB-7', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 8, name: 'Sweater Bolt', breed: 'Sweater', gender: 'Rooster', sire: 'Titan Sweater', dam: 'Sunrise Queen', bird_code: '2B2', wing_band: 'WB-8', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 9, name: 'Hatch Thunder', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Mountain Rose', bird_code: '3C1', wing_band: 'WB-9', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 10, name: 'Hatch Storm', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Mountain Rose', bird_code: '3C2', wing_band: 'WB-10', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
+  { id: 11, name: 'Hatch Mountain', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Mountain Rose', bird_code: '3C4', wing_band: 'WB-11', status: 'Active', bloodline_pct: 100, registry_role: 'Breeding Male' } as FowlRecord,
 ];
 
 function renderFowlLists(overrides = {}) {

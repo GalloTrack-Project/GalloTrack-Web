@@ -22,12 +22,20 @@ import {
   ROLE_LABEL,
   type RegistryLists,
   type RegistrySortKey,
+  type ProspectCategory,
+  PROSPECT_CATEGORIES,
+  filterProspectsByCategory,
+  getProspectCategoryCounts,
 } from '@/lib/registry-roles';
+import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { cn } from '@/components/ui/utils';
 
 type ListTab = 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring';
 
 type Props = {
   tab: ListTab;
+  category?: ProspectCategory;
+  onCategoryChange?: (category: ProspectCategory) => void;
   fowls: FowlRecord[];
   matchHistory: MatchRecord[];
   loading?: boolean;
@@ -234,6 +242,8 @@ type BodyProps = {
   setProfilingSubTab: (tab: ProfilingSubTab) => void;
   onGoToInventory?: () => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
+  category?: ProspectCategory;
+  onCategoryChange?: (category: ProspectCategory) => void;
   handleSetActiveStatus: (fowl: FowlRecord) => Promise<void>;
   setSelectedFowlForDetails: (fowl: FowlRecord) => void;
   setSelectedFowlForArchive: (fowl: FowlRecord) => void;
@@ -242,6 +252,8 @@ type BodyProps = {
 
 function FowlListsBody({
   tab,
+  category: categoryProp,
+  onCategoryChange: onCategoryChangeProp,
   lists,
   fowls,
   matchHistory,
@@ -268,6 +280,15 @@ function FowlListsBody({
   const sort = sortKey ?? internalSort;
   const changeSort = onSortChange ?? setInternalSort;
 
+  // URL-driven category filter for Fight Prospects (?category=all | non-breeding | no-fight)
+  const [internalCategory, setInternalCategory] = useUrlTab<ProspectCategory>({
+    param: 'category',
+    values: PROSPECT_CATEGORIES,
+    defaultValue: 'all',
+  });
+  const category = categoryProp ?? internalCategory;
+  const setCategory = onCategoryChangeProp ?? setInternalCategory;
+
   const baseList = useMemo(() => {
     if (tab === 'males') return lists.males;
     if (tab === 'females') return lists.females;
@@ -289,12 +310,28 @@ function FowlListsBody({
     return map;
   }, [allFowls, birdCodesMap]);
 
+  const foughtNames = useMemo(
+    () => new Set(matchHistory.map((m) => (m.entry_name || '').trim().toLowerCase())),
+    [matchHistory],
+  );
+
+  // Single-source category counts and active category list for Fight Prospects
+  const categoryCounts = useMemo(() => {
+    if (tab !== 'offspring') return { all: baseList.length, nonBreeding: 0, noFight: 0 };
+    return getProspectCategoryCounts(baseList, foughtNames);
+  }, [tab, baseList, foughtNames]);
+
+  const categoryList = useMemo(() => {
+    if (tab !== 'offspring') return baseList;
+    return filterProspectsByCategory(baseList, category, foughtNames);
+  }, [tab, baseList, category, foughtNames]);
+
   const filterOptions = useMemo(() => {
     const sires = new Map<string, ParentOption>();
     const dams = new Map<string, ParentOption>();
     const stages = new Set<string>();
     const breeds = new Set<string>();
-    for (const f of baseList) {
+    for (const f of categoryList) {
       const s = (f.sire || '').trim();
       const d = (f.dam || '').trim();
       if (s) {
@@ -330,7 +367,7 @@ function FowlListsBody({
       stages: Array.from(stages).sort((a, b) => a.localeCompare(b)),
       breeds: Array.from(breeds).sort((a, b) => a.localeCompare(b)),
     };
-  }, [baseList, birdNameCodeMap]);
+  }, [categoryList, birdNameCodeMap]);
 
   const filtersActive =
     filterSire !== 'all' ||
@@ -350,11 +387,6 @@ function FowlListsBody({
     setPage(1);
   };
 
-  const foughtNames = useMemo(
-    () => new Set(matchHistory.map((m) => m.entry_name.trim().toLowerCase())),
-    [matchHistory],
-  );
-
   const comparator = useMemo(
     () => makeRegistryComparator(sort, { fowls: allFowls, matchHistory }),
     [sort, allFowls, matchHistory],
@@ -365,7 +397,7 @@ function FowlListsBody({
     type ItemWithMatch = { fowl: FowlRecord; match: ReturnType<typeof inspectFowlMatch> };
     const matchedList: ItemWithMatch[] = [];
 
-    for (const f of baseList) {
+    for (const f of categoryList) {
       const code = birdCodesMap.get(String(f.id)) || null;
       const match = inspectFowlMatch(f, qTrim, code);
       if (!match.matched) continue;
@@ -374,7 +406,7 @@ function FowlListsBody({
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
       const breedOk = filterBreed === 'all' || (f.breed || '').trim().toLowerCase() === filterBreed.toLowerCase();
-      const hasFights = foughtNames.has(f.name.trim().toLowerCase());
+      const hasFights = foughtNames.has((f.name || '').trim().toLowerCase());
       const fightsOk = filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
 
       if (sireOk && damOk && stageOk && breedOk && fightsOk) {
@@ -394,7 +426,7 @@ function FowlListsBody({
     const list = matchedList.map((item) => item.fowl);
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [baseList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterFights, foughtNames, comparator, page]);
+  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterFights, foughtNames, comparator, page]);
 
   const filterBar = (
     <RegistryFilterBar
@@ -420,7 +452,7 @@ function FowlListsBody({
       stageOptions={filterOptions.stages}
       breedOptions={filterOptions.breeds}
       filteredCount={paginatedBirds.list.length}
-      totalCount={baseList.length}
+      totalCount={categoryList.length}
       onResetAll={clearFilters}
     />
   );
@@ -535,6 +567,13 @@ function FowlListsBody({
   // FIGHT PROSPECTS (OFFSPRING)
   if (tab === 'offspring') {
     const { pagedList, totalPages } = paginatedBirds;
+
+    const categoryTabs: { id: ProspectCategory; label: string; count: number }[] = [
+      { id: 'all', label: 'All Offspring', count: categoryCounts.all },
+      { id: 'non-breeding', label: 'Non-Breeding', count: categoryCounts.nonBreeding },
+      { id: 'no-fight', label: 'No Fight Yet', count: categoryCounts.noFight },
+    ];
+
     return (
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-teal-500">
@@ -548,6 +587,48 @@ function FowlListsBody({
           <span className="shrink-0 self-start sm:self-center text-xs font-black text-white px-3 py-1.5 rounded-full bg-teal-600">{baseList.length} Total</span>
         </div>
 
+        {/* Category Segmented Control (Pill-style tabs) */}
+        <div
+          role="tablist"
+          aria-label="Fight Prospects categories"
+          className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-slate-100 dark:bg-muted/70 rounded-lg border border-slate-200/80 dark:border-border scrollbar-none"
+        >
+          {categoryTabs.map((cat) => {
+            const isActive = category === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                role="tab"
+                id={`prospect-category-${cat.id}`}
+                aria-selected={isActive}
+                onClick={() => {
+                  setCategory(cat.id);
+                  setPage(1);
+                }}
+                className={cn(
+                  'inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0',
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-xs font-black'
+                    : 'text-muted-foreground hover:bg-slate-200/60 dark:hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <span>{cat.label}</span>
+                <span
+                  className={cn(
+                    'text-xs font-black px-2 py-0.5 rounded-full transition-colors',
+                    isActive
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-200/80 dark:bg-muted text-muted-foreground'
+                  )}
+                >
+                  {cat.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {filterBar}
 
         <InventoryHint onGoToInventory={onGoToInventory} />
@@ -556,12 +637,28 @@ function FowlListsBody({
           filteredEmpty
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">🥚</div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Fight Prospects</h3>
-            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chicken found under this status for the Fight Prospects registry.</p>
-            <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
-              ➕ Encode First Fight Prospect Chicken
-            </button>
+            <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">
+              {category === 'no-fight' ? '🥊' : category === 'non-breeding' ? '🧬' : '🥚'}
+            </div>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">
+              {category === 'no-fight'
+                ? 'No Unfought Offspring'
+                : category === 'non-breeding'
+                ? 'No Non-Breeding Offspring'
+                : 'No Fight Prospects'}
+            </h3>
+            <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">
+              {category === 'no-fight'
+                ? 'All registered offspring currently have recorded matches in the system.'
+                : category === 'non-breeding'
+                ? 'No offspring match this category yet.'
+                : 'No chicken found under this status for the Fight Prospects registry.'}
+            </p>
+            {category === 'all' && (
+              <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
+                ➕ Encode First Fight Prospect Chicken
+              </button>
+            )}
           </div>
         ) : (
           <>
@@ -631,6 +728,8 @@ export default function FowlLists(props: Props) {
     <FowlListsBody
       key={tab}
       tab={tab}
+      category={props.category}
+      onCategoryChange={props.onCategoryChange}
       lists={lists}
       fowls={fowls}
       matchHistory={props.matchHistory}

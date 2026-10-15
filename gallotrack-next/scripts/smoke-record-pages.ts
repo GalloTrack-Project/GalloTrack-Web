@@ -72,14 +72,24 @@ async function main() {
   const failures: string[] = [];
 
   const record = async (scene: string, needle?: string) => {
-    // give client-side data fetches a beat to land
+    // give client-side data fetches time to land (cold loads take >1.5s)
     await page.waitForLoadState('networkidle').catch(() => {});
-    await page.waitForTimeout(1500);
+    if (needle) {
+      await page
+        .getByText(needle, { exact: false })
+        .first()
+        .waitFor({ state: 'attached', timeout: 10000 })
+        .catch(() => {});
+    }
+    await page.waitForTimeout(800);
     const url = page.url();
-    const body = (await page.locator('body').innerText().catch(() => '')).slice(0, 400);
+    const fullText = await page.locator('body').innerText().catch(() => '');
+    const body = fullText.slice(0, 400);
     const bouncedToLogin = url.includes('/?redirect') || url.endsWith('/') && !scene.includes('Login');
     const err = (await page.locator('text=/error|failed|exception/i').count().catch(() => 0)) > 0;
-    const ok = !bouncedToLogin && (!needle || body.includes(needle));
+    // CSS text-transform uppercases many labels, so compare case-insensitively.
+    // Search the whole page text, not the 400-char head used for display.
+    const ok = !bouncedToLogin && (!needle || fullText.toLowerCase().includes(needle.toLowerCase()));
     const status = ok ? 'PASS' : 'FAIL';
     console.log(`${status}  ${scene.padEnd(18)} ${url}${ok ? '' : ` (needle=${needle ?? '-'}, bounced=${bouncedToLogin}, errText=${err})`}`);
     if (!ok) failures.push(scene);

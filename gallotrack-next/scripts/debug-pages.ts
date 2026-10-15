@@ -47,7 +47,7 @@ async function main() {
     await page.waitForTimeout(4000);
     const text = await page.locator('main, body').first().innerText().catch(() => '');
     console.log('==== ' + path + ' ==== (' + text.length + ' chars)');
-    console.log(text.slice(0, 1500));
+    console.log(text.slice(0, 3500));
     console.log('...');
   }
   await browser.close();

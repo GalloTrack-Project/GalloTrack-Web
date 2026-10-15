@@ -73,7 +73,11 @@ export default function ProfilingPage() {
   });
   const prevUrlSyncTabRef = useRef(profilingSubTab);
   useEffect(() => {
-    if (urlTabMeta.change === 'popstate' || urlTabMeta.paramPresent) {
+    // Apply URL → state only for shareable links at mount and for back/forward.
+    // User-driven changes (change === 'user') write the URL via the effect below;
+    // re-applying them here ping-pongs the two setters into an infinite
+    // update loop ("Maximum update depth exceeded") that unmounts the page.
+    if (urlTabMeta.change === 'popstate' || (urlTabMeta.change === 'mount' && urlTabMeta.paramPresent)) {
       if (urlTab !== profilingSubTab) setProfilingSubTab(urlTab);
     }
   }, [urlTab, urlTabMeta, profilingSubTab, setProfilingSubTab]);

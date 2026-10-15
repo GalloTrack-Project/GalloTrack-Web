@@ -467,7 +467,11 @@ export default function MarketplacePage({
   });
   const prevUrlSyncStatusRef = useRef(activeTab);
   useEffect(() => {
-    if (urlStatusMeta.change === 'popstate' || urlStatusMeta.paramPresent) {
+    // Apply URL → state only at mount (shareable link) and on back/forward.
+    // User-driven changes write the URL via the effect below; re-applying them
+    // here ping-pongs the two setters into an infinite update loop
+    // ("Maximum update depth exceeded") that unmounts the page.
+    if (urlStatusMeta.change === 'popstate' || (urlStatusMeta.change === 'mount' && urlStatusMeta.paramPresent)) {
       if (urlStatus !== activeTab) setActiveTab(urlStatus);
     }
   }, [urlStatus, urlStatusMeta, activeTab, setActiveTab]);

@@ -48,3 +48,6 @@ backups/
 
 # eslint
 .eslintcache
+
+# video recording output (webm/mp4/manifest/auth state)
+recordings/

@@ -511,3 +511,69 @@ export function makeRegistryComparator(
     }
   };
 }
+
+// ── Fight Prospects Category Filter ───────────────────────────────────────
+
+export type ProspectCategory = 'all' | 'non-breeding' | 'no-fight';
+export const PROSPECT_CATEGORIES: readonly ProspectCategory[] = ['all', 'non-breeding', 'no-fight'] as const;
+
+export interface ProspectCategoryCounts {
+  all: number;
+  nonBreeding: number;
+  noFight: number;
+}
+
+/**
+ * Rule for "Non-Breeding" offspring in Fight Prospects:
+ * Offspring that cannot or can no longer be bred:
+ * 1. Explicitly retired from breeding (retired_scope is 'breeding' or 'both')
+ * 2. Inactive lifecycle or archive status (Archived, Deceased, inactive, or archive_kind of retired/inactive/sold)
+ * 3. Breeding role is 'none' (or unassigned, i.e. not 'breeder' and not 'material')
+ *
+ * Offspring with breeding_role === 'material' (Sire Material) or breeding_role === 'breeder' are
+ * retained/eligible for breeding and are NOT non-breeding.
+ */
+export function isNonBreedingProspect(fowl: FowlRecord): boolean {
+  if (fowl.retired_scope === 'breeding' || fowl.retired_scope === 'both') return true;
+  if (fowl.archive_kind === 'retired' || fowl.archive_kind === 'inactive' || fowl.archive_kind === 'sold') return true;
+  if (fowl.status === 'Archived' || fowl.status === 'Deceased' || fowl.activity_status === 'inactive') return true;
+  if (fowl.breeding_role === 'none' || !fowl.breeding_role) return true;
+  return false;
+}
+
+/**
+ * Filter a list of offspring chickens by ProspectCategory.
+ */
+export function filterProspectsByCategory(
+  prospects: FowlRecord[],
+  category: ProspectCategory,
+  foughtNames: Set<string>,
+): FowlRecord[] {
+  if (category === 'non-breeding') {
+    return prospects.filter(isNonBreedingProspect);
+  }
+  if (category === 'no-fight') {
+    return prospects.filter((f) => !foughtNames.has((f.name || '').trim().toLowerCase()));
+  }
+  return prospects;
+}
+
+/**
+ * Compute counts for all 3 categories in a single pass.
+ */
+export function getProspectCategoryCounts(
+  prospects: FowlRecord[],
+  foughtNames: Set<string>,
+): ProspectCategoryCounts {
+  let nonBreeding = 0;
+  let noFight = 0;
+  for (const f of prospects) {
+    if (isNonBreedingProspect(f)) nonBreeding++;
+    if (!foughtNames.has((f.name || '').trim().toLowerCase())) noFight++;
+  }
+  return {
+    all: prospects.length,
+    nonBreeding,
+    noFight,
+  };
+}
