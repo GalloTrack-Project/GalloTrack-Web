@@ -2,7 +2,19 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ArrowLeft, Trash2, Video, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import {
+  ChevronRight,
+  ArrowLeft,
+  Trash2,
+  Video,
+  Image as ImageIcon,
+  AlertCircle,
+  Calendar,
+  Swords,
+  Sliders,
+  Trophy,
+  Upload,
+} from 'lucide-react';
 import { isMale } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { mergeOptions } from '@/lib/lifecycle';
@@ -26,8 +38,8 @@ import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 function SelectChevron() {
   return (
-    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-      <div className="h-[7px] w-[7px] border-r-[1.7px] border-b-[1.7px] border-muted-foreground rotate-45 -translate-y-[2px]" />
+    <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+      <div className="h-2 w-2 border-r-2 border-b-2 border-muted-foreground rotate-45 -translate-y-[2px]" />
     </div>
   );
 }
@@ -480,41 +492,41 @@ export default function MatchRecordForm({
   };
 
   const selectClass = (hasError?: boolean) =>
-    `match-field h-10 w-full cursor-pointer rounded-md border ${
+    `match-field h-11 sm:h-12 w-full cursor-pointer rounded-lg border ${
       hasError ? 'border-danger focus:border-danger' : 'border-input-border focus:border-success'
-    } bg-white dark:bg-input px-3 pr-10 text-sm font-semibold text-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]`;
+    } bg-white dark:bg-input px-3.5 sm:px-4 pr-10 text-sm sm:text-base font-semibold text-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px]`;
 
   const inputClass = (hasError?: boolean) =>
-    `match-field h-10 min-w-0 flex-1 rounded-md border ${
+    `match-field h-11 sm:h-12 min-w-0 w-full rounded-lg border ${
       hasError ? 'border-danger focus:border-danger' : 'border-input-border focus:border-success'
-    } bg-white dark:bg-input px-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)]`;
+    } bg-white dark:bg-input px-3.5 sm:px-4 text-sm sm:text-base font-semibold text-foreground placeholder:text-muted-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px]`;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-24">
+    <div className="max-w-6xl mx-auto space-y-8 pb-32 sm:pb-40 w-full">
       {/* Breadcrumb & Navigation */}
-      <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-sm text-muted-foreground font-semibold">
+      <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-sm sm:text-base text-muted-foreground font-semibold">
         <button
           type="button"
           onClick={() => handleCancel(onSuccessRedirect)}
-          className="hover:text-foreground transition-colors flex items-center gap-1 cursor-pointer"
+          className="hover:text-foreground transition-colors flex items-center gap-1.5 cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Match Logs</span>
         </button>
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
         <span className="text-foreground font-bold">
           {mode === 'add' ? 'Add Match Record' : 'Edit Match Record'}
         </span>
       </nav>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-5">
         <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight flex items-center gap-2.5">
             <span>⚔️</span>
             <span>{mode === 'add' ? 'Add Match Record' : 'Edit Match Record'}</span>
           </h1>
-          <p className="text-sm text-muted-foreground font-semibold mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground font-medium mt-1.5">
             {mode === 'add'
               ? 'Log a new competitive fight performance encounter with official verification'
               : `Updating match record #${initialRecord?.id ?? ''} · ${initialRecord?.entry_name || 'Chicken'}`}
@@ -524,9 +536,9 @@ export default function MatchRecordForm({
 
       {/* Save Error Banner */}
       {saveError && (
-        <div role="alert" className="p-4 rounded-lg bg-rose-500/10 border border-rose-500/20 text-danger flex items-start gap-3">
+        <div role="alert" className="p-4 sm:p-5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-danger flex items-start gap-3.5">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div className="text-sm">
+          <div className="text-sm sm:text-base">
             <strong className="font-bold block">Save Failed</strong>
             <span>{saveError}</span>
           </div>
@@ -534,184 +546,104 @@ export default function MatchRecordForm({
       )}
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit} noValidate className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-6">
-        {/* Section 1: Chicken Node & Date */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="fowlId">
-              Select Local Chicken Entry <span className="text-danger">*</span>
-            </label>
-            <div className="relative">
-              <select
-                id="fowlId"
-                value={form.fowlId ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value ? Number(e.target.value) : null;
-                  setForm((prev) => ({ ...prev, fowlId: val }));
-                  if (errors.fowlId) setErrors((prev) => ({ ...prev, fowlId: '' }));
-                }}
-                className={selectClass(!!errors.fowlId)}
-                aria-invalid={!!errors.fowlId}
-                aria-describedby={errors.fowlId ? 'err-fowlId' : undefined}
-                required
-              >
-                <option value="">-- Select Rooster --</option>
-                {candidateFowls.map((f) => {
-                  const code = birdCodes.get(String(f.id));
-                  return (
-                    <option key={f.id} value={f.id}>
-                      {code ? `[${formatBirdCodeForDisplay(code)}] ` : ''}
-                      {f.name} ({f.breed})
-                    </option>
-                  );
-                })}
-              </select>
-              <SelectChevron />
-            </div>
-            {errors.fowlId && (
-              <p id="err-fowlId" role="alert" className="mt-1 text-xs font-semibold text-danger">
-                {errors.fowlId}
-              </p>
-            )}
+      <form onSubmit={handleSubmit} noValidate className="bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-10 shadow-sm space-y-8 sm:space-y-10">
+        {/* Section 1: Match Details */}
+        <section className="space-y-4">
+          <div className="border-b border-border pb-3">
+            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Match Details</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+              Select your rooster entry, match date, event type, and arena location
+            </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="match-date">
-              Match Date <span className="text-danger">*</span>
-            </label>
-            <input
-              type="date"
-              id="match-date"
-              value={form.date}
-              onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-              className={inputClass()}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Section 2: Opponent & Location */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-entry-identity">
-              Opponent Entry Identity <span className="text-danger">*</span>
-            </label>
-            <input
-              type="text"
-              id="opponent-entry-identity"
-              value={form.opponentName}
-              onChange={(e) => {
-                setForm((prev) => ({ ...prev, opponentName: e.target.value }));
-                if (errors.opponentName) setErrors((prev) => ({ ...prev, opponentName: '' }));
-              }}
-              placeholder="e.g., Kelso Express"
-              className={inputClass(!!errors.opponentName)}
-              aria-invalid={!!errors.opponentName}
-              aria-describedby={errors.opponentName ? 'err-opponent' : undefined}
-              required
-            />
-            {errors.opponentName && (
-              <p id="err-opponent" role="alert" className="mt-1 text-xs font-semibold text-danger">
-                {errors.opponentName}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="opponent-breed-rasa">
-              Opponent Breed / Rasa
-            </label>
-            <input
-              type="text"
-              id="opponent-breed-rasa"
-              value={form.opponentBreed}
-              onChange={(e) => setForm((prev) => ({ ...prev, opponentBreed: e.target.value }))}
-              placeholder="e.g., Kelso, Roundhead"
-              className={inputClass()}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="arena-location-hub">
-              Arena Location Hub {settings.match_location_required && <span className="text-danger">*</span>}
-            </label>
-            <input
-              list="arena-locations"
-              id="arena-location-hub"
-              value={form.matchLocation}
-              onChange={(e) => {
-                setForm((prev) => ({ ...prev, matchLocation: e.target.value }));
-                if (errors.matchLocation) setErrors((prev) => ({ ...prev, matchLocation: '' }));
-              }}
-              className={inputClass(!!errors.matchLocation)}
-              placeholder={settings.match_location_required ? 'Select or type arena...' : 'Select or type arena (optional)...'}
-              required={settings.match_location_required}
-              aria-invalid={!!errors.matchLocation}
-              aria-describedby={errors.matchLocation ? 'err-location' : undefined}
-            />
-            <datalist id="arena-locations">
-              {locationOptions.map((o) => (
-                <option key={o.value} value={o.value} />
-              ))}
-            </datalist>
-            {errors.matchLocation && (
-              <p id="err-location" role="alert" className="mt-1 text-xs font-semibold text-danger">
-                {errors.matchLocation}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Section 3: Match Configuration */}
-        <div className="rounded-lg border border-border bg-muted/20 p-5 space-y-4">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-foreground flex items-center gap-2">
-            <span>⚙️</span> Match Configuration
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-success" htmlFor="number-of-cocks">
-                Number of Cocks
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  max={99}
-                  id="number-of-cocks"
-                  value={form.cockCount || ''}
-                  onChange={(e) => {
-                    const count = Number(e.target.value) || 0;
-                    setForm((prev) => ({ ...prev, cockCount: count }));
-                  }}
-                  className={`${inputClass()} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                />
-                <span className="rounded-md bg-muted px-4 py-2.5 text-xs font-bold text-muted-foreground">cocks</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-success" htmlFor="chicken-class">
-                Chicken Class
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="fowlId">
+                Select Local Chicken Entry <span className="text-danger">*</span>
               </label>
               <div className="relative">
                 <select
-                  id="chicken-class"
-                  value={form.ageCategory}
-                  onChange={(e) => setForm((prev) => ({ ...prev, ageCategory: e.target.value }))}
-                  className={selectClass()}
+                  id="fowlId"
+                  value={form.fowlId ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value ? Number(e.target.value) : null;
+                    setForm((prev) => ({ ...prev, fowlId: val }));
+                    if (errors.fowlId) setErrors((prev) => ({ ...prev, fowlId: '' }));
+                  }}
+                  className={selectClass(!!errors.fowlId)}
+                  aria-invalid={!!errors.fowlId}
+                  aria-describedby={errors.fowlId ? 'err-fowlId' : undefined}
+                  required
                 >
-                  <option value="Cock">Cock</option>
-                  <option value="Stag">Stag</option>
+                  <option value="">-- Select Rooster --</option>
+                  {candidateFowls.map((f) => {
+                    const code = birdCodes.get(String(f.id));
+                    return (
+                      <option key={f.id} value={f.id}>
+                        {code ? `[${formatBirdCodeForDisplay(code)}] ` : ''}
+                        {f.name} ({f.breed})
+                      </option>
+                    );
+                  })}
                 </select>
                 <SelectChevron />
               </div>
+              {errors.fowlId && (
+                <p id="err-fowlId" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                  {errors.fowlId}
+                </p>
+              )}
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-success" htmlFor="event-type">
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="match-date">
+                Match Date <span className="text-danger">*</span>
+              </label>
+              <input
+                type="date"
+                id="match-date"
+                value={form.date}
+                onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                className={inputClass()}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="arena-location-hub">
+                Arena Location Hub {settings.match_location_required && <span className="text-danger">*</span>}
+              </label>
+              <input
+                list="arena-locations"
+                id="arena-location-hub"
+                value={form.matchLocation}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, matchLocation: e.target.value }));
+                  if (errors.matchLocation) setErrors((prev) => ({ ...prev, matchLocation: '' }));
+                }}
+                className={inputClass(!!errors.matchLocation)}
+                placeholder={settings.match_location_required ? 'Select or type arena...' : 'Select or type arena (optional)...'}
+                required={settings.match_location_required}
+                aria-invalid={!!errors.matchLocation}
+                aria-describedby={errors.matchLocation ? 'err-location' : undefined}
+              />
+              <datalist id="arena-locations">
+                {locationOptions.map((o) => (
+                  <option key={o.value} value={o.value} />
+                ))}
+              </datalist>
+              {errors.matchLocation && (
+                <p id="err-location" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                  {errors.matchLocation}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="event-type">
                 Event Type
               </label>
               <div className="relative">
@@ -743,20 +675,141 @@ export default function MatchRecordForm({
                   }}
                   placeholder="Type custom event type..."
                   maxLength={50}
-                  className={`${inputClass(!!errors.eventType)} mt-2`}
+                  className={`${inputClass(!!errors.eventType)} mt-2.5`}
                   aria-invalid={!!errors.eventType}
                   aria-describedby={errors.eventType ? 'err-event' : undefined}
                 />
               )}
               {errors.eventType && (
-                <p id="err-event" role="alert" className="mt-1 text-xs font-semibold text-danger">
+                <p id="err-event" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
                   {errors.eventType}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Opponent */}
+        <section className="space-y-4">
+          <div className="border-b border-border pb-3">
+            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
+              <Swords className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Opponent</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+              Record identity and breed classification of the challenger entry
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <div className="sm:col-span-1 lg:col-span-2">
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="opponent-entry-identity">
+                Opponent Entry Identity <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="opponent-entry-identity"
+                value={form.opponentName}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, opponentName: e.target.value }));
+                  if (errors.opponentName) setErrors((prev) => ({ ...prev, opponentName: '' }));
+                }}
+                placeholder="e.g., Kelso Express"
+                className={inputClass(!!errors.opponentName)}
+                aria-invalid={!!errors.opponentName}
+                aria-describedby={errors.opponentName ? 'err-opponent' : undefined}
+                required
+              />
+              {errors.opponentName && (
+                <p id="err-opponent" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                  {errors.opponentName}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-success" htmlFor="match-notes">
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="opponent-breed-rasa">
+                Opponent Breed / Rasa
+              </label>
+              <input
+                type="text"
+                id="opponent-breed-rasa"
+                value={form.opponentBreed}
+                onChange={(e) => setForm((prev) => ({ ...prev, opponentBreed: e.target.value }))}
+                placeholder="e.g., Kelso, Roundhead"
+                className={inputClass()}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3: Match Configuration */}
+        <section className="space-y-4">
+          <div className="border-b border-border pb-3">
+            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Match Configuration</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+              Specify fight structure, chicken class, and strategic combat observations
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="number-of-cocks">
+                Number of Cocks
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  id="number-of-cocks"
+                  value={form.cockCount || ''}
+                  onChange={(e) => {
+                    const count = Number(e.target.value) || 0;
+                    setForm((prev) => ({ ...prev, cockCount: count }));
+                  }}
+                  className={`${inputClass()} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                />
+                <span className="rounded-lg bg-muted px-4 py-3 text-xs sm:text-sm font-bold text-muted-foreground shrink-0 h-11 sm:h-12 flex items-center">
+                  cocks
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="chicken-class">
+                Chicken Class
+              </label>
+              <div className="relative">
+                <select
+                  id="chicken-class"
+                  value={form.ageCategory}
+                  onChange={(e) => setForm((prev) => ({ ...prev, ageCategory: e.target.value }))}
+                  className={selectClass()}
+                >
+                  <option value="Cock">Cock</option>
+                  <option value="Stag">Stag</option>
+                </select>
+                <SelectChevron />
+              </div>
+            </div>
+
+            {form.cockCount > 0 && (
+              <div className="sm:col-span-2 lg:col-span-1 flex flex-col justify-end">
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 flex items-center gap-2.5 h-11 sm:h-12">
+                  <span className="h-2.5 w-2.5 rounded-full bg-success animate-pulse shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-success shrink-0">Live Preview:</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-foreground truncate">{buildPreview()}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Notes: Spanning full width of its row */}
+            <div className="col-span-full">
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="match-notes">
                 Notes
               </label>
               <input
@@ -764,283 +817,312 @@ export default function MatchRecordForm({
                 id="match-notes"
                 value={form.matchNotes}
                 onChange={(e) => setForm((prev) => ({ ...prev, matchNotes: e.target.value }))}
-                placeholder="e.g., slow starter, powerful finish"
+                placeholder="e.g., Aggressive high fly start, solid footing, deep cutting finish"
                 maxLength={300}
                 className={inputClass()}
               />
             </div>
           </div>
+        </section>
 
-          {form.cockCount > 0 && (
-            <div className="mt-2 rounded-md bg-success/10 border border-success/20 p-3 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-wide text-success">Live Preview:</span>
-              <span className="text-sm font-extrabold text-foreground">{buildPreview()}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Section 4: Fight Outcome & Health Status */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="fight-outcome">
-              Fight Outcome <span className="text-danger">*</span>
-            </label>
-            <div className="relative">
-              <select
-                id="fight-outcome"
-                value={form.matchOutcome}
-                onChange={(e) => setForm((prev) => ({ ...prev, matchOutcome: e.target.value }))}
-                className="w-full h-10 px-3 pr-10 border border-amber-300 dark:border-amber-700/80 rounded-md text-sm bg-amber-50 dark:bg-amber-950/40 font-black text-amber-900 dark:text-amber-200 cursor-pointer"
-                required
-              >
-                <option value="Win">WIN</option>
-                <option value="Loss">LOSS</option>
-                <option value="Draw">DRAW</option>
-              </select>
-              <SelectChevron />
-            </div>
+        {/* Section 4: Result */}
+        <section className="space-y-4">
+          <div className="border-b border-border pb-3">
+            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Result</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+              Official fight verdict and post-encounter physical health status
+            </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5" htmlFor="post-fight-condition">
-              Post-Fight Condition / Health Status
-            </label>
-            <div className="relative">
-              <select
-                id="post-fight-condition"
-                value={form.matchPostFight}
-                onChange={(e) => setForm((prev) => ({ ...prev, matchPostFight: e.target.value }))}
-                className={selectClass()}
-              >
-                {conditionOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label || o.value}
-                  </option>
-                ))}
-              </select>
-              <SelectChevron />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 5: Media Evidence Management */}
-        <div className="space-y-6 pt-2 border-t border-border">
-          {/* Video Evidence */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <Video className="w-4 h-4 text-emerald-600" />
-                <span>Video Evidence (up to {MAX_MATCH_VIDEOS})</span>
-              </span>
-              <span className="text-xs text-muted-foreground font-semibold">
-                {existingVideos.length + newVideoFiles.length} / {MAX_MATCH_VIDEOS} attached
-              </span>
-            </div>
-
-            {/* Existing Videos List (Edit mode) */}
-            {existingVideos.length > 0 && (
-              <div className="mb-3 space-y-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase">Current Videos:</p>
-                <ul className="space-y-2">
-                  {existingVideos.map((v, idx) => (
-                    <li
-                      key={v.id}
-                      className="flex items-center justify-between p-3 rounded-md border border-border bg-muted/30 text-xs font-semibold"
-                    >
-                      <div className="flex items-center gap-2 truncate pr-2">
-                        <Video className="w-4 h-4 text-success shrink-0" />
-                        <span className="truncate">Video {idx + 1}</span>
-                        <a
-                          href={signedVideoUrls[v.id] || v.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-emerald-600 hover:underline shrink-0 ml-1 font-bold"
-                        >
-                          (View Video)
-                        </a>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExistingVideo(v.id)}
-                        className="text-danger hover:underline font-bold flex items-center gap-1 cursor-pointer shrink-0"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Remove</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="fight-outcome">
+                Fight Outcome <span className="text-danger">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  id="fight-outcome"
+                  value={form.matchOutcome}
+                  onChange={(e) => setForm((prev) => ({ ...prev, matchOutcome: e.target.value }))}
+                  className="w-full h-11 sm:h-12 px-3.5 sm:px-4 pr-10 border border-amber-300 dark:border-amber-700/80 rounded-lg text-sm sm:text-base bg-amber-50 dark:bg-amber-950/40 font-black text-amber-900 dark:text-amber-200 cursor-pointer min-h-[44px]"
+                  required
+                >
+                  <option value="Win">WIN</option>
+                  <option value="Loss">LOSS</option>
+                  <option value="Draw">DRAW</option>
+                </select>
+                <SelectChevron />
               </div>
-            )}
+            </div>
 
-            {/* New Video Upload Dropzone */}
-            {existingVideos.length + newVideoFiles.length < MAX_MATCH_VIDEOS && (
-              <label
-                className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors"
-                htmlFor="video-input"
-              >
-                <span className="text-sm font-bold text-muted-foreground">
-                  + Add fight match recording (MP4, MOV, AVI, WebM, MKV)
+            <div className="sm:col-span-1 lg:col-span-2">
+              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="post-fight-condition">
+                Post-Fight Condition
+              </label>
+              <div className="relative">
+                <select
+                  id="post-fight-condition"
+                  value={form.matchPostFight}
+                  onChange={(e) => setForm((prev) => ({ ...prev, matchPostFight: e.target.value }))}
+                  className={selectClass()}
+                >
+                  {conditionOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label || o.value}
+                    </option>
+                  ))}
+                </select>
+                <SelectChevron />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 5: Media Evidence Management (Full Width) */}
+        <section className="space-y-6 pt-2">
+          <div className="border-b border-border pb-3">
+            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
+              <Video className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Media</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+              Attach official fight video recordings and high-resolution photo documentation
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {/* Video Evidence */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Video className="w-4 h-4 text-emerald-600" />
+                  <span>Video Evidence (up to {MAX_MATCH_VIDEOS})</span>
                 </span>
-                <input
-                  type="file"
-                  id="video-input"
-                  accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska"
-                  multiple
-                  disabled={existingVideos.length + newVideoFiles.length >= MAX_MATCH_VIDEOS}
-                  onChange={(e) => {
-                    void handleVideoSelect(e.target.files);
-                    e.target.value = '';
-                  }}
-                  className="hidden"
-                />
-              </label>
-            )}
+                <span className="text-xs sm:text-sm text-muted-foreground font-semibold">
+                  {existingVideos.length + newVideoFiles.length} / {MAX_MATCH_VIDEOS} attached
+                </span>
+              </div>
 
-            {/* Newly Selected Video Files */}
-            {newVideoFiles.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
-                {newVideoFiles.map((file, idx) => {
-                  const pct = mediaUploadProgress[uploadKey('video', file)];
-                  return (
-                    <li key={`${file.name}-${idx}`} className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs font-bold">
-                      <div className="flex items-center justify-between">
-                        <span className="truncate pr-2">
-                          New Video {idx + 1}: {file.name}
-                          {pct !== undefined ? ` — ${pct}%` : ''}
-                        </span>
+              {/* Existing Videos List (Edit mode) */}
+              {existingVideos.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Current Videos:</p>
+                  <ul className="space-y-2">
+                    {existingVideos.map((v, idx) => (
+                      <li
+                        key={v.id}
+                        className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-muted/30 text-xs sm:text-sm font-semibold"
+                      >
+                        <div className="flex items-center gap-2.5 truncate pr-2">
+                          <Video className="w-4 h-4 text-success shrink-0" />
+                          <span className="truncate font-bold">Video {idx + 1}</span>
+                          <a
+                            href={signedVideoUrls[v.id] || v.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 hover:underline shrink-0 ml-1 font-bold"
+                          >
+                            (View Video)
+                          </a>
+                        </div>
                         <button
                           type="button"
-                          disabled={saving}
-                          onClick={() => setNewVideoFiles(newVideoFiles.filter((_, i) => i !== idx))}
-                          className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40"
+                          onClick={() => handleDeleteExistingVideo(v.id)}
+                          className="text-danger hover:underline font-bold flex items-center gap-1.5 cursor-pointer shrink-0 text-xs sm:text-sm"
                         >
-                          Remove
+                          <Trash2 className="w-4 h-4" />
+                          <span>Remove</span>
                         </button>
-                      </div>
-                      {pct !== undefined && (
-                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full bg-emerald-500 transition-all duration-200"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-          {/* Photo Evidence */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-emerald-600" />
-                <span>Match Photos (up to {MAX_MATCH_PHOTOS})</span>
-              </span>
-              <span className="text-xs text-muted-foreground font-semibold">
-                {existingPhotos.length + newPhotoFiles.length} / {MAX_MATCH_PHOTOS} attached
-              </span>
+              {/* New Video Upload Dropzone */}
+              {existingVideos.length + newVideoFiles.length < MAX_MATCH_VIDEOS && (
+                <label
+                  className="flex flex-col items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-border rounded-xl cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors p-4"
+                  htmlFor="video-input"
+                >
+                  <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-muted-foreground">
+                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span>+ Add fight match recording</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium mt-1">
+                    MP4, MOV, AVI, WebM, MKV up to 50MB
+                  </span>
+                  <input
+                    type="file"
+                    id="video-input"
+                    accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska"
+                    multiple
+                    disabled={existingVideos.length + newVideoFiles.length >= MAX_MATCH_VIDEOS}
+                    onChange={(e) => {
+                      void handleVideoSelect(e.target.files);
+                      e.target.value = '';
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              )}
+
+              {/* Newly Selected Video Files */}
+              {newVideoFiles.length > 0 && (
+                <ul className="space-y-2">
+                  {newVideoFiles.map((file, idx) => {
+                    const pct = mediaUploadProgress[uploadKey('video', file)];
+                    return (
+                      <li key={`${file.name}-${idx}`} className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs sm:text-sm font-bold">
+                        <div className="flex items-center justify-between">
+                          <span className="truncate pr-2">
+                            New Video {idx + 1}: {file.name}
+                            {pct !== undefined ? ` — ${pct}%` : ''}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => setNewVideoFiles(newVideoFiles.filter((_, i) => i !== idx))}
+                            className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        {pct !== undefined && (
+                          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-emerald-500 transition-all duration-200"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
 
-            {/* Existing Photos List (Edit mode) */}
-            {existingPhotos.length > 0 && (
-              <div className="mb-3 space-y-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase">Current Photos:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {existingPhotos.map((p, idx) => (
-                    <div
-                      key={p.id}
-                      className="relative rounded-md border border-border overflow-hidden bg-muted group p-1"
-                    >
-                      <img
-                        src={signedPhotoUrls[p.id] || p.url}
-                        alt={`Match photo ${idx + 1}`}
-                        className="w-full h-24 object-cover rounded"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExistingPhoto(p.id)}
-                        className="mt-1.5 w-full py-1 text-xs font-bold text-danger hover:bg-rose-500/10 rounded flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Remove</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
+            {/* Photo Evidence */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-emerald-600" />
+                  <span>Match Photos (up to {MAX_MATCH_PHOTOS})</span>
+                </span>
+                <span className="text-xs sm:text-sm text-muted-foreground font-semibold">
+                  {existingPhotos.length + newPhotoFiles.length} / {MAX_MATCH_PHOTOS} attached
+                </span>
               </div>
-            )}
 
-            {/* New Photo Upload Dropzone */}
-            {existingPhotos.length + newPhotoFiles.length < MAX_MATCH_PHOTOS && (
-              <label
-                className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors"
-                htmlFor="photo-input"
-              >
-                <span className="text-sm font-bold text-muted-foreground">+ Attach photos of this match</span>
-                <input
-                  type="file"
-                  id="photo-input"
-                  accept="image/*"
-                  multiple
-                  disabled={existingPhotos.length + newPhotoFiles.length >= MAX_MATCH_PHOTOS}
-                  onChange={(e) => {
-                    void handlePhotoSelect(e.target.files);
-                    e.target.value = '';
-                  }}
-                  className="hidden"
-                />
-              </label>
-            )}
-
-            {/* Newly Selected Photo Files */}
-            {newPhotoFiles.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
-                {newPhotoFiles.map((file, idx) => {
-                  const pct = mediaUploadProgress[uploadKey('photo', file)];
-                  return (
-                    <li key={`${file.name}-${idx}`} className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs font-bold">
-                      <div className="flex items-center justify-between">
-                        <span className="truncate pr-2">
-                          New Photo {idx + 1}: {file.name}
-                          {pct !== undefined ? ` — ${pct}%` : ''}
-                        </span>
+              {/* Existing Photos List (Edit mode) */}
+              {existingPhotos.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Current Photos:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {existingPhotos.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className="relative rounded-lg border border-border overflow-hidden bg-muted group p-1.5"
+                      >
+                        <img
+                          src={signedPhotoUrls[p.id] || p.url}
+                          alt={`Match photo ${idx + 1}`}
+                          className="w-full h-28 object-cover rounded-md"
+                        />
                         <button
                           type="button"
-                          disabled={saving}
-                          onClick={() => setNewPhotoFiles(newPhotoFiles.filter((_, i) => i !== idx))}
-                          className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40"
+                          onClick={() => handleDeleteExistingPhoto(p.id)}
+                          className="mt-2 w-full py-1.5 text-xs font-bold text-danger hover:bg-rose-500/10 rounded-md flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                         >
-                          Remove
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
                         </button>
                       </div>
-                      {pct !== undefined && (
-                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full bg-teal-500 transition-all duration-200"
-                            style={{ width: `${pct}%` }}
-                          />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Photo Upload Dropzone */}
+              {existingPhotos.length + newPhotoFiles.length < MAX_MATCH_PHOTOS && (
+                <label
+                  className="flex flex-col items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-border rounded-xl cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors p-4"
+                  htmlFor="photo-input"
+                >
+                  <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-muted-foreground">
+                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span>+ Attach photos of this match</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium mt-1">
+                    JPG, PNG, WebP up to 10MB
+                  </span>
+                  <input
+                    type="file"
+                    id="photo-input"
+                    accept="image/*"
+                    multiple
+                    disabled={existingPhotos.length + newPhotoFiles.length >= MAX_MATCH_PHOTOS}
+                    onChange={(e) => {
+                      void handlePhotoSelect(e.target.files);
+                      e.target.value = '';
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              )}
+
+              {/* Newly Selected Photo Files */}
+              {newPhotoFiles.length > 0 && (
+                <ul className="space-y-2">
+                  {newPhotoFiles.map((file, idx) => {
+                    const pct = mediaUploadProgress[uploadKey('photo', file)];
+                    return (
+                      <li key={`${file.name}-${idx}`} className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs sm:text-sm font-bold">
+                        <div className="flex items-center justify-between">
+                          <span className="truncate pr-2">
+                            New Photo {idx + 1}: {file.name}
+                            {pct !== undefined ? ` — ${pct}%` : ''}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => setNewPhotoFiles(newPhotoFiles.filter((_, i) => i !== idx))}
+                            className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40"
+                          >
+                            Remove
+                          </button>
                         </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                        {pct !== undefined && (
+                          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-teal-500 transition-all duration-200"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Clear bottom spacer so form content is never hidden behind the sticky bar */}
+        <div className="h-4 sm:h-6" />
 
         {/* Sticky Action Bar */}
-        <div className="sticky bottom-0 -mx-6 -mb-6 p-4 sm:p-5 bg-card/95 backdrop-blur-sm border-t border-border rounded-b-lg flex items-center justify-between gap-4 z-10">
+        <div className="sticky bottom-0 z-30 -mx-6 sm:-mx-8 lg:-mx-10 -mb-6 sm:-mb-8 lg:-mb-10 px-6 sm:px-8 lg:px-10 py-4 sm:py-5 bg-card/95 backdrop-blur-md border-t border-border rounded-b-xl flex items-center justify-between gap-4 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
           <button
             type="button"
             onClick={() => handleCancel(onSuccessRedirect)}
             disabled={saving}
-            className="px-5 py-2.5 rounded-lg border border-border font-bold text-sm text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+            className="h-11 sm:h-12 px-6 rounded-lg border border-border font-bold text-sm sm:text-base text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-[44px]"
           >
             Cancel
           </button>
@@ -1048,7 +1130,7 @@ export default function MatchRecordForm({
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-11 sm:h-12 px-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
           >
             {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             <span>

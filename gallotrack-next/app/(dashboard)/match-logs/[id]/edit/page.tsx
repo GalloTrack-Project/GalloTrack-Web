@@ -64,17 +64,17 @@ export default function EditMatchLogPage() {
 
   if (loading || contextLoading) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-4 animate-pulse">
-        <div className="h-5 w-40 bg-muted rounded" />
-        <div className="h-8 w-64 bg-muted rounded" />
-        <div className="h-80 w-full bg-muted rounded-lg" />
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 animate-pulse">
+        <div className="h-6 w-48 bg-muted rounded" />
+        <div className="h-10 w-72 bg-muted rounded" />
+        <div className="h-[600px] w-full bg-muted rounded-xl" />
       </div>
     );
   }
 
   if (error || !record) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
         <div className="bg-card border border-border rounded-lg p-8 text-center space-y-4 shadow-sm">
           <div className="w-12 h-12 rounded-full bg-rose-500/10 text-danger border border-rose-500/20 flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />

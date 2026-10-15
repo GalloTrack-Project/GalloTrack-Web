@@ -19,10 +19,10 @@ export default function NewMatchLogPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 max-w-4xl mx-auto space-y-4 animate-pulse">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 animate-pulse">
           <div className="h-6 w-48 bg-muted rounded" />
           <div className="h-10 w-72 bg-muted rounded" />
-          <div className="h-96 w-full bg-muted rounded-lg" />
+          <div className="h-[600px] w-full bg-muted rounded-xl" />
         </div>
       }
     >
