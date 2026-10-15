@@ -215,7 +215,7 @@ export default function RegisterPage() {
 
           <div className="space-y-8">
             <div className="space-y-4">
-              <p className="text-xs font-semibold tracking-[0.2em] text-emerald-200/80 uppercase">ISUFST CICT Capstone Project</p>
+              <p className="text-xs font-semibold tracking-[0.2em] text-emerald-200/80 uppercase">ISUFST CICI Capstone Project</p>
               <h1 className="text-4xl xl:text-5xl font-semibold text-white leading-[1.1] tracking-tight">
                 Set up your<br />
                 <span className="text-emerald-200">farm</span><br />

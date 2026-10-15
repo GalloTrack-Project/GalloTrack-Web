@@ -103,7 +103,7 @@ export default async function Image() {
             color: 'rgba(255, 255, 255, 0.8)',
           }}
         >
-          <span>ISUFST CICT Capstone Project</span>
+          <span>ISUFST CICI Capstone Project</span>
           <span>gallotrack.vercel.app</span>
         </div>
       </div>

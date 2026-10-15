@@ -16,8 +16,9 @@ export default function AboutSection() {
             <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
               About GalloTrack
             </h2>
+            {/* TODO: Add full CICI acronym expansion once confirmed */}
             <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed max-w-2xl mx-auto">
-              GalloTrack was developed as an <strong className="text-foreground">ISUFST CICT Capstone Project</strong> at the College of Information and Communications Technology, Iloilo State University of Fisheries Science and Technology.
+              GalloTrack was conceived and developed as an <strong className="text-foreground">ISUFST CICI Capstone Project</strong> at Iloilo State University of Fisheries Science and Technology.
             </p>
           </div>
 

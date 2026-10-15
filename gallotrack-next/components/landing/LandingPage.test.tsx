@@ -50,7 +50,7 @@ describe('GalloTrack Public Landing Page', () => {
       expect(brandLogos.length).toBeGreaterThanOrEqual(2);
 
       // Capstone Credit
-      const capstoneCredits = screen.getAllByText(/ISUFST CICT Capstone Project/i);
+      const capstoneCredits = screen.getAllByText(/ISUFST CICI Capstone Project/i);
       expect(capstoneCredits.length).toBeGreaterThan(0);
     });
 
@@ -191,7 +191,8 @@ describe('GalloTrack Public Landing Page', () => {
       // Must NOT contain exaggerated unsupported claims
       expect(container.textContent).not.toMatch(/unalterable generational records/i);
       expect(container.textContent).not.toMatch(/indisputable, digitized pedigree database/i);
-      expect(container.textContent).not.toMatch(/seamless multi-farm support/i);
+      // Must NOT contain old CICT acronym
+      expect(container.textContent).not.toMatch(/\bCICT\b/);
     });
   });
 });

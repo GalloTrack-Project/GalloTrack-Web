@@ -55,7 +55,7 @@ export default function Footer() {
             &copy; {currentYear} GalloTrack. All rights reserved.
           </p>
           <p className="font-semibold text-center sm:text-right text-emerald-600 dark:text-emerald-400">
-            ISUFST CICT Capstone Project
+            ISUFST CICI Capstone Project
           </p>
         </div>
       </div>

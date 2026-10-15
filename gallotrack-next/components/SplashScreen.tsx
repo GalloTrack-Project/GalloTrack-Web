@@ -24,7 +24,7 @@ export default function SplashScreen({ onFinished }: Props) {
           <ChickenIcon className="w-12 h-12 text-emerald-400" />
         </div>
         <div className="space-y-1.5">
-          <span className="text-xs font-black tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full uppercase">ISUFST CICT Official Capstone</span>
+          <span className="text-xs font-black tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full uppercase">ISUFST CICI Official Capstone</span>
         <p className="text-4xl md:text-5xl font-black tracking-wider text-white">
           GALLO<span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">TRACK</span>
         </p>

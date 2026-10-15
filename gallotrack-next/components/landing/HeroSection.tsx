@@ -21,7 +21,7 @@ export default function HeroSection() {
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>ISUFST CICT Capstone Project</span>
+              <span>ISUFST CICI Capstone Project</span>
             </div>
 
             {/* Main Headline */}

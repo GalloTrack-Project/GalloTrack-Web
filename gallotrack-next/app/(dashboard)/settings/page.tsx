@@ -759,7 +759,7 @@ export default function SettingsPage() {
             </SectionCard>
             <SectionCard title="Academic Information">
               <Field label="Institution">
-                <span className="text-sm font-semibold text-slate-600 dark:text-foreground">ISUFST CICT — Capstone Project</span>
+                <span className="text-sm font-semibold text-slate-600 dark:text-foreground">ISUFST CICI — Capstone Project</span>
               </Field>
               <Field label="Repository">
                 <a href="https://github.com/GalloTrack-Project/GalloTrack-Web" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-success dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline underline-offset-2">github.com/GalloTrack-Project/GalloTrack-Web</a>
