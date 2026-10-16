@@ -118,5 +118,9 @@ describe('RegistryNav', () => {
     expect(mobileButtons?.[1]).toHaveTextContent('Female');
     expect(mobileButtons?.[2]).toHaveTextContent('Offspring');
     expect(mobileButtons?.[3]).toHaveTextContent('Matches');
+
+    // Confirm columns match the 4 tabs dynamically, with no empty 5th slot
+    const mobileTablist = screen.getByRole('tablist', { name: /Chicken Registry Mobile Navigation/i });
+    expect(mobileTablist).toHaveStyle({ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' });
   });
 });

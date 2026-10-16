@@ -719,7 +719,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
         <div
           role="tablist"
           aria-label="Offspring breeding classifications"
-          className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-slate-100 dark:bg-muted/70 rounded-lg border border-slate-200/80 dark:border-border scrollbar-none"
+          className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-muted/70 rounded-lg border border-slate-200/80 dark:border-border"
         >
           {categoryTabs.map((cat) => {
             const isActive = category === cat.id;
@@ -736,7 +736,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
                   setPage(1);
                 }}
                 className={cn(
-                  'inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0',
+                  'inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-bold transition-all whitespace-nowrap cursor-pointer',
                   isActive
                     ? 'bg-emerald-600 text-white shadow-xs font-black'
                     : 'text-muted-foreground hover:bg-slate-200/60 dark:hover:bg-muted hover:text-foreground'

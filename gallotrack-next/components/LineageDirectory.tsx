@@ -2507,7 +2507,7 @@ export default function LineageDirectory({
           <div
             role="tablist"
             aria-label="Family Lineage Directory Tabs"
-            className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none"
+            className="flex flex-wrap items-center gap-1 sm:gap-2"
           >
             {tabs.map((tab, idx) => {
               const isSelected = activeTab === tab.id;

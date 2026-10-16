@@ -216,20 +216,37 @@ describe('MarketplacePage (Chicken Inventory) search and filtering', () => {
 });
 
 describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to Breed / Active Breeders)', () => {
+  it('renders all five inventory tabs without horizontal scrolling and with correct tablist semantics', () => {
+    renderMarketplace();
+    const tabsContainer = screen.getByTestId('inventory-tabs-container');
+    expect(tabsContainer).toBeInTheDocument();
+    expect(tabsContainer).toHaveAttribute('role', 'tablist');
+    expect(tabsContainer.className).not.toMatch(/overflow-x-auto/);
+    expect(tabsContainer.className).not.toMatch(/overflow-x-scroll/);
+
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(5);
+    expect(screen.getByRole('tab', { name: /^All Chickens/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Active Breeders/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Ready to Breed/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Archived/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Deceased/ })).toBeInTheDocument();
+  });
+
   it('renders the Active Breeders and Ready to Breed inventory tabs with tooltips', () => {
     renderMarketplace();
-    const activeBreedersBtn = screen.getByRole('button', { name: /^Active Breeders/ });
+    const activeBreedersBtn = screen.getByRole('tab', { name: /^Active Breeders/ });
     expect(activeBreedersBtn).toBeInTheDocument();
     expect(activeBreedersBtn).toHaveAttribute(
       'title',
       'Living breeding herd — Breeding Males (sires) and Breeding Females (dams).'
     );
-    expect(screen.getByRole('button', { name: /^Ready to Breed/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Ready to Breed/ })).toBeInTheDocument();
   });
 
   it('Active Breeders tab lists only the breeding herd — fight prospects excluded', () => {
     renderMarketplace();
-    fireEvent.click(screen.getByRole('button', { name: /^Active Breeders/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Active Breeders/ }));
 
     // Foundation-stock parents are the breeding herd…
     expect(screen.getByRole('heading', { level: 4, name: /Sweater Crimson/i })).toBeInTheDocument();
@@ -253,7 +270,7 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
       ],
     });
 
-    const activeBreedersTab = screen.getByRole('button', { name: /^Active Breeders/ });
+    const activeBreedersTab = screen.getByRole('tab', { name: /^Active Breeders/ });
     expect(activeBreedersTab).toHaveTextContent('Active Breeders1');
     fireEvent.click(activeBreedersTab);
 
@@ -315,7 +332,7 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
 
     renderMarketplace({ fowls: testFowls });
 
-    const breedingTab = screen.getByRole('button', { name: /^Ready to Breed/ });
+    const breedingTab = screen.getByRole('tab', { name: /^Ready to Breed/ });
     expect(breedingTab).toHaveTextContent('Ready to Breed1');
   });
 
@@ -329,6 +346,7 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
 
     const breedingTypeSelect = screen.getByLabelText(/Filter by breeding type/i);
     expect(breedingTypeSelect).toBeInTheDocument();
+    expect(screen.getByText('Breeding Type')).toBeInTheDocument();
     expect(breedingTypeSelect).toHaveValue('all');
 
     // Filter to unverified

@@ -408,8 +408,8 @@ export default function AdminSettingsPage() {
         )}
 
         <div className="flex flex-col lg:flex-row gap-4 items-start">
-          {/* TAB RAIL — vertical on desktop, scrollable row on mobile */}
-          <nav aria-label="Settings sections" className="lg:w-56 shrink-0 bg-card/95 border border-border rounded-lg shadow-2xs p-2 flex lg:flex-col gap-1.5 overflow-x-auto">
+          {/* TAB RAIL — vertical on desktop, wrapped rows below lg */}
+          <nav aria-label="Settings sections" className="w-full lg:w-56 shrink-0 bg-card/95 border border-border rounded-lg shadow-2xs p-2 flex flex-wrap lg:flex-nowrap lg:flex-col gap-1.5">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

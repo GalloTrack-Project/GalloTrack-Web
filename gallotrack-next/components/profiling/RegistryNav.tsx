@@ -158,7 +158,8 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
         <div
           role="tablist"
           aria-label="Chicken Registry Mobile Navigation"
-          className="grid grid-cols-5 items-center gap-1"
+          className="grid items-center gap-1"
+          style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
         >
           {tabs.map((tab, idx) => {
             const isSelected = currentTab === tab.id;

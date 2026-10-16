@@ -10,6 +10,7 @@ import { Modal } from '@/components/ui';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
+import { cn } from '@/components/ui/utils';
 import { inspectFowlMatch, compareFowlSearchRelevance, type FowlMatchResult } from '@/lib/lineage';
 import {
   inventoryCounts,
@@ -576,6 +577,32 @@ export default function MarketplacePage({
     { id: 'deceased', label: 'Deceased', count: counts.deceased },
   ], [counts]);
 
+  const tabRefs = useRef<Map<FilterTab, HTMLButtonElement>>(new Map());
+
+  const handleTabKeyDown = (e: React.KeyboardEvent, index: number) => {
+    let targetIndex = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      targetIndex = (index + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      targetIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      targetIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      targetIndex = tabs.length - 1;
+    }
+
+    if (targetIndex >= 0) {
+      const nextTab = tabs[targetIndex];
+      setActiveTab(nextTab.id);
+      setRoleFilter('all');
+      tabRefs.current.get(nextTab.id)?.focus();
+    }
+  };
+
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
 
   const { filteredFowls, matchMap } = useMemo(() => {
@@ -711,53 +738,114 @@ export default function MarketplacePage({
         </div>
       </div>
 
-      {/* Filter Tabs + Sort */}
-      <div className="flex items-center gap-2 bg-muted rounded-md border border-border p-1 shadow-sm">
-        <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
-          {tabs.map((tab) => (
+      {/* 1. Status Tab Bar (No horizontal scrolling; wrapped pills / responsive grid) */}
+      <div
+        role="tablist"
+        aria-label="Chicken inventory status tabs"
+        data-testid="inventory-tabs-container"
+        className="w-full grid grid-cols-2 md:flex md:flex-wrap items-stretch md:items-center gap-2 p-1.5 bg-muted/60 dark:bg-muted/40 rounded-lg border border-border"
+      >
+        {tabs.map((tab, idx) => {
+          const isSelected = activeTab === tab.id;
+          const isFifth = idx === 4;
+          return (
             <button
               key={tab.id}
+              ref={(el) => {
+                if (el) tabRefs.current.set(tab.id, el);
+                else tabRefs.current.delete(tab.id);
+              }}
+              type="button"
+              role="tab"
+              id={`inventory-tab-${tab.id}`}
+              aria-selected={isSelected}
+              aria-controls="inventory-tabpanel"
+              tabIndex={isSelected ? 0 : -1}
               title={tab.tooltip}
               onClick={() => { setActiveTab(tab.id); setRoleFilter('all'); }}
-              className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}
+              onKeyDown={(e) => handleTabKeyDown(e, idx)}
+              className={cn(
+                'min-h-[44px] px-3.5 py-2 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center justify-between sm:justify-center gap-2 select-none outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60',
+                isFifth ? 'col-span-2 md:col-span-1 md:w-auto' : 'col-span-1 md:w-auto',
+                isSelected
+                  ? 'bg-emerald-600 text-white shadow-sm font-black'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
             >
-              {tab.label}
-              <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
+              <span className="leading-snug text-left sm:text-center whitespace-normal">{tab.label}</span>
+              <span
+                className={cn(
+                  'text-xs font-black px-2 py-0.5 rounded-full shrink-0 transition-colors',
+                  isSelected
+                    ? 'bg-white/20 text-white'
+                    : 'bg-border text-muted-foreground'
+                )}
+              >
+                {tab.count}
+              </span>
             </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-border">
-          <label htmlFor="inventory-role" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Role</label>
+          );
+        })}
+      </div>
+
+      {/* 2. Filters Row (Role, Sex, Type, Sort) in a separate row below tabs */}
+      <div
+        data-testid="inventory-filters-row"
+        className="w-full grid grid-cols-2 md:flex md:flex-wrap items-center gap-2.5 p-2 bg-card rounded-lg border border-border shadow-xs"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
+          <label htmlFor="inventory-role" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+            Role
+          </label>
           <select
             id="inventory-role"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
-            className={`px-2.5 py-2 rounded-sm text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all ${roleFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'}`}
+            className={cn(
+              'w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
+              roleFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
+            )}
           >
             <option value="all">All roles</option>
             {ROLE_FILTER_OPTIONS.map((r) => (
               <option key={r} value={r}>{roleLabel(r)}</option>
             ))}
           </select>
-          <label htmlFor="inventory-sex" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sex</label>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
+          <label htmlFor="inventory-sex" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+            Sex
+          </label>
           <select
             id="inventory-sex"
             aria-label="Filter by sex"
             value={sexFilter}
             onChange={(e) => setSexFilter(e.target.value as SexFilter)}
-            className={`px-2.5 py-2 rounded-sm text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all ${sexFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'}`}
+            className={cn(
+              'w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
+              sexFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
+            )}
           >
             <option value="all">All sexes</option>
             <option value="male">Male (Roosters)</option>
             <option value="female">Female (Hens)</option>
           </select>
-          <label htmlFor="inventory-breeding-type" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Type</label>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
+          <label htmlFor="inventory-breeding-type" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+            Breeding Type
+          </label>
           <select
             id="inventory-breeding-type"
             aria-label="Filter by breeding type"
             value={internalBreedingType}
             onChange={(e) => setInternalBreedingType(e.target.value as BreedingTypeFilter)}
-            className={`px-2.5 py-2 rounded-sm text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all ${internalBreedingType !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'}`}
+            className={cn(
+              'w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
+              internalBreedingType !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
+            )}
             title="Foundation stock is treated as 100% of its registered breed."
           >
             <option value="all">All types</option>
@@ -765,12 +853,17 @@ export default function MarketplacePage({
             <option value="crossbred">Crossbred</option>
             <option value="unverified">Unverified Lineage</option>
           </select>
-          <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sort</label>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 md:ml-auto">
+          <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+            Sort
+          </label>
           <select
             id="inventory-sort"
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="px-2.5 py-2 rounded-sm text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+            className="w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
           >
             <option value="name">Name (A–Z)</option>
             <option value="identifier">Identifier (1A2 before 1A10)</option>
@@ -802,62 +895,64 @@ export default function MarketplacePage({
         </div>
       )}
 
-      {/* Grid */}
-      {filteredFowls.length === 0 ? (
-        <div className="bg-card p-12 text-center rounded-lg border border-border shadow-sm space-y-3.5 max-w-md mx-auto my-6">
-          <div className="w-14 h-14 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/20">
-            🔍
+      {/* Grid Tabpanel */}
+      <div id="inventory-tabpanel" role="tabpanel" aria-labelledby={`inventory-tab-${activeTab}`}>
+        {filteredFowls.length === 0 ? (
+          <div className="bg-card p-12 text-center rounded-lg border border-border shadow-sm space-y-3.5 max-w-md mx-auto my-6">
+            <div className="w-14 h-14 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/20">
+              🔍
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-base font-extrabold text-card-foreground">
+                {debouncedQuery.trim()
+                  ? `No chickens found for "${debouncedQuery}"`
+                  : activeTab === 'active'
+                  ? 'No Active Breeders'
+                  : 'No Chickens Found'}
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium max-w-sm mx-auto">
+                {debouncedQuery.trim()
+                  ? 'No chickens match your search in this tab. Check the spelling or enable "Include parents" to search lineage.'
+                  : activeTab === 'active'
+                  ? 'No active breeding males or females found in the herd.'
+                  : 'No chickens match your current filters. Try adjusting your search or add new chickens.'}
+              </p>
+            </div>
+            {debouncedQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all cursor-pointer"
+              >
+                Clear search
+              </button>
+            )}
           </div>
-          <div className="space-y-1">
-            <h2 className="text-base font-extrabold text-card-foreground">
-              {debouncedQuery.trim()
-                ? `No chickens found for "${debouncedQuery}"`
-                : activeTab === 'active'
-                ? 'No Active Breeders'
-                : 'No Chickens Found'}
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium max-w-sm mx-auto">
-              {debouncedQuery.trim()
-                ? 'No chickens match your search in this tab. Check the spelling or enable "Include parents" to search lineage.'
-                : activeTab === 'active'
-                ? 'No active breeding males or females found in the herd.'
-                : 'No chickens match your current filters. Try adjusting your search or add new chickens.'}
-            </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredFowls.map((fowl) => {
+              const m = matchMap.get(fowl.id);
+              const parentHint = m?.reason === 'sire' || m?.reason === 'dam' ? m.parentHint : undefined;
+              const restorable = isArchivedStatus(fowl) || (isDeceasedStatus(fowl) && canRestoreDeceased);
+              return (
+                <FowlCard
+                  key={fowl.id}
+                  fowl={fowl}
+                  fowls={fowls}
+                  matches={matchHistory}
+                  code={birdCodes.get(String(fowl.id))}
+                  onClick={() => setSelectedFowl(fowl)}
+                  query={debouncedQuery}
+                  parentHint={parentHint}
+                  onOpenProfile={setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined}
+                  onRestore={onRestore && restorable ? () => setRestoreTarget(fowl) : undefined}
+                  classification={classificationMap.get(String(fowl.id))}
+                />
+              );
+            })}
           </div>
-          {debouncedQuery.trim() && (
-            <button
-              type="button"
-              onClick={() => setSearch('')}
-              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all cursor-pointer"
-            >
-              Clear search
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredFowls.map((fowl) => {
-            const m = matchMap.get(fowl.id);
-            const parentHint = m?.reason === 'sire' || m?.reason === 'dam' ? m.parentHint : undefined;
-            const restorable = isArchivedStatus(fowl) || (isDeceasedStatus(fowl) && canRestoreDeceased);
-            return (
-              <FowlCard
-                key={fowl.id}
-                fowl={fowl}
-                fowls={fowls}
-                matches={matchHistory}
-                code={birdCodes.get(String(fowl.id))}
-                onClick={() => setSelectedFowl(fowl)}
-                query={debouncedQuery}
-                parentHint={parentHint}
-                onOpenProfile={setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined}
-                onRestore={onRestore && restorable ? () => setRestoreTarget(fowl) : undefined}
-                classification={classificationMap.get(String(fowl.id))}
-              />
-            );
-          })}
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Detail Modal */}
       {selectedFowl && (
