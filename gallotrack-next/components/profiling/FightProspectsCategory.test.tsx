@@ -146,20 +146,24 @@ describe('Offspring Breeding Classification & Fighting Status Registry', () => {
     expect(screen.getByText('Every child of a registered breeding pair')).toBeInTheDocument();
 
     // Breeding classification pills:
-    // All Offspring: 4
+    // All: 4
     // Breeding Stock: 2 (Sweater Bolt and Hatch Silver have breeding_role: 'material')
     // Non-Breeding: 2 (Lemon Storm and Lemon Blaze have breeding_role: 'none')
-    const allTab = screen.getByRole('tab', { name: /All Offspring/i });
+    const allTab = screen.getByRole('tab', { name: /^All/i });
     const breedingStockTab = screen.getByRole('tab', { name: /Breeding Stock/i });
     const nonBreedingTab = screen.getByRole('tab', { name: /Non-Breeding/i });
 
     expect(allTab).toBeInTheDocument();
-    expect(allTab).toHaveTextContent('All Offspring4');
+    expect(allTab).toHaveTextContent('All4');
     expect(allTab).toHaveAttribute('aria-selected', 'true');
 
     expect(breedingStockTab).toBeInTheDocument();
     expect(breedingStockTab).toHaveTextContent('Breeding Stock2');
     expect(breedingStockTab).toHaveAttribute('aria-selected', 'false');
+    expect(breedingStockTab).toHaveAttribute(
+      'title',
+      'Offspring kept as future breeders. They move to Breeding Male or Female when promoted.'
+    );
 
     expect(nonBreedingTab).toBeInTheDocument();
     expect(nonBreedingTab).toHaveTextContent('Non-Breeding2');
@@ -306,4 +310,46 @@ describe('Offspring Breeding Classification & Fighting Status Registry', () => {
       expect(screen.getByText(/No offspring are currently designated as future breeding stock/i)).toBeInTheDocument();
     });
   });
+
+  it('respects URL query values and aliases (class=breeding-stock, class=all, class=all-offspring)', () => {
+    window.history.replaceState(null, '', '/profiling?subTab=offspring&class=breeding-stock');
+    const { unmount } = renderOffspringRegistry();
+
+    const breedingStockTab = screen.getByRole('tab', { name: /Breeding Stock/i });
+    expect(breedingStockTab).toHaveAttribute('aria-selected', 'true');
+    unmount();
+
+    window.history.replaceState(null, '', '/profiling?subTab=offspring&class=all-offspring');
+    renderOffspringRegistry();
+    const allTab = screen.getByRole('tab', { name: /^All/i });
+    expect(allTab).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('maps legacy ?class=fight-prospects and ?class=no-fight to All + Fighting Status "without" (No Fight Record)', () => {
+    window.history.replaceState(null, '', '/profiling?subTab=offspring&class=fight-prospects');
+    const { unmount } = renderOffspringRegistry();
+
+    // 1. Classification pill is "All"
+    const allTab = screen.getByRole('tab', { name: /^All/i });
+    expect(allTab).toHaveAttribute('aria-selected', 'true');
+
+    // 2. Fighting Status dropdown filter is set to "without" (No Fight Record)
+    const fightFilter = screen.getByLabelText(/Fighting Status/i) as HTMLSelectElement;
+    expect(fightFilter.value).toBe('without');
+
+    // 3. Fought birds (#10 Lemon Storm, #13 Hatch Silver) excluded; unfought birds (#11, #12) shown
+    expect(screen.getByRole('heading', { level: 4, name: /Lemon Blaze/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 4, name: /Sweater Bolt/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Lemon Storm/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Hatch Silver/i })).not.toBeInTheDocument();
+    unmount();
+
+    // Verify ?category=no-fight legacy alias behaves identically
+    window.history.replaceState(null, '', '/profiling?subTab=offspring&category=no-fight');
+    renderOffspringRegistry();
+    const fightFilterLegacy = screen.getByLabelText(/Fighting Status/i) as HTMLSelectElement;
+    expect(fightFilterLegacy.value).toBe('without');
+  });
 });
+
+

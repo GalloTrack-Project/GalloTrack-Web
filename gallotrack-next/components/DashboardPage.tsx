@@ -59,7 +59,7 @@ export default function DashboardPage() {
   };
 
   // Sex split counts cover the whole living roster, so drill into the full
-  // inventory ('all') — the 'active' tab is now the narrower Breeders Stock herd.
+  // inventory ('all') — the 'active' tab is now the narrower Active Breeders herd.
   const navigateToInventoryWithSex = (gender: 'male' | 'female') => {
     ui.setInventoryGenderFilter(gender);
     ui.setInventoryStatusFilter('all');

@@ -10,7 +10,7 @@ describe('RegistryNav', () => {
     sireMaterial: 4,
   };
 
-  it('renders the 5 main tabs in exact required order with badges', () => {
+  it('renders the 4 main tabs in exact required order with badges (Sire Material tab absent)', () => {
     render(
       <RegistryNav
         currentTab="males"
@@ -21,11 +21,11 @@ describe('RegistryNav', () => {
 
     // Desktop tabs
     const tabs = screen.getAllByRole('tab');
-    // We expect desktop + mobile tabs (5 each = 10 total)
-    expect(tabs.length).toBe(10);
+    // We expect desktop + mobile tabs (4 each = 8 total)
+    expect(tabs.length).toBe(8);
 
-    // Verify the 5 desktop tabs in exact order
-    const desktopTabs = tabs.slice(0, 5);
+    // Verify the 4 desktop tabs in exact order
+    const desktopTabs = tabs.slice(0, 4);
     expect(desktopTabs[0]).toHaveTextContent(/Breeding Male/i);
     expect(desktopTabs[0]).toHaveTextContent('11');
 
@@ -37,8 +37,7 @@ describe('RegistryNav', () => {
 
     expect(desktopTabs[3]).toHaveTextContent(/Match Logs/i);
 
-    expect(desktopTabs[4]).toHaveTextContent(/Sire Material/i);
-    expect(desktopTabs[4]).toHaveTextContent('4');
+    expect(screen.queryByRole('tab', { name: /Sire Material/i })).toBeNull();
   });
 
   it('marks current tab with aria-selected=true and others with aria-selected=false', () => {
@@ -89,7 +88,7 @@ describe('RegistryNav', () => {
     expect(handleSelect).toHaveBeenCalledWith('females');
 
     fireEvent.keyDown(firstTab, { key: 'End' });
-    expect(handleSelect).toHaveBeenCalledWith('sireMaterial');
+    expect(handleSelect).toHaveBeenCalledWith('matchForm');
 
     fireEvent.keyDown(firstTab, { key: 'Home' });
     expect(handleSelect).toHaveBeenCalledWith('males');
@@ -108,7 +107,7 @@ describe('RegistryNav', () => {
     expect(mobileNav).toBeInTheDocument();
 
     const mobileButtons = mobileNav?.querySelectorAll('button');
-    expect(mobileButtons?.length).toBe(5);
+    expect(mobileButtons?.length).toBe(4);
 
     mobileButtons?.forEach((btn) => {
       expect(btn.className).toContain('min-h-[48px]');
@@ -119,6 +118,5 @@ describe('RegistryNav', () => {
     expect(mobileButtons?.[1]).toHaveTextContent('Female');
     expect(mobileButtons?.[2]).toHaveTextContent('Offspring');
     expect(mobileButtons?.[3]).toHaveTextContent('Matches');
-    expect(mobileButtons?.[4]).toHaveTextContent('Sire Mat.');
   });
 });

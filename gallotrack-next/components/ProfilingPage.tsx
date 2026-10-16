@@ -14,6 +14,8 @@ import RegistryNav from '@/components/profiling/RegistryNav';
 import BreedsPage from '@/app/(dashboard)/breeds/page';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { REGISTRY_TABS } from '@/lib/nav-manifest';
+import { toastMessage } from '@/lib/toast-bus';
+import { SIRE_MATERIAL_MOVED_MESSAGE } from '@/lib/registry-labels';
 
 export default function ProfilingPage() {
   const fowl = useFowl();
@@ -53,6 +55,20 @@ export default function ProfilingPage() {
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
 
+  // Handle redirect from legacy ?tab=sire-material or ?tab=sireMaterial
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const rawTab = params.get('tab');
+    if (rawTab === 'sire-material' || rawTab === 'sireMaterial') {
+      params.set('tab', 'offspring');
+      params.set('class', 'breeding-stock');
+      const newSearch = params.toString();
+      window.history.replaceState(null, '', `${window.location.pathname}?${newSearch}`);
+      toastMessage(SIRE_MATERIAL_MOVED_MESSAGE, 'info');
+    }
+  }, []);
+
   // URL-driven sub-tab: ?tab=<REGISTRY_TABS>. Opening a shareable link with a
   // valid tab applies it (clean navigations keep whatever navigate(page,
   // subTab) already set); any later change is written back to the URL.
@@ -60,6 +76,10 @@ export default function ProfilingPage() {
     param: 'tab',
     values: REGISTRY_TABS,
     defaultValue: 'form',
+    aliases: {
+      'sire-material': 'offspring',
+      'sireMaterial': 'offspring',
+    },
   });
   const prevUrlSyncTabRef = useRef(profilingSubTab);
   useEffect(() => {
@@ -79,7 +99,7 @@ export default function ProfilingPage() {
   }, [profilingSubTab, urlTab, setUrlTab]);
 
   const listTab =
-    profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'sireMaterial' || profilingSubTab === 'offspring'
+    profilingSubTab === 'males' || profilingSubTab === 'females' || profilingSubTab === 'archived' || profilingSubTab === 'deceased' || profilingSubTab === 'offspring'
       ? profilingSubTab
       : null;
 

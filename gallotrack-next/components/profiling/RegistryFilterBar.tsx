@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2, ArrowDownUp } from 'lucide-react';
+import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2, ArrowDownUp, Shield } from 'lucide-react';
 import { cn } from '@/components/ui/utils';
 import { REGISTRY_SORT_OPTIONS, type RegistrySortKey } from '@/lib/registry-roles';
+import { RETIRED_FIGHTER_LABEL, RETIRED_FIGHTER_TOOLTIP } from '@/lib/registry-labels';
 
 export interface ParentOption {
   name: string;
@@ -30,6 +31,8 @@ export interface RegistryFilterBarProps {
   onFilterFightsChange: (f: 'all' | 'with' | 'without') => void;
   fightsDisabled?: boolean;
   fightsDisabledTooltip?: string;
+  filterRetiredFighter?: boolean;
+  onFilterRetiredFighterChange?: (rf: boolean) => void;
   filterReason?: string;
   onFilterReasonChange?: (r: string) => void;
   effectiveStatus: 'Active' | 'Archived' | 'Deceased';
@@ -221,6 +224,8 @@ export default function RegistryFilterBar({
   onFilterFightsChange,
   fightsDisabled = false,
   fightsDisabledTooltip,
+  filterRetiredFighter = false,
+  onFilterRetiredFighterChange,
   filterReason = 'all',
   onFilterReasonChange,
   effectiveStatus,
@@ -260,9 +265,10 @@ export default function RegistryFilterBar({
     if (filterBreed !== 'all') count++;
     if (filterBreedingType !== 'all') count++;
     if (filterFights !== 'all') count++;
+    if (filterRetiredFighter) count++;
     if (filterReason !== 'all') count++;
     return count;
-  }, [query, filterSire, filterDam, filterStage, filterBreed, filterBreedingType, filterFights, filterReason]);
+  }, [query, filterSire, filterDam, filterStage, filterBreed, filterBreedingType, filterFights, filterRetiredFighter, filterReason]);
 
   const hasActiveFilters = activeFiltersCount > 0;
 
@@ -509,6 +515,33 @@ export default function RegistryFilterBar({
             </div>
           </div>
 
+          {/* 7. Retired Fighter Toggle */}
+          {onFilterRetiredFighterChange && (
+            <div className="flex flex-col gap-1 w-full">
+              <label htmlFor="filter-by-retired-fighter" className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
+                <span>{RETIRED_FIGHTER_LABEL}</span>
+              </label>
+              <button
+                id="filter-by-retired-fighter"
+                type="button"
+                title={RETIRED_FIGHTER_TOOLTIP}
+                onClick={() => onFilterRetiredFighterChange(!filterRetiredFighter)}
+                className={cn(
+                  'h-9 w-full px-3 text-xs font-bold rounded-md border flex items-center justify-between gap-1.5 transition-all cursor-pointer',
+                  filterRetiredFighter
+                    ? 'border-amber-500/80 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-extrabold ring-1 ring-amber-500/30'
+                    : 'border-border bg-background text-foreground hover:bg-muted/50'
+                )}
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <Shield className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>{RETIRED_FIGHTER_LABEL}</span>
+                </span>
+                {filterRetiredFighter && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
+              </button>
+            </div>
+          )}
+
           {/* 6. Sort (Task B — applied before pagination) */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="registry-sort" className="text-xs font-semibold text-muted-foreground">
@@ -675,6 +708,21 @@ export default function RegistryFilterBar({
                 onClick={() => onFilterFightsChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
                 aria-label="Remove fight filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {filterRetiredFighter && onFilterRetiredFighterChange && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-500/10 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+              <Shield className="w-3 h-3 text-amber-600 shrink-0" />
+              <span>{RETIRED_FIGHTER_LABEL}</span>
+              <button
+                type="button"
+                onClick={() => onFilterRetiredFighterChange(false)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                aria-label="Remove retired fighter filter"
               >
                 <X className="w-3 h-3" />
               </button>

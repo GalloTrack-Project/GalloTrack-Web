@@ -151,8 +151,8 @@ recordings/                  # OUTPUT — added to .gitignore
 ### Scene 3 — Chicken Registry (~50 s)
 - **Route:** sidebar click **Chicken Registry** → `/profiling`
 - **Beats:** click through tabs in script order (pulse → ripple → click → 3.5 s hold each):
-  ① **Breeding Male** ② **Breeding Female**  ③ **Fight Prospects** *(narration says "Fight Prospects" — team is re-recording this line, §9.1)* ④ **Match Logs** ⑤ **Sire Material**
-  ⑥ Search demo: click search box, type a wing-band/name fragment (human typing), hold 3 s, clear
+  ① **Breeding Male** ② **Breeding Female** ③ **Offspring** (with **Breeding Stock** pill) ④ **Match Logs** (Sire Material tab removed; retired fighters shown via badge and filter)
+  ⑤ Search demo: click search box, type a wing-band/name fragment (human typing), hold 3 s, clear
 - **Zoom:** 1.35× on the tab strip during the sequence; 1.5× on the search box
 
 ### Scene 4 — Registering a Chicken (~45 s)
@@ -163,7 +163,7 @@ recordings/                  # OUTPUT — added to .gitignore
 
 ### Scene 5 — Chicken Inventory (~55 s)
 - **Route:** sidebar click **Chicken Inventory** → `/catalog`
-- **Beats:** ① 1.15× wide shot of the card grid ② search bar: type + hold + clear ③ click status filters in script order with 3 s holds: **All Chickens → Breeders Stock → Ready to Breed → Archived → Deceased** ④ role/sex filter + sort control (labels confirmed at implementation) ⑤ **scroll animation** down through the chicken cards, camera at 1.25× ⑥ zoom on one card's key details (status/age/weight/lineage)
+- **Beats:** ① 1.15× wide shot of the card grid ② search bar: type + hold + clear ③ click status filters in script order with 3 s holds: **All Chickens → Active Breeders → Ready to Breed → Archived → Deceased** ④ role/sex filter + sort control (labels confirmed at implementation) ⑤ **scroll animation** down through the chicken cards, camera at 1.25× ⑥ zoom on one card's key details (status/age/weight/lineage)
 
 ### Scene 6 — Lineage Directory (~60 s)
 - **Route:** sidebar click **Lineage Directory** → `/lineage`

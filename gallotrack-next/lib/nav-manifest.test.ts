@@ -89,7 +89,7 @@ describe('nav-manifest', () => {
     expect(REGISTRY_TABS).toContain('males');
     expect(REGISTRY_TABS).toContain('offspring');
     expect(REGISTRY_TABS).toContain('matchForm');
-    expect(REGISTRY_TABS).toContain('sireMaterial');
+    expect(REGISTRY_TABS).not.toContain('sireMaterial');
     expect(REGISTRY_TABS).toContain('archived');
     expect(REGISTRY_TABS).toContain('deceased');
     expect(REGISTRY_TABS).toContain('breeds');

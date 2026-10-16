@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { FowlRecord } from '@/lib/types';
 import type { BloodlineStats } from '@/lib/bloodline-composition';
@@ -8,6 +8,7 @@ import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
+import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Lock, Edit3, RotateCcw } from 'lucide-react';
 
 function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
@@ -140,6 +141,10 @@ export default function EncodeForm({
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
 
+  const birthdateValidation = useMemo(
+    () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
+    [newBirthdate, sireName, damName, fowls],
+  );
 
   useEffect(() => {
     if (!strainOpen) return;
@@ -176,7 +181,7 @@ export default function EncodeForm({
   }, [legColorOpen]);
 
   return (
-    <form onSubmit={handleAddFowl} className="space-y-5 animate-fadeIn">
+    <form onSubmit={(e) => { if (!birthdateValidation.valid) { e.preventDefault(); return; } handleAddFowl(e); }} className="space-y-5 animate-fadeIn">
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
@@ -390,9 +395,26 @@ export default function EncodeForm({
             value={newBirthdate}
             onChange={(e) => handleNewBirthdateChange(e.target.value)}
             max={new Date().toISOString().split('T')[0]}
-            className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+            className={`w-full p-3 border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:ring-4 transition-all ${
+              birthdateValidation.errors.length > 0
+                ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950/50'
+                : 'border-input-border focus:border-emerald-500 focus:ring-emerald-100'
+            }`}
             required
-          id="birth-date" />
+            id="birth-date"
+          />
+          {birthdateValidation.errors.map((err, i) => (
+            <p key={`bd-err-${i}`} className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span>{err}</span>
+            </p>
+          ))}
+          {birthdateValidation.warnings.map((warn, i) => (
+            <p key={`bd-warn-${i}`} className="mt-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span>{warn}</span>
+            </p>
+          ))}
           {(() => {
             if (!autoCalcAge) return null;
             const parts = getAgePartsLocal(newBirthdate);
@@ -650,11 +672,11 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <StatusItem icon="🛡️" label="Data Integrity &amp; Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-          <StatusItem icon="✅" label="Validation" value={validationPassed ? 'Passed' : 'Pending'} tone={validationPassed ? 'green' : 'amber'} />
+          <StatusItem icon="✅" label="Validation" value={validationPassed && birthdateValidation.valid ? 'Passed' : 'Pending'} tone={validationPassed && birthdateValidation.valid ? 'green' : 'amber'} />
           <StatusItem icon="🔗" label="Lineage Resolved" value={bloodlineVerified ? 'Resolved' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
           <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
         </div>
-        <button type="submit" disabled={loading || uploadingImage} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2">
+        <button type="submit" disabled={loading || uploadingImage || !birthdateValidation.valid} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
           <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Registering...' : 'REGISTER'}</span>
         </button>

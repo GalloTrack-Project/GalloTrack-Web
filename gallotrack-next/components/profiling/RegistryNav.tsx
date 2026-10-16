@@ -7,7 +7,7 @@ import type { ProfilingSubTab } from '@/lib/types';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 
 export interface MainRegistryTabItem {
-  id: 'males' | 'females' | 'offspring' | 'matchForm' | 'sireMaterial';
+  id: 'males' | 'females' | 'offspring' | 'matchForm';
   label: string;
   shortLabel: string;
   icon: React.ReactNode;
@@ -21,13 +21,13 @@ interface RegistryNavProps {
     males: number;
     females: number;
     offspring: number;
-    sireMaterial: number;
+    sireMaterial?: number;
   };
 }
 
 export default function RegistryNav({ currentTab, onSelectTab, counts }: RegistryNavProps) {
-  // 5 MAIN TABS in strict order requested:
-  // Breeding Male | Breeding Female | Offspring | Match Logs | Sire Material
+  // 4 MAIN TABS in strict order requested:
+  // Breeding Male | Breeding Female | Offspring | Match Logs
   const tabs: MainRegistryTabItem[] = [
     {
       id: 'males',
@@ -55,13 +55,6 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
       label: 'Match Logs',
       shortLabel: 'Matches',
       icon: <FileText className="w-4 h-4 shrink-0" />,
-    },
-    {
-      id: 'sireMaterial',
-      label: 'Sire Material',
-      shortLabel: 'Sire Mat.',
-      icon: <Shield className="w-4 h-4 shrink-0" />,
-      count: counts.sireMaterial,
     },
   ];
 

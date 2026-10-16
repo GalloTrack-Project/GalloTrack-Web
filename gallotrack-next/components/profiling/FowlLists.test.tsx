@@ -218,4 +218,62 @@ describe('FowlLists search and filter', () => {
       expect(screen.getByRole('heading', { level: 4, name: /True Hatch/i })).toBeInTheDocument();
     });
   });
+
+  it('renders Retired Fighter badge on birds with match records that are designated breeders/breeding stock', async () => {
+    const testFowls: FowlRecord[] = [
+      { id: 1, name: 'Iron Lemon', breed: 'Lemon', gender: 'Rooster', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+      { id: 2, name: 'Titan Sweater', breed: 'Sweater', gender: 'Rooster', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+    ];
+    const testMatches = [
+      { id: 101, fowl_id: 1, entry_name: 'Iron Lemon', outcome: 'Win' } as any,
+    ];
+
+    renderFowlLists({ fowls: testFowls, matchHistory: testMatches });
+
+    // Iron Lemon fought -> has Retired Fighter badge
+    const ironLemonHeading = screen.getByRole('heading', { level: 4, name: /Iron Lemon/i });
+    const ironLemonCard = ironLemonHeading.closest('.antigravity-card');
+    expect(ironLemonCard).not.toBeNull();
+    expect(ironLemonCard).toHaveTextContent(/Retired Fighter/i);
+
+    // Titan Sweater did not fight -> does not have badge
+    const titanHeading = screen.getByRole('heading', { level: 4, name: /Titan Sweater/i });
+    const titanCard = titanHeading.closest('.antigravity-card');
+    expect(titanCard).not.toBeNull();
+    expect(titanCard).not.toHaveTextContent(/Retired Fighter/i);
+  });
+
+  it('filters by Retired Fighter toggle button and updates live count', async () => {
+    const testFowls: FowlRecord[] = [
+      { id: 1, name: 'Iron Lemon', breed: 'Lemon', gender: 'Rooster', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+      { id: 2, name: 'Titan Sweater', breed: 'Sweater', gender: 'Rooster', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+    ];
+    const testMatches = [
+      { id: 101, fowl_id: 1, entry_name: 'Iron Lemon', outcome: 'Win' } as any,
+    ];
+
+    renderFowlLists({ fowls: testFowls, matchHistory: testMatches });
+
+    // Initially 2 of 2
+    expect(screen.getAllByText(/2 of 2/i).length).toBeGreaterThan(0);
+
+    // Click Retired Fighter toggle
+    const toggleButton = document.getElementById('filter-by-retired-fighter')!;
+    expect(toggleButton).toBeInTheDocument();
+    fireEvent.click(toggleButton);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/\b1 of 2\b/).length).toBeGreaterThan(0);
+    });
+
+    expect(screen.getByRole('heading', { level: 4, name: /Iron Lemon/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Titan Sweater/i })).not.toBeInTheDocument();
+
+    // Toggle off
+    fireEvent.click(toggleButton);
+    await waitFor(() => {
+      expect(screen.getAllByText(/2 of 2/i).length).toBeGreaterThan(0);
+    });
+    expect(screen.getByRole('heading', { level: 4, name: /Titan Sweater/i })).toBeInTheDocument();
+  });
 });

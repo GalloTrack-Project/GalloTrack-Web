@@ -6,6 +6,7 @@ import ParentSelector from './ParentSelector';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { bloodlineOf } from '@/lib/helpers';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
 
 type EditFowlModalProps = {
@@ -127,6 +128,11 @@ export default function EditFowlModal({
   const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
 
+  const birthdateValidation = React.useMemo(
+    () => validateOffspringBirthdate(editBirthdate, editSire, editDam, fowls),
+    [editBirthdate, editSire, editDam, fowls],
+  );
+
   return (
     <Modal
       open
@@ -137,7 +143,7 @@ export default function EditFowlModal({
       className="max-w-lg"
     >
 
-        <form onSubmit={handleUpdateFowl} className="overflow-y-auto p-6 space-y-4 text-sm">
+        <form onSubmit={(e) => { if (!birthdateValidation.valid) { e.preventDefault(); return; } handleUpdateFowl(e); }} className="overflow-y-auto p-6 space-y-4 text-sm">
           
           <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/40 dark:border-border">
             <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-xs uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
@@ -218,7 +224,30 @@ export default function EditFowlModal({
             </div>
             <div className="mb-2">
               <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="birth-date">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
-              <input type="date" value={editBirthdate} onChange={(e) => handleEditBirthdateChange(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:border-emerald-500" id="birth-date" />
+              <input
+                type="date"
+                value={editBirthdate}
+                onChange={(e) => handleEditBirthdateChange(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className={`w-full p-2.5 border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold ${
+                  birthdateValidation.errors.length > 0
+                    ? 'border-rose-500 focus:border-rose-500'
+                    : 'border-input-border focus:border-emerald-500'
+                }`}
+                id="birth-date"
+              />
+              {birthdateValidation.errors.map((err, i) => (
+                <p key={`edit-bd-err-${i}`} className="mt-1 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span>{err}</span>
+                </p>
+              ))}
+              {birthdateValidation.warnings.map((warn, i) => (
+                <p key={`edit-bd-warn-${i}`} className="mt-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span>{warn}</span>
+                </p>
+              ))}
               {(() => {
                 const parts = getAgeParts(editBirthdate);
                 return parts ? (
@@ -379,8 +408,8 @@ export default function EditFowlModal({
           <div className="pt-2">
             <button 
               type="submit" 
-              disabled={loading}
-              className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-md text-sm shadow-md uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center space-x-2"
+              disabled={loading || !birthdateValidation.valid}
+              className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-md text-sm shadow-md uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
               <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>

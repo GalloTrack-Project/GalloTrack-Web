@@ -21,7 +21,7 @@ export type RoleKey = RegistryRole | 'Sire Material';
 
 export const LIFECYCLE_STATUSES: LifecycleStatus[] = ['Active', 'Archived', 'Deceased'];
 export const REGISTRY_ROLES: RegistryRole[] = ['Breeding Male', 'Breeding Female', 'Non-Breeding'];
-export const ROLE_FILTER_OPTIONS: RoleKey[] = [...REGISTRY_ROLES, 'Sire Material'];
+export const ROLE_FILTER_OPTIONS: RoleKey[] = [...REGISTRY_ROLES];
 
 /**
  * Display-only labels. The stored value `registry_role = 'Non-Breeding'` (and
@@ -278,9 +278,40 @@ export function getRegistryCounts(fowls: FowlRecord[]): RegistryCounts {
 
 // ── Inventory tab counts (single vocabulary with the Registry) ─────────────
 
-export const BREEDING_READY_MIN_DAYS = 240; // ~8 months: mature enough to breed
+/**
+ * Configurable breeding readiness age thresholds in days.
+ * Kept at 240 until farm owner confirms a preferred value.
+ * Configured in a single place with built-in support for separate rooster and hen values:
+ * - male: minimum days for Roosters / Cocks / Stags
+ * - female: minimum days for Hens / Pullets
+ * - default: fallback if gender is unspecified
+ */
+export const MIN_BREEDING_AGE_BY_SEX: { male: number; female: number; default: number } = {
+  male: 240,
+  female: 240,
+  default: 240,
+};
+
+export const MIN_BREEDING_AGE_DAYS = MIN_BREEDING_AGE_BY_SEX.default; // Single named constant
+export const BREEDING_READY_MIN_DAYS = MIN_BREEDING_AGE_DAYS; // Backward-compatibility alias
 export const BREEDING_READY_LOOKAHEAD_DAYS = 30;
-const MATURE_STAGES = new Set(['cock', 'hen', 'bull stag', 'senior hen', 'broodcock', 'broodhen', 'mature']);
+
+/**
+ * Returns the configured minimum breeding age in days.
+ * If gender is provided, uses sex-specific threshold from MIN_BREEDING_AGE_BY_SEX;
+ * otherwise returns MIN_BREEDING_AGE_DAYS.
+ */
+export function getMinBreedingAgeDays(gender?: string | null): number {
+  if (!gender) return MIN_BREEDING_AGE_BY_SEX.default;
+  const g = gender.trim().toLowerCase();
+  if (g === 'hen' || g === 'female' || g === 'pullet') {
+    return MIN_BREEDING_AGE_BY_SEX.female;
+  }
+  if (g === 'rooster' || g === 'male' || g === 'cock' || g === 'stag') {
+    return MIN_BREEDING_AGE_BY_SEX.male;
+  }
+  return MIN_BREEDING_AGE_BY_SEX.default;
+}
 
 function ageInDays(f: FowlRecord, now: number): number | null {
   const birth = (f.birthdate || '').trim();
@@ -290,42 +321,82 @@ function ageInDays(f: FowlRecord, now: number): number | null {
 }
 
 /**
- * Active + at least 8 months old; when no birthdate is recorded, fall back to a mature growth stage.
+ * Ready to Breed rule:
+ * - Active: isActiveStatus(f) is true, activity_status !== 'inactive',
+ *   archive_kind !== 'retired'/'inactive'/'sold'
+ * - Not retired from breeding: retired_scope !== 'breeding' && retired_scope !== 'both'
+ * - Not infertile: condition_status !== 'Infertile' (case-insensitive)
+ * - Either an Active Breeder (Breeding Male or Female) OR a Breeding Stock offspring
+ *   (Non-Breeding offspring with breeding_role === 'material' | 'breeder')
+ * - Age is at or above MIN_BREEDING_AGE_DAYS (missing birth date returns false; does not guess from growth stages).
+ * - Growth stage names are never hardcoded to exclude birds that meet the age rule.
  */
-export function isBreedingReady(f: FowlRecord): boolean {
+export function isBreedingReady(
+  f: FowlRecord,
+  ctx?: RegistryContext,
+  now: number = Date.now(),
+): boolean {
   if (!isActiveStatus(f)) return false;
-  const days = ageInDays(f, Date.now());
-  if (days !== null) return days >= BREEDING_READY_MIN_DAYS;
-  return MATURE_STAGES.has((f.growth_stage || '').trim().toLowerCase());
+  if (f.activity_status === 'inactive') return false;
+  if (f.archive_kind === 'retired' || f.archive_kind === 'inactive' || f.archive_kind === 'sold') return false;
+  if (f.retired_scope === 'breeding' || f.retired_scope === 'both') return false;
+  if ((f.condition_status || '').trim().toLowerCase() === 'infertile') return false;
+
+  const role = roleOf(f, ctx);
+  const isActiveBreeder = role === 'Breeding Male' || role === 'Breeding Female';
+  const isBreedingStockOff = role === 'Non-Breeding' && isBreedingStockOffspring(f);
+  if (!isActiveBreeder && !isBreedingStockOff) return false;
+
+  const days = ageInDays(f, now);
+  if (days === null) return false;
+  return days >= getMinBreedingAgeDays(f.gender);
 }
 
 /**
- * Whole days left before the 240-day maturity threshold (1 = ready tomorrow).
- * null when the chicken is not active, has no usable birthdate, or is already ready.
+ * Whole days left before the MIN_BREEDING_AGE_DAYS maturity threshold (1 = ready tomorrow).
+ * null when the chicken is not active, retired, inactive, infertile, not an active breeder or
+ * breeding stock offspring, has no usable birthdate, or is already ready.
  */
-export function daysUntilBreedingReady(f: FowlRecord, now: number = Date.now()): number | null {
+export function daysUntilBreedingReady(
+  f: FowlRecord,
+  now: number = Date.now(),
+  ctx?: RegistryContext,
+): number | null {
   if (!isActiveStatus(f)) return null;
+  if (f.activity_status === 'inactive') return null;
+  if (f.archive_kind === 'retired' || f.archive_kind === 'inactive' || f.archive_kind === 'sold') return null;
+  if (f.retired_scope === 'breeding' || f.retired_scope === 'both') return null;
+  if ((f.condition_status || '').trim().toLowerCase() === 'infertile') return null;
+
+  const role = roleOf(f, ctx);
+  const isActiveBreeder = role === 'Breeding Male' || role === 'Breeding Female';
+  const isBreedingStockOff = role === 'Non-Breeding' && isBreedingStockOffspring(f);
+  if (!isActiveBreeder && !isBreedingStockOff) return null;
+
   const days = ageInDays(f, now);
   if (days === null) return null;
-  const remaining = Math.ceil(BREEDING_READY_MIN_DAYS - days);
+  const remaining = Math.ceil(getMinBreedingAgeDays(f.gender) - days);
   return remaining > 0 ? remaining : null;
 }
 
 /** True when the chicken becomes ready to breed within BREEDING_READY_LOOKAHEAD_DAYS (inclusive). */
-export function isBreedingReadySoon(f: FowlRecord, now: number = Date.now()): boolean {
-  const remaining = daysUntilBreedingReady(f, now);
+export function isBreedingReadySoon(
+  f: FowlRecord,
+  now: number = Date.now(),
+  ctx?: RegistryContext,
+): boolean {
+  const remaining = daysUntilBreedingReady(f, now, ctx);
   return remaining !== null && remaining >= 1 && remaining <= BREEDING_READY_LOOKAHEAD_DAYS;
 }
 
 /**
- * The breeding herd behind the "Breeders Stock" inventory tab: living birds
- * with a breeding registry role (Breeding Male / Breeding Female) or an
- * explicit `breeding_role = 'breeder'` designation. Fight Prospects (offspring)
- * and Material prospects are not part of the breeding herd and are excluded.
+ * The breeding herd behind the "Active Breeders" (formerly Breeders Stock) inventory tab:
+ * living birds whose registry role is Breeding Male or Breeding Female.
+ * Offspring chickens designated for breeding (breeding_role = 'material' | 'breeder')
+ * stay under the Registry Offspring "Breeding Stock" pill until promoted to Breeding Male or Breeding Female.
  */
 export function isBreederStock(f: FowlRecord, ctx?: RegistryContext): boolean {
   if (!isActiveStatus(f)) return false;
-  if (f.breeding_role === 'breeder') return true;
   const role = roleOf(f, ctx);
   return role === 'Breeding Male' || role === 'Breeding Female';
 }
@@ -333,7 +404,7 @@ export function isBreederStock(f: FowlRecord, ctx?: RegistryContext): boolean {
 export interface InventoryCounts {
   all: number;
   active: number;
-  /** Living breeding herd (Breeders Stock tab): excludes Fight Prospects. */
+  /** Living breeding herd (Active Breeders tab): excludes all Offspring / Fight Prospects. */
   breedersStock: number;
   breedingReady: number;
   archived: number;
@@ -345,9 +416,80 @@ export function inventoryCounts(fowls: FowlRecord[], ctx?: RegistryContext): Inv
     all: fowls.length,
     active: fowls.filter(isActiveStatus).length,
     breedersStock: fowls.filter((f) => isBreederStock(f, ctx)).length,
-    breedingReady: fowls.filter(isBreedingReady).length,
+    breedingReady: fowls.filter((f) => isBreedingReady(f, ctx)).length,
     archived: fowls.filter(isArchivedStatus).length,
     deceased: fowls.filter(isDeceasedStatus).length,
+  };
+}
+
+// ── Birth Date Validation ─────────────────────────────────────────────────
+
+export interface BirthdateValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Validates offspring birth date against parent records:
+ * - Error (blocking): Offspring birth date cannot be earlier than either parent's birth date.
+ * - Warning (non-blocking): Warn if a parent was younger than MIN_BREEDING_AGE_DAYS at offspring birth.
+ */
+export function validateOffspringBirthdate(
+  birthdate: string | null | undefined,
+  sireNameOrCode: string | null | undefined,
+  damNameOrCode: string | null | undefined,
+  fowls: FowlRecord[],
+): BirthdateValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const rawBd = (birthdate || '').trim();
+  if (!rawBd) {
+    return { valid: true, errors, warnings };
+  }
+
+  const childTime = new Date(rawBd).getTime();
+  if (isNaN(childTime)) {
+    return { valid: false, errors: ['Invalid birth date format.'], warnings };
+  }
+
+  const checkParent = (nameOrCode: string | null | undefined, roleLabel: 'Sire' | 'Dam') => {
+    const raw = (nameOrCode || '').trim();
+    if (!raw || raw.toLowerCase() === 'foundation stock') return;
+    const lower = raw.toLowerCase();
+    const parent = fowls.find(
+      (f) =>
+        (f.name || '').trim().toLowerCase() === lower ||
+        (f.bird_code || '').trim().toLowerCase() === lower,
+    );
+    if (!parent || !parent.birthdate) return;
+
+    const parentTime = new Date(parent.birthdate).getTime();
+    if (isNaN(parentTime)) return;
+
+    if (childTime < parentTime) {
+      errors.push(
+        `Birth date cannot be earlier than ${roleLabel}'s birth date (${parent.name || parent.bird_code} was born on ${parent.birthdate}).`,
+      );
+    } else {
+      const parentAgeDays = Math.floor((childTime - parentTime) / 86400000);
+      const minAge = getMinBreedingAgeDays(parent.gender || (roleLabel === 'Sire' ? 'Male' : 'Female'));
+      if (parentAgeDays < minAge) {
+        warnings.push(
+          `${roleLabel} (${parent.name || parent.bird_code}) was only ${parentAgeDays} days old when this offspring was born (recommended minimum breeding age is ${minAge} days).`,
+        );
+      }
+    }
+  };
+
+  checkParent(sireNameOrCode, 'Sire');
+  checkParent(damNameOrCode, 'Dam');
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
   };
 }
 
@@ -622,6 +764,30 @@ export function hasFightRecord(
   if (foughtFowlIds.has(fowl.id)) return true;
   if (foughtNames && foughtNames.has((fowl.name || '').trim().toLowerCase())) {
     return true;
+  }
+  return false;
+}
+
+/**
+ * Predicate: true if chicken qualifies as a Retired Fighter:
+ * 1. Has at least one recorded fight in `match` (hasFightRecord is true).
+ * 2. Is currently designated for breeding:
+ *    - Active Breeder (roleOf is 'Breeding Male' or 'Breeding Female'), OR
+ *    - Offspring Breeding Stock (roleOf is 'Non-Breeding' and f.breeding_role === 'material' or 'breeder').
+ */
+export function isRetiredFighter(
+  fowl: FowlRecord,
+  foughtFowlIds: Set<number>,
+  foughtNames?: Set<string>,
+  ctx?: RegistryContext,
+): boolean {
+  if (!hasFightRecord(fowl, foughtFowlIds, foughtNames)) return false;
+  const role = roleOf(fowl, ctx);
+  if (role === 'Breeding Male' || role === 'Breeding Female') {
+    return true;
+  }
+  if (role === 'Non-Breeding') {
+    return fowl.breeding_role === 'material' || fowl.breeding_role === 'breeder';
   }
   return false;
 }

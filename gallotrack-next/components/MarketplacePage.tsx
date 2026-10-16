@@ -25,7 +25,10 @@ import {
   isBreedingReadySoon,
   isBreederStock,
   type RoleKey,
+  isRetiredFighter,
+  extractFoughtLookups,
 } from '@/lib/registry-roles';
+import RetiredFighterBadge from '@/components/profiling/RetiredFighterBadge';
 import { Search, X } from 'lucide-react';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { INVENTORY_STATUS_TABS } from '@/lib/nav-manifest';
@@ -80,8 +83,9 @@ function getWinRate(fowlName: string, matches: MatchRecord[]) {
 }
 
 function getAgeDisplay(birthdate: string) {
-  if (!birthdate) return 'N/A';
+  if (!birthdate) return 'Needs birth date';
   const b = new Date(birthdate);
+  if (isNaN(b.getTime())) return 'Needs birth date';
   const now = new Date();
   const diffMs = now.getTime() - b.getTime();
   const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -147,6 +151,12 @@ function FowlCard({
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
     [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
   );
+  const { foughtFowlIds, foughtNames } = useMemo(
+    () => extractFoughtLookups(matches),
+    [matches],
+  );
+  const regCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
+  const isRetired = isRetiredFighter(fowl, foughtFowlIds, foughtNames, regCtx);
   const accent = isActiveStatus(fowl)
     ? 'from-emerald-400 to-emerald-500'
     : isArchivedStatus(fowl)
@@ -207,6 +217,7 @@ function FowlCard({
             {parentage && (parentage.type === 'close' || parentage.type === 'line') && (
               <RelatednessBadge classification={parentage} compact />
             )}
+            {isRetired && <RetiredFighterBadge />}
             {fowl.wing_band ? (
               <span className="text-xs font-mono font-bold text-muted-foreground">
                 🏷 <HighlightText text={fowl.wing_band} query={query} />
@@ -539,9 +550,14 @@ export default function MarketplacePage({
   const counts = useMemo(() => inventoryCounts(fowls, registryCtx), [fowls, registryCtx]);
   const classificationMap = useMemo(() => classifyFlock(fowls), [fowls]);
 
-  const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
+  const tabs: { id: FilterTab; label: string; count: number; tooltip?: string }[] = useMemo(() => [
     { id: 'all', label: 'All Chickens', count: counts.all },
-    { id: 'active', label: 'Breeders Stock', count: counts.breedersStock },
+    {
+      id: 'active',
+      label: 'Active Breeders',
+      count: counts.breedersStock,
+      tooltip: 'Living breeding herd — Breeding Males (sires) and Breeding Females (dams).',
+    },
     { id: 'breeding', label: 'Ready to Breed', count: counts.breedingReady },
     { id: 'archived', label: 'Archived', count: counts.archived },
     { id: 'deceased', label: 'Deceased', count: counts.deceased },
@@ -552,7 +568,7 @@ export default function MarketplacePage({
   const { filteredFowls, matchMap } = useMemo(() => {
     let pool = fowls;
     if (activeTab === 'active') pool = pool.filter((f) => isBreederStock(f, registryCtx));
-    else if (activeTab === 'breeding') pool = pool.filter((f) => isBreedingReady(f));
+    else if (activeTab === 'breeding') pool = pool.filter((f) => isBreedingReady(f, registryCtx));
     else if (activeTab === 'archived') pool = pool.filter((f) => isArchivedStatus(f));
     else if (activeTab === 'deceased') pool = pool.filter((f) => isDeceasedStatus(f));
     if (roleFilter !== 'all') pool = pool.filter((f) => roleOf(f, registryCtx) === roleFilter);
@@ -686,7 +702,12 @@ export default function MarketplacePage({
       <div className="flex items-center gap-2 bg-muted rounded-md border border-border p-1 shadow-sm">
         <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => { setActiveTab(tab.id); setRoleFilter('all'); }} className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}>
+            <button
+              key={tab.id}
+              title={tab.tooltip}
+              onClick={() => { setActiveTab(tab.id); setRoleFilter('all'); }}
+              className={`px-3.5 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted/60 hover:text-card-foreground'}`}
+            >
               {tab.label}
               <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground'}`}>{tab.count}</span>
             </button>
@@ -776,11 +797,17 @@ export default function MarketplacePage({
           </div>
           <div className="space-y-1">
             <h2 className="text-base font-extrabold text-card-foreground">
-              {debouncedQuery.trim() ? `No chickens found for "${debouncedQuery}"` : 'No Chickens Found'}
+              {debouncedQuery.trim()
+                ? `No chickens found for "${debouncedQuery}"`
+                : activeTab === 'active'
+                ? 'No Active Breeders'
+                : 'No Chickens Found'}
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground font-medium max-w-sm mx-auto">
               {debouncedQuery.trim()
                 ? 'No chickens match your search in this tab. Check the spelling or enable "Include parents" to search lineage.'
+                : activeTab === 'active'
+                ? 'No active breeding males or females found in the herd.'
                 : 'No chickens match your current filters. Try adjusting your search or add new chickens.'}
             </p>
           </div>

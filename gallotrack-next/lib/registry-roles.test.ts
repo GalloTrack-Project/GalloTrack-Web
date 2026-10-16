@@ -21,10 +21,17 @@ import {
   getProspectCategoryCounts,
   filterProspectsByCategory,
   ROLE_LABEL,
+  isBreedingStockOffspring,
+  isNonBreedingOffspring,
   getOffspringClassificationCounts,
   filterOffspringByClassification,
   extractFoughtLookups,
   hasFightRecord,
+  isRetiredFighter,
+  MIN_BREEDING_AGE_DAYS,
+  MIN_BREEDING_AGE_BY_SEX,
+  getMinBreedingAgeDays,
+  validateOffspringBirthdate,
 } from './registry-roles';
 
 const f = (over: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -259,15 +266,166 @@ describe('invariant: Inventory All = Active + Archived + Deceased', () => {
   });
 });
 
-describe('Breeding Ready (proposed rule)', () => {
-  it('is an active, mature (8+ months) chicken', () => {
-    const old = new Date(Date.now() - 300 * 86400000).toISOString().slice(0, 10);
-    expect(isBreedingReady(f({ id: 1, name: 'A', birthdate: old }))).toBe(true);
-    const baby = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
-    expect(isBreedingReady(f({ id: 2, name: 'B', birthdate: baby }))).toBe(false);
-    expect(isBreedingReady(f({ id: 3, name: 'C', growth_stage: 'Hen' }))).toBe(true);
-    expect(isBreedingReady(f({ id: 4, name: 'D', growth_stage: 'Chick' }))).toBe(false);
-    expect(isBreedingReady(f({ id: 5, name: 'E', status: 'Archived', growth_stage: 'Hen' }))).toBe(false);
+describe('isBreedingReady (Active breeding specification)', () => {
+  const NOW = new Date('2026-10-16T00:00:00Z').getTime();
+  const day = (n: number) => new Date(NOW - n * 86400000).toISOString().slice(0, 10);
+
+  it('requires active status and not archived or deceased', () => {
+    expect(isBreedingReady(f({ id: 1, name: 'Active', birthdate: day(300) }), undefined, NOW)).toBe(true);
+    expect(isBreedingReady(f({ id: 2, name: 'Archived', status: 'Archived', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 3, name: 'Deceased', status: 'Deceased', birthdate: day(300) }), undefined, NOW)).toBe(false);
+  });
+
+  it('excludes inactive activity_status and retired / inactive archive_kinds', () => {
+    expect(isBreedingReady(f({ id: 4, name: 'Inactive Activity', activity_status: 'inactive', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 5, name: 'Retired Kind', archive_kind: 'retired', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 6, name: 'Sold Kind', archive_kind: 'sold', birthdate: day(300) }), undefined, NOW)).toBe(false);
+  });
+
+  it('excludes birds retired from breeding (retired_scope = breeding or both)', () => {
+    expect(isBreedingReady(f({ id: 7, name: 'Retired Breeding', retired_scope: 'breeding', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 8, name: 'Retired Both', retired_scope: 'both', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 9, name: 'Retired Fighting Only', retired_scope: 'fighting', birthdate: day(300) }), undefined, NOW)).toBe(true);
+  });
+
+  it('excludes infertile birds (condition_status = Infertile, case-insensitive)', () => {
+    expect(isBreedingReady(f({ id: 10, name: 'Infertile 1', condition_status: 'Infertile', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 11, name: 'Infertile 2', condition_status: 'infertile', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 12, name: 'Fit Bird', condition_status: 'Fit / Recovered', birthdate: day(300) }), undefined, NOW)).toBe(true);
+  });
+
+  it('requires either an Active Breeder or Breeding Stock offspring', () => {
+    // Active Breeder (Breeding Male / Female)
+    expect(isBreedingReady(f({ id: 13, name: 'Active Sire', registry_role: 'Breeding Male', birthdate: day(300) }), undefined, NOW)).toBe(true);
+    expect(isBreedingReady(f({ id: 14, name: 'Active Dam', registry_role: 'Breeding Female', gender: 'Hen', birthdate: day(300) }), undefined, NOW)).toBe(true);
+
+    // Breeding Stock offspring (material or breeder role)
+    expect(isBreedingReady(f({ id: 15, name: 'Stock Offspring', registry_role: 'Non-Breeding', breeding_role: 'material', birthdate: day(300) }), undefined, NOW)).toBe(true);
+    expect(isBreedingReady(f({ id: 16, name: 'Promoted Prospect', registry_role: 'Non-Breeding', breeding_role: 'breeder', birthdate: day(300) }), undefined, NOW)).toBe(true);
+
+    // Non-breeding offspring without breeding designation -> NOT ready
+    expect(isBreedingReady(f({ id: 17, name: 'Regular Offspring', registry_role: 'Non-Breeding', breeding_role: 'none', birthdate: day(300) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 18, name: 'Unassigned Offspring', registry_role: 'Non-Breeding', birthdate: day(300) }), undefined, NOW)).toBe(false);
+  });
+
+  it('enforces age at or above MIN_BREEDING_AGE_DAYS (240)', () => {
+    expect(MIN_BREEDING_AGE_DAYS).toBe(240);
+    expect(isBreedingReady(f({ id: 19, name: 'Age 240', birthdate: day(240) }), undefined, NOW)).toBe(true);
+    expect(isBreedingReady(f({ id: 20, name: 'Age 239', birthdate: day(239) }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 21, name: 'Age 100', birthdate: day(100) }), undefined, NOW)).toBe(false);
+  });
+
+  it('supports single-point configuration and sex-specific thresholds for roosters and hens', () => {
+    expect(getMinBreedingAgeDays('Rooster')).toBe(240);
+    expect(getMinBreedingAgeDays('Hen')).toBe(240);
+    expect(getMinBreedingAgeDays(undefined)).toBe(240);
+
+    // Verify it easily supports separate rooster vs hen values if configured
+    try {
+      MIN_BREEDING_AGE_BY_SEX.male = 270;
+      MIN_BREEDING_AGE_BY_SEX.female = 210;
+      expect(getMinBreedingAgeDays('Rooster')).toBe(270);
+      expect(getMinBreedingAgeDays('Hen')).toBe(210);
+
+      // Hen at 220d is ready under 210d threshold
+      expect(isBreedingReady(f({ id: 191, name: 'Hen 220d', gender: 'Hen', birthdate: day(220) }), undefined, NOW)).toBe(true);
+      // Rooster at 250d is not ready under 270d threshold
+      expect(isBreedingReady(f({ id: 192, name: 'Rooster 250d', gender: 'Rooster', birthdate: day(250) }), undefined, NOW)).toBe(false);
+    } finally {
+      // Restore baseline
+      MIN_BREEDING_AGE_BY_SEX.male = 240;
+      MIN_BREEDING_AGE_BY_SEX.female = 240;
+    }
+  });
+
+  it('returns false when birth date is missing without guessing from growth stages', () => {
+    expect(isBreedingReady(f({ id: 22, name: 'No Birthdate Cock', birthdate: '', growth_stage: 'Cock' }), undefined, NOW)).toBe(false);
+    expect(isBreedingReady(f({ id: 23, name: 'Null Birthdate Hen', birthdate: undefined, growth_stage: 'Hen' }), undefined, NOW)).toBe(false);
+  });
+
+  it('does not hardcode growth-stage name exclusions when age qualifies', () => {
+    // If a bird is labeled Chick / Stag / Pullet but has age >= 240 days, age rule qualifies it
+    expect(isBreedingReady(f({ id: 24, name: 'Stage Chick but Old', birthdate: day(250), growth_stage: 'Chick' }), undefined, NOW)).toBe(true);
+    expect(isBreedingReady(f({ id: 25, name: 'Stage Stag but Old', birthdate: day(250), growth_stage: 'Stag' }), undefined, NOW)).toBe(true);
+    // If a bird is labeled Cock but age < 240 days, age rule rejects it
+    expect(isBreedingReady(f({ id: 26, name: 'Stage Cock but Young', birthdate: day(200), growth_stage: 'Cock' }), undefined, NOW)).toBe(false);
+  });
+
+  it('derives expected Ready to Breed count dynamically from fixtures', () => {
+    const fixtureFlock: FowlRecord[] = [
+      f({ id: 101, name: 'Ready Breeder 1', registry_role: 'Breeding Male', birthdate: day(300) }), // YES
+      f({ id: 102, name: 'Ready Breeder 2', registry_role: 'Breeding Female', gender: 'Hen', birthdate: day(250) }), // YES
+      f({ id: 103, name: 'Ready Stock Offspring', registry_role: 'Non-Breeding', breeding_role: 'material', birthdate: day(245) }), // YES
+      f({ id: 104, name: 'Young Breeder', registry_role: 'Breeding Male', birthdate: day(180) }), // NO (too young)
+      f({ id: 105, name: 'Archived Breeder', registry_role: 'Breeding Male', status: 'Archived', birthdate: day(400) }), // NO (archived)
+      f({ id: 106, name: 'Infertile Breeder', registry_role: 'Breeding Female', gender: 'Hen', condition_status: 'Infertile', birthdate: day(400) }), // NO (infertile)
+      f({ id: 107, name: 'Retired Scope Breeder', registry_role: 'Breeding Male', retired_scope: 'breeding', birthdate: day(400) }), // NO (retired)
+      f({ id: 108, name: 'Non-Breeding Offspring', registry_role: 'Non-Breeding', breeding_role: 'none', birthdate: day(300) }), // NO (not breeding stock)
+      f({ id: 109, name: 'Missing Birthdate Breeder', registry_role: 'Breeding Male', birthdate: '' }), // NO (missing birthdate)
+      f({ id: 110, name: 'Inactive Status Breeder', registry_role: 'Breeding Male', activity_status: 'inactive', birthdate: day(350) }), // NO (inactive activity)
+    ];
+
+    // Compute expected count derived by matching individual criteria predicates
+    const derivedReadyCount = fixtureFlock.filter((fowl) => {
+      const active = isActiveStatus(fowl) && fowl.activity_status !== 'inactive' && !fowl.archive_kind;
+      const notRetired = fowl.retired_scope !== 'breeding' && fowl.retired_scope !== 'both';
+      const notInfertile = (fowl.condition_status || '').toLowerCase() !== 'infertile';
+      const role = roleOf(fowl);
+      const eligibleRole = role === 'Breeding Male' || role === 'Breeding Female' || (role === 'Non-Breeding' && isBreedingStockOffspring(fowl));
+      const birth = (fowl.birthdate || '').trim();
+      const ageDays = birth ? (NOW - new Date(birth).getTime()) / 86400000 : null;
+      const mature = ageDays !== null && ageDays >= MIN_BREEDING_AGE_DAYS;
+      return active && notRetired && notInfertile && eligibleRole && mature;
+    }).length;
+
+    expect(derivedReadyCount).toBe(3);
+    const readyFiltered = fixtureFlock.filter((f) => isBreedingReady(f, undefined, NOW)).length;
+    expect(readyFiltered).toBe(derivedReadyCount);
+    expect(inventoryCounts(fixtureFlock).breedingReady).toBe(derivedReadyCount);
+  });
+});
+
+describe('validateOffspringBirthdate (Birth Date Validation)', () => {
+  const sire = f({ id: 1, name: 'Sire Iron', bird_code: '10', birthdate: '2024-01-01', registry_role: 'Breeding Male' });
+  const dam = f({ id: 2, name: 'Dam Pearl', bird_code: 'A', birthdate: '2024-02-01', gender: 'Hen', registry_role: 'Breeding Female' });
+  const fowls = [sire, dam];
+
+  it('blocks when offspring birth date is earlier than sire birth date', () => {
+    const res = validateOffspringBirthdate('2023-12-15', 'Sire Iron', 'Dam Pearl', fowls);
+    expect(res.valid).toBe(false);
+    expect(res.errors.length).toBeGreaterThan(0);
+    expect(res.errors[0]).toContain("earlier than Sire's birth date");
+  });
+
+  it('blocks when offspring birth date is earlier than dam birth date', () => {
+    const res = validateOffspringBirthdate('2024-01-15', 'Sire Iron', 'Dam Pearl', fowls);
+    expect(res.valid).toBe(false);
+    expect(res.errors.length).toBeGreaterThan(0);
+    expect(res.errors[0]).toContain("earlier than Dam's birth date");
+  });
+
+  it('warns (does not block) if parent was younger than MIN_BREEDING_AGE_DAYS (240 days) at offspring birth', () => {
+    // Sire born 2024-01-01. Offspring born 2024-06-01 (152 days after sire birth, < 240 days).
+    const res = validateOffspringBirthdate('2024-06-01', 'Sire Iron', 'Dam Pearl', fowls);
+    expect(res.valid).toBe(true);
+    expect(res.errors).toHaveLength(0);
+    expect(res.warnings.length).toBeGreaterThan(0);
+    expect(res.warnings.some((w) => w.includes('recommended minimum breeding age'))).toBe(true);
+  });
+
+  it('passes cleanly without warnings when parents are mature (> 240 days) at offspring birth', () => {
+    // Both parents born Jan/Feb 2024. Offspring born 2025-01-01 (> 330 days).
+    const res = validateOffspringBirthdate('2025-01-01', 'Sire Iron', 'Dam Pearl', fowls);
+    expect(res.valid).toBe(true);
+    expect(res.errors).toHaveLength(0);
+    expect(res.warnings).toHaveLength(0);
+  });
+
+  it('handles Foundation Stock or missing parents cleanly without errors', () => {
+    const res = validateOffspringBirthdate('2025-01-01', 'Foundation Stock', 'Foundation Stock', fowls);
+    expect(res.valid).toBe(true);
+    expect(res.errors).toHaveLength(0);
+    expect(res.warnings).toHaveLength(0);
   });
 });
 
@@ -296,18 +454,40 @@ describe('daysUntilBreedingReady / isBreedingReadySoon (30-day countdown)', () =
   });
 });
 
-describe('isBreederStock (Breeders Stock tab)', () => {
-  it('includes breeding-role birds and explicit Breeder designations', () => {
+describe('isBreederStock (Active Breeders tab)', () => {
+  it('includes active birds with Breeding Male or Breeding Female registry roles', () => {
     expect(isBreederStock(f({ id: 1, name: 'Iron', registry_role: 'Breeding Male' }))).toBe(true);
     expect(isBreederStock(f({ id: 2, name: 'Golden', gender: 'Hen', registry_role: 'Breeding Female' }))).toBe(true);
-    expect(isBreederStock(f({ id: 3, name: 'Picked', breeding_role: 'breeder', registry_role: 'Non-Breeding' }))).toBe(true);
   });
 
-  it('excludes fight prospects, material prospects and non-active birds', () => {
+  it('excludes offspring even if breeding_role is breeder or material (until promoted)', () => {
+    expect(isBreederStock(f({ id: 3, name: 'Picked', breeding_role: 'breeder', registry_role: 'Non-Breeding' }))).toBe(false);
     expect(isBreederStock(f({ id: 4, name: 'Kid', registry_role: 'Non-Breeding' }))).toBe(false);
     expect(isBreederStock(f({ id: 5, name: 'Pro', breeding_role: 'material', registry_role: 'Non-Breeding' }))).toBe(false);
     expect(isBreederStock(f({ id: 6, name: 'Old', registry_role: 'Breeding Male', status: 'Archived' }))).toBe(false);
     expect(isBreederStock(f({ id: 7, name: 'Gone', registry_role: 'Breeding Female', status: 'Deceased' }))).toBe(false);
+  });
+
+  it('enforces that an offspring with breeding_role = "breeder" appears in Offspring Breeding Stock and NOT in Inventory Active Breeders', () => {
+    const offspringBreeder = f({
+      id: 99,
+      name: 'Future Sire',
+      registry_role: 'Non-Breeding',
+      breeding_role: 'breeder',
+      status: 'Active',
+    });
+
+    // 1. Offspring tab classification: belongs to Breeding Stock pill
+    expect(isBreedingStockOffspring(offspringBreeder)).toBe(true);
+    expect(isNonBreedingOffspring(offspringBreeder)).toBe(false);
+
+    // 2. Inventory Active Breeders: strictly excluded
+    expect(isBreederStock(offspringBreeder)).toBe(false);
+
+    // 3. Inventory counts: not counted in breedersStock
+    const counts = inventoryCounts([offspringBreeder]);
+    expect(counts.active).toBe(1);
+    expect(counts.breedersStock).toBe(0);
   });
 
   it('derives NULL roles through the registry context (parents in, offspring out)', () => {
@@ -556,6 +736,107 @@ describe('Offspring category helpers', () => {
     const birdWithoutFight = f({ id: 43, name: 'Lemon Blaze' });
     expect(hasFightRecord(birdWithFight, foughtFowlIds, foughtNames)).toBe(true);
     expect(hasFightRecord(birdWithoutFight, foughtFowlIds, foughtNames)).toBe(false);
+  });
+});
+
+describe('breeding_role = "breeder" restrictions (promotion flow only)', () => {
+  it('identifies unpromoted offspring so that the manual "breeder" toggle is disabled while "material" is allowed', () => {
+    const regCtx = buildRegistryContext([
+      f({ id: 1, name: 'Sire 1', registry_role: 'Breeding Male' }),
+      f({ id: 2, name: 'Dam 1', registry_role: 'Breeding Female' }),
+    ]);
+
+    const offspring = f({ id: 3, name: 'Offspring Chick', sire: 'Sire 1', dam: 'Dam 1', registry_role: 'Non-Breeding' });
+    const isUnpromoted = roleOf(offspring, regCtx) === 'Non-Breeding';
+    expect(isUnpromoted).toBe(true);
+
+    // In FowlDetailsModal, options for manual toggle evaluate isUnpromoted:
+    const roleOptions = [
+      { value: 'none', label: 'Not a breeder' },
+      { value: 'breeder', label: 'Breeder' },
+      { value: 'material', label: 'Material' },
+    ];
+    const evaluatedOptions = roleOptions.map((o) => ({
+      value: o.value,
+      disabled: o.value === 'breeder' && isUnpromoted,
+    }));
+
+    expect(evaluatedOptions.find((o) => o.value === 'breeder')?.disabled).toBe(true);
+    expect(evaluatedOptions.find((o) => o.value === 'material')?.disabled).toBe(false);
+    expect(evaluatedOptions.find((o) => o.value === 'none')?.disabled).toBe(false);
+  });
+
+  it('allows breeder role for promoted birds whose registry role is Breeding Male or Female', () => {
+    const promotedSire = f({ id: 4, name: 'Promoted Sire', registry_role: 'Breeding Male', breeding_role: 'breeder' });
+    const isUnpromoted = roleOf(promotedSire) === 'Non-Breeding';
+    expect(isUnpromoted).toBe(false);
+  });
+});
+
+describe('isRetiredFighter rule evaluation', () => {
+  const matches: MatchRecord[] = [
+    { id: 1, fowl_id: 10, entry_name: 'Iron Lemon' } as MatchRecord,
+    { id: 2, fowl_id: 20, entry_name: 'Hatch Silver' } as MatchRecord,
+    { id: 3, fowl_id: 30, entry_name: 'Hatch Mountain' } as MatchRecord,
+  ];
+  const { foughtFowlIds, foughtNames } = extractFoughtLookups(matches);
+
+  it('qualifies a bird that fought AND is an Active Breeder (Breeding Male / Female)', () => {
+    const foughtMaleBreeder = f({
+      id: 10,
+      name: 'Iron Lemon',
+      registry_role: 'Breeding Male',
+      breeding_role: 'material',
+    });
+    expect(isRetiredFighter(foughtMaleBreeder, foughtFowlIds, foughtNames)).toBe(true);
+  });
+
+  it('qualifies an offspring that fought AND is designated as Breeding Stock', () => {
+    const foughtOffspringBreedingStock = f({
+      id: 20,
+      name: 'Hatch Silver',
+      registry_role: 'Non-Breeding',
+      breeding_role: 'material',
+    });
+    expect(isRetiredFighter(foughtOffspringBreedingStock, foughtFowlIds, foughtNames)).toBe(true);
+
+    const foughtPromotedOffspringBreedingStock = f({
+      id: 20,
+      name: 'Hatch Silver',
+      registry_role: 'Non-Breeding',
+      breeding_role: 'breeder',
+    });
+    expect(isRetiredFighter(foughtPromotedOffspringBreedingStock, foughtFowlIds, foughtNames)).toBe(true);
+  });
+
+  it('does NOT qualify an offspring that fought but is regular non-breeding (not breeding stock)', () => {
+    const foughtRegularOffspring = f({
+      id: 30,
+      name: 'Hatch Mountain',
+      registry_role: 'Non-Breeding',
+      breeding_role: 'none',
+    });
+    expect(isRetiredFighter(foughtRegularOffspring, foughtFowlIds, foughtNames)).toBe(false);
+  });
+
+  it('does NOT qualify a breeding stock offspring that has never fought', () => {
+    const unfoughtBreedingStock = f({
+      id: 40,
+      name: 'Sweater Bolt',
+      registry_role: 'Non-Breeding',
+      breeding_role: 'material',
+    });
+    expect(isRetiredFighter(unfoughtBreedingStock, foughtFowlIds, foughtNames)).toBe(false);
+  });
+
+  it('does NOT qualify an active breeder that has never fought', () => {
+    const unfoughtBreeder = f({
+      id: 50,
+      name: 'True Hatch',
+      registry_role: 'Breeding Male',
+      breeding_role: 'none',
+    });
+    expect(isRetiredFighter(unfoughtBreeder, foughtFowlIds, foughtNames)).toBe(false);
   });
 });
 

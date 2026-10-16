@@ -215,16 +215,21 @@ describe('MarketplacePage (Chicken Inventory) search and filtering', () => {
   });
 });
 
-describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to Breed / Breeders Stock)', () => {
-  it('renders the Breeders Stock and Ready to Breed inventory tabs', () => {
+describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to Breed / Active Breeders)', () => {
+  it('renders the Active Breeders and Ready to Breed inventory tabs with tooltips', () => {
     renderMarketplace();
-    expect(screen.getByRole('button', { name: /^Breeders Stock/ })).toBeInTheDocument();
+    const activeBreedersBtn = screen.getByRole('button', { name: /^Active Breeders/ });
+    expect(activeBreedersBtn).toBeInTheDocument();
+    expect(activeBreedersBtn).toHaveAttribute(
+      'title',
+      'Living breeding herd — Breeding Males (sires) and Breeding Females (dams).'
+    );
     expect(screen.getByRole('button', { name: /^Ready to Breed/ })).toBeInTheDocument();
   });
 
-  it('Breeders Stock tab lists only the breeding herd — fight prospects excluded', () => {
+  it('Active Breeders tab lists only the breeding herd — fight prospects excluded', () => {
     renderMarketplace();
-    fireEvent.click(screen.getByRole('button', { name: /^Breeders Stock/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Active Breeders/ }));
 
     // Foundation-stock parents are the breeding herd…
     expect(screen.getByRole('heading', { level: 4, name: /Sweater Crimson/i })).toBeInTheDocument();
@@ -232,6 +237,28 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
     // …while their offspring (fight prospects) are not.
     expect(screen.queryByRole('heading', { level: 4, name: /Sweater Red Storm/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 4, name: /Iron Thunder/i })).not.toBeInTheDocument();
+  });
+
+  it('excludes offspring with breeding_role = breeder from Active Breeders (stays in Registry until promoted)', () => {
+    renderMarketplace({
+      fowls: [
+        {
+          id: 1, name: 'Iron Sire', gender: 'Rooster', status: 'Active',
+          registry_role: 'Breeding Male', breeding_role: 'breeder',
+        } as FowlRecord,
+        {
+          id: 2, name: 'Prospect Breeder', gender: 'Rooster', status: 'Active',
+          registry_role: 'Non-Breeding', breeding_role: 'breeder',
+        } as FowlRecord,
+      ],
+    });
+
+    const activeBreedersTab = screen.getByRole('button', { name: /^Active Breeders/ });
+    expect(activeBreedersTab).toHaveTextContent('Active Breeders1');
+    fireEvent.click(activeBreedersTab);
+
+    expect(screen.getByRole('heading', { level: 4, name: /Iron Sire/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Prospect Breeder/i })).not.toBeInTheDocument();
   });
 
   it('shows a "Ready in N days" badge only inside the 30-day window', () => {
@@ -253,6 +280,43 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
 
     expect(screen.getByText(/Ready in 20 days/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Ready in \d+ days?/i)).toHaveLength(1);
+  });
+
+  it('displays "Needs birth date" rather than guessing when birth date is missing', () => {
+    renderMarketplace({
+      fowls: [
+        {
+          id: 201, name: 'Dateless Hen', gender: 'Hen', breed: 'Kelso', status: 'Active',
+          growth_stage: 'Hen', birthdate: '', sire: 'Foundation Stock', dam: 'Foundation Stock',
+          bird_code: 'D1',
+        } as FowlRecord,
+      ],
+    });
+
+    expect(screen.getAllByText(/Needs birth date/i).length).toBeGreaterThan(0);
+  });
+
+  it('derives Ready to Breed tab count dynamically from fixtures under the active specification', () => {
+    const born = (days: number) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const testFowls: FowlRecord[] = [
+      {
+        id: 301, name: 'Ready Sire', gender: 'Rooster', breed: 'Kelso', status: 'Active',
+        registry_role: 'Breeding Male', birthdate: born(250), sire: 'Foundation Stock', dam: 'Foundation Stock',
+      } as FowlRecord,
+      {
+        id: 302, name: 'Young Breeder', gender: 'Rooster', breed: 'Kelso', status: 'Active',
+        registry_role: 'Breeding Male', birthdate: born(180), sire: 'Foundation Stock', dam: 'Foundation Stock',
+      } as FowlRecord,
+      {
+        id: 303, name: 'No Date Breeder', gender: 'Rooster', breed: 'Kelso', status: 'Active',
+        registry_role: 'Breeding Male', birthdate: '', sire: 'Foundation Stock', dam: 'Foundation Stock',
+      } as FowlRecord,
+    ];
+
+    renderMarketplace({ fowls: testFowls });
+
+    const breedingTab = screen.getByRole('button', { name: /^Ready to Breed/ });
+    expect(breedingTab).toHaveTextContent('Ready to Breed1');
   });
 
   it('renders Breeding Type dropdown and filters chickens by breeding type', () => {

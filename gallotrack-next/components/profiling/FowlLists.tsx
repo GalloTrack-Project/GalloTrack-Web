@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import type { FowlRecord, MatchRecord, SiblingRelation, ProfilingSubTab } from '@/lib/types';
 import {
   getAgeParts,
@@ -37,11 +37,14 @@ import {
   getOffspringClassificationCounts,
   extractFoughtLookups,
   hasFightRecord,
+  isRetiredFighter,
+  buildRegistryContext,
 } from '@/lib/registry-roles';
+import RetiredFighterBadge from '@/components/profiling/RetiredFighterBadge';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { cn } from '@/components/ui/utils';
 
-type ListTab = 'males' | 'females' | 'archived' | 'deceased' | 'sireMaterial' | 'offspring';
+type ListTab = 'males' | 'females' | 'archived' | 'deceased' | 'offspring';
 
 type Props = {
   tab: ListTab;
@@ -73,6 +76,7 @@ function FowlCard({
   allFowls,
   highlightQuery,
   classificationMap,
+  isRetired,
 }: {
   fowl: FowlRecord;
   index: number;
@@ -85,6 +89,7 @@ function FowlCard({
   allFowls: FowlRecord[];
   highlightQuery?: string;
   classificationMap?: Map<string, GeneticClassification>;
+  isRetired?: boolean;
 }) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
@@ -125,6 +130,7 @@ function FowlCard({
           {(parentage.type === 'close' || parentage.type === 'line') && (
             <RelatednessBadge classification={parentage} compact />
           )}
+          {isRetired && <RetiredFighterBadge />}
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>
@@ -276,7 +282,7 @@ function InventoryMovedPanel({
 }
 
 type BodyProps = {
-  tab: 'males' | 'females' | 'sireMaterial' | 'offspring';
+  tab: 'males' | 'females' | 'offspring';
   lists: RegistryLists;
   fowls: FowlRecord[];
   matchHistory: MatchRecord[];
@@ -321,13 +327,45 @@ function FowlListsBody({
   const [filterDam, setFilterDam] = useState('all');
   const [filterStage, setFilterStage] = useState('all');
   const [filterBreed, setFilterBreed] = useState('all');
-  const [filterFights, setFilterFights] = useState<'all' | 'with' | 'without'>('all');
+  const readFightFilterFromUrl = useCallback((): 'all' | 'with' | 'without' => {
+    if (typeof window === 'undefined') return 'all';
+    const search = new URLSearchParams(window.location.search);
+    const fights = search.get('fights');
+    if (fights === 'with' || fights === 'without') return fights;
+    const rawClass = (search.get('class') || search.get('category') || '').toLowerCase().trim();
+    if (rawClass === 'fight-prospects' || rawClass === 'no-fight') return 'without';
+    return 'all';
+  }, []);
+
+  const [filterFights, setFilterFights] = useState<'all' | 'with' | 'without'>(readFightFilterFromUrl);
+  const [filterRetiredFighter, setFilterRetiredFighter] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleUrlSync = () => {
+      const search = new URLSearchParams(window.location.search);
+      const fights = search.get('fights');
+      if (fights === 'with' || fights === 'without') {
+        setFilterFights(fights);
+        return;
+      }
+      const rawClass = (search.get('class') || search.get('category') || '').toLowerCase().trim();
+      if (rawClass === 'fight-prospects' || rawClass === 'no-fight') {
+        setFilterFights('without');
+      }
+    };
+    handleUrlSync();
+    window.addEventListener('popstate', handleUrlSync);
+    return () => window.removeEventListener('popstate', handleUrlSync);
+  }, []);
   const [filterBreedingType, setFilterBreedingType] = useState<'all' | 'purebred' | 'crossbred' | 'unverified'>('all');
   const [internalSort, setInternalSort] = useState<RegistrySortKey>('identifier');
   const sort = sortKey ?? internalSort;
   const changeSort = onSortChange ?? setInternalSort;
 
 const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
+  'all': 'all',
+  'all-offspring': 'all',
+  'all_offspring': 'all',
   'breeding_stock': 'breeding-stock',
   'material': 'breeding-stock',
   'fight-prospects': 'all',
@@ -348,8 +386,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
   const baseList = useMemo(() => {
     if (tab === 'males') return lists.males;
     if (tab === 'females') return lists.females;
-    if (tab === 'offspring') return lists.nonBreeding;
-    return lists.sireMaterial;
+    return lists.nonBreeding;
   }, [tab, lists]);
 
   const allFowls = fowls;
@@ -371,6 +408,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     () => extractFoughtLookups(matchHistory),
     [matchHistory],
   );
+  const regCtx = useMemo(() => buildRegistryContext(allFowls), [allFowls]);
 
   // Single-source breeding classification counts and active category list for Offspring
   const categoryCounts = useMemo(() => {
@@ -441,6 +479,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     filterBreed !== 'all' ||
     filterBreedingType !== 'all' ||
     filterFights !== 'all' ||
+    filterRetiredFighter ||
     query.trim() !== '';
 
   const clearFilters = () => {
@@ -450,6 +489,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     setFilterBreed('all');
     setFilterBreedingType('all');
     setFilterFights('all');
+    setFilterRetiredFighter(false);
     setQuery('');
     setPage(1);
   };
@@ -477,8 +517,10 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       const breedingTypeOk = matchesBreedingTypeFilter(classification, filterBreedingType);
       const hasFights = hasFightRecord(f, foughtFowlIds, foughtNames);
       const fightsOk = filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
+      const isRetired = isRetiredFighter(f, foughtFowlIds, foughtNames, regCtx);
+      const retiredOk = !filterRetiredFighter || isRetired;
 
-      if (sireOk && damOk && stageOk && breedOk && breedingTypeOk && fightsOk) {
+      if (sireOk && damOk && stageOk && breedOk && breedingTypeOk && fightsOk && retiredOk) {
         matchedList.push({ fowl: f, match });
       }
     }
@@ -495,7 +537,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     const list = matchedList.map((item) => item.fowl);
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterBreedingType, breedingClassificationMap, allFowls, filterFights, foughtFowlIds, foughtNames, comparator, page]);
+  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterBreedingType, breedingClassificationMap, allFowls, filterFights, filterRetiredFighter, foughtFowlIds, foughtNames, regCtx, comparator, page]);
 
   const filterBar = (
     <RegistryFilterBar
@@ -516,6 +558,11 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       filterFights={filterFights}
       onFilterFightsChange={(f) => {
         setFilterFights(f);
+        setPage(1);
+      }}
+      filterRetiredFighter={filterRetiredFighter}
+      onFilterRetiredFighterChange={(rf) => {
+        setFilterRetiredFighter(rf);
         setPage(1);
       }}
       effectiveStatus="Active"
@@ -583,6 +630,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       allFowls={allFowls}
       highlightQuery={debouncedQuery}
       classificationMap={breedingClassificationMap}
+      isRetired={isRetiredFighter(fowl, foughtFowlIds, foughtNames, regCtx)}
     />
   );
 
@@ -643,9 +691,14 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
   if (tab === 'offspring') {
     const { pagedList, totalPages } = paginatedBirds;
 
-    const categoryTabs: { id: BreedingClassification; label: string; count: number }[] = [
-      { id: 'all', label: 'All Offspring', count: categoryCounts.all },
-      { id: 'breeding-stock', label: 'Breeding Stock', count: categoryCounts.breedingStock },
+    const categoryTabs: { id: BreedingClassification; label: string; count: number; tooltip?: string }[] = [
+      { id: 'all', label: 'All', count: categoryCounts.all },
+      {
+        id: 'breeding-stock',
+        label: 'Breeding Stock',
+        count: categoryCounts.breedingStock,
+        tooltip: 'Offspring kept as future breeders. They move to Breeding Male or Female when promoted.',
+      },
       { id: 'non-breeding', label: 'Non-Breeding', count: categoryCounts.nonBreeding },
     ];
 
@@ -677,6 +730,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
                 role="tab"
                 id={`prospect-category-${cat.id}`}
                 aria-selected={isActive}
+                title={cat.tooltip}
                 onClick={() => {
                   setCategory(cat.id);
                   setPage(1);
@@ -748,38 +802,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     );
   }
 
-  // SIRE MATERIAL
-  const { pagedList, totalPages } = paginatedBirds;
-  return (
-    <div className="space-y-4 animate-fadeIn">
-      <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-amber-500">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800 text-warning">🛡️</div>
-          <div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">Sire Material Registry</h2>
-            <p className="text-xs text-muted-foreground font-semibold">Retired fighters promoted to breeding stock after critical injuries</p>
-          </div>
-        </div>
-        <span className="shrink-0 self-start sm:self-center text-xs font-black text-white px-3 py-1.5 rounded-full bg-amber-600">{baseList.length} Registered</span>
-      </div>
-      {filterBar}
-      <InventoryHint onGoToInventory={onGoToInventory} />
-      {filtersActive && paginatedBirds.list.length === 0 ? (
-        filteredEmpty
-      ) : paginatedBirds.list.length === 0 ? (
-        <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
-          <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-warning rounded-full flex items-center justify-center text-3xl mx-auto">🛡️</div>
-          <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">No Sire Material Yet</h3>
-          <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">No chickens have been retired to breeding stock. Open a fighter&rsquo;s details and click <strong>Mark as Sire Material</strong> to move it here.</p>
-        </div>
-      ) : (
-        <>
-          {pagedList.map((fowl, index) => renderCard(fowl, index, 'Male'))}
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-        </>
-      )}
-    </div>
-  );
+  return null;
 }
 
 export default function FowlLists(props: Props) {

@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2, Printer, Share2, GitBranch } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type {
@@ -49,6 +49,20 @@ import {
 import { toastMessage } from '@/lib/toast-bus';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
+import {
+  buildRegistryContext,
+  roleOf,
+  isRetiredFighter,
+  extractFoughtLookups,
+} from '@/lib/registry-roles';
+import {
+  BREEDING_ROLE_LABELS,
+  BREEDING_ROLE_FIELD_LABEL,
+  MARK_AS_BREEDING_STOCK_BUTTON,
+  SET_BACK_TO_ACTIVE_BUTTON,
+  REMOVE_BREEDING_STOCK_BUTTON,
+} from '@/lib/registry-labels';
+import RetiredFighterBadge from '@/components/profiling/RetiredFighterBadge';
 
 const HISTORY_FIELD_LABELS: Record<string, string> = {
   status: 'Status',
@@ -60,9 +74,9 @@ const HISTORY_FIELD_LABELS: Record<string, string> = {
 };
 
 const ROLE_OPTIONS: { value: 'none' | 'breeder' | 'material'; label: string }[] = [
-  { value: 'none', label: 'Not a breeder' },
-  { value: 'breeder', label: 'Breeder' },
-  { value: 'material', label: 'Material' },
+  { value: 'none', label: BREEDING_ROLE_LABELS.none },
+  { value: 'breeder', label: BREEDING_ROLE_LABELS.breeder },
+  { value: 'material', label: BREEDING_ROLE_LABELS.material },
 ];
 
 type FowlDetailsModalProps = {
@@ -220,6 +234,12 @@ export default function FowlDetailsModal({
   const bird = fowls.find((f) => f.id === selectedFowlForDetails.id) ?? selectedFowlForDetails;
   const classification = getBreedingClassification(bird, fowls);
   const parentageRelatedness = getOffspringParentageRelatedness(bird, fowls);
+  const regCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
+  const { foughtFowlIds, foughtNames } = useMemo(
+    () => extractFoughtLookups(matchHistory),
+    [matchHistory],
+  );
+  const isRetired = isRetiredFighter(bird, foughtFowlIds, foughtNames, regCtx);
   const conditionOptions = mergeOptions(optionRows, 'post_match_condition', bird.condition_status).filter(
     (o) => o.value !== 'Deceased',
   );
@@ -371,6 +391,7 @@ export default function FowlDetailsModal({
               {parentageRelatedness.type !== 'unknown' ? (
                 <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " />
               ) : null}
+              {isRetired && <RetiredFighterBadge />}
               <a
                 href={`/lineage?tab=pedigree&chicken=${encodeURIComponent(birdCodeOf(selectedFowlForDetails, fowls) || String(selectedFowlForDetails.id))}`}
                 onClick={() => setSelectedFowlForDetails(null)}
@@ -451,11 +472,15 @@ export default function FowlDetailsModal({
               <div className="pt-1.5">
                 {selectedFowlForDetails.status === 'Sire Material' ? (
                   <button type="button" onClick={() => handleSetActiveStatus(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
-                    Set back to Active
+                    {SET_BACK_TO_ACTIVE_BUTTON}
+                  </button>
+                ) : selectedFowlForDetails.breeding_role === 'material' ? (
+                  <button type="button" onClick={() => handleSetBreedingRole(selectedFowlForDetails, 'none')} className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+                    {REMOVE_BREEDING_STOCK_BUTTON}
                   </button>
                 ) : (
                   <button type="button" onClick={() => handleSetSireMaterial(selectedFowlForDetails)} className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
-                    Mark as Sire Material
+                    {MARK_AS_BREEDING_STOCK_BUTTON}
                   </button>
                 )}
               </div>
@@ -599,25 +624,42 @@ export default function FowlDetailsModal({
                   ))}
                 </select>
               </label>
-              <label className="space-y-1 text-xs font-bold text-slate-600 dark:text-muted-foreground">
-                Breeding / Material Role (manual)
-                <select
-                  value={bird.breeding_role || 'none'}
-                  disabled={busy}
-                  onChange={(e) => {
-                    const role = e.target.value as 'none' | 'breeder' | 'material';
-                    if (role === (bird.breeding_role || 'none')) return;
-                    void runAction(() => handleSetBreedingRole(bird, role));
-                  }}
-                  className="w-full mt-1 p-2.5 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted font-semibold text-slate-800 dark:text-card-foreground focus:border-violet-500 cursor-pointer disabled:opacity-60"
-                >
-                  {ROLE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {(() => {
+                const regCtx = buildRegistryContext(fowls);
+                const currentRole = roleOf(bird, regCtx);
+                const isUnpromotedOffspring = currentRole === 'Non-Breeding';
+
+                return (
+                  <label className="space-y-1 text-xs font-bold text-slate-600 dark:text-muted-foreground">
+                    {BREEDING_ROLE_FIELD_LABEL}
+                    <select
+                      value={bird.breeding_role || 'none'}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const role = e.target.value as 'none' | 'breeder' | 'material';
+                        if (role === 'breeder' && isUnpromotedOffspring) return;
+                        if (role === (bird.breeding_role || 'none')) return;
+                        void runAction(() => handleSetBreedingRole(bird, role));
+                      }}
+                      className="w-full mt-1 p-2.5 border border-input-border rounded-md text-sm bg-slate-50 dark:bg-muted font-semibold text-slate-800 dark:text-card-foreground focus:border-violet-500 cursor-pointer disabled:opacity-60"
+                    >
+                      {ROLE_OPTIONS.map((o) => {
+                        const disabled = o.value === 'breeder' && isUnpromotedOffspring;
+                        return (
+                          <option key={o.value} value={o.value} disabled={disabled}>
+                            {o.label}{disabled ? ' (promotion required)' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {isUnpromotedOffspring && (
+                      <span className="block text-[11px] text-muted-foreground font-normal mt-0.5">
+                        Offspring become breeders through the promotion flow.
+                      </span>
+                    )}
+                  </label>
+                );
+              })()}
             </div>
           )}
 

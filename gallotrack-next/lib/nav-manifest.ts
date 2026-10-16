@@ -31,14 +31,12 @@ export type NavItem = {
 /** Mobile bottom bar keeps this many primary items; the rest live under More. */
 export const MOBILE_PRIMARY_COUNT = 4;
 
-/** URL tab contracts per page. Values are shareable; ids must stay stable. */
 export const REGISTRY_TABS = [
   'form',
   'males',
   'females',
   'archived',
   'deceased',
-  'sireMaterial',
   'offspring',
   'matchForm',
   'breeds',
@@ -86,7 +84,7 @@ export const OWNER_QUICK_ACTIONS: QuickAction[] = [
   { id: 'register', label: 'Register a chicken', hint: 'Registry form', href: '/profiling?tab=form' },
   { id: 'log-match', label: 'Log a match', hint: 'Match logs', href: '/profiling?tab=matchForm' },
   { id: 'fight-prospects', label: 'View Offspring', hint: 'Registry tab', href: '/profiling?tab=offspring' },
-  { id: 'breeders-stock', label: 'Browse Breeders Stock', hint: 'Inventory tab', href: '/catalog?status=active' },
+  { id: 'breeders-stock', label: 'Browse Active Breeders', hint: 'Inventory tab', href: '/catalog?status=active' },
   { id: 'ready-to-breed', label: 'View Ready to Breed', hint: 'Inventory tab', href: '/catalog?status=breeding' },
 ];
 

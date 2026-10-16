@@ -766,9 +766,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(true);
     const result = await fowlService.setSireMaterial(fowl.id);
     if (result.error) {
-      toastMessage(`Failed to mark ${fowl.name} as Sire Material: ${result.error}`, 'error');
+      toastMessage(`Failed to designate ${fowl.name} as Breeding Stock: ${result.error}`, 'error');
     } else {
-      toastMessage(`${fowl.name} is now Sire Material — retired from fighting, available for breeding.`, 'success');
+      toastMessage(`${fowl.name} is now designated as Breeding Stock.`, 'success');
       if (ui.selectedFowlForDetails?.id === fowl.id) ui.setSelectedFowlForDetails(null);
       fetchDatabaseResources();
     }

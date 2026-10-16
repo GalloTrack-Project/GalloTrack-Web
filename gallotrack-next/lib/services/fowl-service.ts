@@ -222,9 +222,8 @@ export async function setSireMaterial(
 ): Promise<{ error?: string; historyError?: string }> {
   return changeLifecycle(
     id,
-    { status: 'Sire Material', breeding_role: 'material', archive_reason: null, archive_kind: null, retired_scope: null, return_date: null },
+    { breeding_role: 'material', archive_reason: null, archive_kind: null, retired_scope: null, return_date: null },
     [
-      { field: 'status', newValue: 'Sire Material' },
       { field: 'breeding_role', newValue: 'material' },
     ],
   );
