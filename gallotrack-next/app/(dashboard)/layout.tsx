@@ -153,10 +153,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-[65px] md:pb-0">
         <header className="h-16 bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0 flex items-center">
           <div className="w-full px-4 sm:px-6 md:px-8 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <span className="md:hidden font-semibold text-card-foreground text-lg tracking-tight bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
-                {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'}
-              </span>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="md:hidden flex flex-col justify-center min-w-0">
+                <span className="font-extrabold text-card-foreground text-sm tracking-tight leading-tight truncate bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+                  {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'} <span className="font-mono text-[10px] text-muted-foreground font-normal">v1.0.0</span>
+                </span>
+                <span className="text-[10px] font-medium text-muted-foreground tracking-wide leading-tight truncate">
+                  {isAdmin ? 'Administrator console' : 'Farm management console'}
+                </span>
+              </div>
 
               <div className="hidden md:flex items-center gap-2.5">
                 <span className="text-sm font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border bg-accent/10 border-accent/30 text-accent">
@@ -172,6 +177,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent/80"></span>
                 </span>
                 <span className="text-sm font-medium text-muted-foreground tracking-wide">PostgreSQL Connected</span>
+                <span className="text-xs text-muted-foreground pl-2.5 border-l border-border/60">
+                  GALLOTRACK v1.0.0 · {isAdmin ? 'Administrator console' : 'Farm management console'}
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
@@ -241,11 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </ErrorBoundary>
         </main>
 
-        <footer className="shrink-0 border-t border-border bg-card/60 px-4 sm:px-6 md:px-8 py-2">
-          <p className="text-sm text-muted-foreground">
-            GALLOTRACK v1.0.0 · {isAdmin ? 'Administrator console' : 'Farm management console'}
-          </p>
-        </footer>
+
 
         <ModalsWrapper />
 
