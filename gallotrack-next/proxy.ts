@@ -1,29 +1,31 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest, type ProxyConfig } from 'next/server';
+import { sanitizeRedirectPath } from '@/lib/auth-redirect';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const PUBLIC_PATHS = new Set(['/', '/register', '/design-kit']);
-const PUBLIC_PREFIXES = ['/auth', '/share', '/api', '/_next'];
+export const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/design-kit']);
+export const PUBLIC_PREFIXES = ['/auth', '/share', '/api', '/_next'];
 
 const STATIC_EXTENSIONS = [
   'svg', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'ico', 'css', 'js',
   'mjs', 'map', 'woff', 'woff2', 'ttf', 'otf', 'txt', 'xml', 'webmanifest',
 ];
 
-function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_PATHS.has(pathname)) return true;
-  if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return true;
-
+export function isStaticAsset(pathname: string): boolean {
   const lastSegment = pathname.slice(pathname.lastIndexOf('/') + 1);
   const dotIndex = lastSegment.lastIndexOf('.');
   if (dotIndex > 0) {
     const extension = lastSegment.slice(dotIndex + 1).toLowerCase();
     if (STATIC_EXTENSIONS.includes(extension)) return true;
   }
-
   return false;
+}
+
+export function isPublicPrefixOrStatic(pathname: string): boolean {
+  if (isStaticAsset(pathname)) return true;
+  return PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
 function redirectTarget(request: NextRequest, destination: string, search = ''): NextResponse {
@@ -34,19 +36,27 @@ function redirectTarget(request: NextRequest, destination: string, search = ''):
 }
 
 /**
- * Server-side route guard for the GalloTrack dashboard.
+ * Server-side route guard for GalloTrack.
  *
- * - Unauthenticated requests to owner/admin screens are sent to the login page
- *   with a `?redirect=` back-link.
- * - `/admin/*` is additionally restricted to profiles flagged as admin.
- *
- * Data itself is still protected by Supabase RLS — this only removes the
- * client-side-only owner/admin separation.
+ * - Unauthenticated requests to protected screens are sent to `/login` with a sanitized `?redirect=` param.
+ * - Logged-in users visiting `/login` or `/register` are redirected to `/dashboard`.
+ * - Public routes (`/`, `/design-kit`, `/auth/*`, `/share/*`, `/api/*`, static assets) remain accessible.
+ * - `/admin/*` is additionally restricted to admin profiles.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
 
-  if (!supabaseUrl || !supabaseAnonKey || isPublicPath(pathname)) {
+  // 1. Static assets and public prefix routes (/auth, /share, /api, /_next) bypass auth guards
+  if (isPublicPrefixOrStatic(pathname)) {
+    return NextResponse.next();
+  }
+
+  // 2. Public landing pages (/ and /design-kit) accessible without redirection for both guests and authenticated users
+  if (pathname === '/' || pathname === '/design-kit') {
+    return NextResponse.next();
+  }
+
+  if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.next();
   }
 
@@ -65,11 +75,25 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     });
 
     const { data, error } = await supabase.auth.getUser();
+    const isAuthenticated = !error && !!data?.user;
 
-    if (error || !data.user) {
-      return redirectTarget(request, '/', `?redirect=${encodeURIComponent(pathname + search)}`);
+    // 3. Auth entry routes (/login, /register)
+    if (pathname === '/login' || pathname === '/register') {
+      if (isAuthenticated) {
+        // Authenticated users must not be bounced to the landing page; send to /dashboard
+        return redirectTarget(request, '/dashboard');
+      }
+      // Unauthenticated visitors reach /login or /register on first click
+      return response;
     }
 
+    // 4. Protected routes: unauthenticated users get sent to /login with sanitized redirect param
+    if (!isAuthenticated) {
+      const sanitizedBackPath = sanitizeRedirectPath(pathname + search, '/dashboard');
+      return redirectTarget(request, '/login', `?redirect=${encodeURIComponent(sanitizedBackPath)}`);
+    }
+
+    // 5. Admin-only routes
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       const { data: profile } = await supabase
         .from('profiles')

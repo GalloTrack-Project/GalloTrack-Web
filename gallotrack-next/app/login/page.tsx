@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGaloTrack } from '@/lib/context';
 import ForgotPasswordModal from '@/components/modals/ForgotPasswordModal';
 import { Dna, Swords, BarChart3, Building2, ArrowLeft } from 'lucide-react';
+import { sanitizeRedirectPath } from '@/lib/auth-redirect';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,15 +49,16 @@ export default function LoginPage() {
       .catch(() => {});
   }, []);
 
-  const redirectPath = typeof window !== 'undefined'
+  const rawRedirect = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('redirect')
     : null;
+  const safeRedirect = sanitizeRedirectPath(rawRedirect, '/dashboard');
 
   useEffect(() => {
     if (currentPage !== 'login') {
-      router.push(redirectPath || '/dashboard');
+      router.push(safeRedirect);
     }
-  }, [currentPage, router, redirectPath]);
+  }, [currentPage, router, safeRedirect]);
 
   if (currentPage !== 'login') return null;
 
