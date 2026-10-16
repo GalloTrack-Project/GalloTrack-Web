@@ -47,6 +47,7 @@ import {
   previewBirdCode,
   resolveBirdCodes,
   validateIdentifierFormat,
+  formatBirdCodeForDisplay,
 } from '@/lib/bird-code';
 import { generateColorReport } from '@/lib/color-genetics';
 import { nameKey } from '@/lib/family-tree';
@@ -747,7 +748,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       if (result.error) {
         toastMessage(`Database Error: ${result.error}`, 'error');
       } else {
-        toastMessage('GalloTrack Registry Object saved successfully.', 'success');
+        const finalDisplayCode = formatBirdCodeForDisplay(codeToUse);
+        const finalIdLabel =
+          role === 'sire' && !finalDisplayCode.toLowerCase().startsWith('sire')
+            ? `Sire ${finalDisplayCode}`
+            : role === 'dam' && !finalDisplayCode.toLowerCase().startsWith('dam')
+              ? `Dam ${finalDisplayCode}`
+              : finalDisplayCode;
+        toastMessage(`Chicken registered successfully (ID: ${finalIdLabel}).`, 'success');
         for (const s of selectedStrains) {
           await strainService.saveCustomStrain(s);
         }

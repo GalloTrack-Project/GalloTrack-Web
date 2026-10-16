@@ -11,17 +11,38 @@ import { isFoundationStock } from '@/lib/helpers';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Lock, Edit3, RotateCcw } from 'lucide-react';
 
-function StatusItem({ icon, label, value, tone }: { icon?: string; label: string; value: string; tone: 'green' | 'amber' | 'rose' }) {
-  const toneCls = tone === 'green'
-    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-    : tone === 'amber'
-      ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-      : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800';
+export function StatusItem({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon?: string;
+  label: string;
+  value: string;
+  tone: 'green' | 'amber' | 'rose';
+}) {
+  const toneCls =
+    tone === 'green'
+      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+      : tone === 'amber'
+        ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+        : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800';
+
   return (
-    <div className="bg-slate-50 dark:bg-muted/50 rounded-md border border-slate-200/70 dark:border-border p-3 min-w-0">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground leading-tight">{icon && <span className="mr-1">{icon}</span>}{label}</span>
-        <span className={`text-xs font-black px-2 py-0.5 rounded-full border whitespace-nowrap shrink-0 ${toneCls}`}>{value}</span>
+    <div className="bg-slate-50 dark:bg-muted/50 rounded-lg border border-slate-200/80 dark:border-border p-3 min-w-0 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
+      <div className="flex items-start gap-1.5 min-w-0">
+        {icon && <span className="text-xs shrink-0 select-none mt-0.5">{icon}</span>}
+        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-tight sm:tracking-wider text-muted-foreground leading-snug break-words">
+          {label}
+        </span>
+      </div>
+      <div className="self-start sm:self-auto shrink-0 min-w-0 max-w-full">
+        <span
+          className={`inline-flex items-center justify-center text-xs font-black px-2.5 py-0.5 rounded-full border min-w-0 max-w-full break-words whitespace-normal text-center ${toneCls}`}
+        >
+          {value}
+        </span>
       </div>
     </div>
   );
@@ -146,6 +167,27 @@ export default function EncodeForm({
     [newBirthdate, sireName, damName, fowls],
   );
 
+  const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
+  const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
+  const isOffspring = hasSire || hasDam;
+  const currentRole: 'sire' | 'dam' | 'offspring' = isOffspring
+    ? 'offspring'
+    : newGender === 'Hen' || newGender === 'Female'
+      ? 'dam'
+      : 'sire';
+
+  const nextIdLabel = useMemo(() => {
+    const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
+    if (!rawCode) return '—';
+    if (currentRole === 'sire') {
+      return rawCode.toLowerCase().startsWith('sire') ? rawCode : `Sire ${rawCode}`;
+    }
+    if (currentRole === 'dam') {
+      return rawCode.toLowerCase().startsWith('dam') ? rawCode : `Dam ${rawCode}`;
+    }
+    return rawCode;
+  }, [birdCode, suggestedBirdCode, currentRole]);
+
   useEffect(() => {
     if (!strainOpen) return;
     const update = () => {
@@ -195,10 +237,6 @@ export default function EncodeForm({
           <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required id="identifier-name" />
         </div>
         {(() => {
-          const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
-          const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
-          const isOffspring = hasSire || hasDam;
-          const currentRole: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : newGender === 'Hen' || newGender === 'Female' ? 'dam' : 'sire';
           const formatCheck = birdCode.trim() ? validateIdentifierFormat(birdCode.trim(), currentRole) : null;
           const isDuplicate = fowls.some(f => normalizeBirdCode(f.bird_code).toLowerCase() === normalizeBirdCode(birdCode).toLowerCase());
 
@@ -662,15 +700,17 @@ export default function EncodeForm({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-card rounded-lg border-2 border-slate-900 dark:border-border shadow-sm p-5">
-        <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="bg-white dark:bg-card rounded-lg border-2 border-slate-900 dark:border-border shadow-sm p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
           <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Validation &amp; Summary Panel</span>
           </div>
-          <span className="text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-1 rounded-full">Code: {formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode) || '—'}</span>
+          <span className="self-start sm:self-auto text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-1 rounded-full max-w-full break-words">
+            Next ID: {nextIdLabel}
+          </span>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div data-testid="validation-summary-grid" className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
           <StatusItem icon="🛡️" label="Data Integrity &amp; Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
           <StatusItem icon="✅" label="Validation" value={validationPassed && birthdateValidation.valid ? 'Passed' : 'Pending'} tone={validationPassed && birthdateValidation.valid ? 'green' : 'amber'} />
           <StatusItem icon="🔗" label="Lineage Resolved" value={bloodlineVerified ? 'Resolved' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
@@ -680,7 +720,7 @@ export default function EncodeForm({
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
           <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Registering...' : 'REGISTER'}</span>
         </button>
-        <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">🔒 Verify lineage accuracy before registering to the cluster registry.</p>
+        <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">🔒 Verify lineage accuracy before registering to the farm registry.</p>
       </div>
     </form>
   );
