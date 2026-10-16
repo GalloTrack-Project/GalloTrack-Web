@@ -283,15 +283,32 @@ function calculateStrainBenchmark(
     }
   });
 
-  const avgWeight = strainFowls.reduce((sum, f) => sum + (Number(f.weight) || 0), 0) / strainFowls.length;
-  const avgHeight = strainFowls.reduce((sum, f) => sum + (Number(f.height) || 0), 0) / strainFowls.length;
+  const parseNum = (v: string | number | undefined | null): number => {
+    if (typeof v === 'number') return v;
+    if (!v) return 0;
+    return Number(String(v).replace(/[^0-9.]/g, '')) || 0;
+  };
+
+  const weights = strainFowls
+    .map(f => parseNum(f.structural_weight ?? f.weight))
+    .filter(n => n > 0);
+  const avgWeight = weights.length > 0
+    ? Math.round((weights.reduce((sum, w) => sum + w, 0) / weights.length) * 10) / 10
+    : (base?.avgWeight ?? 0);
+
+  const heights = strainFowls
+    .map(f => parseNum(f.structural_height ?? f.height))
+    .filter(n => n > 0);
+  const avgHeight = heights.length > 0
+    ? Math.round(heights.reduce((sum, h) => sum + h, 0) / heights.length)
+    : (base?.avgHeight ?? 0);
 
   return {
     strain,
     avgWinRate: wins + losses > 0 ? winRateOf(wins, losses) : null,
     avgResilience: base?.avgResilience || 70,
-    avgWeight: Math.round(avgWeight * 10) / 10,
-    avgHeight: Math.round(avgHeight),
+    avgWeight,
+    avgHeight,
     totalFights: total,
     topPerformers,
   };

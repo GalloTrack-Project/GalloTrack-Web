@@ -50,17 +50,19 @@ export function heightToStorage(val: string, unit: HeightUnit): string {
 }
 
 /** Convert stored value (kg/cm) to display string in preferred unit. */
-export function weightFromStorage(val: string | undefined, unit: WeightUnit): string {
-  if (!val) return '';
-  const n = Number(val.replace(/[^0-9.]/g, ''));
-  if (isNaN(n)) return val;
+export function weightFromStorage(val: string | number | undefined | null, unit: WeightUnit): string {
+  if (val === undefined || val === null || val === '') return '';
+  const str = String(val).trim();
+  const n = Number(str.replace(/[^0-9.]/g, ''));
+  if (isNaN(n) || str === '') return str;
   return String(unit === 'lbs' ? kgToLbs(n) : n);
 }
 
-export function heightFromStorage(val: string | undefined, unit: HeightUnit): string {
-  if (!val) return '';
-  const n = Number(val.replace(/[^0-9.]/g, ''));
-  if (isNaN(n)) return val;
+export function heightFromStorage(val: string | number | undefined | null, unit: HeightUnit): string {
+  if (val === undefined || val === null || val === '') return '';
+  const str = String(val).trim();
+  const n = Number(str.replace(/[^0-9.]/g, ''));
+  if (isNaN(n) || str === '') return str;
   return String(unit === 'inches' ? cmToInches(n) : n);
 }
 

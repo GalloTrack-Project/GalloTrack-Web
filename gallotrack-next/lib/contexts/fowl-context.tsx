@@ -1246,10 +1246,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         fowls.find(f => f.name === fowl.sire)?.color_category,
         fowls.find(f => f.name === fowl.dam)?.color_category
       );
+      const regWeight = (fowl.structural_weight !== undefined && fowl.structural_weight !== null && fowl.structural_weight !== '')
+        ? String(fowl.structural_weight)
+        : (fowl.weight || '');
+      const regHeight = (fowl.structural_height !== undefined && fowl.structural_height !== null && fowl.structural_height !== '')
+        ? String(fowl.structural_height)
+        : (fowl.height || '');
       const breedCompliance = generateBreedCompliance(
         fowl.breed || '',
-        fowl.weight || '',
-        fowl.height || '',
+        regWeight,
+        regHeight,
         fowl.leg_color || '',
         fowl.color_category || '',
         fowl.gender,

@@ -142,10 +142,23 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       )}
 
       {/* Performance Benchmark */}
-      {report.performanceBenchmark && report.performanceBenchmark.totalFights > 0 && (
+      {report.performanceBenchmark && (report.performanceBenchmark.totalFights > 0 || report.performanceBenchmark.avgWinRate !== null) && (
         <div className="bg-white/70 dark:bg-card/70 border border-sky-200 dark:border-sky-900/50 rounded-md p-3 space-y-2">
           <p className="text-xs font-black text-sky-700 dark:text-sky-300 uppercase"><BarChart3 className="w-3 h-3" /> Strain Performance Benchmark</p>
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div>
+              <p className="text-xs font-bold text-muted-foreground">Structural Weight</p>
+              <p className="text-xs font-black text-slate-800 dark:text-card-foreground">
+                {(() => {
+                  const regWeight = (fowl.structural_weight !== undefined && fowl.structural_weight !== null && fowl.structural_weight !== '')
+                    ? fowl.structural_weight
+                    : fowl.weight;
+                  if (!regWeight) return 'N/A';
+                  const clean = String(regWeight).replace(/\s*kg$/i, '').trim();
+                  return clean ? `${clean}kg` : 'N/A';
+                })()}
+              </p>
+            </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Win Rate</p>
               <p className="text-xs font-black text-sky-700 dark:text-sky-300">{report.performanceBenchmark.avgWinRate !== null ? `${report.performanceBenchmark.avgWinRate}%` : 'N/A'}</p>

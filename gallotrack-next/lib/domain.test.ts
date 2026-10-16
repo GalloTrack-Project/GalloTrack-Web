@@ -5,6 +5,7 @@ import {
 } from './breed-standards';
 import { generateColorReport } from './color-genetics';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from './bloodlines';
+import { weightFromStorage } from './units';
 import type { FowlRecord, MatchRecord } from './types';
 
 describe('breed-standards', () => {
@@ -181,5 +182,25 @@ describe('bloodlines', () => {
 
     expect(femaleReport.crossPattern).not.toBeNull();
     expect(femaleReport.crossPattern?.fightingStyle).toBeUndefined();
+  });
+
+  it('preserves individual registered structural_weight without overriding it with strain benchmark average', () => {
+    const fowls: FowlRecord[] = [
+      { id: 20, name: 'HeavyKelso', breed: 'Kelso', weight: '2.8 kg', structural_weight: 2.8, bloodline_pct: 100 } as FowlRecord,
+      { id: 21, name: 'LightKelso', breed: 'Kelso', weight: '2.0 kg', structural_weight: '2.0', bloodline_pct: 100 } as FowlRecord,
+    ];
+    const matches: MatchRecord[] = [
+      { id: 100, entry_name: 'HeavyKelso', outcome: 'win' } as MatchRecord,
+    ];
+
+    const report = generateBloodlineReport(fowls[0], fowls, matches);
+    expect(report.performanceBenchmark).not.toBeNull();
+    expect(report.performanceBenchmark?.avgWeight).toBe(2.4); // average of 2.8 and 2.0
+
+    // Ensure the individual fowl retains its registered value
+    const individualRegWeight = fowls[0].structural_weight ?? fowls[0].weight;
+    expect(individualRegWeight).toBe(2.8);
+    expect(weightFromStorage(individualRegWeight, 'kg')).toBe('2.8');
+    expect(weightFromStorage(fowls[1].structural_weight ?? fowls[1].weight, 'kg')).toBe('2');
   });
 });

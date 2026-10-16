@@ -280,9 +280,24 @@ export default function FowlDetailsModal({
             { label: 'Color', value: [bird.color, bird.color_category].filter(Boolean).join(' · ') || '—' },
             { label: 'Birthdate', value: bird.birthdate || '—' },
             { label: 'Age', value: ageParts ? getAgeLabel(ageParts) : '—' },
-            { label: 'Status', value: bird.status || '—' },
-            { label: 'Weight', value: bird.weight ? `${bird.weight} ${unitPrefs.weightUnit}` : '—' },
-            { label: 'Height', value: bird.height ? `${bird.height} ${unitPrefs.heightUnit}` : '—' },
+            {
+              label: 'Weight',
+              value: (() => {
+                const regWeight = (bird.structural_weight !== undefined && bird.structural_weight !== null && bird.structural_weight !== '')
+                  ? bird.structural_weight
+                  : bird.weight;
+                return regWeight ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '—';
+              })()
+            },
+            {
+              label: 'Height',
+              value: (() => {
+                const regHeight = (bird.structural_height !== undefined && bird.structural_height !== null && bird.structural_height !== '')
+                  ? bird.structural_height
+                  : bird.height;
+                return regHeight ? `${heightFromStorage(regHeight, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '—';
+              })()
+            },
             { label: 'Leg color', value: bird.leg_color || '—' },
             { label: 'Sire', value: bird.sire || '—' },
             { label: 'Dam', value: bird.dam || '—' },
@@ -1670,11 +1685,25 @@ export default function FowlDetailsModal({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Structural Weight</span>
-            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{selectedFowlForDetails.weight ? `${weightFromStorage(selectedFowlForDetails.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : 'N/A'}</strong>
+            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">
+              {(() => {
+                const regWeight = (selectedFowlForDetails.structural_weight !== undefined && selectedFowlForDetails.structural_weight !== null && selectedFowlForDetails.structural_weight !== '')
+                  ? selectedFowlForDetails.structural_weight
+                  : selectedFowlForDetails.weight;
+                return regWeight ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : 'N/A';
+              })()}
+            </strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Height Dimension</span>
-            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{selectedFowlForDetails.height ? `${heightFromStorage(selectedFowlForDetails.height, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : 'N/A'}</strong>
+            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">
+              {(() => {
+                const regHeight = (selectedFowlForDetails.structural_height !== undefined && selectedFowlForDetails.structural_height !== null && selectedFowlForDetails.structural_height !== '')
+                  ? selectedFowlForDetails.structural_height
+                  : selectedFowlForDetails.height;
+                return regHeight ? `${heightFromStorage(regHeight, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : 'N/A';
+              })()}
+            </strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Eye Specimen Variant</span>

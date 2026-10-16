@@ -147,9 +147,15 @@ function FowlCard({
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
+  const regWeight = (fowl.structural_weight !== undefined && fowl.structural_weight !== null && fowl.structural_weight !== '')
+    ? String(fowl.structural_weight)
+    : (fowl.weight || '');
+  const regHeight = (fowl.structural_height !== undefined && fowl.structural_height !== null && fowl.structural_height !== '')
+    ? String(fowl.structural_height)
+    : (fowl.height || '');
   const compliance = useMemo(
-    () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
-    [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
+    () => generateBreedCompliance(fowl.breed, regWeight, regHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
+    [fowl.breed, regWeight, regHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
   );
   const { foughtFowlIds, foughtNames } = useMemo(
     () => extractFoughtLookups(matches),
@@ -246,7 +252,7 @@ function FowlCard({
         </div>
         <div className="bg-muted/50 rounded-md py-2 px-1">
           <p className="text-xs font-bold text-muted-foreground uppercase">Weight</p>
-          <p className="text-sm font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
+          <p className="text-sm font-black text-card-foreground">{regWeight ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
         </div>
         <div className="bg-muted/50 rounded-md py-2 px-1">
           <p className="text-xs font-bold text-muted-foreground uppercase">Stage</p>
@@ -312,9 +318,15 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
   const unitPrefs = useUnitPrefs();
   const stats = getWinRate(fowl.name, matches);
   const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
+  const modalWeight = (fowl.structural_weight !== undefined && fowl.structural_weight !== null && fowl.structural_weight !== '')
+    ? String(fowl.structural_weight)
+    : (fowl.weight || '');
+  const modalHeight = (fowl.structural_height !== undefined && fowl.structural_height !== null && fowl.structural_height !== '')
+    ? String(fowl.structural_height)
+    : (fowl.height || '');
   const compliance = useMemo(
-    () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
-    [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
+    () => generateBreedCompliance(fowl.breed, modalWeight, modalHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
+    [fowl.breed, modalWeight, modalHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
   );
   const readyInDays = isBreedingReadySoon(fowl) ? daysUntilBreedingReady(fowl) : null;
 
@@ -360,8 +372,8 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
               <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-success">{fowl.behavior_trait || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{fowl.weight ? `${weightFromStorage(fowl.weight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{fowl.height ? `${heightFromStorage(fowl.height, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{modalWeight ? `${weightFromStorage(modalWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{modalHeight ? `${heightFromStorage(modalHeight, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '\u2014'}</span></div>
             </div>
           </div>
 

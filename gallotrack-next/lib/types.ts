@@ -12,7 +12,11 @@ export interface FowlRecord {
   birthdate: string;
   age: string;
   weight: string;
+  /** Explicit structural weight from registration row in database (alias/alternative property name). */
+  structural_weight?: string | number | null;
   height: string;
+  /** Explicit structural height from registration row in database (alias/alternative property name). */
+  structural_height?: string | number | null;
   leg_color: string;
   sire: string;
   dam: string;
