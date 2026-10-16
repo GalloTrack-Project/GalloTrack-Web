@@ -1251,7 +1251,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         fowl.weight || '',
         fowl.height || '',
         fowl.leg_color || '',
-        fowl.color_category || ''
+        fowl.color_category || '',
+        fowl.gender,
+        fowl.registry_role
       );
       return { ...report, colorReport, breedCompliance };
     },

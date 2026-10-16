@@ -22,7 +22,7 @@ import { birdFamilyStats } from '@/lib/family-stats';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { isMale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
+import { isMale, isFemale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
@@ -1228,6 +1228,9 @@ export default function FowlDetailsModal({
 
         {/* COMBAT PERFORMANCE STATS VECTOR */}
         {(() => {
+          if (isFemale(selectedFowlForDetails.gender) || selectedFowlForDetails.registry_role === 'Breeding Female') {
+            return null;
+          }
           const fowlMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === selectedFowlForDetails.name?.trim().toLowerCase());
           const totalFights = fowlMatches.length;
           const wins = fowlMatches.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
@@ -1484,7 +1487,8 @@ export default function FowlDetailsModal({
           {(() => {
             type TimelineItem = { key: string; date: string; kind: 'match' | 'status'; title: string; detail?: string };
             const birdName = (selectedFowlForDetails.name || '').trim().toLowerCase();
-            const timelineMatches = matchHistory.filter((m) => (m.entry_name || '').trim().toLowerCase() === birdName);
+            const isDamRecord = isFemale(selectedFowlForDetails.gender) || selectedFowlForDetails.registry_role === 'Breeding Female';
+            const timelineMatches = isDamRecord ? [] : matchHistory.filter((m) => (m.entry_name || '').trim().toLowerCase() === birdName);
             const items: TimelineItem[] = timelineMatches.map((m) => ({
               key: `m-${m.id}`,
               date: m.date || '',

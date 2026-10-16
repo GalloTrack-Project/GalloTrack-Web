@@ -1,5 +1,4 @@
-// Breed standard compliance for gamefowl
-// Compares fowl physical traits against known breed standards with scoring
+import { isFemale } from './helpers';
 
 export type BreedStandard = {
   name: string;
@@ -9,7 +8,8 @@ export type BreedStandard = {
   legColors: string[];
   plumageColors: string[];
   eyeColors: string[];
-  fightingStyle: string;
+  /** Fighting style - combat attribute omitted/restricted for female parent records (Dams). */
+  fightingStyle?: string;
   temperament: string;
   origin: string;
   notes: string;
@@ -265,10 +265,22 @@ export function generateBreedCompliance(
   weight: string | number,
   height: string | number,
   legColor: string,
-  colorCategory: string
+  colorCategory: string,
+  gender?: string,
+  registryRole?: string | null,
 ): BreedCompliance {
   const standards = findMatchingStandards(breed);
-  const matchedStandard = standards[0] || null;
+  const isDamRecord = isFemale(gender) || registryRole === 'Breeding Female';
+  const rawStandard = standards[0] || null;
+  const matchedStandard = rawStandard
+    ? {
+        ...rawStandard,
+        ...(isDamRecord ? { fightingStyle: undefined } : {}),
+      }
+    : null;
+  if (matchedStandard && isDamRecord) {
+    delete matchedStandard.fightingStyle;
+  }
 
   const weightComp = checkWeightCompliance(weight, matchedStandard);
   const heightComp = checkHeightCompliance(height, matchedStandard);
@@ -281,7 +293,9 @@ export function generateBreedCompliance(
 
   if (matchedStandard) {
     notes.push(`Matched: ${matchedStandard.name} (${matchedStandard.origin})`);
-    notes.push(`Fighting style: ${matchedStandard.fightingStyle}`);
+    if (!isDamRecord && matchedStandard.fightingStyle) {
+      notes.push(`Fighting style: ${matchedStandard.fightingStyle}`);
+    }
     notes.push(matchedStandard.notes);
 
     // Weight scoring

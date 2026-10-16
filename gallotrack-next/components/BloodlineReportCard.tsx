@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { useGaloTrack } from '@/lib/context';
+import { isFemale } from '@/lib/helpers';
 import { Dna, BarChart3, Zap, Lightbulb } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 
@@ -16,6 +17,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
   const { generateBloodlineReport } = useGaloTrack();
   const [expanded, setExpanded] = useState(false);
   const report = generateBloodlineReport(fowl);
+  const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
 
   if (compact) {
     return (
@@ -57,7 +59,12 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             </p>
           </div>
         </div>
-        {report.crossPattern && <p className="text-xs text-teal font-semibold text-center">{report.crossPattern.label} — {report.crossPattern.fightingStyle}</p>}
+        {report.crossPattern && (
+          <p className="text-xs text-teal font-semibold text-center">
+            {report.crossPattern.label}
+            {!isDamRecord && report.crossPattern.fightingStyle ? ` — ${report.crossPattern.fightingStyle}` : ''}
+          </p>
+        )}
       </div>
     );
   }
@@ -128,7 +135,9 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">{report.crossPattern.description}</p>
-          <p className="text-xs text-violet font-semibold">Fighting style: {report.crossPattern.fightingStyle}</p>
+          {!isDamRecord && report.crossPattern.fightingStyle && (
+            <p className="text-xs text-violet font-semibold">Fighting style: {report.crossPattern.fightingStyle}</p>
+          )}
         </div>
       )}
 

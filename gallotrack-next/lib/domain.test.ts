@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   generateBreedCompliance,
   findMatchingStandards,
-  BREED_STANDARDS,
 } from './breed-standards';
 import { generateColorReport } from './color-genetics';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from './bloodlines';
@@ -73,6 +72,16 @@ describe('breed-standards', () => {
       const report = generateBreedCompliance('Kelso', '2.1', '38', 'Yellow', 'Red');
       expect(['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F']).toContain(report.complianceGrade);
     });
+
+    it('restricts fightingStyle for female parent records (Dams)', () => {
+      const maleReport = generateBreedCompliance('Kelso', '2.1', '38', 'Yellow', 'Red', 'Rooster', 'Breeding Male');
+      expect(maleReport.matchedStandard?.fightingStyle).toBeDefined();
+      expect(maleReport.notes.some(n => n.includes('Fighting style'))).toBe(true);
+
+      const femaleReport = generateBreedCompliance('Kelso', '2.1', '38', 'Yellow', 'Red', 'Hen', 'Breeding Female');
+      expect(femaleReport.matchedStandard?.fightingStyle).toBeUndefined();
+      expect(femaleReport.notes.some(n => n.includes('Fighting style'))).toBe(false);
+    });
   });
 });
 
@@ -135,5 +144,42 @@ describe('bloodlines', () => {
     expect(summary).toHaveProperty('avgPurity');
     expect(summary).toHaveProperty('closeBreedingCount');
     expect(summary.totalFowls).toBe(3);
+  });
+
+  it('restricts fightingStyle on crossPattern for Dam / female records', () => {
+    const crossSire: FowlRecord = { id: 10, name: 'KelsoSire', sire: '', dam: '', gender: 'Rooster', breed: 'Kelso', bloodline_pct: 100 } as FowlRecord;
+    const crossDam: FowlRecord = { id: 11, name: 'HatchDam', sire: '', dam: '', gender: 'Hen', breed: 'Hatch', bloodline_pct: 100 } as FowlRecord;
+
+    const maleCross: FowlRecord = {
+      id: 12,
+      name: 'CrossCock',
+      sire: 'KelsoSire',
+      dam: 'HatchDam',
+      gender: 'Rooster',
+      breed: 'Kelso x Hatch',
+      registry_role: 'Breeding Male',
+      bloodline_pct: 50,
+    } as FowlRecord;
+
+    const femaleCross: FowlRecord = {
+      id: 13,
+      name: 'CrossHen',
+      sire: 'KelsoSire',
+      dam: 'HatchDam',
+      gender: 'Hen',
+      breed: 'Kelso x Hatch',
+      registry_role: 'Breeding Female',
+      bloodline_pct: 50,
+    } as FowlRecord;
+
+    const flock = [crossSire, crossDam, maleCross, femaleCross];
+    const maleReport = generateBloodlineReport(maleCross, flock, []);
+    const femaleReport = generateBloodlineReport(femaleCross, flock, []);
+
+    expect(maleReport.crossPattern).not.toBeNull();
+    expect(maleReport.crossPattern?.fightingStyle).toBeDefined();
+
+    expect(femaleReport.crossPattern).not.toBeNull();
+    expect(femaleReport.crossPattern?.fightingStyle).toBeUndefined();
   });
 });

@@ -148,8 +148,8 @@ function FowlCard({
   const damBreed = parentBreedOf(fowl.dam, fowls);
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
   const compliance = useMemo(
-    () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
-    [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
+    () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
+    [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
   );
   const { foughtFowlIds, foughtNames } = useMemo(
     () => extractFoughtLookups(matches),
@@ -311,9 +311,10 @@ function FowlCard({
 function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClose: () => void; fowls: FowlRecord[]; code?: string }) {
   const unitPrefs = useUnitPrefs();
   const stats = getWinRate(fowl.name, matches);
+  const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
   const compliance = useMemo(
-    () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
-    [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
+    () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
+    [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
   );
   const readyInDays = isBreedingReadySoon(fowl) ? daysUntilBreedingReady(fowl) : null;
 
@@ -389,7 +390,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           </div>
 
           {/* Performance */}
-          {stats.total > 0 && (
+          {!isDamRecord && stats.total > 0 && (
             <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
               <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Match Performance</h4>
               <div className="grid grid-cols-4 gap-2 text-center">
@@ -450,7 +451,7 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
                   </span>
                 </div>
               </div>
-              {compliance.matchedStandard.fightingStyle && (
+              {!isDamRecord && compliance.matchedStandard.fightingStyle && (
                 <p className="text-xs text-success/70 font-semibold">Fighting style: {compliance.matchedStandard.fightingStyle}</p>
               )}
               {compliance.recommendations.length > 0 && (

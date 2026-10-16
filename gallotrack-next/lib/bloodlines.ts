@@ -2,7 +2,7 @@ import type { FowlRecord } from './types';
 import type { ColorReport } from './color-genetics';
 import type { BreedCompliance } from './breed-standards';
 import { getFowlBloodlineStats } from './bloodline-composition';
-import { winRateOf } from './helpers';
+import { winRateOf, isFemale } from './helpers';
 
 export type StrainType = 'purebred' | 'crossbred' | 'foundation' | 'unknown' | 'linebred';
 
@@ -13,7 +13,8 @@ export type CrossPattern = {
   isIntentional: boolean;
   vigorScore: number;
   description: string;
-  fightingStyle: string;   // e.g. "speed + power"
+  /** Fighting style - combat attribute omitted/restricted for female parent records (Dams). */
+  fightingStyle?: string;   // e.g. "speed + power"
   tier: 'S' | 'A' | 'B' | 'C'; // competitive tier
   winRateBonus: number;    // expected win rate bonus from this cross
 };
@@ -347,15 +348,32 @@ export function generateBloodlineReport(
   // Cross pattern
   const crossKey = `${sireStrain}|||${damStrain}`;
   const knownCross = KNOWN_CROSSES[crossKey] || null;
-  const crossPattern: CrossPattern | null = strainType === 'crossbred' ? (knownCross || {
-    sireStrain, damStrain,
-    label: `${sireStrain.toUpperCase()} × ${damStrain.toUpperCase()}`,
-    isIntentional: false, vigorScore: 50,
-    description: 'Custom cross — not in database',
-    fightingStyle: 'unknown',
-    tier: 'C' as const,
-    winRateBonus: 0,
-  }) : null;
+  const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
+
+  let crossPattern: CrossPattern | null = null;
+  if (strainType === 'crossbred') {
+    if (knownCross) {
+      crossPattern = {
+        ...knownCross,
+        ...(isDamRecord ? { fightingStyle: undefined } : {}),
+      };
+      if (isDamRecord) {
+        delete crossPattern.fightingStyle;
+      }
+    } else {
+      crossPattern = {
+        sireStrain,
+        damStrain,
+        label: `${sireStrain.toUpperCase()} × ${damStrain.toUpperCase()}`,
+        isIntentional: false,
+        vigorScore: 50,
+        description: 'Custom cross — not in database',
+        ...(!isDamRecord ? { fightingStyle: 'unknown' } : {}),
+        tier: 'C' as const,
+        winRateBonus: 0,
+      };
+    }
+  }
 
   const sireRecord = fowls.find(f => f.name === fowl.sire);
   const damRecord = fowls.find(f => f.name === fowl.dam);
