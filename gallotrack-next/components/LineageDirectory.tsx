@@ -2567,7 +2567,7 @@ export default function LineageDirectory({
 
           {/* Right: Tab tools */}
           {activeTab !== 'pedigree' && (
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
               <div className="flex items-center gap-1.5">
                 <label htmlFor="lineage-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
                   Sort:
@@ -2585,7 +2585,7 @@ export default function LineageDirectory({
                 </select>
               </div>
 
-              <div className="flex items-center gap-1 pl-1 border-l border-border/80">
+              <div className="flex items-center gap-1 sm:pl-2 sm:border-l sm:border-border/80">
                 <button
                   type="button"
                   onClick={handleExpandAll}

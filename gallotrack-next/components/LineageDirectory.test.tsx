@@ -147,6 +147,15 @@ describe('LineageDirectory redesigned top section', () => {
     expect(screen.queryByRole('button', { name: /Expand all/i })).not.toBeInTheDocument();
   });
 
+  it('renders context bar tab tools with responsive flex-wrap classes to prevent mobile overflow', () => {
+    renderDirectory();
+    const sortDropdown = screen.getByLabelText(/Sort options/i);
+    // Find the enclosing tab tools container
+    const toolsContainer = sortDropdown.closest('.flex-wrap');
+    expect(toolsContainer).toBeInTheDocument();
+    expect(toolsContainer).toHaveClass('w-full', 'justify-between', 'sm:w-auto', 'sm:justify-end');
+  });
+
   it('filters content and reflects search count in context bar when typing', async () => {
     renderDirectory();
     const searchInput = screen.getByLabelText(/Search family, sire, dam or chicken name/i);
