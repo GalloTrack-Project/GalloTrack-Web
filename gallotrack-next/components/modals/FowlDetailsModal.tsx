@@ -25,6 +25,8 @@ import { useUI } from '@/lib/contexts/ui-context';
 import { isMale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
+import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import RelatednessBadge from '@/components/RelatednessBadge';
 import { printReport } from '@/lib/report-export';
 import { Modal } from '@/components/ui';
 import {
@@ -217,6 +219,7 @@ export default function FowlDetailsModal({
   // Fresh copy so chips/selects update right after a status change.
   const bird = fowls.find((f) => f.id === selectedFowlForDetails.id) ?? selectedFowlForDetails;
   const classification = getBreedingClassification(bird, fowls);
+  const parentageRelatedness = getOffspringParentageRelatedness(bird, fowls);
   const conditionOptions = mergeOptions(optionRows, 'post_match_condition', bird.condition_status).filter(
     (o) => o.value !== 'Deceased',
   );
@@ -264,6 +267,7 @@ export default function FowlDetailsModal({
             { label: 'Dam', value: bird.dam || '—' },
             { label: 'Generation', value: generationInfo(generationOf(bird)).label },
             { label: 'Dominant bloodline', value: `${classification.purityPct}% ${classification.dominantBreed}` },
+            { label: 'Parentage relatedness', value: parentageRelatedness.label },
           ],
         },
         {
@@ -364,6 +368,9 @@ export default function FowlDetailsModal({
                 {classification.type === 'Crossbred' ? classification.derivedBreed : selectedFowlForDetails.breed}
               </span>
               <BreedingTypeBadge classification={classification} />
+              {parentageRelatedness.type !== 'unknown' ? (
+                <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " />
+              ) : null}
               <a
                 href={`/lineage?tab=pedigree&chicken=${encodeURIComponent(birdCodeOf(selectedFowlForDetails, fowls) || String(selectedFowlForDetails.id))}`}
                 onClick={() => setSelectedFowlForDetails(null)}
@@ -799,12 +806,17 @@ export default function FowlDetailsModal({
                   { label: 'Full Siblings', value: stats.fullSiblings, tone: 'text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-950/50' },
                 ];
                 return (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {chips.map((c) => (
-                      <span key={c.label} className={`text-xs font-black px-2.5 py-1 rounded-full border ${c.tone}`}>
-                        {c.label}: {c.value}
-                      </span>
-                    ))}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div className="flex flex-wrap gap-2">
+                      {chips.map((c) => (
+                        <span key={c.label} className={`text-xs font-black px-2.5 py-1 rounded-full border ${c.tone}`}>
+                          {c.label}: {c.value}
+                        </span>
+                      ))}
+                    </div>
+                    {parentageRelatedness.type !== 'unknown' ? (
+                      <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " showSecondary />
+                    ) : null}
                   </div>
                 );
               })()}
@@ -839,13 +851,18 @@ export default function FowlDetailsModal({
                           </p>
                         </div>
                       </div>
-                      <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${
-                        origin.outcome === 'Active'
-                          ? 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50'
-                          : 'text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/40'
-                      }`}>
-                        {origin.outcome}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {parentageRelatedness.type !== 'unknown' ? (
+                          <RelatednessBadge classification={parentageRelatedness} compact />
+                        ) : null}
+                        <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${
+                          origin.outcome === 'Active'
+                            ? 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50'
+                            : 'text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/40'
+                        }`}>
+                          {origin.outcome}
+                        </span>
+                      </div>
                     </div>
                   );
                 })()}

@@ -35,8 +35,19 @@ export default function FarmBloodlineSummary() {
           <p className="text-xs font-bold text-muted-foreground uppercase mt-1">Avg Vigor</p>
         </div>
         <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
-          <p className={`text-2xl font-black ${summary.inbreedingRisk > 0 ? 'text-danger' : 'text-success'}`}>{summary.inbreedingRisk}</p>
-          <p className="text-xs font-bold text-muted-foreground uppercase mt-1">Inbreeding Risk</p>
+          <p className={`text-2xl font-black ${summary.closeBreedingCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-success'}`}>
+            {summary.closeBreedingCount}
+          </p>
+          <p className="text-xs font-bold text-muted-foreground uppercase mt-1">Close Breeding</p>
+          {summary.lineBreedingCount > 0 ? (
+            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
+              {summary.lineBreedingCount} Line bred
+            </p>
+          ) : (
+            <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
+              0 Line bred
+            </p>
+          )}
         </div>
       </div>
 

@@ -35,6 +35,11 @@ import {
 } from '@/lib/services/breeding-service';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { BREEDING_TABS } from '@/lib/nav-manifest';
+import { classifyPairingRelatedness } from '@/lib/relatedness-classification';
+import RelatednessBadge from '@/components/RelatednessBadge';
+import BreedingTypeBadge from '@/components/BreedingTypeBadge';
+import { getBreedingClassification } from '@/lib/breeding-classification';
+import { computeBloodlineComposition, blendCompositions } from '@/lib/bloodline-composition';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -269,8 +274,9 @@ function BreedingPairCard({
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const sire = fowls.find(f => f.id === pair.sire_id);
-  const dam = fowls.find(f => f.id === pair.dam_id);
+  const sire = fowls.find(f => f.id === pair.sire_id) || (pair.sire_name ? fowls.find(f => f.name.toLowerCase() === pair.sire_name.toLowerCase()) : undefined);
+  const dam = fowls.find(f => f.id === pair.dam_id) || (pair.dam_name ? fowls.find(f => f.name.toLowerCase() === pair.dam_name.toLowerCase()) : undefined);
+  const relatedness = useMemo(() => classifyPairingRelatedness(sire, dam, fowls), [sire, dam, fowls]);
 
   const offspring = offspringForPairing(pair, fowls);
 
@@ -314,7 +320,8 @@ function BreedingPairCard({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <RelatednessBadge classification={relatedness} compact />
             <span className={`text-xs font-black px-2 py-1 rounded-full border ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}>
               {pair.outcome}
             </span>
@@ -469,6 +476,12 @@ function AddPairingForm({
   const [outcome, setOutcome] = useState<PairingOutcome>('Active');
   const [error, setError] = useState('');
 
+  const [confirmCloseBreeding, setConfirmCloseBreeding] = useState(false);
+
+  useEffect(() => {
+    setConfirmCloseBreeding(false);
+  }, [sireId, damId]);
+
   const males = fowls.filter(isSireGender);
   const females = fowls.filter(f => !isSireGender(f));
 
@@ -483,6 +496,29 @@ function AddPairingForm({
     () => pairingConflict(pairs, selectedSire, selectedDam),
     [pairs, selectedSire, selectedDam]
   );
+
+  const expectedComposition = useMemo(() => {
+    if (!selectedSire || !selectedDam) return null;
+    const sireComp = computeBloodlineComposition(selectedSire, fowls);
+    const damComp = computeBloodlineComposition(selectedDam, fowls);
+    return blendCompositions(sireComp, damComp, 0.5, 0.5);
+  }, [selectedSire, selectedDam, fowls]);
+
+  const expectedBreedMix = useMemo(() => {
+    if (!expectedComposition || !selectedSire || !selectedDam) return null;
+    const syntheticChild = {
+      id: -999,
+      name: 'Preview Offspring',
+      breed: '',
+      bloodline_composition: expectedComposition,
+    } as unknown as FowlRecord;
+    return getBreedingClassification(syntheticChild, fowls);
+  }, [expectedComposition, selectedSire, selectedDam, fowls]);
+
+  const relatedness = useMemo(() => {
+    if (!selectedSire || !selectedDam) return null;
+    return classifyPairingRelatedness(selectedSire, selectedDam, fowls);
+  }, [selectedSire, selectedDam, fowls]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -499,6 +535,10 @@ function AddPairingForm({
           conflict.pairing.pairing_code || `#${conflict.pairing.id}`
         }).`
       );
+      return;
+    }
+    if (relatedness?.isCloseBreeding && !confirmCloseBreeding) {
+      setError('Please confirm the close breeding warning before recording this pairing.');
       return;
     }
     setError('');
@@ -590,6 +630,97 @@ function AddPairingForm({
         </div>
       )}
 
+      {/* Live Preview: Breed mix + Relatedness */}
+      {selectedSire && selectedDam && (
+        <div className="bg-slate-50 dark:bg-card/70 border border-border rounded-xl p-3.5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Dna className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xs font-black uppercase tracking-widest text-card-foreground">
+              Offspring & Lineage Live Preview
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Expected Offspring Breed Mix */}
+            <div className="bg-card border border-border rounded-lg p-3 space-y-1.5">
+              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                Expected Offspring Breed Mix
+              </p>
+              {expectedBreedMix ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <BreedingTypeBadge classification={expectedBreedMix} />
+                    <span className="text-xs font-black text-card-foreground">
+                      {expectedBreedMix.type === 'Crossbred'
+                        ? expectedBreedMix.derivedBreed
+                        : expectedBreedMix.dominantBreed}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-semibold">
+                    {expectedBreedMix.summary}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Calculating breed mix...</p>
+              )}
+            </div>
+
+            {/* Pairing Relatedness */}
+            <div className="bg-card border border-border rounded-lg p-3 space-y-1.5">
+              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                Pairing Relatedness
+              </p>
+              {relatedness ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <RelatednessBadge classification={relatedness} showSecondary />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-semibold">
+                    {relatedness.relationship}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Evaluating relatedness...</p>
+              )}
+            </div>
+          </div>
+
+          {/* Close Breeding Warning + Confirmation */}
+          {relatedness?.isCloseBreeding && (
+            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-widest">
+                      Close Breeding Warning
+                    </p>
+                    <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                      ({relatedness.secondaryLabel})
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                    {relatedness.relationship}. Inbreeding can amplify undesirable recessive traits and reduce vitality.
+                  </p>
+                </div>
+              </div>
+              <label className="flex items-center gap-2.5 pt-1.5 border-t border-amber-200 dark:border-amber-800/60 cursor-pointer">
+                <input
+                  id="confirm-close-breeding"
+                  type="checkbox"
+                  checked={confirmCloseBreeding}
+                  onChange={(e) => setConfirmCloseBreeding(e.target.checked)}
+                  className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-amber-900 dark:text-amber-200 select-none">
+                  I understand the risks of close breeding and confirm this pairing
+                </span>
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+
       {previewCode && (
         <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-xl p-3 flex items-center gap-3">
           <Combine className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
@@ -652,10 +783,12 @@ function AddPairingForm({
       <div className="flex gap-2 pt-1">
         <button
           type="submit"
-          disabled={!sireId || !damId || conflict?.kind === 'occupied'}
+          disabled={!sireId || !damId || conflict?.kind === 'occupied' || (relatedness?.isCloseBreeding && !confirmCloseBreeding)}
           className="flex-1 py-2.5 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
         >
-          Record Pairing
+          {relatedness?.isCloseBreeding && !confirmCloseBreeding
+            ? 'Confirm Close Breeding to Save'
+            : 'Record Pairing'}
         </button>
         <button
           type="button"

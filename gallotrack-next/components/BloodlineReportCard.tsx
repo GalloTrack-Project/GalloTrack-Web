@@ -32,8 +32,30 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
         <div className="grid grid-cols-4 gap-2 text-center">
           <div><p className="text-xs font-bold text-muted-foreground uppercase">Strain</p><p className="text-xs font-black text-slate-800 dark:text-card-foreground">{report.primaryStrain}</p></div>
           <div><p className="text-xs font-bold text-muted-foreground uppercase">Purity</p><p className="text-xs font-black text-teal">{report.purityPct}%</p></div>
-          <div><p className="text-xs font-bold text-muted-foreground uppercase">Vigor</p><p className="text-xs font-black text-emerald-700 dark:text-emerald-300">{report.hybridVigor.score}</p></div>
-          <div><p className="text-xs font-bold text-muted-foreground uppercase">Inbred</p><p className={`text-xs font-black ${report.inbreedingCoefficient > 20 ? 'text-danger dark:text-rose-300' : 'text-success dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p></div>
+          <div><p className="text-xs font-bold text-muted-foreground uppercase">Vigor</p><p className="text-xs font-black text-emerald-700 dark:text-emerald-300">{report.hybridVigor?.label === '—' ? '—' : report.hybridVigor.score}</p></div>
+          <div>
+            <p className="text-xs font-bold text-muted-foreground uppercase">Kinship</p>
+            <p
+              className={`text-xs font-black ${
+                report.relatedness?.type === 'close'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : report.relatedness?.type === 'line'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : report.relatedness?.type === 'outcross'
+                  ? 'text-success dark:text-emerald-300'
+                  : 'text-muted-foreground'
+              }`}
+              title={report.relatedness?.tooltip}
+            >
+              {report.relatedness?.type === 'close'
+                ? 'Close'
+                : report.relatedness?.type === 'line'
+                ? 'Line'
+                : report.relatedness?.type === 'outcross'
+                ? 'Outcross'
+                : '—'}
+            </p>
+          </div>
         </div>
         {report.crossPattern && <p className="text-xs text-teal font-semibold text-center">{report.crossPattern.label} — {report.crossPattern.fightingStyle}</p>}
       </div>
@@ -72,8 +94,26 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           <p className="text-xs font-black text-teal">{report.purityPct}%</p>
         </div>
         <div className="bg-white/70 dark:bg-card/70 border border-teal-100 dark:border-teal-900/50 rounded-md p-2 text-center">
-          <p className="text-xs font-bold text-muted-foreground uppercase">Inbreeding</p>
-          <p className={`text-xs font-black ${report.inbreedingCoefficient > 30 ? 'text-danger dark:text-rose-300' : report.inbreedingCoefficient > 15 ? 'text-warning dark:text-amber-300' : 'text-success dark:text-emerald-300'}`}>{report.inbreedingCoefficient}%</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase">Parentage</p>
+          <p
+            className={`text-xs font-black ${
+              report.relatedness?.type === 'close'
+                ? 'text-amber-600 dark:text-amber-400'
+                : report.relatedness?.type === 'line'
+                ? 'text-blue-600 dark:text-blue-400'
+                : report.relatedness?.type === 'outcross'
+                ? 'text-success dark:text-emerald-300'
+                : 'text-muted-foreground'
+            }`}
+            title={report.relatedness?.tooltip}
+          >
+            {report.relatedness?.type === 'unknown'
+              ? 'Unknown (foundation stock, no recorded parents)'
+              : report.relatedness?.label || 'Unknown (foundation stock, no recorded parents)'}
+          </p>
+          <p className="text-[10px] text-muted-foreground truncate" title={report.relatedness?.relationship}>
+            {report.relatedness?.relationship || 'Foundation stock (no recorded parents)'}
+          </p>
         </div>
       </div>
 
@@ -117,28 +157,30 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
       )}
 
       {/* Hybrid Vigor Bar */}
-      <div className="bg-white/70 dark:bg-card/70 border border-emerald-200 dark:border-emerald-900/50 rounded-md p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase"><Zap className="w-3 h-3" /> Hybrid Vigor</span>
-          <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
-            report.hybridVigor.score >= 90 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' :
-            report.hybridVigor.score >= 80 ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' :
-            report.hybridVigor.score >= 70 ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300' :
-            report.hybridVigor.score >= 50 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' :
-            'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300'
-          }`}>
-            {report.hybridVigor.label} ({report.hybridVigor.score}/100)
-          </span>
+      {report.hybridVigor?.label !== '—' && (
+        <div className="bg-white/70 dark:bg-card/70 border border-emerald-200 dark:border-emerald-900/50 rounded-md p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase"><Zap className="w-3 h-3" /> Hybrid Vigor</span>
+            <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
+              report.hybridVigor.score >= 90 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' :
+              report.hybridVigor.score >= 80 ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' :
+              report.hybridVigor.score >= 70 ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300' :
+              report.hybridVigor.score >= 50 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' :
+              'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300'
+            }`}>
+              {report.hybridVigor.label} ({report.hybridVigor.score}/100)
+            </span>
+          </div>
+          <div className="w-full h-2 bg-slate-100 dark:bg-muted rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all ${
+              report.hybridVigor.score >= 90 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
+              report.hybridVigor.score >= 80 ? 'bg-emerald-500' :
+              report.hybridVigor.score >= 70 ? 'bg-sky-500' :
+              report.hybridVigor.score >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+            }`} style={{ width: `${report.hybridVigor.score}%` }} />
+          </div>
         </div>
-        <div className="w-full h-2 bg-slate-100 dark:bg-muted rounded-full overflow-hidden">
-          <div className={`h-full rounded-full transition-all ${
-            report.hybridVigor.score >= 90 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
-            report.hybridVigor.score >= 80 ? 'bg-emerald-500' :
-            report.hybridVigor.score >= 70 ? 'bg-sky-500' :
-            report.hybridVigor.score >= 50 ? 'bg-amber-500' : 'bg-rose-500'
-          }`} style={{ width: `${report.hybridVigor.score}%` }} />
-        </div>
-      </div>
+      )}
 
       {/* Expanded Details */}
       {expanded && (
@@ -156,7 +198,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           </div>
 
           {/* Vigor Factors */}
-          {report.hybridVigor.factors.length > 0 && (
+          {report.hybridVigor?.label !== '—' && report.hybridVigor.factors.length > 0 && (
             <div className="bg-white/70 dark:bg-card/70 border border-slate-200 dark:border-border rounded-md p-3 space-y-1">
               <p className="text-xs font-black text-muted-foreground uppercase">Vigor Factors</p>
               {report.hybridVigor.factors.map((f, i) => (

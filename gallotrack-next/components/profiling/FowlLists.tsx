@@ -22,6 +22,8 @@ import {
   type BreedingClassification as GeneticClassification,
 } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
+import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import RelatednessBadge from '@/components/RelatednessBadge';
 import {
   registryTabLists,
   makeRegistryComparator,
@@ -92,6 +94,7 @@ function FowlCard({
   const isBreeder = cardRole === 'Breeding Male' || cardRole === 'Breeding Female';
   const isNonBreeding = cardRole === 'Non-Breeding';
   const classification = classificationMap?.get(String(fowl.id)) ?? getBreedingClassification(fowl, allFowls);
+  const parentage = getOffspringParentageRelatedness(fowl, allFowls);
   const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
   return (
     <div
@@ -119,6 +122,9 @@ function FowlCard({
           ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{displayBreed}</span>
           <BreedingTypeBadge classification={classification} />
+          {(parentage.type === 'close' || parentage.type === 'line') && (
+            <RelatednessBadge classification={parentage} compact />
+          )}
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>

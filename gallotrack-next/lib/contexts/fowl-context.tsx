@@ -249,7 +249,9 @@ interface FowlContextValue {
     crossPatterns: { pattern: string; count: number; avgVigor: number; tier: string }[];
     avgPurity: number;
     avgHybridVigor: number;
-    inbreedingRisk: number;
+    closeBreedingCount: number;
+    lineBreedingCount: number;
+    outcrossCount: number;
     totalFowls: number;
     strainRankings: { strain: string; count: number; avgWinRate: number | null }[];
     topCrosses: { pattern: string; tier: string; vigor: number }[];

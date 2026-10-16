@@ -21,6 +21,8 @@ import {
 import WinRatePill from '@/components/match/WinRatePill';
 import ChickenIcon from '@/components/ChickenIcon';
 import { getBreedingClassification } from '@/lib/breeding-classification';
+import { classifyPairingRelatedness, getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import RelatednessBadge from '@/components/RelatednessBadge';
 
 type Depth = 1 | 2 | 3;
 
@@ -119,6 +121,7 @@ function OffspringNode({
   const stats = matchStatsMap.get(fowl.name.trim().toLowerCase()) || computeWinRate(0, 0);
   const classification = getBreedingClassification(fowl, fowls);
   const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
+  const parentage = getOffspringParentageRelatedness(fowl, fowls);
 
   return (
     <div className="gt-kid">
@@ -153,6 +156,9 @@ function OffspringNode({
             stats={stats}
             className="shrink-0"
           />
+          {(parentage.type === 'close' || parentage.type === 'line') && (
+            <RelatednessBadge classification={parentage} compact />
+          )}
           {totalKids > 0 && (
             <span className="text-xs font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
               {totalKids} {totalKids === 1 ? 'child' : 'children'}
@@ -265,6 +271,10 @@ function PairTree({
   const sireCode = sireFowl ? codes.get(String(sireFowl.id)) || '' : '';
   const damCode = damFowl ? codes.get(String(damFowl.id)) || '' : '';
   const pairCode = offspringBase(sireCode, damCode);
+  const relatedness = useMemo(
+    () => classifyPairingRelatedness(sireFowl, damFowl, fowls),
+    [sireFowl, damFowl, fowls]
+  );
 
   return (
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
@@ -278,6 +288,7 @@ function PairTree({
               pair {pairCode}
             </span>
           )}
+          <RelatednessBadge classification={relatedness} compact />
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <span className="text-xs font-bold text-muted-foreground">

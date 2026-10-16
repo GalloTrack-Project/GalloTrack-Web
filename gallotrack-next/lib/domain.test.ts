@@ -113,17 +113,27 @@ describe('bloodlines', () => {
     { id: 1, entry_name: 'Gamma', breed: 'Kelso', outcome: 'Win', date: '2026-01-01', opponent: 'X', location: 'A', type: 'Derby', status: 'Verified' } as MatchRecord,
   ];
 
-  it('generates bloodline report for a fowl', () => {
+  it('generates bloodline report for an offspring fowl', () => {
     const report = generateBloodlineReport(mockFowls[2], mockFowls, mockMatches);
     expect(report).toHaveProperty('purityPct');
     expect(report).toHaveProperty('hybridVigor');
-    expect(report).toHaveProperty('inbreedingCoefficient');
+    expect(report.inbreedingCoefficient).toBe(25); // Alpha x daughter Beta
+    expect(report.relatedness.type).toBe('close');
+  });
+
+  it('generates bloodline report for a foundation fowl (no vigor verdict, inbreeding null)', () => {
+    const report = generateBloodlineReport(mockFowls[0], mockFowls, mockMatches);
+    expect(report.inbreedingCoefficient).toBeNull();
+    expect(report.hybridVigor.label).toBe('—');
+    expect(report.relatedness.type).toBe('unknown');
+    expect(report.relatedness.label).toBe('Unknown (foundation stock, no recorded parents)');
   });
 
   it('generates farm summary', () => {
     const summary = generateFarmBloodlineSummary(mockFowls, mockMatches);
     expect(summary).toHaveProperty('totalFowls');
     expect(summary).toHaveProperty('avgPurity');
+    expect(summary).toHaveProperty('closeBreedingCount');
     expect(summary.totalFowls).toBe(3);
   });
 });

@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FowlRecord } from '@/lib/types';
 import { getFowlBloodlineStats, UNKNOWN_BLOODLINE, isFoundationName } from '@/lib/bloodline-composition';
 import { getBreedingClassification } from '@/lib/breeding-classification';
+import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import RelatednessBadge from '@/components/RelatednessBadge';
 import { birdCodeOf, compareBirdCodesNatural, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUI } from '@/lib/contexts/ui-context';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
@@ -585,6 +587,11 @@ export default function PedigreeTree({
     [subject, fowls],
   );
 
+  const parentageRelatedness = useMemo(
+    () => (subject ? getOffspringParentageRelatedness(subject, fowls) : null),
+    [subject, fowls],
+  );
+
   const sortedFowls = useMemo(() => {
     return [...fowls].sort((a, b) => {
       const ca = codes.get(String(a.id)) || birdCodeOf(a, fowls);
@@ -845,6 +852,10 @@ export default function PedigreeTree({
                       <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">Back to {breadcrumb[breadcrumb.length - 1].name}</span>
                     </Button>
+                  )}
+
+                  {parentageRelatedness && (
+                    <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " showSecondary />
                   )}
                 </div>
 

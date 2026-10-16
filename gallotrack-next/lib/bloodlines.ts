@@ -18,6 +18,12 @@ export type CrossPattern = {
   winRateBonus: number;    // expected win rate bonus from this cross
 };
 
+import {
+  getOffspringParentageRelatedness,
+  isFoundationBird,
+  type RelatednessClassification,
+} from './relatedness-classification';
+
 export type BloodlineReport = {
   strainType: StrainType;
   primaryStrain: string;
@@ -28,7 +34,8 @@ export type BloodlineReport = {
   generation: number;
   generationLabel: string;
   hybridVigor: HybridVigor;
-  inbreedingCoefficient: number; // 0-100, higher = more inbred
+  inbreedingCoefficient: number | null; // 0-100 or null if foundation / unrecorded
+  relatedness: RelatednessClassification;
   colorReport: ColorReport | null;
   breedCompliance: BreedCompliance | null;
   heritability: HeritabilityScore;
@@ -153,36 +160,9 @@ export function getStrainFromName(name: string): string {
   return 'unknown';
 }
 
-// ─── INBREEDING COEFFICIENT ────────────────────────────────────────────────
-function calculateInbreedingCoefficient(
-  sireStrain: string,
-  damStrain: string,
-  sire: FowlRecord | undefined,
-  dam: FowlRecord | undefined,
-  _fowls: FowlRecord[]
-): number {
-  if (sireStrain === 'unknown' || damStrain === 'unknown') return 0;
-
-  let coefficient = 0;
-
-  // Same strain = higher inbreeding
-  if (sireStrain === damStrain) {
-    coefficient += 25;
-  }
-
-  // Check if parents share ancestors (simplified)
-  if (sire && dam) {
-    const sireParents = [sire.sire, sire.dam].map(n => (n || '').trim().toLowerCase());
-    const damParents = [dam.sire, dam.dam].map(n => (n || '').trim().toLowerCase());
-    const sharedAncestors = sireParents.filter(p => p && damParents.includes(p));
-    coefficient += sharedAncestors.length * 12.5;
-  }
-
-  return Math.min(100, Math.round(coefficient));
-}
-
 // ─── HYBRID VIGOR ──────────────────────────────────────────────────────────
 function calculateHybridVigor(
+  isFoundation: boolean,
   sireStrain: string,
   damStrain: string,
   generation: number,
@@ -190,6 +170,15 @@ function calculateHybridVigor(
   damPct: number,
   crossPattern: CrossPattern | null
 ): HybridVigor {
+  if (isFoundation) {
+    return {
+      score: 0,
+      label: '—',
+      description: 'Not applicable for foundation stock without recorded parents',
+      factors: [],
+    };
+  }
+
   const factors: string[] = [];
   let score = 50;
 
@@ -200,7 +189,7 @@ function calculateHybridVigor(
     factors.push(`Expected win rate bonus: +${crossPattern.winRateBonus}%`);
   } else if (sireStrain === damStrain && sireStrain !== 'unknown') {
     score -= 20;
-    factors.push(`Same strain (${sireStrain}) — inbreeding risk`);
+    factors.push(`Same strain (${sireStrain}) — strain similarity / reduced diversity`);
   } else if (sireStrain !== 'unknown' && damStrain !== 'unknown') {
     score += 15;
     factors.push(`Cross-strain vigor (${sireStrain} × ${damStrain})`);
@@ -222,7 +211,7 @@ function calculateHybridVigor(
   else if (score >= 70) { label = 'Good'; description = 'Good vigor — balanced genetic diversity'; }
   else if (score >= 50) { label = 'Moderate'; description = 'Moderate vigor — some diversity'; }
   else if (score >= 30) { label = 'Low'; description = 'Low vigor — limited diversity'; }
-  else { label = 'Inbred Risk'; description = 'High inbreeding risk — consider outcrossing'; }
+  else { label = 'Low Diversity'; description = 'Low genetic diversity — consider outcrossing for vigor'; }
 
   return { score, label, description, factors };
 }
@@ -376,8 +365,9 @@ export function generateBloodlineReport(
   const sirePct = sireRecord ? (getFowlBloodlineStats(sireRecord, fowls)?.specificPct ?? 0) : 0;
   const damPct = damRecord ? (getFowlBloodlineStats(damRecord, fowls)?.specificPct ?? 0) : 0;
 
-  const hybridVigor = calculateHybridVigor(sireStrain, damStrain, generation, sirePct, damPct, crossPattern);
-  const inbreedingCoefficient = calculateInbreedingCoefficient(sireStrain, damStrain, sireRecord, damRecord, fowls);
+  const hybridVigor = calculateHybridVigor(isFoundationBird(fowl), sireStrain, damStrain, generation, sirePct, damPct, crossPattern);
+  const relatedness = getOffspringParentageRelatedness(fowl, fowls);
+  const inbreedingCoefficient = relatedness.inbreedingCoefficient;
   const heritability = calculateHeritability(sireRecord, damRecord, generation, fowls);
   const performanceBenchmark = calculateStrainBenchmark(effectiveStrain, fowls, matchHistory || []);
 
@@ -392,7 +382,7 @@ export function generateBloodlineReport(
   return {
     strainType, primaryStrain: effectiveStrain, sireStrain, damStrain,
     crossPattern, purityPct, generation, generationLabel: genInfo.label,
-    hybridVigor, inbreedingCoefficient, colorReport: null, breedCompliance: null,
+    hybridVigor, inbreedingCoefficient, relatedness, colorReport: null, breedCompliance: null,
     heritability, performanceBenchmark, confidence,
   };
 }
@@ -406,7 +396,9 @@ export function generateFarmBloodlineSummary(
   crossPatterns: { pattern: string; count: number; avgVigor: number; tier: string }[];
   avgPurity: number;
   avgHybridVigor: number;
-  inbreedingRisk: number;
+  closeBreedingCount: number;
+  lineBreedingCount: number;
+  outcrossCount: number;
   totalFowls: number;
   strainRankings: { strain: string; count: number; avgWinRate: number | null }[];
   topCrosses: { pattern: string; tier: string; vigor: number }[];
@@ -415,15 +407,24 @@ export function generateFarmBloodlineSummary(
   const crossMap = new Map<string, { count: number; vigorSum: number; tier: string }>();
   let puritySum = 0;
   let vigorSum = 0;
-  let inbreedingRisk = 0;
+  let vigorCount = 0;
+  let closeBreedingCount = 0;
+  let lineBreedingCount = 0;
+  let outcrossCount = 0;
 
   fowls.forEach(f => {
     const report = generateBloodlineReport(f, fowls, matchHistory);
     const strain = report.primaryStrain;
     strainDistribution[strain] = (strainDistribution[strain] || 0) + 1;
     puritySum += report.purityPct;
-    vigorSum += report.hybridVigor.score;
-    if (report.hybridVigor.score < 40 || report.inbreedingCoefficient > 30) inbreedingRisk++;
+    if (report.hybridVigor.label !== '—') {
+      vigorSum += report.hybridVigor.score;
+      vigorCount++;
+    }
+
+    if (report.relatedness.type === 'close') closeBreedingCount++;
+    else if (report.relatedness.type === 'line') lineBreedingCount++;
+    else if (report.relatedness.type === 'outcross') outcrossCount++;
 
     if (report.crossPattern) {
       const key = report.crossPattern.label;
@@ -456,8 +457,11 @@ export function generateFarmBloodlineSummary(
   return {
     strainDistribution, crossPatterns, topCrosses, strainRankings,
     avgPurity: fowls.length > 0 ? Math.round(puritySum / fowls.length) : 0,
-    avgHybridVigor: fowls.length > 0 ? Math.round(vigorSum / fowls.length) : 0,
-    inbreedingRisk, totalFowls: fowls.length,
+    avgHybridVigor: vigorCount > 0 ? Math.round(vigorSum / vigorCount) : 0,
+    closeBreedingCount,
+    lineBreedingCount,
+    outcrossCount,
+    totalFowls: fowls.length,
   };
 }
 

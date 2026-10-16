@@ -38,6 +38,8 @@ import {
   type BreedingClassification,
 } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
+import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import RelatednessBadge from '@/components/RelatednessBadge';
 
 const INVENTORY_BREEDING_TYPES = ['all', 'purebred', 'crossbred', 'unverified'] as const;
 type BreedingTypeFilter = (typeof INVENTORY_BREEDING_TYPES)[number];
@@ -140,6 +142,7 @@ function FowlCard({
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
+  const parentage = getOffspringParentageRelatedness(fowl, fowls);
   const compliance = useMemo(
     () => generateBreedCompliance(fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category),
     [fowl.breed, fowl.weight, fowl.height, fowl.leg_color, fowl.color_category]
@@ -201,6 +204,9 @@ function FowlCard({
               {classification?.type === 'Crossbred' ? classification.derivedBreed : fowl.breed}
             </span>
             {classification && <BreedingTypeBadge classification={classification} />}
+            {parentage && (parentage.type === 'close' || parentage.type === 'line') && (
+              <RelatednessBadge classification={parentage} compact />
+            )}
             {fowl.wing_band ? (
               <span className="text-xs font-mono font-bold text-muted-foreground">
                 🏷 <HighlightText text={fowl.wing_band} query={query} />
