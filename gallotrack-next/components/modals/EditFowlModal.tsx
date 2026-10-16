@@ -4,6 +4,7 @@ import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3 } from 'lucide-reac
 import type { FowlRecord, AgeParts } from '@/lib/types';
 import ParentSelector from './ParentSelector';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
+import { bloodlineOf } from '@/lib/helpers';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { Modal } from '@/components/ui';
 
@@ -124,7 +125,7 @@ export default function EditFowlModal({
   if (!editingFowl) return null;
 
   const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
-  const parentBloodlinePct = (f: FowlRecord) => generationPurity(generationOf(f));
+  const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
 
   return (
     <Modal

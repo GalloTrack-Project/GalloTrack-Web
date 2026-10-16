@@ -23,6 +23,8 @@ import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, he
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { isMale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
+import { getBreedingClassification } from '@/lib/breeding-classification';
+import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { printReport } from '@/lib/report-export';
 import { Modal } from '@/components/ui';
 import {
@@ -71,7 +73,8 @@ type FowlDetailsModalProps = {
   getAgeExact: (parts: AgeParts) => string;
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
-  generationPurity: (gen: number) => number;
+  /** @deprecated Use composition engine instead */
+  generationPurity?: (gen: number) => number;
   generationInfo: (gen: number) => { short: string; label: string; desc: string; tone: string };
   bloodlineOf: (f: FowlRecord) => number;
   getSiblingRelations: (f: FowlRecord) => SiblingRelation[];
@@ -90,7 +93,6 @@ export default function FowlDetailsModal({
   getAgeExact,
   getAgeMetrics,
   generationOf,
-  generationPurity,
   generationInfo,
   bloodlineOf,
   getSiblingRelations,
@@ -214,6 +216,7 @@ export default function FowlDetailsModal({
 
   // Fresh copy so chips/selects update right after a status change.
   const bird = fowls.find((f) => f.id === selectedFowlForDetails.id) ?? selectedFowlForDetails;
+  const classification = getBreedingClassification(bird, fowls);
   const conditionOptions = mergeOptions(optionRows, 'post_match_condition', bird.condition_status).filter(
     (o) => o.value !== 'Deceased',
   );
@@ -234,7 +237,7 @@ export default function FowlDetailsModal({
       title: `Gamefowl Profile — ${bird.name}`,
       meta: [
         formatBirdCodeForDisplay(birdCodeOf(bird, fowls)),
-        bird.breed,
+        classification.type === 'Crossbred' ? classification.derivedBreed : bird.breed,
         bird.gender,
         bird.status,
       ]
@@ -248,7 +251,8 @@ export default function FowlDetailsModal({
             { label: 'Wing band', value: bird.wing_band || '—' },
             { label: 'Name', value: bird.name },
             { label: 'Gender', value: bird.gender || '—' },
-            { label: 'Breed / strain', value: bird.breed || '—' },
+            { label: 'Breed / strain', value: classification.type === 'Crossbred' ? classification.derivedBreed : (bird.breed || '—') },
+            { label: 'Breeding classification', value: classification.badgeLabel },
             { label: 'Color', value: [bird.color, bird.color_category].filter(Boolean).join(' · ') || '—' },
             { label: 'Birthdate', value: bird.birthdate || '—' },
             { label: 'Age', value: ageParts ? getAgeLabel(ageParts) : '—' },
@@ -258,8 +262,8 @@ export default function FowlDetailsModal({
             { label: 'Leg color', value: bird.leg_color || '—' },
             { label: 'Sire', value: bird.sire || '—' },
             { label: 'Dam', value: bird.dam || '—' },
-            { label: 'Generation', value: `${generationInfo(generationOf(bird)).label} · ${generationPurity(generationOf(bird))}% purity` },
-            { label: 'Dominant bloodline', value: `${bloodlineOf(bird)}%` },
+            { label: 'Generation', value: generationInfo(generationOf(bird)).label },
+            { label: 'Dominant bloodline', value: `${classification.purityPct}% ${classification.dominantBreed}` },
           ],
         },
         {
@@ -356,7 +360,10 @@ export default function FowlDetailsModal({
                   ⌁ {selectedFowlForDetails.wing_band}
                 </span>
               ) : null}
-              <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase">{selectedFowlForDetails.breed}</span>
+              <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full uppercase">
+                {classification.type === 'Crossbred' ? classification.derivedBreed : selectedFowlForDetails.breed}
+              </span>
+              <BreedingTypeBadge classification={classification} />
               <a
                 href={`/lineage?tab=pedigree&chicken=${encodeURIComponent(birdCodeOf(selectedFowlForDetails, fowls) || String(selectedFowlForDetails.id))}`}
                 onClick={() => setSelectedFowlForDetails(null)}
@@ -1462,12 +1469,12 @@ export default function FowlDetailsModal({
             return (
               <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-md px-3 py-2.5">
                 <div className="min-w-0">
-                  <p className="text-xs font-black text-teal uppercase tracking-wider">🧬 Backcross Generation</p>
+                  <p className="text-xs font-black text-teal uppercase tracking-wider">🧬 Lineage Generation</p>
                   <p className="text-xs text-muted-foreground font-semibold truncate">{selInfo.label} · {selInfo.desc}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-lg font-black text-teal">{generationPurity(selGen)}%</span>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Backcross Purity (F-scale)</p>
+                  <span className="text-lg font-black text-teal">{classification.purityPct}%</span>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Purity ({classification.dominantBreed})</p>
                 </div>
               </div>
             );
@@ -1492,6 +1499,8 @@ export default function FowlDetailsModal({
               <span className="text-slate-800 dark:text-card-foreground">50% · {(() => {
                 const name = selectedFowlForDetails.sire || '';
                 const target = parentRecordOf(selectedFowlForDetails, 'sire', fowls);
+                const targetClass = target ? getBreedingClassification(target, fowls) : null;
+                const targetBreed = targetClass?.type === 'Crossbred' ? targetClass.derivedBreed : target?.breed;
                 return (
                   <>
                     {target ? (
@@ -1504,7 +1513,7 @@ export default function FowlDetailsModal({
                         {name}
                       </button>
                     ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>}
-                    {target?.breed && <span className="font-semibold"> · {target.breed}</span>}
+                    {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
                   </>
                 );
               })()}</span>
@@ -1541,6 +1550,8 @@ export default function FowlDetailsModal({
               <span className="text-slate-800 dark:text-card-foreground">50% · {(() => {
                 const name = selectedFowlForDetails.dam || '';
                 const target = parentRecordOf(selectedFowlForDetails, 'dam', fowls);
+                const targetClass = target ? getBreedingClassification(target, fowls) : null;
+                const targetBreed = targetClass?.type === 'Crossbred' ? targetClass.derivedBreed : target?.breed;
                 return (
                   <>
                     {target ? (
@@ -1553,7 +1564,7 @@ export default function FowlDetailsModal({
                         {name}
                       </button>
                     ) : <span className="text-slate-600 dark:text-muted-foreground">{name || '—'}</span>}
-                    {target?.breed && <span className="font-semibold"> · {target.breed}</span>}
+                    {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
                   </>
                 );
               })()}</span>

@@ -162,7 +162,7 @@ describe('FowlLists search and filter', () => {
 
   it('combines text search with Breed dropdown filter', async () => {
     renderFowlLists();
-    const breedSelect = screen.getByLabelText(/Breed/i);
+    const breedSelect = screen.getByLabelText(/^Breed$/i);
     fireEvent.change(breedSelect, { target: { value: 'Lemon' } });
 
     await waitFor(() => {
@@ -176,5 +176,46 @@ describe('FowlLists search and filter', () => {
       expect(screen.getAllByText(/\b1 of 11\b/).length).toBeGreaterThan(0);
     });
     expect(screen.getByRole('heading', { level: 4, name: /Lemon Blaze/i })).toBeInTheDocument();
+  });
+
+  it('Option 1 Breed filter: Hatch Silver appears under Breed = Hatch and Breed = Sweater, but not under Purebred', async () => {
+    const crossFowls: FowlRecord[] = [
+      { id: 1, name: 'True Hatch', breed: 'Hatch', gender: 'Rooster', sire: '', dam: '', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+      { id: 2, name: 'Silver Princess', breed: 'Sweater', gender: 'Hen', sire: '', dam: '', status: 'Active', registry_role: 'Breeding Female' } as FowlRecord,
+      { id: 3, name: 'Sweater Flash', breed: 'Sweater', gender: 'Rooster', sire: '', dam: '', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+      { id: 4, name: 'Hatch Silver', breed: 'Hatch', gender: 'Rooster', sire: 'True Hatch', dam: 'Silver Princess', status: 'Active', registry_role: 'Breeding Male' } as FowlRecord,
+    ];
+
+    renderFowlLists({ fowls: crossFowls });
+
+    const breedSelect = screen.getByLabelText(/^Breed$/i);
+    const breedingTypeSelect = screen.getByLabelText(/^Breeding Type$/i);
+
+    // 1. Filter Breed = Hatch -> Hatch Silver appears
+    fireEvent.change(breedSelect, { target: { value: 'Hatch' } });
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 4, name: /Hatch Silver/i })).toBeInTheDocument();
+    });
+
+    // 2. Filter Breed = Sweater -> Hatch Silver appears (composition-aware matching!)
+    fireEvent.change(breedSelect, { target: { value: 'Sweater' } });
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 4, name: /Hatch Silver/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 4, name: /Sweater Flash/i })).toBeInTheDocument();
+    });
+
+    // 3. Add Breeding Type = Purebred -> Hatch Silver is excluded, only Sweater Flash remains
+    fireEvent.change(breedingTypeSelect, { target: { value: 'purebred' } });
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { level: 4, name: /Hatch Silver/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 4, name: /Sweater Flash/i })).toBeInTheDocument();
+    });
+
+    // 4. Set Breed = Hatch with Breeding Type = Purebred -> Hatch Silver is also excluded
+    fireEvent.change(breedSelect, { target: { value: 'Hatch' } });
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { level: 4, name: /Hatch Silver/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 4, name: /True Hatch/i })).toBeInTheDocument();
+    });
   });
 });

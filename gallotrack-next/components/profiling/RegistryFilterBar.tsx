@@ -24,6 +24,8 @@ export interface RegistryFilterBarProps {
   onFilterStageChange: (st: string) => void;
   filterBreed: string;
   onFilterBreedChange: (b: string) => void;
+  filterBreedingType?: 'all' | 'purebred' | 'crossbred' | 'unverified';
+  onFilterBreedingTypeChange?: (bt: 'all' | 'purebred' | 'crossbred' | 'unverified') => void;
   filterFights: 'all' | 'with' | 'without';
   onFilterFightsChange: (f: 'all' | 'with' | 'without') => void;
   fightsDisabled?: boolean;
@@ -213,6 +215,8 @@ export default function RegistryFilterBar({
   onFilterStageChange,
   filterBreed,
   onFilterBreedChange,
+  filterBreedingType = 'all',
+  onFilterBreedingTypeChange,
   filterFights,
   onFilterFightsChange,
   fightsDisabled = false,
@@ -254,10 +258,11 @@ export default function RegistryFilterBar({
     if (filterDam !== 'all') count++;
     if (filterStage !== 'all') count++;
     if (filterBreed !== 'all') count++;
+    if (filterBreedingType !== 'all') count++;
     if (filterFights !== 'all') count++;
     if (filterReason !== 'all') count++;
     return count;
-  }, [query, filterSire, filterDam, filterStage, filterBreed, filterFights, filterReason]);
+  }, [query, filterSire, filterDam, filterStage, filterBreed, filterBreedingType, filterFights, filterReason]);
 
   const hasActiveFilters = activeFiltersCount > 0;
 
@@ -439,9 +444,43 @@ export default function RegistryFilterBar({
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>
+            <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight mt-0.5">
+              Includes crossbreds carrying this breed.
+            </p>
           </div>
 
-          {/* 5. Fighting Status */}
+          {/* 5. Breeding Type */}
+          {onFilterBreedingTypeChange && (
+            <div className="flex flex-col gap-1 w-full">
+              <label htmlFor="filter-by-breeding-type" className="text-xs font-semibold text-muted-foreground">
+                Breeding Type
+              </label>
+              <div className="relative">
+                <select
+                  id="filter-by-breeding-type"
+                  value={filterBreedingType}
+                  onChange={(e) => onFilterBreedingTypeChange(e.target.value as any)}
+                  className={cn(
+                    'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                    filterBreedingType !== 'all'
+                      ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                      : 'border-border bg-background text-foreground hover:bg-muted/50'
+                  )}
+                >
+                  <option value="all">All Breeding Types</option>
+                  <option value="purebred">Purebred</option>
+                  <option value="crossbred">Crossbred</option>
+                  <option value="unverified">Unverified Lineage</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+              </div>
+              <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight mt-0.5">
+                Foundation stock is treated as 100% of its registered breed.
+              </p>
+            </div>
+          )}
+
+          {/* 6. Fighting Status */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="filter-by-fights" className="text-xs font-semibold text-muted-foreground">
               Fighting Status
@@ -601,6 +640,27 @@ export default function RegistryFilterBar({
                 onClick={() => onFilterBreedChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
                 aria-label="Remove breed filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {filterBreedingType !== 'all' && onFilterBreedingTypeChange && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
+              <span>
+                Breeding:{' '}
+                {filterBreedingType === 'purebred'
+                  ? 'Purebred'
+                  : filterBreedingType === 'crossbred'
+                  ? 'Crossbred'
+                  : 'Unverified Lineage'}
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterBreedingTypeChange('all')}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                aria-label="Remove breeding type filter"
               >
                 <X className="w-3 h-3" />
               </button>

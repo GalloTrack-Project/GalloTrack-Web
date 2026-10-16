@@ -31,6 +31,16 @@ import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { INVENTORY_STATUS_TABS } from '@/lib/nav-manifest';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { UIContext } from '@/lib/contexts/ui-context';
+import {
+  getBreedingClassification,
+  classifyFlock,
+  matchesBreedingTypeFilter,
+  type BreedingClassification,
+} from '@/lib/breeding-classification';
+import BreedingTypeBadge from '@/components/BreedingTypeBadge';
+
+const INVENTORY_BREEDING_TYPES = ['all', 'purebred', 'crossbred', 'unverified'] as const;
+type BreedingTypeFilter = (typeof INVENTORY_BREEDING_TYPES)[number];
 
 type FilterTab = 'all' | 'active' | 'breeding' | 'archived' | 'deceased';
 type SortKey = 'name' | 'age' | 'strain' | 'winrate' | 'weight' | 'identifier';
@@ -113,6 +123,7 @@ function FowlCard({
   parentHint,
   onOpenProfile,
   onRestore,
+  classification,
 }: {
   fowl: FowlRecord;
   fowls: FowlRecord[];
@@ -123,6 +134,7 @@ function FowlCard({
   parentHint?: string;
   onOpenProfile?: () => void;
   onRestore?: () => void;
+  classification?: BreedingClassification;
 }) {
   const unitPrefs = useUnitPrefs();
   const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
@@ -184,8 +196,11 @@ function FowlCard({
               <span className="font-extrabold">{parentHint}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">{fowl.breed}</span>
+          <div className="flex items-center flex-wrap gap-2 mt-1">
+            <span className="text-xs font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">
+              {classification?.type === 'Crossbred' ? classification.derivedBreed : fowl.breed}
+            </span>
+            {classification && <BreedingTypeBadge classification={classification} />}
             {fowl.wing_band ? (
               <span className="text-xs font-mono font-bold text-muted-foreground">
                 🏷 <HighlightText text={fowl.wing_band} query={query} />
@@ -482,6 +497,26 @@ export default function MarketplacePage({
     setUrlStatus(activeTab);
   }, [activeTab, urlStatus, setUrlStatus]);
 
+  // URL-driven breeding type filter: ?breedingType=<INVENTORY_BREEDING_TYPES>
+  const [internalBreedingType, setInternalBreedingType] = useState<BreedingTypeFilter>('all');
+  const [urlBreedingType, setUrlBreedingType, urlBreedingTypeMeta] = useUrlTab<BreedingTypeFilter>({
+    param: 'breedingType',
+    values: INVENTORY_BREEDING_TYPES,
+    defaultValue: 'all',
+  });
+  const prevUrlSyncBreedingTypeRef = useRef(internalBreedingType);
+  useEffect(() => {
+    if (urlBreedingTypeMeta.change === 'popstate' || (urlBreedingTypeMeta.change === 'mount' && urlBreedingTypeMeta.paramPresent)) {
+      if (urlBreedingType !== internalBreedingType) setInternalBreedingType(urlBreedingType);
+    }
+  }, [urlBreedingType, urlBreedingTypeMeta, internalBreedingType]);
+  useEffect(() => {
+    if (prevUrlSyncBreedingTypeRef.current === internalBreedingType) return;
+    prevUrlSyncBreedingTypeRef.current = internalBreedingType;
+    if (internalBreedingType === urlBreedingType) return;
+    setUrlBreedingType(internalBreedingType);
+  }, [internalBreedingType, urlBreedingType, setUrlBreedingType]);
+
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [internalGenderFilter, setInternalGenderFilter] = useState<SexFilter>('all');
   const sexFilter = propGenderFilter ?? ui?.inventoryGenderFilter ?? internalGenderFilter;
@@ -496,6 +531,7 @@ export default function MarketplacePage({
 
   const registryCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
   const counts = useMemo(() => inventoryCounts(fowls, registryCtx), [fowls, registryCtx]);
+  const classificationMap = useMemo(() => classifyFlock(fowls), [fowls]);
 
   const tabs: { id: FilterTab; label: string; count: number }[] = useMemo(() => [
     { id: 'all', label: 'All Chickens', count: counts.all },
@@ -516,6 +552,12 @@ export default function MarketplacePage({
     if (roleFilter !== 'all') pool = pool.filter((f) => roleOf(f, registryCtx) === roleFilter);
     if (sexFilter === 'male') pool = pool.filter((f) => isMale(f.gender));
     else if (sexFilter === 'female') pool = pool.filter((f) => isFemale(f.gender));
+    if (internalBreedingType !== 'all') {
+      pool = pool.filter((f) => {
+        const c = classificationMap.get(String(f.id)) ?? getBreedingClassification(f, fowls);
+        return matchesBreedingTypeFilter(c, internalBreedingType);
+      });
+    }
 
     const matches = new Map<number, FowlMatchResult>();
     let result: FowlRecord[] = [];
@@ -561,7 +603,7 @@ export default function MarketplacePage({
     });
 
     return { filteredFowls: result, matchMap: matches };
-  }, [fowls, debouncedQuery, includeParents, activeTab, roleFilter, sexFilter, registryCtx, sortKey, matchHistory, birdCodes]);
+  }, [fowls, debouncedQuery, includeParents, activeTab, roleFilter, sexFilter, internalBreedingType, classificationMap, registryCtx, sortKey, matchHistory, birdCodes]);
 
   const confirmRestore = async () => {
     if (!restoreTarget || !onRestore) return;
@@ -669,6 +711,20 @@ export default function MarketplacePage({
             <option value="male">Male (Roosters)</option>
             <option value="female">Female (Hens)</option>
           </select>
+          <label htmlFor="inventory-breeding-type" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Type</label>
+          <select
+            id="inventory-breeding-type"
+            aria-label="Filter by breeding type"
+            value={internalBreedingType}
+            onChange={(e) => setInternalBreedingType(e.target.value as BreedingTypeFilter)}
+            className={`px-2.5 py-2 rounded-sm text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all ${internalBreedingType !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'}`}
+            title="Foundation stock is treated as 100% of its registered breed."
+          >
+            <option value="all">All types</option>
+            <option value="purebred">Purebred</option>
+            <option value="crossbred">Crossbred</option>
+            <option value="unverified">Unverified Lineage</option>
+          </select>
           <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:inline">Sort</label>
           <select
             id="inventory-sort"
@@ -750,6 +806,7 @@ export default function MarketplacePage({
                 parentHint={parentHint}
                 onOpenProfile={setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined}
                 onRestore={onRestore && restorable ? () => setRestoreTarget(fowl) : undefined}
+                classification={classificationMap.get(String(fowl.id))}
               />
             );
           })}

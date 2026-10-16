@@ -136,17 +136,13 @@ describe('generationOfName', () => {
   });
 });
 
-describe('generationPurity', () => {
-  it('returns 100 for generation 0', () => {
+describe('generationPurity (deprecated in favor of composition engine)', () => {
+  it('returns legacy backcross formula values for historical compatibility', () => {
     expect(generationPurity(0)).toBe(100);
-  });
-
-  it('returns increasing purity for higher generations', () => {
     const g1 = generationPurity(1);
     const g2 = generationPurity(2);
-    expect(g1).toBeGreaterThan(0);
-    expect(g1).toBeLessThan(100);
-    expect(g2).toBeGreaterThan(g1);
+    expect(g1).toBe(50); // Legacy backcross formula (note: purebred F1 uses composition engine -> 100%)
+    expect(g2).toBe(75);
   });
 });
 

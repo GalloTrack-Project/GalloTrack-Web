@@ -31,7 +31,7 @@ export default function ProductPreviewMockup() {
                 </h3>
               </div>
               <p className="text-xs text-muted-foreground font-semibold mt-0.5">
-                Crossbreed · Wing Band #WB-001
+                Crossbred · Wing Band #WB-001
               </p>
             </div>
           </div>

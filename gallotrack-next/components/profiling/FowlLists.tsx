@@ -5,7 +5,6 @@ import {
   getAgeParts,
   getAgeLabel,
   generationOf,
-  generationPurity,
   generationInfo,
   getSiblingRelations,
 } from '@/lib/helpers';
@@ -15,6 +14,14 @@ import { inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
 import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
+import {
+  getBreedingClassification,
+  classifyFlock,
+  matchesBreedingTypeFilter,
+  matchesBreedFilter,
+  type BreedingClassification as GeneticClassification,
+} from '@/lib/breeding-classification';
+import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import {
   registryTabLists,
   makeRegistryComparator,
@@ -52,7 +59,31 @@ type Props = {
   setSelectedFowlForDeceased: (fowl: FowlRecord) => void;
 };
 
-function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetActive, onOpenDetails, allFowls, highlightQuery }: { fowl: FowlRecord; index: number; gender: 'Male' | 'Female'; onEdit: (f: FowlRecord) => void; onArchive: (f: FowlRecord) => void; onDeceased: (f: FowlRecord) => void; onSetActive?: (f: FowlRecord) => void; onOpenDetails?: (f: FowlRecord) => void; allFowls: FowlRecord[]; highlightQuery?: string }) {
+function FowlCard({
+  fowl,
+  index,
+  gender,
+  onEdit,
+  onArchive,
+  onDeceased,
+  onSetActive,
+  onOpenDetails,
+  allFowls,
+  highlightQuery,
+  classificationMap,
+}: {
+  fowl: FowlRecord;
+  index: number;
+  gender: 'Male' | 'Female';
+  onEdit: (f: FowlRecord) => void;
+  onArchive: (f: FowlRecord) => void;
+  onDeceased: (f: FowlRecord) => void;
+  onSetActive?: (f: FowlRecord) => void;
+  onOpenDetails?: (f: FowlRecord) => void;
+  allFowls: FowlRecord[];
+  highlightQuery?: string;
+  classificationMap?: Map<string, GeneticClassification>;
+}) {
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
   const cardGen = generationOf(fowl, allFowls);
   const cardGenInfo = generationInfo(cardGen);
@@ -60,6 +91,8 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
   const cardRole = roleOf(fowl);
   const isBreeder = cardRole === 'Breeding Male' || cardRole === 'Breeding Female';
   const isNonBreeding = cardRole === 'Non-Breeding';
+  const classification = classificationMap?.get(String(fowl.id)) ?? getBreedingClassification(fowl, allFowls);
+  const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
   return (
     <div
       role="button"
@@ -84,7 +117,8 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
           {fowl.wing_band ? (
             <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
-          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{fowl.breed}</span>
+          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{displayBreed}</span>
+          <BreedingTypeBadge classification={classification} />
           <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
             {gender === 'Male' ? '🐓 Male' : '🐔 Female'}
           </span>
@@ -101,30 +135,34 @@ function FowlCard({ fowl, index, gender, onEdit, onArchive, onDeceased, onSetAct
               {ROLE_LABEL['Non-Breeding']}
             </span>
           )}
-          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short} · {generationPurity(cardGen)}%</span>
+          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short}</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-lg border border-slate-100 dark:border-border">
           <div>Sire: {(() => {
             const name = (fowl.sire || '').trim();
             const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
+            const targetClass = target ? (classificationMap?.get(String(target.id)) ?? getBreedingClassification(target, allFowls)) : null;
+            const targetBreed = targetClass?.type === 'Crossbred' ? targetClass.derivedBreed : target?.breed;
             return (
               <>
                 {target ? (
                   <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-sky-700 dark:text-sky-300 hover:underline underline-offset-2 cursor-pointer" title="Open the Sire's profile">{name}</button>
                 ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong>}
-                {target?.breed && <span className="font-semibold"> · {target.breed}</span>}
+                {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
               </>
             );
           })()}</div>
           <div>Dam: {(() => {
             const name = (fowl.dam || '').trim();
             const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
+            const targetClass = target ? (classificationMap?.get(String(target.id)) ?? getBreedingClassification(target, allFowls)) : null;
+            const targetBreed = targetClass?.type === 'Crossbred' ? targetClass.derivedBreed : target?.breed;
             return (
               <>
                 {target ? (
                   <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink hover:underline underline-offset-2 cursor-pointer" title="Open the Dam's profile">{name}</button>
                 ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong>}
-                {target?.breed && <span className="font-semibold"> · {target.breed}</span>}
+                {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
               </>
             );
           })()}</div>
@@ -278,6 +316,7 @@ function FowlListsBody({
   const [filterStage, setFilterStage] = useState('all');
   const [filterBreed, setFilterBreed] = useState('all');
   const [filterFights, setFilterFights] = useState<'all' | 'with' | 'without'>('all');
+  const [filterBreedingType, setFilterBreedingType] = useState<'all' | 'purebred' | 'crossbred' | 'unverified'>('all');
   const [internalSort, setInternalSort] = useState<RegistrySortKey>('identifier');
   const sort = sortKey ?? internalSort;
   const changeSort = onSortChange ?? setInternalSort;
@@ -309,6 +348,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
 
   const allFowls = fowls;
   const birdCodesMap = useMemo(() => resolveBirdCodes(allFowls), [allFowls]);
+  const breedingClassificationMap = useMemo(() => classifyFlock(allFowls), [allFowls]);
 
   const birdNameCodeMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -371,6 +411,14 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       }
       stages.add((f.growth_stage || 'Stag').trim() || 'Stag');
       if ((f.breed || '').trim()) breeds.add(f.breed.trim());
+      const classif = breedingClassificationMap.get(String(f.id));
+      if (classif) {
+        for (const b of classif.allBreeds) {
+          if (b.pct > 0.1 && b.strain) {
+            breeds.add(b.strain.trim());
+          }
+        }
+      }
     }
     return {
       sires: Array.from(sires.values()).sort((a, b) => a.name.localeCompare(b.name)),
@@ -378,13 +426,14 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       stages: Array.from(stages).sort((a, b) => a.localeCompare(b)),
       breeds: Array.from(breeds).sort((a, b) => a.localeCompare(b)),
     };
-  }, [categoryList, birdNameCodeMap]);
+  }, [categoryList, birdNameCodeMap, breedingClassificationMap]);
 
   const filtersActive =
     filterSire !== 'all' ||
     filterDam !== 'all' ||
     filterStage !== 'all' ||
     filterBreed !== 'all' ||
+    filterBreedingType !== 'all' ||
     filterFights !== 'all' ||
     query.trim() !== '';
 
@@ -393,6 +442,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     setFilterDam('all');
     setFilterStage('all');
     setFilterBreed('all');
+    setFilterBreedingType('all');
     setFilterFights('all');
     setQuery('');
     setPage(1);
@@ -416,11 +466,13 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();
       const damOk = filterDam === 'all' || (f.dam || '').trim().toLowerCase() === filterDam.toLowerCase();
       const stageOk = filterStage === 'all' || ((f.growth_stage || 'Stag').trim() || 'Stag').toLowerCase() === filterStage.toLowerCase();
-      const breedOk = filterBreed === 'all' || (f.breed || '').trim().toLowerCase() === filterBreed.toLowerCase();
+      const classification = breedingClassificationMap.get(String(f.id)) ?? getBreedingClassification(f, allFowls);
+      const breedOk = matchesBreedFilter(f, classification, filterBreed);
+      const breedingTypeOk = matchesBreedingTypeFilter(classification, filterBreedingType);
       const hasFights = hasFightRecord(f, foughtFowlIds, foughtNames);
       const fightsOk = filterFights === 'all' || (filterFights === 'with' ? hasFights : !hasFights);
 
-      if (sireOk && damOk && stageOk && breedOk && fightsOk) {
+      if (sireOk && damOk && stageOk && breedOk && breedingTypeOk && fightsOk) {
         matchedList.push({ fowl: f, match });
       }
     }
@@ -437,7 +489,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     const list = matchedList.map((item) => item.fowl);
     const start = (page - 1) * PAGE_SIZE;
     return { list, pagedList: list.slice(start, start + PAGE_SIZE), totalPages: Math.ceil(list.length / PAGE_SIZE) };
-  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterFights, foughtFowlIds, foughtNames, comparator, page]);
+  }, [categoryList, birdCodesMap, debouncedQuery, filterSire, filterDam, filterStage, filterBreed, filterBreedingType, breedingClassificationMap, allFowls, filterFights, foughtFowlIds, foughtNames, comparator, page]);
 
   const filterBar = (
     <RegistryFilterBar
@@ -453,6 +505,8 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       onFilterStageChange={(st) => { setFilterStage(st); setPage(1); }}
       filterBreed={filterBreed}
       onFilterBreedChange={(b) => { setFilterBreed(b); setPage(1); }}
+      filterBreedingType={filterBreedingType}
+      onFilterBreedingTypeChange={(bt) => { setFilterBreedingType(bt); setPage(1); }}
       filterFights={filterFights}
       onFilterFightsChange={(f) => {
         setFilterFights(f);
@@ -522,6 +576,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       onSetActive={fowl.status !== 'Active' ? handleSetActiveStatus : undefined}
       allFowls={allFowls}
       highlightQuery={debouncedQuery}
+      classificationMap={breedingClassificationMap}
     />
   );
 

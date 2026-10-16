@@ -583,8 +583,8 @@ export default function EncodeForm({
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-black text-teal uppercase tracking-widest">🧬 Backcross Generation (F-scale)</p>
-              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam lineage history — separate from the bloodline split below</p>
+              <p className="text-xs font-black text-teal uppercase tracking-widest">🧬 Lineage Generation</p>
+              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam ancestry history</p>
             </div>
             <div className="shrink-0 sm:text-right">
               {hasAnyParent ? (
@@ -602,15 +602,15 @@ export default function EncodeForm({
             <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
               <p className="text-xs font-black text-info dark:text-sky-300 uppercase tracking-wider">🐓 Sire Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{sireName.trim() ? sireName : '—'}</p>
-              <p className="text-xs font-bold text-muted-foreground mt-0.5">{sireName.trim() ? `${sireGenInfo.label} · ${generationPurity(sireGen)}% backcross` : '—'}</p>
+              <p className="text-xs font-bold text-muted-foreground mt-0.5">{sireName.trim() ? sireGenInfo.label : '—'}</p>
             </div>
             <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
               <p className="text-xs font-black text-pink uppercase tracking-wider">🐔 Dam Lineage</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{damName.trim() ? damName : '—'}</p>
-              <p className="text-xs font-bold text-muted-foreground mt-0.5">{damName.trim() ? `${damGenInfo.label} · ${generationPurity(damGen)}% backcross` : '—'}</p>
+              <p className="text-xs font-bold text-muted-foreground mt-0.5">{damName.trim() ? damGenInfo.label : '—'}</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground font-semibold">Backcross ladder: F1 (First Cross) = 50% · F2 (1st Backcross) = 75% · F3 (2nd Backcross) = 87.5% · F4+ (Stabilized) = 93.75%–96%+. Backcross purity = 100 × (1 − 2⁻ᵍᵉⁿ) with foundation/base stock = 100%. Ito ay linya ng generasyon — hindi ito ang hatian ng dugo kada lahi.</p>
+          <p className="text-xs text-muted-foreground font-semibold">Generation ladder: F0 (Foundation) · F1 (First Cross) · F2 (1st Backcross) · F3 (2nd Backcross) · F4+ (Stabilized). Purity percentages are calculated per strain from the bloodline composition below.</p>
         </div>
         <BloodlineBreakdown
           stats={previewBloodlineStats && previewBloodlineStats.knownPct > 0 ? previewBloodlineStats : null}

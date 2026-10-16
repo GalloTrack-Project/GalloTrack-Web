@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { getFowlBloodlineStats, UNKNOWN_BLOODLINE, isFoundationName } from '@/lib/bloodline-composition';
+import { getBreedingClassification } from '@/lib/breeding-classification';
 import { birdCodeOf, compareBirdCodesNatural, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUI } from '@/lib/contexts/ui-context';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
@@ -265,13 +266,15 @@ function CompactNodeCard(props: CompactNodeCardProps) {
   }
 
   const stats = useMemo(() => (fowl ? getFowlBloodlineStats(fowl, fowls) : null), [fowl, fowls]);
+  const classification = useMemo(() => (fowl ? getBreedingClassification(fowl, fowls) : null), [fowl, fowls]);
   const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || birdCodeOf(fowl, fowls)) : '';
   const missing = !fowl;
 
+  const displayBreed = classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
   const summaryText = stats
     ? stats.summary
-    : fowl?.breed
-    ? fowl.breed
+    : displayBreed
+    ? displayBreed
     : 'Not registered';
 
   const recenter = useCallback(() => {

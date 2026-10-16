@@ -392,7 +392,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const offspringGenInfo = generationInfo(offspringGen);
   const sireGenInfo = generationInfo(sireGen);
   const damGenInfo = generationInfo(damGen);
-  const computedBloodlinePct = generationPurity(offspringGen);
 
   // ── Standardized bird codes (sire 1, dam A, offspring 1A1 → 1A₁) ──
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
@@ -416,6 +415,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     return computeBloodlineComposition(draft, fowls);
   }, [newName, newBreed, selectedStrains, newGender, sireName, damName, fowls]);
   const previewBloodlineStats = useMemo(() => getBloodlineStats(previewComposition), [previewComposition]);
+  const computedBloodlinePct = previewBloodlineStats ? previewBloodlineStats.specificPct : 100;
   /**
    * "Lineage verified" used to mean "the breeder typed two purity numbers that
    * add to 100". The purity inputs are gone — the engine is the single source
@@ -1021,7 +1021,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const editSireGen = generationOfNameHelper(editSire, fowls, new Map<string, number>(), new Set<string>());
       const editDamGen = generationOfNameHelper(editDam, fowls, new Map<string, number>(), new Set<string>());
       const editHasAnyParent = editSire.trim() !== '' || editDam.trim() !== '';
-      const calculatedBloodline = generationPurity(editHasAnyParent ? Math.max(editSireGen, editDamGen) + 1 : 0);
+      const calculatedBloodline = 100;
       const editAutoParts = autoCalcAge ? getAgePartsHelper(editBirthdate) : null;
 
       // Validate identifier

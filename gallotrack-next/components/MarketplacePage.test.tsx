@@ -254,4 +254,27 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
     expect(screen.getByText(/Ready in 20 days/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Ready in \d+ days?/i)).toHaveLength(1);
   });
+
+  it('renders Breeding Type dropdown and filters chickens by breeding type', () => {
+    // mockFowls has:
+    // 1: Sweater Crimson (Purebred)
+    // 2: Crimson Belle (Purebred)
+    // 3: Sweater Red Storm (Purebred, sire Foundation, dam Crimson Belle [Sweater])
+    // 4: Iron Thunder (Unverified, parents Iron Chief / Lightning Queen not in list)
+    renderMarketplace();
+
+    const breedingTypeSelect = screen.getByLabelText(/Filter by breeding type/i);
+    expect(breedingTypeSelect).toBeInTheDocument();
+    expect(breedingTypeSelect).toHaveValue('all');
+
+    // Filter to unverified
+    fireEvent.change(breedingTypeSelect, { target: { value: 'unverified' } });
+    expect(screen.getByRole('heading', { level: 4, name: /Iron Thunder/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Sweater Crimson/i })).not.toBeInTheDocument();
+
+    // Filter to purebred
+    fireEvent.change(breedingTypeSelect, { target: { value: 'purebred' } });
+    expect(screen.getByRole('heading', { level: 4, name: /Sweater Crimson/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 4, name: /Iron Thunder/i })).not.toBeInTheDocument();
+  });
 });

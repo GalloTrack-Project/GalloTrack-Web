@@ -15,6 +15,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
 import { ROLE_LABEL } from '@/lib/registry-roles';
+import { classifyFlock, getBreedingClassification } from '@/lib/breeding-classification';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -107,15 +108,27 @@ export default function DashboardPage() {
   );
 
   const registryColumns = ['Bird Code', 'Name', 'Gender', 'Breed', 'Birthdate', 'Age', 'Status', 'Weight', 'Height', 'Sire', 'Dam', 'Bloodline %'];
-  const registryRows = React.useMemo(
-    () =>
-      fowls.map((f) => [
+  const registryRows = React.useMemo(() => {
+    const classMap = classifyFlock(fowls);
+    return fowls.map((f) => {
+      const classification = classMap.get(String(f.id)) ?? getBreedingClassification(f, fowls);
+      const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : f.breed;
+      return [
         formatBirdCodeForDisplay(birdCodes.get(String(f.id)) || f.bird_code || ''),
-        f.name, f.gender, f.breed, f.birthdate, f.age, f.status, f.weight, f.height,
-        f.sire, f.dam, f.bloodline_pct,
-      ]),
-    [fowls, birdCodes],
-  );
+        f.name,
+        f.gender,
+        displayBreed,
+        f.birthdate,
+        f.age,
+        f.status,
+        f.weight,
+        f.height,
+        f.sire,
+        f.dam,
+        classification.purityPct,
+      ];
+    });
+  }, [fowls, birdCodes]);
 
   const topStrains = React.useMemo(() => {
     const strainMap = new Map<string, { count: number; males: number; females: number }>();

@@ -20,6 +20,7 @@ import {
 } from '@/lib/win-rate';
 import WinRatePill from '@/components/match/WinRatePill';
 import ChickenIcon from '@/components/ChickenIcon';
+import { getBreedingClassification } from '@/lib/breeding-classification';
 
 type Depth = 1 | 2 | 3;
 
@@ -46,18 +47,22 @@ function ParentChip({
   fowl,
   codes,
   onPick,
+  fowls = [],
 }: {
   roleLabel: 'Sire' | 'Dam';
   name: string;
   fowl?: FowlRecord;
   codes: Map<string, string>;
   onPick?: (f: FowlRecord) => void;
+  fowls?: FowlRecord[];
 }) {
   const accent =
     roleLabel === 'Sire'
       ? 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-400'
       : 'bg-pink-50 dark:bg-pink-950/40 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-400';
   const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '') : '';
+  const classification = fowl ? getBreedingClassification(fowl, fowls) : null;
+  const displayBreed = classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
 
   return (
     <button
@@ -72,8 +77,8 @@ function ParentChip({
       <span className="min-w-0 flex-1">
         <span className="block text-xs font-black uppercase tracking-widest">{roleLabel}</span>
         <span className="block text-xs font-black text-card-foreground truncate">{name}</span>
-        {fowl?.breed && (
-          <span className="block text-xs font-bold text-muted-foreground truncate">{fowl.breed}</span>
+        {displayBreed && (
+          <span className="block text-xs font-bold text-muted-foreground truncate">{displayBreed}</span>
         )}
         {!fowl && (
           <span className="block text-xs font-bold text-muted-foreground">Not in registry</span>
@@ -96,6 +101,7 @@ function OffspringNode({
   onPick,
   onShowFights,
   matchStatsMap,
+  fowls = [],
 }: {
   node: DescendantNode;
   depth: number;
@@ -104,12 +110,15 @@ function OffspringNode({
   onPick?: (f: FowlRecord) => void;
   onShowFights?: (f: FowlRecord) => void;
   matchStatsMap: Map<string, WinRateStats & { matches: MatchRecord[] }>;
+  fowls?: FowlRecord[];
 }) {
   const fowl = node.fowl;
   const code = formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '');
   const kids = depth < maxDepth ? node.children : [];
   const totalKids = node.children.length;
   const stats = matchStatsMap.get(fowl.name.trim().toLowerCase()) || computeWinRate(0, 0);
+  const classification = getBreedingClassification(fowl, fowls);
+  const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
 
   return (
     <div className="gt-kid">
@@ -133,7 +142,7 @@ function OffspringNode({
               {fowl.name}
             </span>
             <span className="block text-xs font-semibold text-muted-foreground truncate">
-              {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {fowl.breed || '—'}
+              {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {displayBreed || '—'}
               {fowl.age ? ` · ${fowl.age}` : ''}
             </span>
           </span>
@@ -174,6 +183,7 @@ function OffspringNode({
               onPick={onPick}
               onShowFights={onShowFights}
               matchStatsMap={matchStatsMap}
+              fowls={fowls}
             />
           ))}
         </div>
@@ -193,6 +203,7 @@ function PairTree({
   onPick,
   onShowFights,
   matchStatsMap,
+  fowls = [],
 }: {
   pair: BreedingPair;
   codes: Map<string, string>;
@@ -204,6 +215,7 @@ function PairTree({
   onPick?: (f: FowlRecord) => void;
   onShowFights?: (f: FowlRecord) => void;
   matchStatsMap: Map<string, WinRateStats & { matches: MatchRecord[] }>;
+  fowls?: FowlRecord[];
 }) {
   const sireFowl = byName.get(nameKey(pair.sire));
   const damFowl = byName.get(nameKey(pair.dam));
@@ -258,9 +270,9 @@ function PairTree({
     <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
       <div className="px-5 pt-5 pb-0 flex items-start gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
-          <ParentChip roleLabel="Sire" name={pair.sire} fowl={sireFowl} codes={codes} onPick={onPick} />
+          <ParentChip roleLabel="Sire" name={pair.sire} fowl={sireFowl} codes={codes} onPick={onPick} fowls={fowls} />
           <span className="text-base font-black text-muted-foreground leading-none">×</span>
-          <ParentChip roleLabel="Dam" name={pair.dam} fowl={damFowl} codes={codes} onPick={onPick} />
+          <ParentChip roleLabel="Dam" name={pair.dam} fowl={damFowl} codes={codes} onPick={onPick} fowls={fowls} />
           {pairCode && (
             <span className="text-xs font-mono font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full">
               pair {pairCode}
@@ -309,6 +321,7 @@ function PairTree({
                     onPick={onPick}
                     onShowFights={onShowFights}
                     matchStatsMap={matchStatsMap}
+                    fowls={fowls}
                   />
                 ))}
               </div>
@@ -330,6 +343,7 @@ function PairTree({
                     onPick={onPick}
                     onShowFights={onShowFights}
                     matchStatsMap={matchStatsMap}
+                    fowls={fowls}
                   />
                 ))}
               </div>
@@ -582,6 +596,7 @@ export default function FamilyTree({
               onPick={onPick}
               onShowFights={onShowFights}
               matchStatsMap={matchStatsMap}
+              fowls={fowls}
             />
           ))}
         </div>

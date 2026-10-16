@@ -104,6 +104,11 @@ export const generationOf = (f: FowlRecord | null | undefined, fowls: FowlRecord
   return generationOfName(f.name, fowls, new Map<string, number>(), new Set<string>());
 };
 
+/**
+ * @deprecated Deprecated in favor of the breed composition engine (`bloodlineOf` or `getBreedingClassification`).
+ * The theoretical backcross formula 100 * (1 - 2^-gen) conflicted with real composition purity
+ * (e.g. purebred F1 offspring showing 50% instead of 100%). Purity percentages must come from the composition engine.
+ */
 export const generationPurity = (gen: number): number => {
   if (gen <= 0) return 100;
   return Math.round((100 * (1 - Math.pow(2, -gen))) * 100) / 100;
@@ -118,7 +123,10 @@ export const generationInfo = (gen: number): { short: string; label: string; des
   return { short: `F${gen}`, label: `F${gen} · Stabilized Line`, desc: 'Stabilized Line', tone: 'teal' };
 };
 
-export const parentBloodlinePct = (f: FowlRecord, fowls: FowlRecord[]): number => generationPurity(generationOf(f, fowls));
+/**
+ * Purity percentage of a parent, derived from the single-source bloodline composition engine.
+ */
+export const parentBloodlinePct = (f: FowlRecord, fowls: FowlRecord[] = []): number => bloodlineOf(f, fowls);
 /**
  * Dominant (specific) bloodline share of a bird — 0–100.
  *
