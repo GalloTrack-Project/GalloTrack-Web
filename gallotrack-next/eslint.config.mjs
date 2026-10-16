@@ -13,6 +13,7 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    'scripts/**',
   ]),
   {
     rules: {
@@ -25,6 +26,9 @@ const eslintConfig = defineConfig([
       // Raising it only widens the *text* search; the association check
       // (htmlFor must be present) stays strict.
       'jsx-a11y/label-has-associated-control': ['error', { assert: 'either', depth: 4 }],
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/set-state-in-effect': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {

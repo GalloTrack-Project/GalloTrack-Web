@@ -2504,7 +2504,7 @@ export default function LineageDirectory({
 
         {/* B. Underline-Style Tabs Row */}
         <div className="border-b border-border/80 -mb-px">
-          <nav
+          <div
             role="tablist"
             aria-label="Family Lineage Directory Tabs"
             className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none"
@@ -2552,7 +2552,7 @@ export default function LineageDirectory({
                 </button>
               );
             })}
-          </nav>
+          </div>
         </div>
 
         {/* C. Context Bar Row (~38px tall) */}

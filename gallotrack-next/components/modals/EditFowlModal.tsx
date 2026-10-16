@@ -6,7 +6,7 @@ import ParentSelector from './ParentSelector';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { bloodlineOf } from '@/lib/helpers';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
-import { validateOffspringBirthdate } from '@/lib/registry-roles';
+import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
 
 type EditFowlModalProps = {
@@ -123,15 +123,19 @@ export default function EditFowlModal({
 }: EditFowlModalProps) {
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+
+  const birthdateValidation = React.useMemo<BirthdateValidationResult>(
+    () =>
+      editingFowl
+        ? validateOffspringBirthdate(editBirthdate, editSire, editDam, fowls ?? [])
+        : { valid: true, errors: [], warnings: [] },
+    [editingFowl, editBirthdate, editSire, editDam, fowls],
+  );
+
   if (!editingFowl) return null;
 
   const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
-
-  const birthdateValidation = React.useMemo(
-    () => validateOffspringBirthdate(editBirthdate, editSire, editDam, fowls),
-    [editBirthdate, editSire, editDam, fowls],
-  );
 
   return (
     <Modal

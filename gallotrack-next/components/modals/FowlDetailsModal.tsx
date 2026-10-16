@@ -228,17 +228,18 @@ export default function FowlDetailsModal({
     setHistoryState({ fowlId, open: true, entries });
   }, [fowlId, historyState]);
 
+  const regCtx = useMemo(() => buildRegistryContext(fowls ?? []), [fowls]);
+  const { foughtFowlIds, foughtNames } = useMemo(
+    () => extractFoughtLookups(matchHistory ?? []),
+    [matchHistory],
+  );
+
   if (!selectedFowlForDetails) return null;
 
   // Fresh copy so chips/selects update right after a status change.
   const bird = fowls.find((f) => f.id === selectedFowlForDetails.id) ?? selectedFowlForDetails;
   const classification = getBreedingClassification(bird, fowls);
   const parentageRelatedness = getOffspringParentageRelatedness(bird, fowls);
-  const regCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
-  const { foughtFowlIds, foughtNames } = useMemo(
-    () => extractFoughtLookups(matchHistory),
-    [matchHistory],
-  );
   const isRetired = isRetiredFighter(bird, foughtFowlIds, foughtNames, regCtx);
   const conditionOptions = mergeOptions(optionRows, 'post_match_condition', bird.condition_status).filter(
     (o) => o.value !== 'Deceased',

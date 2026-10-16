@@ -129,9 +129,6 @@ type Props = {
 
 export default function BloodlineBreakdown({ composition, stats, title, subtitle, compact, fowl, fowls }: Props) {
   const resolved = stats ?? getBloodlineStats(composition ?? null);
-  if (!resolved) return null;
-
-  const { entries, dominant, strainCount, isDiluted, summary, knownPct, unknownPct } = resolved;
 
   const unregisteredCount = React.useMemo(
     () => countUnregisteredAncestors(fowl ?? null, fowls ?? []),
@@ -142,6 +139,10 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
     () => findSharedAncestors(fowl ?? null, fowls ?? []),
     [fowl, fowls]
   );
+
+  if (!resolved) return null;
+
+  const { entries, dominant, strainCount, isDiluted, summary, knownPct, unknownPct } = resolved;
 
   if (compact) {
     return (

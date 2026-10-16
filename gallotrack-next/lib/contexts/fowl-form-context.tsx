@@ -89,6 +89,10 @@ export function useFowlFormState(): FowlFormStateContextValue {
   return ctx;
 }
 
+export function useFowlFormStateOptional(): FowlFormStateContextValue | null {
+  return useContext(FowlFormStateContext);
+}
+
 export function FowlFormStateProvider({ children }: { children: React.ReactNode }) {
   const [autoCalcAge, setAutoCalcAge] = useState(true);
 

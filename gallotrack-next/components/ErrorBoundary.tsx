@@ -3,7 +3,7 @@ import React, { Component, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 type Props = { children: ReactNode; label?: string };
-type State = { hasError: boolean; error: Error | null };
+type State = { hasError: boolean; error: Error | null; errorId?: string };
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -12,7 +12,18 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    const errorId = Math.random().toString(36).substring(2, 10);
+    return { hasError: true, error, errorId };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(
+      `[ErrorBoundary${this.props.label ? `:${this.props.label}` : ''}] Error (ID: ${this.state.errorId || 'unknown'}):`,
+      error
+    );
+    if (errorInfo?.componentStack) {
+      console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    }
   }
 
   render() {

@@ -123,7 +123,7 @@ export default function PromoteToBreederModal({
             />
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            This becomes the chicken's main identifier in breeding charts and pedigrees.
+            This becomes the chicken&apos;s main identifier in breeding charts and pedigrees.
           </p>
         </div>
 

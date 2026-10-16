@@ -52,9 +52,14 @@ export default function PerFowlBreakdownModal({
   const [datePreset, setDatePreset] = useState<DateRangePreset>(initialDatePreset || 'all');
   const [sortBy, setSortBy] = useState<SortOption>('winrate');
 
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
   React.useEffect(() => {
-    if (show && initialDatePreset) {
-      setDatePreset(initialDatePreset);
+    if (show) {
+      setNowMs(Date.now());
+      if (initialDatePreset) {
+        setDatePreset(initialDatePreset);
+      }
     }
   }, [show, initialDatePreset]);
 
@@ -63,14 +68,13 @@ export default function PerFowlBreakdownModal({
   // Filter matches based on selected datePreset
   const filteredMatches = useMemo(() => {
     if (datePreset === 'all') return matchHistory;
-    const nowMs = Date.now();
     const bounds = presetDateKeys(datePreset, nowMs);
     if (!bounds) return matchHistory;
     return matchHistory.filter((m) => {
       if (!m.date) return false;
       return m.date >= bounds.start && m.date <= bounds.end;
     });
-  }, [matchHistory, datePreset]);
+  }, [matchHistory, datePreset, nowMs]);
 
   // Compute breakdown for all chickens that have at least one match
   const chickenRows = useMemo(() => {

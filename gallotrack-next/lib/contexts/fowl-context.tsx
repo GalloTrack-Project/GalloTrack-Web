@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/registry';
 import { useUI } from './ui-context';
-import { FowlFormStateProvider, useFowlFormState } from './fowl-form-context';
+import { FowlFormStateProvider, useFowlFormState, useFowlFormStateOptional } from './fowl-form-context';
 import {
   isMale as isMaleHelper,
   isFemale as isFemaleHelper,
@@ -278,6 +278,13 @@ export function useFowl(): FowlContextValue {
   if (!ctx) throw new Error('useFowl must be used within FowlProvider');
   const formState = useFowlFormState();
   return { ...ctx, ...formState };
+}
+
+export function useFowlOptional(): FowlContextValue | null {
+  const ctx = useContext(FowlContext);
+  const formState = useFowlFormStateOptional();
+  if (!ctx) return null;
+  return formState ? { ...ctx, ...formState } : (ctx as FowlContextValue);
 }
 
 function sanitizeInput(value: string): string {

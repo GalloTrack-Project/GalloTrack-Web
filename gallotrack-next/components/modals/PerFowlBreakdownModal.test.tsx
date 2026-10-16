@@ -102,4 +102,65 @@ describe('PerFowlBreakdownModal', () => {
     expect(within(totalRow).getAllByText(/2W-0L/i).length).toBeGreaterThanOrEqual(1);
     expect(within(totalRow).getAllByText(/100%/i).length).toBeGreaterThanOrEqual(1);
   });
+
+  it('refreshes nowMs on reopen so "today" preset reflects the new date after clock advances past midnight', () => {
+    vi.useFakeTimers();
+    try {
+      // Day 1: 2026-06-01
+      vi.setSystemTime(new Date('2026-06-01T14:00:00Z'));
+
+      const testMatches: MatchRecord[] = [
+        { id: 201, entry_name: 'Sweater Red Storm', outcome: 'Win', date: '2026-06-01', status: 'Completed' } as MatchRecord,
+        { id: 202, entry_name: 'Iron Lemon', outcome: 'Win', date: '2026-06-02', status: 'Completed' } as MatchRecord,
+      ];
+
+      // 1. Open modal on Day 1 with "today" preset
+      const { rerender } = render(
+        <PerFowlBreakdownModal
+          show={true}
+          onClose={vi.fn()}
+          fowls={mockFowls}
+          matchHistory={testMatches}
+          initialDatePreset="today"
+        />
+      );
+
+      // On Day 1, only Sweater Red Storm's match matches today (2026-06-01)
+      expect(screen.getAllByText('Sweater Red Storm').length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByText('Iron Lemon')).not.toBeInTheDocument();
+
+      // 2. Close the modal
+      rerender(
+        <PerFowlBreakdownModal
+          show={false}
+          onClose={vi.fn()}
+          fowls={mockFowls}
+          matchHistory={testMatches}
+          initialDatePreset="today"
+        />
+      );
+      expect(screen.queryByText('Win rate by chicken')).not.toBeInTheDocument();
+
+      // 3. Advance the clock past midnight to Day 2: 2026-06-02
+      vi.setSystemTime(new Date('2026-06-02T10:00:00Z'));
+
+      // 4. Reopen modal with "today" preset
+      rerender(
+        <PerFowlBreakdownModal
+          show={true}
+          onClose={vi.fn()}
+          fowls={mockFowls}
+          matchHistory={testMatches}
+          initialDatePreset="today"
+        />
+      );
+
+      // On Day 2, nowMs refreshed on reopen, so today is now 2026-06-02
+      // Iron Lemon's match matches, and Sweater Red Storm's does not
+      expect(screen.getAllByText('Iron Lemon').length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByText('Sweater Red Storm')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -1,29 +1,11 @@
 {
   "app/(dashboard)/admin/page.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    },
     "react/no-unescaped-entities": {
       "count": 2
     }
   },
   "app/(dashboard)/breeds/page.tsx": {
     "jsx-a11y/no-autofocus": {
-      "count": 1
-    }
-  },
-  "app/(dashboard)/dashboard/admin-page.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "app/(dashboard)/layout.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "app/(dashboard)/marketplace/page.tsx": {
-    "react-hooks/set-state-in-effect": {
       "count": 1
     }
   },
@@ -38,19 +20,6 @@
   "app/auth/verify-otp/page.tsx": {
     "jsx-a11y/no-autofocus": {
       "count": 1
-    }
-  },
-  "components/BreedingHub.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "components/DashboardPage.tsx": {
-    "jsx-a11y/click-events-have-key-events": {
-      "count": 2
-    },
-    "jsx-a11y/no-static-element-interactions": {
-      "count": 2
     }
   },
   "components/modals/FowlDetailsModal.tsx": {
@@ -78,19 +47,6 @@
   },
   "lib/contexts/fowl-context.tsx": {
     "react-hooks/immutability": {
-      "count": 1
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "lib/contexts/fowl-form-context.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "lib/units.ts": {
-    "react-hooks/set-state-in-effect": {
       "count": 1
     }
   },

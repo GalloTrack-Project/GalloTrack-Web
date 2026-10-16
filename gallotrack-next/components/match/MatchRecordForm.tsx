@@ -1030,7 +1030,7 @@ export default function MatchRecordForm({
                       >
                         <img
                           src={signedPhotoUrls[p.id] || p.url}
-                          alt={`Match photo ${idx + 1}`}
+                          alt={`Match attachment ${idx + 1}`}
                           className="w-full h-28 object-cover rounded-md"
                         />
                         <button

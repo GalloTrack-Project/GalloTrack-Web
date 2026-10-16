@@ -6,7 +6,7 @@ import { genderLabel, isMale, isFemale } from '@/lib/helpers';
 import type { FowlRecord } from '@/lib/types';
 import { buildRegistryContext, roleOf, isActiveStatus, ROLE_LABEL } from '@/lib/registry-roles';
 import { buildCodeSet, nextFoundationCode } from '@/lib/bird-code';
-import { useFowl } from '@/lib/contexts/fowl-context';
+import { useFowlOptional } from '@/lib/contexts/fowl-context';
 import PromoteToBreederModal from './PromoteToBreederModal';
 
 export type ParentSelectorProps = {
@@ -74,13 +74,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
   const [promotingFowl, setPromotingFowl] = useState<FowlRecord | null>(null);
   const [promoteModalOpen, setPromoteModalOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
-
-  let fowlContext: ReturnType<typeof useFowl> | null = null;
-  try {
-    fowlContext = useFowl();
-  } catch {
-    fowlContext = null;
-  }
+  const fowlContext = useFowlOptional();
 
   if (prevValue !== value) {
     setPrevValue(value);

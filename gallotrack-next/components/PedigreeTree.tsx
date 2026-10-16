@@ -217,12 +217,26 @@ type CompactNodeCardProps = {
   onRegisterSingle: (hint: { side: 'sire' | 'dam'; breed?: string; childName: string; placeholderName: string }) => void;
 };
 
-function CompactNodeCard(props: CompactNodeCardProps) {
+export function CompactNodeCard(props: CompactNodeCardProps) {
   const {
     node, fowls, codes, canRegisterAncestor,
     onRecenter, onViewProfile, onRegisterMerged, onRegisterSingle
   } = props;
   const { fowl, name, isMerged, role, childBreedHint, childName } = node;
+
+  const stats = useMemo(() => (!isMerged && fowl ? getFowlBloodlineStats(fowl, fowls ?? []) : null), [isMerged, fowl, fowls]);
+  const classification = useMemo(() => (!isMerged && fowl ? getBreedingClassification(fowl, fowls ?? []) : null), [isMerged, fowl, fowls]);
+  const recenter = useCallback(() => {
+    if (!isMerged && fowl) onRecenter(fowl);
+  }, [isMerged, fowl, onRecenter]);
+
+  const viewProfile = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isMerged && fowl) onViewProfile(fowl);
+    },
+    [isMerged, fowl, onViewProfile],
+  );
 
   const roleBorder =
     role === 'subject'
@@ -267,8 +281,6 @@ function CompactNodeCard(props: CompactNodeCardProps) {
     );
   }
 
-  const stats = useMemo(() => (fowl ? getFowlBloodlineStats(fowl, fowls) : null), [fowl, fowls]);
-  const classification = useMemo(() => (fowl ? getBreedingClassification(fowl, fowls) : null), [fowl, fowls]);
   const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || birdCodeOf(fowl, fowls)) : '';
   const missing = !fowl;
 
@@ -278,18 +290,6 @@ function CompactNodeCard(props: CompactNodeCardProps) {
     : displayBreed
     ? displayBreed
     : 'Not registered';
-
-  const recenter = useCallback(() => {
-    if (fowl) onRecenter(fowl);
-  }, [fowl, onRecenter]);
-
-  const viewProfile = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (fowl) onViewProfile(fowl);
-    },
-    [fowl, onViewProfile],
-  );
 
   const onKey = (e: React.KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && fowl) {
@@ -348,6 +348,7 @@ function CompactNodeCard(props: CompactNodeCardProps) {
       data-start-row={node.startRow}
       data-row-span={node.rowSpan}
       role="treeitem"
+      aria-selected={role === 'subject'}
       tabIndex={0}
       aria-label={ariaLabel}
       aria-level={node.gen + 1}
