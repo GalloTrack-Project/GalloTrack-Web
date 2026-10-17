@@ -500,7 +500,7 @@ export default function FamilyTree({
   const [maxDepth, setMaxDepth] = useState<Depth>(2);
   const [internalCollapsed, setInternalCollapsed] = useState<Set<string>>(new Set());
 
-  const matchStatsMap = useMemo(() => buildChickenMatchStatsMap(matchHistory), [matchHistory]);
+  const matchStatsMap = useMemo(() => buildChickenMatchStatsMap(matchHistory, fowls), [matchHistory, fowls]);
 
   const collapsed = collapsedKeys !== undefined ? collapsedKeys : internalCollapsed;
   const toggleCollapse = onToggleCollapse !== undefined

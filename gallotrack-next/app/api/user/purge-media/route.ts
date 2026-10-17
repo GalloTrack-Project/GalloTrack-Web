@@ -31,7 +31,61 @@ async function getAuthenticatedUser(request: NextRequest) {
 }
 
 /**
+ * Recursively lists all concrete object paths under a prefix, handling pagination beyond 1000 objects.
+ */
+async function listAllFilePathsRecursively(
+  admin: ReturnType<typeof getAdminClient>,
+  bucket: string,
+  prefix: string,
+): Promise<{ paths: string[]; errors: string[] }> {
+  const paths: string[] = [];
+  const errors: string[] = [];
+  const pageSize = 1000;
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data: items, error } = await admin.storage
+      .from(bucket)
+      .list(prefix, { limit: pageSize, offset });
+
+    if (error) {
+      errors.push(`Failed to list in ${bucket}/${prefix}: ${error.message}`);
+      break;
+    }
+
+    if (!items || items.length === 0) {
+      break;
+    }
+
+    for (const item of items) {
+      if (!item.name || item.name.startsWith('.')) continue;
+      const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
+
+      // In Supabase storage, folders have id === null. Files always have a valid id or size.
+      const isFolder = item.id === null;
+      if (isFolder) {
+        const sub = await listAllFilePathsRecursively(admin, bucket, fullPath);
+        paths.push(...sub.paths);
+        errors.push(...sub.errors);
+      } else {
+        paths.push(fullPath);
+      }
+    }
+
+    if (items.length < pageSize) {
+      hasMore = false;
+    } else {
+      offset += pageSize;
+    }
+  }
+
+  return { paths, errors };
+}
+
+/**
  * GET: Returns accurate live counts for owner media files and breeding pairings.
+ * Recursively traverses nested user folders (e.g., {user_id}/fowl/...).
  */
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
@@ -43,17 +97,17 @@ export async function GET(request: NextRequest) {
   const userId = user.id;
 
   try {
-    const [pairingsRes, videosRes, photosRes, fowlImagesRes] = await Promise.all([
+    const [pairingsRes, videosResult, photosResult, fowlImagesResult] = await Promise.all([
       admin.from('breeding_pairings').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      admin.storage.from('match-videos').list(userId),
-      admin.storage.from('match-photos').list(userId),
-      admin.storage.from('fowl-images').list(userId),
+      listAllFilePathsRecursively(admin, 'match-videos', userId),
+      listAllFilePathsRecursively(admin, 'match-photos', userId),
+      listAllFilePathsRecursively(admin, 'fowl-images', userId),
     ]);
 
     const pairingsCount = pairingsRes.count ?? 0;
-    const videoFiles = (videosRes.data || []).filter((f) => !f.name.startsWith('.')).length;
-    const photoFiles = (photosRes.data || []).filter((f) => !f.name.startsWith('.')).length;
-    const fowlImageFiles = (fowlImagesRes.data || []).filter((f) => !f.name.startsWith('.')).length;
+    const videoFiles = videosResult.paths.length;
+    const photoFiles = photosResult.paths.length;
+    const fowlImageFiles = fowlImagesResult.paths.length;
     const totalMedia = videoFiles + photoFiles + fowlImageFiles;
 
     return NextResponse.json({
@@ -75,7 +129,9 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST: Purges storage media files strictly under the authenticated user's prefix.
- * Never touches any other user's files or un-prefixed directories.
+ * Recursively traverses nested folders ({user_id}/fowl/...) with pagination and removes
+ * objects by full path in chunks of 1000. Never touches any other user's files or
+ * un-prefixed directories (e.g. fowl-images/profiles/{user_id}/ is preserved).
  */
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
@@ -104,19 +160,16 @@ export async function POST(request: NextRequest) {
 
   for (const bucket of buckets) {
     try {
-      const { data: files, error: listError } = await admin.storage.from(bucket).list(userId);
-      if (listError) {
-        errors.push(`Failed to list files in ${bucket}/${userId}: ${listError.message}`);
-        continue;
+      const { paths, errors: listErrors } = await listAllFilePathsRecursively(admin, bucket, userId);
+      if (listErrors.length > 0) {
+        errors.push(...listErrors);
       }
 
-      if (!files || files.length === 0) continue;
+      if (paths.length === 0) continue;
 
       // Construct and strictly validate path prefixes
       const pathsToDelete: string[] = [];
-      for (const file of files) {
-        if (!file.name || file.name.startsWith('.')) continue;
-        const objectPath = `${userId}/${file.name}`;
+      for (const objectPath of paths) {
         // Strict guard: verify path starts with userId and contains no traversal
         if (!objectPath.startsWith(`${userId}/`) || objectPath.includes('..')) {
           errors.push(`Refusing to delete unsafe path in ${bucket}: ${objectPath}`);
@@ -125,15 +178,18 @@ export async function POST(request: NextRequest) {
         pathsToDelete.push(objectPath);
       }
 
-      if (pathsToDelete.length > 0) {
+      // Delete in batches of 1000 (Supabase batch limit)
+      const batchSize = 1000;
+      for (let i = 0; i < pathsToDelete.length; i += batchSize) {
+        const batch = pathsToDelete.slice(i, i + batchSize);
         const { data: removeData, error: removeError } = await admin.storage
           .from(bucket)
-          .remove(pathsToDelete);
+          .remove(batch);
 
         if (removeError) {
-          errors.push(`Failed to delete files in ${bucket}: ${removeError.message}`);
+          errors.push(`Failed to delete batch of ${batch.length} files in ${bucket}: ${removeError.message}`);
         } else {
-          removedCount += removeData?.length ?? pathsToDelete.length;
+          removedCount += removeData?.length ?? batch.length;
         }
       }
     } catch (bucketErr: unknown) {

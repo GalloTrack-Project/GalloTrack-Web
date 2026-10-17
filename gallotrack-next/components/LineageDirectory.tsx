@@ -727,7 +727,7 @@ export default function LineageDirectory({
     return fowls.filter((f) => isKnownParent(f.sire) && isKnownParent(f.dam));
   }, [fowls]);
 
-  const matchStatsLookup = useMemo(() => buildChickenMatchStatsMap(matchHistory), [matchHistory]);
+  const matchStatsLookup = useMemo(() => buildChickenMatchStatsMap(matchHistory, fowls), [matchHistory, fowls]);
 
   const getChildMatchStats = (childName: string) => {
     return matchStatsLookup.get(childName.trim().toLowerCase()) || computeWinRate(0, 0);

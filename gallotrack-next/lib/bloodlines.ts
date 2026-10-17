@@ -259,7 +259,7 @@ function calculateHeritability(
 function calculateStrainBenchmark(
   strain: string,
   fowls: FowlRecord[],
-  matchHistory: { entry_name?: string; outcome?: string; breed?: string }[]
+  matchHistory: { fowl_id?: number | null; entry_name?: string; outcome?: string; breed?: string }[]
 ): StrainBenchmark | null {
   if (strain === 'unknown') return null;
   const base = STRAIN_BENCHMARKS[strain];
@@ -272,7 +272,8 @@ function calculateStrainBenchmark(
   const topPerformers: string[] = [];
 
   strainFowls.forEach(f => {
-    const fMatches = matchHistory.filter(m => m.entry_name?.trim().toLowerCase() === f.name?.trim().toLowerCase());
+    // Strictly filter matches by fowl_id; orphan matches (fowl_id == null) can never be attributed
+    const fMatches = matchHistory.filter(m => m.fowl_id != null && Number(m.fowl_id) === Number(f.id));
     const fWins = fMatches.filter(m => m.outcome?.toLowerCase() === 'win').length;
     const fLosses = fMatches.filter(m => m.outcome?.toLowerCase() === 'loss').length;
     wins += fWins;

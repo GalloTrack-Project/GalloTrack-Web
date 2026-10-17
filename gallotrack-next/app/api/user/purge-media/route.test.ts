@@ -91,9 +91,9 @@ describe('/api/user/purge-media Route Tests', () => {
   it('purges files strictly with owner prefix on POST scope="all"', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
     mockList
-      .mockResolvedValueOnce({ data: [{ name: 'v1.mp4' }, { name: 'v2.mp4' }] })
-      .mockResolvedValueOnce({ data: [{ name: 'p1.jpg' }] })
-      .mockResolvedValueOnce({ data: [{ name: 'avatar.png' }] });
+      .mockResolvedValueOnce({ data: [{ name: 'v1.mp4', id: 'f1' }, { name: 'v2.mp4', id: 'f2' }] })
+      .mockResolvedValueOnce({ data: [{ name: 'p1.jpg', id: 'f3' }] })
+      .mockResolvedValueOnce({ data: [{ name: 'avatar.png', id: 'f4' }] });
 
     mockRemove.mockResolvedValue({ data: ['mock-removed'], error: null });
 
@@ -112,5 +112,121 @@ describe('/api/user/purge-media Route Tests', () => {
     expect(mockRemove).toHaveBeenCalledWith([`${USER_ID}/v1.mp4`, `${USER_ID}/v2.mp4`]);
     expect(mockRemove).toHaveBeenCalledWith([`${USER_ID}/p1.jpg`]);
     expect(mockRemove).toHaveBeenCalledWith([`${USER_ID}/avatar.png`]);
+  });
+
+  it('recursively traverses nested folders (e.g., {user_id}/fowl/...) and deletes by full path, not folder entry', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+
+    // Mock storage.list behavior:
+    // When listing {USER_ID}: returns a subfolder 'fowl' (id: null) and a top-level file 'top.mp4' (id: 't1')
+    // When listing {USER_ID}/fowl: returns a nested file 'subpic.jpg' (id: 's1')
+    mockList.mockImplementation(async (prefix: string) => {
+      if (prefix === USER_ID) {
+        return {
+          data: [
+            { name: 'top.mp4', id: 't1' },
+            { name: 'fowl', id: null }, // directory marker
+          ],
+          error: null,
+        };
+      }
+      if (prefix === `${USER_ID}/fowl`) {
+        return {
+          data: [
+            { name: 'subpic.jpg', id: 's1' },
+          ],
+          error: null,
+        };
+      }
+      return { data: [], error: null };
+    });
+
+    mockRemove.mockResolvedValue({ data: [{ name: 'removed' }], error: null });
+
+    const req = new NextRequest('http://localhost/api/user/purge-media', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer mock-token' },
+      body: JSON.stringify({ scope: 'fowl' }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+
+    // Verify removed paths are concrete file paths, NOT the directory entry `${USER_ID}/fowl`
+    expect(mockRemove).toHaveBeenCalledWith([
+      `${USER_ID}/top.mp4`,
+      `${USER_ID}/fowl/subpic.jpg`,
+    ]);
+    expect(mockRemove).not.toHaveBeenCalledWith(expect.arrayContaining([`${USER_ID}/fowl`]));
+  });
+
+  it('handles pagination beyond 1000 objects and deletes in batches', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+
+    // Generate 1050 files for match-videos
+    const page1Files = Array.from({ length: 1000 }, (_, i) => ({
+      name: `video_${i}.mp4`,
+      id: `id_${i}`,
+    }));
+    const page2Files = Array.from({ length: 50 }, (_, i) => ({
+      name: `video_${1000 + i}.mp4`,
+      id: `id_${1000 + i}`,
+    }));
+
+    mockList.mockImplementation(async (prefix: string, options?: { limit?: number; offset?: number }) => {
+      if (prefix === USER_ID) {
+        if (!options?.offset || options.offset === 0) {
+          return { data: page1Files, error: null };
+        }
+        if (options.offset === 1000) {
+          return { data: page2Files, error: null };
+        }
+      }
+      return { data: [], error: null };
+    });
+
+    mockRemove.mockImplementation(async (batch: string[]) => ({
+      data: batch.map(p => ({ name: p })),
+      error: null,
+    }));
+
+    const req = new NextRequest('http://localhost/api/user/purge-media', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer mock-token' },
+      body: JSON.stringify({ scope: 'fowl' }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.removedCount).toBe(1050);
+
+    // Deletes in 2 batches: first 1000, then remaining 50
+    expect(mockRemove).toHaveBeenCalledTimes(2);
+    expect(mockRemove.mock.calls[0][0]).toHaveLength(1000);
+    expect(mockRemove.mock.calls[1][0]).toHaveLength(50);
+  });
+
+  it('preserves profile avatars under fowl-images/profiles/ and never queries or touches them', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+    mockList.mockResolvedValue({ data: [], error: null });
+
+    const req = new NextRequest('http://localhost/api/user/purge-media', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer mock-token' },
+      body: JSON.stringify({ scope: 'all' }),
+    });
+
+    await POST(req);
+
+    // Assert mockList was only called with prefixes starting with USER_ID, never 'profiles'
+    for (const call of mockList.mock.calls) {
+      const prefix = call[0];
+      expect(prefix).toMatch(new RegExp(`^${USER_ID}`));
+      expect(prefix).not.toContain('profiles');
+    }
   });
 });

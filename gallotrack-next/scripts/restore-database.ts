@@ -163,23 +163,7 @@ async function restore() {
     console.log(`  Total: ${totalFiles} storage file(s) across ${Object.keys(storageFilesByBucket).length} bucket(s)`);
   }
 
-  if (isDryRun) {
-    console.log(`\n=======================================================`);
-    console.log(`🔍 DRY-RUN SUMMARY COMPLETE`);
-    console.log(`Database tables ready: ${Object.keys(dbData).length} (${totalRows} rows)`);
-    console.log(`Storage files ready: ${totalFiles} objects`);
-    console.log(`NO CHANGES WERE APPLIED to ${targetEnv.toUpperCase()}.`);
-    console.log(`To execute this restore against ${targetEnv.toUpperCase()}, run:`);
-    console.log(`  npx tsx scripts/restore-database.ts --backup=${path.basename(selectedBackupDir)} --target=${targetEnv} --execute${targetEnv === 'production' ? ' --confirm-restore-to-production-DANGER' : ''}`);
-    console.log(`=======================================================\n`);
-    return;
-  }
-
-  // Live execution
-  const supabase = createClient(targetUrl, targetKey, { auth: { persistSession: false } });
-
-  console.log(`\n--- EXECUTING DATABASE RESTORE ---`);
-  // Insert tables in dependency order
+  // Define strict dependency restore order: parents before children
   const restoreOrder = [
     'system_settings',
     'profiles',
@@ -201,8 +185,49 @@ async function restore() {
     'admin_audit_logs',
   ];
 
-  // Include any extra tables in dbData not explicitly in restoreOrder
   const allTablesToRestore = Array.from(new Set([...restoreOrder, ...Object.keys(dbData)]));
+
+  if (isDryRun) {
+    console.log(`\n=======================================================`);
+    console.log(`🔍 DRY-RUN RESTORATION PLAN & ANALYSIS`);
+    console.log(`=======================================================`);
+    console.log(`1. TABLE RESTORATION ORDER (Parents before Children):`);
+    let orderIndex = 1;
+    for (const table of allTablesToRestore) {
+      const count = (dbData[table] || []).length;
+      if (count > 0 || Object.keys(dbData).includes(table)) {
+        console.log(`   ${orderIndex++}. '${table}' (${count} rows)`);
+      }
+    }
+    console.log(`   Dependency Rules:`);
+    console.log(`     • profiles is restored before dependent user records.`);
+    console.log(`     • fowl is restored before breeding_pairings, match, and fowl_status_history.`);
+    console.log(`     • match is restored before match_videos and match_photos.`);
+
+    console.log(`\n2. POSTGRESQL SERIAL SEQUENCE BEHAVIOR:`);
+    console.log(`   ⚠️ CRITICAL: Standard PostgREST/Supabase REST explicit-ID inserts DO NOT`);
+    console.log(`      reset or advance the PostgreSQL serial/identity sequences (e.g., fowl_id_seq).`);
+    console.log(`   • If explicit-ID inserts are executed without resetting sequences, subsequent`);
+    console.log(`     application inserts will trigger duplicate key errors (fowl_pkey collision).`);
+    console.log(`   • Recommended post-restore SQL script to execute in Supabase SQL editor:`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('fowl', 'id'), coalesce(max(id), 1)) FROM fowl;`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('match', 'id'), coalesce(max(id), 1)) FROM match;`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('breeding_pairings', 'id'), coalesce(max(id), 1)) FROM breeding_pairings;`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('safety_incidents', 'id'), coalesce(max(id), 1)) FROM safety_incidents;`);
+
+    console.log(`\n3. SUMMARY:`);
+    console.log(`   Database tables ready: ${Object.keys(dbData).length} (${totalRows} rows)`);
+    console.log(`   Storage files ready: ${totalFiles} objects`);
+    console.log(`   NO CHANGES WERE APPLIED to ${targetEnv.toUpperCase()}.`);
+    console.log(`=======================================================\n`);
+    return;
+  }
+
+  // Live execution
+  const supabase = createClient(targetUrl, targetKey, { auth: { persistSession: false } });
+
+  console.log(`\n--- EXECUTING DATABASE RESTORE ---`);
+  // Tables will be restored in the pre-defined restoreOrder (parents before children)
 
   for (const table of allTablesToRestore) {
     const rows = dbData[table] || [];

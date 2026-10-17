@@ -956,6 +956,9 @@ export default function SettingsPage() {
                         </>
                       )}
                     </ul>
+                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mt-2 bg-emerald-50/80 dark:bg-emerald-950/30 p-2.5 rounded-md border border-emerald-200 dark:border-emerald-800/50">
+                      ✓ Your user profile, farm settings, and profile avatar are intentionally preserved.
+                    </p>
                   </div>
 
                   {/* Option to also delete matches when clearing chicken profiles */}

@@ -336,7 +336,10 @@ export const matchSurvivability = (m: { post_fight_condition?: string; outcome?:
   return null;
 };
 
-export const calculatePairingStats = (fowls: FowlRecord[], matchHistory: { entry_name?: string; outcome?: string; post_fight_condition?: string }[]): { all: Map<string, PairingStats>; ranked: PairingStats[] } => {
+export const calculatePairingStats = (
+  fowls: FowlRecord[],
+  matchHistory: { fowl_id?: number | null; entry_name?: string; outcome?: string; post_fight_condition?: string }[],
+): { all: Map<string, PairingStats>; ranked: PairingStats[] } => {
   const map = new Map<string, PairingStats>();
   fowls.forEach((f) => {
     const sire = (f.sire || '').trim();
@@ -353,7 +356,8 @@ export const calculatePairingStats = (fowls: FowlRecord[], matchHistory: { entry
   map.forEach((stat) => {
     let survivalSum = 0;
     stat.members.forEach((m) => {
-      const fowlMatches = matchHistory.filter((match) => match.entry_name?.trim().toLowerCase() === m.name?.trim().toLowerCase());
+      // Strictly filter matches by fowl_id; orphan matches (fowl_id == null) can never be attributed
+      const fowlMatches = matchHistory.filter((match) => match.fowl_id != null && Number(match.fowl_id) === Number(m.id));
       stat.totalFights += fowlMatches.length;
       stat.wins += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'win').length;
       stat.losses += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'loss').length;

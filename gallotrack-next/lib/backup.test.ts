@@ -96,8 +96,9 @@ describe('restoreBackup fixture tests', () => {
     fowls?: any[];
     matches?: any[];
     pairings?: any[];
+    startId?: number;
   } = {}) {
-    let nextId = 500;
+    let nextId = initialData.startId ?? 500;
     const db = {
       fowl: [...(initialData.fowls || [])],
       match: [...(initialData.matches || [])],
@@ -346,5 +347,59 @@ describe('restoreBackup fixture tests', () => {
       expect(p.user_id).toBe(CURRENT_USER_ID);
       expect(p.user_id).not.toBe('third-party-uuid');
     }
+  });
+
+  it('uses database-assigned numeric IDs (bigint) from INSERT returning ids, never client-generated values', async () => {
+    // Custom mock assigning distinct numeric IDs starting at 9001
+    const mockClient = createMockSupabase({ startId: 9000 });
+
+    const backupData: BackupFile = {
+      data: {
+        fowls: [
+          // Original IDs in backup file: 101, 102, 103
+          { id: 101, name: 'Numeric Sire', bird_code: 'NUM-SIRE' },
+          { id: 102, name: 'Numeric Dam', bird_code: 'NUM-DAM' },
+          { id: 103, name: 'Numeric Offspring', bird_code: 'NUM-OFF', sire_id: 101, dam_id: 102 },
+        ],
+        match_history: [
+          { id: 501, date: '2026-10-15', entry_name: 'Numeric Offspring', opponent: 'Challenger', fowl_id: 103 },
+        ],
+        breeding_pairings: [
+          { id: 601, pairing_code: 'PAIR-NUM', sire_id: 101, dam_id: 102 },
+        ],
+      },
+    };
+
+    const res = await restoreBackup(backupData, {}, mockClient);
+
+    expect(res.errors).toHaveLength(0);
+    expect(res.fowls).toBe(3);
+    expect(res.matches).toBe(1);
+    expect(res.pairings).toBe(1);
+
+    const sire = mockClient.db.fowl.find((f) => f.name === 'Numeric Sire');
+    const dam = mockClient.db.fowl.find((f) => f.name === 'Numeric Dam');
+    const child = mockClient.db.fowl.find((f) => f.name === 'Numeric Offspring');
+    const match = mockClient.db.match[0];
+    const pairing = mockClient.db.breeding_pairings[0];
+
+    // Assert database-assigned numeric IDs (9001, 9002, 9003) were used
+    expect(sire.id).toBe(9001);
+    expect(dam.id).toBe(9002);
+    expect(child.id).toBe(9003);
+
+    // Verify foreign keys were rewritten to the database-assigned numeric IDs, NOT the old ones
+    expect(child.sire_id).toBe(9001);
+    expect(child.dam_id).toBe(9002);
+    expect(child.sire_id).not.toBe(101);
+    expect(child.dam_id).not.toBe(102);
+
+    expect(match.fowl_id).toBe(9003);
+    expect(match.fowl_id).not.toBe(103);
+
+    expect(pairing.sire_id).toBe(9001);
+    expect(pairing.dam_id).toBe(9002);
+    expect(pairing.sire_id).not.toBe(101);
+    expect(pairing.dam_id).not.toBe(102);
   });
 });

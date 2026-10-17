@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { MatchRecord, FowlRecord } from '@/lib/types';
+import type { MatchRecord } from '@/lib/types';
 import {
   computeWinRate,
   combineWinRates,
@@ -7,7 +7,11 @@ import {
   getWinRatePillClasses,
 } from './win-rate';
 
-const makeMatch = (entry_name: string, outcome: 'Win' | 'Loss' | 'Draw' | 'Cancelled' | string): MatchRecord =>
+const makeMatch = (
+  entry_name: string,
+  outcome: 'Win' | 'Loss' | 'Draw' | 'Cancelled' | string,
+  fowl_id: number | null = 1,
+): MatchRecord =>
   ({
     id: Math.floor(Math.random() * 100000),
     date: '2026-05-01',
@@ -15,6 +19,7 @@ const makeMatch = (entry_name: string, outcome: 'Win' | 'Loss' | 'Draw' | 'Cance
     outcome,
     type: 'Derby',
     status: 'Completed',
+    fowl_id,
   }) as MatchRecord;
 
 describe('lib/win-rate', () => {
@@ -136,6 +141,29 @@ describe('lib/win-rate', () => {
       expect(crownStats?.draws).toBe(1);
       expect(crownStats?.decided).toBe(0);
       expect(crownStats?.winRate).toBeNull();
+    });
+
+    it('NEVER attributes orphan matches (fowl_id: null) to a newly registered chicken of the same name', () => {
+      // Historical orphan match with fowl_id: null
+      const orphanMatch = makeMatch('Iron Lemon', 'Win', null);
+      // Newly registered chicken with the exact same name
+      const newChicken = { id: 99, name: 'Iron Lemon', bird_code: 'LEM-99' };
+
+      const map = buildChickenMatchStatsMap([orphanMatch], [newChicken]);
+
+      const newChickenStatsByName = map.get('Iron Lemon');
+      const newChickenStatsById = map.get('99');
+
+      // The new chicken must have 0 fights and null win rate
+      expect(newChickenStatsByName?.wins).toBe(0);
+      expect(newChickenStatsByName?.decided).toBe(0);
+      expect(newChickenStatsByName?.winRate).toBeNull();
+      expect(newChickenStatsByName?.matches).toHaveLength(0);
+
+      expect(newChickenStatsById?.wins).toBe(0);
+      expect(newChickenStatsById?.decided).toBe(0);
+      expect(newChickenStatsById?.winRate).toBeNull();
+      expect(newChickenStatsById?.matches).toHaveLength(0);
     });
   });
 

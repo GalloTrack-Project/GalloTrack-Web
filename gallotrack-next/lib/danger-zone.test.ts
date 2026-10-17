@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { calculatePairingStats } from './helpers';
+import { generateBloodlineReport } from './bloodlines';
 
 describe('Danger Zone Deletion & Owner Data Isolation', () => {
   beforeEach(() => {
@@ -249,6 +251,59 @@ describe('Danger Zone Deletion & Owner Data Isolation', () => {
     // Case B: alsoDeleteMatches is true -> matches are deleted too
     clearFowl(OWNER_ID, true);
     expect(database.match).toHaveLength(0);
+  });
+
+  it('aggregates (strain benchmarks & pairing stats) strictly ignore orphan matches (fowl_id: null) even if chicken has matching name', () => {
+    // 1. Test calculatePairingStats in helpers
+    const parentPairOffspring = [
+      {
+        id: 77,
+        name: 'Thunder Offspring',
+        sire: 'Sire 1',
+        dam: 'Dam A',
+        breed: 'Kelso',
+        gender: 'Male',
+      } as any,
+    ];
+
+    // Orphan match with fowl_id: null but matching entry_name
+    const orphanMatch = {
+      id: 999,
+      fowl_id: null,
+      entry_name: 'Thunder Offspring',
+      outcome: 'Win',
+    };
+
+    const pairingStats = calculatePairingStats(parentPairOffspring, [orphanMatch]);
+    const pair = pairingStats.all.get('sire 1|||dam a');
+
+    expect(pair).toBeDefined();
+    // Orphan match must NOT be counted towards pairing stats!
+    expect(pair?.totalFights).toBe(0);
+    expect(pair?.wins).toBe(0);
+    expect(pair?.decided).toBe(0);
+
+    // 2. Test generateBloodlineReport strain benchmarks in bloodlines
+    const newKelso = {
+      id: 88,
+      name: 'Kelso Champion',
+      breed: 'Kelso',
+      gender: 'Male',
+      sire: 'Foundation Stock',
+      dam: 'Foundation Stock',
+    } as any;
+
+    const orphanKelsoMatch = {
+      id: 1000,
+      fowl_id: null,
+      entry_name: 'Kelso Champion',
+      outcome: 'Win',
+      breed: 'Kelso',
+    };
+
+    const report = generateBloodlineReport(newKelso, [newKelso], [orphanKelsoMatch]);
+    expect(report.performanceBenchmark?.totalFights).toBe(0);
+    expect(report.performanceBenchmark?.topPerformers).not.toContain('Kelso Champion');
   });
 });
 
