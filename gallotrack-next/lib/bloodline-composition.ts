@@ -1,4 +1,4 @@
-import type { FowlRecord } from './types';
+import type { FowlRecord, DeclaredBreedShare } from './types';
 
 /**
  * Bloodline composition engine.
@@ -103,8 +103,172 @@ export function listedStrains(breed?: string | null): string[] {
     .filter((s) => s.length > 0 && strainKey(s) !== 'foundation stock' && strainKey(s) !== 'unspecified strain');
 }
 
+export type DeclaredCompositionValidationResult = {
+  valid: boolean;
+  error?: string;
+  errors: string[];
+  warning?: string;
+  warnings: string[];
+  parsed: DeclaredBreedShare[];
+  total: number;
+};
+
+/** Validate declared composition input with optional allowed breeds list. */
+export function validateDeclaredComposition(
+  raw: unknown,
+  registeredBreed?: string | null,
+  allowedBreeds?: string[]
+): DeclaredCompositionValidationResult {
+  if (raw == null) {
+    return { valid: true, errors: [], warnings: [], parsed: [], total: 100 };
+  }
+  if (!Array.isArray(raw)) {
+    const error = 'Declared composition must be an array of breed shares.';
+    return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+  }
+  if (raw.length === 0) {
+    return { valid: true, errors: [], warnings: [], parsed: [], total: 100 };
+  }
+  if (raw.length > 4) {
+    const error = 'Maximum 4 breeds may be declared.';
+    return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+  }
+
+  const seen = new Set<string>();
+  let total = 0;
+  const parsed: DeclaredBreedShare[] = [];
+  const allowedSet = allowedBreeds && allowedBreeds.length > 0
+    ? new Set(allowedBreeds.map((b) => b.trim().toLowerCase()))
+    : null;
+
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') {
+      const error = 'Invalid breed share entry.';
+      return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+    }
+    const breed = typeof (item as { breed?: unknown }).breed === 'string'
+      ? (item as { breed: string }).breed.trim()
+      : '';
+    const rawPct = (item as { percent?: unknown }).percent;
+    const percent = Number(rawPct);
+
+    if (!breed) {
+      const error = 'Breed name cannot be empty.';
+      return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+    }
+    const key = breed.toLowerCase();
+    if (seen.has(key)) {
+      const error = `Duplicate breed "${breed}" in declared composition.`;
+      return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+    }
+    seen.add(key);
+
+    if (allowedSet && !allowedSet.has(key)) {
+      const error = `Breed "${breed}" is not in the registry breeds list.`;
+      return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+    }
+
+    if (!Number.isFinite(percent) || percent <= 0 || percent > 100) {
+      const error = `Percentage for "${breed}" must be between 0% and 100%.`;
+      return { valid: false, error, errors: [error], warnings: [], parsed: [], total: 0 };
+    }
+
+    total += percent;
+    parsed.push({ breed, percent: round1(percent) });
+  }
+
+  const roundedTotal = round1(total);
+  if (Math.abs(roundedTotal - 100) > 0.11) {
+    const error = `Breed percentages must equal 100% (currently ${roundedTotal}%).`;
+    return {
+      valid: false,
+      error,
+      errors: [error],
+      warnings: [],
+      parsed,
+      total: roundedTotal,
+    };
+  }
+
+  // The registered breed must be one of the breeds
+  let warning: string | undefined;
+  if (registeredBreed && registeredBreed.trim()) {
+    const regKey = registeredBreed.trim().toLowerCase();
+    const hasRegisteredBreed = seen.has(regKey);
+    if (!hasRegisteredBreed) {
+      const error = `Registered breed "${registeredBreed}" must be included in the declared composition.`;
+      return {
+        valid: false,
+        error,
+        errors: [error],
+        warnings: [],
+        parsed,
+        total: roundedTotal,
+      };
+    }
+
+    // Warn (do not block) if it is not the highest share
+    const regEntry = parsed.find((e) => e.breed.toLowerCase() === regKey);
+    const maxEntry = [...parsed].sort((a, b) => b.percent - a.percent)[0];
+    if (regEntry && maxEntry && maxEntry.percent > regEntry.percent) {
+      warning = `Note: Registered breed "${registeredBreed}" (${regEntry.percent}%) is not the dominant share (${maxEntry.breed} is ${maxEntry.percent}%).`;
+    }
+  }
+
+  return {
+    valid: true,
+    warning,
+    warnings: warning ? [warning] : [],
+    errors: [],
+    parsed,
+    total: roundedTotal,
+  };
+}
+
+/** Robust parser for persisted declared_composition from JSON. Logs a single console.warn on error. */
+export function parseDeclaredComposition(
+  raw: unknown,
+  allowedBreeds?: string[]
+): DeclaredBreedShare[] | null {
+  if (raw == null) return null;
+  let parsedRaw = raw;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return null;
+    try {
+      parsedRaw = JSON.parse(trimmed);
+    } catch {
+      console.warn('parseDeclaredComposition ignored invalid JSON string:', raw);
+      return null;
+    }
+  }
+  const result = validateDeclaredComposition(parsedRaw, null, allowedBreeds);
+  if (!result.valid) {
+    console.warn('parseDeclaredComposition ignored invalid value:', result.error, raw);
+    return null;
+  }
+  return result.parsed.length > 0 ? result.parsed : null;
+}
+
+/** Converts declared breed shares to a normalized BloodlineComposition map. */
+export function declaredToComposition(declared: DeclaredBreedShare[]): BloodlineComposition {
+  const comp: BloodlineComposition = {};
+  for (const entry of declared) {
+    comp[entry.breed] = entry.percent;
+  }
+  return normalizeComposition(comp);
+}
+
 /** Composition of a bird that has no registered ancestry. */
-export function baseComposition(f: { breed?: string } | null | undefined): BloodlineComposition {
+export function baseComposition(
+  f: { breed?: string; declared_composition?: unknown } | null | undefined
+): BloodlineComposition {
+  if (f && 'declared_composition' in f && f.declared_composition != null) {
+    const parsed = parseDeclaredComposition(f.declared_composition);
+    if (parsed && parsed.length > 0) {
+      return declaredToComposition(parsed);
+    }
+  }
   const strains = listedStrains(f?.breed);
   if (strains.length === 0) return { [UNKNOWN_BLOODLINE]: 100 };
   const share = round1(100 / strains.length);
@@ -115,7 +279,15 @@ export function baseComposition(f: { breed?: string } | null | undefined): Blood
   return out;
 }
 
-const findByName = (fowls: FowlRecord[], name?: string | null): FowlRecord | undefined => {
+const findByNameOrId = (
+  fowls: FowlRecord[],
+  id?: number | null,
+  name?: string | null
+): FowlRecord | undefined => {
+  if (id != null) {
+    const byId = fowls.find((f) => f.id === id);
+    if (byId) return byId;
+  }
   if (isFoundationName(name)) return undefined;
   const key = strainKey(String(name ?? ''));
   return fowls.find((f) => strainKey(f.name || '') === key);
@@ -132,12 +304,21 @@ function resolveComposition(
   if (cached) return cached;
   if (key && chain.has(key)) return baseComposition(fowl);
 
-  const sire = findByName(fowls, fowl.sire);
-  const dam = findByName(fowls, fowl.dam);
+  const sire = findByNameOrId(fowls, fowl.sire_id, fowl.sire);
+  const dam = findByNameOrId(fowls, fowl.dam_id, fowl.dam);
 
   let comp: BloodlineComposition;
   if (!sire && !dam) {
-    comp = baseComposition(fowl);
+    const s = (fowl.sire || '').trim();
+    const d = (fowl.dam || '').trim();
+    const hasUnregisteredNamedParent = (s && !isFoundationName(s)) || (d && !isFoundationName(d));
+    if (hasUnregisteredNamedParent) {
+      const sireComp = s && !isFoundationName(s) ? { [s]: 100 } : { [UNKNOWN_BLOODLINE]: 100 };
+      const damComp = d && !isFoundationName(d) ? { [d]: 100 } : { [UNKNOWN_BLOODLINE]: 100 };
+      comp = blendCompositions(sireComp, damComp, 0.5, 0.5);
+    } else {
+      comp = baseComposition(fowl);
+    }
   } else {
     if (key) chain.add(key);
     const sireComp = sire
@@ -242,6 +423,9 @@ export function getBloodlineStats(composition: BloodlineComposition | null | und
 /** Stats for a stored fowl record; recomputes from ancestry when not persisted yet. */
 export function getFowlBloodlineStats(fowl: FowlRecord | null | undefined, fowls: FowlRecord[] = []): BloodlineStats | null {
   if (!fowl) return null;
+  if (fowl.declared_composition && fowl.declared_composition.length > 0) {
+    return getBloodlineStats(computeBloodlineComposition(fowl, fowls));
+  }
   const stored = parseComposition(fowl.bloodline_composition);
   if (stored) return getBloodlineStats(stored);
   return getBloodlineStats(computeBloodlineComposition(fowl, fowls));
@@ -357,8 +541,8 @@ function traceNode(
     if (chain.has(key)) return { comp: baseComposition(fowl), sources: baseTraces(fowl, true) };
   }
 
-  const sire = findByName(fowls, fowl.sire);
-  const dam = findByName(fowls, fowl.dam);
+  const sire = findByNameOrId(fowls, fowl.sire_id, fowl.sire);
+  const dam = findByNameOrId(fowls, fowl.dam_id, fowl.dam);
 
   if (!sire && !dam) {
     const comp = baseComposition(fowl);
@@ -518,7 +702,11 @@ export function planLineageRefresh(params: {
     for (let i = 0; i < next.length; i++) {
       const f = next[i];
       if (f.id === root.id || visited.has(f.id)) continue;
-      const isChild = key(f.sire) === parentKey || key(f.dam) === parentKey;
+      const isChild =
+        (f.sire_id != null && f.sire_id === root.id) ||
+        (f.dam_id != null && f.dam_id === root.id) ||
+        key(f.sire) === parentKey ||
+        key(f.dam) === parentKey;
       if (!isChild) continue;
       visited.add(f.id);
 
@@ -586,7 +774,11 @@ export function planLineageRefreshAfterDelete(params: {
     for (let i = 0; i < next.length; i++) {
       const f = next[i];
       if (visited.has(f.id)) continue;
-      const isChild = key(f.sire) === parentKey || key(f.dam) === parentKey;
+      const isChild =
+        (f.sire_id != null && f.sire_id === deleted.id) ||
+        (f.dam_id != null && f.dam_id === deleted.id) ||
+        key(f.sire) === parentKey ||
+        key(f.dam) === parentKey;
       if (!isChild) continue;
       visited.add(f.id);
 
@@ -612,3 +804,73 @@ export function planLineageRefreshAfterDelete(params: {
   }
   return patches;
 }
+
+/** Find all descendants (living, archived, deceased) of a root bird via sire_id/dam_id and text name links. */
+export function getDescendantFowls(
+  root: FowlRecord,
+  fowls: FowlRecord[]
+): FowlRecord[] {
+  const key = (s?: string | null): string => String(s ?? '').trim().toLowerCase();
+  const queue: Array<{ id?: number; nameKey: string }> = [
+    { id: root.id, nameKey: key(root.name) }
+  ];
+  const visited = new Set<number>();
+  const descendants: FowlRecord[] = [];
+
+  while (queue.length > 0) {
+    const parent = queue.shift()!;
+    for (const f of fowls) {
+      if (f.id === root.id || visited.has(f.id)) continue;
+      const isChild =
+        (parent.id != null && (f.sire_id === parent.id || f.dam_id === parent.id)) ||
+        (parent.nameKey.length > 0 && (key(f.sire) === parent.nameKey || key(f.dam) === parent.nameKey));
+      if (isChild) {
+        visited.add(f.id);
+        descendants.push(f);
+        queue.push({ id: f.id, nameKey: key(f.name) });
+      }
+    }
+  }
+  return descendants;
+}
+
+export type FlockCompositionAuditEntry = {
+  id: number;
+  name: string;
+  birdCode: string | null;
+  status: string;
+  cachedComposition: BloodlineComposition | null;
+  liveComposition: BloodlineComposition;
+  cachedPct: number | null;
+  livePct: number;
+  drifted: boolean;
+};
+
+/** Read-only audit helper that recomputes every bird and reports any whose cached value differs from live computation. */
+export function auditFlockCompositions(fowls: FowlRecord[]): FlockCompositionAuditEntry[] {
+  const liveMap = computeAllCompositions(fowls);
+  const entries: FlockCompositionAuditEntry[] = [];
+  for (const f of fowls) {
+    const live = liveMap.get(String(f.id)) || {};
+    const cached = parseComposition(f.bloodline_composition);
+    const liveStats = getBloodlineStats(live);
+    const livePct = liveStats?.specificPct ?? 0;
+    const cachedPct = f.bloodline_pct != null ? Number(f.bloodline_pct) : null;
+    const compStale = compositionIsStale(f.bloodline_composition, live);
+    const pctStale = cachedPct !== null && Math.abs(cachedPct - livePct) > EPSILON;
+    const drifted = compStale || pctStale;
+    entries.push({
+      id: f.id,
+      name: f.name,
+      birdCode: f.bird_code ?? null,
+      status: f.status,
+      cachedComposition: cached,
+      liveComposition: live,
+      cachedPct,
+      livePct,
+      drifted,
+    });
+  }
+  return entries;
+}
+

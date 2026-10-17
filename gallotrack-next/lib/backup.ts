@@ -231,6 +231,9 @@ export async function restoreBackup(
     const sanitized = sanitizeRow(fowl, currentUserId);
     delete sanitized.sire_id;
     delete sanitized.dam_id;
+    if (sanitized.declared_composition == null) {
+      delete sanitized.declared_composition;
+    }
 
     const { data: inserted, error: insertErr } = await client
       .from('fowl')

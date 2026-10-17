@@ -1,8 +1,10 @@
 'use client';
 import React from 'react';
 import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3 } from 'lucide-react';
-import type { FowlRecord, AgeParts } from '@/lib/types';
+import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
 import ParentSelector from './ParentSelector';
+import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
+import { getDescendantFowls, validateDeclaredComposition } from '@/lib/bloodline-composition';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { bloodlineOf } from '@/lib/helpers';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
@@ -57,6 +59,8 @@ type EditFowlModalProps = {
   setEditBirdCode: (v: string) => void;
   editWingBand: string;
   setEditWingBand: (v: string) => void;
+  editDeclaredComposition?: DeclaredBreedShare[] | null;
+  setEditDeclaredComposition?: (v: DeclaredBreedShare[] | null) => void;
   handleEditBirthdateChange: (val: string) => void;
   handleEditAgeChange: (val: string) => void;
   autoComputeGrowthStage: (ageMonths: number, gender: string) => string;
@@ -112,6 +116,8 @@ export default function EditFowlModal({
   setEditBirdCode,
   editWingBand,
   setEditWingBand,
+  editDeclaredComposition,
+  setEditDeclaredComposition,
   handleEditBirthdateChange,
   handleEditAgeChange,
   autoComputeGrowthStage,
@@ -123,6 +129,29 @@ export default function EditFowlModal({
 }: EditFowlModalProps) {
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+
+  const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
+  const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
+  const isOffspring = hasSire || hasDam;
+
+  const descendants = React.useMemo(() => {
+    if (!editingFowl) return [];
+    return getDescendantFowls(editingFowl, fowls ?? []);
+  }, [editingFowl, fowls]);
+
+  const declaredChanged = React.useMemo(() => {
+    if (!editingFowl) return false;
+    const prev = JSON.stringify(editingFowl.declared_composition ?? null);
+    const curr = JSON.stringify(!isOffspring && editDeclaredComposition && editDeclaredComposition.length > 0 ? editDeclaredComposition : null);
+    return prev !== curr;
+  }, [editingFowl, editDeclaredComposition, isOffspring]);
+
+  const declaredValidation = React.useMemo(() => {
+    if (isOffspring || !editDeclaredComposition || editDeclaredComposition.length === 0) {
+      return { valid: true };
+    }
+    return validateDeclaredComposition(editDeclaredComposition, editBreed, availableStrains ?? []);
+  }, [isOffspring, editDeclaredComposition, editBreed, availableStrains]);
 
   const birthdateValidation = React.useMemo<BirthdateValidationResult>(
     () =>
@@ -407,12 +436,50 @@ export default function EditFowlModal({
                   <ParentSelector id="edit-dam" value={editDam} onChange={(v) => { setEditDam(v); if (isFoundationStock(v)) setEditDamPct(100); }} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
               </div>
             </div>
+
+            {!isOffspring ? (
+              <div className="pt-2">
+                <DeclaredCompositionEditor
+                  registeredBreed={editBreed}
+                  availableBreeds={availableStrains ?? []}
+                  value={editDeclaredComposition ?? null}
+                  onChange={(val) => setEditDeclaredComposition?.(val)}
+                />
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground flex items-start gap-2">
+                <span className="text-sm shrink-0">ℹ️</span>
+                <div>
+                  <p className="font-semibold text-foreground">Lineage Composition Auto-Derived</p>
+                  <p className="mt-0.5 leading-relaxed">
+                    Composition is derived from parents (50% Sire, 50% Dam). Manual composition is only available for foundation stock.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
+
+          {declaredChanged && descendants.length > 0 && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3.5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+              <span className="text-base shrink-0">⚠️</span>
+              <div>
+                <p className="font-bold">
+                  Descendant Bloodline Recomputation ({descendants.length} chicken{descendants.length === 1 ? '' : 's'})
+                </p>
+                <p className="mt-0.5 leading-relaxed">
+                  Changing this foundation bird&apos;s breed composition will automatically recompute the bloodline of its {descendants.length} descendant{descendants.length === 1 ? '' : 's'}:
+                </p>
+                <p className="mt-1 font-mono font-bold text-[11px] text-amber-800 dark:text-amber-300">
+                  {descendants.map((d) => d.name).join(', ')}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="pt-2">
             <button 
               type="submit" 
-              disabled={loading || !birthdateValidation.valid}
+              disabled={loading || !birthdateValidation.valid || !declaredValidation.valid}
               className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-md text-sm shadow-md uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}

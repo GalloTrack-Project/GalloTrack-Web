@@ -481,7 +481,7 @@ export default function RegistryFilterBar({
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
               </div>
               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight mt-0.5">
-                Foundation stock is treated as 100% of its registered breed.
+                Foundation stock is treated as 100% of its registered breed unless the owner declares a composition.
               </p>
             </div>
           )}

@@ -28,6 +28,12 @@ export interface BreedingClassification {
   extraBreedsCount: number;
   /** Full breakdown tooltip text */
   tooltipText: string;
+  /** Origin of the composition: 'declared' by owner, 'assumed' 100% of breed, or 'derived' from recorded parents */
+  compositionSource: 'declared' | 'assumed' | 'derived';
+  /** Human-readable source label: "Declared by owner", "Assumed 100% of registered breed", or "Derived from parents" */
+  sourceLabel: string;
+  /** Notice shown when bird has parents but also has a stored declared composition */
+  declaredNotice?: string;
 }
 
 /** Tolerance for purebred check (100% single breed) and strain presence */
@@ -48,6 +54,35 @@ export function isFoundationStockRecord(fowl: FowlRecord | null | undefined): bo
   const sireIsBase = !s || isFoundationName(s);
   const damIsBase = !d || isFoundationName(d);
   return sireIsBase && damIsBase;
+}
+
+export type CompositionSource = 'declared' | 'assumed' | 'derived';
+
+export function getCompositionSource(
+  fowl: FowlRecord | null | undefined
+): CompositionSource {
+  if (!fowl) return 'assumed';
+  const s = (fowl.sire || '').trim();
+  const d = (fowl.dam || '').trim();
+  const hasParents =
+    fowl.sire_id != null ||
+    fowl.dam_id != null ||
+    (s.length > 0 && !isFoundationName(s)) ||
+    (d.length > 0 && !isFoundationName(d));
+
+  if (hasParents) return 'derived';
+  const hasDeclared =
+    Array.isArray(fowl.declared_composition) && fowl.declared_composition.length > 0;
+  return hasDeclared ? 'declared' : 'assumed';
+}
+
+export function getCompositionSourceLabel(
+  fowl: FowlRecord | null | undefined
+): string {
+  const source = getCompositionSource(fowl);
+  if (source === 'declared') return 'Declared by owner';
+  if (source === 'assumed') return 'Assumed 100% of registered breed';
+  return 'Derived from parents';
 }
 
 /**
@@ -73,6 +108,8 @@ export function getBreedingClassification(
       allBreeds: [],
       extraBreedsCount: 0,
       tooltipText: UNVERIFIED_LABEL,
+      compositionSource: 'assumed',
+      sourceLabel: 'Assumed 100% of registered breed',
     };
   }
 
@@ -81,11 +118,23 @@ export function getBreedingClassification(
     return memo.get(memoKey)!;
   }
 
+  const compositionSource = getCompositionSource(fowl);
+  const sourceLabel = getCompositionSourceLabel(fowl);
+
   const s = (fowl.sire || '').trim();
   const d = (fowl.dam || '').trim();
   const sireIsBase = !s || isFoundationName(s);
   const damIsBase = !d || isFoundationName(d);
-  const isFoundation = sireIsBase && damIsBase;
+  const isFoundation = sireIsBase && damIsBase && fowl.sire_id == null && fowl.dam_id == null;
+
+  const hasParents = !isFoundation;
+  const hasIgnoredDeclaration =
+    hasParents &&
+    Array.isArray(fowl.declared_composition) &&
+    fowl.declared_composition.length > 0;
+  const declaredNotice = hasIgnoredDeclaration
+    ? 'Composition is derived from parents. Declared composition is ignored while parents are recorded.'
+    : undefined;
 
   // Rule: If a parent's breed or ancestry is unknown or missing, do not guess.
   // Foundation stock is declared base stock. For any other bird, both sire and dam
@@ -118,6 +167,9 @@ export function getBreedingClassification(
       allBreeds: knownEntries,
       extraBreedsCount: Math.max(0, knownEntries.length - 2),
       tooltipText: 'Parent ancestry is missing or unregistered in the flock registry.',
+      compositionSource,
+      sourceLabel,
+      ...(declaredNotice ? { declaredNotice } : {}),
     };
     if (memo && memoKey) memo.set(memoKey, result);
     return result;
@@ -140,6 +192,9 @@ export function getBreedingClassification(
       allBreeds: [{ strain: breedName, pct: 100 }],
       extraBreedsCount: 0,
       tooltipText: `Purebred ${breedName} (100% verified single-lineage)`,
+      compositionSource,
+      sourceLabel,
+      ...(declaredNotice ? { declaredNotice } : {}),
     };
     if (memo && memoKey) memo.set(memoKey, result);
     return result;
@@ -169,6 +224,9 @@ export function getBreedingClassification(
     allBreeds: knownEntries,
     extraBreedsCount: extraCount,
     tooltipText: `Crossbred (${Math.round(purityPct * 10) / 10}% ${dominant.strain} dominant): ${fullBreakdownStr}`,
+    compositionSource,
+    sourceLabel,
+    ...(declaredNotice ? { declaredNotice } : {}),
   };
 
   if (memo && memoKey) memo.set(memoKey, result);

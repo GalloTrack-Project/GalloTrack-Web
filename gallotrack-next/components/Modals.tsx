@@ -2,6 +2,7 @@
 import React from 'react';
 import type {
   FowlRecord,
+  DeclaredBreedShare,
   MatchRecord,
   SiblingRelation,
   AgeParts,
@@ -128,6 +129,8 @@ type ModalsProps = {
   setEditBirdCode: (v: string) => void;
   editWingBand: string;
   setEditWingBand: (v: string) => void;
+  editDeclaredComposition?: DeclaredBreedShare[] | null;
+  setEditDeclaredComposition?: (v: DeclaredBreedShare[] | null) => void;
 
   handleEditBirthdateChange: (val: string) => void;
   handleEditAgeChange: (val: string) => void;
@@ -236,6 +239,8 @@ export default function Modals(props: ModalsProps) {
           setEditBirdCode={props.setEditBirdCode}
           editWingBand={props.editWingBand}
           setEditWingBand={props.setEditWingBand}
+          editDeclaredComposition={props.editDeclaredComposition}
+          setEditDeclaredComposition={props.setEditDeclaredComposition}
         handleEditBirthdateChange={props.handleEditBirthdateChange}
         handleEditAgeChange={props.handleEditAgeChange}
         autoComputeGrowthStage={props.autoComputeGrowthStage}

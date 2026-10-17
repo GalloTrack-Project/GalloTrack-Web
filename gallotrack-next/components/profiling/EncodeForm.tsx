@@ -1,10 +1,11 @@
 'use client';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import type { FowlRecord } from '@/lib/types';
-import type { BloodlineStats } from '@/lib/bloodline-composition';
+import type { FowlRecord, DeclaredBreedShare } from '@/lib/types';
+import { validateDeclaredComposition, type BloodlineStats } from '@/lib/bloodline-composition';
 import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
+import DeclaredCompositionEditor from './DeclaredCompositionEditor';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
@@ -83,6 +84,8 @@ type Props = {
   setBirdCode: (v: string) => void;
   wingBand: string;
   setWingBand: (v: string) => void;
+  newDeclaredComposition?: DeclaredBreedShare[] | null;
+  setNewDeclaredComposition?: (v: DeclaredBreedShare[] | null) => void;
   suggestedBirdCode: string;
   previewBloodlineStats: BloodlineStats | null;
   selectedImage: File | null;
@@ -118,7 +121,7 @@ type Props = {
 export default function EncodeForm({
   fowls,
   newName, setNewName,
-  setNewBreed,
+  newBreed, setNewBreed,
   newGender, setNewGender,
   newBirthdate, handleNewBirthdateChange,
   age, handleAgeChange,
@@ -135,6 +138,8 @@ export default function EncodeForm({
   damName, setDamName,
   birdCode, setBirdCode,
   wingBand, setWingBand,
+  newDeclaredComposition,
+  setNewDeclaredComposition,
   suggestedBirdCode, previewBloodlineStats,
   selectedImage, setSelectedImage,
   imagePreview, setImagePreview,
@@ -175,6 +180,14 @@ export default function EncodeForm({
     : newGender === 'Hen' || newGender === 'Female'
       ? 'dam'
       : 'sire';
+
+  const declaredValidation = useMemo(() => {
+    if (isOffspring || !newDeclaredComposition || newDeclaredComposition.length === 0) {
+      return { valid: true };
+    }
+    const currentBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed;
+    return validateDeclaredComposition(newDeclaredComposition, currentBreed, availableStrains);
+  }, [isOffspring, newDeclaredComposition, selectedStrains, newBreed, availableStrains]);
 
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
@@ -625,21 +638,30 @@ export default function EncodeForm({
             </div>
           );
         })()}
-        <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md px-3 py-2.5 space-y-1">
-          <p className="text-xs font-black text-muted-foreground uppercase tracking-wider">
-            🧬 Bloodline Split — Auto-Computed
-          </p>
-          <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
-            {isFoundationStock(sireName) || isFoundationStock(damName) || !sireName.trim() || !damName.trim()
-              ? 'Foundation stock contributes 100% of its own strain to the offspring.'
-              : '50% from the Sire, 50% from the Dam — halved again each generation. Hatian ng dugo is derived from the lineage, so there is nothing to enter here.'}
-          </p>
-          {previewBloodlineStats && previewBloodlineStats.knownPct > 0 && (
-            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-              {previewBloodlineStats.summary}
+        {!isOffspring ? (
+          <div className="pt-1">
+            <DeclaredCompositionEditor
+              registeredBreed={selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed}
+              availableBreeds={availableStrains}
+              value={newDeclaredComposition ?? null}
+              onChange={(val) => setNewDeclaredComposition?.(val)}
+            />
+          </div>
+        ) : (
+          <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md px-3 py-2.5 space-y-1">
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-wider">
+              🧬 Bloodline Split — Auto-Computed
             </p>
-          )}
-        </div>
+            <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+              Composition is derived from parents (50% Sire, 50% Dam). Manual composition is only available for foundation stock.
+            </p>
+            {previewBloodlineStats && previewBloodlineStats.knownPct > 0 && (
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                {previewBloodlineStats.summary}
+              </p>
+            )}
+          </div>
+        )}
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0">
@@ -716,7 +738,7 @@ export default function EncodeForm({
           <StatusItem icon="🔗" label="Lineage Resolved" value={bloodlineVerified ? 'Resolved' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
           <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
         </div>
-        <button type="submit" disabled={loading || uploadingImage || !birthdateValidation.valid} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="submit" disabled={loading || uploadingImage || !birthdateValidation.valid || !declaredValidation.valid} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
           <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Registering...' : 'REGISTER'}</span>
         </button>

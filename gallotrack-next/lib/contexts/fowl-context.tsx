@@ -33,6 +33,7 @@ import {
   computeBloodlineComposition,
   getBloodlineStats,
   getFowlBloodlineStats,
+  parseDeclaredComposition,
   planLineageRefresh,
   planLineageRefreshAfterDelete,
   type BloodlineComposition,
@@ -68,6 +69,7 @@ import { useUnitPrefs, weightToStorage, heightToStorage, weightFromStorage, heig
 import type { BloodlineReport } from '@/lib/bloodlines';
 import type {
   FowlRecord,
+  DeclaredBreedShare,
   MatchRecord,
   MatchMedia,
   AgeParts,
@@ -124,6 +126,8 @@ interface FowlContextValue {
   age: string; setAge: (v: string) => void;
   birdCode: string; setBirdCode: (v: string) => void;
   wingBand: string; setWingBand: (v: string) => void;
+  newDeclaredComposition: DeclaredBreedShare[] | null;
+  setNewDeclaredComposition: (v: DeclaredBreedShare[] | null) => void;
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
@@ -150,6 +154,8 @@ interface FowlContextValue {
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
   editBirdCode: string; setEditBirdCode: (v: string) => void;
   editWingBand: string; setEditWingBand: (v: string) => void;
+  editDeclaredComposition: DeclaredBreedShare[] | null;
+  setEditDeclaredComposition: (v: DeclaredBreedShare[] | null) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -203,6 +209,8 @@ interface FowlContextValue {
   previewBloodlineStats: BloodlineStats | null;
   bloodlineStatsOf: (f: FowlRecord) => BloodlineStats | null;
   bloodlineStatsById: Map<string, BloodlineStats | null>;
+  pendingRetryPatches: LineageRefreshPatch[] | null;
+  retryPendingLineagePatches: () => Promise<number>;
 
   handleAddFowl: (e: React.FormEvent) => Promise<void>;
   handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
@@ -319,6 +327,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     newLegColor, setNewLegColor, age, setAge,
     birdCode, setBirdCode,
     wingBand, setWingBand,
+    newDeclaredComposition, setNewDeclaredComposition,
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
@@ -333,6 +342,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
     editBirdCode, setEditBirdCode,
     editWingBand, setEditWingBand,
+    editDeclaredComposition, setEditDeclaredComposition,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains,
@@ -424,9 +434,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       gender: newGender,
       sire: sireName,
       dam: damName,
+      declared_composition: newDeclaredComposition,
     } as FowlRecord;
     return computeBloodlineComposition(draft, fowls);
-  }, [newName, newBreed, selectedStrains, newGender, sireName, damName, fowls]);
+  }, [newName, newBreed, selectedStrains, newGender, sireName, damName, newDeclaredComposition, fowls]);
   const previewBloodlineStats = useMemo(() => getBloodlineStats(previewComposition), [previewComposition]);
   const computedBloodlinePct = previewBloodlineStats ? previewBloodlineStats.specificPct : 100;
   /**
@@ -491,6 +502,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  const [pendingRetryPatches, setPendingRetryPatches] = useState<LineageRefreshPatch[] | null>(null);
+
   /**
    * Push a batch of planned lineage patches to the database. Shared by every
    * flow that invalidates stored bloodline compositions (create, edit,
@@ -498,13 +511,28 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
    */
   const applyLineagePatches = useCallback(async (patches: LineageRefreshPatch[]): Promise<number> => {
     let refreshed = 0;
-    for (const { id, patch } of patches) {
+    const remaining: LineageRefreshPatch[] = [];
+    const failedNames: string[] = [];
+    for (let i = 0; i < patches.length; i++) {
+      const { id, patch } = patches[i];
       const { error } = await fowlService.updateFowl(id, patch);
       if (error) {
-        console.error('Failed to refresh lineage composition:', error);
+        console.error('Failed to refresh lineage composition for fowl id', id, error);
+        remaining.push(...patches.slice(i));
+        const bird = fowls.find(f => f.id === id);
+        failedNames.push(bird ? bird.name : `ID ${id}`);
         break;
       }
       refreshed++;
+    }
+    if (remaining.length > 0) {
+      setPendingRetryPatches(remaining);
+      toastMessage(
+        `Lineage recomputation failed for ${failedNames.join(', ')}. ${remaining.length} descendant update(s) pending retry.`,
+        'error'
+      );
+    } else {
+      setPendingRetryPatches(null);
     }
     if (refreshed > 0) {
       toastMessage(
@@ -513,7 +541,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       );
     }
     return refreshed;
-  }, []);
+  }, [fowls]);
+
+  const retryPendingLineagePatches = useCallback(async (): Promise<number> => {
+    if (!pendingRetryPatches || pendingRetryPatches.length === 0) return 0;
+    const toRun = [...pendingRetryPatches];
+    return await applyLineagePatches(toRun);
+  }, [pendingRetryPatches, applyLineagePatches]);
 
   /**
    * Re-sync descendants after a chicken is created or edited: every child whose
@@ -777,6 +811,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         image_url: uploadedImageUrl,
       };
 
+      if (!isOffspring && newDeclaredComposition && newDeclaredComposition.length > 0) {
+        payload.declared_composition = newDeclaredComposition;
+      }
+
       const MAX_RETRIES = 2;
       let attempt = 0;
       let insertResult: { error?: string; id?: number } = { error: 'Unknown insertion state' };
@@ -839,7 +877,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor('');
       setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage('');
       setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]);
-      setImagePreview(''); setBirdCode(''); setWingBand('');
+      setImagePreview(''); setBirdCode(''); setWingBand(''); setNewDeclaredComposition(null);
 
       if (insertResult.id != null) {
         await refreshDescendantCompositions({ ...payload, id: insertResult.id } as FowlRecord, null);
@@ -855,7 +893,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, fowls, autoCalcAge, unitPrefs]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 
@@ -1113,7 +1151,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditDamPct(isFoundationStock(fowl.dam || '') ? 100 : (fowl.dam_pct ?? 0));
     setEditBirdCode(birdCodeOf(fowl));
     setEditWingBand(fowl.wing_band || '');
-  }, [ui, birdCodeOf]);
+    setEditDeclaredComposition(parseDeclaredComposition(fowl.declared_composition));
+  }, [ui, birdCodeOf, setEditDeclaredComposition, unitPrefs]);
 
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1190,6 +1229,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           gender: editGender,
           sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
           dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',
+          declared_composition: !isOffspring ? editDeclaredComposition : null,
         } as FowlRecord,
         fowls
       );
@@ -1213,7 +1253,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         resolvedParents.dam_id ??
         (nameKey(editDamValue) === nameKey(editing.dam) ? editing.dam_id ?? null : null);
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         name: sanitizeInput(editName),
         breed: sanitizeInput(editBreed),
         gender: editGender,
@@ -1244,6 +1284,17 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         wing_band: editBand || null
       };
 
+      // Only include declared_composition if changed, preventing missing-column error on ordinary edits
+      const prevDeclared = parseDeclaredComposition(ui.editingFowl.declared_composition);
+      const prevJson = JSON.stringify(prevDeclared ?? null);
+      const targetDeclared = (!isOffspring && editDeclaredComposition && editDeclaredComposition.length > 0)
+        ? editDeclaredComposition
+        : null;
+      const targetJson = JSON.stringify(targetDeclared);
+      if (prevJson !== targetJson) {
+        payload.declared_composition = targetDeclared;
+      }
+
       const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
       if (result.error) throw new Error(result.error);
 
@@ -1264,13 +1315,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       await strainService.saveCustomStrain(editBreed);
       const editedRoot = {
         ...ui.editingFowl,
-        name: payload.name,
-        breed: payload.breed,
-        gender: payload.gender,
-        sire: payload.sire,
-        dam: payload.dam,
-        bloodline_pct: payload.bloodline_pct,
-        bloodline_composition: payload.bloodline_composition,
+        name: String(payload.name),
+        breed: String(payload.breed),
+        gender: String(payload.gender),
+        sire: String(payload.sire),
+        dam: String(payload.dam),
+        bloodline_pct: Number(payload.bloodline_pct),
+        bloodline_composition: payload.bloodline_composition as BloodlineComposition,
+        declared_composition: (!isOffspring && editDeclaredComposition && editDeclaredComposition.length > 0)
+          ? editDeclaredComposition
+          : null,
       } as FowlRecord;
       await refreshDescendantCompositions(editedRoot, ui.editingFowl.name);
       ui.setEditingFowl(null);
@@ -1280,7 +1334,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, editDeclaredComposition, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, autoCalcAge, unitPrefs]);
 
   // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);
@@ -1308,6 +1362,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     nextNodeId,
     dataCompleteness, validationPassed, bloodlineVerified, computedBloodlinePct,
     birdCodes, birdCodeOf, suggestedBirdCode, previewComposition, previewBloodlineStats, bloodlineStatsOf, bloodlineStatsById,
+    pendingRetryPatches, retryPendingLineagePatches,
     offspringGenInfo, sireGenInfo, damGenInfo, sireGen, damGen,
     handleAddFowl, handleUpdateFowl,
     handleOpenEditModal, handleArchiveFowlOnly, handleArchiveFowlWithReason,

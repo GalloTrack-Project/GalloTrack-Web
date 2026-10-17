@@ -287,6 +287,7 @@ Accessed by clicking the top `+ Register Chicken` button. Handled in [EncodeForm
 - **Step 3: Ancestry Roots & Photo**:
   - `Sire (Father)`: Select from existing roosters in your flock or type a custom name. Leave blank for "Foundation Stock".
   - `Dam (Mother)`: Select from existing hens in your flock or type a custom name. Leave blank for "Foundation Stock".
+  - `Declared Breed Composition (Foundation Stock Only)`: For birds with no recorded parents, you may declare custom breed shares (up to 4 breeds summing to 100%). If left empty, foundation stock is assumed to be 100% of its registered breed. Offspring with recorded parents are always auto-derived (50% Sire, 50% Dam) and cannot be manually declared.
   - `Existing Offspring & Siblings Box`: Displays real-time counts of full and half-siblings sharing these parents.
   - `Bloodline Split & Backcross Preview`: Dynamically computes the genetic inheritance percentage (50% Sire / 50% Dam) and backcross purity (F1 = 50%, F2 = 75%, F3 = 87.5%, F4+ = 93.75%+).
   - `Chicken Attachment Photo`: Optional image upload from your phone or computer.

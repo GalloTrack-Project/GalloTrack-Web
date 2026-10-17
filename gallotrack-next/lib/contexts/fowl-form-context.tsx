@@ -6,7 +6,7 @@ import {
 } from '@/lib/helpers';
 import { STRAIN_LIST, LEG_COLOR_LIST } from '@/lib/helpers';
 import { useDebounce } from '@/lib/use-debounce';
-import type { PartnerSuggestion } from '@/lib/services/match-options-service';
+import type { DeclaredBreedShare } from '@/lib/types';
 
 interface FowlFormStateContextValue {
   newName: string; setNewName: (v: string) => void;
@@ -28,6 +28,8 @@ interface FowlFormStateContextValue {
   age: string; setAge: (v: string) => void;
   birdCode: string; setBirdCode: (v: string) => void;
   wingBand: string; setWingBand: (v: string) => void;
+  newDeclaredComposition: DeclaredBreedShare[] | null;
+  setNewDeclaredComposition: (v: DeclaredBreedShare[] | null) => void;
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
@@ -54,6 +56,8 @@ interface FowlFormStateContextValue {
   editDamPct: number | string; setEditDamPct: (v: number | string) => void;
   editBirdCode: string; setEditBirdCode: (v: string) => void;
   editWingBand: string; setEditWingBand: (v: string) => void;
+  editDeclaredComposition: DeclaredBreedShare[] | null;
+  setEditDeclaredComposition: (v: DeclaredBreedShare[] | null) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -128,6 +132,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [age, setAge] = useState('');
   const [birdCode, setBirdCode] = useState('');
   const [wingBand, setWingBand] = useState('');
+  const [newDeclaredComposition, setNewDeclaredComposition] = useState<DeclaredBreedShare[] | null>(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -154,6 +159,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [editDamPct, setEditDamPct] = useState<number | string>(100);
   const [editBirdCode, setEditBirdCode] = useState('');
   const [editWingBand, setEditWingBand] = useState('');
+  const [editDeclaredComposition, setEditDeclaredComposition] = useState<DeclaredBreedShare[] | null>(null);
 
   const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
   const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
@@ -240,6 +246,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     weight, setWeight, height, setHeight,
     newLegColor, setNewLegColor, age, setAge,
     birdCode, setBirdCode, wingBand, setWingBand,
+    newDeclaredComposition, setNewDeclaredComposition,
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
     imagePreview, setImagePreview,
@@ -253,6 +260,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     editLegColor, setEditLegColor, editSire, setEditSire,
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
     editBirdCode, setEditBirdCode, editWingBand, setEditWingBand,
+    editDeclaredComposition, setEditDeclaredComposition,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains, addStrain, removeStrain,

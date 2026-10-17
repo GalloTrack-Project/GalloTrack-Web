@@ -44,18 +44,29 @@ export function isChickenCodeUniqueViolation(errMsg?: string | null): boolean {
   );
 }
 
+export const DB_UPDATE_NEEDED_MESSAGE = 'This feature needs a database update';
+
 export async function insertFowl(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
   let res = await supabase.from('fowl').insert([payload]).select('id').single();
+  if (res.error && isMissingCol(res.error, 'declared_composition')) {
+    return { error: DB_UPDATE_NEEDED_MESSAGE };
+  }
   if (res.error && isMissingCol(res.error, 'chicken_code')) {
     const copy = { ...payload };
     copy.bird_code = copy.chicken_code;
     delete copy.chicken_code;
     res = await supabase.from('fowl').insert([copy]).select('id').single();
+    if (res.error && isMissingCol(res.error, 'declared_composition')) {
+      return { error: DB_UPDATE_NEEDED_MESSAGE };
+    }
   } else if (res.error && isMissingCol(res.error, 'bird_code')) {
     const copy = { ...payload };
     copy.chicken_code = copy.bird_code;
     delete copy.bird_code;
     res = await supabase.from('fowl').insert([copy]).select('id').single();
+    if (res.error && isMissingCol(res.error, 'declared_composition')) {
+      return { error: DB_UPDATE_NEEDED_MESSAGE };
+    }
   }
   if (res.error) return { error: res.error.message };
   return { id: res.data?.id };
@@ -63,16 +74,25 @@ export async function insertFowl(payload: Record<string, unknown>): Promise<{ er
 
 export async function updateFowl(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {
   let res = await supabase.from('fowl').update(payload).eq('id', id);
+  if (res.error && isMissingCol(res.error, 'declared_composition')) {
+    return { error: DB_UPDATE_NEEDED_MESSAGE };
+  }
   if (res.error && isMissingCol(res.error, 'chicken_code')) {
     const copy = { ...payload };
     copy.bird_code = copy.chicken_code;
     delete copy.chicken_code;
     res = await supabase.from('fowl').update(copy).eq('id', id);
+    if (res.error && isMissingCol(res.error, 'declared_composition')) {
+      return { error: DB_UPDATE_NEEDED_MESSAGE };
+    }
   } else if (res.error && isMissingCol(res.error, 'bird_code')) {
     const copy = { ...payload };
     copy.chicken_code = copy.bird_code;
     delete copy.bird_code;
     res = await supabase.from('fowl').update(copy).eq('id', id);
+    if (res.error && isMissingCol(res.error, 'declared_composition')) {
+      return { error: DB_UPDATE_NEEDED_MESSAGE };
+    }
   }
   if (res.error) return { error: res.error.message };
   return {};

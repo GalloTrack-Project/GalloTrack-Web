@@ -1,3 +1,8 @@
+export type DeclaredBreedShare = {
+  breed: string;
+  percent: number;
+};
+
 export interface FowlRecord {
   id: number;
   user_id?: string | number;
@@ -38,6 +43,8 @@ export interface FowlRecord {
   wing_band?: string | null;
   /** Per-strain blood percentage breakdown, e.g. { Kelso: 50, Hatch: 25, Roundhead: 25 }. */
   bloodline_composition?: Record<string, number> | null;
+  /** Owner-declared breed composition for foundation stock (birds with no recorded parents), e.g. [{ breed: 'Lemon', percent: 75 }, ...]. Null means assumed 100% of registered breed. */
+  declared_composition?: DeclaredBreedShare[] | null;
   status: string;
   death_reason?: string;
   death_date?: string;
