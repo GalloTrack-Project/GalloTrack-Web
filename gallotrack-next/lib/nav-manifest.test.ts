@@ -81,6 +81,9 @@ describe('nav-manifest', () => {
     expect(getPageTitle('/admin/marketplace')).toBe('Marketplace');
     expect(getPageTitle('/settings')).toBe('Settings');
     expect(getPageTitle('/catalog')).toBe('Catalog');
+    expect(getPageTitle('/match-logs/new')).toBe('Log Match');
+    expect(getPageTitle('/match-logs/121/edit')).toBe('Edit Match Record');
+    expect(getPageTitle('/match-logs')).toBe('Match Logs');
     expect(getPageTitle('/')).toBe('Dashboard');
   });
 

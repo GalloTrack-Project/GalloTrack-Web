@@ -46,6 +46,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const currentNav = findActiveNav(navItems, pathname);
   const activeTitle = currentNav?.label || getPageTitle(pathname);
 
+  useEffect(() => {
+    if (activeTitle) {
+      document.title = `${activeTitle} | GalloTrack`;
+    }
+  }, [activeTitle]);
+
   const iconButtonClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground shadow-2xs transition-colors duration-150 hover:border-accent/50 hover:bg-muted/60 hover:text-accent cursor-pointer';
 

@@ -74,6 +74,10 @@ export default function RegisterPage() {
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
 
   useEffect(() => {
+    document.title = 'Create Account | GalloTrack';
+  }, []);
+
+  useEffect(() => {
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
       .then((s) => {

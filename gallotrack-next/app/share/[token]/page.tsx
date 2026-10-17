@@ -114,6 +114,10 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = 'Shared Gamefowl Profile | GalloTrack';
+  }, []);
+
+  useEffect(() => {
     if (!token) return;
     let cancelled = false;
     (async () => {

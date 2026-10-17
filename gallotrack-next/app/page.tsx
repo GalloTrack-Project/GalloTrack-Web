@@ -8,14 +8,16 @@ import CtaSection from '@/components/landing/CtaSection';
 import Footer from '@/components/landing/Footer';
 
 export const metadata: Metadata = {
-  title: 'GalloTrack — Advanced Gamefowl Breeding & Match Analytics Platform',
+  title: {
+    absolute: 'GalloTrack | Gamefowl Breeding & Match Analytics',
+  },
   description:
     'Optimize your gamefowl breeding program with lineage tracking, fight performance logs, and real-time flock management.',
   alternates: {
     canonical: 'https://gallotrack.vercel.app',
   },
   openGraph: {
-    title: 'GalloTrack — Advanced Gamefowl Breeding & Match Analytics Platform',
+    title: 'GalloTrack | Gamefowl Breeding & Match Analytics',
     description:
       'Optimize your gamefowl breeding program with lineage tracking, fight performance logs, and real-time flock management.',
     url: 'https://gallotrack.vercel.app',
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GalloTrack — Advanced Gamefowl Breeding & Match Analytics Platform',
+    title: 'GalloTrack | Gamefowl Breeding & Match Analytics',
     description:
       'Optimize your gamefowl breeding program with lineage tracking, fight performance logs, and real-time flock management.',
   },

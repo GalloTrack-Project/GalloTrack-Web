@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
@@ -18,8 +18,38 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gallotrack.vercel.app'),
-  title: "GalloTrack",
-  description: "Optimizing Chicken Management through In-Depth Analytics",
+  title: {
+    template: "%s | GalloTrack",
+    default: "GalloTrack | Gamefowl Breeding & Match Analytics",
+  },
+  description: "Optimize your gamefowl breeding program with lineage tracking, fight performance logs, and real-time flock management.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "GalloTrack | Gamefowl Breeding & Match Analytics",
+    description: "Optimize your gamefowl breeding program with lineage tracking, fight performance logs, and real-time flock management.",
+    url: "https://gallotrack.vercel.app",
+    siteName: "GalloTrack",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GalloTrack | Gamefowl Breeding & Match Analytics",
+    description: "Optimize your gamefowl breeding program with lineage tracking, fight performance logs, and real-time flock management.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#022c22",
 };
 
 import StagingBanner from "@/components/StagingBanner";

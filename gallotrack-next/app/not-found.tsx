@@ -3,6 +3,7 @@ import Link from 'next/link';
 export default function NotFound() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-6">
+      <title>Page Not Found | GalloTrack</title>
       <div className="max-w-md w-full text-center space-y-6">
         <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center text-4xl mx-auto">
           🐓

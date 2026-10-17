@@ -39,6 +39,10 @@ export default function LoginPage() {
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
 
   useEffect(() => {
+    document.title = 'Log In | GalloTrack';
+  }, []);
+
+  useEffect(() => {
     fetch('/api/admin/system-settings')
       .then((r) => r.json())
       .then((s) => {

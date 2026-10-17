@@ -119,6 +119,8 @@ export function getPageTitle(pathname: string): string {
     page.href === '/settings' ? pathname === page.href : pathname.startsWith(page.href),
   );
   if (subpage) return subpage.label;
+  if (pathname.startsWith('/match-logs/new')) return 'Log Match';
+  if (pathname.includes('/match-logs/') && pathname.endsWith('/edit')) return 'Edit Match Record';
   return (
     pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ||
     'Dashboard'
