@@ -78,6 +78,13 @@ export async function updateFowl(id: number, payload: Record<string, unknown>): 
   return {};
 }
 
+/**
+ * UNUSED IN STANDARD UI:
+ * deleteFowl performs a hard DELETE from the fowl table.
+ * In standard farm workflows, chickens are only archived or marked deceased (soft lifecycle).
+ * Only referenced by handlePermanentDelete (unreachable in current UI) and admin account deletion.
+ * Do not wire to active inventory UI buttons without explicit approval.
+ */
 export async function deleteFowl(id: number): Promise<{ error?: string }> {
   const { error } = await supabase.from('fowl').delete().eq('id', id);
   if (error) return { error: error.message };

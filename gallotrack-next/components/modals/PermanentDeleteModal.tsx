@@ -4,6 +4,12 @@ import { AlertTriangle } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import type { FowlRecord } from '@/lib/types';
 
+/**
+ * UNUSED / UNREACHABLE COMPONENT:
+ * PermanentDeleteModal is currently unreferenced by any active user-facing button in the registry.
+ * Farm inventory workflow relies strictly on soft lifecycle management (Archived / Deceased).
+ * Preserved for future/admin reference; do not wire to buttons without explicit confirmation.
+ */
 type PermanentDeleteModalProps = {
   pendingPermanentDelete: FowlRecord | null;
   setPendingPermanentDelete: (f: FowlRecord | null) => void;

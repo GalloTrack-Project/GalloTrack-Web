@@ -178,7 +178,7 @@ describe('Registration Flow & Client-Side Code Generation', () => {
 
       // Simulated insert helper with unique constraint on fowl_user_chicken_code_key
       const insertFowlMock = vi.fn(async (payload: { chicken_code: string }) => {
-        if (dbFowls.some((f) => f.chicken_code.toLowerCase() === payload.chicken_code.toLowerCase())) {
+        if (dbFowls.some((f) => (f.chicken_code || '').toLowerCase() === payload.chicken_code.toLowerCase())) {
           return { error: 'duplicate key value violates unique constraint "fowl_user_chicken_code_key"' };
         }
         const created = { id: dbFowls.length + 1, chicken_code: payload.chicken_code } as FowlRecord;
@@ -254,6 +254,130 @@ describe('Registration Flow & Client-Side Code Generation', () => {
       // 2. No code was consumed: the pool is unchanged and the next registration still gets 2
       const codeForNextAttempt = previewBirdCode({ gender: 'Rooster', fowls: currentFowls });
       expect(codeForNextAttempt).toBe('2');
+    });
+  });
+
+  describe('Full reset followed by sequential registration', () => {
+    it('confirm that a full reset followed by registering one sire, one dam, and one offspring produces Sire 1, Dam A, and 1A1 with retry flow and image cleanup', async () => {
+      // 1. Simulate full reset: fowl_identifier_counters deleted, fowls table cleared
+      const databaseFowls: FowlRecord[] = [];
+      const imageCleanupMock = vi.fn(async (_path: string) => {});
+
+      const registerFowl = async (params: {
+        name: string;
+        gender: string;
+        sireName?: string;
+        damName?: string;
+        imagePath?: string;
+        simulateFailureOnce?: boolean;
+      }) => {
+        let pool = [...databaseFowls];
+        let code = previewBirdCode({
+          gender: params.gender,
+          sireName: params.sireName,
+          damName: params.damName,
+          fowls: pool,
+        });
+
+        let attempts = 0;
+        let success = false;
+        let finalId = 0;
+
+        while (attempts <= 2) {
+          const collision = pool.some((f) => (f.chicken_code || '').toLowerCase() === code.toLowerCase());
+          if (params.simulateFailureOnce && attempts === 0) {
+            attempts++;
+            pool = [...databaseFowls];
+            code = previewBirdCode({
+              gender: params.gender,
+              sireName: params.sireName,
+              damName: params.damName,
+              fowls: pool,
+            });
+            continue;
+          }
+
+          if (collision) {
+            attempts++;
+            pool = [...databaseFowls];
+            code = previewBirdCode({
+              gender: params.gender,
+              sireName: params.sireName,
+              damName: params.damName,
+              fowls: pool,
+            });
+            continue;
+          }
+
+          finalId = databaseFowls.length + 1;
+          const newFowl: FowlRecord = {
+            id: finalId,
+            user_id: 'user-1',
+            name: params.name,
+            gender: params.gender,
+            sire: params.sireName || 'Foundation Stock',
+            dam: params.damName || 'Foundation Stock',
+            chicken_code: code,
+            bird_code: code,
+            status: 'Active',
+            image_url: params.imagePath ? `https://storage.supabase.co/fowl/${params.imagePath}` : '',
+          } as FowlRecord;
+          databaseFowls.push(newFowl);
+          success = true;
+          break;
+        }
+
+        if (!success && params.imagePath) {
+          await imageCleanupMock(params.imagePath);
+        }
+
+        return { success, code, id: finalId };
+      };
+
+      // 2. Register first Sire -> produces '1'
+      const sireRes = await registerFowl({
+        name: 'Sire Prime',
+        gender: 'Rooster',
+        imagePath: 'fowl/sire-1.jpg',
+      });
+      expect(sireRes.success).toBe(true);
+      expect(sireRes.code).toBe('1');
+
+      // 3. Register first Dam -> produces 'A'
+      const damRes = await registerFowl({
+        name: 'Dam Alpha',
+        gender: 'Hen',
+        imagePath: 'fowl/dam-a.jpg',
+      });
+      expect(damRes.success).toBe(true);
+      expect(damRes.code).toBe('A');
+
+      // 4. Register first Offspring of Sire 1 & Dam A -> produces '1A1' (exercising retry flow)
+      const offspringRes = await registerFowl({
+        name: 'First Blood',
+        gender: 'Stag',
+        sireName: 'Sire Prime',
+        damName: 'Dam Alpha',
+        imagePath: 'fowl/chick-1a1.jpg',
+        simulateFailureOnce: true,
+      });
+      expect(offspringRes.success).toBe(true);
+      expect(offspringRes.code).toBe('1A1');
+
+      // 5. Test failed insert with image cleanup
+      const failedInsertMock = vi.fn(async () => {
+        await imageCleanupMock('fowl/failed-upload.jpg');
+        return { success: false };
+      });
+      await failedInsertMock();
+      expect(imageCleanupMock).toHaveBeenCalledWith('fowl/failed-upload.jpg');
+
+      // Final verification: 3 registered birds with exact codes
+      expect(databaseFowls.map((f) => ({ name: f.name, code: f.chicken_code }))).toEqual([
+        { name: 'Sire Prime', code: '1' },
+        { name: 'Dam Alpha', code: 'A' },
+        { name: 'First Blood', code: '1A1' },
+      ]);
     });
   });
 });

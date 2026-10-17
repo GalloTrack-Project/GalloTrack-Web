@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/registry'
 import type { AdminSettings } from '@/lib/admin'
 import type { RegistryOption } from '@/lib/types'
-import { User, Home, Settings, Bell, Database, Monitor, X, ListChecks } from 'lucide-react'
+import { User, Home, Settings, Bell, Database, Monitor, X, ListChecks, AlertTriangle } from 'lucide-react'
+import { Modal } from '@/components/ui'
 import { fetchUserSettings, setUserSetting } from '@/lib/services/settings-service'
 import { parseBackup, restoreBackup } from '@/lib/backup'
 import { useFowl } from '@/lib/contexts/fowl-context'
@@ -125,6 +126,12 @@ export default function SettingsPage() {
   const [restoring, setRestoring] = useState(false)
   const restoreInputRef = useRef<HTMLInputElement | null>(null)
   const fowl = useFowl()
+  const [dangerModal, setDangerModal] = useState<{
+    type: 'match' | 'fowl' | 'all'
+    title: string
+    label: string
+  } | null>(null)
+  const [dangerConfirmInput, setDangerConfirmInput] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [userName, setUserName] = useState('')
   const [userCreatedAt, setUserCreatedAt] = useState('')
@@ -336,20 +343,34 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleClear(table: string, label: string) {
-    if (!confirm(`Delete all ${label}? This cannot be undone.`)) return
-    setClearing(table)
+  async function handleConfirmDangerAction() {
+    if (!dangerModal || dangerConfirmInput.trim() !== 'DELETE') return
+    const { type } = dangerModal
+    setClearing(type)
     setClearNotice('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      if (table === 'fowl') {
+      if (type === 'fowl') {
         await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
+        const { error } = await supabase.from('fowl').delete().eq('user_id', user.id)
+        if (error) throw error
+        setClearNotice(`All chicken profiles and sequence counters deleted.`)
+      } else if (type === 'match') {
+        const { error } = await supabase.from('match').delete().eq('user_id', user.id)
+        if (error) throw error
+        setClearNotice(`All match records deleted.`)
+      } else if (type === 'all') {
+        const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
+        if (matchErr) throw matchErr
+        await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
+        const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
+        if (fowlErr) throw fowlErr
+        setClearNotice(`All chicken profiles, match records, and sequence counters deleted.`)
       }
-      const { error } = await supabase.from(table).delete().eq('user_id', user.id)
-      if (error) throw error
-      setClearNotice(`All ${label} deleted.`)
       window.dispatchEvent(new Event('admin-profile-update'))
+      setDangerModal(null)
+      setDangerConfirmInput('')
     } catch (err: unknown) {
       setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
@@ -669,23 +690,144 @@ export default function SettingsPage() {
             </SectionCard>
             <SectionCard title="Danger Zone" description="Irreversible actions. Proceed with caution.">
               <Field label="Clear Match Records" description="Deletes all logged match history. Chicken profiles are kept.">
-                <button type="button" onClick={() => handleClear('match', 'match records')} disabled={clearing === 'match'} className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDangerModal({ type: 'match', title: 'Clear Match Records', label: 'match records' })
+                    setDangerConfirmInput('')
+                  }}
+                  disabled={clearing !== ''}
+                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
                   {clearing === 'match' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                   {clearing === 'match' ? 'Clearing...' : 'Clear Matches'}
                 </button>
               </Field>
               <Field label="Clear Chicken Profiles" description="Deletes all registered chickens. Match history kept.">
-                <button type="button" onClick={() => handleClear('fowl', 'chicken profiles')} disabled={clearing === 'fowl'} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDangerModal({ type: 'fowl', title: 'Clear Chicken Profiles', label: 'chicken profiles' })
+                    setDangerConfirmInput('')
+                  }}
+                  disabled={clearing !== ''}
+                  className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
                   {clearing === 'fowl' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                   {clearing === 'fowl' ? 'Clearing...' : 'Clear Chickens'}
                 </button>
               </Field>
               <Field label="Clear Everything" description="Deletes ALL chicken profiles and match records. Fresh start.">
-                <button type="button" onClick={() => { if (confirm('Delete ALL data? This cannot be undone.')) { handleClear('match', 'all data'); handleClear('fowl', 'all data') } }} disabled={clearing !== ''} className="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5">
-                  Clear Everything
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDangerModal({ type: 'all', title: 'Clear Everything (Full Reset)', label: 'all farm data' })
+                    setDangerConfirmInput('')
+                  }}
+                  disabled={clearing !== ''}
+                  className="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {clearing === 'all' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                  {clearing === 'all' ? 'Clearing...' : 'Clear Everything'}
                 </button>
               </Field>
             </SectionCard>
+
+            {dangerModal && (
+              <Modal
+                open={true}
+                onClose={() => { if (!clearing) { setDangerModal(null); setDangerConfirmInput(''); } }}
+                title={dangerModal.title}
+                description="Irreversible action. This cannot be undone."
+                icon={<AlertTriangle className="w-5 h-5" />}
+                iconClassName="bg-rose-100 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400"
+                className="max-w-lg"
+                footer={
+                  <div className="flex items-center justify-end gap-2.5 w-full">
+                    <button
+                      type="button"
+                      onClick={() => { setDangerModal(null); setDangerConfirmInput(''); }}
+                      disabled={clearing !== ''}
+                      className="px-4 py-2 rounded-md text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleConfirmDangerAction()}
+                      disabled={dangerConfirmInput.trim() !== 'DELETE' || clearing !== ''}
+                      className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+                    >
+                      {clearing !== '' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                      {clearing !== '' ? 'Deleting...' : 'Confirm & Delete'}
+                    </button>
+                  </div>
+                }
+              >
+                <div className="space-y-4 py-1">
+                  {/* Recommended Backup Link */}
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30">
+                    <div className="space-y-0.5">
+                      <span className="block text-xs font-extrabold text-emerald-800 dark:text-emerald-300">Recommended: Export backup first</span>
+                      <span className="block text-xs text-emerald-700/80 dark:text-emerald-400 font-medium">Download a complete JSON backup before deleting.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleExport}
+                      className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-md text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      Export JSON
+                    </button>
+                  </div>
+
+                  {/* Summary of What Will Be Deleted with Counts */}
+                  <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/70 space-y-2">
+                    <span className="block text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                      Items that will be permanently deleted:
+                    </span>
+                    <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-disc list-inside font-medium">
+                      {dangerModal.type === 'fowl' && (
+                        <>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.fowls?.length ?? 0}</strong> Chicken Profiles</li>
+                          <li>Status history audit records and photo links (cascaded)</li>
+                          <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
+                        </>
+                      )}
+                      {dangerModal.type === 'match' && (
+                        <>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.matchHistory?.length ?? 0}</strong> Match Records</li>
+                          <li>Match options, betting entries, and combat video/photo links (cascaded)</li>
+                          <li>Fight win-rate and performance analytics</li>
+                        </>
+                      )}
+                      {dangerModal.type === 'all' && (
+                        <>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.fowls?.length ?? 0}</strong> Chicken Profiles</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.matchHistory?.length ?? 0}</strong> Match Records</li>
+                          <li>All photo/video metadata, status histories, and lineage links</li>
+                          <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* Typed Confirmation Field */}
+                  <div className="space-y-1.5 pt-1">
+                    <label htmlFor="danger-delete-confirm-input" className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      To confirm, type <span className="font-mono font-black text-rose-600 dark:text-rose-400 select-all">DELETE</span> below:
+                    </label>
+                    <input
+                      id="danger-delete-confirm-input"
+                      type="text"
+                      value={dangerConfirmInput}
+                      onChange={(e) => setDangerConfirmInput(e.target.value)}
+                      placeholder="Type DELETE"
+                      className="w-full p-2.5 px-3 border border-slate-300 dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all shadow-xs"
+                    />
+                  </div>
+                </div>
+              </Modal>
+            )}
           </div>
         )
 

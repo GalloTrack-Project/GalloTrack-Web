@@ -79,6 +79,9 @@ import { toastMessage } from '@/lib/toast-bus';
 import { captureVideoPoster, uploadKey } from '@/lib/media-format';
 import { registryTabLists, getRegistryCounts, type RegistryLists, type RegistryCounts } from '@/lib/registry-roles';
 
+/** Tracks whether the RPC fallback warning has already been logged this session. */
+let hasWarnedRpcFallbackThisSession = false;
+
 interface FowlContextValue {
   fowls: FowlRecord[];
   setFowls: React.Dispatch<React.SetStateAction<FowlRecord[]>>;
@@ -680,12 +683,18 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         try {
           const rpcRes = await fowlService.getNextIdentifier(role, sireCode, damCode);
           if (rpcRes.error) {
-            console.warn(`get_next_fowl_identifier RPC error: ${rpcRes.error}. Falling back to client-side code generator.`);
+            if (!hasWarnedRpcFallbackThisSession) {
+              hasWarnedRpcFallbackThisSession = true;
+              console.warn(`get_next_fowl_identifier RPC error: ${rpcRes.error}. Falling back to client-side code generator.`);
+            }
           } else if (rpcRes.code && !poolTaken.has(rpcRes.code.toLowerCase())) {
             resolved = rpcRes.code;
           }
         } catch (rpcErr) {
-          console.warn('get_next_fowl_identifier RPC exception. Falling back to client-side code generator:', rpcErr);
+          if (!hasWarnedRpcFallbackThisSession) {
+            hasWarnedRpcFallbackThisSession = true;
+            console.warn('get_next_fowl_identifier RPC exception. Falling back to client-side code generator:', rpcErr);
+          }
         }
 
         if (!resolved) {
@@ -1032,6 +1041,12 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setLoading(false);
   }, [fetchDatabaseResources, ui]);
 
+  /**
+   * UNUSED / UNREACHABLE IN CURRENT UI:
+   * handlePermanentDelete is not invoked by any active user-facing button in the registry
+   * (ui.pendingPermanentDelete is never populated by standard UI actions; birds are soft-lifecycle
+   * via Archived or Deceased). Preserved for admin/maintenance parity; do not wire without approval.
+   */
   const handlePermanentDelete = useCallback(async () => {
     const deleted = ui.pendingPermanentDelete;
     if (!deleted) return;
