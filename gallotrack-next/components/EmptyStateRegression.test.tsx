@@ -89,7 +89,11 @@ describe('Empty State Regression Suite (Zero Data State Post-Clear)', () => {
   it('2. Registry tabs (ProfilingPage) render cleanly with zero birds without throwing', () => {
     const { container } = renderWithProviders(<ProfilingPage />);
     expect(container).toBeTruthy();
-    expect(screen.getByText(/Breeding Male/i)).toBeDefined();
+    // Confirm the real current 4 tabs are rendered: Breeding Male, Breeding Female, Offspring, Match Logs
+    expect(screen.getAllByRole('tab', { name: /Breeding Male/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('tab', { name: /Breeding Female/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('tab', { name: /Offspring/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('tab', { name: /Match Logs/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   it('3. Inventory tabs (MarketplacePage) render cleanly with zero fowls without throwing', () => {
