@@ -1,8 +1,6 @@
 'use client';
 import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Edit2 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
@@ -116,22 +114,13 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                     )}
                   </td>
                   <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-center gap-2">
-                      <MatchMediaButtons
-                        match={log}
-                        videos={videosFor(matchMedia, log.id, log)}
-                        photos={photosFor(matchMedia, log.id, log)}
-                        posters={postersFor(matchMedia, log.id, log)}
-                      />
-                      <Link
-                        href={`/match-logs/${log.id}/edit`}
-                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        title="Edit Match Record"
-                        aria-label={`Edit Match #${log.id}`}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Link>
-                    </div>
+                    <MatchMediaButtons
+                      match={log}
+                      videos={videosFor(matchMedia, log.id, log)}
+                      photos={photosFor(matchMedia, log.id, log)}
+                      posters={postersFor(matchMedia, log.id, log)}
+                      returnTo="/dashboard"
+                    />
                   </td>
                 </tr>
               );

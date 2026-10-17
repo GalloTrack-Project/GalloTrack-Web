@@ -1,20 +1,22 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
 import { fetchMatchById } from '@/lib/services/match-service';
 import { useFowl } from '@/lib/contexts/fowl-context';
+import { sanitizeRedirectPath } from '@/lib/auth-redirect';
 import type { MatchRecord } from '@/lib/types';
 
-export default function EditMatchLogPage() {
+function EditMatchContent() {
   const params = useParams();
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const { matchHistory, loading: contextLoading } = useFowl();
 
   const idParam = params?.id;
   const matchId = idParam ? Number(idParam) : null;
+  const returnTo = sanitizeRedirectPath(searchParams?.get('returnTo'), '/match-logs');
 
   const [record, setRecord] = useState<MatchRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,11 +87,11 @@ export default function EditMatchLogPage() {
           </p>
           <div className="pt-2">
             <Link
-              href="/match-logs"
+              href={returnTo}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 dark:bg-emerald-600 text-white font-bold text-sm hover:opacity-90 transition-opacity"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Match Logs</span>
+              <span>Back to Previous Page</span>
             </Link>
           </div>
         </div>
@@ -99,7 +101,23 @@ export default function EditMatchLogPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <MatchRecordForm mode="edit" initialRecord={record} />
+      <MatchRecordForm mode="edit" initialRecord={record} onSuccessRedirect={returnTo} />
     </div>
+  );
+}
+
+export default function EditMatchLogPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 animate-pulse">
+          <div className="h-6 w-48 bg-muted rounded" />
+          <div className="h-10 w-72 bg-muted rounded" />
+          <div className="h-[600px] w-full bg-muted rounded-xl" />
+        </div>
+      }
+    >
+      <EditMatchContent />
+    </Suspense>
   );
 }

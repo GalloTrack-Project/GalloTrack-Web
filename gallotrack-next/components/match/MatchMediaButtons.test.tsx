@@ -10,6 +10,12 @@ vi.mock('@/lib/contexts/fowl-context', () => ({
   useFowl: () => ({ fowls: [], birdCodes: new Map() }),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/match-logs',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 import { UIProvider } from '@/lib/contexts/ui-context';
 import MatchMediaButtons from './MatchMediaButtons';
 import MatchMediaViewer from './MatchMediaViewer';
@@ -52,26 +58,27 @@ describe('MatchMediaButtons + MatchMediaViewer', () => {
     playSpy.mockRestore();
   });
 
-  it('shows Watch and Photos buttons with counts for a match with one video and one photo', () => {
+  it('shows Play media button with count, Edit match record, and Share match', () => {
     renderRow();
 
-    const watch = screen.getByTitle('Watch match video');
-    expect(within(watch).getByText('1')).toBeTruthy();
-    expect(screen.getByLabelText('Watch match video for Hatch Mountain')).toBeTruthy();
-
-    const photos = screen.getByTitle('View match photo');
-    expect(within(photos).getByText('1')).toBeTruthy();
-    expect(screen.getByLabelText('View match photo for Hatch Mountain')).toBeTruthy();
+    const playBtn = screen.getByTitle('Play media');
+    expect(within(playBtn).getByText('2')).toBeTruthy();
+    expect(screen.getByLabelText('Play media')).toBeTruthy();
 
     expect(screen.queryByText('No media')).toBeNull();
-    expect(screen.getByTitle('Edit match')).toBeTruthy();
-    expect(screen.getByTitle('Share link')).toBeTruthy();
+    const editLink = screen.getByTitle('Edit match record');
+    expect(editLink).toBeTruthy();
+    expect(screen.getByLabelText('Edit match record')).toBeTruthy();
+    expect(editLink.getAttribute('href')).toContain('/match-logs/1/edit');
+
+    expect(screen.getByTitle('Share match')).toBeTruthy();
+    expect(screen.getByLabelText('Share match')).toBeTruthy();
   });
 
-  it('opens the viewer and plays the video when Watch is clicked', async () => {
+  it('opens the viewer and plays the video when Play media is clicked', async () => {
     renderRow();
 
-    fireEvent.click(screen.getByTitle('Watch match video'));
+    fireEvent.click(screen.getByTitle('Play media'));
 
     const dialog = await screen.findByRole('dialog');
     expect(dialog.getAttribute('aria-label')).toBe('Match media');

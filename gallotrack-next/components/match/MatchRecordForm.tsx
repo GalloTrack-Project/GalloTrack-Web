@@ -81,22 +81,51 @@ export default function MatchRecordForm({
   const { rows } = useRegistryOptions();
   const settings = useUserSettings();
 
-  // Find initial fowl ID
-  const computeInitialFowlId = (): number | null => {
-    if (initialFowlId) return initialFowlId;
+  // Validate and determine initial fowl ID + preselect warning message
+  const { initialFowlIdValue, initialPreselectWarning } = useMemo(() => {
+    if (mode === 'add' && initialFowlId != null) {
+      const found = fowls.find((f) => f.id === initialFowlId);
+      if (!found) {
+        return {
+          initialFowlIdValue: null,
+          initialPreselectWarning: `Chicken #${initialFowlId} was not found in your registry. Please select an active rooster from the list.`,
+        };
+      }
+      if (found.status !== 'Active') {
+        return {
+          initialFowlIdValue: null,
+          initialPreselectWarning: `"${found.name}" is marked as ${found.status}. Only active roosters can be selected for new match records.`,
+        };
+      }
+      if (!isMale(found.gender)) {
+        return {
+          initialFowlIdValue: null,
+          initialPreselectWarning: `"${found.name}" is female (${found.gender || 'Hen'}). Only male roosters can be entered in competitive matches.`,
+        };
+      }
+      return {
+        initialFowlIdValue: found.id,
+        initialPreselectWarning: null,
+      };
+    }
+
+    if (initialFowlId != null) {
+      return { initialFowlIdValue: initialFowlId, initialPreselectWarning: null };
+    }
+
     if (initialRecord) {
-      if (initialRecord.fowl_id != null) return initialRecord.fowl_id;
-      // Fallback by name for legacy records
+      if (initialRecord.fowl_id != null) return { initialFowlIdValue: initialRecord.fowl_id, initialPreselectWarning: null };
       const found = fowls.find(
         (f) => (f.name || '').trim().toLowerCase() === (initialRecord.entry_name || '').trim().toLowerCase()
       );
-      if (found) return found.id;
+      if (found) return { initialFowlIdValue: found.id, initialPreselectWarning: null };
     }
-    return null;
-  };
+
+    return { initialFowlIdValue: null, initialPreselectWarning: null };
+  }, [mode, initialFowlId, initialRecord, fowls]);
 
   const initialFormState: FormState = useMemo(() => ({
-    fowlId: computeInitialFowlId(),
+    fowlId: initialFowlIdValue,
     date: initialRecord?.date || new Date().toISOString().split('T')[0],
     opponentName: initialRecord?.opponent || '',
     opponentBreed: initialRecord?.opponent_breed || '',
@@ -112,9 +141,18 @@ export default function MatchRecordForm({
     cockCount: initialRecord?.cock_count || 2,
     ageCategory: initialRecord?.age_category || 'Cock',
     eventType: initialRecord?.event_type || 'Derby',
-  }), [initialRecord, initialFowlId, fowls]);
+  }), [initialRecord, initialFowlIdValue]);
 
   const [form, setForm] = useState<FormState>(initialFormState);
+  const [preselectWarning, setPreselectWarning] = useState<string | null>(initialPreselectWarning);
+
+  useEffect(() => {
+    setPreselectWarning(initialPreselectWarning);
+    if (initialPreselectWarning) {
+      setForm((prev) => ({ ...prev, fowlId: null }));
+    }
+  }, [initialPreselectWarning]);
+
   const [customEventType, setCustomEventType] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -501,6 +539,15 @@ export default function MatchRecordForm({
       hasError ? 'border-danger focus:border-danger' : 'border-input-border focus:border-success'
     } bg-white dark:bg-input px-3.5 sm:px-4 text-sm sm:text-base font-semibold text-foreground placeholder:text-muted-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px]`;
 
+  // Derive return label for breadcrumb
+  const backLabel = useMemo(() => {
+    const target = (onSuccessRedirect || '').toLowerCase();
+    if (target.includes('/dashboard')) return 'Dashboard';
+    if (target.includes('/lineage')) return 'Lineage Directory';
+    if (target.includes('/profiling')) return 'Chicken Registry';
+    return 'Match Logs';
+  }, [onSuccessRedirect]);
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-32 sm:pb-40 w-full">
       {/* Breadcrumb & Navigation */}
@@ -511,7 +558,7 @@ export default function MatchRecordForm({
           className="hover:text-foreground transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span>Match Logs</span>
+          <span>{backLabel}</span>
         </button>
         <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
         <span className="text-foreground font-bold">
@@ -570,6 +617,7 @@ export default function MatchRecordForm({
                   value={form.fowlId ?? ''}
                   onChange={(e) => {
                     const val = e.target.value ? Number(e.target.value) : null;
+                    setPreselectWarning(null);
                     setForm((prev) => ({ ...prev, fowlId: val }));
                     if (errors.fowlId) setErrors((prev) => ({ ...prev, fowlId: '' }));
                   }}
@@ -591,6 +639,12 @@ export default function MatchRecordForm({
                 </select>
                 <SelectChevron />
               </div>
+              {preselectWarning && (
+                <div role="status" className="mt-1.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-warning text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{preselectWarning}</span>
+                </div>
+              )}
               {errors.fowlId && (
                 <p id="err-fowlId" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
                   {errors.fowlId}

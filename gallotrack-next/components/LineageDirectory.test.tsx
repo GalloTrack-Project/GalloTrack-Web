@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/lineage',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 import type { FowlRecord, PairingStats } from '@/lib/types';
 import LineageDirectory from './LineageDirectory';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';

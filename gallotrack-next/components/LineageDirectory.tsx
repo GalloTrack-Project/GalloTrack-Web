@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
 import {
   Dna,
@@ -569,6 +570,7 @@ export default function LineageDirectory({
   const [activeTab, setActiveTab] = useState<LineageTab>('families');
   const [sortBy, setSortBy] = useState<SortOption>('most');
 
+  const router = useRouter();
   const ui = useUI();
   const settings = useUserSettings();
   const openFights = (f: FowlRecord) => ui.setFightHistoryFowl(f);
@@ -624,17 +626,7 @@ export default function LineageDirectory({
 
   const handleAddMatch = (child: FowlRecord) => {
     setActiveMenuChildId(null);
-    ui.setEditingMatch({
-      id: 0,
-      date: new Date().toISOString().slice(0, 10),
-      entry_name: child.name,
-      breed: child.breed || '',
-      opponent: '',
-      location: '',
-      type: 'Hack Fight',
-      outcome: 'Win',
-      status: 'Completed',
-    } as MatchRecord);
+    router.push(`/match-logs/new?fowlId=${child.id}&returnTo=/lineage`);
   };
 
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);

@@ -1,24 +1,29 @@
 'use client';
 import React from 'react';
-import { Play, Image as ImageIcon, Pencil, Share2 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Play, Pencil, Share2 } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import type { MatchRecord } from '@/lib/types';
 
 type Props = {
   match: MatchRecord;
-  videos: string[];
-  photos: string[];
+  videos?: string[];
+  photos?: string[];
   /** Poster frames index-aligned with `videos`. */
   posters?: (string | null)[];
   /** Show the Edit + Share action buttons (hidden inside read-only surfaces like the share page). */
   showActions?: boolean;
   onEdit?: () => void;
   onShare?: () => void;
+  returnTo?: string;
 };
 
 /**
- * Shared Videos/Photos buttons (with count badges) + Edit/Share actions for a
- * match row. Opens the tabbed MatchMediaViewer with signed URLs.
+ * Shared Actions for a match row:
+ * - Play media (only when media exists, with count badge)
+ * - Edit match record (navigates to /match-logs/[id]/edit with returnTo)
+ * - Share match (opens share modal)
  */
 export default function MatchMediaButtons({
   match,
@@ -28,8 +33,11 @@ export default function MatchMediaButtons({
   showActions = true,
   onEdit,
   onShare,
+  returnTo,
 }: Props) {
   const ui = useUI();
+  const pathname = usePathname();
+
   const effectiveVideos =
     videos && videos.length > 0
       ? videos
@@ -68,23 +76,25 @@ export default function MatchMediaButtons({
 
   const hasVideos = (videoCount > 0 || effectiveVideos.length > 0) && !isProcessing;
   const hasPhotos = photoCount > 0 || effectivePhotos.length > 0;
+  const hasMedia = (hasVideos || hasPhotos) && !isProcessing;
+  const totalMediaCount = (videoCount > 0 ? videoCount : 0) + (photoCount > 0 ? photoCount : 0) || effectiveVideos.length + effectivePhotos.length;
 
-  const openVideos = () =>
+  const openMedia = () =>
     ui.openMatchMediaViewer({
       match,
       videos: effectiveVideos,
       photos: effectivePhotos,
       videoPosters: effectivePosters,
-      tab: 'videos',
+      tab: hasVideos ? 'videos' : 'photos',
     });
-  const openPhotos = () =>
-    ui.openMatchMediaViewer({
-      match,
-      videos: effectiveVideos,
-      photos: effectivePhotos,
-      videoPosters: effectivePosters,
-      tab: 'photos',
-    });
+
+  const safeReturn = returnTo || (pathname && pathname.startsWith('/') ? pathname : '/match-logs');
+  const editHref = `/match-logs/${match.id}/edit${safeReturn ? `?returnTo=${encodeURIComponent(safeReturn)}` : ''}`;
+
+  const closeModals = () => {
+    if (ui.selectedFowlForDetails) ui.setSelectedFowlForDetails(null);
+    if (ui.fightHistoryFowl) ui.setFightHistoryFowl(null);
+  };
 
   return (
     <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
@@ -99,37 +109,25 @@ export default function MatchMediaButtons({
         </span>
       ) : null}
 
-      {hasVideos ? (
+      {hasMedia ? (
         <button
           type="button"
-          title={videoCount > 1 ? `Watch ${videoCount} videos` : 'Watch match video'}
-          aria-label={videoCount > 1 ? `Watch ${videoCount} videos for ${match.entry_name}` : `Watch match video for ${match.entry_name}`}
-          onClick={openVideos}
-          className="relative inline-flex items-center justify-center w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          title="Play media"
+          aria-label="Play media"
+          onClick={(e) => {
+            e.stopPropagation();
+            openMedia();
+          }}
+          className="relative inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Play size={13} fill="currentColor" strokeWidth={0} />
-          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-black px-1 leading-none">
-            {videoCount}
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-black px-1 leading-none pointer-events-none">
+            {totalMediaCount}
           </span>
         </button>
       ) : null}
 
-      {hasPhotos ? (
-        <button
-          type="button"
-          title={photoCount > 1 ? `View ${photoCount} photos` : 'View match photo'}
-          aria-label={photoCount > 1 ? `View ${photoCount} photos for ${match.entry_name}` : `View match photo for ${match.entry_name}`}
-          onClick={openPhotos}
-          className="relative inline-flex items-center justify-center w-8 h-8 rounded-sm bg-teal-500/10 border border-teal-500/20 text-teal hover:bg-teal-500/20 hover:border-teal-500/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <ImageIcon size={13} aria-hidden="true" />
-          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-600 text-white text-xs font-black px-1 leading-none">
-            {photoCount}
-          </span>
-        </button>
-      ) : null}
-
-      {!hasVideos && !hasPhotos && !isProcessing ? (
+      {!hasMedia && !isProcessing ? (
         <span className="text-xs font-bold text-muted-foreground/70" title="No videos or photos yet">
           No media
         </span>
@@ -138,29 +136,52 @@ export default function MatchMediaButtons({
       {showActions ? (
         <>
           <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-border" />
+          {onEdit ? (
+            <button
+              type="button"
+              title="Edit match record"
+              aria-label="Edit match record"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeModals();
+                onEdit();
+              }}
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Pencil size={13} />
+            </button>
+          ) : (
+            <Link
+              href={editHref}
+              title="Edit match record"
+              aria-label="Edit match record"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeModals();
+              }}
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Pencil size={13} />
+            </Link>
+          )}
+
           <button
             type="button"
-            title="Edit match"
-            aria-label={`Edit match ${match.entry_name} vs ${match.opponent || 'opponent'}`}
-            onClick={() => (onEdit ? onEdit() : ui.setEditingMatch(match))}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Pencil size={13} />
-          </button>
-          <button
-            type="button"
-            title="Share link"
-            aria-label={`Share match ${match.entry_name} vs ${match.opponent || 'opponent'}`}
-            onClick={() =>
-              onShare
-                ? onShare()
-                : ui.setShareTarget({
-                    type: 'match',
-                    id: match.id,
-                    label: `${match.entry_name} vs ${match.opponent || 'Opponent'} — ${match.date || ''}`,
-                  })
-            }
-            className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            title="Share match"
+            aria-label="Share match"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onShare) {
+                onShare();
+              } else {
+                ui.setShareTarget({
+                  type: 'match',
+                  id: match.id,
+                  label: `${match.entry_name} vs ${match.opponent || 'Opponent'} — ${match.date || ''}`,
+                });
+              }
+            }}
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Share2 size={13} />
           </button>

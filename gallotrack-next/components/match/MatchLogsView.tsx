@@ -10,7 +10,6 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Edit2,
   Trophy,
   Swords,
 } from 'lucide-react';
@@ -517,22 +516,13 @@ export default function MatchLogsView() {
                       </td>
 
                       <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-2">
-                          <MatchMediaButtons
-                            match={log}
-                            videos={videosFor(matchMedia, log.id, log)}
-                            photos={photosFor(matchMedia, log.id, log)}
-                            posters={postersFor(matchMedia, log.id, log)}
-                          />
-                          <Link
-                            href={`/match-logs/${log.id}/edit`}
-                            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                            title="Edit Match Record"
-                            aria-label={`Edit Match #${log.id}`}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Link>
-                        </div>
+                        <MatchMediaButtons
+                          match={log}
+                          videos={videosFor(matchMedia, log.id, log)}
+                          photos={photosFor(matchMedia, log.id, log)}
+                          posters={postersFor(matchMedia, log.id, log)}
+                          returnTo="/match-logs"
+                        />
                       </td>
                     </tr>
                   );

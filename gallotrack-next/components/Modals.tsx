@@ -22,7 +22,6 @@ import PerFowlBreakdownModal from './modals/PerFowlBreakdownModal';
 import FightHistoryModal from './modals/FightHistoryModal';
 import MatchMediaViewer from './match/MatchMediaViewer';
 import ShareModal from './modals/ShareModal';
-import EditMatchModal from './modals/EditMatchModal';
 
 type ModalsProps = {
   selectedFowlForDetails: FowlRecord | null;
@@ -275,7 +274,6 @@ export default function Modals(props: ModalsProps) {
       <FightHistoryModal />
       <MatchMediaViewer />
       <ShareModal />
-      <EditMatchModal />
     </>
   );
 }

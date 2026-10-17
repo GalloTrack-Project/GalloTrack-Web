@@ -16,7 +16,6 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/contexts/ui-context', () => ({
   useUI: () => ({
     openMatchMediaViewer: mockOpenMatchMediaViewer,
-    setEditingMatch: vi.fn(),
     setShareTarget: vi.fn(),
   }),
 }));
@@ -107,7 +106,7 @@ describe('Match Media Resolution and MatchLogsTable', () => {
     expect(enriched[1].photos).toEqual([]);
   });
 
-  it('renders both Videos and Photos buttons for a match with one video and one photo', () => {
+  it('renders Play media button and exactly one Edit match record link for a match with media', () => {
     const matchesWithMedia: MatchRecord[] = [
       {
         id: 201,
@@ -128,34 +127,28 @@ describe('Match Media Resolution and MatchLogsTable', () => {
 
     render(<MatchLogsTable matches={matchesWithMedia} />);
 
-    // Play video button exists with count "1"
-    const playBtn = screen.getByRole('button', { name: /Watch match video for Iron Lemon/i });
+    // Play media button exists with combined count "2"
+    const playBtn = screen.getByRole('button', { name: 'Play media' });
     expect(playBtn).toBeInTheDocument();
-    expect(playBtn).toHaveTextContent('1');
+    expect(playBtn).toHaveTextContent('2');
 
-    // View photo button exists with count "1"
-    const photoBtn = screen.getByRole('button', { name: /View match photo for Iron Lemon/i });
-    expect(photoBtn).toBeInTheDocument();
-    expect(photoBtn).toHaveTextContent('1');
+    // Exactly one Edit match record action exists linking to edit page with returnTo
+    const editLinks = screen.getAllByRole('link', { name: 'Edit match record' });
+    expect(editLinks).toHaveLength(1);
+    expect(editLinks[0].getAttribute('href')).toBe('/match-logs/201/edit?returnTo=%2Fdashboard');
+
+    // Share action exists
+    expect(screen.getByRole('button', { name: 'Share match' })).toBeInTheDocument();
 
     // "No media" should NOT appear for this row
     expect(screen.queryByText('No media')).not.toBeInTheDocument();
 
-    // Clicking Videos button opens the media viewer focused on videos tab
+    // Clicking Play media button opens the media viewer
     fireEvent.click(playBtn);
     expect(mockOpenMatchMediaViewer).toHaveBeenCalledWith(
       expect.objectContaining({
         tab: 'videos',
         videos: ['https://example.com/videos/iron-lemon.mp4'],
-      })
-    );
-
-    // Clicking Photos button opens the media viewer focused on photos tab
-    fireEvent.click(photoBtn);
-    expect(mockOpenMatchMediaViewer).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tab: 'photos',
-        photos: ['https://example.com/photos/iron-lemon.jpg'],
       })
     );
   });
@@ -182,8 +175,9 @@ describe('Match Media Resolution and MatchLogsTable', () => {
     render(<MatchLogsTable matches={emptyMatch} />);
 
     expect(screen.getByText('No media')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Watch match video/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /View match photo/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play media' })).not.toBeInTheDocument();
+    // Exactly one Edit match record link still exists
+    expect(screen.getAllByRole('link', { name: 'Edit match record' })).toHaveLength(1);
   });
 
   it('confirms videos being converted show "Processing…" instead of "No media"', () => {

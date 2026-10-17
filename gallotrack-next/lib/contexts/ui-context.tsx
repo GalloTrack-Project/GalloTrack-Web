@@ -52,8 +52,6 @@ interface UIContextValue {
   openMatchVideoPlayer: (match: MatchRecord, urls: string[], posters?: (string | null)[]) => void;
   /** Compat: open the viewer focused on a photo gallery. */
   setImageViewerUrl: (v: string | null) => void;
-  editingMatch: MatchRecord | null;
-  setEditingMatch: (m: MatchRecord | null) => void;
   shareTarget: { type: 'match' | 'fowl'; id: number; label: string } | null;
   setShareTarget: (t: { type: 'match' | 'fowl'; id: number; label: string } | null) => void;
 }
@@ -112,7 +110,6 @@ export function UIProvider({
   const [showPerFowlBreakdownModal, setShowPerFowlBreakdownModal] = useState(false);
 
   const [matchMediaViewer, setMatchMediaViewer] = useState<MatchMediaViewerConfig | null>(null);
-  const [editingMatch, setEditingMatch] = useState<MatchRecord | null>(null);
   const [shareTarget, setShareTarget] = useState<{ type: 'match' | 'fowl'; id: number; label: string } | null>(null);
 
   const openMatchMediaViewer = React.useCallback((cfg: MatchMediaViewerConfig) => {
@@ -155,7 +152,6 @@ export function UIProvider({
     matchMediaViewer, openMatchMediaViewer, closeMatchMediaViewer,
     openMatchVideoPlayer,
     setImageViewerUrl,
-    editingMatch, setEditingMatch,
     shareTarget, setShareTarget,
   };
 
