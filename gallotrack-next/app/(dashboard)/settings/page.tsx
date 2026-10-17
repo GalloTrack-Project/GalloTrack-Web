@@ -132,6 +132,7 @@ export default function SettingsPage() {
     label: string
   } | null>(null)
   const [dangerConfirmInput, setDangerConfirmInput] = useState('')
+  const [alsoDeleteMatches, setAlsoDeleteMatches] = useState(false)
   const [userEmail, setUserEmail] = useState('')
   const [userName, setUserName] = useState('')
   const [userCreatedAt, setUserCreatedAt] = useState('')
@@ -354,6 +355,7 @@ export default function SettingsPage() {
   async function openDangerModal(type: 'match' | 'fowl' | 'all', title: string, label: string) {
     setDangerModal({ type, title, label })
     setDangerConfirmInput('')
+    setAlsoDeleteMatches(false)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {
@@ -403,13 +405,20 @@ export default function SettingsPage() {
         const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
         if (fowlErr) throw fowlErr
 
-        // 6. Purge storage files for fowl
+        // 5b. If user checked "Also delete these match records (recommended)", remove matches and match shares
+        if (alsoDeleteMatches) {
+          await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
+          const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
+          if (matchErr) throw matchErr
+        }
+
+        // 6. Purge storage files for fowl (and match files if alsoDeleteMatches is checked)
         if (session?.access_token) {
           try {
             const res = await fetch('/api/user/purge-media', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-              body: JSON.stringify({ scope: 'fowl' }),
+              body: JSON.stringify({ scope: alsoDeleteMatches ? 'all' : 'fowl' }),
             })
             mediaResult = await res.json()
           } catch (e: unknown) {
@@ -419,7 +428,7 @@ export default function SettingsPage() {
 
         const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
         const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
-        setClearNotice(`Chicken profiles, breeding pairings, and counters deleted.${mediaMsg}${errorMsg}`)
+        setClearNotice(`Chicken profiles, breeding pairings, counters${alsoDeleteMatches ? ', and match records' : ''} deleted.${mediaMsg}${errorMsg}`)
       } else if (type === 'match') {
         // 1. Delete share links for matches
         await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
@@ -496,16 +505,32 @@ export default function SettingsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const [fowls, matches] = await Promise.all([
+      const [fowls, matches, pairings] = await Promise.all([
         supabase.from('fowl').select('*').eq('user_id', user.id),
         supabase.from('match').select('*').eq('user_id', user.id),
+        supabase.from('breeding_pairings').select('*').eq('user_id', user.id),
       ])
-      const blob = new Blob([JSON.stringify({ exported_at: new Date().toISOString(), farm: settings.farm_name || 'GalloTrack', fowls: fowls.data || [], matches: matches.data || [] }, null, 2)], { type: 'application/json' })
+      const blob = new Blob(
+        [
+          JSON.stringify(
+            {
+              exported_at: new Date().toISOString(),
+              farm: settings.farm_name || 'GalloTrack',
+              fowls: fowls.data || [],
+              matches: matches.data || [],
+              breeding_pairings: pairings.data || [],
+            },
+            null,
+            2,
+          ),
+        ],
+        { type: 'application/json' },
+      )
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = `gallotrack-backup-${new Date().toISOString().split('T')[0]}.json`
       a.click()
-      setClearNotice('Data exported successfully.')
+      setClearNotice('Data exported successfully (chickens, matches, and breeding pairings).')
       setTimeout(() => setClearNotice(''), 5000)
     } catch {
       setClearNotice('Export failed.')
@@ -524,14 +549,25 @@ export default function SettingsPage() {
         setClearNotice(`Error: ${parsed.error}`)
         return
       }
-      const summary = `${parsed.fowls} chicken${parsed.fowls === 1 ? '' : 's'} and ${parsed.matches} match${parsed.matches === 1 ? '' : 'es'}`
-      if (!window.confirm(`Restore ${summary} from "${file.name}"? Records already in the registry are skipped.`)) return
+      const summary = `${parsed.fowls} chicken${parsed.fowls === 1 ? '' : 's'}, ${parsed.matches} match${parsed.matches === 1 ? '' : 'es'}, and ${parsed.pairings} breeding pairing${parsed.pairings === 1 ? '' : 's'}`
+      if (
+        !window.confirm(
+          `Restore ${summary} from "${file.name}"? Records already in the registry are skipped.\n\nNote: Media files (photos and videos) and status history audit logs are not included. For a complete server and media backup, use: npm run db:backup`,
+        )
+      ) {
+        return
+      }
 
       const result = await restoreBackup(parsed.backup, { includeProfiles: false })
+      const collisionMsg = result.collisions.length > 0 ? ` (${result.collisions.length} colliding record(s) skipped)` : ''
       if (result.errors.length > 0) {
-        setClearNotice(`Error: restored ${result.fowls} chickens and ${result.matches} matches, but ${result.errors.length} row(s) failed — ${result.errors[0]}`)
+        setClearNotice(
+          `Error: restored ${result.fowls} chickens, ${result.matches} matches, ${result.pairings} pairings, but ${result.errors.length} failed — ${result.errors[0]}${collisionMsg}`,
+        )
       } else {
-        setClearNotice(`Restored ${result.fowls} chickens and ${result.matches} matches (${result.skipped} already present were skipped).`)
+        setClearNotice(
+          `Restored ${result.fowls} chickens, ${result.matches} matches, and ${result.pairings} breeding pairings${collisionMsg}.`,
+        )
       }
       window.dispatchEvent(new Event('admin-profile-update'))
       void fowl.fetchDatabaseResources()
@@ -773,13 +809,13 @@ export default function SettingsPage() {
               </div>
             )}
             <SectionCard title="Backup & Restore" description="Download your data for safekeeping, or reload an earlier backup">
-              <Field label="Export All Data" description="Data export of chicken and match records. Photos and videos are not included — for a complete full backup, use the production backup script (npm run db:backup).">
+              <Field label="Export All Data" description="Data export of chicken profiles, match records, and breeding pairings. Photos, videos, and status history are not included — for a complete full backup, use the production backup script (npm run db:backup).">
                 <button type="button" onClick={handleExport} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                   Export JSON
                 </button>
               </Field>
-              <Field label="Restore from Backup" description="Upload a GalloTrack JSON backup — records already in the registry are skipped, nothing is deleted">
+              <Field label="Restore from Backup" description="Upload a GalloTrack JSON backup — records already in the registry are skipped, lineage and codes are preserved. Media files and status history are not included; recommend npm run db:backup for a complete backup.">
                 <div className="flex flex-wrap items-center gap-3 py-1">
                   <input
                     ref={restoreInputRef}
@@ -797,7 +833,7 @@ export default function SettingsPage() {
                     {restoring && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
                     {restoring ? 'Restoring...' : 'Restore JSON'}
                   </button>
-                  <span className="text-xs font-semibold text-muted-foreground">Accepts backups exported from this tab or from the admin console.</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Accepts backups exported from this tab or admin console. Photos/videos not included — use <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">npm run db:backup</code> for full media.</span>
                 </div>
               </Field>
             </SectionCard>
@@ -897,6 +933,7 @@ export default function SettingsPage() {
                           <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.fowlImages}</strong> Storage image file(s) in owner directory</li>
                           <li>Status history audit records and photo links (cascaded)</li>
                           <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
+                          <li><strong className="text-amber-700 dark:text-amber-300 font-bold">{(fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length}</strong> Match record(s) will become unlinked (historical entries)</li>
                         </>
                       )}
                       {dangerModal.type === 'match' && (
@@ -920,6 +957,26 @@ export default function SettingsPage() {
                       )}
                     </ul>
                   </div>
+
+                  {/* Option to also delete matches when clearing chicken profiles */}
+                  {dangerModal.type === 'fowl' && (fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length > 0 && (
+                    <label className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50/80 dark:bg-amber-950/30 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={alsoDeleteMatches}
+                        onChange={(e) => setAlsoDeleteMatches(e.target.checked)}
+                        className="mt-0.5 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                      />
+                      <div className="space-y-0.5 text-xs">
+                        <span className="font-bold text-amber-900 dark:text-amber-200 block">
+                          Also delete these {(fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length} match record(s) (recommended)
+                        </span>
+                        <span className="text-amber-700 dark:text-amber-300 block font-medium">
+                          If checked, matches formerly linked to these chickens will be permanently deleted along with their videos and photos, preventing unlinked orphan entries.
+                        </span>
+                      </div>
+                    </label>
+                  )}
 
                   {/* Typed Confirmation Field */}
                   <div className="space-y-1.5 pt-1">

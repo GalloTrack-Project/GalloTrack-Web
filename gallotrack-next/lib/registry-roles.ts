@@ -745,8 +745,7 @@ export function extractFoughtLookups(matchHistory: MatchRecord[]): {
     if (m.fowl_id != null && typeof m.fowl_id === 'number') {
       foughtFowlIds.add(m.fowl_id);
     }
-    const name = (m.entry_name || '').trim().toLowerCase();
-    if (name) foughtNames.add(name);
+    // Orphan matches (fowl_id == null) are historical entries and do not attach to chickens by name fallback
   }
   return { foughtFowlIds, foughtNames };
 }

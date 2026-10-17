@@ -212,4 +212,43 @@ describe('Danger Zone Deletion & Owner Data Isolation', () => {
     expect(result.notice).toContain('Storage warning: S3 Storage Timeout on match-videos');
     expect(errorReporter).toHaveBeenCalledWith('Storage warning: S3 Storage Timeout on match-videos');
   });
+
+  it('supports alsoDeleteMatches option during Clear Chicken Profiles to delete matches alongside fowl', async () => {
+    const database = {
+      fowl: [
+        { id: 1, user_id: OWNER_ID, name: 'Rooster 1' },
+      ],
+      match: [
+        { id: 101, user_id: OWNER_ID, fowl_id: 1 as number | null, entry_name: 'Rooster 1' },
+      ],
+      breeding_pairings: [
+        { id: 201, user_id: OWNER_ID, sire_id: 1 },
+      ],
+    };
+
+    const clearFowl = (userId: string, alsoDeleteMatches: boolean) => {
+      // 1. Delete breeding pairings
+      database.breeding_pairings = database.breeding_pairings.filter((r) => r.user_id !== userId);
+      // 2. Delete fowl
+      database.fowl = database.fowl.filter((r) => r.user_id !== userId);
+      // 3. Delete matches if option checked
+      if (alsoDeleteMatches) {
+        database.match = database.match.filter((r) => r.user_id !== userId);
+      } else {
+        // FK ON DELETE SET NULL simulation
+        database.match = database.match.map((m) => (m.user_id === userId ? { ...m, fowl_id: null } : m));
+      }
+    };
+
+    // Case A: alsoDeleteMatches is false -> matches survive as historical entries with null fowl_id
+    clearFowl(OWNER_ID, false);
+    expect(database.fowl).toHaveLength(0);
+    expect(database.match).toHaveLength(1);
+    expect(database.match[0].fowl_id).toBeNull();
+
+    // Case B: alsoDeleteMatches is true -> matches are deleted too
+    clearFowl(OWNER_ID, true);
+    expect(database.match).toHaveLength(0);
+  });
 });
+

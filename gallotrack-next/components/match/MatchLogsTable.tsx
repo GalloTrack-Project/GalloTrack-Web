@@ -26,22 +26,9 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
   const { fowls, matchHistory, matchMedia, birdCodes } = useFowl();
   const rows = matches ?? matchHistory;
 
-  const codeByName = React.useMemo(() => {
-    const m = new Map<string, string>();
-    fowls.forEach((f) => {
-      const code = birdCodes.get(String(f.id));
-      const k = (f.name || '').trim().toLowerCase();
-      if (code && k) m.set(k, code);
-    });
-    return m;
-  }, [fowls, birdCodes]);
-
-  const hatchByName = React.useMemo(() => {
-    const m = new Map<string, string>();
-    fowls.forEach((f) => {
-      const k = (f.name || '').trim();
-      if (k && f.birthdate) m.set(k, f.birthdate);
-    });
+  const fowlById = React.useMemo(() => {
+    const m = new Map<number, any>();
+    fowls.forEach((f) => m.set(f.id, f));
     return m;
   }, [fowls]);
 
@@ -68,9 +55,10 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
             </tr>
           ) : (
             rows.map((log) => {
-              const nameKey = (log.entry_name || '').trim().toLowerCase();
-              const code = codeByName.get(nameKey);
-              const hatch = hatchByName.get((log.entry_name || '').trim());
+              const fowl = log.fowl_id != null ? fowlById.get(log.fowl_id) : null;
+              const code = fowl ? birdCodes.get(String(fowl.id)) : '';
+              const hatch = fowl?.birthdate;
+              const isOrphan = log.fowl_id == null;
               return (
                 <tr
                   key={log.id}
@@ -79,7 +67,7 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                 >
                   <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">{log.date}</td>
                   <td className="p-4">
-                    <div className="flex items-center space-x-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><ChickenIcon className="w-3.5 h-3.5 text-success" /></div>
                       {code && (
                         <span className="text-sm font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase">
@@ -87,6 +75,11 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                         </span>
                       )}
                       <span className="font-bold text-card-foreground group-hover:text-emerald-600 transition-colors">{log.entry_name}</span>
+                      {isOrphan && (
+                        <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                          Historical entry (no profile linked)
+                        </span>
+                      )}
                     </div>
                     <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
                       {log.breed || '—'}{hatch ? ` · hatch ${hatch}` : ''}

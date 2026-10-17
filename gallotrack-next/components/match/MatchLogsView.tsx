@@ -166,9 +166,8 @@ export default function MatchLogsView() {
     if (chickenFilter !== 'ALL') {
       const targetId = Number(chickenFilter);
       rows = rows.filter((m) => {
-        if (m.fowl_id != null) return m.fowl_id === targetId;
-        const matched = fowlByName.get((m.entry_name || '').trim().toLowerCase());
-        return matched?.id === targetId;
+        // Authoritative fowl_id only: orphan matches (fowl_id == null) never match by name fallback
+        return m.fowl_id === targetId;
       });
     }
 
@@ -184,7 +183,7 @@ export default function MatchLogsView() {
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       rows = rows.filter((m) => {
-        const fowl = m.fowl_id ? fowlById.get(m.fowl_id) : fowlByName.get((m.entry_name || '').trim().toLowerCase());
+        const fowl = m.fowl_id != null ? fowlById.get(m.fowl_id) : null;
         const code = fowl ? birdCodes.get(String(fowl.id)) : '';
         const name = (m.entry_name || '').toLowerCase();
         const opponent = (m.opponent || '').toLowerCase();
@@ -426,11 +425,10 @@ export default function MatchLogsView() {
               </thead>
               <tbody className="divide-y divide-border text-muted-foreground font-semibold">
                 {paginatedRows.map((log) => {
-                  const fowl = log.fowl_id
-                    ? fowlById.get(log.fowl_id)
-                    : fowlByName.get((log.entry_name || '').trim().toLowerCase());
+                  const fowl = log.fowl_id != null ? fowlById.get(log.fowl_id) : null;
                   const code = fowl ? birdCodes.get(String(fowl.id)) : '';
                   const hatch = fowl?.birthdate;
+                  const isOrphan = log.fowl_id == null;
 
                   return (
                     <tr
@@ -443,7 +441,7 @@ export default function MatchLogsView() {
                       </td>
 
                       <td className="p-4">
-                        <div className="flex items-center space-x-2.5">
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                             <ChickenIcon className="w-3.5 h-3.5 text-success" />
                           </div>
@@ -455,6 +453,11 @@ export default function MatchLogsView() {
                           <span className="font-bold text-card-foreground group-hover:text-emerald-600 transition-colors">
                             {log.entry_name}
                           </span>
+                          {isOrphan && (
+                            <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                              Historical entry (no profile linked)
+                            </span>
+                          )}
                         </div>
                         <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
                           {log.breed || '—'}

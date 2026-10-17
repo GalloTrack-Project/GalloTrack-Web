@@ -35,6 +35,22 @@ const targetEnv = getArg('target') || 'staging';
 const isDryRun = !hasFlag('execute');
 const confirmedProd = hasFlag('confirm-restore-to-production-DANGER');
 
+function getAllFilesRecursively(dir: string, baseDir: string = dir): string[] {
+  let results: string[] = [];
+  if (!fs.existsSync(dir)) return results;
+  const list = fs.readdirSync(dir);
+  for (const file of list) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat && stat.isDirectory()) {
+      results = results.concat(getAllFilesRecursively(fullPath, baseDir));
+    } else {
+      results.push(path.relative(baseDir, fullPath).replace(/\\/g, '/'));
+    }
+  }
+  return results;
+}
+
 async function restore() {
   console.log(`=======================================================`);
   console.log(`🚨 GALLOTRACK DATABASE & STORAGE RESTORE UTILITY`);
@@ -67,6 +83,7 @@ async function restore() {
   }
 
   const dbJsonPath = path.join(selectedBackupDir, 'database.json');
+  const manifestPath = path.join(selectedBackupDir, 'manifest.json');
   const metadataPath = path.join(selectedBackupDir, 'metadata.json');
 
   if (!fs.existsSync(dbJsonPath)) {
@@ -75,7 +92,11 @@ async function restore() {
   }
 
   const dbData: Record<string, any[]> = JSON.parse(fs.readFileSync(dbJsonPath, 'utf8'));
-  const metadata = fs.existsSync(metadataPath) ? JSON.parse(fs.readFileSync(metadataPath, 'utf8')) : null;
+  const manifest = fs.existsSync(manifestPath)
+    ? JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+    : fs.existsSync(metadataPath)
+    ? JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
+    : null;
 
   // Determine target URL and key
   let targetUrl = '';
@@ -85,7 +106,7 @@ async function restore() {
     targetUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
     targetKey = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!confirmedProd) {
+    if (!confirmedProd && !isDryRun) {
       console.error(`\n⛔ PRODUCTION RESTORE SAFETY BLOCK:`);
       console.error(`   Target environment is PRODUCTION (${targetUrl}).`);
       console.error(`   Restoring to production will OVERWRITE current production data!`);
@@ -104,31 +125,50 @@ async function restore() {
   }
 
   console.log(`\nBackup Folder: ${path.basename(selectedBackupDir)}`);
-  console.log(`Backup Timestamp: ${metadata?.timestamp || 'Unknown'}`);
+  console.log(`Backup Timestamp: ${manifest?.timestamp || 'Unknown'}`);
+  console.log(`Owner Scope: ${manifest?.ownerScope || 'All Users'}`);
   console.log(`Target Environment: ${targetEnv.toUpperCase()}`);
   console.log(`Target Supabase Host: ${new URL(targetUrl).hostname}`);
   console.log(`Execution Mode: ${isDryRun ? '🔍 DRY-RUN (No changes will be made)' : '⚡ LIVE EXECUTION'}\n`);
 
   console.log(`--- EXPECTED RESTORE ROW COUNTS ---`);
+  let totalRows = 0;
   for (const [table, rows] of Object.entries(dbData)) {
     console.log(`  • Table '${table}': ${rows.length} rows to restore`);
+    totalRows += rows.length;
   }
+  console.log(`  Total: ${totalRows} rows across ${Object.keys(dbData).length} tables`);
 
   const storageDir = path.join(selectedBackupDir, 'storage');
+  const storageFilesByBucket: Record<string, string[]> = {};
+  let totalFiles = 0;
+
   if (fs.existsSync(storageDir)) {
     console.log(`\n--- EXPECTED RESTORE STORAGE BUCKETS ---`);
     for (const bDir of fs.readdirSync(storageDir)) {
       const bPath = path.join(storageDir, bDir);
       if (fs.statSync(bPath).isDirectory()) {
-        const fileCount = fs.readdirSync(bPath).length;
-        console.log(`  • Bucket '${bDir}': ${fileCount} files to restore`);
+        const files = getAllFilesRecursively(bPath);
+        storageFilesByBucket[bDir] = files;
+        totalFiles += files.length;
+        console.log(`  • Bucket '${bDir}': ${files.length} file(s) to restore`);
+        for (const f of files.slice(0, 5)) {
+          console.log(`      - ${f}`);
+        }
+        if (files.length > 5) {
+          console.log(`      ... and ${files.length - 5} more`);
+        }
       }
     }
+    console.log(`  Total: ${totalFiles} storage file(s) across ${Object.keys(storageFilesByBucket).length} bucket(s)`);
   }
 
   if (isDryRun) {
     console.log(`\n=======================================================`);
     console.log(`🔍 DRY-RUN SUMMARY COMPLETE`);
+    console.log(`Database tables ready: ${Object.keys(dbData).length} (${totalRows} rows)`);
+    console.log(`Storage files ready: ${totalFiles} objects`);
+    console.log(`NO CHANGES WERE APPLIED to ${targetEnv.toUpperCase()}.`);
     console.log(`To execute this restore against ${targetEnv.toUpperCase()}, run:`);
     console.log(`  npx tsx scripts/restore-database.ts --backup=${path.basename(selectedBackupDir)} --target=${targetEnv} --execute${targetEnv === 'production' ? ' --confirm-restore-to-production-DANGER' : ''}`);
     console.log(`=======================================================\n`);
@@ -146,14 +186,25 @@ async function restore() {
     'farms',
     'strains',
     'leg_colors',
+    'registry_options',
+    'user_settings',
     'fowl',
+    'fowl_identifier_counters',
+    'safety_incidents',
     'breeding_pairings',
     'match',
+    'match_photos',
+    'match_videos',
+    'fowl_photos',
+    'fowl_status_history',
     'share_links',
     'admin_audit_logs',
   ];
 
-  for (const table of restoreOrder) {
+  // Include any extra tables in dbData not explicitly in restoreOrder
+  const allTablesToRestore = Array.from(new Set([...restoreOrder, ...Object.keys(dbData)]));
+
+  for (const table of allTablesToRestore) {
     const rows = dbData[table] || [];
     if (rows.length === 0) continue;
     console.log(`  Restoring ${rows.length} rows into '${table}'...`);
@@ -173,22 +224,18 @@ async function restore() {
   // Restore Storage Files
   if (fs.existsSync(storageDir)) {
     console.log(`\n--- EXECUTING STORAGE RESTORE ---`);
-    for (const bDir of fs.readdirSync(storageDir)) {
-      const bPath = path.join(storageDir, bDir);
-      if (!fs.statSync(bPath).isDirectory()) continue;
+    for (const [bucket, files] of Object.entries(storageFilesByBucket)) {
+      console.log(`  Restoring ${files.length} objects into bucket '${bucket}'...`);
 
-      const files = fs.readdirSync(bPath);
-      console.log(`  Restoring ${files.length} objects into bucket '${bDir}'...`);
-
-      for (const fileName of files) {
-        const filePath = path.join(bPath, fileName);
+      for (const relPath of files) {
+        const filePath = path.join(storageDir, bucket, relPath);
         const fileContent = fs.readFileSync(filePath);
-        const { error } = await supabase.storage.from(bDir).upload(fileName, fileContent, { upsert: true });
+        const { error } = await supabase.storage.from(bucket).upload(relPath, fileContent, { upsert: true });
         if (error) {
-          console.warn(`    ⚠️ Failed uploading ${fileName} to bucket '${bDir}': ${error.message}`);
+          console.warn(`    ⚠️ Failed uploading ${relPath} to bucket '${bucket}': ${error.message}`);
         }
       }
-      console.log(`  ✓ Restored bucket '${bDir}'`);
+      console.log(`  ✓ Restored bucket '${bucket}'`);
     }
   }
 

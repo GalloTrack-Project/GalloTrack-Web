@@ -301,7 +301,11 @@ export async function promoteToBreeder(
 export async function uploadFowlImage(file: File): Promise<{ url?: string; path?: string; error?: string }> {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `fowl/${fileName}`;
+  
+  // Safe namespacing: write new uploads under owner prefix so purge-media cleanly clears them
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  const filePath = user ? `${user.id}/fowl/${fileName}` : `fowl/${fileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from('fowl-images')
