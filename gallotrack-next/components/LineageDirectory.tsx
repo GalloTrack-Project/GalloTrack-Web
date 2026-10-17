@@ -2347,9 +2347,12 @@ export default function LineageDirectory({
   };
 
   return (
-    <div className="space-y-4 animate-fadeIn">
-      {/* STICKY TOP CONTAINER: Compact Header + Underline Tabs + Context Bar */}
-      <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-background/95 backdrop-blur-md pt-1 pb-2.5 space-y-2 border-b border-border shadow-2xs">
+    <div className="space-y-4 animate-fadeIn pb-[calc(65px+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-6">
+      {/* TOP CONTAINER: Scrolls naturally on phones (< md) so it never covers content; sticky only from md up */}
+      <div
+        data-testid="lineage-top-container"
+        className="static md:sticky md:top-0 z-20 bg-background/95 backdrop-blur-md pt-1 pb-2.5 space-y-2 border-b border-border shadow-2xs"
+      >
         {/* A. Compact Header Row (~56px tall) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-h-[48px] sm:min-h-[56px] px-1">
           <div className="flex items-center gap-3 min-w-0">
@@ -2376,7 +2379,7 @@ export default function LineageDirectory({
               <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-none truncate">
                 Family Lineage Directory
               </h1>
-              <p className="text-xs text-muted-foreground font-semibold truncate mt-1">
+              <p className="text-xs text-muted-foreground font-semibold mt-1 break-words line-clamp-2 sm:line-clamp-none">
                 Track sibling groups, sire &amp; dam offspring trees to compare performance per bloodline
               </p>
             </div>
@@ -2494,15 +2497,16 @@ export default function LineageDirectory({
           </div>
         </div>
 
-        {/* B. Underline-Style Tabs Row */}
+        {/* B. Underline-Style Tabs Row: 2-column grid on phones (< sm) with 5th tab spanning 2 cols; flex on larger screens */}
         <div className="border-b border-border/80 -mb-px">
           <div
             role="tablist"
             aria-label="Family Lineage Directory Tabs"
-            className="flex flex-wrap items-center gap-1 sm:gap-2"
+            className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2"
           >
             {tabs.map((tab, idx) => {
               const isSelected = activeTab === tab.id;
+              const isFifthTab = idx === 4;
               return (
                 <button
                   key={tab.id}
@@ -2518,22 +2522,26 @@ export default function LineageDirectory({
                   tabIndex={isSelected ? 0 : -1}
                   onClick={() => setActiveTab(tab.id)}
                   onKeyDown={(e) => handleTabKeyDown(e, idx)}
-                  className={`group relative inline-flex items-center gap-2 px-3 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 rounded-t-sm whitespace-nowrap min-h-[44px] ${
+                  className={`group relative flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 rounded-t-sm min-h-[44px] ${
+                    isFifthTab ? 'col-span-2 sm:col-span-1' : 'col-span-1'
+                  } ${
                     isSelected
                       ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 font-extrabold'
                       : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border/80'
                   }`}
                 >
-                  <span
-                    className={`transition-colors ${
-                      isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground group-hover:text-foreground'
-                    }`}
-                  >
-                    {tab.icon}
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <span
+                      className={`shrink-0 transition-colors ${
+                        isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground group-hover:text-foreground'
+                      }`}
+                    >
+                      {tab.icon}
+                    </span>
+                    <span className="truncate">{tab.label}</span>
                   </span>
-                  <span>{tab.label}</span>
                   <span
-                    className={`text-xs font-black px-2 py-0.5 rounded-full transition-colors ${
+                    className={`text-xs font-black px-1.5 sm:px-2 py-0.5 rounded-full transition-colors shrink-0 ${
                       isSelected
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                         : 'bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground'
@@ -2547,10 +2555,10 @@ export default function LineageDirectory({
           </div>
         </div>
 
-        {/* C. Context Bar Row (~38px tall) */}
+        {/* C. Context Bar Row: Compact static bar below md, counts wrap, Sort and Expand/Collapse in one row */}
         <div
           data-testid="lineage-context-bar"
-          className="min-h-[38px] py-1.5 px-3 sm:px-4 bg-muted/40 rounded-md border border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+          className="min-h-[38px] py-2 px-3 sm:px-4 bg-muted/40 rounded-md border border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs static"
         >
           {/* Left: Tab-specific summary text */}
           <div className="flex items-center gap-1.5 flex-wrap text-muted-foreground font-medium">

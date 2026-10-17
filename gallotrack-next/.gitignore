@@ -51,3 +51,6 @@ backups/
 
 # video recording output (webm/mp4/manifest/auth state)
 recordings/
+
+# scratch and screenshots
+scratch/

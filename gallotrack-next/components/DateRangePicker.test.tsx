@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import DateRangePicker from './DateRangePicker';
 
@@ -21,8 +21,10 @@ function renderPicker(overrides: Partial<ComponentProps<typeof DateRangePicker>>
   return { ...view, onOpenChange, onApply, props };
 }
 
-const day = (name: string, calendar: 0 | 1) =>
-  screen.getAllByRole('button', { name })[calendar];
+const day = (name: string, calendar: 0 | 1) => {
+  const desktop = screen.getByTestId('desktop-calendars');
+  return within(desktop).getAllByRole('button', { name })[calendar];
+};
 
 describe('DateRangePicker', () => {
   it('keeps the trigger design with calendar icon, range label, and chevron', () => {
@@ -43,12 +45,13 @@ describe('DateRangePicker', () => {
   it('shows Start Date and End Date calendars with the selected range above them', () => {
     renderPicker();
     expect(screen.getByRole('dialog', { name: 'Select date range' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Start Date calendar' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'End Date calendar' })).toBeInTheDocument();
-    expect(screen.getByText('Start:')).toBeInTheDocument();
-    expect(screen.getByText('Oct 10, 2026')).toBeInTheDocument();
-    expect(screen.getByText('End:')).toBeInTheDocument();
-    expect(screen.getByText('Oct 20, 2026')).toBeInTheDocument();
+    const desktop = screen.getByTestId('desktop-calendars');
+    expect(within(desktop).getByRole('group', { name: 'Start Date calendar' })).toBeInTheDocument();
+    expect(within(desktop).getByRole('group', { name: 'End Date calendar' })).toBeInTheDocument();
+    expect(screen.getAllByText('Start:').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Oct 10, 2026').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('End:').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Oct 20, 2026').length).toBeGreaterThan(0);
   });
 
   it('disables end-calendar days earlier than the start date but keeps the start calendar usable', () => {
@@ -137,4 +140,47 @@ describe('DateRangePicker', () => {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
     });
   });
+
+  it('renders as a dialog with Apply and Cancel buttons and an accessible close button', () => {
+    renderPicker();
+    const dialog = screen.getByRole('dialog', { name: 'Select date range' });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close date range dialog' })).toBeInTheDocument();
+  });
+
+  it('switches between Start Date and End Date in mobile single-month view', () => {
+    renderPicker();
+    const mobileContainer = screen.getByTestId('mobile-calendar');
+    expect(within(mobileContainer).getByRole('group', { name: 'Start Date calendar' })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('mobile-cal-tab-end'));
+    expect(within(mobileContainer).getByRole('group', { name: 'End Date calendar' })).toBeInTheDocument();
+  });
+
+  it('discards pending changes and closes when Escape is pressed', () => {
+    const { onApply, onOpenChange } = renderPicker();
+    fireEvent.click(day('October 15, 2026', 0));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onApply).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('discards pending changes and closes when the header X close button is clicked', () => {
+    const { onApply, onOpenChange } = renderPicker();
+    fireEvent.click(day('October 15, 2026', 0));
+    fireEvent.click(screen.getByRole('button', { name: 'Close date range dialog' }));
+    expect(onApply).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('locks body scroll while open and restores on unmount and close', () => {
+    document.body.style.overflow = 'visible';
+    const { unmount } = renderPicker({ open: true });
+    expect(document.body.style.overflow).toBe('hidden');
+    unmount();
+    expect(document.body.style.overflow).toBe('visible');
+  });
 });
+

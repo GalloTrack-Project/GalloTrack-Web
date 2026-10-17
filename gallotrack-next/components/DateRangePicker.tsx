@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import {
   dateKeyOf,
   dateKeyToMs,
@@ -9,6 +9,7 @@ import {
   type DateRangeCustom,
   type DateRangePreset,
 } from '@/lib/helpers';
+import { cn } from '@/components/ui';
 
 const PRESET_CHIPS: { id: DateRangePreset; label: string }[] = [
   { id: 'today', label: 'Today' },
@@ -78,7 +79,7 @@ function MonthCalendar({
           type="button"
           aria-label={`Previous month (${title})`}
           onClick={() => onViewChange(shiftMonth(view, -1))}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         </button>
@@ -94,59 +95,54 @@ function MonthCalendar({
           type="button"
           aria-label={`Next month (${title})`}
           onClick={() => onViewChange(shiftMonth(view, 1))}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
         >
           <ChevronRight className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
 
-      {/* Day of Week Labels */}
-      <div className="grid grid-cols-7 mb-1" aria-hidden="true">
+      {/* DOW headers */}
+      <div className="grid grid-cols-7 gap-1 text-center mb-1">
         {DOW.map((d) => (
-          <span
-            key={d}
-            className="text-xs font-medium text-slate-400 dark:text-slate-500 text-center uppercase py-1"
-          >
+          <span key={d} className="text-xs font-medium text-slate-400 dark:text-slate-500 py-1">
             {d}
           </span>
         ))}
       </div>
 
-      {/* Date Grid */}
-      <div className="grid grid-cols-7 gap-y-1 gap-x-0">
-        {cells.map((day, i) => {
+      {/* Days Grid */}
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {cells.map((day, idx) => {
           if (day === null) {
-            return <div key={`blank-${i}`} className="h-8 sm:h-9 w-full" />;
+            return <div key={`empty-${idx}`} className="h-8 sm:h-9" />;
           }
 
           const key = `${view.y}-${pad2(view.m + 1)}-${pad2(day)}`;
-          const isStart = Boolean(range.start && key === range.start);
-          const isEnd = Boolean(range.end && key === range.end);
-          const isSameDay = isStart && isEnd;
-          const hasFullRange = Boolean(range.start && range.end && range.start < range.end);
-          const inRange = Boolean(hasFullRange && key > range.start && key < range.end);
           const isToday = key === todayKey;
+          const isStart = range.start === key;
+          const isEnd = range.end === key;
+          const inRange = Boolean(range.start && range.end && key > range.start && key < range.end);
           const disabled = Boolean(disabledBefore && key < disabledBefore);
-          const dow = i % 7; // 0 = Su, 6 = Sa
+          const dow = (leading + day - 1) % 7;
+          const isSameDay = isStart && isEnd;
+          const hasFullRange = Boolean(range.start && range.end);
 
           let btnCls =
-            'relative z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs flex items-center justify-center transition-all ';
+            'relative z-10 w-8 h-8 sm:w-9 sm:h-9 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all cursor-pointer ';
 
           if (disabled) {
-            btnCls += 'text-slate-300 dark:text-slate-600 cursor-not-allowed';
+            btnCls += 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-40 ';
           } else if (isStart || isEnd) {
-            btnCls +=
-              'bg-emerald-600 text-white font-semibold shadow-xs hover:bg-emerald-700 active:scale-95 cursor-pointer';
+            btnCls += 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30 ';
           } else if (inRange) {
             btnCls +=
-              'text-slate-900 dark:text-slate-100 font-medium hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 rounded-full cursor-pointer';
+              'text-emerald-900 dark:text-emerald-100 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 ';
+          } else if (isToday) {
+            btnCls +=
+              'text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-400/60 dark:border-emerald-600/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 ';
           } else {
             btnCls +=
-              'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-normal hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer';
-          }
-
-          if (isToday && !isStart && !isEnd && !disabled) {
-            btnCls += ' ring-1.5 ring-inset ring-emerald-500/50 text-emerald-700 dark:text-emerald-400 font-semibold';
+              'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted hover:text-slate-900 dark:hover:text-white ';
           }
 
           return (
@@ -184,7 +180,7 @@ function MonthCalendar({
   );
 }
 
-type Props = {
+export type Props = {
   label: string;
   preset: DateRangePreset;
   custom: DateRangeCustom;
@@ -214,8 +210,30 @@ function RangePopover({ preset, custom, onOpenChange, onApply, children }: Popov
   const [draft, setDraft] = useState<DateRangeCustom>(initial);
   const [startView, setStartView] = useState<MonthView>(() => viewOf(initial.start));
   const [endView, setEndView] = useState<MonthView>(() => viewOf(initial.end));
+  const [mobileCalTab, setMobileCalTab] = useState<'start' | 'end'>('start');
 
   const close = () => onOpenChange(false);
+
+  // Lock body scroll while open; restore on unmount or close
+  useEffect(() => {
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = origOverflow;
+    };
+  }, []);
+
+  // Escape key closes and discards pending changes
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const pickPreset = (id: DateRangePreset) => {
     if (id === 'all' || id === 'custom') {
@@ -257,110 +275,196 @@ function RangePopover({ preset, custom, onOpenChange, onApply, children }: Popov
       : null;
 
   return (
-    <div
-      role="dialog"
-      aria-label="Select date range"
-      className="absolute right-0 mt-2 z-50 w-[min(94vw,44rem)] bg-white dark:bg-card rounded-2xl border border-slate-200/90 dark:border-border shadow-2xl shadow-slate-900/10 dark:shadow-black/40 p-5 sm:p-6 space-y-4"
-    >
-      {/* HEADER */}
-      <div className="pb-3 border-b border-slate-100 dark:border-border/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">
-            Select Date Range
-          </h3>
-          <div className="mt-0.5 flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-slate-900 dark:text-white">
-              {startText} → {endText}
-            </span>
-            {daysCount !== null && (
-              <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                {daysCount} {daysCount === 1 ? 'day' : 'days'}
+    <>
+      {/* BACKDROP: Modal overlay on phone (z-[60]), light overlay on desktop (sm:z-40) */}
+      <div
+        className="fixed inset-0 z-[60] sm:z-40 bg-black/60 sm:bg-black/20 backdrop-blur-xs transition-opacity"
+        onClick={close}
+        aria-hidden="true"
+      />
+
+      {/* DIALOG CONTAINER */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Select date range"
+        className={cn(
+          // Mobile bottom sheet / dialog (< sm): Full viewport width with 12px margin, max 85dvh, internal scroll, pinned footer
+          'fixed inset-x-3 bottom-3 z-[70] max-h-[85vh] max-h-[85dvh] flex flex-col',
+          'bg-white dark:bg-card rounded-2xl border border-slate-200/90 dark:border-border shadow-2xl shadow-slate-900/20 dark:shadow-black/60',
+          // Desktop anchored popover (>= sm): Anchor to trigger at right-0, max-w-44rem, unconstrained height
+          'sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:mt-2 sm:w-[min(94vw,44rem)] sm:max-h-none sm:z-50'
+        )}
+      >
+        {/* HEADER */}
+        <div className="p-4 sm:p-6 pb-3 border-b border-slate-100 dark:border-border/60 flex items-center justify-between gap-2 shrink-0">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">
+              Select Date Range
+            </h3>
+            <div className="mt-0.5 flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {startText} → {endText}
               </span>
+              {daysCount !== null && (
+                <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                  {daysCount} {daysCount === 1 ? 'day' : 'days'}
+                </span>
+              )}
+            </div>
+          </div>
+          {/* Close button with 44px min touch target */}
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close date range dialog"
+            className="w-11 h-11 flex items-center justify-center rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer shrink-0"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* SCROLLABLE DIALOG BODY */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-3 space-y-4 overscroll-contain">
+          {/* QUICK DATE RANGES (Presets wrap onto multiple lines without horizontal overflow) */}
+          <div className="flex flex-wrap gap-1.5">
+            {PRESET_CHIPS.map((chip) => {
+              const isActive = draftPreset === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => pickPreset(chip.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer border min-h-[36px] flex items-center justify-center ${
+                    isActive
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold shadow-2xs'
+                      : 'bg-white dark:bg-transparent text-slate-600 dark:text-slate-400 border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/50 hover:text-slate-900 dark:hover:text-white font-medium'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* COMPACT START & END DATE INPUTS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="flex items-center gap-2 rounded-xl bg-slate-50/80 dark:bg-muted/30 border border-slate-200 dark:border-border px-3.5 py-2">
+              <CalendarIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Start:</span>
+              <span className="text-xs font-semibold text-slate-900 dark:text-white">{startText}</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-slate-50/80 dark:bg-muted/30 border border-slate-200 dark:border-border px-3.5 py-2">
+              <CalendarIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">End:</span>
+              <span className="text-xs font-semibold text-slate-900 dark:text-white">{endText}</span>
+            </div>
+          </div>
+
+          {/* MOBILE SINGLE MONTH CALENDAR SWITCHER (< sm) */}
+          <div className="sm:hidden flex border border-slate-200 dark:border-border rounded-xl p-1 bg-slate-100 dark:bg-muted/40">
+            <button
+              type="button"
+              data-testid="mobile-cal-tab-start"
+              onClick={() => setMobileCalTab('start')}
+              className={cn(
+                'flex-1 py-2 text-xs font-bold rounded-lg transition-all min-h-[40px]',
+                mobileCalTab === 'start'
+                  ? 'bg-white dark:bg-card text-emerald-700 dark:text-emerald-400 shadow-2xs border border-slate-200/60 dark:border-border'
+                  : 'text-slate-600 dark:text-slate-400'
+              )}
+            >
+              Start Date ({startText})
+            </button>
+            <button
+              type="button"
+              data-testid="mobile-cal-tab-end"
+              onClick={() => setMobileCalTab('end')}
+              className={cn(
+                'flex-1 py-2 text-xs font-bold rounded-lg transition-all min-h-[40px]',
+                mobileCalTab === 'end'
+                  ? 'bg-white dark:bg-card text-emerald-700 dark:text-emerald-400 shadow-2xs border border-slate-200/60 dark:border-border'
+                  : 'text-slate-600 dark:text-slate-400'
+              )}
+            >
+              End Date ({endText})
+            </button>
+          </div>
+
+          {/* MOBILE VIEW: SINGLE MONTH AT A TIME */}
+          <div data-testid="mobile-calendar" className="block sm:hidden">
+            {mobileCalTab === 'start' ? (
+              <MonthCalendar
+                title="Start Date"
+                view={startView}
+                onViewChange={setStartView}
+                range={draft}
+                todayKey={todayKey}
+                onPick={(k) => {
+                  pickStart(k);
+                  setMobileCalTab('end');
+                }}
+              />
+            ) : (
+              <MonthCalendar
+                title="End Date"
+                view={endView}
+                onViewChange={setEndView}
+                range={draft}
+                disabledBefore={draft.start || undefined}
+                todayKey={todayKey}
+                onPick={pickEnd}
+              />
             )}
           </div>
+
+          {/* DESKTOP VIEW: DUAL CALENDARS (>= sm) */}
+          <div data-testid="desktop-calendars" className="hidden sm:grid sm:grid-cols-2 gap-3.5">
+            <MonthCalendar
+              title="Start Date"
+              view={startView}
+              onViewChange={setStartView}
+              range={draft}
+              todayKey={todayKey}
+              onPick={pickStart}
+            />
+            <MonthCalendar
+              title="End Date"
+              view={endView}
+              onViewChange={setEndView}
+              range={draft}
+              disabledBefore={draft.start || undefined}
+              todayKey={todayKey}
+              onPick={pickEnd}
+            />
+          </div>
+
+          {children && (
+            <div className="pt-2 border-t border-slate-100 dark:border-border/60">
+              {children(close)}
+            </div>
+          )}
+        </div>
+
+        {/* PINNED FOOTER: Apply & Cancel buttons above safe-area inset */}
+        <div className="p-4 sm:p-6 pt-3 border-t border-slate-100 dark:border-border/60 flex items-center justify-end gap-2.5 shrink-0 bg-white dark:bg-card rounded-b-2xl pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-6">
+          <button
+            type="button"
+            onClick={close}
+            className="h-11 px-5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={apply}
+            className="h-11 px-6 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            Apply
+          </button>
         </div>
       </div>
-
-      {/* QUICK DATE RANGES */}
-      <div className="flex flex-wrap gap-1.5">
-        {PRESET_CHIPS.map((chip) => {
-          const isActive = draftPreset === chip.id;
-          return (
-            <button
-              key={chip.id}
-              type="button"
-              onClick={() => pickPreset(chip.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer border ${
-                isActive
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold shadow-2xs'
-                  : 'bg-white dark:bg-transparent text-slate-600 dark:text-slate-400 border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/50 hover:text-slate-900 dark:hover:text-white font-medium'
-              }`}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* COMPACT START & END DATE INPUTS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <div className="flex items-center gap-2 rounded-xl bg-slate-50/80 dark:bg-muted/30 border border-slate-200 dark:border-border px-3.5 py-2">
-          <CalendarIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Start:</span>
-          <span className="text-xs font-semibold text-slate-900 dark:text-white">{startText}</span>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl bg-slate-50/80 dark:bg-muted/30 border border-slate-200 dark:border-border px-3.5 py-2">
-          <CalendarIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">End:</span>
-          <span className="text-xs font-semibold text-slate-900 dark:text-white">{endText}</span>
-        </div>
-      </div>
-
-      {/* DUAL CALENDARS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <MonthCalendar
-          title="Start Date"
-          view={startView}
-          onViewChange={setStartView}
-          range={draft}
-          todayKey={todayKey}
-          onPick={pickStart}
-        />
-        <MonthCalendar
-          title="End Date"
-          view={endView}
-          onViewChange={setEndView}
-          range={draft}
-          disabledBefore={draft.start || undefined}
-          todayKey={todayKey}
-          onPick={pickEnd}
-        />
-      </div>
-
-      {/* FOOTER */}
-      <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-border/60">
-        <button
-          type="button"
-          onClick={close}
-          className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={apply}
-          className="px-5 py-2 rounded-xl text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer"
-        >
-          Apply
-        </button>
-      </div>
-
-      {children && (
-        <div className="pt-2 border-t border-slate-100 dark:border-border/60">
-          {children(close)}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -373,14 +477,21 @@ export default function DateRangePicker({
   onApply,
   children,
 }: Props) {
-  const close = () => onOpenChange(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      triggerRef.current?.focus();
+    }
+    onOpenChange(nextOpen);
+  };
 
   return (
     <div className="relative self-start md:self-auto">
-      {open && <div className="fixed inset-0 z-40" onClick={close} aria-hidden="true" />}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => onOpenChange(!open)}
+        onClick={() => handleOpenChange(!open)}
         aria-haspopup="dialog"
         aria-expanded={open}
         className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 bg-white dark:bg-card border border-slate-200/90 dark:border-border hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-muted/40 shadow-2xs transition-all cursor-pointer"
@@ -399,7 +510,7 @@ export default function DateRangePicker({
         <RangePopover
           preset={preset}
           custom={custom}
-          onOpenChange={onOpenChange}
+          onOpenChange={handleOpenChange}
           onApply={onApply}
         >
           {children}

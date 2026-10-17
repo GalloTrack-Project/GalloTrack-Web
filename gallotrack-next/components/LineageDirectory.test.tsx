@@ -107,6 +107,29 @@ describe('LineageDirectory redesigned top section', () => {
     expect(pedigreeTab).toBeInTheDocument();
   });
 
+  it('renders tabs with 2-column grid below sm and fifth tab spanning both columns', () => {
+    renderDirectory();
+    const tablist = screen.getByRole('tablist', { name: /Family Lineage Directory Tabs/i });
+    expect(tablist).toHaveClass('grid', 'grid-cols-2', 'sm:flex');
+
+    const pedigreeTab = screen.getByRole('tab', { name: /Pedigree \/ Ancestors/i });
+    expect(pedigreeTab).toHaveClass('col-span-2', 'sm:col-span-1');
+  });
+
+  it('ensures context bar and top container have no sticky class below md', () => {
+    renderDirectory();
+    const contextBar = screen.getByTestId('lineage-context-bar');
+    expect(contextBar).toHaveClass('static');
+    // Ensure it does not have bare 'sticky' without breakpoint prefix
+    const contextBarClasses = contextBar.className.split(/\s+/);
+    expect(contextBarClasses.includes('sticky')).toBe(false);
+
+    const topContainer = screen.getByTestId('lineage-top-container');
+    expect(topContainer).toHaveClass('static', 'md:sticky');
+    const topContainerClasses = topContainer.className.split(/\s+/);
+    expect(topContainerClasses.includes('sticky')).toBe(false);
+  });
+
   it('shows dynamic summary text in context bar for Full Siblings & Families by default', () => {
     renderDirectory();
     const contextBar = screen.getByTestId('lineage-context-bar');
