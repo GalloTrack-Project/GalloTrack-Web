@@ -343,6 +343,9 @@ export default function SettingsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      if (table === 'fowl') {
+        await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
+      }
       const { error } = await supabase.from(table).delete().eq('user_id', user.id)
       if (error) throw error
       setClearNotice(`All ${label} deleted.`)

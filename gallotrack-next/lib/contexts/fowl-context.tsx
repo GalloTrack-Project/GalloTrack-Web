@@ -593,6 +593,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const handleAddFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 1. Upfront Form & Format Validation
     const validation = validateFowlForm({
       name: newName,
       breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
@@ -608,57 +609,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       return;
     }
 
-    // ── Unique name: each chicken in the registry owns its name ──
+    // Unique name check
     const newKey = nameKey(sanitizeInput(newName));
     if (newKey && fowls.some((f) => nameKey(f.name) === newKey)) {
       toastMessage(`A chicken named "${newName.trim()}" already exists. Pick a unique name.`, 'error');
       return;
     }
 
-    const submittedCode = normalizeBirdCode(birdCode);
-    let codeToUse = submittedCode;
-    const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
-    const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
-    const isOffspring = hasSire || hasDam;
-    const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : isFemaleHelper(newGender) ? 'dam' : 'sire';
-
-    if (!codeToUse) {
-      // Auto-assign: query atomic sequence generator via RPC
-      const sireBird = fowls.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
-      const damBird = fowls.find((f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase());
-      const sireCode = sireBird ? (sireBird.bird_code || birdCodes.get(String(sireBird.id))) : (hasSire ? sireName.trim() : null);
-      const damCode = damBird ? (damBird.bird_code || birdCodes.get(String(damBird.id))) : (hasDam ? damName.trim() : null);
-
-      try {
-        const rpcRes = await fowlService.getNextIdentifier(role, sireCode, damCode);
-        if (rpcRes.code && !takenCodes.has(rpcRes.code.toLowerCase())) {
-          codeToUse = rpcRes.code;
-        }
-      } catch {
-        // Fallback to client-side generator
-      }
-      if (!codeToUse) {
-        codeToUse = suggestedBirdCode;
-      }
-    } else {
-      // Manual override validation
-      const formatCheck = validateIdentifierFormat(submittedCode, role);
-      if (!formatCheck.valid) {
-        toastMessage(`Identifier Format Error: ${formatCheck.error}`, 'error');
-        return;
-      }
-    }
-
-    if (!isValidBirdCode(codeToUse)) {
-      toastMessage(`Invalid Chicken Identifier: use letters, numbers only.`, 'error');
-      return;
-    }
-    if (takenCodes.has(codeToUse.toLowerCase())) {
-      toastMessage(`Chicken Identifier "${codeToUse}" is already in use. Never reuse an identifier.`, 'error');
-      return;
-    }
-
-    // ── Wing band ID: physical band number, unique across the farm ──
+    // Wing band validation
     const bandValue = wingBand.trim();
     if (bandValue && !/^[A-Za-z0-9._-]{1,24}$/.test(bandValue)) {
       toastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
@@ -669,25 +627,96 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       return;
     }
 
-    setLoading(true);
-    let publicImageUrl = '';
+    const submittedCode = normalizeBirdCode(birdCode);
+    const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
+    const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
+    const isOffspring = hasSire || hasDam;
+    const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : isFemaleHelper(newGender) ? 'dam' : 'sire';
 
-    try {
-      if (selectedImage) {
-        setUploadingImage(true);
-        const result = await fowlService.uploadFowlImage(selectedImage);
-        if (result.error) throw new Error(result.error);
-        publicImageUrl = result.url || '';
-      }
-
-      const activeUserId = (await supabase.auth.getUser()).data.user?.id;
-      if (!activeUserId) {
-        toastMessage('Authentication Error: Active session user ID not detected.', 'error');
+    if (submittedCode) {
+      const formatCheck = validateIdentifierFormat(submittedCode, role);
+      if (!formatCheck.valid) {
+        toastMessage(`Identifier Format Error: ${formatCheck.error}`, 'error');
         return;
       }
+      if (!isValidBirdCode(submittedCode)) {
+        toastMessage(`Invalid Chicken Identifier: use letters, numbers only.`, 'error');
+        return;
+      }
+      if (takenCodes.has(submittedCode.toLowerCase())) {
+        toastMessage(`Chicken Identifier "${submittedCode}" is already in use. Never reuse an identifier.`, 'error');
+        return;
+      }
+    }
 
+    const activeUserId = (await supabase.auth.getUser()).data.user?.id;
+    if (!activeUserId) {
+      toastMessage('Authentication Error: Active session user ID not detected.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    let uploadedImageUrl = '';
+    let uploadedImagePath: string | undefined = undefined;
+
+    try {
+      // 2. Fetch freshest list of codes
+      let freshFowls = await fowlService.fetchFowls();
+      let pool = freshFowls.length > 0 ? freshFowls : fowls;
+
+      // 3. Compute next code (short window to INSERT)
+      const deriveCode = async (candidatePool: FowlRecord[]): Promise<string> => {
+        if (submittedCode) return submittedCode;
+
+        const poolCodes = resolveBirdCodes(candidatePool);
+        const poolTaken = buildCodeSet(Array.from(poolCodes.values()));
+
+        const sireBird = candidatePool.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
+        const damBird = candidatePool.find((f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase());
+        const sireCode = sireBird ? (sireBird.bird_code || poolCodes.get(String(sireBird.id))) : (hasSire ? sireName.trim() : null);
+        const damCode = damBird ? (damBird.bird_code || poolCodes.get(String(damBird.id))) : (hasDam ? damName.trim() : null);
+
+        let resolved = '';
+        try {
+          const rpcRes = await fowlService.getNextIdentifier(role, sireCode, damCode);
+          if (rpcRes.error) {
+            console.warn(`get_next_fowl_identifier RPC error: ${rpcRes.error}. Falling back to client-side code generator.`);
+          } else if (rpcRes.code && !poolTaken.has(rpcRes.code.toLowerCase())) {
+            resolved = rpcRes.code;
+          }
+        } catch (rpcErr) {
+          console.warn('get_next_fowl_identifier RPC exception. Falling back to client-side code generator:', rpcErr);
+        }
+
+        if (!resolved) {
+          resolved = previewBirdCode({
+            gender: newGender,
+            sireName,
+            damName,
+            isOffspring,
+            fowls: candidatePool,
+            taken: poolTaken,
+          });
+        }
+        return resolved;
+      };
+
+      let codeToUse = await deriveCode(pool);
+
+      // 4. Upload image (if present)
+      if (selectedImage) {
+        setUploadingImage(true);
+        const uploadResult = await fowlService.uploadFowlImage(selectedImage);
+        setUploadingImage(false);
+        if (uploadResult.error) {
+          throw new Error(`Image upload failed: ${uploadResult.error}`);
+        }
+        uploadedImageUrl = uploadResult.url || '';
+        uploadedImagePath = uploadResult.path;
+      }
+
+      // 5. Construct payload & INSERT with up to 2 retries on unique violation
       const autoParts = autoCalcAge ? getAgePartsHelper(newBirthdate) : null;
-
       const breedValue = selectedStrains.length > 0 ? selectedStrains.join(', ') : sanitizeInput(newBreed) || 'Unspecified Strain';
       const composition = computeBloodlineComposition(
         {
@@ -698,20 +727,15 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           sire: sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock',
           dam: damName.trim() ? sanitizeInput(damName) : 'Foundation Stock',
         } as FowlRecord,
-        fowls
+        pool
       );
       const compositionStats = getBloodlineStats(composition);
-
       const sireValue = sireName.trim() ? sanitizeInput(sireName) : 'Foundation Stock';
       const damValue = damName.trim() ? sanitizeInput(damName) : 'Foundation Stock';
-
-      // Legacy `sire_pct`/`dam_pct` columns — still written so the DB/API
-      // contract holds, but no longer user-entered, displayed, or averaged
-      // into any percentage. The composition engine is the only source of truth.
       const sPct = isFoundationStock(sireValue) ? 100 : 50;
       const dPct = isFoundationStock(damValue) ? 100 : 50;
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         user_id: activeUserId,
         name: sanitizeInput(newName),
         breed: breedValue,
@@ -732,7 +756,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         leg_color: newLegColor.trim() ? newLegColor.trim() : 'N/A',
         sire: sireValue,
         dam: damValue,
-        ...parentLinkIds({ user_id: activeUserId }, sireValue, damValue, fowls),
+        ...parentLinkIds({ user_id: activeUserId }, sireValue, damValue, pool),
         sire_pct: sPct,
         dam_pct: dPct,
         bloodline_pct: compositionStats?.specificPct ?? computedBloodlinePct,
@@ -741,39 +765,88 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         bird_code: codeToUse,
         wing_band: bandValue || null,
         status: 'Active',
-        image_url: publicImageUrl,
+        image_url: uploadedImageUrl,
       };
 
-      const result = await fowlService.insertFowl(payload);
-      if (result.error) {
-        toastMessage(`Database Error: ${result.error}`, 'error');
-      } else {
-        const finalDisplayCode = formatBirdCodeForDisplay(codeToUse);
-        const finalIdLabel =
-          role === 'sire' && !finalDisplayCode.toLowerCase().startsWith('sire')
-            ? `Sire ${finalDisplayCode}`
-            : role === 'dam' && !finalDisplayCode.toLowerCase().startsWith('dam')
-              ? `Dam ${finalDisplayCode}`
-              : finalDisplayCode;
-        toastMessage(`Chicken registered successfully (ID: ${finalIdLabel}).`, 'success');
-        for (const s of selectedStrains) {
-          await strainService.saveCustomStrain(s);
+      const MAX_RETRIES = 2;
+      let attempt = 0;
+      let insertResult: { error?: string; id?: number } = { error: 'Unknown insertion state' };
+
+      while (attempt <= MAX_RETRIES) {
+        payload.chicken_code = codeToUse;
+        payload.bird_code = codeToUse;
+
+        insertResult = await fowlService.insertFowl(payload);
+        if (!insertResult.error) {
+          break;
         }
-        const createdGender = newGender || 'Rooster';
-        setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName(''); setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor(''); setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage(''); setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]); setImagePreview(''); setBirdCode(''); setWingBand('');
-        if (result.id != null) {
-          await refreshDescendantCompositions({ ...payload, id: result.id } as FowlRecord, null);
+
+        if (!fowlService.isChickenCodeUniqueViolation(insertResult.error)) {
+          // Do not retry on other errors
+          break;
         }
-        fetchDatabaseResources();
-        ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
+
+        attempt++;
+        if (attempt <= MAX_RETRIES) {
+          const refetched = await fowlService.fetchFowls();
+          if (refetched.length > 0) {
+            freshFowls = refetched;
+            pool = freshFowls;
+          }
+          codeToUse = await deriveCode(pool);
+        }
       }
+
+      if (insertResult.error) {
+        if (uploadedImagePath || uploadedImageUrl) {
+          await fowlService.deleteFowlImageFile(uploadedImagePath || uploadedImageUrl);
+        }
+        if (fowlService.isChickenCodeUniqueViolation(insertResult.error)) {
+          toastMessage(
+            'Could not register chicken: identifier was taken by another concurrent registration. Please try again.',
+            'error'
+          );
+        } else {
+          toastMessage(`Database Error: ${insertResult.error}`, 'error');
+        }
+        return;
+      }
+
+      // ── Success: show final ID, clean up form & trigger sync ──
+      const finalDisplayCode = formatBirdCodeForDisplay(codeToUse);
+      const finalIdLabel =
+        role === 'sire' && !finalDisplayCode.toLowerCase().startsWith('sire')
+          ? `Sire ${finalDisplayCode}`
+          : role === 'dam' && !finalDisplayCode.toLowerCase().startsWith('dam')
+            ? `Dam ${finalDisplayCode}`
+            : finalDisplayCode;
+      toastMessage(`Chicken registered successfully (ID: ${finalIdLabel}).`, 'success');
+
+      for (const s of selectedStrains) {
+        await strainService.saveCustomStrain(s);
+      }
+      const createdGender = newGender || 'Rooster';
+      setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName('');
+      setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor('');
+      setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage('');
+      setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]);
+      setImagePreview(''); setBirdCode(''); setWingBand('');
+
+      if (insertResult.id != null) {
+        await refreshDescendantCompositions({ ...payload, id: insertResult.id } as FowlRecord, null);
+      }
+      fetchDatabaseResources();
+      ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
     } catch (err: unknown) {
-      toastMessage(`Upload Cluster Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      if (uploadedImagePath || uploadedImageUrl) {
+        await fowlService.deleteFowlImageFile(uploadedImagePath || uploadedImageUrl);
+      }
+      toastMessage(`Registration Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
     } finally {
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, suggestedBirdCode, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 

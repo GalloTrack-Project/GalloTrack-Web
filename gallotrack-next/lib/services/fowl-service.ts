@@ -7,6 +7,7 @@ import {
   restorePatch,
   rolePatch,
 } from '@/lib/lifecycle';
+import { storagePathFromUrl } from '@/lib/media-format';
 
 export async function fetchFowls(): Promise<FowlRecord[]> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,14 +26,32 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
   return data || [];
 }
 
+const isMissingCol = (err?: { message?: string }, col?: string): boolean => {
+  if (!err?.message) return false;
+  const msg = err.message.toLowerCase();
+  if (msg.includes('unique') || msg.includes('duplicate')) return false;
+  return err.message.includes(`column "${col}"`) || err.message.includes(`column fowl.${col}`);
+};
+
+export function isChickenCodeUniqueViolation(errMsg?: string | null): boolean {
+  if (!errMsg) return false;
+  const lower = errMsg.toLowerCase();
+  return (
+    lower.includes('fowl_user_chicken_code_key') ||
+    lower.includes('fowl_user_bird_code_key') ||
+    ((lower.includes('unique') || lower.includes('duplicate key')) &&
+      (lower.includes('chicken_code') || lower.includes('bird_code')))
+  );
+}
+
 export async function insertFowl(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
   let res = await supabase.from('fowl').insert([payload]).select('id').single();
-  if (res.error && res.error.message.includes('chicken_code')) {
+  if (res.error && isMissingCol(res.error, 'chicken_code')) {
     const copy = { ...payload };
     copy.bird_code = copy.chicken_code;
     delete copy.chicken_code;
     res = await supabase.from('fowl').insert([copy]).select('id').single();
-  } else if (res.error && res.error.message.includes('bird_code')) {
+  } else if (res.error && isMissingCol(res.error, 'bird_code')) {
     const copy = { ...payload };
     copy.chicken_code = copy.bird_code;
     delete copy.bird_code;
@@ -44,12 +63,12 @@ export async function insertFowl(payload: Record<string, unknown>): Promise<{ er
 
 export async function updateFowl(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {
   let res = await supabase.from('fowl').update(payload).eq('id', id);
-  if (res.error && res.error.message.includes('chicken_code')) {
+  if (res.error && isMissingCol(res.error, 'chicken_code')) {
     const copy = { ...payload };
     copy.bird_code = copy.chicken_code;
     delete copy.chicken_code;
     res = await supabase.from('fowl').update(copy).eq('id', id);
-  } else if (res.error && res.error.message.includes('bird_code')) {
+  } else if (res.error && isMissingCol(res.error, 'bird_code')) {
     const copy = { ...payload };
     copy.chicken_code = copy.bird_code;
     delete copy.bird_code;
@@ -272,7 +291,7 @@ export async function promoteToBreeder(
   return changeLifecycle(id, patch, history);
 }
 
-export async function uploadFowlImage(file: File): Promise<{ url?: string; error?: string }> {
+export async function uploadFowlImage(file: File): Promise<{ url?: string; path?: string; error?: string }> {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
   const filePath = `fowl/${fileName}`;
@@ -284,7 +303,22 @@ export async function uploadFowlImage(file: File): Promise<{ url?: string; error
   if (uploadError) return { error: uploadError.message };
 
   const { data } = supabase.storage.from('fowl-images').getPublicUrl(filePath);
-  return { url: data.publicUrl };
+  return { url: data.publicUrl, path: filePath };
+}
+
+export async function deleteFowlImageFile(pathOrUrl: string): Promise<void> {
+  try {
+    let filePath = pathOrUrl;
+    if (filePath.startsWith('http')) {
+      const parsed = storagePathFromUrl(filePath);
+      if (parsed) filePath = parsed.path;
+    }
+    if (filePath) {
+      await supabase.storage.from('fowl-images').remove([filePath]);
+    }
+  } catch (err) {
+    console.warn('Best-effort cleanup of orphan fowl image failed:', err);
+  }
 }
 
 export async function getNextIdentifier(
