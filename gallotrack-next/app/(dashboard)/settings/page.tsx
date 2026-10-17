@@ -343,6 +343,36 @@ export default function SettingsPage() {
     }
   }
 
+  const [dangerCounts, setDangerCounts] = useState<{
+    pairingsCount: number
+    mediaCounts: { videos: number; photos: number; fowlImages: number; total: number }
+  }>({
+    pairingsCount: 0,
+    mediaCounts: { videos: 0, photos: 0, fowlImages: 0, total: 0 },
+  })
+
+  async function openDangerModal(type: 'match' | 'fowl' | 'all', title: string, label: string) {
+    setDangerModal({ type, title, label })
+    setDangerConfirmInput('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        const res = await fetch('/api/user/purge-media', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setDangerCounts({
+            pairingsCount: data.pairingsCount ?? 0,
+            mediaCounts: data.mediaCounts ?? { videos: 0, photos: 0, fowlImages: 0, total: 0 },
+          })
+        }
+      }
+    } catch {
+      // Best-effort counts fetch; fallback to 0
+    }
+  }
+
   async function handleConfirmDangerAction() {
     if (!dangerModal || dangerConfirmInput.trim() !== 'DELETE') return
     const { type } = dangerModal
@@ -350,32 +380,115 @@ export default function SettingsPage() {
     setClearNotice('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      const { data: { session } } = await supabase.auth.getSession()
       if (!user) return
+
+      let mediaResult: { success?: boolean; removedCount?: number; errors?: string[] } | null = null
+
       if (type === 'fowl') {
+        // 1. Delete dependent breeding pairings first so no rows with null sire_id/dam_id remain
+        const { error: pairErr } = await supabase.from('breeding_pairings').delete().eq('user_id', user.id)
+        if (pairErr) throw pairErr
+
+        // 2. Delete chicken-dependent safety incidents
+        await supabase.from('safety_incidents').delete().eq('user_id', user.id)
+
+        // 3. Delete share links for fowl
+        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'fowl')
+
+        // 4. Delete identifier sequence counters
         await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
-        const { error } = await supabase.from('fowl').delete().eq('user_id', user.id)
-        if (error) throw error
-        setClearNotice(`All chicken profiles and sequence counters deleted.`)
+
+        // 5. Delete fowl records (cascades fowl_photos and fowl_status_history)
+        const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
+        if (fowlErr) throw fowlErr
+
+        // 6. Purge storage files for fowl
+        if (session?.access_token) {
+          try {
+            const res = await fetch('/api/user/purge-media', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              body: JSON.stringify({ scope: 'fowl' }),
+            })
+            mediaResult = await res.json()
+          } catch (e: unknown) {
+            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] }
+          }
+        }
+
+        const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
+        const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
+        setClearNotice(`Chicken profiles, breeding pairings, and counters deleted.${mediaMsg}${errorMsg}`)
       } else if (type === 'match') {
-        const { error } = await supabase.from('match').delete().eq('user_id', user.id)
-        if (error) throw error
-        setClearNotice(`All match records deleted.`)
-      } else if (type === 'all') {
+        // 1. Delete share links for matches
+        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
+
+        // 2. Delete matches (cascades match_options, match_photos, match_videos)
         const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
         if (matchErr) throw matchErr
+
+        // 3. Purge storage files for matches (match-videos, match-photos)
+        if (session?.access_token) {
+          try {
+            const res = await fetch('/api/user/purge-media', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              body: JSON.stringify({ scope: 'match' }),
+            })
+            mediaResult = await res.json()
+          } catch (e: unknown) {
+            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] }
+          }
+        }
+
+        const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
+        const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
+        setClearNotice(`All match records deleted.${mediaMsg}${errorMsg}`)
+      } else if (type === 'all') {
+        // 1. Clear match records and child links
+        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
+        const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
+        if (matchErr) throw matchErr
+
+        // 2. Clear chicken dependent records (pairings, incidents, share_links)
+        const { error: pairErr } = await supabase.from('breeding_pairings').delete().eq('user_id', user.id)
+        if (pairErr) throw pairErr
+        await supabase.from('safety_incidents').delete().eq('user_id', user.id)
+        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'fowl')
+
+        // 3. Clear counters and fowls
         await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
         const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
         if (fowlErr) throw fowlErr
-        setClearNotice(`All chicken profiles, match records, and sequence counters deleted.`)
+
+        // 4. Purge storage files across all buckets
+        if (session?.access_token) {
+          try {
+            const res = await fetch('/api/user/purge-media', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              body: JSON.stringify({ scope: 'all' }),
+            })
+            mediaResult = await res.json()
+          } catch (e: unknown) {
+            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] }
+          }
+        }
+
+        const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
+        const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
+        setClearNotice(`All chicken profiles, breeding pairings, match records, and sequence counters deleted.${mediaMsg}${errorMsg}`)
       }
       window.dispatchEvent(new Event('admin-profile-update'))
+      void fowl.fetchDatabaseResources()
       setDangerModal(null)
       setDangerConfirmInput('')
     } catch (err: unknown) {
       setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setClearing('')
-      setTimeout(() => setClearNotice(''), 5000)
+      setTimeout(() => setClearNotice(''), 7000)
     }
   }
 
@@ -660,7 +773,7 @@ export default function SettingsPage() {
               </div>
             )}
             <SectionCard title="Backup & Restore" description="Download your data for safekeeping, or reload an earlier backup">
-              <Field label="Export All Data" description="Download a JSON backup of all chicken and match records">
+              <Field label="Export All Data" description="Data export of chicken and match records. Photos and videos are not included — for a complete full backup, use the production backup script (npm run db:backup).">
                 <button type="button" onClick={handleExport} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                   Export JSON
@@ -692,10 +805,7 @@ export default function SettingsPage() {
               <Field label="Clear Match Records" description="Deletes all logged match history. Chicken profiles are kept.">
                 <button
                   type="button"
-                  onClick={() => {
-                    setDangerModal({ type: 'match', title: 'Clear Match Records', label: 'match records' })
-                    setDangerConfirmInput('')
-                  }}
+                  onClick={() => openDangerModal('match', 'Clear Match Records', 'match records')}
                   disabled={clearing !== ''}
                   className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
@@ -706,10 +816,7 @@ export default function SettingsPage() {
               <Field label="Clear Chicken Profiles" description="Deletes all registered chickens. Match history kept.">
                 <button
                   type="button"
-                  onClick={() => {
-                    setDangerModal({ type: 'fowl', title: 'Clear Chicken Profiles', label: 'chicken profiles' })
-                    setDangerConfirmInput('')
-                  }}
+                  onClick={() => openDangerModal('fowl', 'Clear Chicken Profiles', 'chicken profiles')}
                   disabled={clearing !== ''}
                   className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
@@ -720,10 +827,7 @@ export default function SettingsPage() {
               <Field label="Clear Everything" description="Deletes ALL chicken profiles and match records. Fresh start.">
                 <button
                   type="button"
-                  onClick={() => {
-                    setDangerModal({ type: 'all', title: 'Clear Everything (Full Reset)', label: 'all farm data' })
-                    setDangerConfirmInput('')
-                  }}
+                  onClick={() => openDangerModal('all', 'Clear Everything (Full Reset)', 'all farm data')}
                   disabled={clearing !== ''}
                   className="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
@@ -768,8 +872,8 @@ export default function SettingsPage() {
                   {/* Recommended Backup Link */}
                   <div className="flex items-center justify-between p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30">
                     <div className="space-y-0.5">
-                      <span className="block text-xs font-extrabold text-emerald-800 dark:text-emerald-300">Recommended: Export backup first</span>
-                      <span className="block text-xs text-emerald-700/80 dark:text-emerald-400 font-medium">Download a complete JSON backup before deleting.</span>
+                      <span className="block text-xs font-extrabold text-emerald-800 dark:text-emerald-300">Data export. Photos and videos are not included.</span>
+                      <span className="block text-xs text-emerald-700/80 dark:text-emerald-400 font-medium">Exports chickens and match history to JSON. For a complete server and media backup, use the production backup script.</span>
                     </div>
                     <button
                       type="button"
@@ -789,6 +893,8 @@ export default function SettingsPage() {
                       {dangerModal.type === 'fowl' && (
                         <>
                           <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.fowls?.length ?? 0}</strong> Chicken Profiles</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.pairingsCount}</strong> Breeding Pairings (deleted so no orphaned pairings remain)</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.fowlImages}</strong> Storage image file(s) in owner directory</li>
                           <li>Status history audit records and photo links (cascaded)</li>
                           <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
                         </>
@@ -796,6 +902,8 @@ export default function SettingsPage() {
                       {dangerModal.type === 'match' && (
                         <>
                           <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.matchHistory?.length ?? 0}</strong> Match Records</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.videos}</strong> Video file(s) in owner directory</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.photos}</strong> Photo file(s) in owner directory</li>
                           <li>Match options, betting entries, and combat video/photo links (cascaded)</li>
                           <li>Fight win-rate and performance analytics</li>
                         </>
@@ -803,7 +911,9 @@ export default function SettingsPage() {
                       {dangerModal.type === 'all' && (
                         <>
                           <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.fowls?.length ?? 0}</strong> Chicken Profiles</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.pairingsCount}</strong> Breeding Pairings</li>
                           <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.matchHistory?.length ?? 0}</strong> Match Records</li>
+                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.total}</strong> Storage media file(s) ({dangerCounts.mediaCounts.videos} videos, {dangerCounts.mediaCounts.photos} photos, {dangerCounts.mediaCounts.fowlImages} images)</li>
                           <li>All photo/video metadata, status histories, and lineage links</li>
                           <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
                         </>
