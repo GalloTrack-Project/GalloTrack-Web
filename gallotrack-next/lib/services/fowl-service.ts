@@ -47,20 +47,22 @@ export function isChickenCodeUniqueViolation(errMsg?: string | null): boolean {
 export const DB_UPDATE_NEEDED_MESSAGE = 'This feature needs a database update';
 
 export async function insertFowl(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
-  let res = await supabase.from('fowl').insert([payload]).select('id').single();
+  const cleanPayload = { ...payload };
+  if ('chicken_code' in cleanPayload) {
+    if (!cleanPayload.bird_code && cleanPayload.chicken_code) {
+      cleanPayload.bird_code = cleanPayload.chicken_code;
+    }
+    delete cleanPayload.chicken_code;
+  }
+  delete cleanPayload.birth_code;
+  delete cleanPayload.tag_number;
+
+  let res = await supabase.from('fowl').insert([cleanPayload]).select('id').single();
   if (res.error && isMissingCol(res.error, 'declared_composition')) {
     return { error: DB_UPDATE_NEEDED_MESSAGE };
   }
-  if (res.error && isMissingCol(res.error, 'chicken_code')) {
-    const copy = { ...payload };
-    copy.bird_code = copy.chicken_code;
-    delete copy.chicken_code;
-    res = await supabase.from('fowl').insert([copy]).select('id').single();
-    if (res.error && isMissingCol(res.error, 'declared_composition')) {
-      return { error: DB_UPDATE_NEEDED_MESSAGE };
-    }
-  } else if (res.error && isMissingCol(res.error, 'bird_code')) {
-    const copy = { ...payload };
+  if (res.error && isMissingCol(res.error, 'bird_code')) {
+    const copy = { ...cleanPayload };
     copy.chicken_code = copy.bird_code;
     delete copy.bird_code;
     res = await supabase.from('fowl').insert([copy]).select('id').single();
@@ -73,20 +75,22 @@ export async function insertFowl(payload: Record<string, unknown>): Promise<{ er
 }
 
 export async function updateFowl(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {
-  let res = await supabase.from('fowl').update(payload).eq('id', id);
+  const cleanPayload = { ...payload };
+  if ('chicken_code' in cleanPayload) {
+    if (!cleanPayload.bird_code && cleanPayload.chicken_code) {
+      cleanPayload.bird_code = cleanPayload.chicken_code;
+    }
+    delete cleanPayload.chicken_code;
+  }
+  delete cleanPayload.birth_code;
+  delete cleanPayload.tag_number;
+
+  let res = await supabase.from('fowl').update(cleanPayload).eq('id', id);
   if (res.error && isMissingCol(res.error, 'declared_composition')) {
     return { error: DB_UPDATE_NEEDED_MESSAGE };
   }
-  if (res.error && isMissingCol(res.error, 'chicken_code')) {
-    const copy = { ...payload };
-    copy.bird_code = copy.chicken_code;
-    delete copy.chicken_code;
-    res = await supabase.from('fowl').update(copy).eq('id', id);
-    if (res.error && isMissingCol(res.error, 'declared_composition')) {
-      return { error: DB_UPDATE_NEEDED_MESSAGE };
-    }
-  } else if (res.error && isMissingCol(res.error, 'bird_code')) {
-    const copy = { ...payload };
+  if (res.error && isMissingCol(res.error, 'bird_code')) {
+    const copy = { ...cleanPayload };
     copy.chicken_code = copy.bird_code;
     delete copy.bird_code;
     res = await supabase.from('fowl').update(copy).eq('id', id);
@@ -135,16 +139,19 @@ async function changeLifecycle(
     .single();
   if (readError) return { error: readError.message };
 
-  let { error } = await supabase.from('fowl').update(patch).eq('id', id);
-  if (error && error.message.includes('registry_role')) {
-    const copy = { ...patch };
-    delete copy.registry_role;
-    const retry = await supabase.from('fowl').update(copy).eq('id', id);
-    error = retry.error;
+  const cleanPatch = { ...patch };
+  if ('chicken_code' in cleanPatch) {
+    if (!cleanPatch.bird_code && cleanPatch.chicken_code) {
+      cleanPatch.bird_code = cleanPatch.chicken_code;
+    }
+    delete cleanPatch.chicken_code;
   }
-  if (error && error.message.includes('birth_code')) {
-    const copy = { ...patch };
-    delete copy.birth_code;
+  delete cleanPatch.birth_code;
+  delete cleanPatch.tag_number;
+
+  let { error } = await supabase.from('fowl').update(cleanPatch).eq('id', id);
+  if (error && error.message.includes('registry_role')) {
+    const copy = { ...cleanPatch };
     delete copy.registry_role;
     const retry = await supabase.from('fowl').update(copy).eq('id', id);
     error = retry.error;
@@ -304,8 +311,6 @@ export async function promoteToBreeder(
   const patch: Record<string, unknown> = {
     registry_role: opts.targetRole,
     bird_code: opts.breederCode,
-    chicken_code: opts.breederCode,
-    birth_code: opts.birthCode,
     breeding_role: 'breeder',
     status: 'Active',
     activity_status: 'active',

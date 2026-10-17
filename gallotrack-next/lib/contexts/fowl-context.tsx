@@ -804,7 +804,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam_pct: dPct,
         bloodline_pct: compositionStats?.specificPct ?? computedBloodlinePct,
         bloodline_composition: composition,
-        chicken_code: codeToUse,
         bird_code: codeToUse,
         wing_band: bandValue || null,
         status: 'Active',
@@ -820,7 +819,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       let insertResult: { error?: string; id?: number } = { error: 'Unknown insertion state' };
 
       while (attempt <= MAX_RETRIES) {
-        payload.chicken_code = codeToUse;
         payload.bird_code = codeToUse;
 
         insertResult = await fowlService.insertFowl(payload);
@@ -1279,7 +1277,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         dam_pct: dPct,
         bloodline_pct: editCompositionStats?.specificPct ?? calculatedBloodline,
         bloodline_composition: editComposition,
-        chicken_code: codeToUse,
         bird_code: codeToUse,
         wing_band: editBand || null
       };

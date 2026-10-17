@@ -211,15 +211,12 @@ export async function POST(request: NextRequest) {
         taken,
       });
     payload.bird_code = assignedCode;
-    (payload as Record<string, unknown>).chicken_code = assignedCode;
+    delete (payload as Record<string, unknown>).chicken_code;
+    delete (payload as Record<string, unknown>).birth_code;
+    delete (payload as Record<string, unknown>).tag_number;
 
     let { error: insertErr } = await supabase.from('fowl').insert([payload]);
-    if (insertErr && insertErr.message.includes('chicken_code')) {
-      const copy = { ...payload };
-      delete (copy as Record<string, unknown>).chicken_code;
-      const res = await supabase.from('fowl').insert([copy]);
-      insertErr = res.error;
-    } else if (insertErr && insertErr.message.includes('bird_code')) {
+    if (insertErr && insertErr.message.includes('bird_code')) {
       const copy = { ...payload };
       delete (copy as Record<string, unknown>).bird_code;
       const res = await supabase.from('fowl').insert([copy]);

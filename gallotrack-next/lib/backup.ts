@@ -127,6 +127,12 @@ export type RestoreResult = {
 /** Drop server-owned columns so the database can reassign them on restore. */
 function sanitizeRow(row: BackupRow, userId: string): BackupRow {
   const { id: _id, user_id: _userId, created_at: _createdAt, updated_at: _updatedAt, ...rest } = row;
+  if (!rest.bird_code && rest.chicken_code) {
+    rest.bird_code = rest.chicken_code;
+  }
+  delete rest.chicken_code;
+  delete rest.birth_code;
+  delete rest.tag_number;
   return { ...rest, user_id: userId };
 }
 
