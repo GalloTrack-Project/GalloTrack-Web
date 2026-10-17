@@ -360,3 +360,43 @@ describe('MarketplacePage agriculturist terminology (Fight Prospects / Ready to 
     expect(screen.queryByRole('heading', { level: 4, name: /Iron Thunder/i })).not.toBeInTheDocument();
   });
 });
+
+describe('MarketplacePage mobile layout regression protection', () => {
+  it('filter container uses a 2-column grid below md with minmax(0,1fr) and all selects have min-w-0 to prevent horizontal overflow', () => {
+    renderMarketplace();
+
+    const filterContainer = screen.getByTestId('inventory-filters-row');
+    expect(filterContainer).toBeInTheDocument();
+
+    // Assert container classes for mobile 2-column grid layout below sm/md
+    const containerClasses = filterContainer.className.split(/\s+/);
+    expect(containerClasses).toContain('grid');
+    expect(containerClasses).toContain('grid-cols-2');
+    expect(containerClasses).toContain('[grid-template-columns:repeat(2,minmax(0,1fr))]');
+    expect(containerClasses).toContain('md:flex');
+
+    // Assert each select control inside the filter container has min-w-0, max-w-full, and truncate
+    const selects = filterContainer.querySelectorAll('select');
+    expect(selects.length).toBe(4); // Role, Sex, Breeding Type, Sort
+
+    selects.forEach((select) => {
+      const selectClasses = select.className.split(/\s+/);
+      expect(selectClasses).toContain('min-w-0');
+      expect(selectClasses).toContain('max-w-full');
+      expect(selectClasses).toContain('truncate');
+      expect(selectClasses).toContain('w-full');
+    });
+
+    // Assert each filter wrapper item has min-w-0 and w-full for grid cell bounds
+    const labels = filterContainer.querySelectorAll('label');
+    expect(labels.length).toBe(4);
+    labels.forEach((label) => {
+      const parent = label.parentElement;
+      expect(parent).not.toBeNull();
+      const wrapperClasses = parent?.className.split(/\s+/) || [];
+      expect(wrapperClasses).toContain('min-w-0');
+      expect(wrapperClasses).toContain('w-full');
+    });
+  });
+});
+

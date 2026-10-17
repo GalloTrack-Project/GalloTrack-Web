@@ -21,6 +21,7 @@
     "db:audit": "tsx scripts/verify-production-counts.ts",
     "gate:static": "node scripts/standard-gates.mjs",
     "gate:mobile": "node scripts/mobile-gate.mjs",
+    "audit:mobile": "tsx scripts/audit-mobile-overflow.ts",
     "gate": "node scripts/standard-gates.mjs && tsc --noEmit && eslint . --cache && vitest run"
   },
   "dependencies": {

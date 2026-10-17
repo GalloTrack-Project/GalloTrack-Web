@@ -791,9 +791,9 @@ export default function MarketplacePage({
       {/* 2. Filters Row (Role, Sex, Type, Sort) in a separate row below tabs */}
       <div
         data-testid="inventory-filters-row"
-        className="w-full grid grid-cols-2 md:flex md:flex-wrap items-center gap-2.5 p-2 bg-card rounded-lg border border-border shadow-xs"
+        className="w-full grid grid-cols-2 [grid-template-columns:repeat(2,minmax(0,1fr))] md:flex md:flex-wrap items-center gap-2.5 p-2 bg-card rounded-lg border border-border shadow-xs"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
           <label htmlFor="inventory-role" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
             Role
           </label>
@@ -802,7 +802,7 @@ export default function MarketplacePage({
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
             className={cn(
-              'w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
+              'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
               roleFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
             )}
           >
@@ -813,7 +813,7 @@ export default function MarketplacePage({
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
           <label htmlFor="inventory-sex" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
             Sex
           </label>
@@ -823,7 +823,7 @@ export default function MarketplacePage({
             value={sexFilter}
             onChange={(e) => setSexFilter(e.target.value as SexFilter)}
             className={cn(
-              'w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
+              'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
               sexFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
             )}
           >
@@ -833,7 +833,7 @@ export default function MarketplacePage({
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
           <label htmlFor="inventory-breeding-type" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
             Breeding Type
           </label>
@@ -843,7 +843,7 @@ export default function MarketplacePage({
             value={internalBreedingType}
             onChange={(e) => setInternalBreedingType(e.target.value as BreedingTypeFilter)}
             className={cn(
-              'w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
+              'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
               internalBreedingType !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
             )}
             title="Foundation stock is treated as 100% of its registered breed."
@@ -855,7 +855,7 @@ export default function MarketplacePage({
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 md:ml-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto md:ml-auto">
           <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
             Sort
           </label>
@@ -863,7 +863,7 @@ export default function MarketplacePage({
             id="inventory-sort"
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="w-full sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+            className="w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
           >
             <option value="name">Name (A–Z)</option>
             <option value="identifier">Identifier (1A2 before 1A10)</option>
