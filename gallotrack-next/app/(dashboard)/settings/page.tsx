@@ -1135,10 +1135,18 @@ export default function SettingsPage() {
       <div className="flex flex-col md:flex-row gap-6">
         {/* SIDEBAR TABS */}
         <div className="md:w-56 shrink-0">
-          <div className="bg-white/90 dark:bg-slate-900/90 rounded-lg border border-slate-200/80 dark:border-slate-700/50 shadow-sm p-2 md:sticky md:top-4">
+          <div
+            role="tablist"
+            aria-label="Settings Categories"
+            className="bg-white/90 dark:bg-slate-900/90 rounded-lg border border-slate-200/80 dark:border-slate-700/50 shadow-sm p-2 md:sticky md:top-4"
+          >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
+                role="tab"
+                id={`settings-tab-${tab.id}`}
+                aria-selected={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full text-left px-3.5 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2.5 cursor-pointer ${activeTab === tab.id ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/30 shadow-sm' : 'text-muted-foreground dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent'}`}
               >

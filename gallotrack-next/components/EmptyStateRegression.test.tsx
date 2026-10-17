@@ -142,9 +142,9 @@ describe('Empty State Regression Suite (Zero Data State Post-Clear)', () => {
       />
     );
     expect(container).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Breeding Pairs/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /Coding System/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /Safety Incidents/i })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Breeding Pairs/i })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Coding System/i })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /Safety Incidents/i })).toBeDefined();
   });
 
   it('6. Match Logs renders cleanly with zero matches without throwing', () => {

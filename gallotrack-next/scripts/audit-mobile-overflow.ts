@@ -2,28 +2,66 @@
  * scripts/audit-mobile-overflow.ts
  *
  * Playwright mobile overflow audit script.
- * Loads Chicken Inventory (all five status tabs), Chicken Registry (all four tabs),
- * Lineage Directory, Breeding Hub, Match Logs, Add Match Record, and Settings
- * across four mobile viewports (320x640, 360x800, 390x844, 430x932).
+ * Dynamically discovers and tests all tabs (role="tab") on:
+ * - Chicken Inventory (/catalog): All Chickens, Active Breeders, Ready to Breed, Archived, Deceased
+ * - Chicken Registry (/profiling): Breeding Male, Breeding Female, Offspring (with pills: All, Breeding Stock, Non-Breeding), Match Logs
+ * - Lineage Directory (/lineage): All five tabs
+ * - Breeding Hub (/breeding): All tabs (Coding System, Breeding Pairs, Chicken Identity, Safety Incidents)
+ * - Settings (/settings): All tabs (Account, Farm Profile, Preferences, Notifications, Option Lists, Data Management, System Info)
+ * - Match Logs (/match-logs) & Add Match Record (/match-logs/new)
  *
- * FAILS with exit code 1 if document.documentElement.scrollWidth exceeds clientWidth on any route.
+ * Matrix tested:
+ * - Viewports: 320x568, 320x640, 360x800, 390x844, 430x932
+ * - Font scaling: 100%, 125%, 150%
  *
- * LOCAL-ONLY:
- * - Uses owner / test account session from env (SMOKE_EMAIL / SMOKE_PASSWORD or defaults).
- * - Never prints, logs, or commits credentials, tokens, or cookies.
- * - Never writes, updates, or deletes anything in the database (read-only navigation).
+ * FAILS with exit code 1 if document.documentElement.scrollWidth exceeds clientWidth on any route/tab.
+ *
+ * SAFETY & PRIVACY:
+ * - Strictly LOCAL ONLY: Refuses to run against non-localhost BASE_URL without explicit --allow-external flag.
+ * - In-memory session only: Never writes, logs, or commits credentials, tokens, cookies, traces, or storage-state.
+ * - Read-only navigation: Never writes, updates, or deletes any database rows.
  * - Never runs in CI or on deploy.
  *
  * Usage:
- *   1. Ensure server is running (e.g. npm run dev or npm start on http://localhost:3000)
- *   2. npm run audit:mobile
+ *   npm run audit:mobile
  *   or:
  *   BASE_URL=http://localhost:3000 npm run audit:mobile
  */
 
-import { chromium, type Browser, type BrowserContext } from 'playwright';
+import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
+
+const BASE_URL = process.env.BASE_URL || process.env.SMOKE_BASE_URL || 'http://localhost:3000';
+const EMAIL = process.env.SMOKE_EMAIL || 'client@gmail.com';
+const PASSWORD = process.env.SMOKE_PASSWORD || 'password123';
+const ALLOW_EXTERNAL = process.env.ALLOW_EXTERNAL_URL === 'true' || process.argv.includes('--allow-external');
+
+// Validate local-only base URL
+function assertLocalBaseUrl(urlStr: string): void {
+  try {
+    const u = new URL(urlStr);
+    const host = u.hostname.toLowerCase();
+    const isLocal =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1' ||
+      host === '[::1]' ||
+      host.endsWith('.localhost');
+
+    if (!isLocal && !ALLOW_EXTERNAL) {
+      console.error(`\n❌ ERROR: Refusing to run audit against non-local BASE_URL (${urlStr}).`);
+      console.error('This script is strictly intended for local regression testing.');
+      console.error('To override intentionally, pass the --allow-external flag or set ALLOW_EXTERNAL_URL=true.\n');
+      process.exit(1);
+    }
+  } catch (err: unknown) {
+    console.error(`\n❌ ERROR: Invalid BASE_URL: "${urlStr}"`);
+    process.exit(1);
+  }
+}
+
+assertLocalBaseUrl(BASE_URL);
 
 interface ViewportSpec {
   name: string;
@@ -32,51 +70,31 @@ interface ViewportSpec {
 }
 
 const VIEWPORTS: ViewportSpec[] = [
+  { name: '320x568', width: 320, height: 568 },
   { name: '320x640', width: 320, height: 640 },
   { name: '360x800', width: 360, height: 800 },
   { name: '390x844', width: 390, height: 844 },
   { name: '430x932', width: 430, height: 932 },
 ];
 
-interface RouteSpec {
+const FONT_SCALES = [1.0, 1.25, 1.5]; // 100%, 125%, 150%
+
+interface BaseRouteSpec {
   name: string;
   path: string;
+  hasDynamicTabs: boolean;
   expectedSelector?: string;
 }
 
-const ROUTES: RouteSpec[] = [
-  // Chicken Inventory (all 5 tabs)
-  { name: 'Chicken Inventory (All)', path: '/catalog?status=all', expectedSelector: '[data-testid="inventory-tabs-container"]' },
-  { name: 'Chicken Inventory (Active)', path: '/catalog?status=active', expectedSelector: '[data-testid="inventory-tabs-container"]' },
-  { name: 'Chicken Inventory (Breeding)', path: '/catalog?status=breeding', expectedSelector: '[data-testid="inventory-tabs-container"]' },
-  { name: 'Chicken Inventory (Archived)', path: '/catalog?status=archived', expectedSelector: '[data-testid="inventory-tabs-container"]' },
-  { name: 'Chicken Inventory (Deceased)', path: '/catalog?status=deceased', expectedSelector: '[data-testid="inventory-tabs-container"]' },
-
-  // Chicken Registry (all 4 tabs)
-  { name: 'Chicken Registry (Males)', path: '/profiling?tab=males' },
-  { name: 'Chicken Registry (Females)', path: '/profiling?tab=females' },
-  { name: 'Chicken Registry (Archived)', path: '/profiling?tab=archived' },
-  { name: 'Chicken Registry (Deceased)', path: '/profiling?tab=deceased' },
-
-  // Lineage Directory
-  { name: 'Lineage Directory', path: '/lineage' },
-
-  // Breeding Hub
-  { name: 'Breeding Hub', path: '/breeding' },
-
-  // Match Logs
-  { name: 'Match Logs', path: '/match-logs' },
-
-  // Add Match Record
-  { name: 'Add Match Record', path: '/match-logs/new' },
-
-  // Settings
-  { name: 'Settings', path: '/settings' },
+const BASE_ROUTES: BaseRouteSpec[] = [
+  { name: 'Chicken Inventory', path: '/catalog', hasDynamicTabs: true, expectedSelector: '[data-testid="inventory-tabs-container"]' },
+  { name: 'Chicken Registry', path: '/profiling', hasDynamicTabs: true },
+  { name: 'Lineage Directory', path: '/lineage', hasDynamicTabs: true },
+  { name: 'Breeding Hub', path: '/breeding', hasDynamicTabs: true },
+  { name: 'Match Logs', path: '/match-logs', hasDynamicTabs: false },
+  { name: 'Add Match Record', path: '/match-logs/new', hasDynamicTabs: false },
+  { name: 'Settings', path: '/settings', hasDynamicTabs: true },
 ];
-
-const BASE_URL = process.env.BASE_URL || process.env.SMOKE_BASE_URL || 'http://localhost:3000';
-const EMAIL = process.env.SMOKE_EMAIL || 'client@gmail.com';
-const PASSWORD = process.env.SMOKE_PASSWORD || 'password123';
 
 function findCachedChromium(): string | null {
   const cache = path.join(
@@ -117,9 +135,7 @@ async function launchBrowser(): Promise<Browser> {
   } catch {
     const cached = findCachedChromium();
     if (!cached) {
-      throw new Error(
-        'Chromium executable not found. Please install Playwright browsers or set PLAYWRIGHT_CHROMIUM_PATH.',
-      );
+      throw new Error('Chromium executable not found. Please install Playwright browsers or set PLAYWRIGHT_CHROMIUM_PATH.');
     }
     return chromium.launch({ executablePath: cached });
   }
@@ -128,34 +144,76 @@ async function launchBrowser(): Promise<Browser> {
 async function authenticate(context: BrowserContext): Promise<void> {
   const page = await context.newPage();
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('input[type="password"]', { timeout: 15000 });
+  await page.waitForTimeout(1000);
 
-  // Fill credentials safely without printing to stdout
   const emailInput = page.locator('input[type="email"], input[id="email-address"], input[name="username"]').first();
   await emailInput.fill(EMAIL);
   const passwordInput = page.locator('input[type="password"]').first();
   await passwordInput.fill(PASSWORD);
+  await page.waitForTimeout(400);
   await page.click('button[type="submit"]');
 
   await page.waitForURL(/dashboard/, { timeout: 20000 });
   await page.close();
 }
 
+interface OverflowCheckResult {
+  clientWidth: number;
+  scrollWidth: number;
+  hasOverflow: boolean;
+  overflowAmount: number;
+  culprits: Array<{ tag: string; id: string; className: string; right: number }>;
+}
+
+async function measureOverflow(page: Page): Promise<OverflowCheckResult> {
+  return await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const scrollWidth = document.documentElement.scrollWidth;
+    const bodyScrollWidth = document.body.scrollWidth;
+    const effectiveScroll = Math.max(scrollWidth, bodyScrollWidth);
+
+    const culprits: Array<{ tag: string; id: string; className: string; right: number }> = [];
+    if (effectiveScroll > clientWidth + 1) {
+      document.querySelectorAll('*').forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.right > clientWidth + 1) {
+          culprits.push({
+            tag: el.tagName,
+            id: el.id,
+            className: (el.className?.toString?.() || '').slice(0, 60),
+            right: Math.round(rect.right),
+          });
+        }
+      });
+    }
+
+    return {
+      clientWidth,
+      scrollWidth: effectiveScroll,
+      hasOverflow: effectiveScroll > clientWidth + 1,
+      overflowAmount: Math.max(0, effectiveScroll - clientWidth),
+      culprits: culprits.slice(0, 5),
+    };
+  });
+}
+
 interface FailureReport {
   viewport: string;
-  routeName: string;
-  path: string;
+  fontScale: string;
+  targetDescription: string;
   clientWidth: number;
   scrollWidth: number;
   overflowAmount: number;
-  overflowingElements: Array<{ tag: string; id: string; className: string; right: number }>;
+  culprits: Array<{ tag: string; id: string; className: string; right: number }>;
 }
 
 async function runAudit(): Promise<void> {
-  console.log('------------------------------------------------------------');
+  console.log('============================================================');
   console.log('Mobile Overflow Audit (Playwright)');
-  console.log(`Base URL: ${BASE_URL}`);
-  console.log(`Auditing ${ROUTES.length} routes across ${VIEWPORTS.length} viewports (${ROUTES.length * VIEWPORTS.length} total configurations)`);
-  console.log('------------------------------------------------------------\n');
+  console.log(`Base URL: ${BASE_URL} (Local-only verification enforced)`);
+  console.log(`Matrix: ${VIEWPORTS.length} viewports × ${FONT_SCALES.length} font scalings = ${VIEWPORTS.length * FONT_SCALES.length} environment configurations`);
+  console.log('============================================================\n');
 
   let browser: Browser;
   try {
@@ -166,12 +224,13 @@ async function runAudit(): Promise<void> {
     process.exit(1);
   }
 
+  // Pure in-memory session: no storage-state file, no trace recording, no cookies written to disk
   const context = await browser.newContext();
 
   try {
-    console.log('Authenticating owner session...');
+    console.log('Authenticating in-memory session (credentials never logged or persisted)...');
     await authenticate(context);
-    console.log('✓ Authentication successful\n');
+    console.log('✓ In-memory authentication successful\n');
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('Failed to authenticate session:', msg);
@@ -180,111 +239,205 @@ async function runAudit(): Promise<void> {
   }
 
   const failures: FailureReport[] = [];
-  let passedCount = 0;
+  const visitedCatalog = new Set<string>();
+  let totalChecks = 0;
+  let passedChecks = 0;
 
   for (const vp of VIEWPORTS) {
-    console.log(`>>> Checking Viewport: ${vp.name} (${vp.width}x${vp.height})`);
+    for (const fontScale of FONT_SCALES) {
+      const scalePct = `${Math.round(fontScale * 100)}%`;
+      const envLabel = `Viewport: ${vp.name} (${vp.width}x${vp.height}) | Font Scale: ${scalePct}`;
+      console.log(`>>> Checking ${envLabel}`);
 
-    const page = await context.newPage();
-    await page.setViewportSize({ width: vp.width, height: vp.height });
+      const page = await context.newPage();
+      await page.setViewportSize({ width: vp.width, height: vp.height });
 
-    for (const route of ROUTES) {
-      const url = `${BASE_URL}${route.path}`;
-      try {
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        if (route.expectedSelector) {
-          await page.locator(route.expectedSelector).first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
-        }
-        await page.waitForTimeout(600);
-
-        const check = await page.evaluate(() => {
-          const clientWidth = document.documentElement.clientWidth;
-          const scrollWidth = document.documentElement.scrollWidth;
-          const bodyScrollWidth = document.body.scrollWidth;
-          const effectiveScroll = Math.max(scrollWidth, bodyScrollWidth);
-
-          const overflowing: Array<{ tag: string; id: string; className: string; right: number }> = [];
-          if (effectiveScroll > clientWidth) {
-            document.querySelectorAll('*').forEach((el) => {
-              const rect = el.getBoundingClientRect();
-              if (rect.right > clientWidth + 1) {
-                overflowing.push({
-                  tag: el.tagName,
-                  id: el.id,
-                  className: (el.className?.toString?.() || '').slice(0, 60),
-                  right: Math.round(rect.right),
-                });
-              }
-            });
+      for (const route of BASE_ROUTES) {
+        const url = `${BASE_URL}${route.path}`;
+        try {
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+          if (route.expectedSelector) {
+            await page.locator(route.expectedSelector).first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
           }
 
-          return {
-            clientWidth,
-            scrollWidth: effectiveScroll,
-            overflowing: overflowing.slice(0, 5),
-          };
-        });
+          if (fontScale !== 1.0) {
+            await page.evaluate((scale) => {
+              document.documentElement.style.fontSize = `${Math.round(scale * 100)}%`;
+            }, fontScale);
+          }
+          await page.waitForTimeout(400);
 
-        const overflow = check.scrollWidth - check.clientWidth;
-        if (overflow > 1) {
+          if (!route.hasDynamicTabs) {
+            // Static route check
+            const check = await measureOverflow(page);
+            totalChecks++;
+            visitedCatalog.add(`${route.name} (default)`);
+
+            if (check.hasOverflow) {
+              failures.push({
+                viewport: vp.name,
+                fontScale: scalePct,
+                targetDescription: `${route.name} (${route.path})`,
+                clientWidth: check.clientWidth,
+                scrollWidth: check.scrollWidth,
+                overflowAmount: check.overflowAmount,
+                culprits: check.culprits,
+              });
+              console.error(`  ✗ FAIL: [${route.name}] scrollWidth=${check.scrollWidth} > clientWidth=${check.clientWidth} (+${check.overflowAmount}px)`);
+            } else {
+              passedChecks++;
+              console.log(`  ✓ PASS: [${route.name}] (${check.clientWidth}px / ${check.scrollWidth}px)`);
+            }
+          } else {
+            // Discover tabs dynamically via role="tab"
+            const tabElements = await page.locator('[role="tab"]').all();
+            const tabDetails: Array<{ id: string; text: string; index: number }> = [];
+
+            for (let i = 0; i < tabElements.length; i++) {
+              const el = tabElements[i];
+              const isVisible = await el.isVisible().catch(() => false);
+              if (!isVisible) continue;
+
+              const id = (await el.getAttribute('id')) || '';
+              const text = (await el.innerText()).replace(/\s+/g, ' ').trim() || id;
+              tabDetails.push({ id, text, index: i });
+            }
+
+            // Test initial view of the route
+            const initialCheck = await measureOverflow(page);
+            totalChecks++;
+            visitedCatalog.add(`${route.name} (Initial)`);
+            if (initialCheck.hasOverflow) {
+              failures.push({
+                viewport: vp.name,
+                fontScale: scalePct,
+                targetDescription: `${route.name} (Initial)`,
+                clientWidth: initialCheck.clientWidth,
+                scrollWidth: initialCheck.scrollWidth,
+                overflowAmount: initialCheck.overflowAmount,
+                culprits: initialCheck.culprits,
+              });
+              console.error(`  ✗ FAIL: [${route.name} Initial] (+${initialCheck.overflowAmount}px overflow)`);
+            } else {
+              passedChecks++;
+            }
+
+            // Click and audit each dynamically discovered tab
+            for (const t of tabDetails) {
+              const tabLoc = t.id ? page.locator(`#${t.id}`) : page.locator('[role="tab"]').nth(t.index);
+              await tabLoc.click().catch(() => {});
+              await page.waitForTimeout(300);
+
+              const tabCheck = await measureOverflow(page);
+              totalChecks++;
+              const entryName = `${route.name} -> Tab: "${t.text}"`;
+              visitedCatalog.add(entryName);
+
+              if (tabCheck.hasOverflow) {
+                failures.push({
+                  viewport: vp.name,
+                  fontScale: scalePct,
+                  targetDescription: entryName,
+                  clientWidth: tabCheck.clientWidth,
+                  scrollWidth: tabCheck.scrollWidth,
+                  overflowAmount: tabCheck.overflowAmount,
+                  culprits: tabCheck.culprits,
+                });
+                console.error(`  ✗ FAIL: [${entryName}] scrollWidth=${tabCheck.scrollWidth} > clientWidth=${tabCheck.clientWidth} (+${tabCheck.overflowAmount}px)`);
+              } else {
+                passedChecks++;
+                console.log(`  ✓ PASS: [${entryName}] (${tabCheck.clientWidth}px / ${tabCheck.scrollWidth}px)`);
+              }
+
+              // Special check for nested tabs/pills revealed by clicking (e.g. Offspring category pills)
+              const nestedPills = await page.locator('[role="tablist"] [role="tab"]').all();
+              if (nestedPills.length > tabDetails.length) {
+                for (const pill of nestedPills) {
+                  const pId = (await pill.getAttribute('id')) || '';
+                  if (pId.startsWith('prospect-category-')) {
+                    const pText = (await pill.innerText()).replace(/\s+/g, ' ').trim();
+                    await pill.click().catch(() => {});
+                    await page.waitForTimeout(200);
+
+                    const pillCheck = await measureOverflow(page);
+                    totalChecks++;
+                    const pillEntryName = `${route.name} -> Tab: "${t.text}" -> Pill: "${pText}"`;
+                    visitedCatalog.add(pillEntryName);
+
+                    if (pillCheck.hasOverflow) {
+                      failures.push({
+                        viewport: vp.name,
+                        fontScale: scalePct,
+                        targetDescription: pillEntryName,
+                        clientWidth: pillCheck.clientWidth,
+                        scrollWidth: pillCheck.scrollWidth,
+                        overflowAmount: pillCheck.overflowAmount,
+                        culprits: pillCheck.culprits,
+                      });
+                      console.error(`  ✗ FAIL: [${pillEntryName}] (+${pillCheck.overflowAmount}px)`);
+                    } else {
+                      passedChecks++;
+                      console.log(`  ✓ PASS: [${pillEntryName}] (${pillCheck.clientWidth}px / ${pillCheck.scrollWidth}px)`);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
           failures.push({
             viewport: vp.name,
-            routeName: route.name,
-            path: route.path,
-            clientWidth: check.clientWidth,
-            scrollWidth: check.scrollWidth,
-            overflowAmount: overflow,
-            overflowingElements: check.overflowing,
+            fontScale: scalePct,
+            targetDescription: `${route.name} (${route.path})`,
+            clientWidth: vp.width,
+            scrollWidth: -1,
+            overflowAmount: 999,
+            culprits: [],
           });
-          console.error(`  ✗ FAIL: [${route.name}] (${route.path}) => scrollWidth=${check.scrollWidth} > clientWidth=${check.clientWidth} (+${overflow}px overflow)`);
-        } else {
-          passedCount++;
-          console.log(`  ✓ PASS: [${route.name}] (${check.clientWidth}px / ${check.scrollWidth}px)`);
+          console.error(`  ✗ ERROR loading ${route.name}: ${msg.split('\n')[0]}`);
         }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        failures.push({
-          viewport: vp.name,
-          routeName: route.name,
-          path: route.path,
-          clientWidth: vp.width,
-          scrollWidth: -1,
-          overflowAmount: 999,
-          overflowingElements: [],
-        });
-        console.error(`  ✗ ERROR: [${route.name}] load failed: ${msg.split('\n')[0]}`);
       }
-    }
 
-    await page.close();
-    console.log('');
+      await page.close();
+      console.log('');
+    }
   }
 
   await browser.close();
 
-  console.log('------------------------------------------------------------');
-  console.log(`Mobile Overflow Audit Results: ${passedCount} PASSED, ${failures.length} FAILED`);
-  console.log('------------------------------------------------------------');
+  console.log('============================================================');
+  console.log('Mobile Overflow Audit Summary');
+  console.log('============================================================');
+  console.log(`Total Configurations Checked: ${totalChecks}`);
+  console.log(`Passed: ${passedChecks}`);
+  console.log(`Failed: ${failures.length}\n`);
+
+  console.log('PAGES & TABS DYNAMICALLY DISCOVERED & VISITED:');
+  const sortedVisited = Array.from(visitedCatalog).sort();
+  for (const item of sortedVisited) {
+    console.log(`  • ${item}`);
+  }
+  console.log('');
 
   if (failures.length > 0) {
-    console.error('\nFAILURE DETAILS:');
+    console.error('FAILURE DETAILS:');
     for (const f of failures) {
-      console.error(`- Viewport ${f.viewport} on ${f.routeName} (${f.path}):`);
+      console.error(`- [${f.viewport} @ ${f.fontScale}] on ${f.targetDescription}:`);
       console.error(`  clientWidth: ${f.clientWidth}px, scrollWidth: ${f.scrollWidth}px (overflow: +${f.overflowAmount}px)`);
-      if (f.overflowingElements.length > 0) {
-        console.error('  Culprit elements exceeding viewport right:');
-        for (const el of f.overflowingElements) {
-          console.error(`    * <${el.tag.toLowerCase()} id="${el.id}"> right=${el.right}px (class="${el.className}")`);
+      if (f.culprits.length > 0) {
+        for (const c of f.culprits) {
+          console.error(`    * <${c.tag.toLowerCase()} id="${c.id}"> right=${c.right}px (class="${c.className}")`);
         }
       }
     }
     process.exit(1);
   }
 
-  console.log('\nAll checked routes fit strictly within mobile viewports with zero horizontal overflow.');
+  console.log('✓ All routes and dynamic tabs strictly fit mobile viewports with ZERO horizontal overflow across all font scalings.\n');
 }
 
 runAudit().catch((err: unknown) => {
-  console.error('Audit script encountered an unexpected fatal error:', err);
+  console.error('Audit script fatal error:', err);
   process.exit(1);
 });

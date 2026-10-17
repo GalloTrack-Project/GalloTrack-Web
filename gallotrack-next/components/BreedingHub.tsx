@@ -1331,7 +1331,11 @@ export default function BreedingHub({
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border">
+        <div
+          role="tablist"
+          aria-label="Breeding Hub Navigation"
+          className="flex flex-wrap items-center gap-1.5 bg-muted/60 p-1.5 rounded-2xl border border-border"
+        >
           {TABS.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -1339,7 +1343,9 @@ export default function BreedingHub({
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
                 id={`breeding-tab-${tab.id}`}
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                   isActive
