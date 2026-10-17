@@ -6,11 +6,16 @@ import * as path from 'path';
  * DATABASE & STORAGE RESTORE SCRIPT (WITH DRY-RUN & SAFETY GUARD)
  *
  * Usage:
- *   npx tsx scripts/restore-database.ts --backup=<folder_name> [--dry-run] [--target=staging|production]
+ *   npx tsx scripts/restore-database.ts [--backup=<folder_name>] [--target=staging|production] [--execute]
  *
- * Safety Rules:
- *   - Runs in DRY-RUN mode by default unless --execute is passed.
- *   - Refuses to run against production unless --confirm-restore-to-production-DANGER is explicitly passed.
+ * Safety Rules & Guardrails:
+ *   1. Runs in DRY-RUN mode by default unless --execute is passed.
+ *   2. Refuses to run against production unless --confirm-restore-to-production-DANGER is passed.
+ *   3. Refuses a live restore into a database that already contains the owner's rows unless
+ *      --allow-overwrite-existing-owner-data is passed.
+ *   4. Explicit Post-Restore Sequence Reset:
+ *      PostgreSQL serial sequences are NOT automatically advanced by REST inserts with explicit IDs.
+ *      Post-restore SQL script must be run to avoid duplicate key errors.
  */
 
 const ENV_PATH = path.resolve(__dirname, '../.env.local');
@@ -30,10 +35,51 @@ const getArg = (name: string) => {
 };
 const hasFlag = (flag: string) => args.includes(`--${flag}`);
 
+if (hasFlag('help') || hasFlag('h')) {
+  console.log(`
+================================================================================
+🚨 GALLOTRACK DATABASE & STORAGE RESTORE UTILITY
+================================================================================
+
+Usage:
+  npx tsx scripts/restore-database.ts [options]
+
+Options:
+  --backup=<folder_name>                     Path or name of backup folder in backups/ (default: latest backup)
+  --target=staging|production                Target database environment (default: staging)
+  --execute                                  Execute live restore (default is dry-run mode)
+  --confirm-restore-to-production-DANGER     Required safety flag when target is production
+  --allow-overwrite-existing-owner-data      Required when target DB already has rows for the owner
+  --help, -h                                 Show this help screen
+
+Safety Rules & Guardrails:
+  1. Dry-Run By Default:
+     Inspects manifests, table row counts, and storage files without writing anything to the database or storage.
+  2. Production Protection:
+     Refuses live execution against production unless --confirm-restore-to-production-DANGER is explicitly passed.
+  3. Existing Owner Data Guard:
+     Refuses a live restore if the target database already contains existing rows for the backup owner.
+     Pass --allow-overwrite-existing-owner-data only if you intend to merge or overwrite into an existing dataset.
+  4. Mandatory Post-Restore Sequence Reset:
+     Because PostgreSQL serial sequences (e.g. fowl_id_seq, match_id_seq) do not auto-advance during explicit-ID
+     REST inserts, you MUST execute the following SQL in Supabase SQL editor after every live restore:
+       SELECT setval(pg_get_serial_sequence('fowl', 'id'), coalesce(max(id), 1)) FROM fowl;
+       SELECT setval(pg_get_serial_sequence('match', 'id'), coalesce(max(id), 1)) FROM match;
+       SELECT setval(pg_get_serial_sequence('breeding_pairings', 'id'), coalesce(max(id), 1)) FROM breeding_pairings;
+       SELECT setval(pg_get_serial_sequence('safety_incidents', 'id'), coalesce(max(id), 1)) FROM safety_incidents;
+       SELECT setval(pg_get_serial_sequence('fowl_status_history', 'id'), coalesce(max(id), 1)) FROM fowl_status_history;
+       SELECT setval(pg_get_serial_sequence('share_links', 'id'), coalesce(max(id), 1)) FROM share_links;
+       SELECT setval(pg_get_serial_sequence('admin_audit_logs', 'id'), coalesce(max(id), 1)) FROM admin_audit_logs;
+================================================================================
+`);
+  process.exit(0);
+}
+
 const backupFolderArg = getArg('backup');
 const targetEnv = getArg('target') || 'staging';
 const isDryRun = !hasFlag('execute');
 const confirmedProd = hasFlag('confirm-restore-to-production-DANGER');
+const allowOverwriteExistingOwnerData = hasFlag('allow-overwrite-existing-owner-data');
 
 function getAllFilesRecursively(dir: string, baseDir: string = dir): string[] {
   let results: string[] = [];
@@ -204,18 +250,26 @@ async function restore() {
     console.log(`     • fowl is restored before breeding_pairings, match, and fowl_status_history.`);
     console.log(`     • match is restored before match_videos and match_photos.`);
 
-    console.log(`\n2. POSTGRESQL SERIAL SEQUENCE BEHAVIOR:`);
+    console.log(`\n2. POST-RESTORE SEQUENCE RESET (EXPLICIT MANDATORY STEP):`);
     console.log(`   ⚠️ CRITICAL: Standard PostgREST/Supabase REST explicit-ID inserts DO NOT`);
     console.log(`      reset or advance the PostgreSQL serial/identity sequences (e.g., fowl_id_seq).`);
     console.log(`   • If explicit-ID inserts are executed without resetting sequences, subsequent`);
     console.log(`     application inserts will trigger duplicate key errors (fowl_pkey collision).`);
-    console.log(`   • Recommended post-restore SQL script to execute in Supabase SQL editor:`);
+    console.log(`   • MANDATORY POST-RESTORE SQL SCRIPT to execute in Supabase SQL editor:`);
     console.log(`       SELECT setval(pg_get_serial_sequence('fowl', 'id'), coalesce(max(id), 1)) FROM fowl;`);
     console.log(`       SELECT setval(pg_get_serial_sequence('match', 'id'), coalesce(max(id), 1)) FROM match;`);
     console.log(`       SELECT setval(pg_get_serial_sequence('breeding_pairings', 'id'), coalesce(max(id), 1)) FROM breeding_pairings;`);
     console.log(`       SELECT setval(pg_get_serial_sequence('safety_incidents', 'id'), coalesce(max(id), 1)) FROM safety_incidents;`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('fowl_status_history', 'id'), coalesce(max(id), 1)) FROM fowl_status_history;`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('share_links', 'id'), coalesce(max(id), 1)) FROM share_links;`);
+    console.log(`       SELECT setval(pg_get_serial_sequence('admin_audit_logs', 'id'), coalesce(max(id), 1)) FROM admin_audit_logs;`);
 
-    console.log(`\n3. SUMMARY:`);
+    console.log(`\n3. EXISTING DATA SAFETY GUARD:`);
+    console.log(`   • A real restore (--execute) will verify if the target database already contains`);
+    console.log(`     rows for the backup owner. If rows exist, it refuses to restore unless`);
+    console.log(`     --allow-overwrite-existing-owner-data is provided.`);
+
+    console.log(`\n4. SUMMARY:`);
     console.log(`   Database tables ready: ${Object.keys(dbData).length} (${totalRows} rows)`);
     console.log(`   Storage files ready: ${totalFiles} objects`);
     console.log(`   NO CHANGES WERE APPLIED to ${targetEnv.toUpperCase()}.`);
@@ -225,6 +279,37 @@ async function restore() {
 
   // Live execution
   const supabase = createClient(targetUrl, targetKey, { auth: { persistSession: false } });
+
+  // Safety Gate: Refuse real restore into database with existing owner rows unless flag is given
+  const targetOwnerId =
+    manifest?.ownerScope && manifest.ownerScope !== 'All Users'
+      ? manifest.ownerScope
+      : (dbData['fowl']?.[0]?.user_id || null);
+
+  if (targetOwnerId) {
+    console.log(`Verifying target database state for owner '${targetOwnerId}'...`);
+    const { count, error: countErr } = await supabase
+      .from('fowl')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', targetOwnerId);
+
+    if (countErr) {
+      console.warn(`  ⚠️ Could not verify existing fowl count: ${countErr.message}`);
+    } else if (count !== null && count > 0) {
+      if (!allowOverwriteExistingOwnerData) {
+        console.error(`\n⛔ EXISTING OWNER DATA SAFETY BLOCK:`);
+        console.error(`   Target database already contains ${count} fowl row(s) for owner '${targetOwnerId}'.`);
+        console.error(`   A live restore into a database containing existing owner rows will cause key conflicts or mixed states.`);
+        console.error(`   To proceed with overwriting/merging into existing data, you MUST provide:`);
+        console.error(`     --allow-overwrite-existing-owner-data\n`);
+        process.exit(1);
+      } else {
+        console.log(`  ⚠️ Notice: Target database contains ${count} existing fowl row(s). Flag --allow-overwrite-existing-owner-data was provided; proceeding.`);
+      }
+    } else {
+      console.log(`  ✓ Target database is clean (0 existing fowl rows for owner '${targetOwnerId}').`);
+    }
+  }
 
   console.log(`\n--- EXECUTING DATABASE RESTORE ---`);
   // Tables will be restored in the pre-defined restoreOrder (parents before children)
@@ -266,7 +351,15 @@ async function restore() {
 
   console.log(`\n=======================================================`);
   console.log(`✅ RESTORE COMPLETED SUCCESSFULLY`);
-  console.log(`=======================================================\n`);
+  console.log(`=======================================================`);
+  console.log(`MANDATORY NEXT STEP: Run sequence reset SQL in Supabase SQL editor:`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('fowl', 'id'), coalesce(max(id), 1)) FROM fowl;`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('match', 'id'), coalesce(max(id), 1)) FROM match;`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('breeding_pairings', 'id'), coalesce(max(id), 1)) FROM breeding_pairings;`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('safety_incidents', 'id'), coalesce(max(id), 1)) FROM safety_incidents;`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('fowl_status_history', 'id'), coalesce(max(id), 1)) FROM fowl_status_history;`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('share_links', 'id'), coalesce(max(id), 1)) FROM share_links;`);
+  console.log(`  SELECT setval(pg_get_serial_sequence('admin_audit_logs', 'id'), coalesce(max(id), 1)) FROM admin_audit_logs;\n`);
 }
 
 restore().catch((err) => {

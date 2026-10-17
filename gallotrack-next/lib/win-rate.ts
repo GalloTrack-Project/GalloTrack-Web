@@ -98,84 +98,34 @@ class CaseInsensitiveMatchStatsMap extends Map<
  * Builds an in-memory lookup map of chicken ID / name -> WinRateStats + matches list.
  *
  * Rules:
- * - Orphan matches (fowl_id == null) are NEVER attributed to newly registered chickens of the same name.
- * - When fowls list is provided, matches are attributed strictly by fowl_id, with chicken name
- *   used only as a secondary lookup label for that specific fowl record.
+ * - fowls list is strictly required. Matches are attributed exclusively by `fowl_id === fowl.id`.
+ * - Orphan matches (fowl_id == null) are NEVER attributed to any chicken.
+ * - Chicken names and bird codes serve solely as lookup keys pointing to that specific fowl ID's verified stats.
  */
 export function buildChickenMatchStatsMap(
   matches: MatchRecord[],
-  fowls?: Array<{ id: number; name?: string; bird_code?: string | null }>,
+  fowls: Array<{ id: number; name?: string; bird_code?: string | null }>,
 ): Map<
   string,
   WinRateStats & { matches: MatchRecord[]; lastMatchDate: string | null }
 > {
   const result = new CaseInsensitiveMatchStatsMap();
 
-  if (fowls && fowls.length > 0) {
-    const temp = new Map<
-      number,
-      { wins: number; losses: number; draws: number; matches: MatchRecord[]; lastMatchDate: string | null }
-    >();
-
-    for (const f of fowls) {
-      temp.set(f.id, { wins: 0, losses: 0, draws: 0, matches: [], lastMatchDate: null });
-    }
-
-    for (const m of matches) {
-      // Orphan matches (fowl_id == null) can NEVER be attributed to any chicken profile
-      if (m.fowl_id == null) continue;
-
-      const entry = temp.get(Number(m.fowl_id));
-      if (!entry) continue;
-
-      entry.matches.push(m);
-      const outcome = (m.outcome || '').trim().toLowerCase();
-      if (outcome === 'win') entry.wins++;
-      else if (outcome === 'loss') entry.losses++;
-      else if (outcome === 'draw') entry.draws++;
-
-      if (m.date) {
-        if (!entry.lastMatchDate || m.date > entry.lastMatchDate) {
-          entry.lastMatchDate = m.date;
-        }
-      }
-    }
-
-    for (const f of fowls) {
-      const entry = temp.get(f.id)!;
-      const stats = computeWinRate(entry.wins, entry.losses, entry.draws);
-      const item = {
-        ...stats,
-        matches: entry.matches,
-        lastMatchDate: entry.lastMatchDate,
-      };
-
-      result.set(String(f.id), item);
-      if (f.name) result.set(f.name, item);
-      if (f.bird_code) result.set(f.bird_code, item);
-    }
-
-    return result;
-  }
-
-  // Fallback when fowls list is not provided (standalone test/backward compatibility)
   const temp = new Map<
-    string,
+    number,
     { wins: number; losses: number; draws: number; matches: MatchRecord[]; lastMatchDate: string | null }
   >();
 
+  for (const f of fowls) {
+    temp.set(f.id, { wins: 0, losses: 0, draws: 0, matches: [], lastMatchDate: null });
+  }
+
   for (const m of matches) {
-    // Orphan matches (fowl_id == null) are NEVER attributed to chickens
+    // Orphan matches (fowl_id == null) can NEVER be attributed to any chicken profile
     if (m.fowl_id == null) continue;
 
-    const rawName = (m.entry_name || '').trim().toLowerCase();
-    if (!rawName) continue;
-
-    let entry = temp.get(rawName);
-    if (!entry) {
-      entry = { wins: 0, losses: 0, draws: 0, matches: [], lastMatchDate: null };
-      temp.set(rawName, entry);
-    }
+    const entry = temp.get(Number(m.fowl_id));
+    if (!entry) continue;
 
     entry.matches.push(m);
     const outcome = (m.outcome || '').trim().toLowerCase();
@@ -190,15 +140,19 @@ export function buildChickenMatchStatsMap(
     }
   }
 
-  temp.forEach((entry, key) => {
+  for (const f of fowls) {
+    const entry = temp.get(f.id)!;
     const stats = computeWinRate(entry.wins, entry.losses, entry.draws);
     const item = {
       ...stats,
       matches: entry.matches,
       lastMatchDate: entry.lastMatchDate,
     };
-    result.set(key, item);
-  });
+
+    result.set(String(f.id), item);
+    if (f.name) result.set(f.name, item);
+    if (f.bird_code) result.set(f.bird_code, item);
+  }
 
   return result;
 }

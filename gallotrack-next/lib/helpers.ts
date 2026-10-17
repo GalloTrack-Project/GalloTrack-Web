@@ -355,9 +355,11 @@ export const calculatePairingStats = (
   });
   map.forEach((stat) => {
     let survivalSum = 0;
-    stat.members.forEach((m) => {
-      // Strictly filter matches by fowl_id; orphan matches (fowl_id == null) can never be attributed
-      const fowlMatches = matchHistory.filter((match) => match.fowl_id != null && Number(match.fowl_id) === Number(m.id));
+    stat.members.forEach((memberFowl) => {
+      // Strictly filter matches by fowl_id matching memberFowl.id; orphan matches (fowl_id == null) can never be attributed
+      const fowlMatches = matchHistory.filter(
+        (matchRecord) => matchRecord.fowl_id != null && Number(matchRecord.fowl_id) === Number(memberFowl.id),
+      );
       stat.totalFights += fowlMatches.length;
       stat.wins += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'win').length;
       stat.losses += fowlMatches.filter((x) => x.outcome && x.outcome.toLowerCase() === 'loss').length;

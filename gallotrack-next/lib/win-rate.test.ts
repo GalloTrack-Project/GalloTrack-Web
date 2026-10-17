@@ -120,14 +120,18 @@ describe('lib/win-rate', () => {
 
   describe('buildChickenMatchStatsMap', () => {
     it('indexes matches by chicken name case-insensitively and computes accurate records', () => {
+      const fowls = [
+        { id: 10, name: 'Sweater Red Storm' },
+        { id: 20, name: 'Hatch Crown' },
+      ];
       const matches: MatchRecord[] = [
-        makeMatch('Sweater Red Storm', 'Win'),
-        makeMatch('sweater red storm', 'Win'),
-        makeMatch('Sweater Red Storm ', 'Loss'),
-        makeMatch('Hatch Crown', 'Draw'),
+        makeMatch('Sweater Red Storm', 'Win', 10),
+        makeMatch('sweater red storm', 'Win', 10),
+        makeMatch('Sweater Red Storm ', 'Loss', 10),
+        makeMatch('Hatch Crown', 'Draw', 20),
       ];
 
-      const map = buildChickenMatchStatsMap(matches);
+      const map = buildChickenMatchStatsMap(matches, fowls);
 
       const stormStats = map.get('Sweater Red Storm');
       expect(stormStats).toBeDefined();
@@ -195,23 +199,30 @@ describe('lib/win-rate', () => {
 
   describe('Real Dataset Reconciliation', () => {
     // Current user's 5 chickens and 5 matches
+    const testFowls = [
+      { id: 1, name: 'Sweater Red Storm' },
+      { id: 2, name: 'Iron Lemon' },
+      { id: 3, name: 'Hatch Crown' },
+      { id: 4, name: 'Hatch Mountain' },
+      { id: 5, name: 'Hatch Silver' },
+    ];
     const testMatches: MatchRecord[] = [
-      makeMatch('Sweater Red Storm', 'Win'),
-      makeMatch('Iron Lemon', 'Win'),
-      makeMatch('Hatch Crown', 'Win'),
-      makeMatch('Hatch Mountain', 'Win'),
-      makeMatch('Hatch Silver', 'Loss'),
+      makeMatch('Sweater Red Storm', 'Win', 1),
+      makeMatch('Iron Lemon', 'Win', 2),
+      makeMatch('Hatch Crown', 'Win', 3),
+      makeMatch('Hatch Mountain', 'Win', 4),
+      makeMatch('Hatch Silver', 'Loss', 5),
     ];
 
     it('reconciles 5 chickens with 4W-1L (80%) overall win rate', () => {
-      const map = buildChickenMatchStatsMap(testMatches);
+      const map = buildChickenMatchStatsMap(testMatches, testFowls);
       expect(map.get('Sweater Red Storm')?.winRate).toBe(100);
       expect(map.get('Iron Lemon')?.winRate).toBe(100);
       expect(map.get('Hatch Crown')?.winRate).toBe(100);
       expect(map.get('Hatch Mountain')?.winRate).toBe(100);
       expect(map.get('Hatch Silver')?.winRate).toBe(0);
 
-      const allStats = Array.from(map.values());
+      const allStats = testFowls.map((f) => map.get(f.name)!);
       const overall = combineWinRates(allStats);
       expect(overall.wins).toBe(4);
       expect(overall.losses).toBe(1);
@@ -221,7 +232,7 @@ describe('lib/win-rate', () => {
     });
 
     it('reconciles Sire True Hatch offspring: 2W-1L = 67%', () => {
-      const map = buildChickenMatchStatsMap(testMatches);
+      const map = buildChickenMatchStatsMap(testMatches, testFowls);
       const trueHatchOffspring = ['Hatch Mountain', 'Hatch Crown', 'Hatch Silver'].map(
         (name) => map.get(name)!
       );
@@ -235,7 +246,7 @@ describe('lib/win-rate', () => {
     });
 
     it('reconciles Sire Titan Sweater offspring: 1W-0L = 100%', () => {
-      const map = buildChickenMatchStatsMap(testMatches);
+      const map = buildChickenMatchStatsMap(testMatches, testFowls);
       const titanSweaterOffspring = ['Sweater Red Storm'].map((name) => map.get(name)!);
 
       const groupTotal = combineWinRates(titanSweaterOffspring);

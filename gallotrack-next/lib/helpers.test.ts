@@ -10,6 +10,7 @@ import {
   generationPurity,
   generationInfo,
   getAgeParts,
+  calculatePairingStats,
 } from './helpers';
 import type { FowlRecord } from './types';
 
@@ -171,5 +172,43 @@ describe('getAgeParts', () => {
     const parts = getAgeParts('2025-01-01');
     expect(parts).not.toBe(null);
     expect(parts!.months).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('calculatePairingStats fowl_id isolation', () => {
+  it('correctly attributes matches with fowl_id 7 to chicken id 7 and ignores matches with id 7 but fowl_id 9', () => {
+    // Parent pairing produces offspring chicken with id: 7
+    const fowls: FowlRecord[] = [
+      {
+        id: 7,
+        name: 'Lucky Seven',
+        sire: 'Sire King',
+        dam: 'Dam Queen',
+        gender: 'Male',
+        breed: 'Kelso',
+      } as FowlRecord,
+    ];
+
+    const matchHistory = [
+      // Match 1: id: 101, fowl_id: 7 (Win for chicken 7) -> SHOULD BE COUNTED
+      { id: 101, fowl_id: 7, entry_name: 'Lucky Seven', outcome: 'Win' },
+      // Match 2: id: 102, fowl_id: 7 (Loss for chicken 7) -> SHOULD BE COUNTED
+      { id: 102, fowl_id: 7, entry_name: 'Lucky Seven', outcome: 'Loss' },
+      // Match 3: id: 7, fowl_id: 9 (Match id is 7, but fowl_id is 9!) -> MUST NOT BE COUNTED for chicken 7
+      { id: 7, fowl_id: 9, entry_name: 'Other Bird Nine', outcome: 'Win' },
+      // Match 4: id: 103, fowl_id: null (Orphan match with same name) -> MUST NOT BE COUNTED
+      { id: 103, fowl_id: null, entry_name: 'Lucky Seven', outcome: 'Win' },
+    ];
+
+    const stats = calculatePairingStats(fowls, matchHistory);
+    const pairing = stats.all.get('sire king|||dam queen');
+
+    expect(pairing).toBeDefined();
+    // Only the 2 matches with fowl_id: 7 should be counted
+    expect(pairing?.totalFights).toBe(2);
+    expect(pairing?.wins).toBe(1);
+    expect(pairing?.losses).toBe(1);
+    expect(pairing?.decided).toBe(2);
+    expect(pairing?.winRate).toBe(50);
   });
 });

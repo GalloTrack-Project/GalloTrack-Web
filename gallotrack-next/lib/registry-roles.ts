@@ -752,19 +752,14 @@ export function extractFoughtLookups(matchHistory: MatchRecord[]): {
 
 /**
  * Determines whether a chicken has a fight record in `match`.
- * Evaluates `fowl_id` (foreign key in match). If match records in test mocks lack
- * fowl_id, falls back to entry_name.
+ * Evaluates `fowl_id` strictly (foreign key in match).
  */
 export function hasFightRecord(
   fowl: FowlRecord,
   foughtFowlIds: Set<number>,
-  foughtNames?: Set<string>,
+  _foughtNames?: Set<string>,
 ): boolean {
-  if (foughtFowlIds.has(fowl.id)) return true;
-  if (foughtNames && foughtNames.has((fowl.name || '').trim().toLowerCase())) {
-    return true;
-  }
-  return false;
+  return foughtFowlIds.has(fowl.id);
 }
 
 /**
