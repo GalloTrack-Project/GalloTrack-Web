@@ -1,14 +1,19 @@
 /**
  * scripts/audit-mobile-overflow.ts
  *
- * Playwright mobile overflow audit script.
- * Dynamically discovers and tests all tabs (role="tab") on:
- * - Chicken Inventory (/catalog): All Chickens, Active Breeders, Ready to Breed, Archived, Deceased
- * - Chicken Registry (/profiling): Breeding Male, Breeding Female, Offspring (with pills: All, Breeding Stock, Non-Breeding), Match Logs
- * - Lineage Directory (/lineage): All five tabs
- * - Breeding Hub (/breeding): All tabs (Coding System, Breeding Pairs, Chicken Identity, Safety Incidents)
- * - Settings (/settings): All tabs (Account, Farm Profile, Preferences, Notifications, Option Lists, Data Management, System Info)
- * - Match Logs (/match-logs) & Add Match Record (/match-logs/new)
+ * Playwright mobile overflow audit script with Stress Dataset Injection:
+ * - Injects a comprehensive 40-chicken, 10-match, 8-pairing stress dataset via
+ *   Playwright route interception (strictly in-memory, read-only, never writes to DB).
+ * - Exercised with long multi-word names (e.g. "Lemon Roundhead Queen Matriarch Supreme Champion"),
+ *   long wing bands ("WB-55041-QUEEN-MATRIARCH-SUPREME-A"), 50+ char notes, and multi-strain
+ *   crossbred badges ("CROSSBRED · 50% LEMON ROUNDHEAD / 25% HATCH / 25% SWEATER").
+ * - Dynamically discovers and tests all tabs (role="tab") on:
+ *   - Chicken Inventory (/catalog): All Chickens, Active Breeders, Ready to Breed, Archived, Deceased
+ *   - Chicken Registry (/profiling): Breeding Male, Breeding Female, Offspring (with pills: All, Breeding Stock, Non-Breeding), Match Logs
+ *   - Lineage Directory (/lineage): All five tabs
+ *   - Breeding Hub (/breeding): All tabs (Coding System, Breeding Pairs, Chicken Identity, Safety Incidents)
+ *   - Settings (/settings): All tabs (Account, Farm Profile, Preferences, Notifications, Option Lists, Data Management, System Info)
+ *   - Match Logs (/match-logs) & Add Match Record (/match-logs/new)
  *
  * Matrix tested:
  * - Viewports: 320x568, 320x640, 360x800, 390x844, 430x932
@@ -19,7 +24,7 @@
  * SAFETY & PRIVACY:
  * - Strictly LOCAL ONLY: Refuses to run against non-localhost BASE_URL without explicit --allow-external flag.
  * - In-memory session only: Never writes, logs, or commits credentials, tokens, cookies, traces, or storage-state.
- * - Read-only navigation: Never writes, updates, or deletes any database rows.
+ * - Read-only mock layer: Intercepts network calls to provide deterministic stress data without writing to Supabase.
  * - Never runs in CI or on deploy.
  *
  * Usage:
@@ -31,6 +36,7 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
+import { STRESS_FOWLS, STRESS_MATCHES, STRESS_PAIRINGS } from './fixtures/stress-dataset';
 
 const BASE_URL = process.env.BASE_URL || process.env.SMOKE_BASE_URL || 'http://localhost:3000';
 const EMAIL = process.env.SMOKE_EMAIL || 'client@gmail.com';
@@ -198,6 +204,31 @@ async function measureOverflow(page: Page): Promise<OverflowCheckResult> {
   });
 }
 
+interface RenderElementCounts {
+  cards: number;
+  rows: number;
+  badges: number;
+}
+
+async function countRenderedElements(page: Page): Promise<RenderElementCounts> {
+  return await page.evaluate(() => {
+    // Cards: fowl cards, match cards, breeding pair cards, summary boxes
+    const cards = document.querySelectorAll(
+      '.group.bg-card, [data-testid="fowl-card"], article, div[class*="rounded-2xl border"], div[class*="rounded-3xl border"], div[class*="bg-card"][class*="rounded-lg border"]'
+    ).length;
+
+    // Table rows
+    const rows = document.querySelectorAll('tbody tr, [role="row"]').length;
+
+    // Badges / pills: status badges, breeding type badges, bloodline chips, tags
+    const badges = document.querySelectorAll(
+      '[data-testid="status-badge"], span[class*="rounded-full"], span[class*="rounded-md"][class*="text-xs"], span[class*="tracking-wider"], span[class*="font-mono"]'
+    ).length;
+
+    return { cards, rows, badges };
+  });
+}
+
 interface FailureReport {
   viewport: string;
   fontScale: string;
@@ -210,8 +241,9 @@ interface FailureReport {
 
 async function runAudit(): Promise<void> {
   console.log('============================================================');
-  console.log('Mobile Overflow Audit (Playwright)');
+  console.log('Mobile Overflow Audit (Playwright with Stress Dataset)');
   console.log(`Base URL: ${BASE_URL} (Local-only verification enforced)`);
+  console.log(`Stress Dataset: ${STRESS_FOWLS.length} Chickens, ${STRESS_MATCHES.length} Matches, ${STRESS_PAIRINGS.length} Pairings`);
   console.log(`Matrix: ${VIEWPORTS.length} viewports × ${FONT_SCALES.length} font scalings = ${VIEWPORTS.length * FONT_SCALES.length} environment configurations`);
   console.log('============================================================\n');
 
@@ -238,8 +270,44 @@ async function runAudit(): Promise<void> {
     process.exit(1);
   }
 
+  // Intercept all Supabase REST data calls with deterministic stress dataset
+  // Strictly read-only simulation, never writes to database
+  await context.route('**/*.supabase.co/rest/v1/**', async (route) => {
+    const url = route.request().url();
+    if (url.includes('/fowl')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(STRESS_FOWLS),
+      });
+    }
+    if (url.includes('/match_videos') || url.includes('/match_photos') || url.includes('/fowl_photos') || url.includes('/safety_incidents')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    }
+    if (url.includes('/match')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(STRESS_MATCHES),
+      });
+    }
+    if (url.includes('/breeding_pairings')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(STRESS_PAIRINGS),
+      });
+    }
+    return route.continue();
+  });
+
   const failures: FailureReport[] = [];
   const visitedCatalog = new Set<string>();
+  const elementMetricsMap = new Map<string, RenderElementCounts>();
   let totalChecks = 0;
   let passedChecks = 0;
 
@@ -265,13 +333,42 @@ async function runAudit(): Promise<void> {
               document.documentElement.style.fontSize = `${Math.round(scale * 100)}%`;
             }, fontScale);
           }
-          await page.waitForTimeout(400);
+
+          // Await data hydration for stress dataset
+          if (route.path === '/catalog') {
+            await page.waitForFunction(() => {
+              const el = document.querySelector('#inventory-tab-all span:last-child');
+              return el && parseInt(el.textContent?.trim() || '0', 10) > 0;
+            }, { timeout: 10000 }).catch(() => {});
+          } else if (route.path === '/profiling') {
+            await page.waitForFunction(() => {
+              const tabs = document.querySelectorAll('[role="tab"]');
+              return Array.from(tabs).some(t => t.textContent?.includes('4') || t.textContent?.includes('24'));
+            }, { timeout: 10000 }).catch(() => {});
+          } else if (route.path === '/lineage') {
+            await page.waitForFunction(() => {
+              const tabs = document.querySelectorAll('[role="tab"]');
+              return Array.from(tabs).some(t => {
+                const num = parseInt(t.textContent?.match(/\d+/)?.[0] || '0', 10);
+                return num > 0;
+              });
+            }, { timeout: 10000 }).catch(() => {});
+          } else {
+            await page.waitForTimeout(400);
+          }
 
           if (!route.hasDynamicTabs) {
             // Static route check
             const check = await measureOverflow(page);
             totalChecks++;
-            visitedCatalog.add(`${route.name} (default)`);
+            const entryName = `${route.name} (default)`;
+            visitedCatalog.add(entryName);
+
+            // Record render element metrics on default view
+            if (!elementMetricsMap.has(entryName)) {
+              const counts = await countRenderedElements(page);
+              elementMetricsMap.set(entryName, counts);
+            }
 
             if (check.hasOverflow) {
               failures.push({
@@ -306,12 +403,18 @@ async function runAudit(): Promise<void> {
             // Test initial view of the route
             const initialCheck = await measureOverflow(page);
             totalChecks++;
-            visitedCatalog.add(`${route.name} (Initial)`);
+            const initialEntryName = `${route.name} (Initial)`;
+            visitedCatalog.add(initialEntryName);
+            if (!elementMetricsMap.has(initialEntryName)) {
+              const counts = await countRenderedElements(page);
+              elementMetricsMap.set(initialEntryName, counts);
+            }
+
             if (initialCheck.hasOverflow) {
               failures.push({
                 viewport: vp.name,
                 fontScale: scalePct,
-                targetDescription: `${route.name} (Initial)`,
+                targetDescription: initialEntryName,
                 clientWidth: initialCheck.clientWidth,
                 scrollWidth: initialCheck.scrollWidth,
                 overflowAmount: initialCheck.overflowAmount,
@@ -332,6 +435,11 @@ async function runAudit(): Promise<void> {
               totalChecks++;
               const entryName = `${route.name} -> Tab: "${t.text}"`;
               visitedCatalog.add(entryName);
+
+              if (!elementMetricsMap.has(entryName)) {
+                const counts = await countRenderedElements(page);
+                elementMetricsMap.set(entryName, counts);
+              }
 
               if (tabCheck.hasOverflow) {
                 failures.push({
@@ -363,6 +471,11 @@ async function runAudit(): Promise<void> {
                     totalChecks++;
                     const pillEntryName = `${route.name} -> Tab: "${t.text}" -> Pill: "${pText}"`;
                     visitedCatalog.add(pillEntryName);
+
+                    if (!elementMetricsMap.has(pillEntryName)) {
+                      const counts = await countRenderedElements(page);
+                      elementMetricsMap.set(pillEntryName, counts);
+                    }
 
                     if (pillCheck.hasOverflow) {
                       failures.push({
@@ -412,6 +525,18 @@ async function runAudit(): Promise<void> {
   console.log(`Total Configurations Checked: ${totalChecks}`);
   console.log(`Passed: ${passedChecks}`);
   console.log(`Failed: ${failures.length}\n`);
+
+  console.log('============================================================');
+  console.log('ACTUAL RENDERED CARDS, ROWS & BADGES PER PAGE/TAB:');
+  console.log('============================================================');
+  const sortedMetrics = Array.from(elementMetricsMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [entry, counts] of sortedMetrics) {
+    console.log(`  • ${entry}:`);
+    console.log(`    - Rendered Cards: ${counts.cards}`);
+    console.log(`    - Rendered Rows: ${counts.rows}`);
+    console.log(`    - Rendered Badges / Chips: ${counts.badges}`);
+  }
+  console.log('');
 
   console.log('PAGES & TABS DYNAMICALLY DISCOVERED & VISITED:');
   const sortedVisited = Array.from(visitedCatalog).sort();

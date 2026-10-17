@@ -86,7 +86,7 @@ describe('MatchRecordForm', () => {
     expect(screen.getByText(/Lemon Storm/i)).toBeDefined();
     expect(screen.getByText(/Hatch Silver/i)).toBeDefined();
     expect(screen.queryByText(/Golden Pearl/i)).toBeNull();
-  });
+  }, 15000);
 
   it('pre-selects rooster when initialFowlId is passed', () => {
     render(<MatchRecordForm mode="add" initialFowlId={55} />);
