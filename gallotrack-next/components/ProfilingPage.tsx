@@ -26,6 +26,7 @@ export default function ProfilingPage() {
     fowls, registryLists, registryCounts,
     matchHistory,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
+    newColor, setNewColor, newBehaviorTrait, setNewBehaviorTrait,
     newBirthdate, handleNewBirthdateChange,
     age, handleAgeChange,
     newGrowthStage, setNewGrowthStage,
@@ -163,6 +164,8 @@ export default function ProfilingPage() {
           newName={newName} setNewName={setNewName}
           newBreed={newBreed} setNewBreed={setNewBreed}
           newGender={newGender} setNewGender={setNewGender}
+          newColor={newColor} setNewColor={setNewColor}
+          newBehaviorTrait={newBehaviorTrait} setNewBehaviorTrait={setNewBehaviorTrait}
           newBirthdate={newBirthdate} handleNewBirthdateChange={handleNewBirthdateChange}
           age={age} handleAgeChange={handleAgeChange}
           newGrowthStage={newGrowthStage} setNewGrowthStage={setNewGrowthStage}

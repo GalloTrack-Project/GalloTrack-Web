@@ -13,9 +13,11 @@ interface FowlFormStateContextValue {
   newBreed: string; setNewBreed: (v: string) => void;
   newGender: string; setNewGender: (v: string) => void;
   newColor: string; setNewColor: (v: string) => void;
+  newFeatherColor: string; setNewFeatherColor: (v: string) => void;
   newColorCategory: string; setNewColorCategory: (v: string) => void;
   newGrowthStage: string; setNewGrowthStage: (v: string) => void;
   newBehaviorTrait: string; setNewBehaviorTrait: (v: string) => void;
+  newTrait: string; setNewTrait: (v: string) => void;
   newEyeVariant: string; setNewEyeVariant: (v: string) => void;
   newBirthdate: string; setNewBirthdate: (v: string) => void;
   sireName: string; setSireName: (v: string) => void;
@@ -42,7 +44,9 @@ interface FowlFormStateContextValue {
   editGender: string; setEditGender: (v: string) => void;
   editColorCategory: string; setEditColorCategory: (v: string) => void;
   editColor: string; setEditColor: (v: string) => void;
+  editFeatherColor: string; setEditFeatherColor: (v: string) => void;
   editBehaviorTrait: string; setEditBehaviorTrait: (v: string) => void;
+  editTrait: string; setEditTrait: (v: string) => void;
   editEyeVariant: string; setEditEyeVariant: (v: string) => void;
   editAge: string; setEditAge: (v: string) => void;
   editBirthdate: string; setEditBirthdate: (v: string) => void;
@@ -238,8 +242,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
 
   const value: FowlFormStateContextValue = {
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
-    newColor, setNewColor, newColorCategory, setNewColorCategory,
+    newColor, setNewColor, newFeatherColor: newColor, setNewFeatherColor: setNewColor,
+    newColorCategory, setNewColorCategory,
     newGrowthStage, setNewGrowthStage, newBehaviorTrait, setNewBehaviorTrait,
+    newTrait: newBehaviorTrait, setNewTrait: setNewBehaviorTrait,
     newEyeVariant, setNewEyeVariant, newBirthdate, setNewBirthdate,
     sireName, setSireName, damName, setDamName,
     sirePct, setSirePct, damPct, setDamPct,
@@ -253,7 +259,8 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
 
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
-    editColor, setEditColor, editBehaviorTrait, setEditBehaviorTrait,
+    editColor, setEditColor, editFeatherColor: editColor, setEditFeatherColor: setEditColor,
+    editBehaviorTrait, setEditBehaviorTrait, editTrait: editBehaviorTrait, setEditTrait: setEditBehaviorTrait,
     editEyeVariant, setEditEyeVariant, editAge, setEditAge,
     editBirthdate, setEditBirthdate, editGrowthStage, setEditGrowthStage,
     editWeight, setEditWeight, editHeight, setEditHeight,

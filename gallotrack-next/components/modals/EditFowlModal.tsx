@@ -6,7 +6,7 @@ import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import { getDescendantFowls, validateDeclaredComposition } from '@/lib/bloodline-composition';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode, previewBirdCode } from '@/lib/bird-code';
-import { bloodlineOf } from '@/lib/helpers';
+import { bloodlineOf, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
@@ -186,10 +186,6 @@ export default function EditFowlModal({
               <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="identifier-name">Identifier Name</label>
               <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" required id="identifier-name" />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="behavior-trait">Behavior Trait</label>
-              <input type="text" value={editBehaviorTrait} onChange={(e) => setEditBehaviorTrait(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" placeholder="e.g. aggressive, calm" id="behavior-trait" />
-            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative z-30">
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="genetic-strain">Genetic Strain</label>
@@ -222,39 +218,57 @@ export default function EditFowlModal({
                 </select>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="edit-feather-color">
+                  Feather Color
+                </label>
+                <input
+                  type="text"
+                  list="edit-feather-color-options"
+                  value={editColor}
+                  onChange={(e) => {
+                    const c = e.target.value;
+                    setEditColor(c);
+                    setEditColorCategory(c.toLowerCase().includes('red') ? 'Red' : 'Light Color');
+                  }}
+                  placeholder="Select or enter feather color..."
+                  className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
+                  id="edit-feather-color"
+                />
+                <datalist id="edit-feather-color-options">
+                  {FEATHER_COLOR_LIST.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="edit-behavior-trait">
+                  Trait
+                </label>
+                <input
+                  type="text"
+                  list="edit-trait-options"
+                  value={editBehaviorTrait}
+                  onChange={(e) => setEditBehaviorTrait(e.target.value)}
+                  placeholder="Select or enter trait..."
+                  className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
+                  id="edit-behavior-trait"
+                />
+                <datalist id="edit-trait-options">
+                  {TRAIT_LIST.map((t) => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/40 dark:border-border">
             <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-xs uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
               <Ruler className="w-3.5 h-3.5" /> <span>Physical Parameters</span>
             </h4>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="color-group">Color Group</label>
-                <select value={editColorCategory} onChange={(e) => { setEditColorCategory(e.target.value); setEditColor(e.target.value === 'Red' ? 'Bright Red' : 'Talisay / Grey'); }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground" id="color-group">
-                  <option value="Red">Red Class</option>
-                  <option value="Light Color">Light Class</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="specific-tone">Specific Tone</label>
-                <select value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input text-slate-700 dark:text-card-foreground font-medium" id="specific-tone">
-                  {editColorCategory === 'Red' ? (
-                    <>
-                      <option value="Bright Red">Bright Red</option>
-                      <option value="Dark Red">Dark Red</option>
-                      <option value="Light Red">Light Red</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Talisay / Grey">Talisay / Grey</option>
-                      <option value="White Cup">White Cup</option>
-                      <option value="Black">Black</option>
-                    </>
-                  )}
-                </select>
-              </div>
-            </div>
             <div className="mb-2">
               <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="birth-date">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
               <input

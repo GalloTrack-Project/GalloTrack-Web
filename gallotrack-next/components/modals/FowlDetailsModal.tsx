@@ -1728,12 +1728,12 @@ export default function FowlDetailsModal({
             <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{selectedFowlForDetails.eye_variant || 'Standard Eye'}</strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
-            <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Visual Color Range</span>
-            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{selectedFowlForDetails.color_category} ({selectedFowlForDetails.color})</strong>
+            <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Feather Color</span>
+            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{selectedFowlForDetails.feather_color || selectedFowlForDetails.color || 'Standard'}</strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border sm:col-span-2">
-            <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Behavioral Spec</span>
-            <strong className="text-emerald-700 dark:text-emerald-300 text-sm mt-0.5 block font-bold">{selectedFowlForDetails.behavior_trait}</strong>
+            <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Trait</span>
+            <strong className="text-emerald-700 dark:text-emerald-300 text-sm mt-0.5 block font-bold">{selectedFowlForDetails.trait || selectedFowlForDetails.behavior_trait || 'Standard'}</strong>
           </div>
         </div>
       </Modal>

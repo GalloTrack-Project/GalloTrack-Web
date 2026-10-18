@@ -13,7 +13,7 @@ import {
   checkParentageMatch,
   normalizeBirdCode,
 } from '@/lib/bird-code';
-import { isFoundationStock } from '@/lib/helpers';
+import { isFoundationStock, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Lock, RotateCcw, Edit3 } from 'lucide-react';
 
@@ -62,6 +62,10 @@ type Props = {
   setNewBreed: (v: string) => void;
   newGender: string;
   setNewGender: (v: string) => void;
+  newColor?: string;
+  setNewColor?: (v: string) => void;
+  newBehaviorTrait?: string;
+  setNewBehaviorTrait?: (v: string) => void;
   newBirthdate: string;
   handleNewBirthdateChange: (val: string) => void;
   age: string;
@@ -162,6 +166,10 @@ export default function EncodeForm({
   handleAddFowl,
   autoCalcAge,
   getAutoCalcAge,
+  newColor = '',
+  setNewColor,
+  newBehaviorTrait = '',
+  setNewBehaviorTrait,
 }: Props) {
   const unitPrefs = useUnitPrefs();
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
@@ -478,6 +486,47 @@ export default function EncodeForm({
               <option value="Rooster" className="bg-popover text-popover-foreground">Sire</option>
               <option value="Hen" className="bg-popover text-popover-foreground">Dam</option>
             </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="feather-color">
+              Feather Color
+            </label>
+            <input
+              type="text"
+              list="feather-color-options"
+              value={newColor}
+              onChange={(e) => setNewColor?.(e.target.value)}
+              placeholder="Select or enter feather color..."
+              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
+              id="feather-color"
+            />
+            <datalist id="feather-color-options">
+              {FEATHER_COLOR_LIST.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="behavior-trait">
+              Trait
+            </label>
+            <input
+              type="text"
+              list="trait-options"
+              value={newBehaviorTrait}
+              onChange={(e) => setNewBehaviorTrait?.(e.target.value)}
+              placeholder="Select or enter trait..."
+              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
+              id="behavior-trait"
+            />
+            <datalist id="trait-options">
+              {TRAIT_LIST.map((t) => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
           </div>
         </div>
       </div>

@@ -28,6 +28,39 @@ export const MATCH_TYPE_OPTIONS: string[] = [
 
 export const LEG_COLOR_LIST = ['Yellow', 'White', 'Green / Slate', 'Willow', 'Black'];
 
+export const FEATHER_COLOR_LIST = [
+  'Black-Breasted Red',
+  'Dark Red',
+  'Bright Red',
+  'Wheaten',
+  'White',
+  'Dark Cornish',
+  'Ginger Red',
+  'Brown Red',
+  'Gray',
+  'Pyle',
+  'Dom',
+  'Duckwing',
+  'Black',
+];
+
+export const TRAIT_LIST = [
+  'Aggressive',
+  'Smart Fighter',
+  'Powerful',
+  'Fast',
+  'Alert',
+  'Active',
+  'Calm',
+  'Broody',
+  'Docile',
+  'High Velocity Cutter',
+  'Aggressive Counter Striker',
+  'Tenacious Offense',
+  'High Flyer Ace',
+  'Wave-Motion Tracker',
+];
+
 export const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[] = [
   { id: '7d', label: 'Last 7 Days' },
   { id: '30d', label: 'Last 30 Days' },

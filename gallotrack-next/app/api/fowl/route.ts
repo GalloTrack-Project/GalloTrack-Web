@@ -65,7 +65,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data || [] });
+  const rows = (data || []).map((f) => ({
+    ...f,
+    trait: f.trait || f.behavior_trait || '',
+    feather_color: f.feather_color || f.color || '',
+  }));
+
+  return NextResponse.json({ data: rows });
 }
 
 export async function POST(request: NextRequest) {
@@ -104,10 +110,10 @@ export async function POST(request: NextRequest) {
       name: sanitize(String(body.name)),
       breed: sanitize(String(body.breed)) || 'Unspecified Strain',
       gender: body.gender || 'Rooster',
-      color: body.color || 'Bright Red',
+      color: body.feather_color || body.color || 'Bright Red',
       color_category: body.color_category || 'Red',
       growth_stage: body.growth_stage || '',
-      behavior_trait: body.behavior_trait || 'Wave-Motion Tracker',
+      behavior_trait: body.trait || body.behavior_trait || 'Wave-Motion Tracker',
       eye_variant: body.eye_variant || 'Standard Eye',
       birthdate: body.birthdate || null,
       age: body.age || 'N/A',

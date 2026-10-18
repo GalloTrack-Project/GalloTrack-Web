@@ -54,10 +54,21 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
         if (recordedRole) {
           f.registry_role = recordedRole as FowlRecord['registry_role'];
         }
+        f.trait = f.trait || f.behavior_trait || '';
+        f.feather_color = f.feather_color || f.color || '';
+      }
+    } else {
+      for (const f of fowls) {
+        f.trait = f.trait || f.behavior_trait || '';
+        f.feather_color = f.feather_color || f.color || '';
       }
     }
   } catch (err) {
     console.warn('Could not fetch status history for reconciliation:', err);
+    for (const f of fowls) {
+      f.trait = f.trait || f.behavior_trait || '';
+      f.feather_color = f.feather_color || f.color || '';
+    }
   }
 
   return fowls;
@@ -130,6 +141,12 @@ export async function insertFowl(payload: Record<string, unknown>): Promise<{ er
   if (!working.bird_code && working.chicken_code) {
     working.bird_code = working.chicken_code;
   }
+  if (!working.behavior_trait && working.trait) {
+    working.behavior_trait = working.trait;
+  }
+  if (!working.color && working.feather_color) {
+    working.color = working.feather_color;
+  }
   const cleanPayload = filterAllowedColumns('fowl', working);
 
   const res = await supabase.from('fowl').insert([cleanPayload]).select('id').single();
@@ -147,6 +164,12 @@ export async function updateFowl(id: number, payload: Record<string, unknown>): 
   const working = { ...payload };
   if (!working.bird_code && working.chicken_code) {
     working.bird_code = working.chicken_code;
+  }
+  if (!working.behavior_trait && working.trait) {
+    working.behavior_trait = working.trait;
+  }
+  if (!working.color && working.feather_color) {
+    working.color = working.feather_color;
   }
   const cleanPayload = filterAllowedColumns('fowl', working);
 

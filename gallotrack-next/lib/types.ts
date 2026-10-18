@@ -10,9 +10,13 @@ export interface FowlRecord {
   breed: string;
   gender: string;
   color: string;
+  /** Feather / plumage color. */
+  feather_color?: string;
   color_category: string;
   growth_stage: string;
   behavior_trait: string;
+  /** Behavioral / fighting trait. */
+  trait?: string;
   eye_variant: string;
   birthdate: string;
   age: string;
