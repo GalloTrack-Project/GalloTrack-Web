@@ -50,6 +50,7 @@ import {
   validateIdentifierFormat,
   formatBirdCodeForDisplay,
 } from '@/lib/bird-code';
+import { isValidWingBand, WING_BAND_ERROR } from '@/lib/wing-band';
 import { generateColorReport } from '@/lib/color-genetics';
 import { nameKey } from '@/lib/family-tree';
 import { parentLinkIds } from '@/lib/lineage';
@@ -655,8 +656,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
     // Wing band validation
     const bandValue = wingBand.trim();
-    if (bandValue && !/^[A-Za-z0-9._-]{1,24}$/.test(bandValue)) {
-      toastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
+    if (bandValue && !isValidWingBand(bandValue)) {
+      toastMessage(WING_BAND_ERROR, 'error');
       return;
     }
     if (bandValue && fowls.some((f) => (f.wing_band || '').trim().toLowerCase() === bandValue.toLowerCase())) {
@@ -1207,8 +1208,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       // ── Wing band ID: physical band number, unique across the farm ──
       const editBand = editWingBand.trim();
-      if (editBand && !/^[A-Za-z0-9._-]{1,24}$/.test(editBand)) {
-        toastMessage('Wing Band: use letters, numbers, - . _ only (max 24 chars).', 'error');
+      if (editBand && !isValidWingBand(editBand)) {
+        toastMessage(WING_BAND_ERROR, 'error');
         return;
       }
       const duplicateBand = fowls.some(

@@ -7,10 +7,10 @@ import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import DeclaredCompositionEditor from './DeclaredCompositionEditor';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
-import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
-import { Lock, Edit3, RotateCcw } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 export function StatusItem({
   icon,
@@ -165,7 +165,6 @@ export default function EncodeForm({
   const legColorInputRef = useRef<HTMLDivElement>(null);
   const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
-  const [isManualOverride, setIsManualOverride] = useState(false);
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -249,97 +248,49 @@ export default function EncodeForm({
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">Identifier Name</label>
           <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required id="identifier-name" />
         </div>
-        {(() => {
-          const formatCheck = birdCode.trim() ? validateIdentifierFormat(birdCode.trim(), currentRole) : null;
-          const isDuplicate = fowls.some(f => normalizeBirdCode(f.bird_code).toLowerCase() === normalizeBirdCode(birdCode).toLowerCase());
+        <div className="bg-slate-50/80 dark:bg-muted/40 p-4 rounded-lg border border-slate-200/80 dark:border-border space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
+              Unique Chicken Identifier
+            </label>
+            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full">
+              System Auto-Generated
+            </span>
+          </div>
 
-          return (
-            <div className="bg-slate-50/80 dark:bg-muted/40 p-4 rounded-lg border border-slate-200/80 dark:border-border space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
-                  Unique Chicken Identifier
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsManualOverride(!isManualOverride);
-                    if (isManualOverride) setBirdCode('');
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  {isManualOverride ? (
-                    <>
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Use Auto-Generated Code</span>
-                    </>
-                  ) : (
-                    <>
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Edit identifier manually</span>
-                    </>
-                  )}
-                </button>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 flex items-center justify-between p-3 rounded-md border border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identifier:</span>
+                <span className="font-mono text-base font-extrabold tracking-wide text-emerald-800 dark:text-emerald-300">
+                  {formatBirdCodeForDisplay(suggestedBirdCode) || 'Generating...'}
+                </span>
               </div>
-
-              {!isManualOverride ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 flex items-center justify-between p-3 rounded-md border border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identifier:</span>
-                      <span className="font-mono text-base font-extrabold tracking-wide text-emerald-800 dark:text-emerald-300">
-                        {formatBirdCodeForDisplay(suggestedBirdCode) || 'Generating...'}
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
-                      Auto-Assigned ({currentRole === 'sire' ? 'Sire' : currentRole === 'dam' ? 'Dam' : 'Offspring'})
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={birdCode}
-                      onChange={(e) => setBirdCode(e.target.value)}
-                      className="w-full p-3 border border-emerald-500 rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-mono font-bold focus:ring-4 focus:ring-emerald-100"
-                      placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || 'e.g. 1, A, 1A1'}
-                      id="chicken-code"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    {birdCode.trim() ? (
-                      formatCheck && !formatCheck.valid ? (
-                        <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
-                      ) : isDuplicate ? (
-                        <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Identifier &quot;{birdCode.trim()}&quot; is already in use</span>
-                      ) : (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Valid format for {currentRole}</span>
-                      )
-                    ) : (
-                      <span className="text-muted-foreground">Format: Sire (digits) · Dam (letters) · Offspring (sire + dam + sequence)</span>
-                    )}
-                  </div>
-                </div>
-              )}
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                Auto-Assigned ({currentRole === 'sire' ? 'Sire' : currentRole === 'dam' ? 'Dam' : 'Offspring'})
+              </span>
             </div>
-          );
-        })()}
+          </div>
+          <p className="text-xs text-muted-foreground font-medium">
+            System/database ID is automatically resolved and strictly locked. Enter manual physical tags, letters, numbers, or subscripts in the Wing Band ID field below.
+          </p>
+        </div>
         <div>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="wing-band-id">
-            Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>
+            Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
           </label>
           <input
             type="text"
             value={wingBand}
             onChange={(e) => setWingBand(e.target.value)}
-            maxLength={24}
+            maxLength={50}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
-            placeholder="e.g. W-001"
-          id="wing-band-id" />
+            placeholder="e.g. WB-001, 1A₁, or Hatch#3 (Gen₂)"
+            id="wing-band-id"
+          />
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
-            {wingBand.trim() ? 'This number will be banded on the chicken’s wing' : 'Optional — the number stamped on the wing band'}
+            Manual physical ID stamped on wing band or leg tag. Enter combinations of letters, numbers, subscripts, or lineage tags (e.g. WB-001, 1A₁, Hatch#3).
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -410,17 +410,20 @@ export default function EditFowlModal({
             })()}
             <div>
               <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="wing-band-id">
-                Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band)</span>
+                Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
               </label>
               <input
                 type="text"
                 value={editWingBand}
                 onChange={(e) => setEditWingBand(e.target.value)}
-                maxLength={24}
+                maxLength={50}
                 className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
-                placeholder="e.g. W-001"
-              id="wing-band-id" />
-              <p className="text-xs text-muted-foreground mt-1 font-semibold">Physical ID sa pakpak — dapat natatangi sa buong farm.</p>
+                placeholder="e.g. WB-001, 1A₁, or Hatch#3 (Gen₂)"
+                id="wing-band-id"
+              />
+              <p className="text-xs text-muted-foreground mt-1 font-semibold">
+                Physical ID stamped on wing band or leg tag (letters, numbers, subscripts, or notations).
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

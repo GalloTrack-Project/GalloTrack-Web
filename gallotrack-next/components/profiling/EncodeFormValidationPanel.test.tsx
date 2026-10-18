@@ -140,5 +140,16 @@ describe('Validation & Summary Panel and StatusItem', () => {
       expect(badge.className).not.toContain('truncate');
       expect(badge.className).toContain('whitespace-normal');
     });
+
+    // Verification of Identifier Separation & Wing Band UX
+    expect(screen.getByText(/System Auto-Generated/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Edit identifier manually/i)).not.toBeInTheDocument();
+
+    const wingBandInput = screen.getByLabelText(/Wing Band ID/i);
+    expect(wingBandInput).toBeInTheDocument();
+    expect(wingBandInput).toHaveAttribute('placeholder', 'e.g. WB-001, 1A₁, or Hatch#3 (Gen₂)');
+    expect(wingBandInput).toHaveAttribute('maxLength', '50');
+    expect(screen.getByText(/combinations of letters, numbers, subscripts, or lineage tags/i)).toBeInTheDocument();
   });
 });
+

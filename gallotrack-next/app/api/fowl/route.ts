@@ -13,6 +13,7 @@ import {
   resolveBirdCodes,
 } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
+import { isValidWingBand, WING_BAND_ERROR } from '@/lib/wing-band';
 import { parentLinkIds } from '@/lib/lineage';
 import { filterAllowedColumns } from '@/lib/schema-contract';
 import { DB_UPDATE_NEEDED_MESSAGE } from '@/lib/services/fowl-service';
@@ -129,9 +130,9 @@ export async function POST(request: NextRequest) {
     // ── Wing Band ID — physical band number, must be unique per user ──
     const rawBand = String(body.wing_band ?? '').trim();
     if (rawBand) {
-      if (!/^[A-Za-z0-9._-]{1,24}$/.test(rawBand)) {
+      if (!isValidWingBand(rawBand)) {
         return NextResponse.json(
-          { error: 'Invalid wing band ID — use letters, numbers, . _ - only, max 24 chars (e.g. W-001)' },
+          { error: WING_BAND_ERROR },
           { status: 400 }
         );
       }
