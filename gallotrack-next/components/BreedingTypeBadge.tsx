@@ -15,7 +15,16 @@ export default function BreedingTypeBadge({
   className,
   compact = false,
 }: BreedingTypeBadgeProps) {
-  const { type, badgeLabel, tooltipText } = classification;
+  const { type, badgeLabel, tooltipText, compositionSource, basedOnAssumed } = classification;
+  const isAssumed = compositionSource === 'assumed' || !!basedOnAssumed;
+
+  const assumedExplanation = compositionSource === 'assumed'
+    ? 'Assumed from registered breed (not verified)'
+    : 'Lineage includes assumed foundation stock';
+
+  const fullTooltip = isAssumed
+    ? `${tooltipText} · ${assumedExplanation}`
+    : tooltipText;
 
   let colorClasses = '';
   if (type === 'Purebred') {
@@ -36,9 +45,29 @@ export default function BreedingTypeBadge({
         colorClasses,
         className
       )}
-      title={tooltipText}
+      title={fullTooltip}
+      aria-label={isAssumed ? `${badgeLabel} (assumed)` : badgeLabel}
     >
       <span>{badgeLabel}</span>
+      {isAssumed && (
+        compact ? (
+          <span
+            className="font-mono text-[10px] font-black opacity-80 shrink-0"
+            aria-label="Assumed lineage"
+            title={assumedExplanation}
+          >
+            ~
+          </span>
+        ) : (
+          <span
+            className="text-[10px] font-bold lowercase opacity-85 shrink-0"
+            aria-label="Assumed lineage"
+            title={assumedExplanation}
+          >
+            (assumed)
+          </span>
+        )
+      )}
     </span>
   );
 }

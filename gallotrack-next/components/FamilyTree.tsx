@@ -80,7 +80,12 @@ function ParentChip({
         <span className="block text-xs font-black uppercase tracking-widest">{roleLabel}</span>
         <span className="block text-xs font-black text-card-foreground truncate">{name}</span>
         {displayBreed && (
-          <span className="block text-xs font-bold text-muted-foreground truncate">{displayBreed}</span>
+          <span className="block text-xs font-bold text-muted-foreground truncate" title={classification?.sourceLabel}>
+            {displayBreed}
+            {(classification?.compositionSource === 'assumed' || classification?.basedOnAssumed) && (
+              <span className="ml-1 text-[10px] opacity-75 font-mono" aria-label="Assumed lineage">~</span>
+            )}
+          </span>
         )}
         {!fowl && (
           <span className="block text-xs font-bold text-muted-foreground">Not in registry</span>
@@ -146,6 +151,9 @@ function OffspringNode({
             </span>
             <span className="block text-xs font-semibold text-muted-foreground truncate">
               {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {displayBreed || '—'}
+              {(classification.compositionSource === 'assumed' || classification.basedOnAssumed) && (
+                <span className="ml-1 text-[10px] opacity-75 font-mono" title={classification.sourceLabel} aria-label="Assumed lineage">~</span>
+              )}
               {fowl.age ? ` · ${fowl.age}` : ''}
             </span>
           </span>

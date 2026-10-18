@@ -116,9 +116,16 @@ export default function DeclaredCompositionEditor({
                 : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
             )}
           >
-            {isCustomDeclared ? 'Declared by owner' : 'Assumed 100% of registered breed'}
+            {isCustomDeclared ? 'Declared by owner' : 'Assumed from registered breed (not verified)'}
           </span>
         </div>
+      </div>
+
+      <div className="p-2.5 rounded-lg border border-border/70 bg-muted/30 text-xs text-muted-foreground flex items-start gap-2">
+        <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          Not sure? Leave it blank. The system assumes 100% of the selected breed and marks it as Assumed. You can declare the real percentage any time.
+        </p>
       </div>
 
       {/* Assumed view */}

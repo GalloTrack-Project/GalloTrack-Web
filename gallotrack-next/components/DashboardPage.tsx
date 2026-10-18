@@ -107,12 +107,18 @@ export default function DashboardPage() {
     [matchHistory],
   );
 
-  const registryColumns = ['Bird Code', 'Name', 'Gender', 'Breed', 'Birthdate', 'Age', 'Status', 'Weight', 'Height', 'Sire', 'Dam', 'Bloodline %'];
+  const registryColumns = ['Bird Code', 'Name', 'Gender', 'Breed', 'Birthdate', 'Age', 'Status', 'Weight', 'Height', 'Sire', 'Dam', 'Bloodline %', 'Composition basis'];
   const registryRows = React.useMemo(() => {
     const classMap = classifyFlock(fowls);
     return fowls.map((f) => {
       const classification = classMap.get(String(f.id)) ?? getBreedingClassification(f, fowls);
       const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : f.breed;
+      const compositionBasis =
+        classification.compositionSource === 'declared'
+          ? 'Declared'
+          : classification.compositionSource === 'assumed'
+          ? 'Assumed'
+          : 'Derived';
       return [
         formatBirdCodeForDisplay(birdCodes.get(String(f.id)) || f.bird_code || ''),
         f.name,
@@ -126,6 +132,7 @@ export default function DashboardPage() {
         f.sire,
         f.dam,
         classification.purityPct,
+        compositionBasis,
       ];
     });
   }, [fowls, birdCodes]);

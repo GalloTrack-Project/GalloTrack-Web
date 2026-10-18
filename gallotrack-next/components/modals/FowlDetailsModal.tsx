@@ -23,7 +23,7 @@ import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, he
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { isMale, isFemale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
-import { getBreedingClassification } from '@/lib/breeding-classification';
+import { getBreedingClassification, isFoundationStockRecord } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
@@ -126,6 +126,7 @@ export default function FowlDetailsModal({
     handleSaveFowlNotes,
     handleRestoreFowlOnly,
     setArchiveReasonInput,
+    handleOpenEditModal,
     breedingPairs,
     matchMedia,
     bloodlineStatsOf,
@@ -277,6 +278,7 @@ export default function FowlDetailsModal({
             { label: 'Gender', value: bird.gender || '—' },
             { label: 'Breed / strain', value: classification.type === 'Crossbred' ? classification.derivedBreed : (bird.breed || '—') },
             { label: 'Breeding classification', value: classification.badgeLabel },
+            { label: 'Composition basis', value: classification.compositionSource === 'declared' ? 'Declared' : classification.compositionSource === 'assumed' ? 'Assumed' : 'Derived' },
             { label: 'Color', value: [bird.color, bird.color_category].filter(Boolean).join(' · ') || '—' },
             { label: 'Birthdate', value: bird.birthdate || '—' },
             { label: 'Age', value: ageParts ? getAgeLabel(ageParts) : '—' },
@@ -365,8 +367,14 @@ export default function FowlDetailsModal({
 
         <BloodlineBreakdown
           stats={bloodlineStatsOf(selectedFowlForDetails)}
+          fowl={selectedFowlForDetails}
+          fowls={fowls}
           title="Bloodline Percentage"
-          subtitle="Each percentage is the 50/50 split contributed by the sire and the dam"
+          onEditComposition={
+            isFoundationStockRecord(selectedFowlForDetails)
+              ? () => handleOpenEditModal(selectedFowlForDetails)
+              : undefined
+          }
         />
 
         <BloodlineProvenance
@@ -408,6 +416,16 @@ export default function FowlDetailsModal({
                 <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " />
               ) : null}
               {isRetired && <RetiredFighterBadge />}
+              {isFoundationStockRecord(selectedFowlForDetails) && (
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditModal(selectedFowlForDetails)}
+                  className="inline-flex items-center gap-1 text-xs font-black text-amber-800 dark:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800 px-2.5 py-0.5 rounded-full uppercase transition-colors cursor-pointer"
+                  title="Edit breed composition for this foundation chicken"
+                >
+                  ✏️ Edit composition
+                </button>
+              )}
               <a
                 href={`/lineage?tab=pedigree&chicken=${encodeURIComponent(birdCodeOf(selectedFowlForDetails, fowls) || String(selectedFowlForDetails.id))}`}
                 onClick={() => setSelectedFowlForDetails(null)}

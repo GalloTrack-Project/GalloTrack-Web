@@ -2,6 +2,7 @@
 import React from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { traceComposition, type TraceSource } from '@/lib/bloodline-composition';
+import { getCompositionSourceInfo, hasBothParentsRecorded } from '@/lib/breeding-classification';
 
 const DOT = [
   'bg-emerald-500',
@@ -70,6 +71,8 @@ type Props = {
  */
 export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title, subtitle }: Props) {
   const trace = React.useMemo(() => (fowl ? traceComposition(fowl, fowls) : []), [fowl, fowls]);
+  const sourceInfo = React.useMemo(() => (fowl ? getCompositionSourceInfo(fowl, fowls) : null), [fowl, fowls]);
+  const show5050 = React.useMemo(() => hasBothParentsRecorded(fowl ?? null, fowls), [fowl, fowls]);
 
   const meaningful = trace.some((entry) => entry.sources.some((s) => s.depth > 0 || s.ancestor.id === null));
   if (!fowl || !meaningful) return null;
@@ -90,9 +93,16 @@ export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title
         <p className="text-xs font-black text-sky-700 dark:text-sky-300 uppercase tracking-widest">
           🔎 {title || 'Where Each Percentage Comes From'}
         </p>
+        {sourceInfo?.sourceLabel && (
+          <p className="text-xs font-bold text-sky-800 dark:text-sky-300 mt-0.5">
+            Source: <span className="font-semibold">{sourceInfo.sourceLabel}</span>
+          </p>
+        )}
         <p className="text-xs text-muted-foreground font-semibold mt-0.5 leading-relaxed">
           {subtitle ||
-            'Bawat linya ay isang ninunong nag-ambag — 50% mula sa Sire, 50% mula sa Dam, hinahati kada henerasyon.'}
+            (show5050
+              ? 'Bawat linya ay isang ninunong nag-ambag — 50% mula sa Sire, 50% mula sa Dam, hinahati kada henerasyon.'
+              : 'Bawat linya ay isang ninunong nag-ambag sa komposisyon ng lahi.')}
         </p>
       </div>
 

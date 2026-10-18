@@ -285,11 +285,15 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
   const missing = !fowl;
 
   const displayBreed = classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
-  const summaryText = stats
+  const isAssumed = classification?.compositionSource === 'assumed' || !!classification?.basedOnAssumed;
+  const baseSummary = stats
     ? stats.summary
     : displayBreed
     ? displayBreed
     : 'Not registered';
+  const summaryTitle = isAssumed
+    ? `${baseSummary} (assumed lineage)`
+    : baseSummary;
 
   const onKey = (e: React.KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && fowl) {
@@ -339,7 +343,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
     );
   }
 
-  const ariaLabel = `${node.role.toUpperCase()}: ${name}${code ? `, code ${code}` : ''}, ${summaryText}`;
+  const ariaLabel = `${node.role.toUpperCase()}: ${name}${code ? `, code ${code}` : ''}, ${baseSummary}${isAssumed ? ' (assumed)' : ''}`;
 
   return (
     <div
@@ -369,8 +373,13 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
               {name}
             </span>
           </div>
-          <p className="text-[11px] font-bold text-muted-foreground truncate" title={summaryText}>
-            {summaryText}
+          <p className="text-[11px] font-bold text-muted-foreground truncate" title={summaryTitle}>
+            <span>{baseSummary}</span>
+            {isAssumed && baseSummary !== 'Not registered' && (
+              <span className="ml-1 text-[10px] font-extrabold text-amber-600 dark:text-amber-400" aria-label="Assumed lineage">
+                ~
+              </span>
+            )}
           </p>
         </div>
       </div>

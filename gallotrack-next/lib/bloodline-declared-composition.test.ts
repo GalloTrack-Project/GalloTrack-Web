@@ -63,9 +63,9 @@ describe('Foundation Declared Composition System', () => {
       const classification = getBreedingClassification(bird, [bird]);
       expect(classification.type).toBe('Purebred');
       expect(classification.compositionSource).toBe('assumed');
-      expect(classification.sourceLabel).toBe('Assumed 100% of registered breed');
+      expect(classification.sourceLabel).toBe('Assumed from registered breed (not verified)');
       expect(getCompositionSource(bird)).toBe('assumed');
-      expect(getCompositionSourceLabel(bird)).toBe('Assumed 100% of registered breed');
+      expect(getCompositionSourceLabel(bird)).toBe('Assumed from registered breed (not verified)');
     });
   });
 
@@ -168,9 +168,10 @@ describe('Foundation Declared Composition System', () => {
       const classification = getBreedingClassification(offspring, fowls);
       expect(classification.type).toBe('Crossbred');
       expect(classification.compositionSource).toBe('derived');
-      expect(classification.sourceLabel).toBe('Derived from parents');
+      expect(classification.basedOnAssumed).toBe(true);
+      expect(classification.sourceLabel).toBe('Derived from parents (Includes assumed foundation stock)');
       expect(getCompositionSource(offspring)).toBe('derived');
-      expect(getCompositionSourceLabel(offspring)).toBe('Derived from parents');
+      expect(getCompositionSourceLabel(offspring, fowls)).toBe('Derived from parents (Includes assumed foundation stock)');
     });
   });
 

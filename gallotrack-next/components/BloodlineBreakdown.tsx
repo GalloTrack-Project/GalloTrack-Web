@@ -3,10 +3,16 @@ import React from 'react';
 import type { FowlRecord } from '@/lib/types';
 import {
   getBloodlineStats,
+  getFowlBloodlineStats,
   UNKNOWN_BLOODLINE,
   type BloodlineComposition,
   type BloodlineStats,
 } from '@/lib/bloodline-composition';
+import {
+  getCompositionSourceInfo,
+  hasBothParentsRecorded,
+  isFoundationStockRecord,
+} from '@/lib/breeding-classification';
 
 const PALETTE = [
   'bg-emerald-500',
@@ -125,10 +131,25 @@ type Props = {
   compact?: boolean;
   fowl?: FowlRecord | null;
   fowls?: FowlRecord[];
+  onEditComposition?: () => void;
 };
 
-export default function BloodlineBreakdown({ composition, stats, title, subtitle, compact, fowl, fowls }: Props) {
-  const resolved = stats ?? getBloodlineStats(composition ?? null);
+export default function BloodlineBreakdown({
+  composition,
+  stats,
+  title,
+  subtitle,
+  compact,
+  fowl,
+  fowls,
+  onEditComposition,
+}: Props) {
+  const resolved = React.useMemo(() => {
+    if (stats !== undefined) return stats;
+    if (composition !== undefined) return composition ? getBloodlineStats(composition) : null;
+    if (fowl) return getFowlBloodlineStats(fowl, fowls ?? []);
+    return null;
+  }, [stats, composition, fowl, fowls]);
 
   const unregisteredCount = React.useMemo(
     () => countUnregisteredAncestors(fowl ?? null, fowls ?? []),
@@ -140,9 +161,22 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
     [fowl, fowls]
   );
 
+  const sourceInfo = React.useMemo(
+    () => (fowl ? getCompositionSourceInfo(fowl, fowls ?? []) : null),
+    [fowl, fowls]
+  );
+
+  const show5050 = React.useMemo(
+    () => hasBothParentsRecorded(fowl ?? null, fowls ?? []),
+    [fowl, fowls]
+  );
+
   if (!resolved) return null;
 
   const { entries, dominant, strainCount, isDiluted, summary, knownPct, unknownPct } = resolved;
+  const isAssumed = sourceInfo?.source === 'assumed';
+  const sourceLine = sourceInfo?.sourceLabel;
+  const canEditComposition = isFoundationStockRecord(fowl) && onEditComposition;
 
   if (compact) {
     return (
@@ -160,6 +194,12 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
             {dominant.strain} {dominant.pct}%
           </span>
         </div>
+
+        {sourceLine && (
+          <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+            Source: <span className="font-semibold">{sourceLine}</span>
+          </p>
+        )}
 
         <div className="h-4 w-full rounded-full bg-white/80 dark:bg-muted overflow-hidden border border-white/60 flex">
           {entries.map((entry, i) => (
@@ -195,9 +235,16 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
         </div>
 
         <div className="space-y-0.5">
-          <p className="text-xs text-muted-foreground font-semibold">
-            50% Sire · 50% Dam · halved each gen
-          </p>
+          {show5050 && (
+            <p className="text-xs text-muted-foreground font-semibold">
+              50% Sire · 50% Dam · halved each gen
+            </p>
+          )}
+          {isAssumed && (
+            <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold" title="No parents are recorded, so the system assumes this bird is 100% of its registered breed. You can declare the real composition by editing the chicken.">
+              Assumed 100% {dominant.strain}
+            </p>
+          )}
           {unknownPct > 0 && (
             <p className="text-xs text-muted-foreground font-semibold">
               {unknownPct}% unknown because {unregisteredCount || Math.max(1, Math.ceil(unknownPct / 25))} ancestor
@@ -222,11 +269,14 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
           <p className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
             🧬 {title || 'Bloodline Percentage Breakdown'}
           </p>
-          {subtitle ? (
-            <p className="text-xs text-muted-foreground font-semibold mt-0.5">{subtitle}</p>
-          ) : (
+          {sourceLine && (
+            <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300 mt-0.5">
+              Source: <span className="font-semibold">{sourceLine}</span>
+            </p>
+          )}
+          {show5050 && (
             <p className="text-xs text-muted-foreground font-semibold mt-0.5">
-              50% Sire · 50% Dam — halved each generation
+              {subtitle || '50% Sire · 50% Dam — halved each generation'}
             </p>
           )}
         </div>
@@ -269,19 +319,54 @@ export default function BloodlineBreakdown({ composition, stats, title, subtitle
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground font-semibold leading-relaxed border-t border-emerald-100 dark:border-emerald-900/50 pt-2">
-        <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
-        {unknownPct > 0 && (
-          <>
-            {' '}
-            · <span className="font-black text-muted-foreground">{unknownPct}% unregistered ancestry</span> — set the
-            parents&apos; breed to complete the split.
-          </>
-        )}
-        {knownPct > 0 && unknownPct === 0 && strainCount === 1 && (
-          <> · Pure / single-bloodline split.</>
-        )}
-      </p>
+      {isAssumed ? (
+        <div className="border-t border-emerald-100 dark:border-emerald-900/50 pt-2 space-y-2">
+          <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> Assumed 100% {dominant.strain}
+          </p>
+          <div className="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <p className="leading-relaxed">
+              No parents are recorded, so the system assumes this bird is 100% of its registered breed. You can declare the real composition by editing the chicken.
+            </p>
+            {canEditComposition && (
+              <button
+                type="button"
+                onClick={onEditComposition}
+                className="text-xs font-bold text-amber-800 dark:text-amber-300 underline hover:no-underline shrink-0 cursor-pointer self-start sm:self-auto"
+              >
+                Edit composition →
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="border-t border-emerald-100 dark:border-emerald-900/50 pt-2 space-y-1.5">
+          <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
+            {unknownPct > 0 && (
+              <>
+                {' '}
+                · <span className="font-black text-muted-foreground">{unknownPct}% unregistered ancestry</span> — set the
+                parents&apos; breed to complete the split.
+              </>
+            )}
+            {knownPct > 0 && unknownPct === 0 && strainCount === 1 && (
+              <> · Pure / single-bloodline split.</>
+            )}
+          </p>
+          {canEditComposition && (
+            <div>
+              <button
+                type="button"
+                onClick={onEditComposition}
+                className="text-xs font-bold text-emerald-700 dark:text-emerald-300 underline hover:no-underline cursor-pointer"
+              >
+                Edit composition →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {sharedAncestors.length > 0 && (
         <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2">

@@ -477,7 +477,13 @@ The Lineage Directory is located at `/lineage` ([gallotrack-next/components/Line
 - Clicking any ancestor opens their complete profile.
 
 ### How Lineage Calculations Work
-- **What "Foundation Stock" Means**: A bird whose ancestors were not born on your farm (e.g. purchased champion broodcock or imported hen). It has no parents recorded in your database (`sire_id` and `dam_id` are `NULL`). The system treats it as generation 0 with 100% purity of its own named strain.
+- **What "Foundation Stock" Means**: A bird whose ancestors were not born on your farm (e.g. purchased champion broodcock or imported hen). It has no parents recorded in your database (`sire_id` and `dam_id` are `NULL`). The system treats it as generation 0 with 100% purity of its own named strain unless declared otherwise.
+- **Lineage Transparency & Limitations (Assumed vs Declared vs Derived)**:
+  - **Assumed**: A foundation bird with no recorded parents and no custom declaration is treated as 100% of its registered breed. The UI explicitly marks this as `Assumed from registered breed (not verified)` and shows an `(assumed)` or `~` badge qualifier and profile note. This clarifies to the owner that purity is an unverified baseline assumption, not genetic proof. The owner can declare the real makeup anytime via Edit Chicken.
+  - **Declared**: A foundation bird where the owner explicitly declared known ancestral percentages (up to 4 breeds summing to 100%). Marked in the UI as `Declared by owner`.
+  - **Derived**: Offspring with recorded parents whose composition is mathematically computed (50% Sire, 50% Dam). If any ancestor in its ancestry tree used an assumed composition, the lineage is transparently labelled `Derived from parents (Includes assumed foundation stock)` and carries the `(assumed)` / `~` qualifier.
+  - **50/50 Parent Contribution Note**: The "50% Sire, 50% Dam" helper sentence is only shown when both parents are recorded flock chickens. For foundation stock or birds with unrecorded parents, this sentence is hidden.
+  - **Flock Counts & Classification Invariant**: The underlying composition math, Purebred/Crossbred/Unverified classifications, relatedness metrics, and filter counts are preserved with zero shifts.
 - **Bloodline Percentage Engine**: Handled in [bloodline-composition.ts](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/bloodline-composition.ts):
   - Traverses the pedigree tree upwards.
   - Takes 50% from the sire's bloodline map and 50% from the dam's bloodline map.
