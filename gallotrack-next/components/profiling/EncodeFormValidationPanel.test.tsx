@@ -147,9 +147,12 @@ describe('Validation & Summary Panel and StatusItem', () => {
 
     const wingBandInput = screen.getByLabelText(/Wing Band ID/i);
     expect(wingBandInput).toBeInTheDocument();
-    expect(wingBandInput).toHaveAttribute('placeholder', 'e.g. WB-001, 1A₁, or Hatch#3 (Gen₂)');
     expect(wingBandInput).toHaveAttribute('maxLength', '50');
-    expect(screen.getByText(/combinations of letters, numbers, subscripts, or lineage tags/i)).toBeInTheDocument();
+
+    // Auto-generation badge for Sire
+    expect(screen.getByText(/Auto-Generated \(Sire Number\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Auto-generated based on Breeding Male/i)).toBeInTheDocument();
   });
 });
+
 

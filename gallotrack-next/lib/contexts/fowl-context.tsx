@@ -417,9 +417,17 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const sireGenInfo = generationInfo(sireGen);
   const damGenInfo = generationInfo(damGen);
 
-  // ── Standardized bird codes (sire 1, dam A, offspring 1A1 → 1A₁) ──
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
-  const takenCodes = useMemo(() => buildCodeSet(Array.from(birdCodes.values())), [birdCodes]);
+  const takenCodes = useMemo(() => {
+    const set = buildCodeSet(Array.from(birdCodes.values()));
+    fowls.forEach((f) => {
+      if (f.wing_band) {
+        const norm = normalizeBirdCode(f.wing_band).toLowerCase();
+        if (norm) set.add(norm);
+      }
+    });
+    return set;
+  }, [birdCodes, fowls]);
   const birdCodeOf = useCallback((f: FowlRecord) => birdCodes.get(String(f.id)) || normalizeBirdCode(f.bird_code), [birdCodes]);
   const suggestedBirdCode = useMemo(
     () => previewBirdCode({ gender: newGender, sireName, damName, fowls, taken: takenCodes }),

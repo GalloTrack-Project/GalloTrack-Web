@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
-import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3 } from 'lucide-react';
+import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw } from 'lucide-react';
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
 import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import { getDescendantFowls, validateDeclaredComposition } from '@/lib/bloodline-composition';
-import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode, previewBirdCode } from '@/lib/bird-code';
 import { bloodlineOf } from '@/lib/helpers';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
@@ -409,9 +409,28 @@ export default function EditFowlModal({
               );
             })()}
             <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="wing-band-id">
-                Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-muted-foreground uppercase" htmlFor="wing-band-id">
+                  Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const suggested = previewBirdCode({
+                      gender: editGender,
+                      sireName: editSire,
+                      damName: editDam,
+                      fowls,
+                    });
+                    if (suggested) setEditWingBand(suggested);
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                  title="Auto-suggest Wing Band based on role & parentage"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Auto-Suggest ID</span>
+                </button>
+              </div>
               <input
                 type="text"
                 value={editWingBand}

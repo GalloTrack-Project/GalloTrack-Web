@@ -10,7 +10,7 @@ import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
-import { Lock } from 'lucide-react';
+import { Lock, RotateCcw } from 'lucide-react';
 
 export function StatusItem({
   icon,
@@ -165,6 +165,21 @@ export default function EncodeForm({
   const legColorInputRef = useRef<HTMLDivElement>(null);
   const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [isWingBandCustomized, setIsWingBandCustomized] = useState(false);
+
+  // Auto-generate / prefill Wing Band ID based on classification and parentage
+  useEffect(() => {
+    if (!isWingBandCustomized && suggestedBirdCode) {
+      setWingBand(suggestedBirdCode);
+    }
+  }, [suggestedBirdCode, isWingBandCustomized, setWingBand]);
+
+  const handleResetWingBand = () => {
+    setIsWingBandCustomized(false);
+    if (suggestedBirdCode) {
+      setWingBand(suggestedBirdCode);
+    }
+  };
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -277,20 +292,49 @@ export default function EncodeForm({
           </p>
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="wing-band-id">
-            Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider" htmlFor="wing-band-id">
+              Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
+            </label>
+            <div className="flex items-center gap-2">
+              {isWingBandCustomized ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded-full">
+                    Custom Override
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetWingBand}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                    title={`Revert to auto-generated ${suggestedBirdCode}`}
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset to Auto ({suggestedBirdCode || '—'})</span>
+                  </button>
+                </div>
+              ) : (
+                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full">
+                  Auto-Generated ({currentRole === 'sire' ? 'Sire Number' : currentRole === 'dam' ? 'Dam Letter' : 'Birth Code'})
+                </span>
+              )}
+            </div>
+          </div>
           <input
             type="text"
             value={wingBand}
-            onChange={(e) => setWingBand(e.target.value)}
+            onChange={(e) => {
+              setWingBand(e.target.value);
+              setIsWingBandCustomized(true);
+            }}
             maxLength={50}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
-            placeholder="e.g. WB-001, 1A₁, or Hatch#3 (Gen₂)"
+            placeholder={suggestedBirdCode || 'e.g. 1, A, 1A1, WB-001'}
             id="wing-band-id"
           />
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
-            Manual physical ID stamped on wing band or leg tag. Enter combinations of letters, numbers, subscripts, or lineage tags (e.g. WB-001, 1A₁, Hatch#3).
+            {isWingBandCustomized
+              ? 'Manual override active. Custom tag will be banded on this chicken. Click "Reset to Auto" to restore auto-assignment.'
+              : `Auto-generated based on ${currentRole === 'sire' ? 'Breeding Male (Sire sequential number)' : currentRole === 'dam' ? 'Breeding Female (Dam sequential letter)' : 'Non-Breeding Offspring (Sire # + Dam Letter + sequence)'}. You can edit this field to customize.`}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
