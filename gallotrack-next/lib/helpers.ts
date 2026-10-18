@@ -7,7 +7,7 @@ export const POST_FIGHT_CONDITIONS = [
   { value: 'Deceased (Died from injuries)', icon: '💀', short: 'DECEASED', desc: 'Died from fight injuries' },
 ] as const;
 
-export const STRAIN_LIST = ['Sweater', 'Hatch', 'Roundhead', 'Kelso', 'Lemon 84', 'Albany', 'Claret', 'Whitehackle', 'Black', 'Melsin', 'Bennie', 'Joe Madigin'];
+export const STRAIN_LIST: string[] = [];
 
 export const MATCH_EVENT_TYPES = ['Derby', 'Lusong'] as const;
 
