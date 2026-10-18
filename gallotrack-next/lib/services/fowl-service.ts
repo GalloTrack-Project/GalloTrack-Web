@@ -26,18 +26,23 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
   }
   const fowls: FowlRecord[] = data || [];
 
-  // Reconcile birth_code from append-only fowl_status_history without modifying DB schema
+  // Reconcile birth_code and registry_role from append-only fowl_status_history without modifying DB schema
   try {
     const { data: historyData } = await supabase
       .from('fowl_status_history')
-      .select('fowl_id, new_value')
-      .eq('field', 'birth_code');
+      .select('fowl_id, field, new_value')
+      .in('field', ['birth_code', 'registry_role']);
 
     if (historyData && historyData.length > 0) {
       const birthCodeMap = new Map<number, string>();
+      const roleMap = new Map<number, string>();
       for (const h of historyData) {
         if (h.fowl_id && h.new_value) {
-          birthCodeMap.set(h.fowl_id, h.new_value);
+          if (h.field === 'birth_code') {
+            birthCodeMap.set(h.fowl_id, h.new_value);
+          } else if (h.field === 'registry_role') {
+            roleMap.set(h.fowl_id, h.new_value);
+          }
         }
       }
       for (const f of fowls) {
@@ -45,10 +50,14 @@ export async function fetchFowls(): Promise<FowlRecord[]> {
         if (recordedBirthCode) {
           f.birth_code = recordedBirthCode;
         }
+        const recordedRole = roleMap.get(f.id);
+        if (recordedRole) {
+          f.registry_role = recordedRole as FowlRecord['registry_role'];
+        }
       }
     }
   } catch (err) {
-    console.warn('Could not fetch birth_code status history:', err);
+    console.warn('Could not fetch status history for reconciliation:', err);
   }
 
   return fowls;

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { FowlRecord, StatusHistoryEntry } from './types';
 import { filterAllowedColumns } from './schema-contract';
+import { registryTabLists } from './registry-roles';
 
 describe('promoteToBreeder: Offspring 1A1 -> Sire 4 Fixture Test', () => {
   // Mock flock fixtures (isolated memory fixture, zero DB writes)
@@ -176,6 +177,14 @@ describe('promoteToBreeder: Offspring 1A1 -> Sire 4 Fixture Test', () => {
     expect(initialTotalCount).toBe(5);
     expect(initialOffspringCount).toBe(3);
 
+    // Initial tab membership: targetOffspring is in the Offspring tab (nonBreeding), NOT Breeding Male
+    const beforeTabs = registryTabLists(flock);
+    expect(beforeTabs.nonBreeding.map((f) => f.id)).toContain(targetOffspring.id);
+    expect(beforeTabs.males.map((f) => f.id)).not.toContain(targetOffspring.id);
+    expect(beforeTabs.males.length).toBe(1);
+    expect(beforeTabs.females.length).toBe(1);
+    expect(beforeTabs.nonBreeding.length).toBe(3);
+
     // Promotion action
     const opts = {
       targetRole: 'Breeding Male' as const,
@@ -233,12 +242,18 @@ describe('promoteToBreeder: Offspring 1A1 -> Sire 4 Fixture Test', () => {
     Object.assign(targetOffspring, filteredPatch);
     historyRows.push(...newHistoryEntries);
 
-    // 3. Attach birth_code from history reconciliation (matching fetchFowls() behavior)
+    // 3. Attach birth_code and registry_role from history reconciliation (matching fetchFowls() behavior)
     const birthCodeEntry = historyRows.find(
       (h) => h.fowl_id === targetOffspring.id && h.field === 'birth_code'
     );
     if (birthCodeEntry) {
       targetOffspring.birth_code = birthCodeEntry.new_value;
+    }
+    const roleEntry = historyRows.find(
+      (h) => h.fowl_id === targetOffspring.id && h.field === 'registry_role'
+    );
+    if (roleEntry) {
+      targetOffspring.registry_role = roleEntry.new_value as FowlRecord['registry_role'];
     }
 
     // ── ASSERTIONS ──
@@ -274,5 +289,13 @@ describe('promoteToBreeder: Offspring 1A1 -> Sire 4 Fixture Test', () => {
     const allCodes = flock.map((f) => f.bird_code).filter(Boolean);
     const uniqueCodes = new Set(allCodes);
     expect(uniqueCodes.size).toBe(allCodes.length);
+
+    // g. PROOF: Offspring leaves Offspring tab (nonBreeding) and appears in Breeding Male tab (males)
+    const afterTabs = registryTabLists(flock);
+    expect(afterTabs.nonBreeding.map((f) => f.id)).not.toContain(targetOffspring.id);
+    expect(afterTabs.males.map((f) => f.id)).toContain(targetOffspring.id);
+    expect(afterTabs.nonBreeding.length).toBe(beforeTabs.nonBreeding.length - 1); // 3 -> 2
+    expect(afterTabs.males.length).toBe(beforeTabs.males.length + 1); // 1 -> 2
+    expect(afterTabs.females.length).toBe(beforeTabs.females.length); // 1 (unchanged)
   });
 });

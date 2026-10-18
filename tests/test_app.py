@@ -70,8 +70,8 @@ class TestAuthRoutes:
         resp = client.post('/auth/register', data={
             'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'password123',
-            'password_confirm': 'password123'
+            'password': 'fixture_test_pass',
+            'password_confirm': 'fixture_test_pass'
         }, follow_redirects=True)
         assert resp.status_code == 200
 
