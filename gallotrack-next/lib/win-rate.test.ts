@@ -5,6 +5,7 @@ import {
   combineWinRates,
   buildChickenMatchStatsMap,
   getWinRatePillClasses,
+  computeClassMatchStats,
 } from './win-rate';
 
 const makeMatch = (

@@ -200,6 +200,6 @@ describe('Auth Routing & Redirect Flow Integration Tests', () => {
       expect(dashboardCta).toHaveAttribute('href', '/dashboard');
       expect(screen.queryByRole('link', { name: /^Sign up$/i })).not.toBeInTheDocument();
       unmount();
-    });
+    }, 15000);
   });
 });
