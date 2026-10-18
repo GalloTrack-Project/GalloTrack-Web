@@ -1,82 +1,70 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { uploadFowlImage } from './fowl-service';
+import { describe, it, expect } from 'vitest';
+import {
+  isBirdCodeUniqueViolation,
+  isChickenCodeUniqueViolation,
+  DB_UPDATE_NEEDED_MESSAGE,
+} from './fowl-service';
 
-const mockUpload = vi.fn();
-const mockGetPublicUrl = vi.fn();
-const mockGetUser = vi.fn();
-
-vi.mock('@/lib/registry', () => ({
-  supabase: {
-    auth: {
-      getUser: () => mockGetUser(),
-    },
-    storage: {
-      from: vi.fn().mockImplementation((bucket: string) => {
-        if (bucket === 'fowl-images') {
-          return {
-            upload: mockUpload,
-            getPublicUrl: mockGetPublicUrl,
-          };
-        }
-        return {};
-      }),
-    },
-  },
-}));
-
-describe('uploadFowlImage (path fixture test)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockGetPublicUrl.mockImplementation((path: string) => ({
-      data: { publicUrl: `https://example.supabase.co/storage/v1/object/public/fowl-images/${path}` },
-    }));
+describe('fowl-service: isBirdCodeUniqueViolation', () => {
+  it('detects Postgres 23505 with fowl_user_bird_code_key index in message', () => {
+    const errorObj = {
+      code: '23505',
+      message: 'duplicate key value violates unique constraint "fowl_user_bird_code_key"',
+      details: 'Key (user_id, bird_code)=(123, 1A1) already exists.',
+    };
+    expect(isBirdCodeUniqueViolation(errorObj)).toBe(true);
+    expect(isChickenCodeUniqueViolation(errorObj)).toBe(true);
   });
 
-  it('uploads to {user_id}/fowl/{fileName} when user is authenticated', async () => {
-    mockGetUser.mockResolvedValue({
-      data: { user: { id: 'usr-9cc100d9-c855-41d3-a6a8-3c10fd65221c' } },
-    });
-    mockUpload.mockResolvedValue({ data: { path: 'uploaded' }, error: null });
-
-    const dummyFile = new File(['mock content'], 'champion-cock.jpg', { type: 'image/jpeg' });
-    const result = await uploadFowlImage(dummyFile);
-
-    expect(result.error).toBeUndefined();
-    expect(result.path).toBeDefined();
-    expect(result.url).toBeDefined();
-
-    // Verify path structure: usr-9cc100d9-c855-41d3-a6a8-3c10fd65221c/fowl/{timestamp}-{random}.jpg
-    expect(result.path).toMatch(/^usr-9cc100d9-c855-41d3-a6a8-3c10fd65221c\/fowl\/\d+-[a-z0-9]+\.jpg$/);
-    expect(result.url).toContain(result.path!);
-
-    // Verify storage upload call arguments
-    expect(mockUpload).toHaveBeenCalledTimes(1);
-    expect(mockUpload).toHaveBeenCalledWith(result.path, dummyFile);
+  it('detects Postgres 23505 with bird_code in details', () => {
+    const errorObj = {
+      code: '23505',
+      message: 'duplicate key value violates unique constraint',
+      details: 'Key (user_id, bird_code)=(abc, 2) already exists.',
+    };
+    expect(isBirdCodeUniqueViolation(errorObj)).toBe(true);
+    expect(isChickenCodeUniqueViolation(errorObj)).toBe(true);
   });
 
-  it('falls back to fowl/{fileName} when unauthenticated', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: null } });
-    mockUpload.mockResolvedValue({ data: { path: 'uploaded' }, error: null });
-
-    const dummyFile = new File(['mock content'], 'rooster.png', { type: 'image/png' });
-    const result = await uploadFowlImage(dummyFile);
-
-    expect(result.error).toBeUndefined();
-    expect(result.path).toBeDefined();
-    expect(result.path).toMatch(/^fowl\/\d+-[a-z0-9]+\.png$/);
-    expect(mockUpload).toHaveBeenCalledWith(result.path, dummyFile);
+  it('detects string error messages containing fowl_user_bird_code_key', () => {
+    const errorStr = 'duplicate key value violates unique constraint "fowl_user_bird_code_key"';
+    expect(isBirdCodeUniqueViolation(errorStr)).toBe(true);
+    expect(isChickenCodeUniqueViolation(errorStr)).toBe(true);
   });
 
-  it('returns error when storage upload fails', async () => {
-    mockGetUser.mockResolvedValue({
-      data: { user: { id: 'usr-123' } },
-    });
-    mockUpload.mockResolvedValue({ data: null, error: { message: 'Bucket not found' } });
+  it('detects legacy fowl_user_chicken_code_key for backward compatibility', () => {
+    const errorStr = 'duplicate key value violates unique constraint "fowl_user_chicken_code_key"';
+    expect(isBirdCodeUniqueViolation(errorStr)).toBe(true);
+    expect(isChickenCodeUniqueViolation(errorStr)).toBe(true);
+  });
 
-    const dummyFile = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
-    const result = await uploadFowlImage(dummyFile);
+  it('does NOT trigger for unique violations on other columns/indexes (e.g. wing_band)', () => {
+    const wingBandError = {
+      code: '23505',
+      message: 'duplicate key value violates unique constraint "fowl_user_wing_band_key"',
+      details: 'Key (user_id, wing_band)=(123, WB-001) already exists.',
+    };
+    expect(isBirdCodeUniqueViolation(wingBandError)).toBe(false);
+    expect(isChickenCodeUniqueViolation(wingBandError)).toBe(false);
+  });
 
-    expect(result.error).toBe('Bucket not found');
-    expect(result.url).toBeUndefined();
+  it('does NOT trigger for other postgres error codes (e.g. 42703 undefined column)', () => {
+    const missingColError = {
+      code: '42703',
+      message: 'column "declared_composition" does not exist',
+    };
+    expect(isBirdCodeUniqueViolation(missingColError)).toBe(false);
+  });
+
+  it('returns false for null, undefined, or empty error', () => {
+    expect(isBirdCodeUniqueViolation(null)).toBe(false);
+    expect(isBirdCodeUniqueViolation(undefined)).toBe(false);
+    expect(isBirdCodeUniqueViolation('')).toBe(false);
+  });
+
+  it('exports DB_UPDATE_NEEDED_MESSAGE with the specified user-facing text', () => {
+    expect(DB_UPDATE_NEEDED_MESSAGE).toBe(
+      'This feature needs a database update. Please contact the administrator.'
+    );
   });
 });

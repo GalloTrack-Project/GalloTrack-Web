@@ -51,6 +51,18 @@ backups/
 
 # video recording output (webm/mp4/manifest/auth state)
 recordings/
+*.webm
+*.mp4
+videos/
+
+# Playwright artifacts, traces, and storage state
+.auth.json
+auth.json
+*.trace.zip
+traces/
+test-results/
+playwright-report/
+blob-report/
 
 # scratch and screenshots
 scratch/

@@ -32,12 +32,30 @@ async function launch() {
 }
 
 async function main() {
+  const envPath = join(process.cwd(), '.env.local');
+  const env: Record<string, string> = {};
+  if (existsSync(envPath)) {
+    const { readFileSync } = await import('node:fs');
+    for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+      if (!line.includes('=') || line.startsWith('#')) continue;
+      const i = line.indexOf('=');
+      env[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+    }
+  }
+
+  const email = process.env.SMOKE_EMAIL || env.SMOKE_EMAIL;
+  const password = process.env.SMOKE_PASSWORD || env.SMOKE_PASSWORD;
+  if (!email || !password) {
+    console.error('❌ Missing SMOKE_EMAIL or SMOKE_PASSWORD. Set them in .env.local or environment.');
+    process.exit(1);
+  }
+
   const browser = await launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#email-address', { timeout: 30000 });
-  await page.fill('#email-address', 'client@gmail.com');
-  await page.fill('#password', 'password123');
+  await page.fill('#email-address', email);
+  await page.fill('#password', password);
   await page.click('button[type=submit]');
   await page.waitForURL(/dashboard/, { timeout: 20000 }).catch(() => {});
   await page.waitForTimeout(4000);

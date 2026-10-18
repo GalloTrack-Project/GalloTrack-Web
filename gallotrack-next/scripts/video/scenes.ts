@@ -58,7 +58,25 @@ export type Scene = {
   steps: Step[];
 };
 
-const E = 'client@gmail.com';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+function getDemoCreds() {
+  const envPath = join(process.cwd(), '.env.local');
+  const env: Record<string, string> = {};
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+      if (!line.includes('=') || line.startsWith('#')) continue;
+      const i = line.indexOf('=');
+      env[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+    }
+  }
+  const email = process.env.SMOKE_EMAIL || env.SMOKE_EMAIL || '';
+  const password = process.env.SMOKE_PASSWORD || env.SMOKE_PASSWORD || '';
+  return { email, password };
+}
+
+const { email: DEMO_EMAIL, password: DEMO_PASSWORD } = getDemoCreds();
 
 export const SCENES: Scene[] = [
   {
@@ -71,8 +89,8 @@ export const SCENES: Scene[] = [
       { type: 'hold', ms: 1800, label: 'hold on login page' },
       { type: 'zoom', target: { css: 'form' }, level: 1.3, label: 'crop to login form (action scope)' },
       { type: 'hold', ms: 1500 },
-      { type: 'type', target: { css: '#email-address' }, text: E, label: 'type email' },
-      { type: 'type', target: { css: '#password' }, text: 'password123', label: 'type password' },
+      { type: 'type', target: { css: '#email-address' }, text: DEMO_EMAIL, label: 'type email' },
+      { type: 'type', target: { css: '#password' }, text: DEMO_PASSWORD, label: 'type password' },
       { type: 'click', target: { css: 'button[type=submit]' }, label: 'click Sign in' },
       { type: 'waitUrl', re: '/dashboard', label: 'land on dashboard' },
       { type: 'reset', label: 'back to full view after login' },

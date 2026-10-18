@@ -70,5 +70,17 @@ logs/
 
 .vercel
 .env*
+!*.env.example
 backups/
 scratch/
+recordings/
+videos/
+*.webm
+*.mp4
+.auth.json
+auth.json
+*.trace.zip
+traces/
+test-results/
+playwright-report/
+blob-report/

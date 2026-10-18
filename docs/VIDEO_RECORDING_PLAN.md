@@ -13,7 +13,7 @@
 |---|----------|--------|
 | 1 | Output structure | **Per-scene clips + one stitched full video** |
 | 2 | Pacing | **Natural speed with 3–4 s holds after each action** (room to talk over) |
-| 3 | Environment | **Localhost dev server** (`npm run dev`) with demo account `client@gmail.com` |
+| 3 | Environment | **Localhost dev server** (`npm run dev`) with demo account configured via `SMOKE_EMAIL` |
 | 4 | Video spec | **1920×1080 @ 30 fps** — *as-built: Playwright 1.55 has no `recordVideo.fps` option; capture is 1920×1080@25fps VP8 (its fixed rate). Deliverables are H.264 MP4 @25fps — natively smooth. If 30fps is required, add `-vf fps=30` to the stitch conversion (duplicates ~20% of frames; not recommended).* |
 | 5 | Effects | **All four:** zoom & pan, custom cursor + click ripple, target highlight pulse, scroll animations |
 | 6 | Scene 4 form | **Type only, never submit** — farm data stays clean |
@@ -62,7 +62,7 @@ No third-party services, APIs, or external dependencies are involved (nothing to
 1. `gallotrack-next/.env.local` present (Supabase creds) — dev server can start.
 2. Start dev server in background: `npm run dev` → wait for `http://localhost:3000`.
 3. **Warm-up:** load every scene route once before recording (first Next compile per route takes seconds; must not happen mid-take).
-4. Demo account: `SMOKE_EMAIL` / `SMOKE_PASSWORD` (defaults `client@gmail.com` / `password123`) — **not committed**; set via env if different.
+4. Demo account: `SMOKE_EMAIL` / `SMOKE_PASSWORD` — set via local `.env.local` or environment variables; **never commit real credentials**.
 5. ffmpeg on `PATH` after `winget install Gyan.FFmpeg` (verify with `ffmpeg -version`; may need a new shell for PATH).
 6. Chromium build cached (`npx playwright install chromium` if missing) — driver reuses the repo's `findCachedChromium()` fallback.
 

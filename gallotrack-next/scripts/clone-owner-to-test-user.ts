@@ -25,10 +25,15 @@ if (fs.existsSync(ENV_PATH)) {
   }
 }
 
-const SRC_EMAIL = 'hazeldato-on@isufst.edu.ph';
-const DST_EMAIL = 'client@gmail.com';
-const DST_PASSWORD = 'password123';
+const SRC_EMAIL = process.env.CLONE_SRC_EMAIL || env.CLONE_SRC_EMAIL || process.env.SRC_EMAIL || env.SRC_EMAIL;
+const DST_EMAIL = process.env.CLONE_DST_EMAIL || env.CLONE_DST_EMAIL || process.env.DST_EMAIL || env.DST_EMAIL;
+const DST_PASSWORD = process.env.CLONE_DST_PASSWORD || env.CLONE_DST_PASSWORD || process.env.DST_PASSWORD || env.DST_PASSWORD;
 const DRY_RUN = process.argv.includes('--dry-run');
+
+if (!SRC_EMAIL || !DST_EMAIL || !DST_PASSWORD) {
+  console.error('❌ Missing required environment variables: CLONE_SRC_EMAIL, CLONE_DST_EMAIL, CLONE_DST_PASSWORD. Set them in .env.local or environment.');
+  process.exit(1);
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;

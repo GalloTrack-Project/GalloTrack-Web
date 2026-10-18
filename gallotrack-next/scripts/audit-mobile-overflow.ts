@@ -1,6 +1,11 @@
 /**
  * Mobile Horizontal Overflow Audit (Playwright Regression Test)
  *
+ * NOTE: This audit script intercepts and mocks the Supabase data layer locally
+ * to inject synthetic datasets (including the 40-fowl stress dataset) and verify
+ * browser layout and mobile responsiveness. It checks CSS rendering and layout only,
+ * and cannot / does not validate real database writes or database constraints.
+ *
  * Verifies that all dashboard routes and sub-tabs fit within mobile viewports
  * with ZERO horizontal overflow (document.documentElement.scrollWidth <= clientWidth).
  *
@@ -108,7 +113,7 @@ const BASE_ROUTES: BaseRouteSpec[] = [
   { name: 'Lineage Directory', path: '/lineage', hasDynamicTabs: true },
   { name: 'Breeding Hub', path: '/breeding', hasDynamicTabs: true },
   { name: 'Match Logs', path: '/match-logs', hasDynamicTabs: false },
-  { name: 'Add Match Record', path: '/match-logs/new?initialFowlId=101', hasDynamicTabs: false },
+  { name: 'Add Match Record', path: '/match-logs/new?fowlId=101', hasDynamicTabs: false },
   { name: 'Edit Match Record', path: '/match-logs/1/edit', hasDynamicTabs: false },
   { name: 'Settings', path: '/settings', hasDynamicTabs: true },
 ];

@@ -14,6 +14,8 @@ import {
 } from '@/lib/bird-code';
 import { isFoundationStock } from '@/lib/helpers';
 import { parentLinkIds } from '@/lib/lineage';
+import { filterAllowedColumns } from '@/lib/schema-contract';
+import { DB_UPDATE_NEEDED_MESSAGE } from '@/lib/services/fowl-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -211,19 +213,16 @@ export async function POST(request: NextRequest) {
         taken,
       });
     payload.bird_code = assignedCode;
-    delete (payload as Record<string, unknown>).chicken_code;
-    delete (payload as Record<string, unknown>).birth_code;
-    delete (payload as Record<string, unknown>).tag_number;
+    const cleanPayload = filterAllowedColumns('fowl', payload);
 
-    let { error: insertErr } = await supabase.from('fowl').insert([payload]);
-    if (insertErr && insertErr.message.includes('bird_code')) {
-      const copy = { ...payload };
-      delete (copy as Record<string, unknown>).bird_code;
-      const res = await supabase.from('fowl').insert([copy]);
-      insertErr = res.error;
-    }
+    const { error: insertErr } = await supabase.from('fowl').insert([cleanPayload]);
 
     if (insertErr) {
+      const msg = insertErr.message?.toLowerCase() || '';
+      if (insertErr.code === '42703' || msg.includes('does not exist') || msg.includes('column')) {
+        console.error('[api/fowl] Missing column in database:', insertErr);
+        return NextResponse.json({ error: DB_UPDATE_NEEDED_MESSAGE }, { status: 500 });
+      }
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 

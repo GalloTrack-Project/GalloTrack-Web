@@ -50,9 +50,25 @@ async function launch() {
   }
 }
 
-const BASE = process.env.SMOKE_BASE_URL || 'http://localhost:3000';
-const EMAIL = process.env.SMOKE_EMAIL || 'client@gmail.com';
-const PASSWORD = process.env.SMOKE_PASSWORD || 'password123';
+const envLocalPath = join(process.cwd(), '.env.local');
+const localEnv: Record<string, string> = {};
+if (existsSync(envLocalPath)) {
+  const { readFileSync } = require('node:fs');
+  for (const line of readFileSync(envLocalPath, 'utf8').split(/\r?\n/)) {
+    if (!line.includes('=') || line.startsWith('#')) continue;
+    const i = line.indexOf('=');
+    localEnv[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+  }
+}
+
+const BASE = process.env.SMOKE_BASE_URL || localEnv.SMOKE_BASE_URL || 'http://localhost:3000';
+const EMAIL = process.env.SMOKE_EMAIL || localEnv.SMOKE_EMAIL;
+const PASSWORD = process.env.SMOKE_PASSWORD || localEnv.SMOKE_PASSWORD;
+
+if (!EMAIL || !PASSWORD) {
+  console.error('❌ Missing SMOKE_EMAIL or SMOKE_PASSWORD. Set them in .env.local or environment.');
+  process.exit(1);
+}
 
 /** [scene, path, mustContain (optional text proving the page rendered)] */
 const PAGES: [string, string, string?][] = [

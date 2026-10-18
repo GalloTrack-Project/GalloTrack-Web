@@ -1,6 +1,10 @@
 """
 GalloTrack Flask Backend Tests
 Run with: pytest tests/ -v
+
+NOTE: This file contains local-only mock fixtures for testing the legacy Flask/SQLite backend.
+All usernames ('testuser'), emails ('test@example.com'), and passwords ('testpass123')
+are synthetic in-memory test fixtures only, and never touch production or external services.
 """
 import pytest
 from app import create_app

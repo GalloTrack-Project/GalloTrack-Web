@@ -124,16 +124,28 @@ export type RestoreResult = {
   errors: string[];
 };
 
-/** Drop server-owned columns so the database can reassign them on restore. */
-function sanitizeRow(row: BackupRow, userId: string): BackupRow {
+import { filterAllowedColumns } from '@/lib/schema-contract';
+
+/** Drop server-owned columns and filter against schema contract allowlist for fowl. */
+function sanitizeFowl(row: BackupRow, userId: string): BackupRow {
   const { id: _id, user_id: _userId, created_at: _createdAt, updated_at: _updatedAt, ...rest } = row;
   if (!rest.bird_code && rest.chicken_code) {
     rest.bird_code = rest.chicken_code;
   }
-  delete rest.chicken_code;
-  delete rest.birth_code;
-  delete rest.tag_number;
-  return { ...rest, user_id: userId };
+  const filtered = filterAllowedColumns('fowl', rest);
+  return { ...filtered, user_id: userId };
+}
+
+function sanitizeMatch(row: BackupRow, userId: string): BackupRow {
+  const { id: _id, user_id: _userId, created_at: _createdAt, updated_at: _updatedAt, ...rest } = row;
+  const filtered = filterAllowedColumns('match', rest);
+  return { ...filtered, user_id: userId };
+}
+
+function sanitizePairing(row: BackupRow, userId: string): BackupRow {
+  const { id: _id, user_id: _userId, created_at: _createdAt, updated_at: _updatedAt, ...rest } = row;
+  const filtered = filterAllowedColumns('breeding_pairings', rest);
+  return { ...filtered, user_id: userId };
 }
 
 function sanitizeProfile(row: BackupRow): BackupRow {
@@ -234,7 +246,7 @@ export async function restoreBackup(
     const oldDamId = fowl.dam_id != null ? Number(fowl.dam_id) : null;
 
     // Temporarily clear sire_id and dam_id on insert to avoid foreign key errors before parents exist
-    const sanitized = sanitizeRow(fowl, currentUserId);
+    const sanitized = sanitizeFowl(fowl, currentUserId);
     delete sanitized.sire_id;
     delete sanitized.dam_id;
     if (sanitized.declared_composition == null) {
@@ -304,7 +316,7 @@ export async function restoreBackup(
       continue;
     }
 
-    const sanitized = sanitizeRow(match, currentUserId);
+    const sanitized = sanitizeMatch(match, currentUserId);
 
     // Remap fowl_id to newly assigned ID if available
     if (match.fowl_id != null) {
@@ -345,7 +357,7 @@ export async function restoreBackup(
       continue;
     }
 
-    const sanitized = sanitizeRow(pairing, currentUserId);
+    const sanitized = sanitizePairing(pairing, currentUserId);
 
     // Remap sire_id and dam_id
     if (pairing.sire_id != null) {
