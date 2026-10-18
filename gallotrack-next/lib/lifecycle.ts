@@ -41,6 +41,13 @@ export const BREEDING_ROLE_LABELS: Record<string, string> = {
   material: 'Material',
 };
 
+import { FEATHER_COLOR_LIST, TRAIT_LIST } from './helpers';
+
+export const BUILTIN_SUGGESTIONS: Record<string, string[]> = {
+  feather_color: FEATHER_COLOR_LIST,
+  trait: TRAIT_LIST,
+};
+
 /** Merge template + farm rows of one list: farm row wins, inactive dropped, sorted. */
 export function mergeOptions(
   rows: RegistryOption[] | undefined,
@@ -48,12 +55,38 @@ export function mergeOptions(
   currentValue?: string | null,
 ): RegistryOption[] {
   const byValue = new Map<string, RegistryOption>();
+  const inactiveKeys = new Set<string>();
+
+  // If built-in suggestions exist for this listKey, start with them as default templates
+  const suggestions = BUILTIN_SUGGESTIONS[listKey];
+  if (suggestions) {
+    for (const [idx, val] of suggestions.entries()) {
+      byValue.set(val, {
+        list_key: listKey,
+        value: val,
+        label: val,
+        sort_order: idx + 1,
+      });
+    }
+  }
+
   for (const row of rows ?? []) {
     if (row.list_key !== listKey) continue;
-    if (row.is_active === false) continue;
+    const lower = row.value.toLowerCase();
+    if (row.is_active === false) {
+      inactiveKeys.add(lower);
+      continue;
+    }
     const existing = byValue.get(row.value);
     if (!existing || (row.user_id && !existing.user_id)) byValue.set(row.value, row);
   }
+
+  for (const [val] of byValue) {
+    if (inactiveKeys.has(val.toLowerCase())) {
+      byValue.delete(val);
+    }
+  }
+
   if (currentValue && !byValue.has(currentValue)) {
     byValue.set(currentValue, {
       list_key: listKey,

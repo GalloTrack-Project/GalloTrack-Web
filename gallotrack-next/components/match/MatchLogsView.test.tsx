@@ -36,6 +36,7 @@ const mockMatches: Partial<MatchRecord>[] = [
     outcome: 'Win',
     status: 'Verified',
     date: '2026-10-10',
+    age_category: 'Cock',
   },
   {
     id: 2,
@@ -48,6 +49,7 @@ const mockMatches: Partial<MatchRecord>[] = [
     outcome: 'Loss',
     status: 'Verified',
     date: '2026-10-12',
+    age_category: 'Stag',
   },
   {
     id: 3,
@@ -60,6 +62,20 @@ const mockMatches: Partial<MatchRecord>[] = [
     outcome: 'Draw',
     status: 'Pending',
     date: '2026-10-14',
+    age_category: 'Open',
+  },
+  {
+    id: 4,
+    fowl_id: 10,
+    entry_name: 'Storm Rooster',
+    breed: 'Hatch',
+    opponent: 'Vintage Rival D',
+    location: 'Bacolod Arena',
+    type: 'Derby',
+    outcome: 'Win',
+    status: 'Verified',
+    date: '2026-10-15',
+    age_category: 'Derby Special',
   },
 ];
 
@@ -159,5 +175,28 @@ describe('MatchLogsView', () => {
 
     fireEvent.click(tableRow!);
     expect(mockPush).toHaveBeenCalledWith('/match-logs/1/edit');
+  });
+
+  it('filters matches by chicken class (Open)', () => {
+    render(<MatchLogsView />);
+
+    const classSelect = screen.getByLabelText(/Filter by chicken class/i);
+    expect(classSelect).toBeDefined();
+
+    // Filter to Open
+    fireEvent.change(classSelect, { target: { value: 'Open' } });
+
+    // Should find Iron Claw C (match 3, Open) and NOT Tough Opponent A (Cock) or Strong Challenger B (Stag)
+    expect(screen.getByText('Iron Claw C')).toBeDefined();
+    expect(screen.queryByText('Tough Opponent A')).toBeNull();
+    expect(screen.queryByText('Strong Challenger B')).toBeNull();
+  });
+
+  it('displays unknown class badge cleanly without breaking', () => {
+    render(<MatchLogsView />);
+
+    // Match 4 has unknown class 'Derby Special'
+    expect(screen.getByText('Vintage Rival D')).toBeDefined();
+    expect(screen.getByText('Derby Special')).toBeDefined();
   });
 });

@@ -13,7 +13,9 @@ import {
   checkParentageMatch,
   normalizeBirdCode,
 } from '@/lib/bird-code';
-import { isFoundationStock, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
+import { isFoundationStock, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
+import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Lock, RotateCcw, Edit3 } from 'lucide-react';
 
@@ -247,6 +249,26 @@ export default function EncodeForm({
     window.addEventListener('resize', update);
     return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
   }, [legColorOpen]);
+
+  const { rows: registryOptionRows } = useRegistryOptions();
+  const baseColorOptions = useMemo(
+    () => mergeOptions(registryOptionRows, 'feather_color'),
+    [registryOptionRows]
+  );
+  const baseTraitOptions = useMemo(
+    () => mergeOptions(registryOptionRows, 'trait'),
+    [registryOptionRows]
+  );
+  const featherColorOptions = useMemo(
+    () => mergeOptions(registryOptionRows, 'feather_color', newColor),
+    [registryOptionRows, newColor]
+  );
+  const traitOptions = useMemo(
+    () => mergeOptions(registryOptionRows, 'trait', newBehaviorTrait),
+    [registryOptionRows, newBehaviorTrait]
+  );
+  const isCustomColor = isCustomOption(newColor, baseColorOptions.map((o) => o.value));
+  const isCustomTrait = isCustomOption(newBehaviorTrait, baseTraitOptions.map((o) => o.value));
 
   return (
     <form onSubmit={(e) => { if (!birthdateValidation.valid) { e.preventDefault(); return; } handleAddFowl(e); }} className="space-y-5 animate-fadeIn">
@@ -493,38 +515,58 @@ export default function EncodeForm({
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="feather-color">
               Feather Color
+              {isCustomColor && (
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
+              )}
             </label>
             <input
               type="text"
               list="feather-color-options"
               value={newColor}
               onChange={(e) => setNewColor?.(e.target.value)}
+              onBlur={() => {
+                if (newColor) {
+                  setNewColor?.(normalizeOptionValue(newColor, featherColorOptions.map((o) => o.value)));
+                }
+              }}
               placeholder="Select or enter feather color..."
               className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
               id="feather-color"
             />
             <datalist id="feather-color-options">
-              {FEATHER_COLOR_LIST.map((c) => (
-                <option key={c} value={c} />
+              {featherColorOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label || opt.value}
+                </option>
               ))}
             </datalist>
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="behavior-trait">
               Trait
+              {isCustomTrait && (
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
+              )}
             </label>
             <input
               type="text"
               list="trait-options"
               value={newBehaviorTrait}
               onChange={(e) => setNewBehaviorTrait?.(e.target.value)}
+              onBlur={() => {
+                if (newBehaviorTrait) {
+                  setNewBehaviorTrait?.(normalizeOptionValue(newBehaviorTrait, traitOptions.map((o) => o.value)));
+                }
+              }}
               placeholder="Select or enter trait..."
               className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
               id="behavior-trait"
             />
             <datalist id="trait-options">
-              {TRAIT_LIST.map((t) => (
-                <option key={t} value={t} />
+              {traitOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label || opt.value}
+                </option>
               ))}
             </datalist>
           </div>

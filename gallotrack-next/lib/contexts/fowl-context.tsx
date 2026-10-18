@@ -1134,9 +1134,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditName(fowl.name);
     setEditBreed(fowl.breed);
     setEditGender(fowl.gender);
-    setEditColorCategory(fowl.color_category || 'Red');
-    setEditColor(fowl.color || 'Bright Red');
-    setEditBehaviorTrait(fowl.behavior_trait || 'Wave-Motion Tracker');
+    setEditColorCategory(fowl.color_category || '');
+    setEditColor(fowl.feather_color || fowl.color || '');
+    setEditBehaviorTrait(fowl.trait || fowl.behavior_trait || '');
     setEditEyeVariant(fowl.eye_variant || 'Standard Eye');
     const parsedAge = fowl.age ? Number(fowl.age.replace(/[^0-9.]/g, '')) : 0;
     setEditAge(fowl.age ? fowl.age.replace(' Months', '') : '');

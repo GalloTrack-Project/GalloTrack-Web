@@ -132,6 +132,12 @@ function sanitizeFowl(row: BackupRow, userId: string): BackupRow {
   if (!rest.bird_code && rest.chicken_code) {
     rest.bird_code = rest.chicken_code;
   }
+  if (!rest.behavior_trait && rest.trait) {
+    rest.behavior_trait = rest.trait;
+  }
+  if (!rest.color && rest.feather_color) {
+    rest.color = rest.feather_color;
+  }
   const filtered = filterAllowedColumns('fowl', rest);
   return { ...filtered, user_id: userId };
 }

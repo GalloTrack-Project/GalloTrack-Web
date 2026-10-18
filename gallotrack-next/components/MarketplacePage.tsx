@@ -3,7 +3,7 @@ import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { formatBirdCodeForDisplay, resolveBirdCodes, compareBirdCodesNatural } from '@/lib/bird-code';
-import { genderLabel, parentBreedOf, parentBloodlineOf, isMale, isFemale } from '@/lib/helpers';
+import { genderLabel, parentBreedOf, parentBloodlineOf, isMale, isFemale, formatColorDisplay } from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
@@ -242,6 +242,19 @@ function FowlCard({
               </span>
             )}
           </div>
+          {((fowl.feather_color || fowl.color) || (fowl.trait || fowl.behavior_trait)) && (
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground font-semibold truncate">
+              {(fowl.feather_color || fowl.color) && (
+                <span>🎨 {formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</span>
+              )}
+              {(fowl.feather_color || fowl.color) && (fowl.trait || fowl.behavior_trait) && (
+                <span className="text-muted-foreground/40">·</span>
+              )}
+              {(fowl.trait || fowl.behavior_trait) && (
+                <span className="text-emerald-700 dark:text-emerald-300 font-bold">⚡ {fowl.trait || fowl.behavior_trait}</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -369,10 +382,10 @@ function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRe
           <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
             <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Physical Profile</h4>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground font-semibold">Color: </span><span className="font-black text-card-foreground">{fowl.color || '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Feather Color: </span><span className="font-black text-card-foreground">{formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</span></div>
               <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-success">{fowl.behavior_trait || '\u2014'}</span></div>
+              <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-success">{fowl.trait || fowl.behavior_trait || '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{modalWeight ? `${weightFromStorage(modalWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</span></div>
               <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{modalHeight ? `${heightFromStorage(modalHeight, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '\u2014'}</span></div>
             </div>

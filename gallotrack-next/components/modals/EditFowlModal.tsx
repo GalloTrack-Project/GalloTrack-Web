@@ -6,7 +6,9 @@ import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import { getDescendantFowls, validateDeclaredComposition } from '@/lib/bloodline-composition';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode, previewBirdCode } from '@/lib/bird-code';
-import { bloodlineOf, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
+import { bloodlineOf, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
+import { mergeOptions } from '@/lib/lifecycle';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
@@ -130,6 +132,26 @@ export default function EditFowlModal({
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
 
+  const { rows: registryOptionRows } = useRegistryOptions();
+  const baseColorOptions = React.useMemo(
+    () => mergeOptions(registryOptionRows, 'feather_color'),
+    [registryOptionRows]
+  );
+  const baseTraitOptions = React.useMemo(
+    () => mergeOptions(registryOptionRows, 'trait'),
+    [registryOptionRows]
+  );
+  const featherColorOptions = React.useMemo(
+    () => mergeOptions(registryOptionRows, 'feather_color', editColor),
+    [registryOptionRows, editColor]
+  );
+  const traitOptions = React.useMemo(
+    () => mergeOptions(registryOptionRows, 'trait', editBehaviorTrait),
+    [registryOptionRows, editBehaviorTrait]
+  );
+  const isCustomColor = isCustomOption(editColor, baseColorOptions.map((o) => o.value));
+  const isCustomTrait = isCustomOption(editBehaviorTrait, baseTraitOptions.map((o) => o.value));
+
   const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
   const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
   const isOffspring = hasSire || hasDam;
@@ -223,6 +245,9 @@ export default function EditFowlModal({
               <div>
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="edit-feather-color">
                   Feather Color
+                  {isCustomColor && (
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
+                  )}
                 </label>
                 <input
                   type="text"
@@ -233,32 +258,49 @@ export default function EditFowlModal({
                     setEditColor(c);
                     setEditColorCategory(c.toLowerCase().includes('red') ? 'Red' : 'Light Color');
                   }}
+                  onBlur={() => {
+                    if (editColor) {
+                      setEditColor(normalizeOptionValue(editColor, featherColorOptions.map((o) => o.value)));
+                    }
+                  }}
                   placeholder="Select or enter feather color..."
                   className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
                   id="edit-feather-color"
                 />
                 <datalist id="edit-feather-color-options">
-                  {FEATHER_COLOR_LIST.map((c) => (
-                    <option key={c} value={c} />
+                  {featherColorOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label || opt.value}
+                    </option>
                   ))}
                 </datalist>
               </div>
               <div>
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="edit-behavior-trait">
                   Trait
+                  {isCustomTrait && (
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   list="edit-trait-options"
                   value={editBehaviorTrait}
                   onChange={(e) => setEditBehaviorTrait(e.target.value)}
+                  onBlur={() => {
+                    if (editBehaviorTrait) {
+                      setEditBehaviorTrait(normalizeOptionValue(editBehaviorTrait, traitOptions.map((o) => o.value)));
+                    }
+                  }}
                   placeholder="Select or enter trait..."
                   className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
                   id="edit-behavior-trait"
                 />
                 <datalist id="edit-trait-options">
-                  {TRAIT_LIST.map((t) => (
-                    <option key={t} value={t} />
+                  {traitOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label || opt.value}
+                    </option>
                   ))}
                 </datalist>
               </div>

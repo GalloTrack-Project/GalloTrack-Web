@@ -12,7 +12,7 @@ import {
   previewBirdCode,
   resolveBirdCodes,
 } from '@/lib/bird-code';
-import { isFoundationStock } from '@/lib/helpers';
+import { isFoundationStock, normalizeOptionValue, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
 import { isValidWingBand, WING_BAND_ERROR } from '@/lib/wing-band';
 import { parentLinkIds } from '@/lib/lineage';
 import { filterAllowedColumns } from '@/lib/schema-contract';
@@ -110,10 +110,10 @@ export async function POST(request: NextRequest) {
       name: sanitize(String(body.name)),
       breed: sanitize(String(body.breed)) || 'Unspecified Strain',
       gender: body.gender || 'Rooster',
-      color: body.feather_color || body.color || 'Bright Red',
-      color_category: body.color_category || 'Red',
+      color: normalizeOptionValue(String(body.feather_color || body.color || ''), FEATHER_COLOR_LIST),
+      color_category: body.color_category ? sanitize(String(body.color_category)) : '',
       growth_stage: body.growth_stage || '',
-      behavior_trait: body.trait || body.behavior_trait || 'Wave-Motion Tracker',
+      behavior_trait: normalizeOptionValue(String(body.trait || body.behavior_trait || ''), TRAIT_LIST),
       eye_variant: body.eye_variant || 'Standard Eye',
       birthdate: body.birthdate || null,
       age: body.age || 'N/A',

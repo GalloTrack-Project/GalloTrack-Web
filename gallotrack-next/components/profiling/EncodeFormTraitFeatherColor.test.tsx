@@ -110,6 +110,85 @@ describe('Trait and Feather Color UI Integration', () => {
     expect(setNewBehaviorTrait).toHaveBeenCalledWith('Smart Fighter');
   });
 
+  it('displays custom badge when custom trait or color is entered in EncodeForm', () => {
+    const mockProps: any = {
+      fowls: [],
+      newName: 'Storm Rider',
+      setNewName: vi.fn(),
+      newBreed: 'Sweater',
+      setNewBreed: vi.fn(),
+      newGender: 'Rooster',
+      setNewGender: vi.fn(),
+      newColor: 'Unique Turquoise Spark',
+      setNewColor: vi.fn(),
+      newBehaviorTrait: 'Acrobatic Evader',
+      setNewBehaviorTrait: vi.fn(),
+      newBirthdate: '2024-05-01',
+      handleNewBirthdateChange: vi.fn(),
+      age: '12',
+      handleAgeChange: vi.fn(),
+      newGrowthStage: 'Cock',
+      setNewGrowthStage: vi.fn(),
+      height: '45',
+      setHeight: vi.fn(),
+      weight: '2.2',
+      setWeight: vi.fn(),
+      newLegColor: 'Yellow',
+      setNewLegColor: vi.fn(),
+      availableLegColors: ['Yellow', 'White'],
+      customLegColorNames: new Set<string>(),
+      deleteCustomLegColor: vi.fn(),
+      legColorQuery: '',
+      setLegColorQuery: vi.fn(),
+      legColorOpen: false,
+      setLegColorOpen: vi.fn(),
+      sireName: '',
+      setSireName: vi.fn(),
+      damName: '',
+      setDamName: vi.fn(),
+      birdCode: '',
+      setBirdCode: vi.fn(),
+      wingBand: 'WB-001',
+      setWingBand: vi.fn(),
+      suggestedBirdCode: '1',
+      previewBloodlineStats: null,
+      selectedImage: null,
+      setSelectedImage: vi.fn(),
+      imagePreview: '',
+      setImagePreview: vi.fn(),
+      strainQuery: '',
+      setStrainQuery: vi.fn(),
+      strainOpen: false,
+      setStrainOpen: vi.fn(),
+      availableStrains: [],
+      selectedStrains: [],
+      addStrain: vi.fn(),
+      removeStrain: vi.fn(),
+      loading: false,
+      uploadingImage: false,
+      nextNodeId: '1',
+      dataCompleteness: 100,
+      validationPassed: true,
+      bloodlineVerified: true,
+      computedBloodlinePct: 100,
+      offspringGenInfo: { short: 'F0', label: 'Base Stock' },
+      sireGenInfo: { short: 'F0', label: 'Base Stock' },
+      damGenInfo: { short: 'F0', label: 'Base Stock' },
+      sireGen: 0,
+      damGen: 0,
+      generationPurity: vi.fn(),
+      handleAddFowl: vi.fn(),
+      autoCalcAge: true,
+      getAutoCalcAge: () => true,
+    };
+
+    render(<EncodeForm {...mockProps} />);
+
+    // Custom badges should be rendered for non-standard options
+    const customBadges = screen.getAllByText('custom');
+    expect(customBadges.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('renders Feather Color and Trait inputs in EditFowlModal with accessible labels', () => {
     const setEditColor = vi.fn();
     const setEditBehaviorTrait = vi.fn();

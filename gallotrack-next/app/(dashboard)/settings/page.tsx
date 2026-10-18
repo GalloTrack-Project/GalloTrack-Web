@@ -10,7 +10,7 @@ import { fetchUserSettings, setUserSetting } from '@/lib/services/settings-servi
 import { parseBackup, restoreBackup } from '@/lib/backup'
 import { useFowl } from '@/lib/contexts/fowl-context'
 import { RANKING_METRICS, RANKING_METRIC_LABELS, DEFAULT_SETTINGS, type UserSettings as FarmSettings, type SettingsKey } from '@/lib/settings'
-import { fetchRegistryOptions, addRegistryOption, setRegistryOptionActive } from '@/lib/services/options-service'
+import { fetchRegistryOptions, addRegistryOption, setRegistryOptionActive, toggleTemplateOption } from '@/lib/services/options-service'
 
 interface UserSettings extends AdminSettings {
   farm_name?: string
@@ -149,6 +149,8 @@ export default function SettingsPage() {
   const [optNotice, setOptNotice] = useState('')
 
   const MANAGED_LISTS: { key: string; label: string; desc: string }[] = [
+    { key: 'feather_color', label: 'Feather Colors', desc: 'Plumage color suggestions (Black-Breasted Red, Wheaten, Dark Red, etc.) for registration and editing' },
+    { key: 'trait', label: 'Fighting / Behavioral Traits', desc: 'Fighting and behavioral trait suggestions (Aggressive, Smart Fighter, High Velocity Cutter, etc.) for registration and editing' },
     { key: 'event_type', label: 'Event Types', desc: 'Derby, Lusok, and any custom events offered when logging a fight' },
     { key: 'match_type', label: 'Match Types', desc: 'Main Event, Elimination, Finals, Exhibition — the format of the match' },
     { key: 'post_match_condition', label: 'Post-Fight Conditions', desc: 'Condition options recorded after each fight (never changes a status automatically)' },
@@ -181,9 +183,18 @@ export default function SettingsPage() {
   }
 
   async function handleToggleOption(row: RegistryOption) {
-    if (row.id == null) return
-    const { error } = await setRegistryOptionActive(row.id, row.is_active === false)
-    if (error) setOptNotice(error)
+    if (row.id != null && row.user_id) {
+      const { error } = await setRegistryOptionActive(row.id, row.is_active === false)
+      if (error) setOptNotice(error)
+    } else {
+      const { error } = await toggleTemplateOption(
+        row.list_key,
+        row.value,
+        row.label || row.value,
+        row.is_active === false,
+      )
+      if (error) setOptNotice(error)
+    }
     await reloadRegistryOptions()
     setTimeout(() => setOptNotice(''), 3000)
   }
@@ -758,18 +769,17 @@ export default function SettingsPage() {
                             className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${active ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/70 dark:border-emerald-500/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 line-through'}`}
                           >
                             {row.label || row.value}
-                            {isTemplate ? (
-                              <span className="text-xs uppercase tracking-wider opacity-70">template</span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleToggleOption(row)}
-                                className="cursor-pointer underline underline-offset-2 hover:opacity-70"
-                                title={active ? 'Hide this option from forms' : 'Show this option again'}
-                              >
-                                {active ? 'hide' : 'show'}
-                              </button>
+                            {isTemplate && (
+                              <span className="text-[10px] uppercase tracking-wider opacity-70">suggestion</span>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleOption(row)}
+                              className="cursor-pointer underline underline-offset-2 hover:opacity-70 ml-0.5"
+                              title={active ? 'Hide this option from forms' : 'Show this option again'}
+                            >
+                              {active ? 'hide' : 'show'}
+                            </button>
                           </span>
                         )
                       })}

@@ -170,6 +170,9 @@ export interface PairingStats {
   verdictConfidence: 'Low' | 'Medium' | 'High';
 }
 
+export const CHICKEN_CLASSES = ['Cock', 'Stag', 'Open'] as const;
+export type ChickenClass = (typeof CHICKEN_CLASSES)[number];
+
 export interface MatchRecord {
   id: number;
   user_id?: string | number;

@@ -55,7 +55,7 @@ export default function FightHistoryModal() {
     m.opponent,
     m.breed,
     m.opponent_breed,
-    [m.event_type, m.type].filter(Boolean).join(' · '),
+    [m.event_type, m.type, m.age_category].filter(Boolean).join(' · '),
     m.outcome,
     m.location,
     m.post_fight_condition,

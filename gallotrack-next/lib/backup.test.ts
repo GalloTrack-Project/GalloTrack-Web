@@ -209,6 +209,7 @@ describe('restoreBackup fixture tests', () => {
             entry_name: 'Prince Child',
             opponent: 'Dark Falcon',
             fowl_id: 30,
+            age_category: 'Open',
           },
         ],
         breeding_pairings: [
@@ -251,10 +252,11 @@ describe('restoreBackup fixture tests', () => {
     expect(restoredChild.sire_id).not.toBe(10);
     expect(restoredChild.dam_id).not.toBe(20);
 
-    // Verify match.fowl_id was rewritten to the new child ID
+    // Verify match.fowl_id was rewritten to the new child ID and age_category round-trips
     const restoredMatch = mockClient.db.match[0];
     expect(restoredMatch.fowl_id).toBe(restoredChild.id);
     expect(restoredMatch.fowl_id).not.toBe(30);
+    expect(restoredMatch.age_category).toBe('Open');
 
     // Verify breeding_pairings sire_id and dam_id were rewritten to new IDs
     const restoredPairing = mockClient.db.breeding_pairings[0];

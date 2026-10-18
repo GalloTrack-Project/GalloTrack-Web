@@ -7,6 +7,7 @@ import {
   generationOf,
   generationInfo,
   getSiblingRelations,
+  formatColorDisplay,
 } from '@/lib/helpers';
 import Pagination from '@/components/Pagination';
 import { birdCodeOf, formatBirdCodeForDisplay, resolveBirdCodes, normalizeBirdCode } from '@/lib/bird-code';
@@ -178,8 +179,8 @@ function FowlCard({
               </>
             );
           })()}</div>
-          <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{fowl.color_category} ({fowl.color})</strong></div>
-          <div>Trait: <strong className="text-emerald-700 dark:text-emerald-300">{fowl.behavior_trait}</strong></div>
+          <div>Color: <strong className="text-slate-800 dark:text-card-foreground">{formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</strong></div>
+          <div>Trait: <strong className="text-emerald-700 dark:text-emerald-300">{fowl.trait || fowl.behavior_trait || 'Not specified'}</strong></div>
           <div>Legs: <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
           <div className="col-span-2 pt-1 border-t border-slate-200/60 dark:border-border flex items-center justify-between text-xs">
             <span>📅 Age:</span>
@@ -506,7 +507,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
 
     for (const f of categoryList) {
       const code = birdCodesMap.get(String(f.id)) || null;
-      const match = inspectFowlMatch(f, qTrim, code);
+      const match = inspectFowlMatch(f, qTrim, code, { includeTraitsAndColors: true });
       if (!match.matched) continue;
 
       const sireOk = filterSire === 'all' || (f.sire || '').trim().toLowerCase() === filterSire.toLowerCase();

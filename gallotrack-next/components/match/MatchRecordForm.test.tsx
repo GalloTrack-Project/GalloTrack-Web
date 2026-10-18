@@ -226,4 +226,87 @@ describe('MatchRecordForm', () => {
     fireEvent.click(discardBtn);
     expect(mockPush).toHaveBeenCalledWith('/match-logs');
   });
+
+  it('offers Cock, Stag, and Open options in Chicken Class select', () => {
+    render(<MatchRecordForm mode="add" />);
+
+    const classSelect = screen.getByLabelText(/Chicken Class/i) as HTMLSelectElement;
+    expect(classSelect).toBeDefined();
+
+    const options = Array.from(classSelect.options).map((o) => o.value);
+    expect(options).toEqual(['Cock', 'Stag', 'Open']);
+    expect(classSelect.value).toBe('Cock'); // Default stays Cock
+  });
+
+  it('saves Open as age_category in Add mode', async () => {
+    vi.mocked(matchService.insertMatch).mockResolvedValue({ id: 1001 });
+
+    render(<MatchRecordForm mode="add" />);
+
+    // Select chicken
+    const chickenSelect = screen.getByLabelText(/Select Local Chicken Entry/i);
+    fireEvent.change(chickenSelect, { target: { value: '42' } });
+
+    // Enter opponent
+    const opponentInput = screen.getByLabelText(/Opponent Entry Identity/i);
+    fireEvent.change(opponentInput, { target: { value: 'Open Class Opponent' } });
+
+    // Select Open class
+    const classSelect = screen.getByLabelText(/Chicken Class/i);
+    fireEvent.change(classSelect, { target: { value: 'Open' } });
+
+    // Submit form
+    const saveButton = screen.getByRole('button', { name: /Save Match Record/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(matchService.insertMatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fowl_id: 42,
+          entry_name: 'Lemon Storm',
+          age_category: 'Open',
+          opponent: 'Open Class Opponent',
+        })
+      );
+    });
+  });
+
+  it('loads and preserves Open in Edit mode', async () => {
+    const openMatch: MatchRecord = {
+      id: 99,
+      fowl_id: 42,
+      entry_name: 'Lemon Storm',
+      breed: 'Lemon',
+      date: '2026-10-01',
+      opponent: 'Grand Derby Winner',
+      outcome: 'Win',
+      cock_count: 4,
+      age_category: 'Open',
+      event_type: 'Derby',
+      location: 'Pasay Arena',
+      type: 'Derby',
+      status: 'Verified',
+    };
+
+    vi.mocked(matchService.updateMatch).mockResolvedValue({});
+
+    render(<MatchRecordForm mode="edit" initialRecord={openMatch} />);
+
+    const classSelect = screen.getByLabelText(/Chicken Class/i) as HTMLSelectElement;
+    expect(classSelect.value).toBe('Open');
+
+    const updateButton = screen.getByRole('button', { name: /Update Match Record/i });
+    fireEvent.click(updateButton);
+
+    await waitFor(() => {
+      expect(matchService.updateMatch).toHaveBeenCalledWith(
+        99,
+        expect.objectContaining({
+          fowl_id: 42,
+          age_category: 'Open',
+        })
+      );
+    });
+  });
 });
+

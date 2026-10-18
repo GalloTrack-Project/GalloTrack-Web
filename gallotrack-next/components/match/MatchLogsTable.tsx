@@ -79,9 +79,16 @@ export default function MatchLogsTable({ matches, emptyText = 'No data available
                         </span>
                       )}
                     </div>
-                    <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
-                      {log.breed || '—'}{hatch ? ` · hatch ${hatch}` : ''}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {log.breed || '—'}{hatch ? ` · hatch ${hatch}` : ''}
+                      </span>
+                      {log.age_category && (
+                        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                          {log.age_category}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-1.5">

@@ -22,7 +22,7 @@ import { birdFamilyStats } from '@/lib/family-stats';
 import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { isMale, isFemale, parentBloodlineOf, winRateOf } from '@/lib/helpers';
+import { isMale, isFemale, parentBloodlineOf, winRateOf, formatColorDisplay } from '@/lib/helpers';
 import { getBreedingClassification, isFoundationStockRecord } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
@@ -279,7 +279,8 @@ export default function FowlDetailsModal({
             { label: 'Breed / strain', value: classification.type === 'Crossbred' ? classification.derivedBreed : (bird.breed || '—') },
             { label: 'Breeding classification', value: classification.badgeLabel },
             { label: 'Composition basis', value: classification.compositionSource === 'declared' ? 'Declared' : classification.compositionSource === 'assumed' ? 'Assumed' : 'Derived' },
-            { label: 'Color', value: [bird.color, bird.color_category].filter(Boolean).join(' · ') || '—' },
+            { label: 'Feather color', value: formatColorDisplay(bird.feather_color || bird.color, bird.color_category) },
+            { label: 'Trait', value: bird.trait || bird.behavior_trait || '—' },
             { label: 'Birthdate', value: bird.birthdate || '—' },
             { label: 'Age', value: ageParts ? getAgeLabel(ageParts) : '—' },
             {
@@ -1729,11 +1730,11 @@ export default function FowlDetailsModal({
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border">
             <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Feather Color</span>
-            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{selectedFowlForDetails.feather_color || selectedFowlForDetails.color || 'Standard'}</strong>
+            <strong className="text-slate-800 dark:text-card-foreground text-sm mt-0.5 block">{formatColorDisplay(selectedFowlForDetails.feather_color || selectedFowlForDetails.color, selectedFowlForDetails.color_category)}</strong>
           </div>
           <div className="bg-slate-50 dark:bg-muted/50 p-3 rounded-md border border-slate-100 dark:border-border sm:col-span-2">
             <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Trait</span>
-            <strong className="text-emerald-700 dark:text-emerald-300 text-sm mt-0.5 block font-bold">{selectedFowlForDetails.trait || selectedFowlForDetails.behavior_trait || 'Standard'}</strong>
+            <strong className="text-emerald-700 dark:text-emerald-300 text-sm mt-0.5 block font-bold">{selectedFowlForDetails.trait || selectedFowlForDetails.behavior_trait || 'Not specified'}</strong>
           </div>
         </div>
       </Modal>

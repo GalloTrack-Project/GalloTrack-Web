@@ -96,7 +96,7 @@ export async function GET(
 
   const { data: fowl } = await admin
     .from('fowl')
-    .select('id, name, breed, gender, birthdate, color, image_url, status, sire, dam, wing_band, bird_code')
+    .select('id, name, breed, gender, birthdate, color, color_category, behavior_trait, image_url, status, sire, dam, wing_band, bird_code')
     .eq('id', link.entity_id)
     .eq('user_id', link.user_id)
     .maybeSingle();
@@ -124,7 +124,13 @@ export async function GET(
 
   return NextResponse.json({
     type: 'fowl',
-    fowl: { ...fowl, sire_breed: breedOf(fowl.sire), dam_breed: breedOf(fowl.dam) },
+    fowl: {
+      ...fowl,
+      feather_color: fowl.color,
+      trait: fowl.behavior_trait,
+      sire_breed: breedOf(fowl.sire),
+      dam_breed: breedOf(fowl.dam),
+    },
     photos: (photos || []).map((p) => p.url),
   });
 }

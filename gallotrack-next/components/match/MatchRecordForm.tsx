@@ -846,6 +846,7 @@ export default function MatchRecordForm({
                 >
                   <option value="Cock">Cock</option>
                   <option value="Stag">Stag</option>
+                  <option value="Open">Open</option>
                 </select>
                 <SelectChevron />
               </div>

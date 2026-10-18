@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
-import { getAgeLabel, isMale, isFemale } from '@/lib/helpers';
+import { getAgeLabel, isMale, isFemale, formatColorDisplay } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
@@ -101,13 +101,29 @@ export default function DashboardPage() {
     () =>
       matchHistory.map((m) => [
         m.date, m.entry_name, m.opponent, m.breed, m.opponent_breed,
-        [m.event_type, m.type].filter(Boolean).join(' · '), m.outcome, m.location,
+        [m.event_type, m.type, m.age_category].filter(Boolean).join(' · '), m.outcome, m.location,
         m.post_fight_condition, [m.side, m.notes].filter(Boolean).join(' · '),
       ]),
     [matchHistory],
   );
 
-  const registryColumns = ['Bird Code', 'Name', 'Gender', 'Breed', 'Birthdate', 'Age', 'Status', 'Weight', 'Height', 'Sire', 'Dam', 'Bloodline %', 'Composition basis'];
+  const registryColumns = [
+    'Bird Code',
+    'Name',
+    'Gender',
+    'Breed',
+    'Feather Color',
+    'Trait',
+    'Birthdate',
+    'Age',
+    'Status',
+    'Weight',
+    'Height',
+    'Sire',
+    'Dam',
+    'Bloodline %',
+    'Composition basis',
+  ];
   const registryRows = React.useMemo(() => {
     const classMap = classifyFlock(fowls);
     return fowls.map((f) => {
@@ -119,11 +135,15 @@ export default function DashboardPage() {
           : classification.compositionSource === 'assumed'
           ? 'Assumed'
           : 'Derived';
+      const featherColor = formatColorDisplay(f.feather_color || f.color, f.color_category);
+      const trait = f.trait || f.behavior_trait || '—';
       return [
         formatBirdCodeForDisplay(birdCodes.get(String(f.id)) || f.bird_code || ''),
         f.name,
         f.gender,
         displayBreed,
+        featherColor,
+        trait,
         f.birthdate,
         f.age,
         f.status,

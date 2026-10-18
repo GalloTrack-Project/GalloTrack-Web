@@ -16,6 +16,7 @@ export const COCK_COUNT_OPTIONS = [2, 3, 4, 5] as const;
 export const AGE_CATEGORY_OPTIONS = [
   { value: 'Cock', label: 'Cock (24+ mo)', desc: 'Mature fighting cock' },
   { value: 'Stag', label: 'Stag (6–24 mo)', desc: 'Young stag in conditioning' },
+  { value: 'Open', label: 'Open', desc: 'No class restriction (cock or stag)' },
 ] as const;
 
 export const MATCH_TYPE_OPTIONS: string[] = [
@@ -60,6 +61,58 @@ export const TRAIT_LIST = [
   'High Flyer Ace',
   'Wave-Motion Tracker',
 ];
+
+/**
+ * Normalizes a free-text option value:
+ * 1. Trims leading and trailing whitespace.
+ * 2. Collapses internal whitespace sequences into a single space.
+ * 3. Matches case-insensitively against available canonical options; if a match
+ *    is found, returns the canonical casing.
+ * 4. Otherwise returns the trimmed & collapsed free text.
+ */
+export function normalizeOptionValue(
+  value: string | undefined | null,
+  canonicalOptions: string[] = []
+): string {
+  if (!value) return '';
+  const collapsed = value.trim().replace(/\s+/g, ' ');
+  if (!collapsed) return '';
+  const lower = collapsed.toLowerCase();
+  const matched = canonicalOptions.find((opt) => opt.trim().toLowerCase() === lower);
+  return matched || collapsed;
+}
+
+/**
+ * Checks whether a given value is a custom (non-standard) entry relative to
+ * the provided option list.
+ */
+export function isCustomOption(
+  value: string | undefined | null,
+  canonicalOptions: string[] = []
+): boolean {
+  if (!value) return false;
+  const collapsed = value.trim().replace(/\s+/g, ' ');
+  if (!collapsed) return false;
+  const lower = collapsed.toLowerCase();
+  return !canonicalOptions.some((opt) => opt.trim().toLowerCase() === lower);
+}
+
+/**
+ * Formats a chicken's plumage/feather color for display, preserving legacy
+ * color category groupings (e.g. "Red (Bright Red)") when category and color differ.
+ */
+export function formatColorDisplay(
+  color?: string | null,
+  colorCategory?: string | null
+): string {
+  const c = (color || '').trim();
+  const cat = (colorCategory || '').trim();
+  if (!c && !cat) return 'Not specified';
+  if (c && cat && cat.toLowerCase() !== c.toLowerCase()) {
+    return `${cat} (${c})`;
+  }
+  return c || cat || 'Not specified';
+}
 
 export const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: string }[] = [
   { id: '7d', label: 'Last 7 Days' },

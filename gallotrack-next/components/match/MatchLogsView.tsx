@@ -33,6 +33,7 @@ export default function MatchLogsView() {
   const urlSearch = searchParams.get('q') || '';
   const urlOutcome = searchParams.get('outcome') || 'ALL';
   const urlChickenId = searchParams.get('fowlId') || 'ALL';
+  const urlClass = searchParams.get('class') || 'ALL';
   const urlStartDate = searchParams.get('startDate') || '';
   const urlEndDate = searchParams.get('endDate') || '';
   const urlSort = searchParams.get('sort') || 'newest';
@@ -42,6 +43,7 @@ export default function MatchLogsView() {
   const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [outcomeFilter, setOutcomeFilter] = useState(urlOutcome);
   const [chickenFilter, setChickenFilter] = useState(urlChickenId);
+  const [classFilter, setClassFilter] = useState(urlClass);
   const [startDate, setStartDate] = useState(urlStartDate);
   const [endDate, setEndDate] = useState(urlEndDate);
   const [sortOrder, setSortOrder] = useState(urlSort);
@@ -52,11 +54,12 @@ export default function MatchLogsView() {
     setSearchQuery(urlSearch);
     setOutcomeFilter(urlOutcome);
     setChickenFilter(urlChickenId);
+    setClassFilter(urlClass);
     setStartDate(urlStartDate);
     setEndDate(urlEndDate);
     setSortOrder(urlSort);
     setCurrentPage(isNaN(urlPage) || urlPage < 1 ? 1 : urlPage);
-  }, [urlSearch, urlOutcome, urlChickenId, urlStartDate, urlEndDate, urlSort, urlPage]);
+  }, [urlSearch, urlOutcome, urlChickenId, urlClass, urlStartDate, urlEndDate, urlSort, urlPage]);
 
   // Update URL helper
   const updateUrlParams = useCallback(
@@ -93,6 +96,12 @@ export default function MatchLogsView() {
     updateUrlParams({ fowlId: val === 'ALL' ? null : val, page: '1' });
   };
 
+  const handleClassChange = (val: string) => {
+    setClassFilter(val);
+    setCurrentPage(1);
+    updateUrlParams({ class: val === 'ALL' ? null : val, page: '1' });
+  };
+
   const handleStartDateChange = (val: string) => {
     setStartDate(val);
     setCurrentPage(1);
@@ -120,6 +129,7 @@ export default function MatchLogsView() {
     setSearchQuery('');
     setOutcomeFilter('ALL');
     setChickenFilter('ALL');
+    setClassFilter('ALL');
     setStartDate('');
     setEndDate('');
     setSortOrder('newest');
@@ -131,6 +141,7 @@ export default function MatchLogsView() {
     searchQuery.trim() ||
       outcomeFilter !== 'ALL' ||
       chickenFilter !== 'ALL' ||
+      classFilter !== 'ALL' ||
       startDate ||
       endDate ||
       sortOrder !== 'newest'
@@ -168,6 +179,11 @@ export default function MatchLogsView() {
         // Authoritative fowl_id only: orphan matches (fowl_id == null) never match by name fallback
         return m.fowl_id === targetId;
       });
+    }
+
+    // Class filter
+    if (classFilter !== 'ALL') {
+      rows = rows.filter((m) => (m.age_category || 'Cock').trim().toLowerCase() === classFilter.toLowerCase());
     }
 
     // Date range filter
@@ -211,7 +227,7 @@ export default function MatchLogsView() {
     });
 
     return rows;
-  }, [matchHistory, outcomeFilter, chickenFilter, startDate, endDate, searchQuery, sortOrder, fowlById, fowlByName, birdCodes]);
+  }, [matchHistory, outcomeFilter, chickenFilter, classFilter, startDate, endDate, searchQuery, sortOrder, fowlById, fowlByName, birdCodes]);
 
   // Pagination calculation
   const totalItems = filteredMatches.length;
@@ -253,7 +269,7 @@ export default function MatchLogsView() {
       <div className="bg-card border border-border rounded-lg p-4 shadow-sm space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Search Input */}
-          <div className="md:col-span-4 relative">
+          <div className="md:col-span-3 relative">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -278,6 +294,7 @@ export default function MatchLogsView() {
             <select
               value={outcomeFilter}
               onChange={(e) => handleOutcomeChange(e.target.value)}
+              aria-label="Filter by outcome"
               className="w-full h-10 px-3 border border-input-border rounded-md text-sm bg-white dark:bg-input font-bold text-foreground cursor-pointer focus:border-success"
             >
               <option value="ALL">All Outcomes</option>
@@ -292,6 +309,7 @@ export default function MatchLogsView() {
             <select
               value={chickenFilter}
               onChange={(e) => handleChickenChange(e.target.value)}
+              aria-label="Filter by chicken"
               className="w-full h-10 px-3 border border-input-border rounded-md text-sm bg-white dark:bg-input font-bold text-foreground cursor-pointer focus:border-success"
             >
               <option value="ALL">All Chickens</option>
@@ -307,11 +325,27 @@ export default function MatchLogsView() {
             </select>
           </div>
 
+          {/* Class Filter */}
+          <div className="md:col-span-2">
+            <select
+              value={classFilter}
+              onChange={(e) => handleClassChange(e.target.value)}
+              aria-label="Filter by chicken class"
+              className="w-full h-10 px-3 border border-input-border rounded-md text-sm bg-white dark:bg-input font-bold text-foreground cursor-pointer focus:border-success"
+            >
+              <option value="ALL">All Classes</option>
+              <option value="Cock">Cock</option>
+              <option value="Stag">Stag</option>
+              <option value="Open">Open</option>
+            </select>
+          </div>
+
           {/* Sort Filter */}
-          <div className="md:col-span-3">
+          <div className="md:col-span-2">
             <select
               value={sortOrder}
               onChange={(e) => handleSortChange(e.target.value)}
+              aria-label="Sort match records"
               className="w-full h-10 px-3 border border-input-border rounded-md text-sm bg-white dark:bg-input font-bold text-foreground cursor-pointer focus:border-success"
             >
               <option value="newest">Sort: Newest First</option>
@@ -458,10 +492,17 @@ export default function MatchLogsView() {
                             </span>
                           )}
                         </div>
-                        <span className="block text-xs font-semibold text-muted-foreground mt-0.5">
-                          {log.breed || '—'}
-                          {hatch ? ` · hatch ${hatch}` : ''}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {log.breed || '—'}
+                            {hatch ? ` · hatch ${hatch}` : ''}
+                          </span>
+                          {log.age_category && (
+                            <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                              {log.age_category}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="p-4">

@@ -210,6 +210,11 @@ describe('fowlMatchesQuery', () => {
     expect(fowlMatchesQuery(chick, 'kelso', null, { includeParents: true })).toBe(false);
   });
 
+  it('matches trait and feather color when includeTraitsAndColors option is true', () => {
+    expect(fowlMatchesQuery(chick, 'red', null, { includeTraitsAndColors: true })).toBe(true);
+    expect(fowlMatchesQuery(chick, 'aggressive', null, { includeTraitsAndColors: true })).toBe(true);
+  });
+
   it('ignores extra whitespace and case differences', () => {
     expect(fowlMatchesQuery(chick, '   SPUR   ')).toBe(true);
     expect(fowlMatchesQuery(chick, '  wb-003  ')).toBe(true);

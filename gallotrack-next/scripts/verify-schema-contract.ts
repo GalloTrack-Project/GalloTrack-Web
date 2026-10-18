@@ -61,7 +61,7 @@ async function runVerification() {
   }
 
   // 2. Explicitly assert that phantom columns do NOT exist on public.fowl
-  const phantomColumns = ['chicken_code', 'birth_code', 'tag_number'];
+  const phantomColumns = ['chicken_code', 'birth_code', 'tag_number', 'trait', 'feather_color'];
   for (const col of phantomColumns) {
     const { error } = await client.from('fowl').select(col).limit(0);
     if (!error) {

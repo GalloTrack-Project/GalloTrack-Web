@@ -56,12 +56,15 @@ export function matchBirds(fowls: FowlRecord[], query: string, limit = BIRD_SEAR
     const plainCode = normalizeBirdCode(rawCode).toLowerCase();
     const displayCode = formatBirdCodeForDisplay(rawCode).toLowerCase();
     const wing = (fowl.wing_band ?? '').trim().toLowerCase();
+    const color = (fowl.feather_color || fowl.color || '').trim().toLowerCase();
+    const trait = (fowl.trait || fowl.behavior_trait || '').trim().toLowerCase();
     let score = -1;
     if (name === q) score = 0;
     else if (name.startsWith(q)) score = 1;
     else if (plainCode.includes(normQ) || displayCode.includes(q)) score = 2;
     else if (wing.includes(q)) score = 3;
     else if (name.includes(q)) score = 4;
+    else if (trait.includes(q) || color.includes(q)) score = 5;
     if (score >= 0) scored.push({ fowl, score });
   }
   scored.sort((a, b) => a.score - b.score);

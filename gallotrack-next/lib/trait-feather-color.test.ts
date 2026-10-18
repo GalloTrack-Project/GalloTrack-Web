@@ -145,4 +145,56 @@ describe('Trait and Feather Color — Registration and Storage Contract', () => 
     expect(fowl.trait).toBe('Tenacious Offense');
     expect(fowl.feather_color).toBe('Dark Cornish');
   });
+
+  describe('Normalization and Legacy Helpers', () => {
+    it('normalizes whitespace and matches canonical options case-insensitively', async () => {
+      const { normalizeOptionValue } = await import('./helpers');
+      const canonicals = ['High Flyer', 'Wheaten', 'Dark Red'];
+
+      expect(normalizeOptionValue('  high   flyer  ', canonicals)).toBe('High Flyer');
+      expect(normalizeOptionValue('WHEATEN', canonicals)).toBe('Wheaten');
+      expect(normalizeOptionValue('   custom   trait   value  ', canonicals)).toBe('custom trait value');
+      expect(normalizeOptionValue('', canonicals)).toBe('');
+    });
+
+    it('identifies custom non-list options', async () => {
+      const { isCustomOption } = await import('./helpers');
+      const canonicals = ['High Flyer', 'Wheaten'];
+
+      expect(isCustomOption('high flyer', canonicals)).toBe(false);
+      expect(isCustomOption('High Flyer', canonicals)).toBe(false);
+      expect(isCustomOption('Unlisted Custom Trait', canonicals)).toBe(true);
+      expect(isCustomOption('', canonicals)).toBe(false);
+    });
+
+    it('formats legacy color values such as "Red (Bright Red)" cleanly', async () => {
+      const { formatColorDisplay } = await import('./helpers');
+
+      expect(formatColorDisplay('Bright Red', 'Red')).toBe('Red (Bright Red)');
+      expect(formatColorDisplay('Red (Bright Red)')).toBe('Red (Bright Red)');
+      expect(formatColorDisplay('Wheaten')).toBe('Wheaten');
+      expect(formatColorDisplay('', 'Red')).toBe('Red');
+      expect(formatColorDisplay('')).toBe('Not specified');
+    });
+
+    it('defaults new fowl behavior_trait and color to empty string rather than hardcoded terms', async () => {
+      const { supabase } = await import('@/lib/registry');
+
+      await insertFowl({
+        user_id: 'test-user-uuid',
+        name: 'New Bird No Trait',
+        breed: 'Hatch',
+        gender: 'Rooster',
+      });
+
+      type MockRegistry = typeof supabase & {
+        getLastInserted: () => Record<string, unknown> | null;
+      };
+
+      const inserted = (supabase as unknown as MockRegistry).getLastInserted();
+      expect(inserted?.behavior_trait).toBe('');
+      expect(inserted?.color).toBe('');
+      expect(inserted?.behavior_trait).not.toBe('Wave-Motion Tracker');
+    });
+  });
 });

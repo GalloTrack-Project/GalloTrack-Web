@@ -120,10 +120,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('');
   const [newGender, setNewGender] = useState('');
-  const [newColor, setNewColor] = useState('Bright Red');
-  const [newColorCategory, setNewColorCategory] = useState('Red');
+  const [newColor, setNewColor] = useState('');
+  const [newColorCategory, setNewColorCategory] = useState('');
   const [newGrowthStage, setNewGrowthStage] = useState('');
-  const [newBehaviorTrait, setNewBehaviorTrait] = useState('Wave-Motion Tracker');
+  const [newBehaviorTrait, setNewBehaviorTrait] = useState('');
   const [newEyeVariant, setNewEyeVariant] = useState('Standard Eye');
   const [newBirthdate, setNewBirthdate] = useState('');
   const [sireName, setSireName] = useState('');

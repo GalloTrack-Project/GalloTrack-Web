@@ -203,3 +203,47 @@ export function getWinRateTextColor(stats: {
   }
   return 'text-rose-600 dark:text-rose-400';
 }
+
+/**
+ * Breakdown of match performance grouped by chicken class (age_category).
+ * Always includes groups for Cock, Stag, and Open.
+ * Unknown or custom classes are tracked without dropping or miscounting.
+ */
+export function computeClassMatchStats(
+  matches: MatchRecord[],
+): Record<string, WinRateStats & { matches: MatchRecord[] }> {
+  const groups: Record<string, { wins: number; losses: number; draws: number; matches: MatchRecord[] }> = {
+    Cock: { wins: 0, losses: 0, draws: 0, matches: [] },
+    Stag: { wins: 0, losses: 0, draws: 0, matches: [] },
+    Open: { wins: 0, losses: 0, draws: 0, matches: [] },
+  };
+
+  for (const m of matches) {
+    const rawClass = (m.age_category || 'Cock').trim();
+    let key = rawClass;
+    if (rawClass.toLowerCase() === 'cock') key = 'Cock';
+    else if (rawClass.toLowerCase() === 'stag') key = 'Stag';
+    else if (rawClass.toLowerCase() === 'open') key = 'Open';
+
+    if (!groups[key]) {
+      groups[key] = { wins: 0, losses: 0, draws: 0, matches: [] };
+    }
+
+    groups[key].matches.push(m);
+    const outcome = (m.outcome || '').trim().toLowerCase();
+    if (outcome === 'win') groups[key].wins++;
+    else if (outcome === 'loss') groups[key].losses++;
+    else if (outcome === 'draw') groups[key].draws++;
+  }
+
+  const result: Record<string, WinRateStats & { matches: MatchRecord[] }> = {};
+  for (const [key, val] of Object.entries(groups)) {
+    result[key] = {
+      ...computeWinRate(val.wins, val.losses, val.draws),
+      matches: val.matches,
+    };
+  }
+
+  return result;
+}
+

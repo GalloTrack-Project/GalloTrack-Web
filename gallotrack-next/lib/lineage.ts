@@ -210,6 +210,7 @@ export function normalizeSearchTerm(text?: string | null): string {
 
 export interface FowlMatchOptions {
   includeParents?: boolean;
+  includeTraitsAndColors?: boolean;
 }
 
 export type FowlMatchReason = 'self' | 'sire' | 'dam' | null;
@@ -229,6 +230,7 @@ export interface FowlMatchResult {
  * - Unique identifier (e.g. 1A1; "1A" matches offspring of that pair)
  * - Wing band number
  * If includeParents is true, also matches sire and dam.
+ * If includeTraitsAndColors is true, also matches trait and feather color.
  */
 export function inspectFowlMatch(
   fowl: FowlRecord,
@@ -256,8 +258,17 @@ export function inspectFowlMatch(
   const codeMatches = normCode ? normCode.includes(q) : false;
   const wingMatches = normWing ? normWing.includes(q) : false;
 
+  let colorMatches = false;
+  let traitMatches = false;
+  if (options?.includeTraitsAndColors) {
+    const normColor = normalizeSearchTerm(fowl.feather_color || fowl.color);
+    const normTrait = normalizeSearchTerm(fowl.trait || fowl.behavior_trait);
+    colorMatches = normColor ? normColor.includes(q) : false;
+    traitMatches = normTrait ? normTrait.includes(q) : false;
+  }
+
   // 1. Own fields have highest priority
-  if (nameContains || codeMatches || wingMatches) {
+  if (nameContains || codeMatches || wingMatches || colorMatches || traitMatches) {
     return {
       matched: true,
       reason: 'self',

@@ -257,4 +257,73 @@ describe('lib/win-rate', () => {
       expect(groupTotal.foughtCount).toBe(1);
     });
   });
+
+  describe('computeClassMatchStats', () => {
+    it('groups matches by Cock, Stag, Open, and unknown custom classes without dropping or miscounting', () => {
+      const matches: MatchRecord[] = [
+        { ...makeMatch('Bird A', 'Win'), age_category: 'Cock' },
+        { ...makeMatch('Bird A', 'Loss'), age_category: 'Cock' },
+        { ...makeMatch('Bird B', 'Win'), age_category: 'Stag' },
+        { ...makeMatch('Bird B', 'Draw'), age_category: 'Stag' },
+        { ...makeMatch('Bird C', 'Win'), age_category: 'Open' },
+        { ...makeMatch('Bird C', 'Win'), age_category: 'Open' },
+        { ...makeMatch('Bird C', 'Loss'), age_category: 'Open' },
+        { ...makeMatch('Bird D', 'Win'), age_category: 'Special Derby' },
+      ];
+
+      const byClass = computeClassMatchStats(matches);
+
+      // Cock: 1W - 1L = 50%
+      expect(byClass.Cock).toBeDefined();
+      expect(byClass.Cock.wins).toBe(1);
+      expect(byClass.Cock.losses).toBe(1);
+      expect(byClass.Cock.decided).toBe(2);
+      expect(byClass.Cock.winRate).toBe(50);
+      expect(byClass.Cock.matches).toHaveLength(2);
+
+      // Stag: 1W - 0L - 1D = 100% (draws excluded from denominator)
+      expect(byClass.Stag).toBeDefined();
+      expect(byClass.Stag.wins).toBe(1);
+      expect(byClass.Stag.losses).toBe(0);
+      expect(byClass.Stag.draws).toBe(1);
+      expect(byClass.Stag.decided).toBe(1);
+      expect(byClass.Stag.winRate).toBe(100);
+      expect(byClass.Stag.matches).toHaveLength(2);
+
+      // Open: 2W - 1L = 67%
+      expect(byClass.Open).toBeDefined();
+      expect(byClass.Open.wins).toBe(2);
+      expect(byClass.Open.losses).toBe(1);
+      expect(byClass.Open.decided).toBe(3);
+      expect(byClass.Open.winRate).toBe(67);
+      expect(byClass.Open.matches).toHaveLength(3);
+
+      // Special Derby (unknown/custom class): 1W - 0L = 100%
+      expect(byClass['Special Derby']).toBeDefined();
+      expect(byClass['Special Derby'].wins).toBe(1);
+      expect(byClass['Special Derby'].decided).toBe(1);
+      expect(byClass['Special Derby'].winRate).toBe(100);
+      expect(byClass['Special Derby'].matches).toHaveLength(1);
+
+      // Total matches match fixture
+      const totalMatchesCount = Object.values(byClass).reduce((acc, g) => acc + g.matches.length, 0);
+      expect(totalMatchesCount).toBe(matches.length);
+    });
+
+    it('always provides Cock, Stag, and Open groups even when dataset is empty', () => {
+      const byClass = computeClassMatchStats([]);
+      expect(byClass.Cock).toBeDefined();
+      expect(byClass.Cock.total).toBe(0);
+      expect(byClass.Cock.winRate).toBeNull();
+
+      expect(byClass.Stag).toBeDefined();
+      expect(byClass.Stag.total).toBe(0);
+      expect(byClass.Stag.winRate).toBeNull();
+
+      expect(byClass.Open).toBeDefined();
+      expect(byClass.Open.total).toBe(0);
+      expect(byClass.Open.winRate).toBeNull();
+    });
+  });
 });
+

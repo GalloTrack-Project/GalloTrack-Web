@@ -9,6 +9,7 @@ import {
 } from '@/lib/lifecycle';
 import { storagePathFromUrl } from '@/lib/media-format';
 import { filterAllowedColumns } from '@/lib/schema-contract';
+import { normalizeOptionValue, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
 
 export async function fetchFowls(): Promise<FowlRecord[]> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -141,12 +142,15 @@ export async function insertFowl(payload: Record<string, unknown>): Promise<{ er
   if (!working.bird_code && working.chicken_code) {
     working.bird_code = working.chicken_code;
   }
-  if (!working.behavior_trait && working.trait) {
-    working.behavior_trait = working.trait;
-  }
-  if (!working.color && working.feather_color) {
-    working.color = working.feather_color;
-  }
+  const rawTrait = working.trait !== undefined ? String(working.trait) : (working.behavior_trait !== undefined ? String(working.behavior_trait) : '');
+  const normTrait = normalizeOptionValue(rawTrait, TRAIT_LIST);
+  working.behavior_trait = normTrait;
+  working.trait = normTrait;
+
+  const rawColor = working.feather_color !== undefined ? String(working.feather_color) : (working.color !== undefined ? String(working.color) : '');
+  const normColor = normalizeOptionValue(rawColor, FEATHER_COLOR_LIST);
+  working.color = normColor;
+  working.feather_color = normColor;
   const cleanPayload = filterAllowedColumns('fowl', working);
 
   const res = await supabase.from('fowl').insert([cleanPayload]).select('id').single();
@@ -165,11 +169,17 @@ export async function updateFowl(id: number, payload: Record<string, unknown>): 
   if (!working.bird_code && working.chicken_code) {
     working.bird_code = working.chicken_code;
   }
-  if (!working.behavior_trait && working.trait) {
-    working.behavior_trait = working.trait;
+  const rawTrait = working.trait !== undefined ? String(working.trait) : (working.behavior_trait !== undefined ? String(working.behavior_trait) : undefined);
+  if (rawTrait !== undefined) {
+    const normTrait = normalizeOptionValue(rawTrait, TRAIT_LIST);
+    working.behavior_trait = normTrait;
+    working.trait = normTrait;
   }
-  if (!working.color && working.feather_color) {
-    working.color = working.feather_color;
+  const rawColor = working.feather_color !== undefined ? String(working.feather_color) : (working.color !== undefined ? String(working.color) : undefined);
+  if (rawColor !== undefined) {
+    const normColor = normalizeOptionValue(rawColor, FEATHER_COLOR_LIST);
+    working.color = normColor;
+    working.feather_color = normColor;
   }
   const cleanPayload = filterAllowedColumns('fowl', working);
 
