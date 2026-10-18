@@ -229,7 +229,7 @@ recordings/                  # OUTPUT — added to .gitignore
 ## 9. Risks & known issues
 
 1. **Script/UI label mismatch (Scene 3) — RESOLVED:** the UI tab renders **"Fight Prospects"** (`ROLE_LABEL['Non-Breeding']` in `lib/registry-roles.ts`). The team will **re-record the narration to say "Fight Prospects"** instead of "non-breeding chickens". Video shows the UI as-is.
-2. **Credentials:** demo account `client@gmail.com` / `password123` (the `SMOKE_EMAIL`/`SMOKE_PASSWORD` defaults) — supplied by the user for recording; never committed to the repo.
+2. **Credentials:** demo account (configured via `SMOKE_EMAIL` / `SMOKE_PASSWORD`) — supplied by the user for recording; never committed to the repo.
 2. **No real cursor in Playwright video** — fully mitigated by the overlay (§4.2), but the overlay must be injected *before* first paint to avoid a cursor "popping in".
 3. **fps limit 25/30** — 60 fps is not natively possible; 30 fps confirmed (decision #4).
 4. **Empty demo data** (Safety Incidents, Archived/Deceased tabs, lineage trees) — pre-flight must confirm content; empty states are shown intentionally rather than faked.

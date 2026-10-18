@@ -13,9 +13,11 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 
+const repoRoot = path.resolve(__dirname, '../..');
+
 function runGit(args: string): string {
   try {
-    return execSync(`git ${args}`, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+    return execSync(`git ${args}`, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
   } catch (err: unknown) {
     return '';
   }
@@ -78,7 +80,7 @@ function scan(): { hits: SecretHit[]; clean: boolean } {
   }
 
   // 4. Scan working tree for hardcoded secrets
-  const treeGrep = runGit('grep -iE "(service_role_key|SUPABASE_SERVICE_ROLE_KEY)[ \t]*[:=][ \t]*[\'"`][A-Za-z0-9_.-]{20,}" -- ":!.env*" ":!scratch/*" ":!scripts/check-secrets.ts"');
+  const treeGrep = runGit('grep --untracked -iE "(service_role_key|SUPABASE_SERVICE_ROLE_KEY)[ \t]*[:=][ \t]*[\'"`][A-Za-z0-9_.-]{20,}" -- ":!.env*" ":!scratch/*" ":!*check-secrets.ts"');
   if (treeGrep.trim()) {
     for (const line of treeGrep.split('\n')) {
       if (!line.trim() || line.includes('your-') || line.includes('placeholder')) continue;
@@ -90,6 +92,26 @@ function scan(): { hits: SecretHit[]; clean: boolean } {
         prefix: 'key-',
         length: line.length,
       });
+    }
+  }
+
+  // 5. Scan working tree for legacy credentials (flagged without printing values)
+  const legacyStrings = [
+    Buffer.from('Y2xpZW50QGdtYWlsLmNvbQ==', 'base64').toString(),
+    Buffer.from('cGFzc3dvcmQxMjM=', 'base64').toString(),
+  ];
+  for (const cred of legacyStrings) {
+    const res = runGit(`grep --untracked -F -l "${cred}" -- ":!.env*" ":!scratch/*" ":!*check-secrets.ts"`);
+    if (res.trim()) {
+      for (const file of res.trim().split('\n')) {
+        if (!file.trim()) continue;
+        hits.push({
+          type: 'DISALLOWED_CREDENTIAL_STRING',
+          file: file.trim(),
+          prefix: 'cred-',
+          length: cred.length,
+        });
+      }
     }
   }
 
