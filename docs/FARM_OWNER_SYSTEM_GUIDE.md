@@ -274,9 +274,16 @@ Accessed by clicking the top `+ Register Chicken` button. Handled in [EncodeForm
 
 - **Step 1: Core Identifiers**:
   - `Identifier Name` (Required): Unique text name for the bird. Checked for duplicates.
-  - `Unique Chicken Identifier` (Auto-Generated): Displays the next sequential code. Can be manually edited by clicking "Edit identifier manually".
-  - `Wing Band ID` (Optional): Physical metal band code stamped on the wing (`max 24 characters`, alphanumeric plus `.-_`). Checked for duplicates per farm.
-  - `Genetic Strain` (Required): Searchable tag selector. Pick known breeds (e.g. Sweater, Kelso, Hatch) or type a new custom strain name.
+  - `Unique Chicken Identifier` (Auto-Generated, `bird_code`):
+    - System/database identifier adhering to gamefowl lineage conventions: Sires get plain sequential numbers (`1, 2, 3`), Dams get single sequential letters (`A, B, C`, skipping `X`), and Offspring get the combined sire number + dam letter + sequence counter (`1A1, 1A2, 2B1`).
+    - For offspring, the code is generated only once **both** sire and dam are chosen; otherwise it remains blank with the guide *"Select both sire and dam"*.
+    - Can be customized via the **"Edit identifier manually"** toggle with real-time role-pattern validation, ASCII normalization (e.g., converting subscript notations like `1A₁` to plain `1A1`), case-insensitive uniqueness check against all flock records (including archived and deceased birds), and parentage mismatch warnings.
+    - Governed by unique database constraint `fowl_user_bird_code_key`.
+  - `Wing Band ID` (Optional, `wing_band`):
+    - Purely optional manual input for the physical metal band code stamped on the physical bird's wing (`max 24 characters`, alphanumeric plus `.-_`).
+    - **Independent Namespace**: It is completely separate from `bird_code`. A physical band value such as `1A1` never collides with or blocks system identifier `1A1`, and vice versa.
+    - Remains `null` when left blank, is never auto-filled or overwritten from `bird_code`, and is preserved untouched if an offspring is promoted to breeding stock.
+  - `Genetic Strain` (Required): Searchable tag selector populated from your farm's custom breeds directory (`/breeds`). If no breeds are registered yet, shows *"No breeds yet. Add your breeds first."* with a direct link to register your foundation bloodlines.
   - `Gender Class` (Required): Dropdown choice between **Sire** (Rooster) or **Dam** (Hen).
 - **Step 2: Physical Parameters**:
   - `Birth Date` (Required): Calendar picker. Cannot be in the future.
@@ -341,8 +348,8 @@ Each card in the registry list shows the bird’s code, wing band tag, strain, g
 
 ### The "Breeds" Button & Registry Options
 Clicking the `Breeds` button in the top right opens `/breeds` ([app/(dashboard)/breeds/page.tsx](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/app/%28dashboard%29/breeds/page.tsx)):
-- Allows managing your farm's strain directory (table `strains`). You can add custom gamefowl bloodlines (e.g. "Dink Fair Sweater", "McLean Hatch") or delete custom strains that are no longer used.
-- Built-in industry strains cannot be deleted to prevent pedigree corruption.
+- Allows managing your farm's strain directory (table `strains`). You can register your farm's exact gamefowl bloodlines (e.g. "Dink Fair Sweater", "McLean Hatch") or edit/delete strains.
+- Since default hardcoded breeds were deprecated in favor of authentic farm ownership, newly created accounts start with a clean breeds list. If no breeds exist yet, dropdowns cleanly instruct the owner to add their breeds first at `/breeds`.
 - Leg color options (Yellow, White, Green / Slate, Willow, Black) can also be customized here and stored in table `leg_colors`.
 
 ### Match Logs Tab & Recording Fights

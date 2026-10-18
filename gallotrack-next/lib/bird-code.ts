@@ -28,21 +28,38 @@ const OFFSPRING_CODE_PATTERN = /^(\d+[A-Za-z]+)(\d+)$/;
 
 const SUBSCRIPT_DIGITS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'] as const;
 
+export function fromSubscriptDigits(input: string): string {
+  return String(input ?? '').replace(/[₀-₉]/g, (char) => {
+    const idx = SUBSCRIPT_DIGITS.indexOf(char as (typeof SUBSCRIPT_DIGITS)[number]);
+    return idx >= 0 ? String(idx) : char;
+  });
+}
+
+export function toSubscriptDigits(digits: string): string {
+  return digits.replace(/\d/g, (d) => SUBSCRIPT_DIGITS[Number(d)] ?? d);
+}
+
 export const isFemaleCode = (gender?: string | null): boolean => {
   const g = String(gender ?? '').trim().toLowerCase();
   return g === 'hen' || g === 'pullet' || g === 'female';
 };
 
 export const normalizeBirdCode = (value: unknown): string =>
-  String(value ?? '')
+  fromSubscriptDigits(String(value ?? ''))
     .replace(/\s+/g, '')
     .slice(0, BIRD_CODE_MAX_LENGTH);
 
 export const isValidBirdCode = (value: unknown): boolean => {
-  const raw = String(value ?? '').replace(/\s+/g, '');
+  const raw = fromSubscriptDigits(String(value ?? '')).replace(/\s+/g, '');
   if (raw.length === 0 || raw.length > BIRD_CODE_MAX_LENGTH) return false;
   return BIRD_CODE_PATTERN.test(raw);
 };
+
+export function formatBirdCodeForDisplay(code?: string | null): string {
+  const norm = normalizeBirdCode(code);
+  if (!norm) return '';
+  return norm;
+}
 
 export function isSireIdentifier(code: string): boolean {
   const norm = normalizeBirdCode(code);
@@ -86,6 +103,29 @@ export function validateIdentifierFormat(
     }
   }
   return { valid: true };
+}
+
+export function checkParentageMatch(
+  code: string,
+  sireCode?: string | null,
+  damCode?: string | null
+): { matches: boolean; warning?: string } {
+  const norm = normalizeBirdCode(code);
+  if (!isOffspringIdentifier(norm)) return { matches: true };
+  const expectedSire = sireCode ? sirePart(normalizeBirdCode(sireCode)) : null;
+  const expectedDam = damCode ? damPart(normalizeBirdCode(damCode)) : null;
+  if (!expectedSire || !expectedDam) return { matches: true };
+  const expectedPrefix = `${expectedSire}${expectedDam}`.toUpperCase();
+  const m = OFFSPRING_CODE_PATTERN.exec(norm);
+  if (!m) return { matches: true };
+  const actualPrefix = m[1].toUpperCase();
+  if (actualPrefix !== expectedPrefix) {
+    return {
+      matches: false,
+      warning: `Identifier "${norm}" starts with "${m[1]}", but selected Sire (${expectedSire}) and Dam (${expectedDam}) suggest prefix "${expectedPrefix}".`,
+    };
+  }
+  return { matches: true };
 }
 
 /** Case-insensitive comparison key. */
@@ -348,21 +388,19 @@ export function previewBirdCode(params: {
   const hasSire = !!sire || (!!sName && sName !== 'foundation stock');
   const hasDam = !!dam || (!!dName && dName !== 'foundation stock');
 
+  const roleIsOffspring = isOffspring ?? (hasSire || hasDam);
+  if (roleIsOffspring) {
+    if (!hasSire || !hasDam) {
+      return '';
+    }
+  }
+
   return generateBirdCode({
     gender,
     sireCode: sire ? codes.get(String(sire.id)) || sire.bird_code : hasSire ? sName : null,
     damCode: dam ? codes.get(String(dam.id)) || dam.bird_code : hasDam ? dName : null,
-    isOffspring: isOffspring ?? (hasSire || hasDam),
+    isOffspring: roleIsOffspring,
     taken,
   });
 }
 
-/**
- * Render a tag for display: returns the full code (e.g. 1A1, 1A4, 1, A).
- * Editable / stored codes and display badges match directly.
- */
-export function formatBirdCodeForDisplay(value: unknown): string {
-  const code = normalizeBirdCode(value);
-  if (!code) return '';
-  return code;
-}

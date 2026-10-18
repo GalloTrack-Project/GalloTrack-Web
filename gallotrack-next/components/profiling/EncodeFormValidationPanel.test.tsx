@@ -142,16 +142,17 @@ describe('Validation & Summary Panel and StatusItem', () => {
     });
 
     // Verification of Identifier Separation & Wing Band UX
-    expect(screen.getByText(/System Auto-Generated/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Edit identifier manually/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Unique Chicken Identifier/i)).toBeInTheDocument();
+    expect(screen.getByText(/Edit identifier manually/i)).toBeInTheDocument();
 
     const wingBandInput = screen.getByLabelText(/Wing Band ID/i);
     expect(wingBandInput).toBeInTheDocument();
     expect(wingBandInput).toHaveAttribute('maxLength', '50');
 
-    // Auto-generation badge for Sire
-    expect(screen.getByText(/Auto-Generated \(Sire Number\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Auto-generated based on Breeding Male/i)).toBeInTheDocument();
+    // Auto-assigned badge for Sire on the Unique Chicken Identifier
+    expect(screen.getByText(/Auto-Assigned \(Sire\)/i)).toBeInTheDocument();
+    // Helper text for filled wing band
+    expect(screen.getByText(/This number will be banded on the chicken’s wing/i)).toBeInTheDocument();
   });
 });
 

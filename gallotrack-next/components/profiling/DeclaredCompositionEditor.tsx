@@ -52,9 +52,11 @@ export default function DeclaredCompositionEditor({
   }, [isCustomDeclared, validation.parsed, registeredBreed]);
 
   const handleStartCustom = () => {
-    onChange([
-      { breed: registeredBreed.trim() || availableBreeds[0] || 'Lemon', percent: 100 },
-    ]);
+    if (availableBreeds.length === 0) return;
+    const initialBreed = availableBreeds.includes(registeredBreed.trim())
+      ? registeredBreed.trim()
+      : availableBreeds[0] || registeredBreed.trim();
+    onChange([{ breed: initialBreed, percent: 100 }]);
   };
 
   const handleResetToAssumed = () => {
@@ -64,7 +66,7 @@ export default function DeclaredCompositionEditor({
   const handleAddRow = () => {
     if (!value || value.length >= 4) return;
     const existingKeys = new Set(value.map((v) => v.breed.trim().toLowerCase()));
-    const nextBreed = availableBreeds.find((b) => !existingKeys.has(b.trim().toLowerCase())) || availableBreeds[0] || 'Sweater';
+    const nextBreed = availableBreeds.find((b) => !existingKeys.has(b.trim().toLowerCase())) || availableBreeds[0] || registeredBreed.trim();
     onChange([...value, { breed: nextBreed, percent: 0 }]);
   };
 
@@ -121,23 +123,38 @@ export default function DeclaredCompositionEditor({
 
       {/* Assumed view */}
       {!isCustomDeclared ? (
-        <div className="p-3 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 text-xs">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>
-              Default: <strong className="text-foreground">100% {currentBreed}</strong> (assumed pure)
-            </span>
+        availableBreeds.length === 0 ? (
+          <div className="p-3 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Info className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span>No breeds yet. Add your breeds first to declare custom composition.</span>
+            </div>
+            <a
+              href="/breeds"
+              className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0"
+            >
+              Add Breeds →
+            </a>
           </div>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={handleStartCustom}
-            className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer inline-flex items-center justify-center gap-1 shrink-0 self-start sm:self-auto"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Declare Custom Composition
-          </button>
-        </div>
+        ) : (
+          <div className="p-3 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>
+                Default: <strong className="text-foreground">100% {currentBreed}</strong> (assumed pure)
+              </span>
+            </div>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={handleStartCustom}
+              className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer inline-flex items-center justify-center gap-1 shrink-0 self-start sm:self-auto"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Declare Custom Composition
+            </button>
+          </div>
+        )
       ) : (
         /* Custom declared composition editor */
         <div className="space-y-3 pt-1">

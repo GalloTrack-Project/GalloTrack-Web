@@ -258,8 +258,9 @@ describe('promoteToBreeder: Offspring 1A1 -> Sire 4 Fixture Test', () => {
 
     // ── ASSERTIONS ──
 
-    // a. bird_code changed to the breeder code
+    // a. bird_code changed to the breeder code, and wing_band is left unchanged
     expect(targetOffspring.bird_code).toBe('Sire 4');
+    expect(targetOffspring.wing_band).toBe('WB-010');
 
     // b. Old birth code is preserved in fowl_status_history and reconciled to .birth_code
     expect(targetOffspring.birth_code).toBe('1A1');

@@ -408,42 +408,39 @@ export default function EditFowlModal({
                 </div>
               );
             })()}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-muted-foreground uppercase" htmlFor="wing-band-id">
-                  Wing Band ID <span className="text-muted-foreground font-normal lowercase">(physical tag — alphanumeric / lineage tags)</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const suggested = previewBirdCode({
-                      gender: editGender,
-                      sireName: editSire,
-                      damName: editDam,
-                      fowls,
-                    });
-                    if (suggested) setEditWingBand(suggested);
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
-                  title="Auto-suggest Wing Band based on role & parentage"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Auto-Suggest ID</span>
-                </button>
-              </div>
-              <input
-                type="text"
-                value={editWingBand}
-                onChange={(e) => setEditWingBand(e.target.value)}
-                maxLength={50}
-                className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
-                placeholder="e.g. WB-001, 1A₁, or Hatch#3 (Gen₂)"
-                id="wing-band-id"
-              />
-              <p className="text-xs text-muted-foreground mt-1 font-semibold">
-                Physical ID stamped on wing band or leg tag (letters, numbers, subscripts, or notations).
-              </p>
-            </div>
+            {(() => {
+              const trimmedBand = editWingBand.trim();
+              const isBandDuplicate = trimmedBand
+                ? fowls.some((f) => f.id !== editingFowl?.id && (f.wing_band || '').trim().toLowerCase() === trimmedBand.toLowerCase())
+                : false;
+
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-muted-foreground uppercase" htmlFor="wing-band-id">
+                      Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>
+                    </label>
+                  </div>
+                  <input
+                    type="text"
+                    value={editWingBand}
+                    onChange={(e) => setEditWingBand(e.target.value)}
+                    maxLength={50}
+                    className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
+                    placeholder="e.g. W-001"
+                    id="wing-band-id"
+                  />
+                  {isBandDuplicate && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-bold mt-1">
+                      ❌ Wing Band ID &quot;{trimmedBand}&quot; is already assigned to another chicken.
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1 font-semibold">
+                    {trimmedBand ? 'Physical metal wing band number.' : 'Optional — the number stamped on the physical metal wing band.'}
+                  </p>
+                </div>
+              );
+            })()}
             <div className="grid grid-cols-2 gap-3">
               <div>
                   <label htmlFor="edit-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1">

@@ -9,7 +9,7 @@ import {
   getSiblingRelations,
 } from '@/lib/helpers';
 import Pagination from '@/components/Pagination';
-import { birdCodeOf, formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { birdCodeOf, formatBirdCodeForDisplay, resolveBirdCodes, normalizeBirdCode } from '@/lib/bird-code';
 import { inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
@@ -122,7 +122,7 @@ function FowlCard({
             </span>
             <HighlightText text={fowl.name} query={highlightQuery} />
           </h4>
-          {fowl.wing_band ? (
+          {fowl.wing_band && fowl.wing_band.trim().toLowerCase() !== normalizeBirdCode(fowl.bird_code).toLowerCase() ? (
             <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title="Wing Band ID (physical band on the chicken)">🏷 <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{displayBreed}</span>

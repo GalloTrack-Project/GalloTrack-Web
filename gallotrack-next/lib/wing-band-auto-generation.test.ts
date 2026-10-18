@@ -13,7 +13,7 @@ const makeFowl = (partial: Partial<FowlRecord> & { id: number; name: string }): 
     ...partial,
   }) as FowlRecord;
 
-describe('Wing Band Auto-Generation Logic (Sir Ragde Nalla Specification)', () => {
+describe('Unique Chicken Identifier Auto-Generation Logic', () => {
   it('Breeding Male (Sire): automatically assigns/suggests plain sequential numbers (1, 2, 3)', () => {
     const fowls: FowlRecord[] = [];
     // First foundation sire
@@ -125,21 +125,19 @@ describe('Wing Band Auto-Generation Logic (Sir Ragde Nalla Specification)', () =
     expect(offFrom2B).toBe('2B1');
   });
 
-  it('respects existing wing_band values when building collision set', () => {
+  it('keeps identifier collision set strictly independent from physical wing_band values', () => {
     const fowls: FowlRecord[] = [
-      makeFowl({ id: 1, name: 'Sire Old', gender: 'Rooster', bird_code: '1', wing_band: '1' }),
-      makeFowl({ id: 2, name: 'Sire Custom', gender: 'Rooster', bird_code: 'OLD-2', wing_band: '2' }),
+      makeFowl({ id: 1, name: 'Sire Old', gender: 'Rooster', bird_code: '1', wing_band: '2' }),
     ];
 
     const birdCodes = resolveBirdCodes(fowls);
+    // taken codes for bird_code must only include bird_code ('1'), never wing_band ('2')
     const taken = buildCodeSet(Array.from(birdCodes.values()));
-    fowls.forEach((f) => {
-      if (f.wing_band) {
-        taken.add(f.wing_band.toLowerCase());
-      }
-    });
 
-    // Next Sire will not use 1 or 2 since both are taken by existing wing bands
+    expect(taken.has('1')).toBe(true);
+    expect(taken.has('2')).toBe(false);
+
+    // Next Sire receives 2 because 2 is only taken as a physical wing_band, not a bird_code
     const nextSire = previewBirdCode({
       gender: 'Rooster',
       sireName: '',
@@ -147,6 +145,6 @@ describe('Wing Band Auto-Generation Logic (Sir Ragde Nalla Specification)', () =
       fowls,
       taken,
     });
-    expect(nextSire).toBe('3');
+    expect(nextSire).toBe('2');
   });
 });

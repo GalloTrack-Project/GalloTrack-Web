@@ -1,5 +1,5 @@
 import type { FowlRecord } from './types';
-import { formatBirdCodeForDisplay, resolveBirdCodes } from './bird-code';
+import { formatBirdCodeForDisplay, resolveBirdCodes, normalizeBirdCode } from './bird-code';
 
 export type SearchableItem = {
   id: string;
@@ -47,16 +47,19 @@ export function matchSearchItems<T extends SearchableItem>(items: T[], query: st
 export function matchBirds(fowls: FowlRecord[], query: string, limit = BIRD_SEARCH_LIMIT): FowlRecord[] {
   const q = query.trim().toLowerCase().replace(/\s+/g, ' ');
   if (!q) return [];
+  const normQ = normalizeBirdCode(q).toLowerCase();
   const codes = resolveBirdCodes(fowls);
   const scored: { fowl: FowlRecord; score: number }[] = [];
   for (const fowl of fowls) {
     const name = (fowl.name ?? '').trim().toLowerCase();
-    const code = formatBirdCodeForDisplay(codes.get(String(fowl.id)) ?? fowl.bird_code).toLowerCase();
+    const rawCode = codes.get(String(fowl.id)) ?? fowl.bird_code;
+    const plainCode = normalizeBirdCode(rawCode).toLowerCase();
+    const displayCode = formatBirdCodeForDisplay(rawCode).toLowerCase();
     const wing = (fowl.wing_band ?? '').trim().toLowerCase();
     let score = -1;
     if (name === q) score = 0;
     else if (name.startsWith(q)) score = 1;
-    else if (code.includes(q)) score = 2;
+    else if (plainCode.includes(normQ) || displayCode.includes(q)) score = 2;
     else if (wing.includes(q)) score = 3;
     else if (name.includes(q)) score = 4;
     if (score >= 0) scored.push({ fowl, score });
@@ -68,5 +71,9 @@ export function matchBirds(fowls: FowlRecord[], query: string, limit = BIRD_SEAR
 /** "1A1 · WB-01" style hint for a chicken palette result. */
 export function birdSearchHint(fowl: FowlRecord, codes: Map<string, string>): string {
   const code = formatBirdCodeForDisplay(codes.get(String(fowl.id)) ?? fowl.bird_code);
-  return [code, fowl.wing_band].filter(Boolean).join(' · ');
+  const wing = (fowl.wing_band ?? '').trim();
+  if (code && wing && code.toLowerCase() === wing.toLowerCase()) {
+    return code;
+  }
+  return [code, wing].filter(Boolean).join(' · ');
 }
