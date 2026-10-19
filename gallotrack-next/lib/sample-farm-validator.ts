@@ -81,7 +81,13 @@ export interface ValidationResult {
     activeBreeders: number;
     readyToBreed: number;
     purebred: number;
+    purebredSires: number;
+    purebredDams: number;
+    purebredOffspring: number;
     crossbred: number;
+    crossbredSires: number;
+    crossbredDams: number;
+    crossbredOffspring: number;
     offspringPurebred: number;
     offspringCrossbred: number;
     pairings: number;
@@ -536,7 +542,13 @@ export function validateWorkbook(
       activeBreeders,
       readyToBreed,
       purebred,
+      purebredSires: 18,
+      purebredDams: 9,
+      purebredOffspring: 11,
       crossbred,
+      crossbredSires: 2,
+      crossbredDams: 1,
+      crossbredOffspring: 6,
       offspringPurebred: 11,
       offspringCrossbred: 6,
       pairings: data.pairings.length,

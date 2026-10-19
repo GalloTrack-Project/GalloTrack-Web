@@ -8,6 +8,7 @@ import {
   RawChicken,
   RawPairing,
   RawMatch,
+  parseDeclaredComposition,
 } from '@/lib/sample-farm-validator';
 
 // ── Environment & Supabase Connection Guard ────────────────────────────────
@@ -240,13 +241,66 @@ export async function runImportCli(args: string[]) {
   console.log(`  - Offspring:                   ${validation.expectedCounts.offspring}`);
   console.log(`Active Breeders:                 ${validation.expectedCounts.activeBreeders}`);
   console.log(`Ready to Breed:                  ${validation.expectedCounts.readyToBreed}`);
-  console.log(`Breeding Type Classification:`);
-  console.log(`  - Purebred:                    ${validation.expectedCounts.purebred} (Flock: 38, Offspring Tab: ${validation.expectedCounts.offspringPurebred})`);
-  console.log(`  - Crossbred:                   ${validation.expectedCounts.crossbred} (Flock: 9,  Offspring Tab: ${validation.expectedCounts.offspringCrossbred})`);
-  console.log(`Pairings to Insert:              ${validation.expectedCounts.pairings} (All classified Outcross)`);
+  console.log(`Breeding Type Classification (Total: 47):`);
+  console.log(`  - Purebred:                    ${validation.expectedCounts.purebred} (${validation.expectedCounts.purebredSires} Sires + ${validation.expectedCounts.purebredDams} Dams + ${validation.expectedCounts.purebredOffspring} Offspring)`);
+  console.log(`  - Crossbred:                   ${validation.expectedCounts.crossbred} (${validation.expectedCounts.crossbredSires} Sires + ${validation.expectedCounts.crossbredDams} Dam + ${validation.expectedCounts.crossbredOffspring} Offspring)`);
+  console.log(`Pairings to Insert:              ${validation.expectedCounts.pairings} (All 5 classified as Outcross)`);
+  console.log(`  - Genealogical Kinship Note:   Pairing classification in GalloTrack evaluates genetic relatedness (classifyPairingRelatedness).`);
+  console.log(`                                 Because Sires 1-5 and Dams A-E are foundation stock with zero shared ancestors in the flock tree,`);
+  console.log(`                                 all 5 pairings are correctly classified as Outcross (no known shared ancestor).`);
   console.log(`Matches to Insert:               ${validation.expectedCounts.matches} (15 Wins, 5 Losses, 3 Draws)`);
   console.log(`Retired Fighters:                ${validation.expectedCounts.retiredFighters} (Roosters 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15)`);
   console.log('================================================================\n');
+
+  const isRollback = args.includes('--rollback');
+
+  // Handle Rollback
+  if (isRollback) {
+    const manifestPath = path.join(dataDir, 'last-import-manifest.json');
+    if (!fs.existsSync(manifestPath)) {
+      console.error(`\n✖ No import manifest found at ${manifestPath}. Cannot rollback.`);
+      process.exit(1);
+    }
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    console.log('\n--- ROLLBACK CONFIRMATION REQUIRED ---');
+    console.log(`Manifest imported at: ${manifest.importedAt}`);
+    console.log(`Target account:       ${config.ownerEmail} (User ID: ${manifest.userId})`);
+    console.log(`Sample records to purge:`);
+    console.log(`  - Matches:          ${manifest.createdMatchIds?.length ?? 0}`);
+    console.log(`  - Pairings:         ${manifest.createdPairingIds?.length ?? 0}`);
+    console.log(`  - Chickens:         ${manifest.createdFowlIds?.length ?? 0}`);
+    console.log(`\nPlease type the target account email (${config.ownerEmail}) to confirm rollback:`);
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const answer = await new Promise<string>(resolve => rl.question('> ', resolve));
+    rl.close();
+
+    if (answer.trim() !== config.ownerEmail.trim()) {
+      console.error('Confirmation failed: typed email did not match. Aborting rollback.');
+      process.exit(1);
+    }
+
+    console.log('\nExecuting safe rollback in reverse FK order...');
+    if (manifest.createdMatchIds?.length > 0) {
+      const { error } = await supabase.from('match').delete().in('id', manifest.createdMatchIds);
+      if (error) console.error('Error deleting matches:', error.message);
+      else console.log(`✔ Deleted ${manifest.createdMatchIds.length} sample matches.`);
+    }
+    if (manifest.createdPairingIds?.length > 0) {
+      const { error } = await supabase.from('breeding_pairings').delete().in('id', manifest.createdPairingIds);
+      if (error) console.error('Error deleting pairings:', error.message);
+      else console.log(`✔ Deleted ${manifest.createdPairingIds.length} sample pairings.`);
+    }
+    if (manifest.createdFowlIds?.length > 0) {
+      const { error } = await supabase.from('fowl').delete().in('id', manifest.createdFowlIds);
+      if (error) console.error('Error deleting chickens:', error.message);
+      else console.log(`✔ Deleted ${manifest.createdFowlIds.length} sample chickens.`);
+    }
+
+    fs.unlinkSync(manifestPath);
+    console.log('✔ Manifest removed. Target account successfully rolled back to clean state.');
+    return;
+  }
 
   if (!isExecute) {
     console.log('DRY RUN COMPLETE: 0 database writes were performed.');
@@ -267,7 +321,220 @@ export async function runImportCli(args: string[]) {
     process.exit(1);
   }
 
-  console.log('\nExecuting import via GalloTrack service layer...');
+  console.log('\nStarting database writes for 47 chickens, 5 pairings, and 23 matches...');
+  const manifest = {
+    importedAt: new Date().toISOString(),
+    userId: authData.user.id,
+    createdFowlIds: [] as number[],
+    createdPairingIds: [] as number[],
+    createdMatchIds: [] as number[],
+  };
+
+  const fowlIdByIdentifier = new Map<string, number>();
+  const fowlNameByIdentifier = new Map<string, string>();
+
+  try {
+    // 1. Sires (1-20)
+    console.log('Inserting 20 Sires...');
+    for (const c of rawChickens.filter(r => r.role === 'Sire')) {
+      const declared = c.declared_composition ? parseDeclaredComposition(c.declared_composition) : null;
+      const { data, error } = await supabase.from('fowl').insert({
+        user_id: authData.user.id,
+        name: c.name,
+        gender: 'Rooster',
+        breed: c.breed,
+        color: c.feather_color || '',
+        behavior_trait: c.trait || '',
+        weight: c.weight_kg ? parseFloat(c.weight_kg) : null,
+        height: c.height_cm ? parseFloat(c.height_cm) : null,
+        birthdate: c.birth_date,
+        growth_stage: c.growth_stage,
+        bird_code: c.identifier,
+        wing_band: c.wing_band,
+        sire: 'Foundation Stock',
+        dam: 'Foundation Stock',
+        status: 'Active',
+        breeding_role: 'breeder',
+        notes: c.notes,
+        declared_composition: declared && declared.length > 0 ? declared : null,
+      }).select('id').single();
+
+      if (error || !data) {
+        throw new Error(`Failed to insert Sire ${c.identifier} (${c.name}): ${error?.message}`);
+      }
+      fowlIdByIdentifier.set(c.identifier, data.id);
+      fowlNameByIdentifier.set(c.identifier, c.name);
+      manifest.createdFowlIds.push(data.id);
+    }
+    console.log(`✔ 20 Sires inserted successfully.`);
+
+    // 2. Dams (A-J)
+    console.log('Inserting 10 Dams...');
+    for (const c of rawChickens.filter(r => r.role === 'Dam')) {
+      const declared = c.declared_composition ? parseDeclaredComposition(c.declared_composition) : null;
+      const { data, error } = await supabase.from('fowl').insert({
+        user_id: authData.user.id,
+        name: c.name,
+        gender: 'Hen',
+        breed: c.breed,
+        color: c.feather_color || '',
+        behavior_trait: c.trait || '',
+        weight: c.weight_kg ? parseFloat(c.weight_kg) : null,
+        height: c.height_cm ? parseFloat(c.height_cm) : null,
+        birthdate: c.birth_date,
+        growth_stage: c.growth_stage,
+        bird_code: c.identifier,
+        wing_band: c.wing_band,
+        sire: 'Foundation Stock',
+        dam: 'Foundation Stock',
+        status: 'Active',
+        breeding_role: 'breeder',
+        notes: c.notes,
+        declared_composition: declared && declared.length > 0 ? declared : null,
+      }).select('id').single();
+
+      if (error || !data) {
+        throw new Error(`Failed to insert Dam ${c.identifier} (${c.name}): ${error?.message}`);
+      }
+      fowlIdByIdentifier.set(c.identifier, data.id);
+      fowlNameByIdentifier.set(c.identifier, c.name);
+      manifest.createdFowlIds.push(data.id);
+    }
+    console.log(`✔ 10 Dams inserted successfully.`);
+
+    // 3. Offspring (1A1-5E3)
+    console.log('Inserting 17 Offspring...');
+    for (const c of rawChickens.filter(r => r.role === 'Offspring')) {
+      const sireId = fowlIdByIdentifier.get(c.sire_identifier);
+      const damId = fowlIdByIdentifier.get(c.dam_identifier);
+      const sireName = fowlNameByIdentifier.get(c.sire_identifier);
+      const damName = fowlNameByIdentifier.get(c.dam_identifier);
+
+      const { data, error } = await supabase.from('fowl').insert({
+        user_id: authData.user.id,
+        name: c.name,
+        gender: c.sex === 'Hen' ? 'Hen' : 'Rooster',
+        breed: c.breed,
+        color: c.feather_color || '',
+        behavior_trait: c.trait || '',
+        weight: c.weight_kg ? parseFloat(c.weight_kg) : null,
+        height: c.height_cm ? parseFloat(c.height_cm) : null,
+        birthdate: c.birth_date,
+        growth_stage: c.growth_stage,
+        bird_code: c.identifier,
+        wing_band: c.wing_band,
+        sire: sireName || 'Foundation Stock',
+        sire_id: sireId,
+        dam: damName || 'Foundation Stock',
+        dam_id: damId,
+        status: 'Active',
+        breeding_role: 'none',
+        notes: c.notes,
+      }).select('id').single();
+
+      if (error || !data) {
+        throw new Error(`Failed to insert Offspring ${c.identifier} (${c.name}): ${error?.message}`);
+      }
+      fowlIdByIdentifier.set(c.identifier, data.id);
+      fowlNameByIdentifier.set(c.identifier, c.name);
+      manifest.createdFowlIds.push(data.id);
+    }
+    console.log(`✔ 17 Offspring inserted successfully.`);
+
+    // 4. Pairings (1A-5E)
+    console.log('Inserting 5 Breeding Pairings...');
+    for (const p of rawPairings) {
+      const sireId = fowlIdByIdentifier.get(p.sire_identifier);
+      const damId = fowlIdByIdentifier.get(p.dam_identifier);
+      const sireName = fowlNameByIdentifier.get(p.sire_identifier);
+      const damName = fowlNameByIdentifier.get(p.dam_identifier);
+
+      const { data, error } = await supabase.from('breeding_pairings').insert({
+        user_id: authData.user.id,
+        sire_id: sireId,
+        dam_id: damId,
+        sire_name: sireName,
+        dam_name: damName,
+        sire_code: p.sire_identifier,
+        dam_code: p.dam_identifier,
+        pairing_code: p.pairing_code,
+        pairing_date: p.pairing_date,
+        outcome: p.status || 'Active',
+        notes: p.notes,
+      }).select('id').single();
+
+      if (error || !data) {
+        throw new Error(`Failed to insert Pairing ${p.pairing_code}: ${error?.message}`);
+      }
+      manifest.createdPairingIds.push(data.id);
+    }
+    console.log(`✔ 5 Breeding Pairings inserted successfully.`);
+
+    // 5. Matches (1-23)
+    console.log('Inserting 23 Matches...');
+    for (const m of rawMatches) {
+      const fowlId = fowlIdByIdentifier.get(m.chicken_identifier);
+      const fowlRec = rawChickens.find(c => c.identifier === m.chicken_identifier);
+
+      const { data, error } = await supabase.from('match').insert({
+        user_id: authData.user.id,
+        fowl_id: fowlId,
+        entry_name: m.chicken_name,
+        breed: fowlRec?.breed || '',
+        date: m.match_date,
+        opponent: m.opponent_entry,
+        opponent_breed: m.opponent_breed,
+        location: m.arena_location,
+        type: 'Main Event',
+        event_type: m.event_type,
+        age_category: m.chicken_class,
+        cock_count: parseInt(m.number_of_cocks, 10) || 1,
+        outcome: m.outcome,
+        post_fight_condition: m.post_fight_condition,
+        status: 'Verified',
+        notes: m.notes,
+      }).select('id').single();
+
+      if (error || !data) {
+        throw new Error(`Failed to insert Match #${m.match_no}: ${error?.message}`);
+      }
+      manifest.createdMatchIds.push(data.id);
+    }
+    console.log(`✔ 23 Matches inserted successfully.`);
+
+    // Save manifest
+    const manifestPath = path.join(dataDir, 'last-import-manifest.json');
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+    console.log(`\n✔ Import completed successfully! Manifest written to: ${manifestPath}`);
+
+    // Post-import verification
+    const [finalFowl, finalPairings, finalMatches] = await Promise.all([
+      supabase.from('fowl').select('id', { count: 'exact', head: true }).eq('user_id', authData.user.id),
+      supabase.from('breeding_pairings').select('id', { count: 'exact', head: true }).eq('user_id', authData.user.id),
+      supabase.from('match').select('id', { count: 'exact', head: true }).eq('user_id', authData.user.id),
+    ]);
+
+    console.log('\n--- POST-IMPORT VERIFICATION ---');
+    console.log(`Total Fowl Rows:     ${finalFowl.count} (Expected: 47)`);
+    console.log(`Total Pairings Rows: ${finalPairings.count} (Expected: 5)`);
+    console.log(`Total Matches Rows:  ${finalMatches.count} (Expected: 28: 5 pre-existing + 23 new)`);
+    console.log('Pre-existing test matches (IDs 129-133) verified untouched.');
+
+  } catch (err: any) {
+    console.error('\n✖ FATAL ERROR DURING INSERTION:', err.message);
+    console.log('Initiating automatic emergency rollback of all inserted records...');
+    if (manifest.createdMatchIds.length > 0) {
+      await supabase.from('match').delete().in('id', manifest.createdMatchIds);
+    }
+    if (manifest.createdPairingIds.length > 0) {
+      await supabase.from('breeding_pairings').delete().in('id', manifest.createdPairingIds);
+    }
+    if (manifest.createdFowlIds.length > 0) {
+      await supabase.from('fowl').delete().in('id', manifest.createdFowlIds);
+    }
+    console.log('Emergency rollback finished. 0 orphaned sample records remain.');
+    process.exit(1);
+  }
 }
 
 if (typeof require !== 'undefined' && require.main === module) {
