@@ -4,6 +4,8 @@ import type { FowlRecord } from '@/lib/types';
 import {
   getBloodlineStats,
   getFowlBloodlineStats,
+  computePedigreeComposition,
+  hasRecordedParents,
   UNKNOWN_BLOODLINE,
   type BloodlineComposition,
   type BloodlineStats,
@@ -166,6 +168,13 @@ export default function BloodlineBreakdown({
     [fowl, fowls]
   );
 
+  const pedigreeSummary = React.useMemo(() => {
+    if (!fowl || !fowls || !hasRecordedParents(fowl)) return null;
+    const pedComp = computePedigreeComposition(fowl, fowls);
+    const pedStats = getBloodlineStats(pedComp);
+    return pedStats?.summary ?? null;
+  }, [fowl, fowls]);
+
   const show5050 = React.useMemo(
     () => hasBothParentsRecorded(fowl ?? null, fowls ?? []),
     [fowl, fowls]
@@ -175,8 +184,9 @@ export default function BloodlineBreakdown({
 
   const { entries, dominant, strainCount, isDiluted, summary, knownPct, unknownPct } = resolved;
   const isAssumed = sourceInfo?.source === 'assumed';
+  const isAdjusted = sourceInfo?.source === 'adjusted';
   const sourceLine = sourceInfo?.sourceLabel;
-  const canEditComposition = isFoundationStockRecord(fowl) && onEditComposition;
+  const canEditComposition = Boolean(onEditComposition);
 
   if (compact) {
     return (
@@ -196,9 +206,16 @@ export default function BloodlineBreakdown({
         </div>
 
         {sourceLine && (
-          <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-            Source: <span className="font-semibold">{sourceLine}</span>
-          </p>
+          <div className="space-y-0.5">
+            <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+              Source: <span className="font-semibold">{sourceLine}</span>
+            </p>
+            {isAdjusted && pedigreeSummary && (
+              <p className="text-[11px] text-muted-foreground font-semibold">
+                Calculated from parents: {pedigreeSummary}
+              </p>
+            )}
+          </div>
         )}
 
         <div className="h-4 w-full rounded-full bg-white/80 dark:bg-muted overflow-hidden border border-white/60 flex">
@@ -270,9 +287,16 @@ export default function BloodlineBreakdown({
             🧬 {title || 'Bloodline Percentage Breakdown'}
           </p>
           {sourceLine && (
-            <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300 mt-0.5">
-              Source: <span className="font-semibold">{sourceLine}</span>
-            </p>
+            <div className="mt-0.5 space-y-0.5">
+              <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                Source: <span className="font-semibold">{sourceLine}</span>
+              </p>
+              {isAdjusted && pedigreeSummary && (
+                <p className="text-xs text-muted-foreground font-semibold">
+                  Calculated from parents: <span className="font-bold text-foreground">{pedigreeSummary}</span>
+                </p>
+              )}
+            </div>
           )}
           {show5050 && (
             <p className="text-xs text-muted-foreground font-semibold mt-0.5">
@@ -343,6 +367,9 @@ export default function BloodlineBreakdown({
         <div className="border-t border-emerald-100 dark:border-emerald-900/50 pt-2 space-y-1.5">
           <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
             <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
+            {isAdjusted && pedigreeSummary && (
+              <> · <span className="font-semibold text-emerald-800 dark:text-emerald-300">Calculated from parents: {pedigreeSummary}</span></>
+            )}
             {unknownPct > 0 && (
               <>
                 {' '}
@@ -350,7 +377,7 @@ export default function BloodlineBreakdown({
                 parents&apos; breed to complete the split.
               </>
             )}
-            {knownPct > 0 && unknownPct === 0 && strainCount === 1 && (
+            {knownPct > 0 && unknownPct === 0 && strainCount === 1 && !isAdjusted && (
               <> · Pure / single-bloodline split.</>
             )}
           </p>

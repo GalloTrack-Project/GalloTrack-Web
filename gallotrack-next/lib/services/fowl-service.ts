@@ -161,6 +161,21 @@ export async function insertFowl(payload: Record<string, unknown>): Promise<{ er
     }
     return { error: res.error.message };
   }
+
+  if (res.data?.id && working.declared_composition && Array.isArray(working.declared_composition) && working.declared_composition.length > 0) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from('fowl_status_history').insert([{
+        fowl_id: res.data.id,
+        field: 'declared_composition',
+        old_value: null,
+        new_value: JSON.stringify(working.declared_composition),
+        changed_by: user?.id ?? null,
+      }]);
+    } catch (histErr) {
+      console.warn('Could not log declared_composition insert in history:', histErr);
+    }
+  }
   return { id: res.data?.id };
 }
 
@@ -182,6 +197,33 @@ export async function updateFowl(id: number, payload: Record<string, unknown>): 
     working.feather_color = normColor;
   }
   const cleanPayload = filterAllowedColumns('fowl', working);
+
+  // If declared_composition is being changed, read previous value to log history
+  if ('declared_composition' in working) {
+    try {
+      const { data: currentFowl } = await supabase
+        .from('fowl')
+        .select('declared_composition')
+        .eq('id', id)
+        .single();
+      const oldVal = currentFowl?.declared_composition ? JSON.stringify(currentFowl.declared_composition) : null;
+      const newVal = working.declared_composition && Array.isArray(working.declared_composition) && working.declared_composition.length > 0
+        ? JSON.stringify(working.declared_composition)
+        : null;
+      if (oldVal !== newVal) {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from('fowl_status_history').insert([{
+          fowl_id: id,
+          field: 'declared_composition',
+          old_value: oldVal,
+          new_value: newVal ?? '[]',
+          changed_by: user?.id ?? null,
+        }]);
+      }
+    } catch (histErr) {
+      console.warn('Could not log declared_composition change in history:', histErr);
+    }
+  }
 
   const res = await supabase.from('fowl').update(cleanPayload).eq('id', id);
   if (res.error) {

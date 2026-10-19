@@ -132,6 +132,8 @@ export default function DashboardPage() {
       const compositionBasis =
         classification.compositionSource === 'declared'
           ? 'Declared'
+          : classification.compositionSource === 'adjusted'
+          ? 'Adjusted'
           : classification.compositionSource === 'assumed'
           ? 'Assumed'
           : 'Derived';

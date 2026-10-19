@@ -1,6 +1,8 @@
 import type { FowlRecord } from './types';
 import {
   getFowlBloodlineStats,
+  getBloodlineStats,
+  computePedigreeComposition,
   type BloodlineStats,
   UNKNOWN_BLOODLINE,
   isFoundationName,
@@ -29,14 +31,18 @@ export interface BreedingClassification {
   extraBreedsCount: number;
   /** Full breakdown tooltip text */
   tooltipText: string;
-  /** Origin of the composition: 'declared' by owner, 'assumed' 100% of breed, or 'derived' from recorded parents */
-  compositionSource: 'declared' | 'assumed' | 'derived';
+  /** Origin of the composition: 'declared' by owner, 'adjusted' by owner, 'assumed' 100% of breed, or 'derived' from recorded parents */
+  compositionSource: 'declared' | 'adjusted' | 'assumed' | 'derived';
   /** True when any ancestor in its lineage used an assumed composition */
   basedOnAssumed: boolean;
-  /** Human-readable source label: "Declared by owner", "Assumed from registered breed (not verified)", or "Derived from parents" */
+  /** Human-readable source label: "Declared by owner", "Adjusted by owner", "Assumed from registered breed (not verified)", or "Derived from parents" */
   sourceLabel: string;
   /** Notice shown when bird has parents but also has a stored declared composition */
   declaredNotice?: string;
+  /** Calculated pedigree summary from parents, e.g. "50% Hatch · 50% Sweater" */
+  pedigreeSummary?: string;
+  /** Calculated pedigree composition from parents */
+  pedigreeComposition?: Record<string, number>;
 }
 
 /** Tolerance for purebred check (100% single breed) and strain presence */
@@ -59,7 +65,7 @@ export function isFoundationStockRecord(fowl: FowlRecord | null | undefined): bo
   return sireIsBase && damIsBase;
 }
 
-export type CompositionSource = 'declared' | 'assumed' | 'derived';
+export type CompositionSource = 'declared' | 'adjusted' | 'assumed' | 'derived';
 
 export function getCompositionSource(
   fowl: FowlRecord | null | undefined
@@ -73,9 +79,10 @@ export function getCompositionSource(
     (s.length > 0 && !isFoundationName(s)) ||
     (d.length > 0 && !isFoundationName(d));
 
-  if (hasParents) return 'derived';
   const parsed = parseDeclaredComposition(fowl.declared_composition);
   const hasDeclared = parsed !== null && parsed.length > 0;
+
+  if (hasParents) return hasDeclared ? 'adjusted' : 'derived';
   return hasDeclared ? 'declared' : 'assumed';
 }
 
@@ -191,10 +198,12 @@ export function getCompositionSourceInfo(
   memo?: Map<string, boolean>
 ): CompositionSourceInfo {
   const source = getCompositionSource(fowl);
-  const basedOnAssumed = source === 'derived' ? hasAssumedAncestor(fowl, fowls, memo) : false;
+  const basedOnAssumed = source === 'derived' || source === 'adjusted' ? hasAssumedAncestor(fowl, fowls, memo) : false;
   let sourceLabel = 'Assumed from registered breed (not verified)';
   if (source === 'declared') {
     sourceLabel = 'Declared by owner';
+  } else if (source === 'adjusted') {
+    sourceLabel = 'Adjusted by owner';
   } else if (source === 'derived') {
     sourceLabel = basedOnAssumed
       ? 'Derived from parents (Includes assumed foundation stock)'
@@ -255,14 +264,14 @@ export function getBreedingClassification(
   const sireIsBase = !s || isFoundationName(s);
   const damIsBase = !d || isFoundationName(d);
   const isFoundation = sireIsBase && damIsBase && fowl.sire_id == null && fowl.dam_id == null;
-
   const hasParents = !isFoundation;
-  const hasIgnoredDeclaration =
-    hasParents &&
-    Array.isArray(fowl.declared_composition) &&
-    fowl.declared_composition.length > 0;
-  const declaredNotice = hasIgnoredDeclaration
-    ? 'Composition is derived from parents. Declared composition is ignored while parents are recorded.'
+
+  const pedigreeComp = hasParents ? computePedigreeComposition(fowl, fowls) : undefined;
+  const pedigreeSummary = pedigreeComp && Object.keys(pedigreeComp).length > 0
+    ? Object.entries(pedigreeComp)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([breed, pct]) => `${pct}% ${breed}`)
+        .join(' / ')
     : undefined;
 
   // Rule: If a parent's breed or ancestry is unknown or missing, do not guess.
@@ -299,7 +308,8 @@ export function getBreedingClassification(
       compositionSource,
       basedOnAssumed,
       sourceLabel,
-      ...(declaredNotice ? { declaredNotice } : {}),
+      ...(pedigreeSummary ? { pedigreeSummary } : {}),
+      ...(pedigreeComp ? { pedigreeComposition: pedigreeComp } : {}),
     };
     if (memo && memoKey) memo.set(memoKey, result);
     return result;
@@ -313,6 +323,8 @@ export function getBreedingClassification(
     const breedName = dominant.strain;
     const tooltipText = compositionSource === 'assumed'
       ? `Assumed purebred ${breedName} (not verified from recorded parents)`
+      : compositionSource === 'adjusted'
+      ? `Purebred ${breedName} (adjusted by owner)`
       : basedOnAssumed
       ? `Purebred ${breedName} (lineage includes assumed foundation stock)`
       : `Purebred ${breedName} (100% verified single-lineage)`;
@@ -331,7 +343,8 @@ export function getBreedingClassification(
       compositionSource,
       basedOnAssumed,
       sourceLabel,
-      ...(declaredNotice ? { declaredNotice } : {}),
+      ...(pedigreeSummary ? { pedigreeSummary } : {}),
+      ...(pedigreeComp ? { pedigreeComposition: pedigreeComp } : {}),
     };
     if (memo && memoKey) memo.set(memoKey, result);
     return result;
@@ -364,7 +377,8 @@ export function getBreedingClassification(
     compositionSource,
     basedOnAssumed,
     sourceLabel,
-    ...(declaredNotice ? { declaredNotice } : {}),
+    ...(pedigreeSummary ? { pedigreeSummary } : {}),
+    ...(pedigreeComp ? { pedigreeComposition: pedigreeComp } : {}),
   };
 
   if (memo && memoKey) memo.set(memoKey, result);

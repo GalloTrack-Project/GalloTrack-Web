@@ -1,0 +1,48 @@
+order,role,identifier,name,sex,breed,declared_composition,feather_color,leg_color,trait,weight_kg,height_cm,birth_date,growth_stage,wing_band,sire_identifier,dam_identifier,status,notes
+1,Sire,1,Crown Lemon,Rooster,Lemon,,Black-Breasted Red,Yellow,,2.5,49,2023-02-14,Cock,WB-001,,,Active,[SAMPLE] Foundation sire
+2,Sire,2,Thunder Sweater,Rooster,Sweater,,Dark Red,Willow,,2.4,48,2023-03-08,Cock,WB-002,,,Active,[SAMPLE] Foundation sire
+3,Sire,3,Royal Hatch,Rooster,Hatch,,Black-Breasted Red,Yellow,,2.3,47,2023-03-27,Cock,WB-003,,,Active,[SAMPLE] Foundation sire
+4,Sire,4,Anvil Hatch,Rooster,Hatch,,Brown-Red,Willow,,2.4,48,2023-04-19,Cock,WB-004,,,Active,[SAMPLE] Foundation sire
+5,Sire,5,Amber Lemon,Rooster,Lemon,,Ginger,Yellow,,2.2,46,2023-05-06,Cock,WB-005,,,Active,[SAMPLE] Foundation sire
+6,Sire,6,Granite Roundhead,Rooster,Roundhead,,Dark Red,Yellow,,2.6,50,2023-05-30,Cock,WB-006,,,Active,[SAMPLE] Foundation sire
+7,Sire,7,Vandal Sweater,Rooster,Sweater,,Black-Breasted Red,White,,2.3,47,2023-06-21,Cock,WB-007,,,Active,[SAMPLE] Foundation sire
+8,Sire,8,Silver Whitehackle,Rooster,Whitehackle,,Silver Duckwing,Yellow,,2.1,46,2023-07-11,Cock,WB-008,,,Active,[SAMPLE] Foundation sire
+9,Sire,9,Rustler Kelso,Rooster,Kelso,,Pyle,White,,2.2,47,2023-08-02,Cock,WB-009,,,Active,[SAMPLE] Foundation sire
+10,Sire,10,Bronze Roundhead,Rooster,Roundhead,,Brown-Red,Yellow,,2.5,49,2023-08-25,Cock,WB-010,,,Active,[SAMPLE] Foundation sire
+11,Sire,11,Hunter Lemon,Rooster,Lemon,Lemon 75; Hatch 25,Wheaten,Yellow,,2.3,47,2023-09-17,Cock,WB-011,,,Active,[SAMPLE] Foundation sire; composition declared manually by the owner (sample)
+12,Sire,12,Bandit Sweater,Rooster,Sweater,,Dark Red,Willow,,2.4,48,2023-10-09,Cock,WB-012,,,Active,[SAMPLE] Foundation sire
+13,Sire,13,Falcon Hatch,Rooster,Hatch,,Black-Breasted Red,Slate,,2.2,46,2023-11-04,Cock,WB-013,,,Active,[SAMPLE] Foundation sire
+14,Sire,14,Ivory Whitehackle,Rooster,Whitehackle,,White,White,,2,45,2023-11-28,Cock,WB-014,,,Active,[SAMPLE] Foundation sire
+15,Sire,15,Titanio Roundhead,Rooster,Roundhead,,Black,Black,,2.7,51,2024-01-13,Cock,WB-015,,,Active,[SAMPLE] Foundation sire
+16,Sire,16,Drifter Kelso,Rooster,Kelso,,Gray,White,,2.3,47,2024-02-03,Cock,WB-016,,,Active,[SAMPLE] Foundation sire
+17,Sire,17,Goldrun Lemon,Rooster,Lemon,,Golden Duckwing,Yellow,,2.2,46,2024-02-26,Cock,WB-017,,,Active,[SAMPLE] Foundation sire
+18,Sire,18,Kestrel Sweater,Rooster,Sweater,Sweater 87.5; Kelso 12.5,Blue / Splash,Slate,,2.1,45,2024-03-18,Cock,WB-018,,,Active,[SAMPLE] Foundation sire; composition declared manually by the owner (sample)
+19,Sire,19,Ranger Whitehackle,Rooster,Whitehackle,,Dom / Crele,Willow,,2.4,48,2024-04-09,Cock,WB-019,,,Active,[SAMPLE] Foundation sire
+20,Sire,20,Boulder Hatch,Rooster,Hatch,,Dark Red,Yellow,,2.5,49,2024-05-01,Cock,WB-020,,,Active,[SAMPLE] Foundation sire
+21,Dam,A,Duchess Lemon,Hen,Lemon,,Wheaten,Yellow,,1.9,42,2023-04-07,Hen,WB-021,,,Active,[SAMPLE] Foundation dam
+22,Dam,B,Ember Sweater,Hen,Sweater,,Brown-Red,Willow,,1.8,41,2023-05-19,Hen,WB-022,,,Active,[SAMPLE] Foundation dam
+23,Dam,C,Willow Hatch,Hen,Hatch,,Black-Breasted Red,Yellow,,1.8,41,2023-06-12,Hen,WB-023,,,Active,[SAMPLE] Foundation dam
+24,Dam,D,Pepper Sweater,Hen,Sweater,,Ginger,Yellow,,1.7,40,2023-07-30,Hen,WB-024,,,Active,[SAMPLE] Foundation dam
+25,Dam,E,Marigold Roundhead,Hen,Roundhead,,Pyle,White,,1.9,42,2023-09-03,Hen,WB-025,,,Active,[SAMPLE] Foundation dam
+26,Dam,F,Saffron Lemon,Hen,Lemon,Lemon 75; Whitehackle 25,Golden Duckwing,Willow,,1.7,40,2023-10-22,Hen,WB-026,,,Active,[SAMPLE] Foundation dam; composition declared manually by the owner (sample)
+27,Dam,G,Frost Whitehackle,Hen,Whitehackle,,White,White,,1.6,39,2023-12-15,Hen,WB-027,,,Active,[SAMPLE] Foundation dam
+28,Dam,H,Hazel Hatch,Hen,Hatch,,Dark Red,Slate,,1.8,41,2024-01-27,Hen,WB-028,,,Active,[SAMPLE] Foundation dam
+29,Dam,I,Echo Kelso,Hen,Kelso,,Gray,Yellow,,1.7,40,2024-03-05,Hen,WB-029,,,Active,[SAMPLE] Foundation dam
+30,Dam,J,Terra Roundhead,Hen,Roundhead,,Black,Black,,2,43,2024-04-14,Hen,WB-030,,,Active,[SAMPLE] Foundation dam
+31,Offspring,1A1,Lemon Vanguard,Rooster,Lemon,,Black-Breasted Red,Yellow,,2.4,48,2025-03-12,Bull Stag,WB-031,1,A,Active,[SAMPLE] Purebred Lemon offspring
+32,Offspring,1A2,Lemon Dahlia,Hen,Lemon,,Wheaten,Yellow,,1.8,41,2025-03-12,Hen,WB-032,1,A,Active,[SAMPLE] Purebred Lemon offspring
+33,Offspring,1A3,Lemon Cobalt,Rooster,Lemon,,Dark Red,Yellow,,2.3,47,2025-03-13,Bull Stag,WB-033,1,A,Active,[SAMPLE] Purebred Lemon offspring
+34,Offspring,1A4,Lemon Primrose,Hen,Lemon,,Ginger,Yellow,,1.7,40,2025-03-13,Hen,WB-034,1,A,Active,[SAMPLE] Purebred Lemon offspring
+35,Offspring,2B1,Sweater Hammer,Rooster,Sweater,,Dark Red,Willow,,2.3,47,2025-04-20,Bull Stag,WB-035,2,B,Active,[SAMPLE] Purebred Sweater offspring
+36,Offspring,2B2,Sweater Ruby,Hen,Sweater,,Brown-Red,Willow,,1.8,41,2025-04-20,Hen,WB-036,2,B,Active,[SAMPLE] Purebred Sweater offspring
+37,Offspring,2B3,Sweater Anchor,Rooster,Sweater,,Black-Breasted Red,Slate,,2.2,46,2025-04-21,Bull Stag,WB-037,2,B,Active,[SAMPLE] Purebred Sweater offspring
+38,Offspring,3C1,Hatch Warden,Rooster,Hatch,,Black-Breasted Red,Yellow,,2.3,47,2025-05-08,Bull Stag,WB-038,3,C,Active,[SAMPLE] Purebred Hatch offspring
+39,Offspring,3C2,Hatch Linnet,Hen,Hatch,,Brown-Red,Yellow,,1.7,40,2025-05-08,Hen,WB-039,3,C,Active,[SAMPLE] Purebred Hatch offspring
+40,Offspring,3C3,Hatch Pilot,Rooster,Hatch,,Black-Breasted Red,Yellow,,0.5,21,2026-09-05,Chick,WB-040,3,C,Active,[SAMPLE] Purebred Hatch offspring
+41,Offspring,3C4,Hatch Sparrow,Hen,Hatch,,Brown-Red,Yellow,,0.4,19,2026-09-05,Chick,WB-041,3,C,Active,[SAMPLE] Purebred Hatch offspring
+42,Offspring,4D1,Cinder,Rooster,Hatch,,Dark Red,Willow,,2.4,48,2025-06-24,Bull Stag,WB-042,4,D,Active,[SAMPLE] Hatch x Sweater cross (calculated 50/50 from parents)
+43,Offspring,4D2,Paprika,Hen,Sweater,,Ginger,Yellow,,1.8,41,2025-06-24,Hen,WB-043,4,D,Active,[SAMPLE] Hatch x Sweater cross (calculated 50/50 from parents)
+44,Offspring,4D3,Flint,Rooster,Hatch,,Black,Slate,,2.3,47,2025-06-25,Bull Stag,WB-044,4,D,Active,[SAMPLE] Hatch x Sweater cross (calculated 50/50 from parents)
+45,Offspring,5E1,Copper,Rooster,Lemon,,Brown-Red,Yellow,,1.6,40,2026-05-20,Stag,WB-045,5,E,Active,[SAMPLE] Lemon x Roundhead cross (calculated 50/50 from parents)
+46,Offspring,5E2,Poppy,Hen,Roundhead,,Pyle,White,,1.3,36,2026-05-20,Pullet,WB-046,5,E,Active,[SAMPLE] Lemon x Roundhead cross (calculated 50/50 from parents)
+47,Offspring,5E3,Rocket,Rooster,Lemon,,Dark Red,Yellow,,1.6,40,2026-05-21,Stag,WB-047,5,E,Active,[SAMPLE] Lemon x Roundhead cross (calculated 50/50 from parents)

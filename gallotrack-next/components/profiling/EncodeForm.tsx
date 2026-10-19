@@ -2,7 +2,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { FowlRecord, DeclaredBreedShare } from '@/lib/types';
-import { validateDeclaredComposition, type BloodlineStats } from '@/lib/bloodline-composition';
+import {
+  validateDeclaredComposition,
+  computePedigreeComposition,
+  type BloodlineStats,
+  type BloodlineComposition,
+} from '@/lib/bloodline-composition';
 import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import DeclaredCompositionEditor from './DeclaredCompositionEditor';
@@ -196,13 +201,29 @@ export default function EncodeForm({
       ? 'dam'
       : 'sire';
 
+  const pedigreeComposition = useMemo<BloodlineComposition | null>(() => {
+    if (!hasAnyParent) return null;
+    const draft = {
+      id: -1,
+      name: newName.trim() || '__preview__',
+      breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
+      gender: newGender,
+      sire: sireName,
+      dam: damName,
+    } as FowlRecord;
+    return computePedigreeComposition(draft, fowls);
+  }, [hasAnyParent, newName, selectedStrains, newBreed, newGender, sireName, damName, fowls]);
+
   const declaredValidation = useMemo(() => {
-    if (isOffspring || !newDeclaredComposition || newDeclaredComposition.length === 0) {
+    if (!newDeclaredComposition || newDeclaredComposition.length === 0) {
       return { valid: true };
     }
     const currentBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed;
-    return validateDeclaredComposition(newDeclaredComposition, currentBreed, availableStrains);
-  }, [isOffspring, newDeclaredComposition, selectedStrains, newBreed, availableStrains]);
+    return validateDeclaredComposition(newDeclaredComposition, currentBreed, availableStrains, {
+      isOffspring,
+      pedigreeComposition,
+    });
+  }, [isOffspring, newDeclaredComposition, selectedStrains, newBreed, availableStrains, pedigreeComposition]);
 
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
@@ -509,6 +530,17 @@ export default function EncodeForm({
               <option value="Hen" className="bg-popover text-popover-foreground">Dam</option>
             </select>
           </div>
+          {!hasAnyParent && (
+            <div className="sm:col-span-2 pt-1">
+              <DeclaredCompositionEditor
+                registeredBreed={selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed}
+                availableBreeds={availableStrains}
+                value={newDeclaredComposition ?? null}
+                onChange={(val) => setNewDeclaredComposition?.(val)}
+                hasParents={false}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -779,28 +811,16 @@ export default function EncodeForm({
             </div>
           );
         })()}
-        {!isOffspring ? (
+        {hasAnyParent && (
           <div className="pt-1">
             <DeclaredCompositionEditor
               registeredBreed={selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed}
               availableBreeds={availableStrains}
               value={newDeclaredComposition ?? null}
               onChange={(val) => setNewDeclaredComposition?.(val)}
+              hasParents={true}
+              pedigreeComposition={pedigreeComposition}
             />
-          </div>
-        ) : (
-          <div className="bg-slate-50 dark:bg-muted/50 border border-slate-200 dark:border-border rounded-md px-3 py-2.5 space-y-1">
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-wider">
-              🧬 Bloodline Split — Auto-Computed
-            </p>
-            <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
-              Composition is derived from parents (50% Sire, 50% Dam). Manual composition is only available for foundation stock.
-            </p>
-            {previewBloodlineStats && previewBloodlineStats.knownPct > 0 && (
-              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                {previewBloodlineStats.summary}
-              </p>
-            )}
           </div>
         )}
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">

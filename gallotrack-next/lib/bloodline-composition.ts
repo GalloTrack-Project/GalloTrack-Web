@@ -113,11 +113,17 @@ export type DeclaredCompositionValidationResult = {
   total: number;
 };
 
-/** Validate declared composition input with optional allowed breeds list. */
+export type DeclaredCompositionValidationOptions = {
+  isOffspring?: boolean;
+  pedigreeComposition?: BloodlineComposition | null;
+};
+
+/** Validate declared composition input with optional allowed breeds list and pedigree warning checks. */
 export function validateDeclaredComposition(
   raw: unknown,
   registeredBreed?: string | null,
-  allowedBreeds?: string[]
+  allowedBreeds?: string[],
+  options?: DeclaredCompositionValidationOptions
 ): DeclaredCompositionValidationResult {
   if (raw == null) {
     return { valid: true, errors: [], warnings: [], parsed: [], total: 100 };
@@ -190,9 +196,32 @@ export function validateDeclaredComposition(
     };
   }
 
-  // The registered breed must be one of the breeds
-  let warning: string | undefined;
-  if (registeredBreed && registeredBreed.trim()) {
+  const warnings: string[] = [];
+
+  // For birds with parents, check pedigree comparison warnings
+  if (options?.pedigreeComposition && Object.keys(options.pedigreeComposition).length > 0) {
+    const ped = options.pedigreeComposition;
+    const pedKeys = new Map<string, { strain: string; pct: number }>();
+    for (const [s, p] of Object.entries(ped)) {
+      pedKeys.set(s.trim().toLowerCase(), { strain: s, pct: p });
+    }
+
+    for (const item of parsed) {
+      const k = item.breed.trim().toLowerCase();
+      const pedMatch = pedKeys.get(k);
+      if (!pedMatch || pedMatch.pct <= 0) {
+        warnings.push(`Breed "${item.breed}" is not in the recorded lineage.`);
+      } else {
+        const diff = Math.abs(item.percent - pedMatch.pct);
+        if (diff > 20) {
+          warnings.push(
+            `"${item.breed}" (${item.percent}%) differs by ${round1(diff)} percentage points from calculated pedigree value (${pedMatch.pct}%).`
+          );
+        }
+      }
+    }
+  } else if (!options?.isOffspring && registeredBreed && registeredBreed.trim()) {
+    // Only check registered breed requirement for foundation / birds without parents
     const regKey = registeredBreed.trim().toLowerCase();
     const hasRegisteredBreed = seen.has(regKey);
     if (!hasRegisteredBreed) {
@@ -211,14 +240,18 @@ export function validateDeclaredComposition(
     const regEntry = parsed.find((e) => e.breed.toLowerCase() === regKey);
     const maxEntry = [...parsed].sort((a, b) => b.percent - a.percent)[0];
     if (regEntry && maxEntry && maxEntry.percent > regEntry.percent) {
-      warning = `Note: Registered breed "${registeredBreed}" (${regEntry.percent}%) is not the dominant share (${maxEntry.breed} is ${maxEntry.percent}%).`;
+      warnings.push(
+        `Note: Registered breed "${registeredBreed}" (${regEntry.percent}%) is not the dominant share (${maxEntry.breed} is ${maxEntry.percent}%).`
+      );
     }
   }
+
+  const warning = warnings.length > 0 ? warnings[0] : undefined;
 
   return {
     valid: true,
     warning,
-    warnings: warning ? [warning] : [],
+    warnings,
     errors: [],
     parsed,
     total: roundedTotal,
@@ -242,7 +275,7 @@ export function parseDeclaredComposition(
       return null;
     }
   }
-  const result = validateDeclaredComposition(parsedRaw, null, allowedBreeds);
+  const result = validateDeclaredComposition(parsedRaw, null, allowedBreeds, { isOffspring: true });
   if (!result.valid) {
     console.warn('parseDeclaredComposition ignored invalid value:', result.error, raw);
     return null;
@@ -259,6 +292,20 @@ export function declaredToComposition(declared: DeclaredBreedShare[]): Bloodline
   return normalizeComposition(comp);
 }
 
+/** Raw assumed composition from listed breed tag without considering declared_composition. */
+export function assumedBreedComposition(
+  f: { breed?: string } | null | undefined
+): BloodlineComposition {
+  const strains = listedStrains(f?.breed);
+  if (strains.length === 0) return { [UNKNOWN_BLOODLINE]: 100 };
+  const share = round1(100 / strains.length);
+  const out: BloodlineComposition = {};
+  strains.forEach((s, i) => {
+    out[s] = i === strains.length - 1 ? round1(100 - share * (strains.length - 1)) : share;
+  });
+  return out;
+}
+
 /** Composition of a bird that has no registered ancestry. */
 export function baseComposition(
   f: { breed?: string; declared_composition?: unknown } | null | undefined
@@ -269,14 +316,20 @@ export function baseComposition(
       return declaredToComposition(parsed);
     }
   }
-  const strains = listedStrains(f?.breed);
-  if (strains.length === 0) return { [UNKNOWN_BLOODLINE]: 100 };
-  const share = round1(100 / strains.length);
-  const out: BloodlineComposition = {};
-  strains.forEach((s, i) => {
-    out[s] = i === strains.length - 1 ? round1(100 - share * (strains.length - 1)) : share;
-  });
-  return out;
+  return assumedBreedComposition(f);
+}
+
+/** Helper to check whether a bird has recorded/named parents. */
+export function hasRecordedParents(fowl?: FowlRecord | null): boolean {
+  if (!fowl) return false;
+  const s = (fowl.sire || '').trim();
+  const d = (fowl.dam || '').trim();
+  return (
+    fowl.sire_id != null ||
+    fowl.dam_id != null ||
+    (s.length > 0 && !isFoundationName(s)) ||
+    (d.length > 0 && !isFoundationName(d))
+  );
 }
 
 const findByNameOrId = (
@@ -293,62 +346,130 @@ const findByNameOrId = (
   return fowls.find((f) => strainKey(f.name || '') === key);
 };
 
-function resolveComposition(
+function resolveCompositions(
   fowl: FowlRecord,
   fowls: FowlRecord[],
-  memo: Map<string, BloodlineComposition>,
+  effectiveMemo: Map<string, BloodlineComposition>,
+  pedigreeMemo: Map<string, BloodlineComposition>,
   chain: Set<string>
-): BloodlineComposition {
-  const key = strainKey(fowl.name || '');
-  const cached = key ? memo.get(key) : undefined;
-  if (cached) return cached;
-  if (key && chain.has(key)) return baseComposition(fowl);
+): { effective: BloodlineComposition; pedigree: BloodlineComposition } {
+  const fowlKey = fowl.id != null ? `id:${fowl.id}` : `name:${strainKey(fowl.name || '')}`;
+  const cachedEff = effectiveMemo.get(fowlKey);
+  const cachedPed = pedigreeMemo.get(fowlKey);
+  if (cachedEff && cachedPed) return { effective: cachedEff, pedigree: cachedPed };
 
-  const sire = findByNameOrId(fowls, fowl.sire_id, fowl.sire);
-  const dam = findByNameOrId(fowls, fowl.dam_id, fowl.dam);
+  const parsedDeclared = parseDeclaredComposition(fowl.declared_composition);
+  const hasValidDeclared = parsedDeclared !== null && parsedDeclared.length > 0;
+  const declaredComp = hasValidDeclared ? declaredToComposition(parsedDeclared) : null;
 
-  let comp: BloodlineComposition;
-  if (!sire && !dam) {
-    const s = (fowl.sire || '').trim();
-    const d = (fowl.dam || '').trim();
-    const hasUnregisteredNamedParent = (s && !isFoundationName(s)) || (d && !isFoundationName(d));
-    if (hasUnregisteredNamedParent) {
-      const sireComp = s && !isFoundationName(s) ? { [s]: 100 } : { [UNKNOWN_BLOODLINE]: 100 };
-      const damComp = d && !isFoundationName(d) ? { [d]: 100 } : { [UNKNOWN_BLOODLINE]: 100 };
-      comp = blendCompositions(sireComp, damComp, 0.5, 0.5);
-    } else {
-      comp = baseComposition(fowl);
-    }
-  } else {
-    if (key) chain.add(key);
-    const sireComp = sire
-      ? resolveComposition(sire, fowls, memo, chain)
-      : { [UNKNOWN_BLOODLINE]: 100 };
-    const damComp = dam
-      ? resolveComposition(dam, fowls, memo, chain)
-      : { [UNKNOWN_BLOODLINE]: 100 };
-    if (key) chain.delete(key);
-    comp = blendCompositions(sireComp, damComp, 0.5, 0.5);
+  // Cycle guard
+  if (chain.has(fowlKey)) {
+    const fallback = declaredComp ?? assumedBreedComposition(fowl);
+    return { effective: fallback, pedigree: fallback };
   }
 
-  if (key) memo.set(key, comp);
-  return comp;
+  const s = (fowl.sire || '').trim();
+  const d = (fowl.dam || '').trim();
+  const hasSire = fowl.sire_id != null || (s.length > 0 && !isFoundationName(s));
+  const hasDam = fowl.dam_id != null || (d.length > 0 && !isFoundationName(d));
+  const hasParents = hasSire || hasDam;
+
+  let pedigreeComp: BloodlineComposition;
+
+  if (!hasParents) {
+    pedigreeComp = assumedBreedComposition(fowl);
+  } else {
+    chain.add(fowlKey);
+
+    const sire = findByNameOrId(fowls, fowl.sire_id, fowl.sire);
+    const dam = findByNameOrId(fowls, fowl.dam_id, fowl.dam);
+
+    if (!sire && !dam) {
+      const hasUnregisteredNamedParent = (s && !isFoundationName(s)) || (d && !isFoundationName(d));
+      if (hasUnregisteredNamedParent) {
+        const sireEff = s && !isFoundationName(s) ? { [s]: 100 } : { [UNKNOWN_BLOODLINE]: 100 };
+        const damEff = d && !isFoundationName(d) ? { [d]: 100 } : { [UNKNOWN_BLOODLINE]: 100 };
+        chain.delete(fowlKey);
+        pedigreeComp = blendCompositions(sireEff, damEff, 0.5, 0.5);
+      } else {
+        chain.delete(fowlKey);
+        pedigreeComp = assumedBreedComposition(fowl);
+      }
+    } else {
+      const sireEff = sire
+        ? resolveCompositions(sire, fowls, effectiveMemo, pedigreeMemo, chain).effective
+        : { [UNKNOWN_BLOODLINE]: 100 };
+      const damEff = dam
+        ? resolveCompositions(dam, fowls, effectiveMemo, pedigreeMemo, chain).effective
+        : { [UNKNOWN_BLOODLINE]: 100 };
+      chain.delete(fowlKey);
+      pedigreeComp = blendCompositions(sireEff, damEff, 0.5, 0.5);
+    }
+  }
+
+  const effectiveComp = declaredComp ?? pedigreeComp;
+
+  effectiveMemo.set(fowlKey, effectiveComp);
+  pedigreeMemo.set(fowlKey, pedigreeComp);
+
+  return { effective: effectiveComp, pedigree: pedigreeComp };
 }
 
-/** Blood percentage breakdown (per strain) for a single fowl. */
-export function computeBloodlineComposition(fowl: FowlRecord, fowls: FowlRecord[]): BloodlineComposition {
+/** Calculated pedigree expected composition: 50% Sire + 50% Dam of parents' EFFECTIVE compositions. */
+export function computePedigreeComposition(
+  fowl: FowlRecord,
+  fowls: FowlRecord[]
+): BloodlineComposition {
   if (!fowl) return {};
-  return resolveComposition(fowl, fowls, new Map<string, BloodlineComposition>(), new Set<string>());
+  const { pedigree } = resolveCompositions(
+    fowl,
+    fowls,
+    new Map<string, BloodlineComposition>(),
+    new Map<string, BloodlineComposition>(),
+    new Set<string>()
+  );
+  return pedigree;
+}
+
+export const pedigreeComposition = computePedigreeComposition;
+
+/**
+ * Effective composition:
+ * - declared_composition if present (for both foundation and adjusted birds)
+ * - else pedigreeComposition (for birds with recorded parents)
+ * - else assumed 100% of listed strain (for foundation birds without parents)
+ */
+export function computeEffectiveComposition(
+  fowl: FowlRecord,
+  fowls: FowlRecord[]
+): BloodlineComposition {
+  if (!fowl) return {};
+  const { effective } = resolveCompositions(
+    fowl,
+    fowls,
+    new Map<string, BloodlineComposition>(),
+    new Map<string, BloodlineComposition>(),
+    new Set<string>()
+  );
+  return effective;
+}
+
+export const effectiveComposition = computeEffectiveComposition;
+
+/** Blood percentage breakdown (per strain) for a single fowl — uses effective composition. */
+export function computeBloodlineComposition(fowl: FowlRecord, fowls: FowlRecord[]): BloodlineComposition {
+  return computeEffectiveComposition(fowl, fowls);
 }
 
 /** Pre-computed compositions for an entire registry (single ancestry walk). */
 export function computeAllCompositions(fowls: FowlRecord[]): Map<string, BloodlineComposition> {
-  const memo = new Map<string, BloodlineComposition>();
+  const effectiveMemo = new Map<string, BloodlineComposition>();
+  const pedigreeMemo = new Map<string, BloodlineComposition>();
   const chain = new Set<string>();
   const out = new Map<string, BloodlineComposition>();
   fowls.forEach((f) => {
-    const comp = resolveComposition(f, fowls, memo, chain);
-    out.set(String(f.id), comp);
+    const { effective } = resolveCompositions(f, fowls, effectiveMemo, pedigreeMemo, chain);
+    out.set(String(f.id), effective);
   });
   return out;
 }
@@ -541,6 +662,17 @@ function traceNode(
     if (chain.has(key)) return { comp: baseComposition(fowl), sources: baseTraces(fowl, true) };
   }
 
+  const parsedDeclared = parseDeclaredComposition(fowl.declared_composition);
+  if (parsedDeclared && parsedDeclared.length > 0) {
+    const comp = declaredToComposition(parsedDeclared);
+    const sources = baseTraces(fowl, false);
+    if (key) {
+      compMemo.set(key, comp);
+      traceMemo.set(key, sources);
+    }
+    return { comp, sources };
+  }
+
   const sire = findByNameOrId(fowls, fowl.sire_id, fowl.sire);
   const dam = findByNameOrId(fowls, fowl.dam_id, fowl.dam);
 
@@ -693,26 +825,27 @@ export function planLineageRefresh(params: {
   if (rootIndex >= 0) next[rootIndex] = { ...next[rootIndex], ...root };
   else next.push(root);
 
-  const queue: string[] = [rootKey, ...(renamed ? [prevKey] : [])].filter((k) => k.length > 0);
+  const queue: Array<{ id?: number; nameKey: string }> = [
+    { id: root.id, nameKey: rootKey },
+    ...(renamed && prevKey ? [{ id: root.id, nameKey: prevKey }] : []),
+  ];
   const visited = new Set<number>();
   const patches: LineageRefreshPatch[] = [];
 
   while (queue.length > 0) {
-    const parentKey = queue.shift() as string;
+    const parent = queue.shift()!;
     for (let i = 0; i < next.length; i++) {
       const f = next[i];
       if (f.id === root.id || visited.has(f.id)) continue;
       const isChild =
-        (f.sire_id != null && f.sire_id === root.id) ||
-        (f.dam_id != null && f.dam_id === root.id) ||
-        key(f.sire) === parentKey ||
-        key(f.dam) === parentKey;
+        (parent.id != null && (f.sire_id === parent.id || f.dam_id === parent.id)) ||
+        (parent.nameKey.length > 0 && (key(f.sire) === parent.nameKey || key(f.dam) === parent.nameKey));
       if (!isChild) continue;
       visited.add(f.id);
 
       // Keep walking down even when this child itself did not drift.
       const childKey = key(f.name);
-      if (childKey && childKey !== parentKey) queue.push(childKey);
+      queue.push({ id: f.id, nameKey: childKey });
 
       const linkPatch: Record<string, string> = {};
       if (renamed) {
@@ -745,6 +878,8 @@ export function planLineageRefresh(params: {
   return patches;
 }
 
+export const syncDescendantCompositions = planLineageRefresh;
+
 /**
  * Which descendants went stale after a bird was permanently deleted?
  *
@@ -762,28 +897,28 @@ export function planLineageRefreshAfterDelete(params: {
   const { deleted, fowls } = params;
   const key = (s?: string | null): string => String(s ?? '').trim().toLowerCase();
   const deletedKey = key(deleted.name);
-  if (!deletedKey) return [];
+  if (!deletedKey && deleted.id == null) return [];
 
   const next = fowls.filter((f) => f.id !== deleted.id);
-  const queue: string[] = [deletedKey];
+  const queue: Array<{ id?: number; nameKey: string }> = [
+    { id: deleted.id, nameKey: deletedKey },
+  ];
   const visited = new Set<number>();
   const patches: LineageRefreshPatch[] = [];
 
   while (queue.length > 0) {
-    const parentKey = queue.shift() as string;
+    const parent = queue.shift()!;
     for (let i = 0; i < next.length; i++) {
       const f = next[i];
       if (visited.has(f.id)) continue;
       const isChild =
-        (f.sire_id != null && f.sire_id === deleted.id) ||
-        (f.dam_id != null && f.dam_id === deleted.id) ||
-        key(f.sire) === parentKey ||
-        key(f.dam) === parentKey;
+        (parent.id != null && (f.sire_id === parent.id || f.dam_id === parent.id)) ||
+        (parent.nameKey.length > 0 && (key(f.sire) === parent.nameKey || key(f.dam) === parent.nameKey));
       if (!isChild) continue;
       visited.add(f.id);
 
       const childKey = key(f.name);
-      if (childKey && childKey !== parentKey) queue.push(childKey);
+      queue.push({ id: f.id, nameKey: childKey });
 
       const fresh = computeBloodlineComposition(f, next);
       const stats = getBloodlineStats(fresh);

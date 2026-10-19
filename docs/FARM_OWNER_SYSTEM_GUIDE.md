@@ -478,17 +478,19 @@ The Lineage Directory is located at `/lineage` ([gallotrack-next/components/Line
 
 ### How Lineage Calculations Work
 - **What "Foundation Stock" Means**: A bird whose ancestors were not born on your farm (e.g. purchased champion broodcock or imported hen). It has no parents recorded in your database (`sire_id` and `dam_id` are `NULL`). The system treats it as generation 0 with 100% purity of its own named strain unless declared otherwise.
-- **Lineage Transparency & Limitations (Assumed vs Declared vs Derived)**:
-  - **Assumed**: A foundation bird with no recorded parents and no custom declaration is treated as 100% of its registered breed. The UI explicitly marks this as `Assumed from registered breed (not verified)` and shows an `(assumed)` or `~` badge qualifier and profile note. This clarifies to the owner that purity is an unverified baseline assumption, not genetic proof. The owner can declare the real makeup anytime via Edit Chicken.
-  - **Declared**: A foundation bird where the owner explicitly declared known ancestral percentages (up to 4 breeds summing to 100%). Marked in the UI as `Declared by owner`.
-  - **Derived**: Offspring with recorded parents whose composition is mathematically computed (50% Sire, 50% Dam). If any ancestor in its ancestry tree used an assumed composition, the lineage is transparently labelled `Derived from parents (Includes assumed foundation stock)` and carries the `(assumed)` / `~` qualifier.
-  - **50/50 Parent Contribution Note**: The "50% Sire, 50% Dam" helper sentence is only shown when both parents are recorded flock chickens. For foundation stock or birds with unrecorded parents, this sentence is hidden.
-  - **Flock Counts & Classification Invariant**: The underlying composition math, Purebred/Crossbred/Unverified classifications, relatedness metrics, and filter counts are preserved with zero shifts.
+- **Lineage Transparency, Expected Pedigree vs. Owner Adjustments, & Limitations**:
+  - **Calculated Pedigree as Expected Average**: For birds with recorded parents, the system mathematically calculates the expected average from the pedigree (50% Sire's effective composition + 50% Dam's effective composition). Because inheritance involves independent assortment and recombination, this calculated average is only an expected baseline value.
+  - **Owner Adjustment from Observation**: The owner may observe physical traits or phenotype (e.g., bird appears 60% Hatch / 40% Sweater instead of 50/50) and manually adjust the composition.
+  - **Marking & Flow to Descendants**:
+    - **Assumed**: A bird without parents and no declaration is assumed 100% purebred for its registered breed (`Assumed from registered breed (not verified)`).
+    - **Declared**: A bird without parents where the owner manually entered composition (`Declared by owner`).
+    - **Derived**: A bird with recorded parents whose composition equals the calculated pedigree average (`Derived from parents`, with `Includes assumed foundation stock` if any ancestor was assumed).
+    - **Adjusted**: A bird with recorded parents where the owner manually adjusted the composition (`Adjusted by owner`). Adjusted values flow downstream to all descendants as their parent's effective composition.
+  - **Cannot Verify True Genetic Purity**: The system tracks pedigree records, owner observations, and mathematical expectations. It does not perform DNA sequencing and cannot verify true biological or genetic purity.
 - **Bloodline Percentage Engine**: Handled in [bloodline-composition.ts](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/bloodline-composition.ts):
   - Traverses the pedigree tree upwards.
-  - Takes 50% from the sire's bloodline map and 50% from the dam's bloodline map.
-  - Example: A pure 100% Sweater sire paired with a pure 100% Kelso dam produces offspring with `{ "Sweater": 50, "Kelso": 50 }`.
-  - If that 50/50 offspring is backcrossed to a pure Sweater sire, the next generation receives $50\% + 25\% = 75\%$ Sweater and $25\%$ Kelso.
+  - Takes 50% from the sire's effective composition and 50% from the dam's effective composition.
+  - Example: A pure 100% Sweater sire paired with a pure 100% Kelso dam produces offspring with `{ "Sweater": 50, "Kelso": 50 }` by default. If the owner adjusts that offspring to 60/40, that adjusted 60/40 effective composition flows into the next generation.
 - **Family Win Rates**: Handled in [win-rate.ts](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/win-rate.ts):
   - Sums all wins and losses across every brother and sister in that family group to establish empirical bloodline cross viability.
 

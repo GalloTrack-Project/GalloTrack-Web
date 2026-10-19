@@ -4,7 +4,13 @@ import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw } from '
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
 import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
-import { getDescendantFowls, validateDeclaredComposition } from '@/lib/bloodline-composition';
+import {
+  getDescendantFowls,
+  validateDeclaredComposition,
+  computePedigreeComposition,
+  type BloodlineComposition,
+} from '@/lib/bloodline-composition';
+import { getCompositionSource } from '@/lib/breeding-classification';
 import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode, previewBirdCode } from '@/lib/bird-code';
 import { bloodlineOf, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
@@ -161,19 +167,40 @@ export default function EditFowlModal({
     return getDescendantFowls(editingFowl, fowls ?? []);
   }, [editingFowl, fowls]);
 
+  const pedigreeComposition = React.useMemo<BloodlineComposition | null>(() => {
+    if (!editingFowl) return null;
+    const draft: FowlRecord = {
+      ...editingFowl,
+      breed: editBreed,
+      sire: editSire,
+      dam: editDam,
+    };
+    return computePedigreeComposition(draft, fowls ?? []);
+  }, [editingFowl, editBreed, editSire, editDam, fowls]);
+
+  const compositionSource = React.useMemo(() => {
+    if (!editingFowl) return 'assumed';
+    return getCompositionSource(editingFowl);
+  }, [editingFowl]);
+
   const declaredChanged = React.useMemo(() => {
     if (!editingFowl) return false;
     const prev = JSON.stringify(editingFowl.declared_composition ?? null);
-    const curr = JSON.stringify(!isOffspring && editDeclaredComposition && editDeclaredComposition.length > 0 ? editDeclaredComposition : null);
+    const curr = JSON.stringify(
+      editDeclaredComposition && editDeclaredComposition.length > 0 ? editDeclaredComposition : null
+    );
     return prev !== curr;
-  }, [editingFowl, editDeclaredComposition, isOffspring]);
+  }, [editingFowl, editDeclaredComposition]);
 
   const declaredValidation = React.useMemo(() => {
-    if (isOffspring || !editDeclaredComposition || editDeclaredComposition.length === 0) {
+    if (!editDeclaredComposition || editDeclaredComposition.length === 0) {
       return { valid: true };
     }
-    return validateDeclaredComposition(editDeclaredComposition, editBreed, availableStrains ?? []);
-  }, [isOffspring, editDeclaredComposition, editBreed, availableStrains]);
+    return validateDeclaredComposition(editDeclaredComposition, editBreed, availableStrains ?? [], {
+      isOffspring,
+      pedigreeComposition,
+    });
+  }, [isOffspring, editDeclaredComposition, editBreed, availableStrains, pedigreeComposition]);
 
   const birthdateValidation = React.useMemo<BirthdateValidationResult>(
     () =>
@@ -240,6 +267,20 @@ export default function EditFowlModal({
                 </select>
               </div>
             </div>
+
+            {!isOffspring && (
+              <div className="mt-3">
+                <DeclaredCompositionEditor
+                  registeredBreed={editBreed}
+                  availableBreeds={availableStrains ?? []}
+                  value={editDeclaredComposition ?? null}
+                  onChange={(val) => setEditDeclaredComposition?.(val)}
+                  hasParents={false}
+                  currentValue={editingFowl.declared_composition as any}
+                  source={compositionSource}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
@@ -512,24 +553,19 @@ export default function EditFowlModal({
               </div>
             </div>
 
-            {!isOffspring ? (
+            {isOffspring && (
               <div className="pt-2">
                 <DeclaredCompositionEditor
                   registeredBreed={editBreed}
                   availableBreeds={availableStrains ?? []}
                   value={editDeclaredComposition ?? null}
                   onChange={(val) => setEditDeclaredComposition?.(val)}
+                  hasParents={true}
+                  pedigreeComposition={pedigreeComposition}
+                  currentValue={editingFowl.declared_composition as any}
+                  calculatedValue={pedigreeComposition}
+                  source={compositionSource}
                 />
-              </div>
-            ) : (
-              <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground flex items-start gap-2">
-                <span className="text-sm shrink-0">ℹ️</span>
-                <div>
-                  <p className="font-semibold text-foreground">Lineage Composition Auto-Derived</p>
-                  <p className="mt-0.5 leading-relaxed">
-                    Composition is derived from parents (50% Sire, 50% Dam). Manual composition is only available for foundation stock.
-                  </p>
-                </div>
               </div>
             )}
           </div>
@@ -537,16 +573,21 @@ export default function EditFowlModal({
           {declaredChanged && descendants.length > 0 && (
             <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3.5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
               <span className="text-base shrink-0">⚠️</span>
-              <div>
+              <div className="w-full">
                 <p className="font-bold">
                   Descendant Bloodline Recomputation ({descendants.length} chicken{descendants.length === 1 ? '' : 's'})
                 </p>
                 <p className="mt-0.5 leading-relaxed">
-                  Changing this foundation bird&apos;s breed composition will automatically recompute the bloodline of its {descendants.length} descendant{descendants.length === 1 ? '' : 's'}:
+                  Changing this bird&apos;s breed composition will automatically recompute the bloodline of its {descendants.length} descendant{descendants.length === 1 ? '' : 's'}.
                 </p>
-                <p className="mt-1 font-mono font-bold text-[11px] text-amber-800 dark:text-amber-300">
-                  {descendants.map((d) => d.name).join(', ')}
-                </p>
+                <details className="mt-2 text-[11px]">
+                  <summary className="font-semibold text-amber-800 dark:text-amber-300 cursor-pointer hover:underline">
+                    View affected descendants ({descendants.length})
+                  </summary>
+                  <p className="mt-1 font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-900/40 p-2 rounded-md max-h-28 overflow-y-auto">
+                    {descendants.map((d) => d.name).join(', ')}
+                  </p>
+                </details>
               </div>
             </div>
           )}

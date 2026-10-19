@@ -278,7 +278,7 @@ export default function FowlDetailsModal({
             { label: 'Gender', value: bird.gender || '—' },
             { label: 'Breed / strain', value: classification.type === 'Crossbred' ? classification.derivedBreed : (bird.breed || '—') },
             { label: 'Breeding classification', value: classification.badgeLabel },
-            { label: 'Composition basis', value: classification.compositionSource === 'declared' ? 'Declared' : classification.compositionSource === 'assumed' ? 'Assumed' : 'Derived' },
+            { label: 'Composition basis', value: classification.compositionSource === 'declared' ? 'Declared' : classification.compositionSource === 'adjusted' ? 'Adjusted' : classification.compositionSource === 'assumed' ? 'Assumed' : 'Derived' },
             { label: 'Feather color', value: formatColorDisplay(bird.feather_color || bird.color, bird.color_category) },
             { label: 'Trait', value: bird.trait || bird.behavior_trait || '—' },
             { label: 'Birthdate', value: bird.birthdate || '—' },

@@ -16,14 +16,31 @@ export default function BreedingTypeBadge({
   compact = false,
 }: BreedingTypeBadgeProps) {
   const { type, badgeLabel, tooltipText, compositionSource, basedOnAssumed } = classification;
-  const isAssumed = compositionSource === 'assumed' || !!basedOnAssumed;
 
-  const assumedExplanation = compositionSource === 'assumed'
-    ? 'Assumed from registered breed (not verified)'
-    : 'Lineage includes assumed foundation stock';
+  let qualifierText = '';
+  let compactMarker = '';
+  let qualifierExplanation = '';
 
-  const fullTooltip = isAssumed
-    ? `${tooltipText} · ${assumedExplanation}`
+  if (compositionSource === 'adjusted') {
+    qualifierText = '(adjusted)';
+    compactMarker = '*';
+    qualifierExplanation = 'Adjusted by owner';
+  } else if (compositionSource === 'declared') {
+    qualifierText = '(declared)';
+    compactMarker = '†';
+    qualifierExplanation = 'Declared by owner';
+  } else if (compositionSource === 'assumed' || basedOnAssumed) {
+    qualifierText = '(assumed)';
+    compactMarker = '~';
+    qualifierExplanation =
+      compositionSource === 'assumed'
+        ? 'Assumed from registered breed (not verified)'
+        : 'Lineage includes assumed foundation stock';
+  }
+
+  const hasQualifier = qualifierText !== '';
+  const fullTooltip = hasQualifier
+    ? `${tooltipText} · ${qualifierExplanation}`
     : tooltipText;
 
   let colorClasses = '';
@@ -46,25 +63,25 @@ export default function BreedingTypeBadge({
         className
       )}
       title={fullTooltip}
-      aria-label={isAssumed ? `${badgeLabel} (assumed)` : badgeLabel}
+      aria-label={hasQualifier ? `${badgeLabel} ${qualifierText}` : badgeLabel}
     >
       <span>{badgeLabel}</span>
-      {isAssumed && (
+      {hasQualifier && (
         compact ? (
           <span
             className="font-mono text-[10px] font-black opacity-80 shrink-0"
-            aria-label="Assumed lineage"
-            title={assumedExplanation}
+            aria-label={qualifierExplanation}
+            title={qualifierExplanation}
           >
-            ~
+            {compactMarker}
           </span>
         ) : (
           <span
             className="text-[10px] font-bold lowercase opacity-85 shrink-0"
-            aria-label="Assumed lineage"
-            title={assumedExplanation}
+            aria-label={qualifierExplanation}
+            title={qualifierExplanation}
           >
-            (assumed)
+            {qualifierText}
           </span>
         )
       )}

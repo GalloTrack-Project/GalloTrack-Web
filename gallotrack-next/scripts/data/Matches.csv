@@ -1,0 +1,24 @@
+match_no,match_date,chicken_identifier,chicken_name,opponent_entry,opponent_breed,arena_location,event_type,chicken_class,number_of_cocks,outcome,post_fight_condition,notes
+1,2024-03-16,1,Crown Lemon,Red Baron,Kelso,Provincial Coliseum,Derby,Cock,2,Win,Fit / Recovered,[SAMPLE]
+2,2024-04-13,2,Thunder Sweater,Iron Hawk,Roundhead,Municipal Cockpit Arena,Derby,Cock,2,Win,Fit / Recovered,[SAMPLE]
+3,2024-05-04,3,Royal Hatch,Golden Spur,Lemon,Barangay Derby Grounds,Derby,Cock,3,Win,Fit / Recovered,[SAMPLE]
+4,2024-05-25,4,Anvil Hatch,Silver Dart,Sweater,Municipal Cockpit Arena,Hack Fight,Cock,1,Win,Fit / Recovered,[SAMPLE]
+5,2024-06-08,5,Amber Lemon,Storm Chaser,Hatch,Provincial Coliseum,Derby,Cock,2,Loss,Severely Injured / Critical,[SAMPLE] Retired from fighting after this match
+6,2024-06-22,1,Crown Lemon,Night Rider,Kelso,Barangay Derby Grounds,Hack Fight,Cock,1,Win,Fit / Recovered,[SAMPLE]
+7,2024-07-13,6,Granite Roundhead,Copper Jack,Whitehackle,Municipal Cockpit Arena,Derby,Cock,2,Win,Fit / Recovered,[SAMPLE]
+8,2024-08-17,2,Thunder Sweater,Black Mamba,Whitehackle,Provincial Coliseum,Derby,Cock,3,Loss,Minor Injury,[SAMPLE]
+9,2024-08-24,8,Silver Whitehackle,Sand Viper,Roundhead,Barangay Derby Grounds,Hack Fight,Cock,1,Loss,Minor Injury,[SAMPLE]
+10,2024-09-14,3,Royal Hatch,Night Rider,Kelso,Municipal Cockpit Arena,Fast Fight,Cock,1,Draw,Fit / Recovered,[SAMPLE]
+11,2024-10-05,10,Bronze Roundhead,Red Comet,Sweater,Provincial Coliseum,Derby,Cock,2,Win,Fit / Recovered,[SAMPLE]
+12,2024-11-16,12,Bandit Sweater,Iron Hawk,Roundhead,Municipal Cockpit Arena,Fast Fight,Cock,1,Win,Fit / Recovered,[SAMPLE]
+13,2025-01-18,6,Granite Roundhead,White Lightning,Hatch,Barangay Derby Grounds,Derby,Cock,2,Win,Fit / Recovered,[SAMPLE]
+14,2025-02-22,9,Rustler Kelso,Golden Spur,Lemon,Provincial Coliseum,Derby,Open,2,Win,Fit / Recovered,[SAMPLE] Open class entry (needs the Open class option)
+15,2025-03-08,15,Titanio Roundhead,Black Mamba,Whitehackle,Municipal Cockpit Arena,Derby,Cock,3,Draw,Fit / Recovered,[SAMPLE]
+16,2025-12-06,1A1,Lemon Vanguard,Night Rider,Kelso,Provincial Coliseum,Derby,Stag,2,Win,Fit / Recovered,[SAMPLE]
+17,2025-12-20,1A3,Lemon Cobalt,Storm Chaser,Hatch,Barangay Derby Grounds,Derby,Stag,2,Loss,Minor Injury,[SAMPLE]
+18,2026-01-24,2B1,Sweater Hammer,Golden Spur,Lemon,Municipal Cockpit Arena,Hack Fight,Stag,1,Win,Fit / Recovered,[SAMPLE]
+19,2026-02-14,3C1,Hatch Warden,Copper Jack,Whitehackle,Provincial Coliseum,Fast Fight,Stag,1,Draw,Fit / Recovered,[SAMPLE]
+20,2026-04-11,1A1,Lemon Vanguard,Silver Dart,Sweater,Municipal Cockpit Arena,Derby,Cock,2,Win,Fit / Recovered,[SAMPLE]
+21,2026-05-09,4D1,Cinder,Red Comet,Sweater,Barangay Derby Grounds,Derby,Stag,2,Win,Fit / Recovered,[SAMPLE]
+22,2026-06-13,2B1,Sweater Hammer,Sand Viper,Roundhead,Provincial Coliseum,Derby,Cock,3,Loss,Severely Injured / Critical,[SAMPLE] Kept for breeding after the injury
+23,2026-09-12,4D1,Cinder,White Lightning,Hatch,Municipal Cockpit Arena,Derby,Open,2,Win,Fit / Recovered,[SAMPLE] Open class entry (needs the Open class option)

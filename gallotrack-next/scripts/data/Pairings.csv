@@ -1,0 +1,6 @@
+pairing_code,sire_identifier,dam_identifier,pairing_date,status,notes
+1A,1,A,2025-02-01,Active,[SAMPLE] Same-breed pair
+2B,2,B,2025-03-10,Active,[SAMPLE] Same-breed pair
+3C,3,C,2025-03-25,Active,[SAMPLE] Same-breed pair
+4D,4,D,2025-05-12,Active,[SAMPLE] Hatch x Sweater cross (calculated 50/50 from parents)
+5E,5,E,2026-04-02,Active,[SAMPLE] Lemon x Roundhead cross (calculated 50/50 from parents)
