@@ -49,6 +49,16 @@ export default function MatchLogsView() {
   const [sortOrder, setSortOrder] = useState(urlSort);
   const [currentPage, setCurrentPage] = useState(isNaN(urlPage) || urlPage < 1 ? 1 : urlPage);
 
+  // Preserve active tab and filter state when navigating to match record creation/editing
+  const currentReturnPath = useMemo(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    if (pathname === '/profiling' && !sp.get('tab')) {
+      sp.set('tab', 'matchForm');
+    }
+    const qs = sp.toString();
+    return `${pathname}${qs ? `?${qs}` : ''}`;
+  }, [pathname, searchParams]);
+
   // Sync state if URL changes externally
   useEffect(() => {
     setSearchQuery(urlSearch);
@@ -134,7 +144,11 @@ export default function MatchLogsView() {
     setEndDate('');
     setSortOrder('newest');
     setCurrentPage(1);
-    router.replace(pathname, { scroll: false });
+    if (pathname === '/profiling') {
+      router.replace('/profiling?tab=matchForm', { scroll: false });
+    } else {
+      router.replace(pathname, { scroll: false });
+    }
   };
 
   const hasActiveFilters = Boolean(
@@ -256,7 +270,7 @@ export default function MatchLogsView() {
 
         <div>
           <Link
-            href="/match-logs/new"
+            href={`/match-logs/new?returnTo=${encodeURIComponent(currentReturnPath)}`}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition-all cursor-pointer w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
@@ -413,7 +427,7 @@ export default function MatchLogsView() {
             </p>
             <div className="pt-2">
               <Link
-                href="/match-logs/new"
+                href={`/match-logs/new?returnTo=${encodeURIComponent(currentReturnPath)}`}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -466,7 +480,7 @@ export default function MatchLogsView() {
                   return (
                     <tr
                       key={log.id}
-                      onClick={() => router.push(`/match-logs/${log.id}/edit`)}
+                      onClick={() => router.push(`/match-logs/${log.id}/edit?returnTo=${encodeURIComponent(currentReturnPath)}`)}
                       className="hover:bg-muted/30 transition-colors duration-150 cursor-pointer group"
                     >
                       <td className="p-4 pl-6 font-mono text-muted-foreground whitespace-nowrap">
@@ -562,7 +576,7 @@ export default function MatchLogsView() {
                           videos={videosFor(matchMedia, log.id, log)}
                           photos={photosFor(matchMedia, log.id, log)}
                           posters={postersFor(matchMedia, log.id, log)}
-                          returnTo="/match-logs"
+                          returnTo={currentReturnPath}
                         />
                       </td>
                     </tr>

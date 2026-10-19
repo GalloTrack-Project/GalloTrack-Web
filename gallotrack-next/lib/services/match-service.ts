@@ -44,6 +44,30 @@ export async function fetchMatchById(id: number): Promise<MatchRecord | null> {
 }
 
 export async function insertMatch(payload: Record<string, unknown>): Promise<{ error?: string; id?: number }> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      const res = await fetch('/api/match', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { error: json.error || `Failed to create match (${res.status})` };
+      }
+      if (json.data?.id) {
+        return { id: json.data.id };
+      }
+    }
+  } catch (err: unknown) {
+    console.warn('POST /api/match request failed, falling back to client Supabase:', err);
+  }
+
+  // Fallback for tests / offline mock clients
   const { data, error } = await supabase.from('match').insert([payload]).select('id').single();
   if (error) return { error: error.message };
   return { id: data.id };

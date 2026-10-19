@@ -74,7 +74,7 @@ export default function MatchRecordForm({
   mode,
   initialRecord,
   initialFowlId,
-  onSuccessRedirect = '/match-logs',
+  onSuccessRedirect = '/profiling?tab=matchForm',
 }: MatchRecordFormProps) {
   const router = useRouter();
   const { fowls, birdCodes, fetchDatabaseResources } = useFowl();
@@ -350,6 +350,14 @@ export default function MatchRecordForm({
     if (form.cockCount < 1 || form.cockCount > 99) {
       errs.cockCount = 'Number of cocks must be between 1 and 99.';
     }
+    if (form.date) {
+      const matchDate = new Date(form.date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (matchDate > today) {
+        errs.date = 'Match date cannot be in the future.';
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -374,6 +382,7 @@ export default function MatchRecordForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     setSaveError(null);
 
     const errs: Record<string, string> = {};
@@ -391,6 +400,14 @@ export default function MatchRecordForm({
     }
     if (form.cockCount < 1 || form.cockCount > 99) {
       errs.cockCount = 'Number of cocks must be between 1 and 99.';
+    }
+    if (form.date) {
+      const matchDate = new Date(form.date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (matchDate > today) {
+        errs.date = 'Match date cannot be in the future.';
+      }
     }
     setErrors(errs);
 
@@ -542,6 +559,7 @@ export default function MatchRecordForm({
   // Derive return label for breadcrumb
   const backLabel = useMemo(() => {
     const target = (onSuccessRedirect || '').toLowerCase();
+    if (target.includes('tab=matchform') || target.includes('/match-logs')) return 'Match Logs';
     if (target.includes('/dashboard')) return 'Dashboard';
     if (target.includes('/lineage')) return 'Lineage Directory';
     if (target.includes('/profiling')) return 'Chicken Registry';
@@ -660,10 +678,20 @@ export default function MatchRecordForm({
                 type="date"
                 id="match-date"
                 value={form.date}
-                onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-                className={inputClass()}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, date: e.target.value }));
+                  if (errors.date) setErrors((prev) => ({ ...prev, date: '' }));
+                }}
+                className={inputClass(!!errors.date)}
                 required
+                aria-invalid={!!errors.date}
+                aria-describedby={errors.date ? 'err-date' : undefined}
               />
+              {errors.date && (
+                <p id="err-date" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                  {errors.date}
+                </p>
+              )}
             </div>
 
             <div>

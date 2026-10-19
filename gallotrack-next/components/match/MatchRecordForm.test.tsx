@@ -144,7 +144,7 @@ describe('MatchRecordForm', () => {
         })
       );
       expect(mockFetchDatabaseResources).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/match-logs');
+      expect(mockPush).toHaveBeenCalledWith('/profiling?tab=matchForm');
     });
   });
 
@@ -193,7 +193,7 @@ describe('MatchRecordForm', () => {
         })
       );
       expect(mockFetchDatabaseResources).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/match-logs');
+      expect(mockPush).toHaveBeenCalledWith('/profiling?tab=matchForm');
     });
   });
 
@@ -203,7 +203,7 @@ describe('MatchRecordForm', () => {
     // Form pristine -> Cancel navigates immediately without modal
     const cancelButton = screen.getByRole('button', { name: /Cancel/i });
     fireEvent.click(cancelButton);
-    expect(mockPush).toHaveBeenCalledWith('/match-logs');
+    expect(mockPush).toHaveBeenCalledWith('/profiling?tab=matchForm');
     expect(screen.queryByRole('heading', { name: /Unsaved Changes/i })).toBeNull();
 
     // Now make the form dirty
@@ -224,7 +224,7 @@ describe('MatchRecordForm', () => {
     fireEvent.click(cancelButton);
     const discardBtn = screen.getByRole('button', { name: /Discard & Leave/i });
     fireEvent.click(discardBtn);
-    expect(mockPush).toHaveBeenCalledWith('/match-logs');
+    expect(mockPush).toHaveBeenCalledWith('/profiling?tab=matchForm');
   });
 
   it('offers Cock, Stag, and Open options in Chicken Class select', () => {
@@ -306,6 +306,47 @@ describe('MatchRecordForm', () => {
           age_category: 'Open',
         })
       );
+    });
+  });
+
+  it('rejects match dates in the future', async () => {
+    render(<MatchRecordForm mode="add" />);
+
+    const chickenSelect = screen.getByLabelText(/Select Local Chicken Entry/i);
+    fireEvent.change(chickenSelect, { target: { value: '42' } });
+
+    const opponentInput = screen.getByLabelText(/Opponent Entry Identity/i);
+    fireEvent.change(opponentInput, { target: { value: 'Future Opponent' } });
+
+    const dateInput = screen.getByLabelText(/Match Date/i);
+    fireEvent.change(dateInput, { target: { value: '2099-01-01' } });
+
+    const saveButton = screen.getByRole('button', { name: /Save Match Record/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Match date cannot be in the future.')).toBeDefined();
+    });
+
+    expect(matchService.insertMatch).not.toHaveBeenCalled();
+  });
+
+  it('navigates to custom onSuccessRedirect when provided', async () => {
+    vi.mocked(matchService.insertMatch).mockResolvedValue({ id: 1002 });
+
+    render(<MatchRecordForm mode="add" onSuccessRedirect="/profiling?tab=matchForm&q=lemon" />);
+
+    const chickenSelect = screen.getByLabelText(/Select Local Chicken Entry/i);
+    fireEvent.change(chickenSelect, { target: { value: '42' } });
+
+    const opponentInput = screen.getByLabelText(/Opponent Entry Identity/i);
+    fireEvent.change(opponentInput, { target: { value: 'Custom Nav Opponent' } });
+
+    const saveButton = screen.getByRole('button', { name: /Save Match Record/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/profiling?tab=matchForm&q=lemon');
     });
   });
 });

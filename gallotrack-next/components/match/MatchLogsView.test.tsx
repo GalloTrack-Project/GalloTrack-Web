@@ -110,7 +110,7 @@ describe('MatchLogsView', () => {
 
     const addLink = screen.getByRole('link', { name: /Add Match Record/i });
     expect(addLink).toBeDefined();
-    expect(addLink.getAttribute('href')).toBe('/match-logs/new');
+    expect(addLink.getAttribute('href')).toContain('/match-logs/new?returnTo=');
   });
 
   it('filters matches by search query', () => {
@@ -174,7 +174,7 @@ describe('MatchLogsView', () => {
     expect(tableRow).toBeDefined();
 
     fireEvent.click(tableRow!);
-    expect(mockPush).toHaveBeenCalledWith('/match-logs/1/edit');
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/match-logs/1/edit?returnTo='));
   });
 
   it('filters matches by chicken class (Open)', () => {

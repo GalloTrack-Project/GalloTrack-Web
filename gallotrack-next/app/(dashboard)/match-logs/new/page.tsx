@@ -8,7 +8,7 @@ function AddMatchRecordContent() {
   const searchParams = useSearchParams();
   const fowlIdParam = searchParams.get('fowlId');
   const initialFowlId = fowlIdParam ? Number(fowlIdParam) : null;
-  const returnTo = sanitizeRedirectPath(searchParams.get('returnTo'), '/match-logs');
+  const returnTo = sanitizeRedirectPath(searchParams.get('returnTo'), '/profiling?tab=matchForm');
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

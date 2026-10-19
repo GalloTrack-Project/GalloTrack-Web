@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { sanitize } from '@/lib/sanitize';
 import { fetchMatchMediaBatch } from '@/lib/services/media-service';
+import { filterAllowedColumns } from '@/lib/schema-contract';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -85,11 +86,59 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    if (!body.entry_name || String(body.entry_name).trim() === '') {
+    let fowlId: number | null = null;
+    let entryName = body.entry_name ? sanitize(String(body.entry_name)) : '';
+    let breed = body.breed ? sanitize(String(body.breed)) : 'Unknown';
+
+    if (body.fowl_id != null) {
+      const parsedFowlId = Number(body.fowl_id);
+      if (isNaN(parsedFowlId)) {
+        return NextResponse.json({ error: 'Invalid fowl_id parameter' }, { status: 400 });
+      }
+
+      // Query fowl for ownership, gender, and status validation
+      const { data: fowlData, error: fowlErr } = await supabase
+        .from('fowl')
+        .select('id, user_id, name, breed, gender, status')
+        .eq('id', parsedFowlId)
+        .maybeSingle();
+
+      if (fowlErr || !fowlData) {
+        return NextResponse.json({ error: 'Chicken record not found' }, { status: 400 });
+      }
+
+      // Ensure chicken belongs to authenticated user
+      if (fowlData.user_id !== auth.user.id) {
+        return NextResponse.json({ error: 'Chicken record does not belong to your account' }, { status: 403 });
+      }
+
+      // Only active chickens can participate in competitive matches
+      if (fowlData.status !== 'Active') {
+        return NextResponse.json({
+          error: `Chicken "${fowlData.name}" is marked as ${fowlData.status}. Only active roosters can be entered in matches.`,
+        }, { status: 400 });
+      }
+
+      // Male roosters only
+      const genderLower = (fowlData.gender || '').toLowerCase();
+      const isMale = genderLower === 'rooster' || genderLower === 'cock' || genderLower === 'stag' || genderLower === 'male';
+      if (!isMale) {
+        return NextResponse.json({ error: 'Only male roosters can be entered in competitive matches' }, { status: 400 });
+      }
+
+      fowlId = fowlData.id;
+      if (!entryName) entryName = sanitize(fowlData.name);
+      if ((!body.breed || body.breed === 'Unknown') && fowlData.breed) {
+        breed = sanitize(fowlData.breed);
+      }
+    }
+
+    if (!entryName || entryName.trim() === '') {
       return NextResponse.json({ error: 'Missing required field: entry_name' }, { status: 400 });
     }
 
-    if (body.outcome && !VALID_OUTCOMES.includes(body.outcome.toLowerCase())) {
+    const outcome = body.outcome ? String(body.outcome).trim() : 'Win';
+    if (body.outcome && !VALID_OUTCOMES.includes(outcome.toLowerCase())) {
       return NextResponse.json({ error: `Invalid outcome. Must be one of: ${VALID_OUTCOMES.join(', ')}` }, { status: 400 });
     }
 
@@ -104,22 +153,29 @@ export async function POST(request: NextRequest) {
       if (isNaN(dateObj.getTime())) {
         return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
       }
-      if (dateObj > new Date()) {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (dateObj > today) {
         return NextResponse.json({ error: 'Match date cannot be in the future' }, { status: 400 });
       }
     }
 
-    const payload = {
+    const rawPayload: Record<string, unknown> = {
       user_id: auth.user.id,
+      fowl_id: fowlId,
       date: body.date || new Date().toISOString().split('T')[0],
-      entry_name: sanitize(String(body.entry_name)),
-      breed: body.breed || 'Unknown',
+      entry_name: entryName,
+      breed: breed,
       opponent: body.opponent ? sanitize(String(body.opponent)) : 'Anonymous Opponent',
       opponent_breed: body.opponent_breed ? sanitize(String(body.opponent_breed)) : '',
+      opponent_bloodline: body.opponent_bloodline ? sanitize(String(body.opponent_bloodline)) : null,
+      opponent_birthdate: body.opponent_birthdate ? String(body.opponent_birthdate) : null,
+      opponent_photo_url: body.opponent_photo_url || null,
+      opponent_id: body.opponent_id || null,
       location: body.location ? sanitize(String(body.location)) : '',
       type: body.type || 'Main Event',
       derby_match_number: body.derby_match_number || 1,
-      outcome: body.outcome || 'Win',
+      outcome: outcome,
       status: 'Verified',
       post_fight_condition: body.post_fight_condition || 'Fit / Recovered',
       side: body.side ? sanitize(String(body.side)) : null,
@@ -130,12 +186,19 @@ export async function POST(request: NextRequest) {
       event_type: body.event_type || 'Derby',
     };
 
-    const { error: insertErr } = await supabase.from('match').insert([payload]);
+    const payload = filterAllowedColumns('match', rawPayload);
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from('match')
+      .insert([payload])
+      .select('id')
+      .single();
+
     if (insertErr) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true }, { status: 201 });
+    return NextResponse.json({ success: true, data: { id: inserted.id } }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
