@@ -139,6 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((event) => {
       if (event !== 'SIGNED_OUT') return;
       if (quietSignOut.current || ui.currentPage === 'login') return;
+      // Already on the sign-in screen: do not start another redirect cycle.
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) return;
 
       setCurrentUserId(null);
       setUsername('');
@@ -149,6 +151,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('gallotrack_user_id');
         localStorage.removeItem('gallotrack_rememberMe');
         document.cookie = 'gallotrack_session=; path=/; max-age=0';
+        // Clear the Supabase auth cookies too. On an automatic SIGNED_OUT the
+        // client does not always do this, and a still-valid server cookie makes
+        // the proxy bounce /login back to /dashboard, which loops forever.
+        for (const cookie of document.cookie.split(';')) {
+          const name = cookie.split('=')[0]?.trim();
+          if (name && name.includes('-auth-token')) {
+            document.cookie = `${name}=; path=/; max-age=0`;
+          }
+        }
         toastMessage('Your session has expired. Please sign in again.', 'warning');
         const currentPath = window.location.pathname + window.location.search;
         window.location.replace(signInRedirectFor(currentPath));
