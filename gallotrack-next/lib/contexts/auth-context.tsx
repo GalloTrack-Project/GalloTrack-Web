@@ -4,7 +4,6 @@ import { ensureOwnerRecords, supabase } from '@/lib/registry';
 import { isAdminProfile } from '@/lib/admin';
 import { useUI } from './ui-context';
 import { toastMessage } from '@/lib/toast-bus';
-import { signInRedirectFor } from '@/lib/auth-redirect';
 
 interface AuthContextValue {
   currentUserId: string | null;
@@ -162,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         toastMessage('Your session has expired. Please sign in again.', 'warning');
         const currentPath = window.location.pathname + window.location.search;
-        window.location.replace(signInRedirectFor(currentPath));
+        window.location.replace(`/auth/signout?redirect=${encodeURIComponent(currentPath)}`);
       }
     });
     return () => subscription.unsubscribe();
@@ -400,7 +399,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     await signOutQuietly();
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      window.location.href = '/auth/signout';
     }
   }, [ui, signOutQuietly]);
 
