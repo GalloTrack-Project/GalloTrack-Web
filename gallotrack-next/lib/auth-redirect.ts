@@ -5,7 +5,7 @@
  */
 export function sanitizeRedirectPath(
   redirect: string | null | undefined,
-  fallback: string = '/dashboard'
+  fallback: string = '/dashboard',
 ): string {
   if (!redirect || typeof redirect !== 'string') {
     return fallback;
@@ -56,4 +56,14 @@ export function sanitizeRedirectPath(
   }
 
   return trimmed;
+}
+
+/**
+ * Builds the sign-in URL used when a session is lost or expires. The page the
+ * user was on is preserved as a sanitized `redirect` parameter so they return
+ * there after signing in. This must never fall back to the landing page.
+ */
+export function signInRedirectFor(currentPath: string | null | undefined): string {
+  const redirectTo = sanitizeRedirectPath(currentPath, '/dashboard');
+  return `/login?redirect=${encodeURIComponent(redirectTo)}`;
 }

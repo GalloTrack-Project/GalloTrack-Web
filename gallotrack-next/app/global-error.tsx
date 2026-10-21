@@ -62,13 +62,27 @@ export default function GlobalError({
           >
             !
           </div>
-          <h1 style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, letterSpacing: '-0.02em' }}>
+          <h1
+            style={{
+              margin: '0 0 8px',
+              fontSize: '22px',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+            }}
+          >
             GalloTrack hit an unexpected error
           </h1>
           <p style={{ margin: '0 0 4px', fontSize: '14px', color: '#94a3b8', lineHeight: 1.6 }}>
             Your data is safe — this screen only means the interface failed to render.
           </p>
-          <p style={{ margin: '0 0 20px', fontSize: '13px', color: '#64748b', wordBreak: 'break-word' }}>
+          <p
+            style={{
+              margin: '0 0 20px',
+              fontSize: '13px',
+              color: '#64748b',
+              wordBreak: 'break-word',
+            }}
+          >
             {detail}
             {digest ? ` (ref: ${digest})` : ''}
           </p>
@@ -94,7 +108,7 @@ export default function GlobalError({
             <button
               type="button"
               onClick={() => {
-                window.location.href = '/';
+                window.location.href = '/login';
               }}
               style={{
                 background: 'transparent',

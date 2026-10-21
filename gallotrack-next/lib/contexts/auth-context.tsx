@@ -4,6 +4,7 @@ import { ensureOwnerRecords, supabase } from '@/lib/registry';
 import { isAdminProfile } from '@/lib/admin';
 import { useUI } from './ui-context';
 import { toastMessage } from '@/lib/toast-bus';
+import { signInRedirectFor } from '@/lib/auth-redirect';
 
 interface AuthContextValue {
   currentUserId: string | null;
@@ -81,7 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRememberMe(savedRememberMe);
 
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (session && session.user) {
             setCurrentUserId(session.user.id);
             localStorage.setItem('gallotrack_user_id', session.user.id);
@@ -89,7 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUsername(session.user.email?.split('@')[0] || 'admin');
             ui.setCurrentPage('dashboard');
             try {
-              const { data: profile } = await supabase.from('profiles').select('id, is_admin, role, farm_name, is_active').eq('id', session.user.id).maybeSingle();
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('id, is_admin, role, farm_name, is_active')
+                .eq('id', session.user.id)
+                .maybeSingle();
               setIsAdmin(isAdminProfile(profile));
               setUserHub((profile && (profile.farm_name || '').trim()) || 'ISUFST DINGLE HUB');
               setUserActive(profile ? profile.is_active !== false : true);
@@ -105,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     checkSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /** Sign out for a reason we already show in the UI — never as "session expired". */
@@ -114,7 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut();
     } finally {
-      setTimeout(() => { quietSignOut.current = false; }, 1000);
+      setTimeout(() => {
+        quietSignOut.current = false;
+      }, 1000);
     }
   }, []);
 
@@ -125,7 +134,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * session cookie and send the user back to the sign-in screen.
    */
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event !== 'SIGNED_OUT') return;
       if (quietSignOut.current || ui.currentPage === 'login') return;
 
@@ -139,7 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('gallotrack_rememberMe');
         document.cookie = 'gallotrack_session=; path=/; max-age=0';
         toastMessage('Your session has expired. Please sign in again.', 'warning');
-        window.location.href = '/';
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.replace(signInRedirectFor(currentPath));
       }
     });
     return () => subscription.unsubscribe();
@@ -153,9 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedAvatar = localStorage.getItem('gallotrack_admin_avatar');
         if (storedAvatar) setAvatarUrl(storedAvatar);
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
-          const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
           if (profile) {
             setIsAdmin(isAdminProfile(profile));
             setAdminName(profile.full_name || 'Farm Owner');
@@ -177,139 +195,184 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const loadUserProfile = useCallback(async (userId: string): Promise<{ profile: Record<string, unknown> | null; welcomeName: string }> => {
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (profile) {
-      setIsAdmin(isAdminProfile(profile));
-      setAdminName(profile.full_name || 'Farm Owner');
-      setAvatarUrl(profile.avatar_url || '');
-      setUserHub((profile.farm_name || '').trim() || 'ISUFST DINGLE HUB');
-      setUserActive(profile.is_active !== false);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
-        localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url || '');
-        localStorage.setItem('gallotrack_admin_phone', profile.phone_number || '');
-      }
-      return { profile, welcomeName: profile.full_name?.split(' ')[0] || 'User' };
-    }
-    return { profile: null, welcomeName: 'User' };
-  }, []);
-
-  const syncProfileFromUser = useCallback(async (user: { id: string; user_metadata?: Record<string, unknown>; email?: string }, fallbackName: string): Promise<string> => {
-    const meta = (user.user_metadata || {}) as { full_name?: string; farm_name?: string; first_name?: string; middle_name?: string; last_name?: string; contact_number?: string };
-    const fullName = meta.full_name || fallbackName;
-    const farmName = meta.farm_name || '';
-
-    let defaultRole = 'owner';
-    let autoApprove = true;
-    try {
-      const res = await fetch('/api/admin/system-settings');
-      const s = await res.json();
-      if (s.default_user_role) defaultRole = s.default_user_role;
-      if (s.allow_registrations === false) autoApprove = false;
-    } catch { /* use defaults */ }
-
-    const { error: insertErr } = await supabase.from('profiles').insert([{
-      id: user.id,
-      email: user.email || '',
-      full_name: fullName,
-      farm_name: farmName,
-      phone_number: meta.contact_number || '',
-      avatar_url: '',
-      role: defaultRole,
-      is_admin: defaultRole === 'admin',
-      is_active: autoApprove,
-    }]);
-    if (!insertErr && farmName) {
-      await supabase.from('farms').insert([{
-        owner_id: user.id,
-        farm_name: farmName,
-        contact_number: meta.contact_number || '',
-      }]);
-    }
-    if (!insertErr) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('gallotrack_admin_name', fullName);
-      }
-      return fullName.split(' ')[0];
-    }
-    return fallbackName.split(' ')[0];
-  }, []);
-
-  const handleLogin = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMessage('');
-    setLoading(true);
-
-    const loginEmail = username.trim();
-
-    try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: password
-      });
-
-      if (authError) {
-        const msg = authError.message.toLowerCase();
-        if (msg.includes('invalid login credentials') || msg.includes('invalid') || msg.includes('wrong password') || msg.includes('user not found')) {
-          setError('The email address or password you entered is incorrect. Please try again.');
-        } else if (msg.includes('email not confirmed')) {
-          setError('Please verify your email address before logging in. Check your inbox for the verification link.');
-        } else if (msg.includes('too many')) {
-          setError('Too many login attempts. Please wait a moment and try again.');
-        } else {
-          setError('Unable to sign in. Please check your credentials and try again.');
+  const loadUserProfile = useCallback(
+    async (
+      userId: string,
+    ): Promise<{ profile: Record<string, unknown> | null; welcomeName: string }> => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      if (profile) {
+        setIsAdmin(isAdminProfile(profile));
+        setAdminName(profile.full_name || 'Farm Owner');
+        setAvatarUrl(profile.avatar_url || '');
+        setUserHub((profile.farm_name || '').trim() || 'ISUFST DINGLE HUB');
+        setUserActive(profile.is_active !== false);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gallotrack_admin_name', profile.full_name || '');
+          localStorage.setItem('gallotrack_admin_avatar', profile.avatar_url || '');
+          localStorage.setItem('gallotrack_admin_phone', profile.phone_number || '');
         }
-        return;
+        return { profile, welcomeName: profile.full_name?.split(' ')[0] || 'User' };
+      }
+      return { profile: null, welcomeName: 'User' };
+    },
+    [],
+  );
+
+  const syncProfileFromUser = useCallback(
+    async (
+      user: { id: string; user_metadata?: Record<string, unknown>; email?: string },
+      fallbackName: string,
+    ): Promise<string> => {
+      const meta = (user.user_metadata || {}) as {
+        full_name?: string;
+        farm_name?: string;
+        first_name?: string;
+        middle_name?: string;
+        last_name?: string;
+        contact_number?: string;
+      };
+      const fullName = meta.full_name || fallbackName;
+      const farmName = meta.farm_name || '';
+
+      let defaultRole = 'owner';
+      let autoApprove = true;
+      try {
+        const res = await fetch('/api/admin/system-settings');
+        const s = await res.json();
+        if (s.default_user_role) defaultRole = s.default_user_role;
+        if (s.allow_registrations === false) autoApprove = false;
+      } catch {
+        /* use defaults */
       }
 
-      if (!data.user) {
-        setError('System Error: No user data received.');
-        return;
+      const { error: insertErr } = await supabase.from('profiles').insert([
+        {
+          id: user.id,
+          email: user.email || '',
+          full_name: fullName,
+          farm_name: farmName,
+          phone_number: meta.contact_number || '',
+          avatar_url: '',
+          role: defaultRole,
+          is_admin: defaultRole === 'admin',
+          is_active: autoApprove,
+        },
+      ]);
+      if (!insertErr && farmName) {
+        await supabase.from('farms').insert([
+          {
+            owner_id: user.id,
+            farm_name: farmName,
+            contact_number: meta.contact_number || '',
+          },
+        ]);
       }
-
-      setCurrentUserId(data.user.id);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('gallotrack_user_id', data.user.id);
-        document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
+      if (!insertErr) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gallotrack_admin_name', fullName);
+        }
+        return fullName.split(' ')[0];
       }
+      return fallbackName.split(' ')[0];
+    },
+    [],
+  );
 
-      if (!data.user.email_confirmed_at) {
-        await signOutQuietly();
-        setError('Please verify your email address before logging in. Check your inbox for the verification link.');
-        return;
+  const handleLogin = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError('');
+      setSuccessMessage('');
+      setLoading(true);
+
+      const loginEmail = username.trim();
+
+      try {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: loginEmail,
+          password: password,
+        });
+
+        if (authError) {
+          const msg = authError.message.toLowerCase();
+          if (
+            msg.includes('invalid login credentials') ||
+            msg.includes('invalid') ||
+            msg.includes('wrong password') ||
+            msg.includes('user not found')
+          ) {
+            setError('The email address or password you entered is incorrect. Please try again.');
+          } else if (msg.includes('email not confirmed')) {
+            setError(
+              'Please verify your email address before logging in. Check your inbox for the verification link.',
+            );
+          } else if (msg.includes('too many')) {
+            setError('Too many login attempts. Please wait a moment and try again.');
+          } else {
+            setError('Unable to sign in. Please check your credentials and try again.');
+          }
+          return;
+        }
+
+        if (!data.user) {
+          setError('System Error: No user data received.');
+          return;
+        }
+
+        setCurrentUserId(data.user.id);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gallotrack_user_id', data.user.id);
+          document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
+        }
+
+        if (!data.user.email_confirmed_at) {
+          await signOutQuietly();
+          setError(
+            'Please verify your email address before logging in. Check your inbox for the verification link.',
+          );
+          return;
+        }
+
+        if (typeof window !== 'undefined' && rememberMe) {
+          localStorage.setItem('gallotrack_rememberMe', 'true');
+        }
+
+        const { profile, welcomeName } = await loadUserProfile(data.user.id);
+
+        if (profile && profile.is_active === false) {
+          await signOutQuietly();
+          setError(
+            'This account has been deactivated by the administrator. Contact system support to restore access.',
+          );
+          if (typeof window !== 'undefined') localStorage.removeItem('gallotrack_user_id');
+          return;
+        }
+
+        let finalWelcomeName = welcomeName;
+        if (!profile) {
+          finalWelcomeName = await syncProfileFromUser(data.user, username);
+        }
+
+        ui.setCurrentPage('dashboard');
+        await ensureOwnerRecords(supabase, data.user);
+        setTimeout(
+          () => toastMessage(`Access Authenticated. Welcome back, ${finalWelcomeName}!`, 'success'),
+          400,
+        );
+        window.dispatchEvent(new Event('admin-profile-update'));
+      } catch (err) {
+        console.error(err);
+        setError('System Error: Unable to authenticate.');
+      } finally {
+        setLoading(false);
       }
-
-      if (typeof window !== 'undefined' && rememberMe) {
-        localStorage.setItem('gallotrack_rememberMe', 'true');
-      }
-
-      const { profile, welcomeName } = await loadUserProfile(data.user.id);
-
-      if (profile && profile.is_active === false) {
-        await signOutQuietly();
-        setError('This account has been deactivated by the administrator. Contact system support to restore access.');
-        if (typeof window !== 'undefined') localStorage.removeItem('gallotrack_user_id');
-        return;
-      }
-
-      let finalWelcomeName = welcomeName;
-      if (!profile) {
-        finalWelcomeName = await syncProfileFromUser(data.user, username);
-      }
-
-      ui.setCurrentPage('dashboard');
-      await ensureOwnerRecords(supabase, data.user);
-      setTimeout(() => toastMessage(`Access Authenticated. Welcome back, ${finalWelcomeName}!`, 'success'), 400);
-      window.dispatchEvent(new Event('admin-profile-update'));
-    } catch (err) {
-      console.error(err);
-      setError('System Error: Unable to authenticate.');
-    } finally {
-      setLoading(false);
-    }
-  }, [username, password, rememberMe, ui, loadUserProfile, syncProfileFromUser, signOutQuietly]);
+    },
+    [username, password, rememberMe, ui, loadUserProfile, syncProfileFromUser, signOutQuietly],
+  );
 
   const handleLogout = useCallback(async () => {
     setCurrentUserId(null);
@@ -326,52 +389,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     await signOutQuietly();
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      window.location.href = '/login';
     }
   }, [ui, signOutQuietly]);
 
-  const handleSendResetLink = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!forgotEmail.trim()) {
-      setForgotError('Please enter your registered email address.');
-      return;
-    }
-    setForgotLoading(true);
-    setForgotError('');
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
-        redirectTo: window.location.origin + '/auth/update-password',
-      });
-      if (error) {
-        setForgotError(error.message);
-      } else {
-        setForgotSent(true);
-        toastMessage('Password reset link sent. Check your inbox.', 'success');
+  const handleSendResetLink = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!forgotEmail.trim()) {
+        setForgotError('Please enter your registered email address.');
+        return;
       }
-    } catch (err: unknown) {
-      setForgotError(err instanceof Error ? err.message : 'Failed to send reset link. Please try again.');
-    } finally {
-      setForgotLoading(false);
-    }
-  }, [forgotEmail, ui]);
+      setForgotLoading(true);
+      setForgotError('');
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+          redirectTo: window.location.origin + '/auth/update-password',
+        });
+        if (error) {
+          setForgotError(error.message);
+        } else {
+          setForgotSent(true);
+          toastMessage('Password reset link sent. Check your inbox.', 'success');
+        }
+      } catch (err: unknown) {
+        setForgotError(
+          err instanceof Error ? err.message : 'Failed to send reset link. Please try again.',
+        );
+      } finally {
+        setForgotLoading(false);
+      }
+    },
+    [forgotEmail, ui],
+  );
 
   const value: AuthContextValue = {
-    currentUserId, isAdmin,
-    adminName, setAdminName,
-    avatarUrl, setAvatarUrl,
-    userHub, userActive,
-    username, setUsername,
-    password, setPassword,
-    showPassword, setShowPassword,
-    error, setError,
-    rememberMe, setRememberMe,
-    successMessage, setSuccessMessage,
-    forgotEmail, setForgotEmail,
-    forgotLoading, forgotSent, setForgotSent,
-    forgotError, setForgotError,
-    loading, setLoading,
+    currentUserId,
+    isAdmin,
+    adminName,
+    setAdminName,
+    avatarUrl,
+    setAvatarUrl,
+    userHub,
+    userActive,
+    username,
+    setUsername,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    error,
+    setError,
+    rememberMe,
+    setRememberMe,
+    successMessage,
+    setSuccessMessage,
+    forgotEmail,
+    setForgotEmail,
+    forgotLoading,
+    forgotSent,
+    setForgotSent,
+    forgotError,
+    setForgotError,
+    loading,
+    setLoading,
     authChecked,
-    handleLogin, handleLogout, handleSendResetLink,
+    handleLogin,
+    handleLogout,
+    handleSendResetLink,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

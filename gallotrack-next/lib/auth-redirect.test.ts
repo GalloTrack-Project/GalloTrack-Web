@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeRedirectPath } from './auth-redirect';
+import { sanitizeRedirectPath, signInRedirectFor } from './auth-redirect';
 
 describe('sanitizeRedirectPath', () => {
   describe('Valid Same-Origin Relative Paths', () => {
@@ -8,7 +8,7 @@ describe('sanitizeRedirectPath', () => {
       expect(sanitizeRedirectPath('/profiling?tab=males')).toBe('/profiling?tab=males');
       expect(sanitizeRedirectPath('/match-logs/new')).toBe('/match-logs/new');
       expect(sanitizeRedirectPath('/chicken-inventory?status=active&gender=male')).toBe(
-        '/chicken-inventory?status=active&gender=male'
+        '/chicken-inventory?status=active&gender=male',
       );
     });
   });
@@ -79,5 +79,25 @@ describe('sanitizeRedirectPath', () => {
       expect(sanitizeRedirectPath('/register')).toBe('/dashboard');
       expect(sanitizeRedirectPath('/register?ref=123')).toBe('/dashboard');
     });
+  });
+});
+
+describe('signInRedirectFor', () => {
+  it('preserves the current protected page as the redirect target', () => {
+    expect(signInRedirectFor('/match-logs/164/edit?returnTo=%2Fdashboard')).toBe(
+      `/login?redirect=${encodeURIComponent('/match-logs/164/edit?returnTo=%2Fdashboard')}`,
+    );
+  });
+
+  it('never falls back to the landing page', () => {
+    expect(signInRedirectFor('/')).toBe('/login?redirect=%2Fdashboard');
+    expect(signInRedirectFor(null)).toBe('/login?redirect=%2Fdashboard');
+    expect(signInRedirectFor(undefined)).toBe('/login?redirect=%2Fdashboard');
+    expect(signInRedirectFor('https://evil.com')).toBe('/login?redirect=%2Fdashboard');
+    expect(signInRedirectFor('/login?redirect=/foo')).toBe('/login?redirect=%2Fdashboard');
+  });
+
+  it('always targets the sign-in route', () => {
+    expect(signInRedirectFor('/dashboard').startsWith('/login?redirect=')).toBe(true);
   });
 });

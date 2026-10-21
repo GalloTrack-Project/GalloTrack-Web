@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/registry';
 import { recordAdminAction } from '@/lib/api/audit-log';
+import { signInRedirectFor } from '@/lib/auth-redirect';
 
 export interface AdminSettings {
   system_name?: string;
@@ -43,7 +44,9 @@ export interface AdminProfileRow {
   last_sign_in_at?: string | null;
 }
 
-export function isAdminProfile(profile: Pick<AdminProfileRow, 'is_admin' | 'role'> | null | undefined): boolean {
+export function isAdminProfile(
+  profile: Pick<AdminProfileRow, 'is_admin' | 'role'> | null | undefined,
+): boolean {
   if (!profile) return false;
   return profile.role === 'admin' || profile.is_admin === true;
 }
@@ -58,12 +61,17 @@ export function profileDisplayName(p: AdminProfileRow): string {
 
 /**
  * Resolves the current user's profile and verifies admin privileges.
- * Redirects to `/` when the caller is signed out or not an admin.
+ * Signed-out callers are sent to the sign-in screen (with a redirect back to
+ * the admin route); signed-in non-admins are sent to their dashboard.
  */
 export async function adminGuard(): Promise<AdminProfileRow | null> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   if (!session?.user) {
-    if (typeof window !== 'undefined') window.location.replace('/');
+    if (typeof window !== 'undefined') {
+      window.location.replace(signInRedirectFor(window.location.pathname + window.location.search));
+    }
     return null;
   }
   const { data: profile } = await supabase
@@ -72,7 +80,7 @@ export async function adminGuard(): Promise<AdminProfileRow | null> {
     .eq('id', session.user.id)
     .maybeSingle();
   if (!isAdminProfile(profile)) {
-    if (typeof window !== 'undefined') window.location.replace('/');
+    if (typeof window !== 'undefined') window.location.replace('/dashboard');
     return null;
   }
   return profile as AdminProfileRow;
@@ -88,20 +96,42 @@ export async function fetchAllProfiles(): Promise<AdminProfileRow[]> {
 }
 
 export async function setUserActive(userId: string, active: boolean): Promise<void> {
-  const { data: existing } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle();
   if (!existing) {
-    await supabase.from('profiles').insert({ id: userId, is_active: active, role: 'owner', updated_at: new Date().toISOString() });
+    await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        is_active: active,
+        role: 'owner',
+        updated_at: new Date().toISOString(),
+      });
     return;
   }
   const { error } = await supabase
     .from('profiles')
-    .update({ is_active: active, account_status: active ? 'active' : 'deactivated', updated_at: new Date().toISOString() })
+    .update({
+      is_active: active,
+      account_status: active ? 'active' : 'deactivated',
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', userId);
   if (error) throw new Error(error.message);
-  await recordAdminAction({ action: active ? 'user_activated' : 'user_deactivated', targetType: 'profile', targetId: userId });
+  await recordAdminAction({
+    action: active ? 'user_activated' : 'user_deactivated',
+    targetType: 'profile',
+    targetId: userId,
+  });
 }
 
-export async function setAccountStatus(userId: string, status: 'active' | 'suspended' | 'deactivated'): Promise<void> {
+export async function setAccountStatus(
+  userId: string,
+  status: 'active' | 'suspended' | 'deactivated',
+): Promise<void> {
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -120,13 +150,28 @@ export async function setUserVerified(userId: string, verified: boolean): Promis
     .update({ is_verified: verified, updated_at: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw new Error(error.message);
-  await recordAdminAction({ action: verified ? 'user_verified' : 'user_verification_revoked', targetType: 'profile', targetId: userId });
+  await recordAdminAction({
+    action: verified ? 'user_verified' : 'user_verification_revoked',
+    targetType: 'profile',
+    targetId: userId,
+  });
 }
 
 export async function setUserRole(userId: string, role: 'owner' | 'admin'): Promise<void> {
-  const { data: existing } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle();
   if (!existing) {
-    await supabase.from('profiles').insert({ id: userId, role, is_admin: role === 'admin', updated_at: new Date().toISOString() });
+    await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        role,
+        is_admin: role === 'admin',
+        updated_at: new Date().toISOString(),
+      });
     return;
   }
   const { error } = await supabase
@@ -134,7 +179,12 @@ export async function setUserRole(userId: string, role: 'owner' | 'admin'): Prom
     .update({ role, is_admin: role === 'admin', updated_at: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw new Error(error.message);
-  await recordAdminAction({ action: `role_changed_to_${role}`, targetType: 'profile', targetId: userId, details: { role } });
+  await recordAdminAction({
+    action: `role_changed_to_${role}`,
+    targetType: 'profile',
+    targetId: userId,
+    details: { role },
+  });
 }
 
 /**
@@ -150,7 +200,11 @@ export async function deleteUserRecords(userId: string): Promise<void> {
   // NOTE: marketplace_listings is deprecated — table may still exist in DB for historical data
   const { error } = await supabase.from('profiles').delete().eq('id', userId);
   if (error) throw new Error(error.message);
-  await recordAdminAction({ action: 'user_records_deleted', targetType: 'profile', targetId: userId });
+  await recordAdminAction({
+    action: 'user_records_deleted',
+    targetType: 'profile',
+    targetId: userId,
+  });
 }
 
 export async function fetchSystemSettings(): Promise<AdminSettings> {
@@ -183,16 +237,14 @@ export async function fetchSystemSettings(): Promise<AdminSettings> {
 }
 
 export async function updateSystemSettings(settings: AdminSettings): Promise<void> {
-  const { error } = await supabase
-    .from('system_settings')
-    .upsert(
-      {
-        key: 'app',
-        value: settings as unknown as Record<string, unknown>,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'key' }
-    );
+  const { error } = await supabase.from('system_settings').upsert(
+    {
+      key: 'app',
+      value: settings as unknown as Record<string, unknown>,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'key' },
+  );
   if (error) throw new Error(error.message);
   await recordAdminAction({
     action: 'system_settings_updated',
