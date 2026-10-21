@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { BUILD_SHA } from '@/lib/build-info';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -33,6 +34,9 @@ export default function Footer() {
               </span>
               <span className="text-muted-foreground border-border ml-1 rounded border px-1.5 py-0.5 font-mono text-xs font-bold tracking-widest uppercase">
                 v1.0.0
+              </span>
+              <span className="text-muted-foreground font-mono text-xs font-bold tracking-widest uppercase">
+                build {BUILD_SHA}
               </span>
             </Link>
             <p className="text-muted-foreground max-w-sm text-xs font-medium">

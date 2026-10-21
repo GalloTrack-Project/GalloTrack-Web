@@ -8,6 +8,7 @@ import { Dna, Swords, BarChart3, Building2, ArrowLeft } from 'lucide-react';
 import { sanitizeRedirectPath } from '@/lib/auth-redirect';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useT } from '@/lib/i18n';
+import { BUILD_SHA } from '@/lib/build-info';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -114,7 +115,7 @@ export default function LoginPage() {
                   GALLO<span className="text-emerald-200">TRACK</span>
                 </h2>
                 <span className="block font-mono text-xs font-bold tracking-widest text-emerald-200/70 uppercase">
-                  v1.0.0
+                  v1.0.0 · build {BUILD_SHA}
                 </span>
               </div>
             </Link>
