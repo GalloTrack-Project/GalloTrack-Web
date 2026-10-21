@@ -6,6 +6,7 @@ import type { MatchRecord, FowlRecord, MatchMedia } from '@/lib/types';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
+const mockOpenFowlDetails = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
@@ -16,6 +17,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/contexts/ui-context', () => ({
   useUI: () => ({
     openMatchMediaViewer: vi.fn(),
+    setSelectedFowlForDetails: mockOpenFowlDetails,
   }),
 }));
 
@@ -111,6 +113,14 @@ describe('MatchLogsView', () => {
     const addLink = screen.getByRole('link', { name: /Add Match Record/i });
     expect(addLink).toBeDefined();
     expect(addLink.getAttribute('href')).toContain('/match-logs/new?returnTo=');
+  });
+
+  it('clicking the chicken identity opens the chicken info card instead of the match editor', () => {
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getAllByRole('button', { name: /View info for Storm Rooster/i })[0]);
+
+    expect(mockOpenFowlDetails).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('filters matches by search query', () => {

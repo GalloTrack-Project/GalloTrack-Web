@@ -80,7 +80,7 @@ vi.mock('@/lib/services/match-service', () => mockMatchService);
 vi.mock('@/lib/services/media-service', () => mockMediaService);
 
 vi.mock('@/lib/contexts/ui-context', () => ({
-  useUI: () => ({ openMatchMediaViewer: vi.fn() }),
+  useUI: () => ({ openMatchMediaViewer: vi.fn(), setSelectedFowlForDetails: vi.fn() }),
 }));
 
 vi.mock('@/lib/contexts/fowl-context', () => ({

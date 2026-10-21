@@ -3,12 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MatchLogsTable from './MatchLogsTable';
 import { fetchMatchMediaBatch, attachMatchMediaCounts } from '@/lib/services/media-service';
-import type { MatchRecord, MatchMedia } from '@/lib/types';
+import type { MatchRecord, MatchMedia, FowlRecord } from '@/lib/types';
 
 const mockOpenMatchMediaViewer = vi.fn();
+const mockOpenFowlDetails = vi.fn();
+const mockPush = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: mockPush, replace: vi.fn(), back: vi.fn() }),
   usePathname: () => '/match-logs',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -17,12 +19,12 @@ vi.mock('@/lib/contexts/ui-context', () => ({
   useUI: () => ({
     openMatchMediaViewer: mockOpenMatchMediaViewer,
     setShareTarget: vi.fn(),
+    setSelectedFowlForDetails: mockOpenFowlDetails,
   }),
 }));
 
-
 const mockFowlContext = {
-  fowls: [],
+  fowls: [] as FowlRecord[],
   matchHistory: [],
   matchMedia: new Map<number, MatchMedia>(),
   birdCodes: new Map<string, string>(),
@@ -77,7 +79,11 @@ describe('Match Media Resolution and MatchLogsTable', () => {
                 if (table === 'match_photos') {
                   return {
                     data: [
-                      { match_id: 101, url: 'https://example.com/photos/match-101-a.jpg', sort_order: 1 },
+                      {
+                        match_id: 101,
+                        url: 'https://example.com/photos/match-101-a.jpg',
+                        sort_order: 1,
+                      },
                     ],
                     error: null,
                   };
@@ -149,7 +155,7 @@ describe('Match Media Resolution and MatchLogsTable', () => {
       expect.objectContaining({
         tab: 'videos',
         videos: ['https://example.com/videos/iron-lemon.mp4'],
-      })
+      }),
     );
   });
 
@@ -202,5 +208,36 @@ describe('Match Media Resolution and MatchLogsTable', () => {
 
     expect(screen.getByText(/Processing…/i)).toBeInTheDocument();
     expect(screen.queryByText('No media')).not.toBeInTheDocument();
+  });
+
+  it('clicking the chicken identity opens the chicken info card instead of the match editor', () => {
+    const fowl = {
+      id: 501,
+      name: 'Lemon',
+      breed: 'Lemon',
+      gender: 'Rooster',
+      birthdate: '2024-02-21',
+    } as unknown as FowlRecord;
+    mockFowlContext.fowls = [fowl];
+    const match = {
+      id: 1001,
+      fowl_id: 501,
+      entry_name: 'Lemon',
+      breed: 'Lemon',
+      opponent: 'Kelso',
+      location: 'Dingle Breeding Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2026-10-20',
+    } as MatchRecord;
+
+    render(<MatchLogsTable matches={[match]} />);
+    fireEvent.click(screen.getByRole('button', { name: /View info for Lemon/i }));
+
+    expect(mockOpenFowlDetails).toHaveBeenCalledWith(fowl);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    mockFowlContext.fowls = [];
   });
 });

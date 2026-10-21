@@ -17,6 +17,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
 import type { MatchRecord, FowlRecord } from '@/lib/types';
@@ -29,6 +30,7 @@ export default function MatchLogsView() {
   const searchParams = useSearchParams();
 
   const t = useT();
+  const ui = useUI();
   const { fowls, matchHistory, matchMedia, birdCodes, loading } = useFowl();
 
   // Read URL query params
@@ -495,6 +497,12 @@ export default function MatchLogsView() {
                   const code = fowl ? birdCodes.get(String(fowl.id)) : '';
                   const hatch = fowl?.birthdate;
                   const isOrphan = log.fowl_id == null;
+                  const openFowlInfo = fowl
+                    ? (event: React.MouseEvent) => {
+                        event.stopPropagation();
+                        ui.setSelectedFowlForDetails(fowl);
+                      }
+                    : undefined;
 
                   return (
                     <tr
@@ -512,17 +520,41 @@ export default function MatchLogsView() {
 
                       <td className="min-w-0 p-2.5 lg:p-3">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
-                            <ChickenIcon className="text-success h-3.5 w-3.5" />
-                          </div>
-                          {code && (
-                            <span className="text-success rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase">
-                              [{formatBirdCodeForDisplay(code)}]
-                            </span>
+                          {openFowlInfo ? (
+                            <button
+                              type="button"
+                              onClick={openFowlInfo}
+                              aria-label={`View info for ${log.entry_name}`}
+                              title={`View info for ${log.entry_name}`}
+                              className="focus-visible:ring-ring flex min-w-0 cursor-pointer flex-wrap items-center gap-2 rounded-md text-left focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
+                                <ChickenIcon className="text-success h-3.5 w-3.5" />
+                              </div>
+                              {code && (
+                                <span className="text-success rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase">
+                                  [{formatBirdCodeForDisplay(code)}]
+                                </span>
+                              )}
+                              <span className="text-card-foreground min-w-0 font-bold break-words transition-colors group-hover:text-emerald-600">
+                                {log.entry_name}
+                              </span>
+                            </button>
+                          ) : (
+                            <>
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
+                                <ChickenIcon className="text-success h-3.5 w-3.5" />
+                              </div>
+                              {code && (
+                                <span className="text-success rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase">
+                                  [{formatBirdCodeForDisplay(code)}]
+                                </span>
+                              )}
+                              <span className="text-card-foreground min-w-0 font-bold break-words transition-colors group-hover:text-emerald-600">
+                                {log.entry_name}
+                              </span>
+                            </>
                           )}
-                          <span className="text-card-foreground min-w-0 font-bold break-words transition-colors group-hover:text-emerald-600">
-                            {log.entry_name}
-                          </span>
                           {isOrphan && (
                             <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                               Historical entry (no profile linked)
