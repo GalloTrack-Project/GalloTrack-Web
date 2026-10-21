@@ -92,15 +92,15 @@ export default function MatchLogsTable({
                     {log.date}
                   </td>
                   <td className="min-w-0 p-2.5 lg:p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {openFowlInfo ? (
-                        <button
-                          type="button"
-                          onClick={openFowlInfo}
-                          aria-label={`View info for ${log.entry_name}`}
-                          title={`View info for ${log.entry_name}`}
-                          className="focus-visible:ring-ring flex min-w-0 cursor-pointer flex-wrap items-center gap-2 rounded-md text-left focus-visible:ring-2 focus-visible:outline-none"
-                        >
+                    {openFowlInfo ? (
+                      <button
+                        type="button"
+                        onClick={openFowlInfo}
+                        aria-label={`View info for ${log.entry_name}`}
+                        title={`View info for ${log.entry_name}`}
+                        className="focus-visible:ring-ring flex w-full min-w-0 cursor-pointer flex-col items-start rounded-md text-left focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
                             <ChickenIcon className="text-success h-3.5 w-3.5" />
                           </div>
@@ -112,9 +112,22 @@ export default function MatchLogsTable({
                           <span className="text-card-foreground font-bold transition-colors group-hover:text-emerald-600">
                             {log.entry_name}
                           </span>
-                        </button>
-                      ) : (
-                        <>
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-muted-foreground text-xs font-semibold">
+                            {log.breed || '—'}
+                            {hatch ? ` · ${t('registry.hatchedDate', { date: hatch })}` : ''}
+                          </span>
+                          {log.age_category && (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                              {log.age_category}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
                             <ChickenIcon className="text-success h-3.5 w-3.5" />
                           </div>
@@ -126,25 +139,25 @@ export default function MatchLogsTable({
                           <span className="text-card-foreground font-bold transition-colors group-hover:text-emerald-600">
                             {log.entry_name}
                           </span>
-                        </>
-                      )}
-                      {isOrphan && (
-                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                          Historical entry (no profile linked)
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                      <span className="text-muted-foreground text-xs font-semibold">
-                        {log.breed || '—'}
-                        {hatch ? ` · ${t('registry.hatchedDate', { date: hatch })}` : ''}
-                      </span>
-                      {log.age_category && (
-                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                          {log.age_category}
-                        </span>
-                      )}
-                    </div>
+                          {isOrphan && (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                              Historical entry (no profile linked)
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-muted-foreground text-xs font-semibold">
+                            {log.breed || '—'}
+                            {hatch ? ` · ${t('registry.hatchedDate', { date: hatch })}` : ''}
+                          </span>
+                          {log.age_category && (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                              {log.age_category}
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </td>
                   <td className="min-w-0 p-2.5 lg:p-3">
                     <div className="flex min-w-0 items-center gap-1.5">
