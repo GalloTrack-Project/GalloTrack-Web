@@ -10,10 +10,12 @@ vi.mock('@/lib/contexts/fowl-context', () => ({
   useFowl: () => ({ fowls: [], birdCodes: new Map() }),
 }));
 
+const nav = vi.hoisted(() => ({ pathname: '/match-logs', search: '' }));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => '/match-logs',
-  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => nav.pathname,
+  useSearchParams: () => new URLSearchParams(nav.search),
 }));
 
 import { UIProvider } from '@/lib/contexts/ui-context';
@@ -41,7 +43,7 @@ function renderRow() {
     <UIProvider theme="dark" setTheme={() => {}}>
       <MatchMediaButtons match={match} videos={[VIDEO_URL]} photos={[PHOTO_URL]} />
       <MatchMediaViewer />
-    </UIProvider>
+    </UIProvider>,
   );
 }
 
@@ -49,6 +51,8 @@ describe('MatchMediaButtons + MatchMediaViewer', () => {
   let playSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    nav.pathname = '/match-logs';
+    nav.search = '';
     playSpy = vi
       .spyOn(HTMLMediaElement.prototype, 'play')
       .mockResolvedValue(undefined as unknown as void);
@@ -73,6 +77,21 @@ describe('MatchMediaButtons + MatchMediaViewer', () => {
 
     expect(screen.getByTitle('Share match')).toBeTruthy();
     expect(screen.getByLabelText('Share match')).toBeTruthy();
+  });
+
+  it('preserves the current path and query when no explicit returnTo is given (modal entry point)', () => {
+    nav.pathname = '/profiling';
+    nav.search = 'tab=males&q=Lemon';
+    render(
+      <UIProvider theme="dark" setTheme={() => {}}>
+        <MatchMediaButtons match={match} />
+      </UIProvider>,
+    );
+
+    const editLink = screen.getByTitle('Edit match record');
+    expect(editLink.getAttribute('href')).toBe(
+      '/match-logs/1/edit?returnTo=%2Fprofiling%3Ftab%3Dmales%26q%3DLemon',
+    );
   });
 
   it('opens the viewer and plays the video when Play media is clicked', async () => {

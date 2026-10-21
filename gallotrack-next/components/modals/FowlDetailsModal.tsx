@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2, Printer, Share2, GitBranch } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 import type {
   FowlRecord,
   MatchRecord,
@@ -133,6 +134,7 @@ export default function FowlDetailsModal({
   } = useFowl();
   const { rows: optionRows } = useRegistryOptions();
   const router = useRouter();
+  const t = useT();
 
   const fowlId = selectedFowlForDetails?.id ?? null;
   // State is keyed by fowl id so switching birds never shows stale history
@@ -1453,7 +1455,7 @@ export default function FowlDetailsModal({
                                 <span className="font-black text-slate-800 dark:text-card-foreground">{match.entry_name}</span>
                               </div>
                               <span className="block text-xs font-semibold text-muted-foreground normal-case">
-                                {match.breed || '—'}{selectedFowlForDetails.birthdate ? ` · hatch ${selectedFowlForDetails.birthdate}` : ''}
+                                {match.breed || '—'}{selectedFowlForDetails.birthdate ? ` · ${t('registry.hatchedDate', { date: selectedFowlForDetails.birthdate })}` : ''}
                               </span>
                             </td>
                             <td className="p-2.5">

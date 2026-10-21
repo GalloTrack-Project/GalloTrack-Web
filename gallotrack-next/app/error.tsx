@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useT } from '@/lib/i18n';
 
 function getErrorId(error: Error & { digest?: string }): string {
   if (error.digest) return error.digest;
@@ -20,6 +21,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useT();
   const errorId = useMemo(() => getErrorId(error), [error]);
 
   useEffect(() => {
@@ -36,9 +38,9 @@ export default function Error({
           ⚠️
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black tracking-tight text-danger">Something went wrong</h1>
+          <h1 className="text-2xl font-black tracking-tight text-danger">{t('errors.serverErrorTitle')}</h1>
           <p className="text-sm text-muted-foreground/70">
-            {error.message || 'An unexpected error occurred.'}
+            {error.message || t('errors.serverErrorDesc')}
           </p>
           <p className="text-xs font-mono text-muted-foreground/50">
             Error ID: {errorId}
@@ -50,13 +52,13 @@ export default function Error({
             onClick={reset}
             className="w-full sm:w-auto inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold py-2.5 px-6 rounded-md text-sm transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
           >
-            Try Again
+            {t('errors.tryAgain')}
           </button>
           <Link
             href="/dashboard"
             className="w-full sm:w-auto inline-block bg-slate-200 dark:bg-muted hover:bg-slate-300 dark:hover:bg-muted/80 text-foreground font-bold py-2.5 px-6 rounded-md text-sm transition-all cursor-pointer"
           >
-            Back to Dashboard
+            {t('errors.backHome')}
           </Link>
         </div>
       </div>

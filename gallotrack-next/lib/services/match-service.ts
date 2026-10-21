@@ -73,10 +73,50 @@ export async function insertMatch(payload: Record<string, unknown>): Promise<{ e
   return { id: data.id };
 }
 
-export async function updateMatch(id: number, payload: Record<string, unknown>): Promise<{ error?: string }> {
-  const { error } = await supabase.from('match').update(payload).eq('id', id);
+export async function updateMatch(
+  id: number,
+  payload: Record<string, unknown>
+): Promise<{ error?: string; updatedId?: number }> {
+  const { data, error } = await supabase
+    .from('match')
+    .update(payload)
+    .eq('id', id)
+    .select('id');
+
   if (error) return { error: error.message };
-  return {};
+
+  const updatedRows = data ?? [];
+
+  if (updatedRows.length !== 1) {
+    // Zero rows updated with no error = RLS blocked or row missing.
+    // Run a diagnostic read (SELECT only) to tell the user which case applies.
+    // More than one row is impossible for a primary-key filter and means the
+    // contract was broken - report it as a failure, never as a success.
+    console.warn(
+      `[match-service] updateMatch: ${updatedRows.length} rows updated for match id=${id}. Running diagnostic read.`,
+    );
+    const { data: diagData } = await supabase
+      .from('match')
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (updatedRows.length > 1) {
+      return { error: 'This match could not be updated with your account. Please reload and try again.' };
+    }
+
+    if (diagData) {
+      // Row is visible but update was blocked - RLS / permission issue
+      return {
+        error:
+          'This match could not be updated with your account. It may be owned by a different user.',
+      };
+    }
+    // Row is not visible at all
+    return { error: 'This match was not found. It may have been deleted.' };
+  }
+
+  return { updatedId: updatedRows[0].id };
 }
 
 export async function uploadMatchVideo(

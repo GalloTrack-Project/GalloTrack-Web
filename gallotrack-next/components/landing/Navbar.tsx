@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
+import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 export default function LandingNavbar() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -44,15 +45,15 @@ export default function LandingNavbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/85 backdrop-blur-md transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex flex-wrap items-center justify-between gap-x-2">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 cursor-pointer group">
+        <Link href="/" className="flex items-center gap-3 cursor-pointer group min-w-0">
           <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:bg-emerald-500 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
             </svg>
           </div>
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2 hidden sm:flex">
             <span className="text-xl font-black tracking-tight text-foreground">
               GALLO<span className="text-emerald-600 dark:text-emerald-400">TRACK</span>
             </span>
@@ -107,6 +108,7 @@ export default function LandingNavbar() {
 
         {/* Desktop Action Area */}
         <div className="hidden md:flex items-center gap-3">
+          <CompactLanguageSwitcher />
           {mounted && (
             <button
               type="button"
@@ -146,13 +148,14 @@ export default function LandingNavbar() {
         </div>
 
         {/* Mobile Hamburger & Theme Toggle */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex md:hidden items-center gap-2 shrink-0">
+          <CompactLanguageSwitcher />
           {mounted && (
             <button
               type="button"
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               aria-label="Toggle theme"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground"
+              className="p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground"
             >
               {resolvedTheme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -162,7 +165,7 @@ export default function LandingNavbar() {
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground focus:outline-none"
+            className="p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground focus:outline-none"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

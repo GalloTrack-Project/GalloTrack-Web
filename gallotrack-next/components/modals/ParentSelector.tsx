@@ -8,6 +8,7 @@ import { buildRegistryContext, roleOf, isActiveStatus, ROLE_LABEL } from '@/lib/
 import { buildCodeSet, nextFoundationCode } from '@/lib/bird-code';
 import { useFowlOptional } from '@/lib/contexts/fowl-context';
 import PromoteToBreederModal from './PromoteToBreederModal';
+import { useT } from '@/lib/i18n';
 
 export type ParentSelectorProps = {
   id?: string;
@@ -43,8 +44,10 @@ function getSiblingType(child: FowlRecord, parentName: string, parentGender: 'si
 }
 
 function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { child: FowlRecord; parentName: string; parentGender: 'sire' | 'dam'; allFowls: FowlRecord[]; onSelect: () => void }) {
+  const { t } = useT();
   const relType = getSiblingType(child, parentName, parentGender, allFowls);
   const isFull = relType === 'Full Sibling';
+  const displayRel = isFull ? t('registry.fullSibling') : t('registry.halfSibling');
   return (
     <button
       type="button"
@@ -59,13 +62,14 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
         <span className="block text-xs text-muted-foreground font-semibold">{child.breed} · {child.growth_stage || 'N/A'}</span>
       </span>
       <span className={`shrink-0 text-xs font-black px-1.5 py-0.5 rounded-full uppercase ${isFull ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'}`}>
-        {relType}
+        {displayRel}
       </span>
     </button>
   );
 }
 
 export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
@@ -205,7 +209,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                           {f.name}
                           {isPromotedChild && (
                             <span className="ml-1.5 text-xs font-mono text-muted-foreground font-semibold">
-                              (born as {f.birth_code})
+                              {t('registry.cardBornAs', { code: f.birth_code ?? '' })}
                             </span>
                           )}
                         </span>
@@ -227,7 +231,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                             ? 'bg-emerald-500 text-white border border-emerald-500'
                             : 'bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-muted-foreground hover:bg-emerald-100 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-900/50 dark:hover:text-emerald-300 dark:hover:border-emerald-700'
                         }`}
-                        title={`View ${children.length} children of ${f.name}`}
+                        title={t('registry.viewChildrenTitle', { count: String(children.length), name: f.name })}
                       >
                          <Eye className="w-3.5 h-3.5" />
                       </button>
@@ -239,7 +243,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                   {isExpanded && children.length > 0 && (
                     <div className="bg-slate-50 dark:bg-muted/50 border-t border-slate-100 dark:border-border pl-4 pr-2 py-1">
                       <div className="flex items-center gap-1.5 px-2 py-1.5 mb-1">
-                        <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Offspring of {f.name}</span>
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">{t('registry.offspringOf', { name: f.name })}</span>
                         <span className="text-xs font-black bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">{children.length}</span>
                       </div>
                       {children.map((child) => (
@@ -264,7 +268,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
             })
           ) : (
             <div className="px-3 py-2.5 text-xs text-muted-foreground italic">
-              No active {preferredGender === 'Male' ? 'Breeding Males' : 'Breeding Females'} match your query.
+              {t('registry.noActiveBreedingMatch', { gender: preferredGender === 'Male' ? t('domain.roleSire') : t('domain.roleDam') })}
             </div>
           )}
 
@@ -275,8 +279,8 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                 <span className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
                   {ROLE_LABEL['Non-Breeding']} ({offspringCandidates.length})
                 </span>
-                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                  Promote to use as parent
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                  {t('registry.promoteToUseAsParent')}
                 </span>
               </div>
               {offspringCandidates.map((f) => {
@@ -310,10 +314,10 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                         setPromoteModalOpen(true);
                       }}
                       className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer"
-                      title={`Promote ${f.name} to ${targetRole}`}
+                      title={t('registry.promoteToBreederTitle', { name: f.name, role: targetRole })}
                     >
                       <Award className="w-3 h-3" />
-                      <span>Promote to breeder first</span>
+                      <span>{t('registry.promoteToBreederFirst')}</span>
                     </button>
                   </div>
                 );
@@ -333,7 +337,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
             <span className={`w-7 h-7 rounded-sm ${accentBg} text-white flex items-center justify-center text-xs font-black shrink-0`}>{genderIcon}</span>
             <span className="flex-1 min-w-0">
               <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">
-                {text.trim() ? `Use "${text.trim()}" as custom ${preferredGender?.toLowerCase() || 'parent'}` : 'External / Foundation Stock name...'}
+                {text.trim() ? t('registry.useAsCustomParent', { name: text.trim(), gender: preferredGender === 'Male' ? t('domain.roleSire') : t('domain.roleDam') }) : t('registry.externalFoundationPlaceholder')}
               </span>
             </span>
           </button>
@@ -342,7 +346,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
 
       {matchedParent?.breed && (
         <p className="mt-1 text-xs font-bold text-muted-foreground">
-          Breed:{' '}
+          {t('registry.breedLabelWithColon')}{' '}
           <span className={`font-black ${accent === 'emerald' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
             {matchedParent.breed}
           </span>

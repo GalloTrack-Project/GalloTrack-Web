@@ -5,7 +5,7 @@ import ChickenIcon from '@/components/ChickenIcon';
 
 export default function ProductPreviewMockup() {
   return (
-    <div className="relative w-full max-w-xl mx-auto select-none">
+    <div className="relative w-full max-w-xl mx-auto select-none min-w-0">
       {/* Decorative background glows */}
       <div className="absolute -top-10 -left-10 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-10 -right-10 w-72 h-72 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -17,16 +17,16 @@ export default function ProductPreviewMockup() {
 
         {/* Card Header: Rooster Identity */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-success shadow-inner shrink-0">
               <ChickenIcon className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
                 <span className="text-xs font-mono font-black px-2 py-0.5 rounded bg-emerald-500/15 text-success border border-emerald-500/25 uppercase">
                   [1A1]
                 </span>
-                <h3 className="text-lg font-black text-foreground tracking-tight">
+                <h3 className="text-lg font-black text-foreground tracking-tight min-w-0 break-words">
                   Sample Rooster
                 </h3>
               </div>
@@ -36,7 +36,7 @@ export default function ProductPreviewMockup() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border uppercase tracking-wider">
               Sample Data
             </span>
@@ -49,8 +49,8 @@ export default function ProductPreviewMockup() {
 
         {/* Lineage & Ancestry Chips */}
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            <span className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 min-w-0">
               <Dna className="w-3.5 h-3.5 text-emerald-500" />
               Automatic Bloodline Calculation
             </span>
@@ -85,8 +85,8 @@ export default function ProductPreviewMockup() {
 
         {/* Match Performance Snapshot */}
         <div className="pt-2 border-t border-border/60 space-y-3">
-          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            <span className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 min-w-0">
               <Swords className="w-3.5 h-3.5 text-emerald-500" />
               Fight Performance
             </span>
@@ -110,7 +110,7 @@ export default function ProductPreviewMockup() {
 
           {/* Last Match Snapshot Row */}
           <div className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 truncate pr-2">
+            <div className="flex flex-wrap items-center gap-2 min-w-0 pr-2">
               <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="font-bold text-foreground truncate">
                 Won vs Opponent A

@@ -1,16 +1,16 @@
-﻿-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- GalloTrack Complete Seed Data v2 â€” 100 Fowls + 100 Matches
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- GalloTrack Complete Seed Data v2 — 100 Fowls + 100 Matches
+-- ═══════════════════════════════════════════════════════════════════════════
 -- HOW TO USE:
---   1. Go to Supabase Dashboard â†’ SQL Editor
+--   1. Go to Supabase Dashboard → SQL Editor
 --   2. Paste this entire script
 --   3. Click "Run"
 --   The script auto-detects your user ID from auth.users.
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 0: Setup tables & helper
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS strains (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -64,15 +64,15 @@ DO $$ BEGIN
 EXCEPTION WHEN undefined_object THEN null;
 END $$;
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 1: Clean existing data
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 DELETE FROM match WHERE user_id = (SELECT id::text FROM auth.users LIMIT 1);
 DELETE FROM fowl WHERE user_id = (SELECT id::text FROM auth.users LIMIT 1);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 2: Foundation Sires (6) â€” no parents, 100% bloodline
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 2: Foundation Sires (6) — no parents, 100% bloodline
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -84,9 +84,9 @@ FROM (VALUES
   ('Grand Albany',   'Albany',   'Rooster', 'Dark Cornish',       'Dark',     'Cock', 'Bold',         'Sta. Cruz', '2023-05-20'::date, '31 Months', '2.6 kg', '59 cm', 'Black',         'Foundation Stock', 'Foundation Stock', 0, 0, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 3: Foundation Hens (6) â€” no parents, 100% bloodline
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 3: Foundation Hens (6) — no parents, 100% bloodline
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -98,9 +98,9 @@ FROM (VALUES
   ('Dark Empress',    'Albany',   'Hen', 'Dark Cornish',    'Dark',     'Hen', 'Fierce',  'Sta. Cruz','2023-12-01'::date, '24 Months', '1.9 kg', '48 cm', 'Green / Slate', 'Foundation Stock', 'Foundation Stock', 0, 0, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 4: Full-Sibling Family A â€” Iron Lemon Ã— Golden Pearl (5 siblings)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 4: Full-Sibling Family A — Iron Lemon × Golden Pearl (5 siblings)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -111,9 +111,9 @@ FROM (VALUES
   ('Lemon Pearl',    'Lemon', 'Hen',     'Wheaten',            'Wheaten', 'Pullet',  'Active',       'Pearl',     '2024-09-15'::date, '6 Months',  '1.3 kg', '40 cm', 'Yellow',        'Iron Lemon', 'Golden Pearl', 100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 5: Full-Sibling Family B â€” Titan Sweater Ã— Sunrise Queen (4 siblings)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 5: Full-Sibling Family B — Titan Sweater × Sunrise Queen (4 siblings)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -123,9 +123,9 @@ FROM (VALUES
   ('Sweater Kid',    'Sweater', 'Rooster', 'Wheaten', 'Wheaten', 'Stag',    'Smart Fighter','Beanie', '2025-01-10'::date, '3 Months',  '1.0 kg', '35 cm', 'White',         'Titan Sweater', 'Sunrise Queen', 100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 6: Full-Sibling Family C â€” True Hatch Ã— Mountain Rose (4 siblings)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 6: Full-Sibling Family C — True Hatch × Mountain Rose (4 siblings)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -135,9 +135,9 @@ FROM (VALUES
   ('Hatch Bolt',     'Hatch', 'Rooster', 'Dark Red',     'Red',     'Stag',    'Bold',          'Sta. Cruz', '2025-02-01'::date, '2 Months',  '0.8 kg', '30 cm', 'Green / Slate', 'True Hatch', 'Mountain Rose', 100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 7: Full-Sibling Family D â€” King Roundhead Ã— Silver Princess (4 siblings)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 7: Full-Sibling Family D — King Roundhead × Silver Princess (4 siblings)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -147,9 +147,9 @@ FROM (VALUES
   ('Roundhead Star',   'Roundhead', 'Rooster', 'Wheaten',  'Wheaten', 'Stag',    'Alert',        'Pearl',     '2025-03-01'::date, '1 Month',  '0.5 kg', '25 cm', 'Willow',        'King Roundhead', 'Silver Princess', 100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 8: Full-Sibling Family E â€” Boss Kelso Ã— Red Duchess (4 siblings)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 8: Full-Sibling Family E — Boss Kelso × Red Duchess (4 siblings)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -159,9 +159,9 @@ FROM (VALUES
   ('Kelso Chick',     'Kelso', 'Rooster', 'Red',     'Red',     'Chick',   'Curious',      'Beanie', '2025-06-01'::date, '0 Months', '0.2 kg', '15 cm', 'Yellow', 'Boss Kelso', 'Red Duchess', 100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 9: Half-Siblings via Sire â€” same father, different mothers (8)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 9: Half-Siblings via Sire — same father, different mothers (8)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -175,9 +175,9 @@ FROM (VALUES
   ('Kelso Mountain',      'Kelso',   'Rooster', 'Dark Red',           'Red',      'Stag',    'Steady',        'Beanie',    '2025-01-15'::date, '3 Months',  '1.0 kg', '36 cm', 'Green / Slate', 'Boss Kelso',     'Mountain Rose',   100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 10: Half-Siblings via Dam â€” same mother, different fathers (8)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 10: Half-Siblings via Dam — same mother, different fathers (8)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -191,9 +191,9 @@ FROM (VALUES
   ('Albany Duchess',       'Albany',   'Rooster', 'Dark Cornish',       'Dark',     'Cock',    'Bold',          'Sta. Cruz', '2024-05-25'::date, '10 Months', '2.2 kg', '54 cm', 'Black',         'Grand Albany',   'Red Duchess',     100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 11: 2nd Generation Crosses â€” Grandchildren (10)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 11: 2nd Generation Crosses — Grandchildren (10)
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -209,9 +209,9 @@ FROM (VALUES
   ('Cross Champion',  'Hatch',    'Rooster', 'Dark Red',           'Red',      'Cock',    'Smart Fighter', 'Sta. Cruz', '2024-08-01'::date, '7 Months',  '2.0 kg', '52 cm', 'Green / Slate', 'Hatch Storm',    'Lemon Grace',     100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 12: Additional Stags (8) â€” young males in conditioning
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 12: Additional Stags (8) — young males in conditioning
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -225,9 +225,9 @@ FROM (VALUES
   ('Cross Kid',       'Sweater',  'Rooster', 'Dark Red',           'Red',      'Stag',    'Bold',          'Sta. Cruz', '2025-03-20'::date, '1 Month',  '0.6 kg', '26 cm', 'Green / Slate', 'Sweater Gold',   'Hatch Lemon',     100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 13: Chicks (6)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -239,9 +239,9 @@ FROM (VALUES
   ('Chick Zeta',     'Albany',   'Rooster', 'Dark Yellow',    'Yellow',   'Chick',   'Alert',         'Sta. Cruz', '2025-08-10'::date, '0 Months', '0.1 kg', '9 cm',  'Black',         'Grand Albany',   'Dark Empress',    100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 14: Archived Birds (8)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, archive_reason, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -255,9 +255,9 @@ FROM (VALUES
   ('Sold Hatch',        'Hatch',    'Rooster', 'Dark Red',           'Red',     'Cock', 'Powerful',  'Sta. Cruz', '2023-07-20'::date, '28 Months', '2.2 kg', '55 cm', 'Green / Slate', 'True Hatch',     'Mountain Rose',   100, 100, 100, 'Archived', 'Sold to derby team',               '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, archive_reason, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 15: Deceased Birds (5)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, death_reason, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -268,9 +268,9 @@ FROM (VALUES
   ('Remembered',      'Kelso',    'Rooster', 'Red',            'Red',     'Cock', 'Steady',     'Beanie',    '2023-04-25'::date, '30 Months', '2.1 kg', '54 cm', 'Yellow',        'Boss Kelso',     'Red Duchess',     100, 100, 100, 'Deceased', 'Died in transport to arena',       '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, death_reason, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 16: Sire Material Birds (6)
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -282,9 +282,9 @@ FROM (VALUES
   ('Proven Sire 6',   'Albany',   'Rooster', 'Dark Cornish',       'Dark',    'Cock', 'Bold',         'Sta. Cruz', '2023-06-30'::date, '30 Months', '2.5 kg', '58 cm', 'Black',         'Grand Albany',   'Dark Empress',    100, 100, 100, 'Sire Material', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 17: Pullets (4) â€” young females
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 17: Pullets (4) — young females
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -294,9 +294,9 @@ FROM (VALUES
   ('Young Duchess',   'Kelso',    'Pullet', 'Red',                'Red',     'Pullet', 'Alert',      'Beanie',    '2025-05-01'::date, '0 Months', '0.3 kg', '18 cm', 'Yellow',        'Boss Kelso',     'Red Duchess',     100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 18: Bull Stags (4) â€” 12-24 month males in training
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 18: Bull Stags (4) — 12-24 month males in training
+-- ═══════════════════════════════════════════════════════════════════════════
 INSERT INTO fowl (user_id, name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -306,9 +306,9 @@ FROM (VALUES
   ('Bull Kelso',      'Kelso',    'Rooster', 'Red',                'Red',     'Bull Stag', 'Steady',     'Beanie',    '2024-06-01'::date, '9 Months',  '1.8 kg', '49 cm', 'Yellow',        'Kelso Express',  'Kelso Belle',     100, 100, 100, 'Active', '')
 ) AS v(name, breed, gender, color, color_category, growth_stage, behavior_trait, eye_variant, birthdate, age, weight, height, leg_color, sire, dam, sire_pct, dam_pct, bloodline_pct, status, image_url);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- STEP 19: MATCH RECORDS â€” 100 matches covering all possibilities
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP 19: MATCH RECORDS — 100 matches covering all possibilities
+-- ═══════════════════════════════════════════════════════════════════════════
 
 -- === 2-COCK DERBY (15 matches) ===
 INSERT INTO match (user_id, date, entry_name, breed, opponent, opponent_breed, location, type, derby_match_number, outcome, status, post_fight_condition, cock_count, age_category, event_type)
@@ -442,7 +442,7 @@ FROM (VALUES
   ('2026-03-30'::date, 'Flash Warrior',   'Kelso',    'Rival Albany Storm',     'Albany',   'Dingle Breeding Arena',       'Special Derby', 3, 'Win',  'Verified', 'Fit / Recovered',              3, 'Stag', 'Derby')
 ) AS v(date, entry_name, breed, opponent, opponent_breed, location, type, derby_match_number, outcome, status, post_fight_condition, cock_count, age_category, event_type);
 
--- === CUSTOM TYPES (10 matches) â€” user-typed events ===
+-- === CUSTOM TYPES (10 matches) — user-typed events ===
 INSERT INTO match (user_id, date, entry_name, breed, opponent, opponent_breed, location, type, derby_match_number, outcome, status, post_fight_condition, cock_count, age_category, event_type)
 SELECT (SELECT id::text FROM auth.users LIMIT 1), v.*
 FROM (VALUES
@@ -458,9 +458,9 @@ FROM (VALUES
   ('2025-11-15'::date, 'Inactive Star',    'Roundhead','Rival Whitehackle Pro',  'Whitehackle','Santa Barbara Sports Complex','Local Derby',       1, 'Win',  'Verified', 'Fit / Recovered',              2, 'Cock', 'Derby')
 ) AS v(date, entry_name, breed, opponent, opponent_breed, location, type, derby_match_number, outcome, status, post_fight_condition, cock_count, age_category, event_type);
 
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 -- VERIFICATION QUERIES
--- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+-- ═══════════════════════════════════════════════════════════════════════════
 
 -- Total counts
 SELECT 'FOWL COUNT' as label, COUNT(*) as total FROM fowl WHERE user_id = (SELECT id::text FROM auth.users LIMIT 1)

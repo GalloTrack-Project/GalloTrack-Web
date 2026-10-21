@@ -26,6 +26,10 @@ export type NavItem = {
   match: 'exact' | 'prefix';
   /** Sidebar group label; consecutive items with the same group are grouped. */
   group: string;
+  /** Translation key in nav dictionary (optional) */
+  key?: 'dashboard' | 'registry' | 'inventory' | 'lineage' | 'breeding' | 'profile' | 'overview' | 'users' | 'config';
+  /** Group key in nav dictionary (optional) */
+  groupKey?: 'farmGroup' | 'consoleGroup' | 'accountGroup';
 };
 
 /** Mobile bottom bar keeps this many primary items; the rest live under More. */
@@ -54,19 +58,19 @@ export const MARKETPLACE_TABS = ['browse', 'my', 'create'] as const;
 export const LINEAGE_TABS = ['tree', 'families', 'sire', 'dam', 'pedigree'] as const;
 
 export const OWNER_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: LayoutDashboard, match: 'exact', group: 'Farm' },
-  { href: '/profiling', label: 'Chicken Registry', shortLabel: 'Registry', icon: Dna, match: 'prefix', group: 'Farm' },
-  { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon, match: 'prefix', group: 'Farm' },
-  { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine, match: 'prefix', group: 'Farm' },
-  { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical, match: 'prefix', group: 'Farm' },
-  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account' },
+  { href: '/dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: LayoutDashboard, match: 'exact', group: 'Farm', key: 'dashboard', groupKey: 'farmGroup' },
+  { href: '/profiling', label: 'Chicken Registry', shortLabel: 'Registry', icon: Dna, match: 'prefix', group: 'Farm', key: 'registry', groupKey: 'farmGroup' },
+  { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon, match: 'prefix', group: 'Farm', key: 'inventory', groupKey: 'farmGroup' },
+  { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine, match: 'prefix', group: 'Farm', key: 'lineage', groupKey: 'farmGroup' },
+  { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical, match: 'prefix', group: 'Farm', key: 'breeding', groupKey: 'farmGroup' },
+  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account', key: 'profile', groupKey: 'accountGroup' },
 ];
 
 export const ADMIN_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'System Overview', shortLabel: 'Overview', icon: LayoutDashboard, match: 'exact', group: 'Console' },
-  { href: '/admin', label: 'User Registry', shortLabel: 'Users', icon: Users, match: 'exact', group: 'Console' },
-  { href: '/admin/settings', label: 'System Config', shortLabel: 'Config', icon: Settings, match: 'prefix', group: 'Console' },
-  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account' },
+  { href: '/dashboard', label: 'System Overview', shortLabel: 'Overview', icon: LayoutDashboard, match: 'exact', group: 'Console', key: 'overview', groupKey: 'consoleGroup' },
+  { href: '/admin', label: 'User Registry', shortLabel: 'Users', icon: Users, match: 'exact', group: 'Console', key: 'users', groupKey: 'consoleGroup' },
+  { href: '/admin/settings', label: 'System Config', shortLabel: 'Config', icon: Settings, match: 'prefix', group: 'Console', key: 'config', groupKey: 'consoleGroup' },
+  { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account', key: 'profile', groupKey: 'accountGroup' },
 ];
 
 /** Secondary admin pages: not sidebar items, but titled in the header. */
@@ -125,4 +129,23 @@ export function getPageTitle(pathname: string): string {
     pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ||
     'Dashboard'
   );
+}
+
+/** Translates nav items based on their declared translation keys, falling back to static labels. */
+export function getTranslatedNavItems(
+  navItems: NavItem[],
+  t: (key: string) => string
+): NavItem[] {
+  return navItems.map((item) => {
+    if (!item.key) return item;
+    const label = t(`nav.${item.key}`);
+    const shortLabel = t(`nav.${item.key}Short`);
+    const group = item.groupKey ? t(`nav.${item.groupKey}`) : item.group;
+    return {
+      ...item,
+      label: label && label !== `nav.${item.key}` ? label : item.label,
+      shortLabel: shortLabel && shortLabel !== `nav.${item.key}Short` ? shortLabel : item.shortLabel,
+      group: group && group !== `nav.${item.groupKey}` ? group : item.group,
+    };
+  });
 }

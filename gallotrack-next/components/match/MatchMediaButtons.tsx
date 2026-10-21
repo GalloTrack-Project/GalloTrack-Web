@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Play, Pencil, Share2 } from 'lucide-react';
 import { useUI } from '@/lib/contexts/ui-context';
 import type { MatchRecord } from '@/lib/types';
@@ -37,29 +37,30 @@ export default function MatchMediaButtons({
 }: Props) {
   const ui = useUI();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const effectiveVideos =
     videos && videos.length > 0
       ? videos
       : match.videos && match.videos.length > 0
-      ? match.videos
-      : match.video_url && match.video_url.trim() !== ''
-      ? [match.video_url.trim()]
-      : [];
+        ? match.videos
+        : match.video_url && match.video_url.trim() !== ''
+          ? [match.video_url.trim()]
+          : [];
 
   const effectivePhotos =
     photos && photos.length > 0
       ? photos
       : match.photos && match.photos.length > 0
-      ? match.photos
-      : [];
+        ? match.photos
+        : [];
 
   const effectivePosters =
     posters && posters.length > 0
       ? posters
       : match.video_posters && match.video_posters.length > 0
-      ? match.video_posters
-      : [];
+        ? match.video_posters
+        : [];
 
   type ProcessingFlags = { video_status?: string; video_processing?: boolean };
   const flags = match as MatchRecord & Partial<ProcessingFlags>;
@@ -67,8 +68,11 @@ export default function MatchMediaButtons({
     flags.video_status === 'processing' ||
     flags.status === 'processing' ||
     flags.video_processing ||
-    (typeof match.video_url === 'string' && /processing|converting|transcoding/i.test(match.video_url)) ||
-    effectiveVideos.some((v) => typeof v === 'string' && /processing|converting|transcoding/i.test(v))
+    (typeof match.video_url === 'string' &&
+      /processing|converting|transcoding/i.test(match.video_url)) ||
+    effectiveVideos.some(
+      (v) => typeof v === 'string' && /processing|converting|transcoding/i.test(v),
+    ),
   );
 
   const videoCount = match.video_count !== undefined ? match.video_count : effectiveVideos.length;
@@ -77,7 +81,9 @@ export default function MatchMediaButtons({
   const hasVideos = (videoCount > 0 || effectiveVideos.length > 0) && !isProcessing;
   const hasPhotos = photoCount > 0 || effectivePhotos.length > 0;
   const hasMedia = (hasVideos || hasPhotos) && !isProcessing;
-  const totalMediaCount = (videoCount > 0 ? videoCount : 0) + (photoCount > 0 ? photoCount : 0) || effectiveVideos.length + effectivePhotos.length;
+  const totalMediaCount =
+    (videoCount > 0 ? videoCount : 0) + (photoCount > 0 ? photoCount : 0) ||
+    effectiveVideos.length + effectivePhotos.length;
 
   const openMedia = () =>
     ui.openMatchMediaViewer({
@@ -88,7 +94,10 @@ export default function MatchMediaButtons({
       tab: hasVideos ? 'videos' : 'photos',
     });
 
-  const safeReturn = returnTo || (pathname && pathname.startsWith('/') ? pathname : '/match-logs');
+  const search = searchParams?.toString() ?? '';
+  const currentPath =
+    pathname && pathname.startsWith('/') ? `${pathname}${search ? `?${search}` : ''}` : '';
+  const safeReturn = returnTo || currentPath || '/match-logs';
   const editHref = `/match-logs/${match.id}/edit${safeReturn ? `?returnTo=${encodeURIComponent(safeReturn)}` : ''}`;
 
   const closeModals = () => {
@@ -97,14 +106,14 @@ export default function MatchMediaButtons({
   };
 
   return (
-    <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+    <div className="flex items-center justify-center gap-1 whitespace-nowrap">
       {isProcessing ? (
         <span
           title="Video is being processed/converted"
           aria-label={`Video processing for ${match.entry_name}`}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-amber-500/10 border border-amber-500/20 text-warning text-xs font-bold whitespace-nowrap cursor-wait"
+          className="text-warning inline-flex cursor-wait items-center gap-1.5 rounded-sm border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-bold whitespace-nowrap"
         >
-          <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-500" />
           Processing…
         </span>
       ) : null}
@@ -118,24 +127,27 @@ export default function MatchMediaButtons({
             e.stopPropagation();
             openMedia();
           }}
-          className="relative inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-success hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="text-success focus-visible:ring-ring relative inline-flex h-8 min-h-[44px] w-8 min-w-[44px] cursor-pointer items-center justify-center rounded-sm border border-emerald-500/20 bg-emerald-500/10 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:outline-none sm:min-h-[32px] sm:min-w-[32px]"
         >
           <Play size={13} fill="currentColor" strokeWidth={0} />
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-black px-1 leading-none pointer-events-none">
+          <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] leading-none font-black text-white">
             {totalMediaCount}
           </span>
         </button>
       ) : null}
 
       {!hasMedia && !isProcessing ? (
-        <span className="text-xs font-bold text-muted-foreground/70" title="No videos or photos yet">
+        <span
+          className="text-muted-foreground/70 hidden text-xs font-bold xl:inline"
+          title="No videos or photos yet"
+        >
           No media
         </span>
       ) : null}
 
       {showActions ? (
         <>
-          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-border" />
+          <span aria-hidden="true" className="bg-border mx-0.5 hidden h-5 w-px xl:inline-block" />
           {onEdit ? (
             <button
               type="button"
@@ -146,7 +158,7 @@ export default function MatchMediaButtons({
                 closeModals();
                 onEdit();
               }}
-              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="bg-muted border-border text-muted-foreground hover:text-success hover:border-success/40 focus-visible:ring-ring inline-flex h-8 min-h-[44px] w-8 min-w-[44px] cursor-pointer items-center justify-center rounded-sm border transition-all focus-visible:ring-2 focus-visible:outline-none sm:min-h-[32px] sm:min-w-[32px]"
             >
               <Pencil size={13} />
             </button>
@@ -159,7 +171,7 @@ export default function MatchMediaButtons({
                 e.stopPropagation();
                 closeModals();
               }}
-              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="bg-muted border-border text-muted-foreground hover:text-success hover:border-success/40 focus-visible:ring-ring inline-flex h-8 min-h-[44px] w-8 min-w-[44px] cursor-pointer items-center justify-center rounded-sm border transition-all focus-visible:ring-2 focus-visible:outline-none sm:min-h-[32px] sm:min-w-[32px]"
             >
               <Pencil size={13} />
             </Link>
@@ -181,7 +193,7 @@ export default function MatchMediaButtons({
                 });
               }
             }}
-            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] w-8 h-8 rounded-sm bg-muted border border-border text-muted-foreground hover:text-success hover:border-success/40 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="bg-muted border-border text-muted-foreground hover:text-success hover:border-success/40 focus-visible:ring-ring inline-flex h-8 min-h-[44px] w-8 min-w-[44px] cursor-pointer items-center justify-center rounded-sm border transition-all focus-visible:ring-2 focus-visible:outline-none sm:min-h-[32px] sm:min-w-[32px]"
           >
             <Share2 size={13} />
           </button>

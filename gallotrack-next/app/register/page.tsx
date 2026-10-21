@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, fullNameFromMetadata } from '@/lib/registry';
 import { Dna, BarChart3, Building2, ShieldCheck } from 'lucide-react';
+import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { useT } from '@/lib/i18n';
 
 const ICONS = {
   user: (
@@ -57,6 +59,7 @@ const STEPS = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useT();
   const [step, setStep] = useState(1);
 
   const [firstName, setFirstName] = useState('');
@@ -74,8 +77,8 @@ export default function RegisterPage() {
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
 
   useEffect(() => {
-    document.title = 'Create Account | GalloTrack';
-  }, []);
+    document.title = `${t('auth.registerTitle')} | GalloTrack`;
+  }, [t]);
 
   useEffect(() => {
     fetch('/api/admin/system-settings')
@@ -264,15 +267,18 @@ export default function RegisterPage() {
           <div className="p-6 sm:p-8 space-y-5">
           {/* Header */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2.5 lg:hidden">
-              <div className="w-9 h-9 rounded-md bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent" aria-hidden="true"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 lg:hidden min-w-0">
+                <div className="w-9 h-9 rounded-md bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent" aria-hidden="true"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
+                </div>
+                <p className="text-base font-semibold text-card-foreground tracking-tight hidden sm:inline">GALLO<span className="text-accent">TRACK</span></p>
               </div>
-              <p className="text-base font-semibold text-card-foreground tracking-tight">GALLO<span className="text-accent">TRACK</span></p>
+              <CompactLanguageSwitcher variant="button" />
             </div>
             <div className="space-y-1.5">
-              <h1 className="text-2xl font-semibold text-card-foreground tracking-tight leading-tight">Farm Owner Registration</h1>
-              <p className="text-sm text-muted-foreground">Create your account to manage lineage, analytics and flock records.</p>
+              <h1 className="text-2xl font-semibold text-card-foreground tracking-tight leading-tight">{t('auth.registerTitle')}</h1>
+              <p className="text-sm text-muted-foreground">{t('auth.registerSubtitle')}</p>
             </div>
           </div>
 
@@ -281,12 +287,12 @@ export default function RegisterPage() {
           )}
 
           {/* Step Indicator */}
-          <div className="flex items-center justify-center gap-2 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-2">
             {STEPS.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <div className="flex flex-col items-center gap-1.5">
+              <div key={s.id} className="flex items-center gap-1.5 sm:gap-2">
+                <div className="flex flex-col items-center gap-1.5 min-w-0">
                   <div
-                    className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-black transition-all duration-300 ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center text-sm font-black transition-all duration-300 ${
                       step > s.id
                         ? 'bg-emerald-500 text-white'
                         : step === s.id
@@ -300,10 +306,10 @@ export default function RegisterPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{ICONS[s.icon]}</svg>
                     )}
                   </div>
-                  <span className={`text-xs font-bold tracking-wider ${step === s.id ? 'text-success' : 'text-muted-foreground'}`}>{s.label}</span>
+                  <span className={`text-[10px] sm:text-xs font-bold tracking-wider text-center leading-tight break-words max-w-[72px] sm:max-w-none ${step === s.id ? 'text-success' : 'text-muted-foreground'}`}>{s.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className={`w-12 h-0.5 rounded-full mb-5 transition-all duration-300 ${step > s.id ? 'bg-emerald-500' : 'bg-border'}`}></div>
+                  <div className={`w-5 sm:w-12 h-0.5 rounded-full mb-5 transition-all duration-300 ${step > s.id ? 'bg-emerald-500' : 'bg-border'}`}></div>
                 )}
               </div>
             ))}
@@ -442,7 +448,7 @@ export default function RegisterPage() {
                     </>
                   ) : (
                     <>
-                      <span className="text-sm tracking-widest">{loading ? 'Creating Account...' : 'REGISTER'}</span>
+                      <span className="text-sm tracking-widest">{loading ? t('auth.signingUp') : t('auth.signUpButton')}</span>
                       {!loading && <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>}
                     </>
                   )}
@@ -452,7 +458,7 @@ export default function RegisterPage() {
 
             <div className="pt-1">
               <Link href="/login" className="text-xs font-bold text-muted-foreground hover:text-success transition-colors tracking-wide cursor-pointer underline underline-offset-2 decoration-muted-foreground/50 hover:decoration-emerald-400 w-full text-center block">
-                Already have an account? Log In
+                {t('auth.haveAccountPrompt')} {t('auth.signInLink')}
               </Link>
             </div>
           </form>

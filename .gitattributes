@@ -1,0 +1,33 @@
+# Normalize text files to LF in the repository and in the working tree.
+* text=auto eol=lf
+
+# Binary assets must never be normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.avif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.xlsx binary
+*.mp4 binary
+*.mov binary
+*.mp3 binary
+*.wav binary
+
+# Explicit textual formats kept on LF even on Windows checkouts.
+*.csv text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.mjs text eol=lf

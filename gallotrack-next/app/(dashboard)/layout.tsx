@@ -10,11 +10,22 @@ import { useAuth } from '@/lib/contexts/auth-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { supabase } from '@/lib/registry';
 import { SkipLink, cn } from '@/components/ui';
-import { OWNER_NAV, ADMIN_NAV, isActiveNav, findActiveNav, groupNavItems, getPageTitle, type NavItem } from '@/lib/nav-manifest';
+import {
+  OWNER_NAV,
+  ADMIN_NAV,
+  isActiveNav,
+  findActiveNav,
+  groupNavItems,
+  getPageTitle,
+  getTranslatedNavItems,
+  type NavItem,
+} from '@/lib/nav-manifest';
 import GlobalSearch from '@/components/nav/GlobalSearch';
 import MobileNav from '@/components/nav/MobileNav';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { useT } from '@/lib/i18n';
+import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,6 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const ui = useUI();
   const auth = useAuth();
   const fowl = useFowl();
+  const t = useT();
   const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState({ total_users: 0, total_fowls: 0, total_matches: 0 });
 
@@ -30,7 +42,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!auth.isAdmin) return;
     async function loadStats() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) return;
       const res = await fetch('/api/admin/stats', {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -41,7 +55,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [auth.isAdmin]);
 
   const isAdmin = auth.isAdmin;
-  const navItems: NavItem[] = isAdmin ? ADMIN_NAV : OWNER_NAV;
+  const rawNavItems: NavItem[] = isAdmin ? ADMIN_NAV : OWNER_NAV;
+  const navItems: NavItem[] = getTranslatedNavItems(rawNavItems, t as (k: string) => string);
 
   const currentNav = findActiveNav(navItems, pathname);
   const activeTitle = currentNav?.label || getPageTitle(pathname);
@@ -58,28 +73,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div
       data-role={isAdmin ? 'admin' : 'owner'}
-      className="bg-background min-h-screen font-sans antialiased text-foreground flex flex-col md:flex-row overflow-hidden h-[100dvh] w-full relative selection:bg-accent selection:text-accent-foreground"
+      className="bg-background text-foreground selection:bg-accent selection:text-accent-foreground relative flex h-[100dvh] min-h-screen w-full flex-col overflow-hidden font-sans antialiased md:flex-row"
     >
       <SkipLink />
 
       {/* SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-card text-card-foreground flex-col md:fixed md:inset-y-0 md:left-0 z-50 border-r border-border shadow-2xl h-full justify-between">
+      <aside className="bg-card text-card-foreground border-border z-50 hidden h-full w-64 flex-col justify-between border-r shadow-2xl md:fixed md:inset-y-0 md:left-0 md:flex">
         <div>
-          <div className="h-16 px-5 border-b border-border bg-muted/40 flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 rounded-sm bg-accent/15 border border-accent/40 flex items-center justify-center shadow-inner shrink-0">
-              {isAdmin ? <Shield className="w-4 h-4 text-accent" aria-hidden="true" /> : <ChickenIcon className="w-4 h-4 text-accent" />}
+          <div className="border-border bg-muted/40 flex h-16 shrink-0 items-center gap-3 border-b px-5">
+            <div className="bg-accent/15 border-accent/40 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border shadow-inner">
+              {isAdmin ? (
+                <Shield className="text-accent h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChickenIcon className="text-accent h-4 w-4" />
+              )}
             </div>
             <div className="min-w-0 flex-1 leading-none">
-              <p className="text-base font-semibold tracking-tight text-card-foreground">GALLO<span className="text-accent">TRACK</span></p>
-              <span className="text-sm font-mono font-medium text-accent tracking-widest uppercase block mt-1.5">
+              <p className="text-card-foreground text-base font-semibold tracking-tight">
+                GALLO<span className="text-accent">TRACK</span>
+              </p>
+              <span className="text-accent mt-1.5 block font-mono text-sm font-medium tracking-widest uppercase">
                 {isAdmin ? 'Admin Panel' : 'v1.0.0'}
               </span>
             </div>
           </div>
-          <nav aria-label="Primary" className="p-4 space-y-4 mt-2">
+          <nav aria-label="Primary" className="mt-2 space-y-4 p-4">
             {groupNavItems(navItems).map(({ group, items }) => (
               <div key={group}>
-                <p className="px-4 pb-1.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">{group}</p>
+                <p className="text-muted-foreground px-4 pb-1.5 text-[11px] font-black tracking-widest uppercase">
+                  {group}
+                </p>
                 <div className="space-y-1.5">
                   {items.map((item) => (
                     <Link
@@ -87,13 +110,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={item.href}
                       aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
                       className={cn(
-                        'w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-sm text-sm tracking-wide transition-colors duration-150',
+                        'flex w-full items-center gap-3 rounded-sm px-4 py-2.5 text-left text-sm tracking-wide transition-colors duration-150',
                         isActiveNav(item, pathname)
                           ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
-                          : 'text-muted-foreground font-medium hover:bg-muted/70 hover:text-foreground',
+                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground font-medium',
                       )}
                     >
-                      <item.icon className="w-4 h-4" />
+                      <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
                     </Link>
                   ))}
@@ -103,122 +126,183 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
 
-        <div className="p-4 border-t border-border bg-muted/40 space-y-3">
+        <div className="border-border bg-muted/40 space-y-3 border-t p-4">
           <div className="flex items-center gap-3 px-2 py-1 select-none">
             {auth.avatarUrl ? (
-              <img src={auth.avatarUrl} alt="" className="w-8 h-8 rounded-sm object-cover border border-border" />
+              <img
+                src={auth.avatarUrl}
+                alt=""
+                className="border-border h-8 w-8 rounded-sm border object-cover"
+              />
             ) : (
-              <div className="w-8 h-8 rounded-sm bg-accent/15 border border-accent/40 flex items-center justify-center shadow-inner"><User className="w-4 h-4 text-muted-foreground" aria-hidden="true" /></div>
+              <div className="bg-accent/15 border-accent/40 flex h-8 w-8 items-center justify-center rounded-sm border shadow-inner">
+                <User className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+              </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-card-foreground truncate">{auth.adminName}</p>
-              <span className="inline-block text-sm font-medium uppercase tracking-wider px-2 py-0.5 mt-0.5 rounded-full border bg-accent/15 border-accent/30 text-accent">
+              <p className="text-card-foreground truncate text-sm font-semibold">
+                {auth.adminName}
+              </p>
+              <span className="bg-accent/15 border-accent/30 text-accent mt-0.5 inline-block rounded-full border px-2 py-0.5 text-sm font-medium tracking-wider uppercase">
                 {isAdmin ? 'Admin' : 'Farm Owner'}
               </span>
             </div>
           </div>
 
           {isAdmin && (
-            <div className="px-2 space-y-1.5">
-              <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">System Overview</p>
+            <div className="space-y-1.5 px-2">
+              <p className="text-muted-foreground text-sm font-medium tracking-widest uppercase">
+                System Overview
+              </p>
               <div className="grid grid-cols-3 gap-1.5">
                 <div className="bg-muted/50 rounded-sm p-2 text-center">
-                  <p className="text-sm font-semibold text-accent tabular-nums">{stats.total_users}</p>
-                  <p className="text-sm font-medium text-muted-foreground">Users</p>
+                  <p className="text-accent text-sm font-semibold tabular-nums">
+                    {stats.total_users}
+                  </p>
+                  <p className="text-muted-foreground text-sm font-medium">Users</p>
                 </div>
                 <div className="bg-muted/50 rounded-sm p-2 text-center">
-                  <p className="text-sm font-semibold text-success tabular-nums">{stats.total_fowls}</p>
-                  <p className="text-sm font-medium text-muted-foreground">Chickens</p>
+                  <p className="text-success text-sm font-semibold tabular-nums">
+                    {stats.total_fowls}
+                  </p>
+                  <p className="text-muted-foreground text-sm font-medium">Chickens</p>
                 </div>
                 <div className="bg-muted/50 rounded-sm p-2 text-center">
-                  <p className="text-sm font-semibold text-info tabular-nums">{stats.total_matches}</p>
-                  <p className="text-sm font-medium text-muted-foreground">Matches</p>
+                  <p className="text-info text-sm font-semibold tabular-nums">
+                    {stats.total_matches}
+                  </p>
+                  <p className="text-muted-foreground text-sm font-medium">Matches</p>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="px-2 flex items-center justify-between gap-2">
-            <span className={cn(
-              'inline-flex items-center gap-1.5 text-sm font-medium uppercase tracking-widest',
-              auth.userActive ? 'text-success' : 'text-danger',
-            )}>
-              <span aria-hidden="true" className={cn('w-1.5 h-1.5 rounded-full', auth.userActive ? 'bg-success' : 'bg-danger animate-pulse')}></span>
-              {auth.userActive ? 'Access Active' : 'Access Restricted'}
+          <div className="flex items-center justify-between gap-2 px-2">
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 text-sm font-medium tracking-widest uppercase',
+                auth.userActive ? 'text-success' : 'text-danger',
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full',
+                  auth.userActive ? 'bg-success' : 'bg-danger animate-pulse',
+                )}
+              ></span>
+              {auth.userActive ? t('header.accessActive') : t('header.accessRestricted')}
             </span>
-            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider truncate">{auth.userHub}</span>
+            <span className="text-muted-foreground truncate text-sm font-medium tracking-wider uppercase">
+              {auth.userHub}
+            </span>
           </div>
-          <button type="button" onClick={() => ui.setShowLogoutModal(true)} className="w-full bg-muted hover:bg-danger/10 text-muted-foreground hover:text-danger border border-border hover:border-danger/30 text-left flex items-center gap-3 px-4 py-2.5 rounded-sm text-sm font-medium transition-colors duration-150 cursor-pointer">
-            <LogOut className="w-4 h-4" aria-hidden="true" />
-            <span>Log Out</span>
+          <button
+            type="button"
+            onClick={() => ui.setShowLogoutModal(true)}
+            className="bg-muted hover:bg-danger/10 text-muted-foreground hover:text-danger border-border hover:border-danger/30 flex w-full cursor-pointer items-center gap-3 rounded-sm border px-4 py-2.5 text-left text-sm font-medium transition-colors duration-150"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            <span>{t('nav.logout')}</span>
           </button>
         </div>
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 md:pl-64 flex flex-col h-full w-full min-h-0 overflow-hidden relative pb-[65px] md:pb-0">
-        <header className="h-16 bg-card/85 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-xs shrink-0 flex items-center">
-          <div className="w-full px-4 sm:px-6 md:px-8 flex justify-between items-center">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="md:hidden flex flex-col justify-center min-w-0">
-                <span className="font-extrabold text-card-foreground text-sm tracking-tight leading-tight truncate bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
-                  {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'} <span className="font-mono text-[10px] text-muted-foreground font-normal">v1.0.0</span>
+      <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden pb-[65px] md:pb-0 md:pl-64">
+        <header className="bg-card/85 border-border sticky top-0 z-40 flex h-16 shrink-0 items-center border-b shadow-xs backdrop-blur-md">
+          <div className="flex w-full items-center justify-between px-3 sm:px-6 md:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 flex-col justify-center md:hidden">
+                <span className="text-card-foreground from-foreground to-accent truncate bg-gradient-to-r bg-clip-text text-sm leading-tight font-extrabold tracking-tight text-transparent">
+                  {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'}{' '}
+                  <span className="text-muted-foreground font-mono text-[10px] font-normal">
+                    v1.0.0
+                  </span>
                 </span>
-                <span className="text-[10px] font-medium text-muted-foreground tracking-wide leading-tight truncate">
+                <span className="text-muted-foreground truncate text-[10px] leading-tight font-medium tracking-wide">
                   {isAdmin ? 'Administrator console' : 'Farm management console'}
                 </span>
               </div>
 
-              <div className="hidden md:flex items-center gap-2.5">
-                <span className="text-sm font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border bg-accent/10 border-accent/30 text-accent">
+              <div className="hidden items-center gap-2.5 md:flex">
+                <span className="bg-accent/10 border-accent/30 text-accent rounded-sm border px-2 py-0.5 text-sm font-medium tracking-wider uppercase">
                   {isAdmin ? 'Admin' : 'Portal'}
                 </span>
-                <span aria-hidden="true" className="text-muted-foreground/40 text-sm">/</span>
-                <span className="text-sm font-semibold text-foreground tracking-tight">{activeTitle}</span>
+                <span aria-hidden="true" className="text-muted-foreground/40 text-sm">
+                  /
+                </span>
+                <span className="text-foreground text-sm font-semibold tracking-tight">
+                  {activeTitle}
+                </span>
               </div>
 
-              <div className="hidden lg:flex items-center gap-2 select-none pl-3 border-l border-border/60">
+              <div className="border-border/60 hidden items-center gap-2 border-l pl-3 select-none lg:flex">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-accent/40"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent/80"></span>
+                  <span className="bg-accent/40 absolute inline-flex h-full w-full animate-pulse rounded-full"></span>
+                  <span className="bg-accent/80 relative inline-flex h-1.5 w-1.5 rounded-full"></span>
                 </span>
-                <span className="text-sm font-medium text-muted-foreground tracking-wide">PostgreSQL Connected</span>
-                <span className="text-xs text-muted-foreground pl-2.5 border-l border-border/60">
-                  GALLOTRACK v1.0.0 · {isAdmin ? 'Administrator console' : 'Farm management console'}
+                <span className="text-muted-foreground text-sm font-medium tracking-wide">
+                  {t('header.connected')}
+                </span>
+                <span className="text-muted-foreground border-border/60 border-l pl-2.5 text-xs">
+                  GALLOTRACK v1.0.0 · {isAdmin ? t('nav.adminConsole') : t('nav.farmConsole')}
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2.5">
               {auth.avatarUrl ? (
-                <img src={auth.avatarUrl} alt="" className="md:hidden w-8 h-8 rounded-full object-cover border border-border" />
+                <img
+                  src={auth.avatarUrl}
+                  alt=""
+                  className="border-border h-8 w-8 rounded-full border object-cover md:hidden"
+                />
               ) : (
-                <div className="md:hidden w-8 h-8 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center"><User className="w-4 h-4 text-muted-foreground" aria-hidden="true" /></div>
+                <div className="bg-accent/15 border-accent/40 flex h-8 w-8 items-center justify-center rounded-full border md:hidden">
+                  <User className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+                </div>
               )}
               <GlobalSearch />
+              <div className="hidden items-center sm:flex">
+                <CompactLanguageSwitcher variant="button" />
+              </div>
               {!isAdmin && (
-                <Link href="/settings" aria-label="Settings" title="Settings" className={iconButtonClass}>
-                  <Settings className="w-4 h-4" aria-hidden="true" />
+                <Link
+                  href="/settings"
+                  aria-label={t('header.settings')}
+                  title={t('header.settings')}
+                  className={iconButtonClass}
+                >
+                  <Settings className="h-4 w-4" aria-hidden="true" />
                 </Link>
               )}
               {mounted && (
                 <button
                   type="button"
                   onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                  aria-label={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                  title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label={
+                    resolvedTheme === 'dark' ? t('header.switchToLight') : t('header.switchToDark')
+                  }
+                  title={
+                    resolvedTheme === 'dark' ? t('header.switchToLight') : t('header.switchToDark')
+                  }
                   className={iconButtonClass}
                 >
-                  {resolvedTheme === 'dark' ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
+                  {resolvedTheme === 'dark' ? (
+                    <Sun className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Moon className="h-4 w-4" aria-hidden="true" />
+                  )}
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => ui.setShowLogoutModal(true)}
-                aria-label="Log out"
-                title="Log out"
-                className="md:hidden bg-danger/10 text-danger hover:bg-danger/20 border border-danger/30 p-1.5 px-2 sm:px-3 rounded-full text-sm font-semibold cursor-pointer transition-colors duration-150 flex items-center shadow-2xs"
+                aria-label={t('header.logoutAria')}
+                title={t('header.logoutAria')}
+                className="bg-danger/10 text-danger hover:bg-danger/20 border-danger/30 flex cursor-pointer items-center rounded-full border p-1.5 px-1.5 text-sm font-semibold shadow-2xs transition-colors duration-150 sm:px-3 md:hidden"
               >
-                <LogOut className="w-4 h-4" aria-hidden="true" />
+                <LogOut className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -227,35 +311,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {fowl.loadError && (
           <div
             role="alert"
-            className="shrink-0 border-b border-amber-300/70 bg-amber-50 dark:bg-amber-950/40 px-4 sm:px-6 md:px-8 py-3 flex flex-col sm:flex-row sm:items-center gap-2"
+            className="flex shrink-0 flex-col gap-2 border-b border-amber-300/70 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:px-6 md:px-8 dark:bg-amber-950/40"
           >
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 hidden sm:block" aria-hidden="true" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
-                Registry sync failed
+            <AlertTriangle
+              className="hidden h-4 w-4 shrink-0 text-amber-600 sm:block dark:text-amber-400"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black tracking-widest text-amber-700 uppercase dark:text-amber-400">
+                {t('errors.syncFailed')}
               </p>
-              <p className="text-sm font-semibold text-muted-foreground mt-0.5 break-words">
-                {fowl.loadError} Figures on screen may be out of date.
+              <p className="text-muted-foreground mt-0.5 text-sm font-semibold break-words">
+                {fowl.loadError} {t('errors.syncFailedDesc')}
               </p>
             </div>
             <button
               type="button"
               onClick={() => fowl.fetchDatabaseResources()}
-              className="flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-sm px-3 py-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer transition-colors duration-150 shrink-0"
+              className="flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-sm border border-amber-300 px-3 py-1.5 text-xs font-black tracking-wider text-amber-700 uppercase transition-colors duration-150 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/40"
             >
-              <RefreshCw className="w-3 h-3" aria-hidden="true" />
-              Retry
+              <RefreshCw className="h-3 w-3" aria-hidden="true" />
+              {t('common.retry')}
             </button>
           </div>
         )}
 
-        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6">
-          <ErrorBoundary label="Dashboard Section">
-            {children}
-          </ErrorBoundary>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8"
+        >
+          <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
         </main>
-
-
 
         <ModalsWrapper />
 

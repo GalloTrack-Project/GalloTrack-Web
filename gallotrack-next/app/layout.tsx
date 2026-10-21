@@ -53,26 +53,34 @@ export const viewport: Viewport = {
 };
 
 import StagingBanner from "@/components/StagingBanner";
+import { cookies } from "next/headers";
+import { getLanguageFromCookies } from "@/lib/i18n/server";
+import { LanguageProvider } from "@/lib/i18n";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const lang = getLanguageFromCookies(cookieStore);
+
   return (
-    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={lang} suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem storageKey="theme">
-          <ToastProvider>
-            <GalloTrackProvider>
-              <RootErrorBoundary>
-                <div className="min-h-full w-full flex flex-col">
-                  <StagingBanner />
-                  {children}
-                </div>
-              </RootErrorBoundary>
-            </GalloTrackProvider>
-          </ToastProvider>
+          <LanguageProvider initialLanguage={lang}>
+            <ToastProvider>
+              <GalloTrackProvider>
+                <RootErrorBoundary>
+                  <div className="min-h-full w-full flex flex-col">
+                    <StagingBanner />
+                    {children}
+                  </div>
+                </RootErrorBoundary>
+              </GalloTrackProvider>
+            </ToastProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

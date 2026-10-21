@@ -14,6 +14,7 @@ import type { BloodlineComposition } from '@/lib/bloodline-composition';
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
   usePathname: () => '/profiling',
+  useSearchParams: () => new URLSearchParams('tab=males'),
 }));
 
 vi.mock('@/lib/services/fowl-service', () => ({
@@ -86,9 +87,15 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
       const [selected, setSelected] = useState<FowlRecord | null>(null);
       return (
         <div>
-          <button data-testid="select-none" onClick={() => setSelected(null)}>Clear</button>
-          <button data-testid="select-bird1" onClick={() => setSelected(mockBird1)}>Bird 1</button>
-          <button data-testid="select-bird2" onClick={() => setSelected(mockBird2)}>Bird 2</button>
+          <button data-testid="select-none" onClick={() => setSelected(null)}>
+            Clear
+          </button>
+          <button data-testid="select-bird1" onClick={() => setSelected(mockBird1)}>
+            Bird 1
+          </button>
+          <button data-testid="select-bird2" onClick={() => setSelected(mockBird2)}>
+            Bird 2
+          </button>
           <FowlDetailsModal
             selectedFowlForDetails={selected}
             setSelectedFowlForDetails={setSelected}
@@ -104,7 +111,9 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
             getSiblingRelations={() => []}
             getMilestoneInfo={() => null}
             getArchiveBadgeStyle={() => ({ bg: '', text: '', border: '', label: '' })}
-            pairingAnalytics={{ all: new Map(), activePairs: 0, topPairs: [], underperformingPairs: [] } as any}
+            pairingAnalytics={
+              { all: new Map(), activePairs: 0, topPairs: [], underperformingPairs: [] } as any
+            }
           />
         </div>
       );
@@ -113,7 +122,7 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
     render(
       <TestWrapper>
         <TestContainer />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Initial state: selectedFowlForDetails is null
@@ -143,8 +152,12 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
       const [editing, setEditing] = useState<FowlRecord | null>(null);
       return (
         <div>
-          <button data-testid="open-edit" onClick={() => setEditing(mockBird1)}>Open</button>
-          <button data-testid="close-edit" onClick={() => setEditing(null)}>Close</button>
+          <button data-testid="open-edit" onClick={() => setEditing(mockBird1)}>
+            Open
+          </button>
+          <button data-testid="close-edit" onClick={() => setEditing(null)}>
+            Close
+          </button>
           <EditFowlModal
             editingFowl={editing}
             setEditingFowl={setEditing}
@@ -209,7 +222,7 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
     render(
       <TestWrapper>
         <TestContainer />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Initial state: editingFowl is null
@@ -237,13 +250,13 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
       const [comp, setComp] = useState<BloodlineComposition | null>(null);
       return (
         <div>
-          <button data-testid="resolve-comp" onClick={() => setComp(validComp)}>Resolve</button>
-          <button data-testid="unresolve-comp" onClick={() => setComp(null)}>Unresolve</button>
-          <BloodlineBreakdown
-            composition={comp}
-            fowl={mockBird1}
-            fowls={mockFowls}
-          />
+          <button data-testid="resolve-comp" onClick={() => setComp(validComp)}>
+            Resolve
+          </button>
+          <button data-testid="unresolve-comp" onClick={() => setComp(null)}>
+            Unresolve
+          </button>
+          <BloodlineBreakdown composition={comp} fowl={mockBird1} fowls={mockFowls} />
         </div>
       );
     }
@@ -313,7 +326,7 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
     render(
       <TestWrapper>
         <TestContainer />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Initial state: not merged -> shows bird name
@@ -338,12 +351,7 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
   it('ParentSelector mounts safely both inside and outside FowlProvider without throwing', () => {
     // 1. Outside provider
     const { unmount } = render(
-      <ParentSelector
-        value=""
-        onChange={vi.fn()}
-        fowls={mockFowls}
-        preferredGender="Male"
-      />
+      <ParentSelector value="" onChange={vi.fn()} fowls={mockFowls} preferredGender="Male" />,
     );
     expect(screen.getByPlaceholderText(/Type a name or pick from registry/i)).toBeInTheDocument();
     unmount();
@@ -357,7 +365,7 @@ describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
           fowls={mockFowls}
           preferredGender="Male"
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
     expect(screen.getByDisplayValue('Champion Stag')).toBeInTheDocument();
   });

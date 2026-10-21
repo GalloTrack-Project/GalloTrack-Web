@@ -11,6 +11,8 @@ import { parseBackup, restoreBackup } from '@/lib/backup'
 import { useFowl } from '@/lib/contexts/fowl-context'
 import { RANKING_METRICS, RANKING_METRIC_LABELS, DEFAULT_SETTINGS, type UserSettings as FarmSettings, type SettingsKey } from '@/lib/settings'
 import { fetchRegistryOptions, addRegistryOption, setRegistryOptionActive, toggleTemplateOption } from '@/lib/services/options-service'
+import { LanguageSelect } from '@/components/i18n/LanguageSwitcher'
+import { useLanguage } from '@/lib/i18n'
 
 interface UserSettings extends AdminSettings {
   farm_name?: string
@@ -105,6 +107,7 @@ const defaultSystemConfig: SystemConfig = {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { t, language, isBeta } = useLanguage()
   const [activeTab, setActiveTab] = useState<Tab>('account')
   const [settings, setSettings] = useState<UserSettings>({
     default_strain: 'Sweater',
@@ -669,6 +672,16 @@ export default function SettingsPage() {
       case 'preferences':
         return (
           <div className="space-y-4">
+            <SectionCard title={t('preferences.languageSectionTitle')} description={t('preferences.languageSectionDesc')}>
+              <Field label={t('preferences.languageFieldLabel')} description={t('preferences.languageFieldDesc')}>
+                <LanguageSelect />
+              </Field>
+              {isBeta(language) && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold py-1">
+                  ⚠️ {t('preferences.betaNotice')}
+                </p>
+              )}
+            </SectionCard>
             <SectionCard title="Measurement Units" description="Units used throughout the system (admin defaults applied if not overridden)">
               <Field label="Weight Unit">
                 <SelectInput value={settings.weight_unit || 'kg'} onChange={(v) => update('weight_unit', v)} options={[
@@ -888,7 +901,7 @@ export default function SettingsPage() {
                 open={true}
                 onClose={() => { if (!clearing) { setDangerModal(null); setDangerConfirmInput(''); } }}
                 title={dangerModal.title}
-                description="Irreversible action. This cannot be undone."
+                description={t('dangerZone.description')}
                 icon={<AlertTriangle className="w-5 h-5" />}
                 iconClassName="bg-rose-100 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400"
                 className="max-w-lg"
@@ -900,7 +913,7 @@ export default function SettingsPage() {
                       disabled={clearing !== ''}
                       className="px-4 py-2 rounded-md text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-50"
                     >
-                      Cancel
+                      {t('dangerZone.cancelButton')}
                     </button>
                     <button
                       type="button"
@@ -909,7 +922,7 @@ export default function SettingsPage() {
                       className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
                     >
                       {clearing !== '' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                      {clearing !== '' ? 'Deleting...' : 'Confirm & Delete'}
+                      {clearing !== '' ? t('common.loading') : t('dangerZone.confirmButton')}
                     </button>
                   </div>
                 }
@@ -994,7 +1007,7 @@ export default function SettingsPage() {
                   {/* Typed Confirmation Field */}
                   <div className="space-y-1.5 pt-1">
                     <label htmlFor="danger-delete-confirm-input" className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                      To confirm, type <span className="font-mono font-black text-rose-600 dark:text-rose-400 select-all">DELETE</span> below:
+                      {t('dangerZone.confirmPrompt', { expected: 'DELETE' })}
                     </label>
                     <input
                       id="danger-delete-confirm-input"

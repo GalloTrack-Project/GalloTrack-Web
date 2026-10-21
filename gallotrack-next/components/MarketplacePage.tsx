@@ -44,6 +44,7 @@ import {
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
+import { useT } from '@/lib/i18n';
 
 const INVENTORY_BREEDING_TYPES = ['all', 'purebred', 'crossbred', 'unverified'] as const;
 type BreedingTypeFilter = (typeof INVENTORY_BREEDING_TYPES)[number];
@@ -508,6 +509,7 @@ export default function MarketplacePage({
   canRestoreDeceased = false,
   setSelectedFowlForDetails,
 }: Props) {
+  const { t } = useT();
   const [internalSearch, setInternalSearch] = useState('');
   const search = propSearch !== undefined ? propSearch : internalSearch;
   const setSearch = propSetSearch !== undefined ? propSetSearch : setInternalSearch;
@@ -848,7 +850,7 @@ export default function MarketplacePage({
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
           <label htmlFor="inventory-breeding-type" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
-            Breeding Type
+            {t('registry.breedingTypeLabel')}
           </label>
           <select
             id="inventory-breeding-type"
@@ -859,12 +861,12 @@ export default function MarketplacePage({
               'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
               internalBreedingType !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
             )}
-            title="Foundation stock is treated as 100% of its registered breed."
+            title={t('registry.breedingTypeHelp')}
           >
-            <option value="all">All types</option>
-            <option value="purebred">Purebred</option>
-            <option value="crossbred">Crossbred</option>
-            <option value="unverified">Unverified Lineage</option>
+            <option value="all">{t('registry.allBreedingTypesOption')}</option>
+            <option value="purebred">{t('domain.breedingPurebred')}</option>
+            <option value="crossbred">{t('domain.breedingCrossbred')}</option>
+            <option value="unverified">{t('domain.breedingUnverified')}</option>
           </select>
         </div>
 

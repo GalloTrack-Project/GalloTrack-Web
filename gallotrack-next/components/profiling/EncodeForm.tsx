@@ -23,6 +23,7 @@ import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Lock, RotateCcw, Edit3 } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 export function StatusItem({
   icon,
@@ -46,7 +47,7 @@ export function StatusItem({
     <div className="bg-slate-50 dark:bg-muted/50 rounded-lg border border-slate-200/80 dark:border-border p-3 min-w-0 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
       <div className="flex items-start gap-1.5 min-w-0">
         {icon && <span className="text-xs shrink-0 select-none mt-0.5">{icon}</span>}
-        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-tight sm:tracking-wider text-muted-foreground leading-snug break-words">
+        <span className="text-xs font-bold uppercase tracking-tight sm:tracking-wider text-muted-foreground leading-snug break-words">
           {label}
         </span>
       </div>
@@ -178,6 +179,7 @@ export default function EncodeForm({
   newBehaviorTrait = '',
   setNewBehaviorTrait,
 }: Props) {
+  const { t } = useT();
   const unitPrefs = useUnitPrefs();
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
@@ -297,13 +299,13 @@ export default function EncodeForm({
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
             <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">1</span>
-            <span>Step 1: Core Identifiers</span>
+            <span>{t('registry.step1Title')}</span>
           </h3>
           <span className="text-xs font-mono bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full font-black shrink-0">ID: {nextNodeId}</span>
         </div>
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">Identifier Name</label>
-          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder="e.g., Roundhead Storm" required id="identifier-name" />
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">{t('registry.identifierName')}</label>
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder={t('registry.identifierPlaceholder')} required id="identifier-name" />
         </div>
         {(() => {
           const sireBird = fowls.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
@@ -323,7 +325,7 @@ export default function EncodeForm({
             <div className="bg-slate-50/80 dark:bg-muted/40 p-4 rounded-lg border border-slate-200/80 dark:border-border space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
-                  Unique Chicken Identifier
+                  {t('registry.uniqueChickenId')}
                 </label>
                 <button
                   type="button"
@@ -336,12 +338,12 @@ export default function EncodeForm({
                   {isManualOverride ? (
                     <>
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Use Auto-Assigned Code</span>
+                      <span>{t('registry.useAutoAssignedCode')}</span>
                     </>
                   ) : (
                     <>
                       <Edit3 className="w-3.5 h-3.5" />
-                      <span>Edit identifier manually</span>
+                      <span>{t('registry.editIdManually')}</span>
                     </>
                   )}
                 </button>
@@ -352,17 +354,17 @@ export default function EncodeForm({
                   <div className="flex-1 flex items-center justify-between p-3 rounded-md border border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
                     <div className="flex items-center gap-2">
                       <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identifier:</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('registry.identifierLabel')}</span>
                       <span className="font-mono text-base font-extrabold tracking-wide text-emerald-800 dark:text-emerald-300">
-                        {suggestedBirdCode ? formatBirdCodeForDisplay(suggestedBirdCode) : currentRole === 'offspring' ? 'Select both sire and dam' : 'Generating...'}
+                        {suggestedBirdCode ? formatBirdCodeForDisplay(suggestedBirdCode) : currentRole === 'offspring' ? t('registry.selectSireAndDam') : t('registry.generating')}
                       </span>
                     </div>
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
                       {suggestedBirdCode
-                        ? `Auto-Assigned (${currentRole === 'sire' ? 'Sire' : currentRole === 'dam' ? 'Dam' : 'Offspring'})`
+                        ? currentRole === 'sire' ? t('registry.autoAssignedSire') : currentRole === 'dam' ? t('registry.autoAssignedDam') : t('registry.autoAssignedOffspring')
                         : currentRole === 'offspring'
-                          ? 'Awaiting Parents'
-                          : 'Auto-Assigned'}
+                          ? t('registry.awaitingParents')
+                          : t('registry.autoAssigned')}
                     </span>
                   </div>
                 </div>
@@ -384,16 +386,16 @@ export default function EncodeForm({
                         {formatCheck && !formatCheck.valid ? (
                           <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
                         ) : isDuplicate ? (
-                          <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Identifier &quot;{birdCode.trim()}&quot; is already in use by another chicken</span>
+                          <span className="text-rose-600 dark:text-rose-400 font-bold">{t('registry.idAlreadyInUse', { code: birdCode.trim() })}</span>
                         ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Valid format for {currentRole}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{t('registry.validFormatForRole', { role: currentRole })}</span>
                         )}
                         {!parentCheck.matches && parentCheck.warning && (
                           <span className="text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded p-1">⚠️ {parentCheck.warning}</span>
                         )}
                       </>
                     ) : (
-                      <span className="text-muted-foreground">Format: Sire (digits) · Dam (letters) · Offspring (sire number + dam letter + sequence)</span>
+                      <span className="text-muted-foreground">{t('registry.formatHelpText')}</span>
                     )}
                   </div>
                 </div>
@@ -404,7 +406,7 @@ export default function EncodeForm({
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider" htmlFor="wing-band-id">
-              Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>
+              {t('registry.wingBandId')} <span className="text-muted-foreground font-normal lowercase">{t('registry.wingBandSub')}</span>
             </label>
           </div>
           <input
@@ -413,7 +415,7 @@ export default function EncodeForm({
             onChange={(e) => setWingBand(e.target.value)}
             maxLength={50}
             className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
-            placeholder="e.g. W-001"
+            placeholder={t('registry.wingBandPlaceholder')}
             id="wing-band-id"
           />
           {(() => {
@@ -425,11 +427,11 @@ export default function EncodeForm({
               <div className="mt-1">
                 {isBandDuplicate && (
                   <p className="text-xs text-rose-600 dark:text-rose-400 font-bold mb-1">
-                    ❌ Wing Band ID &quot;{trimmedBand}&quot; is already assigned to another chicken.
+                    {t('registry.wingBandDuplicate', { band: trimmedBand })}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground font-semibold">
-                  {trimmedBand ? 'This number will be banded on the chicken’s wing' : 'Optional — the number stamped on the physical metal wing band'}
+                  {trimmedBand ? t('registry.wingBandHelpWithVal') : t('registry.wingBandHelpOptional')}
                 </p>
               </div>
             );
@@ -437,14 +439,14 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="genetic-strain">Genetic Strain</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="genetic-strain">{t('registry.geneticStrain')}</label>
           {selectedStrains.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2.5">
               {selectedStrains.map((s, i) => (
                 <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-xs font-semibold px-3 py-1.5 rounded-sm group hover:border-emerald-300 transition-all">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                   {s}
-                    <button type="button" onClick={() => removeStrain(i)} aria-label="Remove strain" className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
+                    <button type="button" onClick={() => removeStrain(i)} aria-label={t('registry.removeStrainAria')} className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
                 </span>
               ))}
             </div>
@@ -523,11 +525,11 @@ export default function EncodeForm({
           </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">Gender Class</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
             <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required id="gender-class">
-              <option value="" disabled className="bg-popover text-muted-foreground">Select Gender Class</option>
-              <option value="Rooster" className="bg-popover text-popover-foreground">Sire</option>
-              <option value="Hen" className="bg-popover text-popover-foreground">Dam</option>
+              <option value="" disabled className="bg-popover text-muted-foreground">{t('registry.selectGenderClass')}</option>
+              <option value="Rooster" className="bg-popover text-popover-foreground">{t('registry.sireOption')}</option>
+              <option value="Hen" className="bg-popover text-popover-foreground">{t('registry.damOption')}</option>
             </select>
           </div>
           {!hasAnyParent && (
@@ -546,9 +548,9 @@ export default function EncodeForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="feather-color">
-              Feather Color
+              {t('registry.featherColor')}
               {isCustomColor && (
-                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">{t('registry.customBadge')}</span>
               )}
             </label>
             <input
@@ -561,7 +563,7 @@ export default function EncodeForm({
                   setNewColor?.(normalizeOptionValue(newColor, featherColorOptions.map((o) => o.value)));
                 }
               }}
-              placeholder="Select or enter feather color..."
+              placeholder={t('registry.featherColorPlaceholder')}
               className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
               id="feather-color"
             />
@@ -575,9 +577,9 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="behavior-trait">
-              Trait
+              {t('registry.trait')}
               {isCustomTrait && (
-                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">{t('registry.customBadge')}</span>
               )}
             </label>
             <input
@@ -590,7 +592,7 @@ export default function EncodeForm({
                   setNewBehaviorTrait?.(normalizeOptionValue(newBehaviorTrait, traitOptions.map((o) => o.value)));
                 }
               }}
-              placeholder="Select or enter trait..."
+              placeholder={t('registry.traitPlaceholder')}
               className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
               id="behavior-trait"
             />
@@ -608,11 +610,11 @@ export default function EncodeForm({
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-5">
         <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">2</span>
-          <span>Step 2: Physical Parameters</span>
+          <span>{t('registry.step2Title')}</span>
         </h3>
         <div>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="birth-date">
-            Birth Date <span className="text-success dark:text-emerald-300 font-black">{autoCalcAge ? '· required — age is auto-calculated' : '· required'}</span>
+            {t('registry.birthDate')} <span className="text-success dark:text-emerald-300 font-black">{autoCalcAge ? t('registry.requiredAutoAge') : t('registry.requiredOnly')}</span>
           </label>
           <input
             type="date"
@@ -644,45 +646,45 @@ export default function EncodeForm({
             const parts = getAgePartsLocal(newBirthdate);
             return parts ? (
               <p className="mt-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 rounded-sm px-2.5 py-1.5">
-                📅 Auto Age: {getAgeLabelLocal(parts)} &nbsp;·&nbsp; <span className="font-mono font-semibold">Exact {getAgeExactLocal(parts)}</span>
+                {t('registry.autoAgeLabel', { label: getAgeLabelLocal(parts), exact: getAgeExactLocal(parts) })}
               </p>
             ) : (
-              <p className="mt-1.5 text-xs text-muted-foreground font-semibold">Age, growth stage, and calendar milestones are derived automatically from this date.</p>
+              <p className="mt-1.5 text-xs text-muted-foreground font-semibold">{t('registry.birthDateDerivedHelp')}</p>
             );
           })()}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">Age (Mos) {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">{t('registry.ageMos')} {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">{t('registry.autoBadge')}</span>}</label>
             <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" placeholder="0" required id="age-mos" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="growth-stage">Growth Stage</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="growth-stage">{t('registry.growthStage')}</label>
             <select
               value={newGrowthStage}
               onChange={(e) => setNewGrowthStage(e.target.value)}
               className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-success dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
             id="growth-stage">
-              <option value="" disabled className="bg-popover text-muted-foreground">Select stage...</option>
-              <option value="Chick" className="bg-popover text-popover-foreground">Chick</option>
-              <option value="Stag" className="bg-popover text-popover-foreground">Stag</option>
-              <option value="Pullet" className="bg-popover text-popover-foreground">Pullet</option>
-              <option value="Bull Stag" className="bg-popover text-popover-foreground">Bull Stag</option>
-              <option value="Cock" className="bg-popover text-popover-foreground">Cock</option>
-              <option value="Hen" className="bg-popover text-popover-foreground">Hen</option>
+              <option value="" disabled className="bg-popover text-muted-foreground">{t('registry.selectStage')}</option>
+              <option value="Chick" className="bg-popover text-popover-foreground">{t('registry.stageChick')}</option>
+              <option value="Stag" className="bg-popover text-popover-foreground">{t('registry.stageStag')}</option>
+              <option value="Pullet" className="bg-popover text-popover-foreground">{t('registry.stagePullet')}</option>
+              <option value="Bull Stag" className="bg-popover text-popover-foreground">{t('registry.stageBullStag')}</option>
+              <option value="Cock" className="bg-popover text-popover-foreground">{t('registry.stageCock')}</option>
+              <option value="Hen" className="bg-popover text-popover-foreground">{t('registry.stageHen')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="height">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="height">{t('registry.height')} ({heightUnitLabel(unitPrefs.heightUnit)})</label>
             <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="weight">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="weight">{t('registry.weight')} ({weightUnitLabel(unitPrefs.weightUnit)})</label>
             <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">Leg Color</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">{t('registry.legColor')}</label>
           <div className="relative">
             <input
               type="text"
@@ -690,14 +692,14 @@ export default function EncodeForm({
               onChange={(e) => { setLegColorQuery(e.target.value); setNewLegColor(e.target.value); setLegColorOpen(true); }}
               onFocus={() => setLegColorOpen(true)}
               onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
-              placeholder="Select or type a leg color..."
+              placeholder={t('registry.legColorPlaceholder')}
               className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
             id="leg-color" />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
-              aria-label="Toggle leg color list"
+              aria-label={t('registry.toggleLegColorList')}
             >
               ▾
             </button>
@@ -718,17 +720,17 @@ export default function EncodeForm({
                           onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(legColorQuery.trim()); setNewLegColor(legColorQuery.trim()); setLegColorOpen(false); }}
                           className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-slate-200 dark:border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
                         >
-                          <span className="text-sm font-black text-success dark:text-emerald-300">➕ Save &quot;{legColorQuery.trim()}&quot; as new leg color</span>
-                          <span className="text-xs font-mono text-success uppercase shrink-0">Auto-saved</span>
+                          <span className="text-sm font-black text-success dark:text-emerald-300">{t('registry.saveNewLegColor', { color: legColorQuery.trim() })}</span>
+                          <span className="text-xs font-mono text-success uppercase shrink-0">{t('registry.autoSavedBadge')}</span>
                         </button>
-                        {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Matching colors</div>}
+                        {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('registry.matchingColors')}</div>}
                         {matching.map((s) => (
                             <div key={s} className="flex items-center w-full group">
                               <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer">
                                 {s}
                               </button>
                               {customLegColorNames.has(s) && (
-                                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-all cursor-pointer" title={t('registry.deleteColorTitle', { color: s })}>✕</button>
                               )}
                             </div>
                         ))}
@@ -741,39 +743,39 @@ export default function EncodeForm({
                           {s}
                         </button>
                         {customLegColorNames.has(s) && (
-                          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-all cursor-pointer" title={`Delete "${s}"`}>✕</button>
+                          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); deleteCustomLegColor(s); }} className="shrink-0 w-6 h-6 mr-2 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-all cursor-pointer" title={t('registry.deleteColorTitle', { color: s })}>✕</button>
                         )}
                       </div>
                   ));
                 })()}
                 {legColorQuery.trim() === '' && availableLegColors.length === 0 && (
-                  <div className="px-4 py-3 text-xs text-muted-foreground font-semibold">No leg colors saved yet — type a name to create one.</div>
+                  <div className="px-4 py-3 text-xs text-muted-foreground font-semibold">{t('registry.noLegColorsYet')}</div>
                 )}
               </div>
             </div>,
             document.body
           )}
-          <p className="mt-1.5 text-xs text-muted-foreground font-semibold">Common choices: Yellow, White, Green / Slate, Willow, Black — or type a custom leg color.</p>
+          <p className="mt-1.5 text-xs text-muted-foreground font-semibold">{t('registry.legColorHelp')}</p>
         </div>
       </div>
 
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4">
         <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">3</span>
-          <span>Step 3: Ancestry Roots &amp; Photo</span>
+          <span>{t('registry.step3Title')}</span>
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
               <label htmlFor="encode-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-                Sire (Father) <span className="text-muted-foreground font-normal lowercase">(pick from registry or type custom)</span>
+                {t('registry.sireFather')} <span className="text-muted-foreground font-normal lowercase">{t('registry.parentPickHelp')}</span>
               </label>
-              <ParentSelector id="encode-sire" value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder="e.g. Foundation Stock or Sire Name" />
+              <ParentSelector id="encode-sire" value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder={t('registry.sirePlaceholder')} />
           </div>
           <div>
               <label htmlFor="encode-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-                Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(pick from registry or type custom)</span>
+                {t('registry.damMother')} <span className="text-muted-foreground font-normal lowercase">{t('registry.parentPickHelp')}</span>
               </label>
-              <ParentSelector id="encode-dam" value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder="e.g. Foundation Stock or Dam Name" />
+              <ParentSelector id="encode-dam" value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder={t('registry.damPlaceholder')} />
           </div>
         </div>
         {(sireName.trim() || damName.trim()) && (() => {
@@ -784,26 +786,32 @@ export default function EncodeForm({
           if (!hasData) return null;
           return (
             <div className="bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-950/40 border border-sky-100 dark:border-sky-900/50 rounded-lg p-4 space-y-2">
-              <p className="text-xs font-black text-sky-700 dark:text-sky-300 uppercase tracking-widest">👤 Existing Offspring &amp; Siblings</p>
+              <p className="text-xs font-black text-sky-700 dark:text-sky-300 uppercase tracking-widest">{t('registry.existingOffspringSiblings')}</p>
               <div className="grid grid-cols-2 gap-3">
                 {sireChildren.length > 0 && (
                   <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
-                    <p className="text-xs font-black text-info dark:text-sky-300 uppercase">🐓 {sireName.trim()} Offspring</p>
+                    <p className="text-xs font-black text-info dark:text-sky-300 uppercase">{t('registry.sireOffspringHeader', { name: sireName.trim() })}</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{sireChildren.length}</p>
                     <p className="text-xs text-muted-foreground font-semibold">
-                      {sireChildren.filter((c) => c.gender === 'Male').length} sire(s) · {sireChildren.filter((c) => c.gender === 'Female').length} dam(s)
+                      {t('registry.sireDamCount', {
+                        sires: String(sireChildren.filter((c) => c.gender === 'Male').length),
+                        dams: String(sireChildren.filter((c) => c.gender === 'Female').length),
+                      })}
                     </p>
                     {sireFullSibs.length > 0 && (
-                      <p className="text-xs font-bold text-success dark:text-emerald-300 mt-1">✓ {sireFullSibs.length} full sibling(s) with current dam</p>
+                      <p className="text-xs font-bold text-success dark:text-emerald-300 mt-1">{t('registry.fullSiblingsNotice', { count: String(sireFullSibs.length) })}</p>
                     )}
                   </div>
                 )}
                 {damChildren.length > 0 && (
                   <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
-                    <p className="text-xs font-black text-pink uppercase">🐔 {damName.trim()} Offspring</p>
+                    <p className="text-xs font-black text-pink uppercase">{t('registry.damOffspringHeader', { name: damName.trim() })}</p>
                     <p className="text-lg font-black text-slate-800 dark:text-card-foreground">{damChildren.length}</p>
                     <p className="text-xs text-muted-foreground font-semibold">
-                      {damChildren.filter((c) => c.gender === 'Male').length} sire(s) · {damChildren.filter((c) => c.gender === 'Female').length} dam(s)
+                      {t('registry.sireDamCount', {
+                        sires: String(damChildren.filter((c) => c.gender === 'Male').length),
+                        dams: String(damChildren.filter((c) => c.gender === 'Female').length),
+                      })}
                     </p>
                   </div>
                 )}
@@ -826,8 +834,8 @@ export default function EncodeForm({
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-black text-teal uppercase tracking-widest">🧬 Lineage Generation</p>
-              <p className="text-xs text-muted-foreground font-semibold mt-0.5">Auto-detected from the selected Sire &amp; Dam ancestry history</p>
+              <p className="text-xs font-black text-teal uppercase tracking-widest">{t('registry.lineageGeneration')}</p>
+              <p className="text-xs text-muted-foreground font-semibold mt-0.5">{t('registry.lineageGenerationHelp')}</p>
             </div>
             <div className="shrink-0 sm:text-right">
               {hasAnyParent ? (
@@ -838,45 +846,45 @@ export default function EncodeForm({
               ) : (
                 <p className="text-2xl font-black text-muted-foreground mt-1.5">—</p>
               )}
-              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">{bloodlineVerified ? 'Lineage Resolved' : 'Awaiting Parents'}</p>
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">{bloodlineVerified ? t('registry.lineageResolved') : t('registry.awaitingParentsStatus')}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white/70 dark:bg-card/70 border border-sky-100 dark:border-sky-900/50 rounded-md p-3">
-              <p className="text-xs font-black text-info dark:text-sky-300 uppercase tracking-wider">🐓 Sire Lineage</p>
+              <p className="text-xs font-black text-info dark:text-sky-300 uppercase tracking-wider">{t('registry.sireLineage')}</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{sireName.trim() ? sireName : '—'}</p>
               <p className="text-xs font-bold text-muted-foreground mt-0.5">{sireName.trim() ? sireGenInfo.label : '—'}</p>
             </div>
             <div className="bg-white/70 dark:bg-card/70 border border-pink-100 dark:border-pink-900/50 rounded-md p-3">
-              <p className="text-xs font-black text-pink uppercase tracking-wider">🐔 Dam Lineage</p>
+              <p className="text-xs font-black text-pink uppercase tracking-wider">{t('registry.damLineage')}</p>
               <p className="text-sm font-black text-slate-800 dark:text-card-foreground truncate">{damName.trim() ? damName : '—'}</p>
               <p className="text-xs font-bold text-muted-foreground mt-0.5">{damName.trim() ? damGenInfo.label : '—'}</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground font-semibold">Generation ladder: F0 (Foundation) · F1 (First Cross) · F2 (1st Backcross) · F3 (2nd Backcross) · F4+ (Stabilized). Purity percentages are calculated per strain from the bloodline composition below.</p>
+          <p className="text-xs text-muted-foreground font-semibold">{t('registry.generationLadderHelp')}</p>
         </div>
         <BloodlineBreakdown
           stats={previewBloodlineStats && previewBloodlineStats.knownPct > 0 ? previewBloodlineStats : null}
-          title="Bloodline Split (Live Preview)"
-          subtitle="Auto-computed from the parents — 50% Sire, 50% Dam, halved each generation"
+          title={t('registry.bloodlineSplitTitle')}
+          subtitle={t('registry.bloodlineSplitSub')}
         />
         {!previewBloodlineStats || previewBloodlineStats.knownPct === 0 ? (
           <div className="bg-slate-50 dark:bg-muted/50 border border-dashed border-slate-200 dark:border-border rounded-lg p-4">
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-              🧬 Bloodline Split
+              {t('registry.bloodlineSplitEmptyTitle')}
             </p>
             <p className="text-xs text-muted-foreground font-semibold mt-1">
-              Select a Sire and Dam (or set a strain) to see the blood percentage per breed.
+              {t('registry.bloodlineSplitEmptyHelp')}
             </p>
           </div>
         ) : null}
         <div>
-          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">Chicken Attachment Photo</span>
+          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">{t('registry.chickenPhoto')}</span>
           <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative" htmlFor="field">
             {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={imagePreview} alt={t('registry.imagePreviewAlt')} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : 'Choose chicken image file'}</span>
+              <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : t('registry.chooseImageFile')}</span>
             )}
             <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" id="field" />
           </label>
@@ -887,23 +895,23 @@ export default function EncodeForm({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
           <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Validation &amp; Summary Panel</span>
+            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t('registry.validationSummaryPanel')}</span>
           </div>
           <span className="self-start sm:self-auto text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-1 rounded-full max-w-full break-words">
-            Next ID: {nextIdLabel}
+            {t('registry.nextIdLabel', { id: nextIdLabel })}
           </span>
         </div>
         <div data-testid="validation-summary-grid" className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
-          <StatusItem icon="🛡️" label="Data Integrity &amp; Lineage Accuracy" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-          <StatusItem icon="✅" label="Validation" value={validationPassed && birthdateValidation.valid ? 'Passed' : 'Pending'} tone={validationPassed && birthdateValidation.valid ? 'green' : 'amber'} />
-          <StatusItem icon="🔗" label="Lineage Resolved" value={bloodlineVerified ? 'Resolved' : 'Awaiting'} tone={bloodlineVerified ? 'green' : 'amber'} />
-          <StatusItem icon="📊" label="Data Completeness" value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
+          <StatusItem icon="🛡️" label={t('registry.dataIntegrity')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
+          <StatusItem icon="✅" label={t('registry.validationStatus')} value={validationPassed && birthdateValidation.valid ? t('registry.validationPassed') : t('registry.validationPending')} tone={validationPassed && birthdateValidation.valid ? 'green' : 'amber'} />
+          <StatusItem icon="🔗" label={t('registry.lineageResolved')} value={bloodlineVerified ? t('registry.lineageResolvedStatus') : t('registry.lineageAwaitingStatus')} tone={bloodlineVerified ? 'green' : 'amber'} />
+          <StatusItem icon="📊" label={t('registry.dataCompleteness')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
         </div>
         <button type="submit" disabled={loading || uploadingImage || !birthdateValidation.valid || !declaredValidation.valid} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-          <span>{uploadingImage ? 'Uploading Attachment...' : loading ? 'Registering...' : 'REGISTER'}</span>
+          <span>{uploadingImage ? t('registry.uploadingAttachment') : loading ? t('registry.registering') : t('registry.registerBtn')}</span>
         </button>
-        <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">🔒 Verify lineage accuracy before registering to the farm registry.</p>
+        <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">{t('registry.verifyBeforeRegistering')}</p>
       </div>
     </form>
   );

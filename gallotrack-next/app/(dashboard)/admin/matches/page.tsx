@@ -1,5 +1,6 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useToast } from '@/components/ui';
 import { Swords, CheckCircle, XCircle, Handshake, Skull, Search, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/lib/registry';
@@ -76,7 +77,8 @@ export default function AdminMatchAuditPage() {
         });
       }
     } catch {
-      pushToast({ title: 'Failed to load matches', variant: 'danger' });
+      pushToast({ title: 'Failed to load matches', variant: 'danger' });
+
     } finally {
       setLoading(false);
     }
@@ -151,7 +153,8 @@ export default function AdminMatchAuditPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full">
+
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
@@ -241,7 +244,7 @@ export default function AdminMatchAuditPage() {
             <h2 className="text-xs font-black uppercase tracking-widest text-card-foreground">All Match Records</h2>
             <span className="text-xs font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {matches.length} records</span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-0 max-w-full">
             <table className="w-full text-left min-w-[1000px]">
               <thead>
                 <tr className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">

@@ -419,7 +419,8 @@ export default function AdminPanelPage() {
             </button>
           ))}
         </div>
-
+
+
 
         {activeTab === 'users' && (<>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4">
@@ -608,7 +609,7 @@ export default function AdminPanelPage() {
             <span className="text-xs font-mono text-muted-foreground font-bold uppercase tracking-wider">{filteredProfiles.length} of {total} records</span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-0 max-w-full">
             <table className="w-full text-left min-w-[960px]">
               <thead>
                 <tr className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">

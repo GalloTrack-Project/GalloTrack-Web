@@ -190,7 +190,7 @@ function VerifyOtpCard() {
 
               <div>
                 <label className={labelClass} htmlFor="verification-code-1">Verification Code</label>
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <input
                       key={i}
@@ -205,7 +205,7 @@ function VerifyOtpCard() {
                       onKeyDown={(e) => handleDigitKeyDown(e, i)}
                       onPaste={handlePaste}
                       aria-label={`Digit ${i + 1} of 6`}
-                      className="w-9 h-12 sm:w-11 border border-input-border rounded-md text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 transition-colors text-foreground"
+                      className="w-9 h-12 sm:w-11 min-w-0 border border-input-border rounded-md text-center text-xl font-black bg-muted/60 focus:bg-muted focus:border-emerald-500 transition-colors text-foreground"
                       id={`verification-code-${i + 1}`} />
                   ))}
                 </div>

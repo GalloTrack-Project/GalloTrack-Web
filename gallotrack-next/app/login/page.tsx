@@ -6,9 +6,12 @@ import { useGaloTrack } from '@/lib/context';
 import ForgotPasswordModal from '@/components/modals/ForgotPasswordModal';
 import { Dna, Swords, BarChart3, Building2, ArrowLeft } from 'lucide-react';
 import { sanitizeRedirectPath } from '@/lib/auth-redirect';
+import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { useT } from '@/lib/i18n';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useT();
   const store = useGaloTrack();
   const {
     currentPage,
@@ -39,8 +42,8 @@ export default function LoginPage() {
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
 
   useEffect(() => {
-    document.title = 'Log In | GalloTrack';
-  }, []);
+    document.title = `${t('auth.loginTitle')} | GalloTrack`;
+  }, [t]);
 
   useEffect(() => {
     fetch('/api/admin/system-settings')
@@ -96,13 +99,16 @@ export default function LoginPage() {
               </div>
             </Link>
 
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-100/80 hover:text-white bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-full border border-white/15 transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Home</span>
-            </Link>
+            <div className="flex flex-wrap items-center gap-3 justify-end">
+              <CompactLanguageSwitcher variant="select" />
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-100/80 hover:text-white bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-full border border-white/15 transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Home</span>
+              </Link>
+            </div>
           </div>
 
           {/* Center — Hero */}
@@ -151,22 +157,25 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md relative z-10">
           {/* Mobile logo and Back link */}
-          <div className="lg:hidden flex items-center justify-between mb-8">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+          <div className="lg:hidden flex flex-wrap items-center justify-between gap-2 mb-8">
+            <Link href="/" className="inline-flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z"/></svg>
               </div>
-              <span className="font-black text-foreground tracking-tight">GALLOTRACK</span>
+              <span className="font-black text-foreground tracking-tight hidden sm:inline">GALLOTRACK</span>
             </Link>
-            <Link href="/" className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Home</span>
-            </Link>
+            <div className="flex items-center gap-2 shrink-0">
+              <CompactLanguageSwitcher variant="button" />
+              <Link href="/" className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Home</span>
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-2 mb-8">
-            <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Welcome back</h2>
-            <p className="text-sm text-muted-foreground font-medium">Sign in to your account to continue</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">{t('auth.loginTitle')}</h2>
+            <p className="text-sm text-muted-foreground font-medium">{t('auth.loginSubtitle')}</p>
           </div>
 
           {maintenanceMsg && (
@@ -175,22 +184,22 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest" htmlFor="email-address">Email Address</label>
+              <label className="block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest" htmlFor="email-address">{t('auth.emailLabel')}</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                 </span>
-                <input type="email" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder="you@example.com" autoComplete="off" required id="email-address" />
+                <input type="email" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-10 pr-3.5 py-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder={t('auth.emailPlaceholder')} autoComplete="off" required id="email-address" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest" htmlFor="password">Password</label>
+              <label className="block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest" htmlFor="password">{t('auth.passwordLabel')}</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </span>
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder="Enter your password" autoComplete="new-password" required id="password" />
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-11 py-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground" placeholder={t('auth.passwordPlaceholder')} autoComplete="new-password" required id="password" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 p-1 rounded-sm transition-colors cursor-pointer" title={showPassword ? 'Hide' : 'Show'}>
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -212,7 +221,7 @@ export default function LoginPage() {
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Remember Me</span>
               </label>
               <button type="button" onClick={() => { setShowForgotPasswordModal(true); setForgotEmail(''); setForgotSent(false); setForgotError(''); }} className="text-xs font-bold text-emerald-500 hover:text-emerald-400 transition-colors tracking-wide cursor-pointer">
-                Forgot Password?
+                {t('auth.forgotPassword')}
               </button>
             </div>
 
@@ -223,14 +232,14 @@ export default function LoginPage() {
               <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <div className="relative flex items-center justify-center gap-3">
                 {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                <span className="text-sm tracking-widest">{loading ? 'SIGNING IN...' : 'SIGN IN'}</span>
+                <span className="text-sm tracking-widest">{loading ? t('auth.signingIn') : t('auth.signInButton')}</span>
               </div>
             </button>
 
             <p className="text-center text-xs text-muted-foreground font-medium pt-1">
-              Don&apos;t have an account?{' '}
+              {t('auth.noAccountPrompt')}{' '}
               <Link href="/register" className="font-bold text-emerald-500 hover:text-emerald-400 transition-colors">
-                Create one
+                {t('auth.signUpLink')}
               </Link>
             </p>
 

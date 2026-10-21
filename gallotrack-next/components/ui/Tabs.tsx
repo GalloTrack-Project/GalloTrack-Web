@@ -72,8 +72,8 @@ function Tabs({
         aria-orientation={vertical ? 'vertical' : 'horizontal'}
         onKeyDown={handleKeyDown}
         className={cn(
-          'flex gap-1 border-b border-border p-1',
-          vertical && 'sm:flex-col sm:border-b-0 sm:border-r',
+          'flex gap-1 border-b border-border p-1 overflow-x-auto',
+          vertical && 'sm:flex-col sm:border-b-0 sm:border-r sm:overflow-visible',
         )}
       >
         {items.map((item) => {

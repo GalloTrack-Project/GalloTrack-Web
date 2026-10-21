@@ -9,12 +9,17 @@
  * cut off by an `overflow: hidden` ancestor, which produces no scrollbar and
  * no measurable document overflow.
  *
+ * Every route is checked in EVERY supported language (cookie `gt-lang`, the
+ * same cookie the app reads server-side) and at every requested font scale,
+ * because translations and larger type are what actually break narrow layouts.
+ *
  * Requires a running server (`npm run dev`) and a Chromium build:
  *   npx playwright install chromium
  * Point at a specific binary with PLAYWRIGHT_CHROMIUM_PATH if needed.
  *
  *   node scripts/mobile-gate.mjs
  *   BASE_URL=http://localhost:3001 node scripts/mobile-gate.mjs
+ *   LANGUAGES=en,tl FONT_SCALES=125,150 WIDTHS=320,360 node scripts/mobile-gate.mjs
  */
 
 import { chromium } from 'playwright';
@@ -25,6 +30,22 @@ import { fileURLToPath } from 'node:url';
 const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 const WIDTHS = (process.env.WIDTHS ?? '390,360,320').split(',').map(Number);
+/** Desktop widths are also swept - the old gate only covered phone widths. */
+const DESKTOP_WIDTHS = (process.env.DESKTOP_WIDTHS ?? '1024,1100,1280,1330,1366,1440,1920')
+  .split(',')
+  .map(Number)
+  .filter((n) => !Number.isNaN(n));
+/** Languages to exercise. The app reads the `gt-lang` cookie server-side. */
+const LANGUAGES = (process.env.LANGUAGES ?? 'en,tl,hil')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+/** Font scales to exercise (percent of the browser default root font size). */
+const FONT_SCALES = (process.env.FONT_SCALES ?? '100,125,150')
+  .split(',')
+  .map((n) => Number(n.trim()))
+  .filter((n) => !Number.isNaN(n) && n > 0);
+const LANGUAGE_COOKIE = 'gt-lang';
 
 /**
  * Any Chromium build already sitting in Playwright's standard cache.
@@ -114,6 +135,26 @@ const PROBE = () => {
     out.push(`the page scrolls sideways by ${document.documentElement.scrollWidth - vw}px`);
   }
 
+  for (const el of document.querySelectorAll('a[href], button, [role="button"]')) {
+    const s = getComputedStyle(el);
+    if (s.visibility === 'hidden' || s.display === 'none') continue;
+    if (s.position === 'fixed' || s.position === 'absolute') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const rawLabel = (el.getAttribute('aria-label') || el.textContent || el.tagName)
+      .toString()
+      .trim()
+      .replace(/\s+/g, ' ');
+    const isAction =
+      /^(Edit match record|Share match|Play media|Save Match Record|Update Match Record|Cancel)$/.test(
+        rawLabel,
+      );
+    if (!isAction) continue;
+    if (r.right > vw + 1 || r.left < -1) {
+      out.push(`action "${rawLabel.slice(0, 40)}" is outside the ${vw}px viewport`);
+    }
+  }
+
   for (const el of document.querySelectorAll('body *')) {
     const s = getComputedStyle(el);
     if (s.position === 'absolute' || s.position === 'fixed') continue;
@@ -164,7 +205,12 @@ const PROBE = () => {
 };
 
 const routes = discoverRoutes();
-console.log(`mobile gate: ${routes.length} routes x ${WIDTHS.join('/')}px against ${BASE_URL}\n`);
+const totalChecks =
+  routes.length * (WIDTHS.length * FONT_SCALES.length + DESKTOP_WIDTHS.length) * LANGUAGES.length;
+console.log(
+  `mobile gate: ${routes.length} routes x phone ${WIDTHS.join('/')}px + desktop ${DESKTOP_WIDTHS.join('/')}px x ${FONT_SCALES.map((s) => s + '%').join('/')} (100% on desktop) x ` +
+    `${LANGUAGES.join('/')} = ${totalChecks} checks against ${BASE_URL}\n`,
+);
 
 let browser;
 try {
@@ -176,42 +222,81 @@ try {
 }
 
 let failures = 0;
+const perLanguage = new Map();
 
-for (const width of WIDTHS) {
-  const context = await browser.newContext({ viewport: { width, height: 800 } });
+for (const lang of LANGUAGES) {
+  const context = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 } });
+  await context.addCookies([{ name: LANGUAGE_COOKIE, value: lang, url: BASE_URL }]);
   const page = await context.newPage();
 
-  for (const route of routes) {
-    try {
-      await page.goto(BASE_URL + route, { waitUntil: 'domcontentloaded', timeout: 120000 });
-      await page.waitForTimeout(700);
-      const issues = await page.evaluate(PROBE);
+  let langChecks = 0;
+  let langFailures = 0;
 
-      if (issues.length) {
-        failures++;
-        console.error(`\u2717 ${width}px  ${route}`);
-        for (const issue of issues) console.error(`    ${issue}`);
-      } else {
-        console.log(`\u2713 ${width}px  ${route}`);
+  for (const width of [...WIDTHS, ...DESKTOP_WIDTHS]) {
+    await page.setViewportSize({ width, height: 800 });
+    const isDesktop = DESKTOP_WIDTHS.includes(width);
+    const scales = isDesktop ? [100] : FONT_SCALES;
+
+    for (const scale of scales) {
+      console.log(`  … ${lang} ${width}px ${scale}% (${routes.length} routes)`);
+      for (const route of routes) {
+        try {
+          await page.goto(BASE_URL + route, { waitUntil: 'domcontentloaded', timeout: 120000 });
+          await page.waitForTimeout(700);
+
+          if (scale !== 100) {
+            await page.evaluate((s) => {
+              document.documentElement.style.fontSize = `${s}%`;
+            }, scale);
+            await page.waitForTimeout(150);
+          }
+
+          const issues = await page.evaluate(PROBE);
+          langChecks++;
+
+          if (issues.length) {
+            // Layout can still be settling (fonts, images, transitions). Re-check
+            // once after a short settle and only fail on a persistent problem.
+            await page.waitForTimeout(500);
+            const confirmed = await page.evaluate(PROBE);
+            if (confirmed.length) {
+              failures++;
+              langFailures++;
+              console.error(`\u2717 ${lang} ${width}px ${scale}%  ${route}`);
+              for (const issue of confirmed) console.error(`    ${issue}`);
+            } else if (process.env.GATE_VERBOSE === 'true') {
+              console.log(`\u2713 ${lang} ${width}px ${scale}%  ${route} (after settle)`);
+            }
+          } else if (process.env.GATE_VERBOSE === 'true') {
+            console.log(`\u2713 ${lang} ${width}px ${scale}%  ${route}`);
+          }
+        } catch (error) {
+          failures++;
+          langFailures++;
+          console.error(
+            `\u2717 ${lang} ${width}px ${scale}%  ${route}\n    could not load: ${error.message.split('\n')[0].slice(0, 80)}`,
+          );
+        }
       }
-    } catch (error) {
-      failures++;
-      console.error(
-        `\u2717 ${width}px  ${route}\n    could not load: ${error.message.split('\n')[0].slice(0, 80)}`,
-      );
     }
   }
 
+  perLanguage.set(lang, { checks: langChecks, failures: langFailures });
   await context.close();
 }
 
 await browser.close();
 
+console.log('\nmobile gate checks per language:');
+for (const [lang, stats] of perLanguage) {
+  console.log(`  ${lang.padEnd(4)} ${stats.checks} checks, ${stats.failures} failing`);
+}
+
 if (failures) {
   console.error(
-    `\nmobile gate failed: ${failures} route/width combination(s) with layout problems`,
+    `\nmobile gate failed: ${failures} route/width/scale/language combination(s) with layout problems`,
   );
   process.exit(1);
 }
 
-console.log(`\nmobile gate passed: ${routes.length * WIDTHS.length} checks, no layout problems`);
+console.log(`\nmobile gate passed: ${totalChecks} checks, no layout problems`);

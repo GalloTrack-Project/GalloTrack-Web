@@ -93,8 +93,8 @@ function Swatch({ token, note }: { token: string; note?: string }) {
         style={{ backgroundColor: `var(--${token})` }}
       />
       <div className="min-w-0">
-        <p className="text-foreground truncate font-mono text-sm font-semibold">--{token}</p>
-        {note ? <p className="text-muted-foreground truncate text-sm">{note}</p> : null}
+        <p className="text-foreground break-words font-mono text-sm font-semibold">--{token}</p>
+        {note ? <p className="text-muted-foreground break-words text-sm">{note}</p> : null}
       </div>
     </div>
   );
@@ -307,7 +307,8 @@ export default function DesignKitPage() {
           </Section>
 
           <Section title="Data table" hint="Scoped column headers, hover rows, token borders.">
-            <Table>
+            <div className="overflow-x-auto min-w-0 max-w-full">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Sire × Dam</TableHead>
@@ -353,6 +354,7 @@ export default function DesignKitPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </Section>
 
           <Section title="Dialog" hint="Role, modal flag, focus trap, focus restore and Escape.">

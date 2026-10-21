@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui';
 import type { FowlRecord } from '@/lib/types';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 import ChickenIcon from '@/components/ChickenIcon';
+import { useT } from '@/lib/i18n';
 
 type PromoteToBreederModalProps = {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function PromoteToBreederModal({
   onConfirm,
   loading = false,
 }: PromoteToBreederModalProps) {
+  const { t } = useT();
   const [code, setCode] = useState(suggestedCode);
   const [busy, setBusy] = useState(false);
 
@@ -36,7 +38,7 @@ export default function PromoteToBreederModal({
 
   const birthCode = (fowl.birth_code || fowl.bird_code || fowl.chicken_code || '').trim();
   const isMale = targetRole === 'Breeding Male';
-  const roleLabel = isMale ? 'Breeding Male (Sire)' : 'Breeding Female (Dam)';
+  const roleLabel = isMale ? `${t('registry.tabMales')} (${t('domain.roleSire')})` : `${t('registry.tabFemales')} (${t('domain.roleDam')})`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +55,7 @@ export default function PromoteToBreederModal({
     <Modal
       open={isOpen}
       onClose={onClose}
-      title="Promote Offspring to Breeding Stock"
+      title={t('registry.promoteModalTitle')}
       icon={<Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
       className="max-w-md"
     >
@@ -69,20 +71,20 @@ export default function PromoteToBreederModal({
                 {fowl.name}
               </h4>
               <p className="text-xs text-muted-foreground font-semibold">
-                {fowl.breed} · {fowl.gender || (isMale ? 'Rooster' : 'Hen')}
+                {fowl.breed} · {fowl.gender || (isMale ? t('domain.classCock') : 'Hen')}
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-200/60 dark:border-border/60">
             <div>
-              <span className="text-muted-foreground font-medium block">Current Role:</span>
+              <span className="text-muted-foreground font-medium block">{t('registry.currentRoleLabel')}</span>
               <span className="font-bold text-slate-700 dark:text-slate-300">{ROLE_LABEL['Non-Breeding']}</span>
             </div>
             <div>
-              <span className="text-muted-foreground font-medium block">Birth Code:</span>
+              <span className="text-muted-foreground font-medium block">{t('registry.birthCodeLabel')}</span>
               <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                born as {birthCode || 'N/A'}
+                {t('registry.cardBornAs', { code: birthCode || 'N/A' })}
               </span>
             </div>
           </div>
@@ -91,15 +93,16 @@ export default function PromoteToBreederModal({
         {/* Transition Preview */}
         <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg space-y-2">
           <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-            <span>Promotion Target</span>
+            <span>{t('registry.promotionTarget')}</span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200">
               {roleLabel}
             </span>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-300">
-            This chicken will leave the <strong>{ROLE_LABEL['Non-Breeding']}</strong> tab and appear strictly in the{' '}
-            <strong>Breeding</strong> tab. Its birth code (<code className="font-mono">{birthCode}</code>) will remain
-            preserved as historical reference.
+            {t('registry.promotionNotice', {
+              fromRole: ROLE_LABEL['Non-Breeding'],
+              code: birthCode,
+            })}
           </p>
         </div>
 
@@ -109,7 +112,9 @@ export default function PromoteToBreederModal({
             htmlFor="promote-breeder-code"
             className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-card-foreground mb-1"
           >
-            New Breeder Identifier ({isMale ? 'Sire Number' : 'Dam Letter'})
+            {t('registry.newBreederIdLabel', {
+              detail: isMale ? t('registry.sireNumberDetail') : t('registry.damLetterDetail'),
+            })}
           </label>
           <div className="relative">
             <input
@@ -123,7 +128,7 @@ export default function PromoteToBreederModal({
             />
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            This becomes the chicken&apos;s main identifier in breeding charts and pedigrees.
+            {t('registry.newBreederIdHelp')}
           </p>
         </div>
 
@@ -131,7 +136,7 @@ export default function PromoteToBreederModal({
         <div className="flex items-start gap-2 text-xs text-muted-foreground bg-slate-100/70 dark:bg-muted/30 p-2.5 rounded-md">
           <ShieldAlert className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
           <span>
-            This action is logged in <code>fowl_status_history</code> and is fully reversible.
+            {t('registry.reversibleAuditNotice', { table: 'fowl_status_history' })}
           </span>
         </div>
 
@@ -143,14 +148,14 @@ export default function PromoteToBreederModal({
             disabled={busy || loading}
             className="px-3.5 py-2 text-xs font-bold rounded-md border border-slate-300 dark:border-border hover:bg-slate-100 dark:hover:bg-muted text-slate-700 dark:text-slate-300 cursor-pointer"
           >
-            Cancel
+            {t('dateRange.cancel')}
           </button>
           <button
             type="submit"
             disabled={busy || loading}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-md bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm cursor-pointer disabled:opacity-50"
           >
-            <span>{busy || loading ? 'Promoting...' : 'Confirm Promotion & Select'}</span>
+            <span>{busy || loading ? t('registry.promotingBtn') : t('registry.confirmPromotionBtn')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

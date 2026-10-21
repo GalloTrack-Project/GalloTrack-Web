@@ -5,6 +5,22 @@ import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2, ArrowDownUp,
 import { cn } from '@/components/ui/utils';
 import { REGISTRY_SORT_OPTIONS, type RegistrySortKey } from '@/lib/registry-roles';
 import { RETIRED_FIGHTER_LABEL, RETIRED_FIGHTER_TOOLTIP } from '@/lib/registry-labels';
+import { useT } from '@/lib/i18n';
+import type { TranslationKey } from '@/lib/i18n';
+
+/**
+ * Canonical growth-stage stored values -> display label keys.
+ * The option VALUE stays the canonical stored string; only the visible label
+ * is localized, and it leads with the canonical English term.
+ */
+const STAGE_LABEL_KEYS: Record<string, TranslationKey> = {
+  Chick: 'registry.stageChick',
+  Stag: 'registry.stageStag',
+  'Bull Stag': 'registry.stageBullStag',
+  Pullet: 'registry.stagePullet',
+  Cock: 'registry.stageCock',
+  Hen: 'registry.stageHen',
+};
 
 export interface ParentOption {
   name: string;
@@ -66,6 +82,7 @@ function SearchableParentDropdown({
   options: ParentOption[];
   placeholder: string;
 }) {
+  const { t } = useT();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -139,7 +156,7 @@ function SearchableParentDropdown({
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder={`Search ${label.toLowerCase()}…`}
+                placeholder={t('registry.searchParentPlaceholder', { label: label.toLowerCase() })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-8 pr-2.5 py-1 text-xs rounded-sm border border-border bg-background focus:outline-hidden focus:border-emerald-500"
@@ -165,7 +182,7 @@ function SearchableParentDropdown({
             </button>
             {filteredOptions.length === 0 ? (
               <div className="px-3 py-3 text-center text-xs text-muted-foreground">
-                No matching options
+                {t('registry.noMatchingOptions')}
               </div>
             ) : (
               filteredOptions.map((opt) => {
@@ -240,6 +257,7 @@ export default function RegistryFilterBar({
   totalCount,
   onResetAll,
 }: RegistryFilterBarProps) {
+  const { t } = useT();
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -299,8 +317,8 @@ export default function RegistryFilterBar({
                 onQueryChange('');
               }
             }}
-            placeholder="Search name, ID, wing band…"
-            aria-label="Search Registry"
+            placeholder={t('registry.searchPlaceholderShort')}
+            aria-label={t('registry.searchAriaLabel')}
             className={cn(
               'h-10 w-full rounded-md border border-input-border bg-background py-2 pl-9 pr-16 text-sm text-foreground font-medium',
               'placeholder:text-muted-foreground placeholder:font-normal',
@@ -317,7 +335,7 @@ export default function RegistryFilterBar({
                   onQueryChange('');
                   searchInputRef.current?.focus();
                 }}
-                aria-label="Clear search input"
+                aria-label={t('registry.clearSearchAria')}
                 className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
@@ -326,7 +344,7 @@ export default function RegistryFilterBar({
               <kbd
                 aria-hidden="true"
                 className="hidden sm:inline-flex items-center justify-center text-xs font-mono text-muted-foreground/80 bg-muted px-1.5 py-0.5 rounded border border-border"
-                title="Press / anywhere to search"
+                title={t('registry.pressToSearchTitle')}
               >
                 /
               </kbd>
@@ -348,7 +366,7 @@ export default function RegistryFilterBar({
           )}
         >
           <Filter className="w-3.5 h-3.5" />
-          <span>Filters</span>
+          <span>{t('registry.mobileFiltersBtn')}</span>
           {activeFiltersCount > (query.trim() ? 1 : 0) && (
             <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
               {activeFiltersCount - (query.trim() ? 1 : 0)}
@@ -359,9 +377,9 @@ export default function RegistryFilterBar({
         {/* Live Result Count Badge */}
         <div className="hidden sm:flex items-center shrink-0">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-bold bg-muted/80 text-foreground border border-border">
-            <span className="text-muted-foreground">Results:</span>
+            <span className="text-muted-foreground">{t('registry.resultsLabel')}</span>
             <span className={cn('font-black', filteredCount === 0 && 'text-danger')}>
-              {filteredCount} of {totalCount}
+              {t('registry.resultsRatio', { filtered: String(filteredCount), total: String(totalCount) })}
             </span>
           </span>
         </div>
@@ -379,27 +397,27 @@ export default function RegistryFilterBar({
           {/* 1. Father (Sire) */}
           <SearchableParentDropdown
             id="filter-by-sire"
-            label="Father (Sire)"
+            label={t('registry.fatherSireLabel')}
             value={filterSire}
             onChange={onFilterSireChange}
             options={sireOptions}
-            placeholder="All Fathers (Sire)"
+            placeholder={t('registry.allFathersPlaceholder')}
           />
 
           {/* 2. Mother (Dam) */}
           <SearchableParentDropdown
             id="filter-by-dam"
-            label="Mother (Dam)"
+            label={t('registry.motherDamLabel')}
             value={filterDam}
             onChange={onFilterDamChange}
             options={damOptions}
-            placeholder="All Mothers (Dam)"
+            placeholder={t('registry.allMothersPlaceholder')}
           />
 
           {/* 3. Growth Stage */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="filter-by-growth-stage" className="text-xs font-semibold text-muted-foreground">
-              Growth Stage
+              {t('registry.growthStageLabel')}
             </label>
             <div className="relative">
               <select
@@ -413,10 +431,10 @@ export default function RegistryFilterBar({
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
                 )}
               >
-                <option value="all">All Stages</option>
+                <option value="all">{t('registry.allStagesOption')}</option>
                 {stageOptions.map((st) => (
                   <option key={st} value={st}>
-                    {st}
+                    {STAGE_LABEL_KEYS[st] ? t(STAGE_LABEL_KEYS[st]) : st}
                   </option>
                 ))}
               </select>
@@ -427,7 +445,7 @@ export default function RegistryFilterBar({
           {/* 4. Breed */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="filter-by-breed" className="text-xs font-semibold text-muted-foreground">
-              Breed
+              {t('registry.breedLabel')}
             </label>
             <div className="relative">
               <select
@@ -441,7 +459,7 @@ export default function RegistryFilterBar({
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
                 )}
               >
-                <option value="all">All Breeds</option>
+                <option value="all">{t('registry.allBreedsOption')}</option>
                 {breedOptions.map((b) => (
                   <option key={b} value={b}>
                     {b}
@@ -450,8 +468,8 @@ export default function RegistryFilterBar({
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>
-            <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight mt-0.5">
-              Includes crossbreds carrying this breed.
+            <p className="text-xs text-muted-foreground/80 font-medium leading-tight mt-0.5">
+              {t('registry.breedFilterHelp')}
             </p>
           </div>
 
@@ -459,7 +477,7 @@ export default function RegistryFilterBar({
           {onFilterBreedingTypeChange && (
             <div className="flex flex-col gap-1 w-full">
               <label htmlFor="filter-by-breeding-type" className="text-xs font-semibold text-muted-foreground">
-                Breeding Type
+                {t('registry.breedingTypeLabel')}
               </label>
               <div className="relative">
                 <select
@@ -473,15 +491,15 @@ export default function RegistryFilterBar({
                       : 'border-border bg-background text-foreground hover:bg-muted/50'
                   )}
                 >
-                  <option value="all">All Breeding Types</option>
-                  <option value="purebred">Purebred</option>
-                  <option value="crossbred">Crossbred</option>
-                  <option value="unverified">Unverified Lineage</option>
+                  <option value="all">{t('registry.allBreedingTypesOption')}</option>
+                  <option value="purebred">{t('domain.breedingPurebred')}</option>
+                  <option value="crossbred">{t('domain.breedingCrossbred')}</option>
+                  <option value="unverified">{t('domain.breedingUnverified')}</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight mt-0.5">
-                Foundation stock is treated as 100% of its registered breed unless the owner declares a composition.
+              <p className="text-xs text-muted-foreground/80 font-medium leading-tight mt-0.5">
+                {t('registry.breedingTypeHelp')}
               </p>
             </div>
           )}
@@ -489,7 +507,7 @@ export default function RegistryFilterBar({
           {/* 6. Fighting Status */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="filter-by-fights" className="text-xs font-semibold text-muted-foreground">
-              Fighting Status
+              {t('registry.fightingStatusLabel')}
             </label>
             <div className="relative">
               <select
@@ -507,9 +525,9 @@ export default function RegistryFilterBar({
                     : 'border-border bg-background text-foreground hover:bg-muted/50 cursor-pointer'
                 )}
               >
-                <option value="all">All</option>
-                <option value="without">No Fight Record</option>
-                <option value="with">Has Fight Record</option>
+                <option value="all">{t('registry.filterAllFights')}</option>
+                <option value="without">{t('registry.noFightRecordOption')}</option>
+                <option value="with">{t('registry.hasFightRecordOption')}</option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -545,7 +563,7 @@ export default function RegistryFilterBar({
           {/* 6. Sort (Task B — applied before pagination) */}
           <div className="flex flex-col gap-1 w-full">
             <label htmlFor="registry-sort" className="text-xs font-semibold text-muted-foreground">
-              Sort
+              {t('registry.sortLabel')}
             </label>
             <div className="relative">
               <ArrowDownUp className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -560,11 +578,28 @@ export default function RegistryFilterBar({
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
                 )}
               >
-                {REGISTRY_SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
+                {REGISTRY_SORT_OPTIONS.map((opt) => {
+                  const sortLabel = opt.value === 'identifier'
+                    ? t('registry.sortIdentifier')
+                    : opt.value === 'name'
+                    ? t('registry.sortName')
+                    : opt.value === 'newest'
+                    ? t('registry.sortNewest')
+                    : opt.value === 'oldest'
+                    ? t('registry.sortOldest')
+                    : opt.value === 'age'
+                    ? t('registry.sortAge')
+                    : opt.value === 'offspring'
+                    ? t('registry.sortOffspring')
+                    : opt.value === 'wins'
+                    ? t('registry.sortWins')
+                    : opt.label;
+                  return (
+                    <option key={opt.value} value={opt.value}>
+                      {sortLabel}
+                    </option>
+                  );
+                })}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -574,7 +609,7 @@ export default function RegistryFilterBar({
           {(effectiveStatus === 'Archived' || effectiveStatus === 'Deceased') && onFilterReasonChange && (
             <div className="flex flex-col gap-1 w-full sm:col-span-2 md:col-span-1">
               <label htmlFor="filter-by-reason" className="text-xs font-semibold text-muted-foreground">
-                {effectiveStatus === 'Archived' ? 'Archive Reason' : 'Cause of Death'}
+                {effectiveStatus === 'Archived' ? t('registry.archiveReasonLabel') : t('registry.causeOfDeathLabel')}
               </label>
               <div className="relative">
                 <select
@@ -588,7 +623,7 @@ export default function RegistryFilterBar({
                       : 'border-border bg-background text-foreground hover:bg-muted/50'
                   )}
                 >
-                  <option value="all">{effectiveStatus === 'Archived' ? 'All Reasons' : 'All Causes'}</option>
+                  <option value="all">{effectiveStatus === 'Archived' ? t('registry.allReasonsOption') : t('registry.allCausesOption')}</option>
                   {reasonOptions.map((r) => (
                     <option key={r} value={r}>
                       {r}
@@ -606,17 +641,17 @@ export default function RegistryFilterBar({
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 animate-fadeIn">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Active filters:
+            {t('registry.activeFiltersLabel')}
           </span>
 
           {query.trim() && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
-              <span>Search: &ldquo;{query}&rdquo;</span>
+              <span>{t('registry.searchChip', { query })}</span>
               <button
                 type="button"
                 onClick={() => onQueryChange('')}
                 className="hover:text-emerald-950 dark:hover:text-white cursor-pointer"
-                aria-label="Remove search filter"
+                aria-label={t('registry.removeSearchFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -625,12 +660,12 @@ export default function RegistryFilterBar({
 
           {filterSire !== 'all' && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
-              <span>Father: {filterSire}</span>
+              <span>{t('registry.fatherChip', { name: filterSire })}</span>
               <button
                 type="button"
                 onClick={() => onFilterSireChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove sire filter"
+                aria-label={t('registry.removeSireFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -639,12 +674,12 @@ export default function RegistryFilterBar({
 
           {filterDam !== 'all' && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
-              <span>Mother: {filterDam}</span>
+              <span>{t('registry.motherChip', { name: filterDam })}</span>
               <button
                 type="button"
                 onClick={() => onFilterDamChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove dam filter"
+                aria-label={t('registry.removeDamFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -653,12 +688,12 @@ export default function RegistryFilterBar({
 
           {filterStage !== 'all' && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
-              <span>Stage: {filterStage}</span>
+              <span>{t('registry.stageChip', { stage: filterStage })}</span>
               <button
                 type="button"
                 onClick={() => onFilterStageChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove stage filter"
+                aria-label={t('registry.removeStageFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -667,12 +702,12 @@ export default function RegistryFilterBar({
 
           {filterBreed !== 'all' && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
-              <span>Breed: {filterBreed}</span>
+              <span>{t('registry.breedChip', { breed: filterBreed })}</span>
               <button
                 type="button"
                 onClick={() => onFilterBreedChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove breed filter"
+                aria-label={t('registry.removeBreedFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -682,18 +717,19 @@ export default function RegistryFilterBar({
           {filterBreedingType !== 'all' && onFilterBreedingTypeChange && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
               <span>
-                Breeding:{' '}
-                {filterBreedingType === 'purebred'
-                  ? 'Purebred'
-                  : filterBreedingType === 'crossbred'
-                  ? 'Crossbred'
-                  : 'Unverified Lineage'}
+                {t('registry.breedingChip', {
+                  type: filterBreedingType === 'purebred'
+                    ? t('domain.breedingPurebred')
+                    : filterBreedingType === 'crossbred'
+                    ? t('domain.breedingCrossbred')
+                    : t('domain.breedingUnverified'),
+                })}
               </span>
               <button
                 type="button"
                 onClick={() => onFilterBreedingTypeChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove breeding type filter"
+                aria-label={t('registry.removeBreedingFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -702,12 +738,16 @@ export default function RegistryFilterBar({
 
           {filterFights !== 'all' && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
-              <span>Fights: {filterFights === 'with' ? 'With records' : 'Without records'}</span>
+              <span>
+                {t('registry.fightsChip', {
+                  status: filterFights === 'with' ? t('registry.withRecords') : t('registry.withoutRecords'),
+                })}
+              </span>
               <button
                 type="button"
                 onClick={() => onFilterFightsChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove fight filter"
+                aria-label={t('registry.removeFightFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -722,7 +762,7 @@ export default function RegistryFilterBar({
                 type="button"
                 onClick={() => onFilterRetiredFighterChange(false)}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove retired fighter filter"
+                aria-label={t('registry.removeRetiredFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -731,12 +771,12 @@ export default function RegistryFilterBar({
 
           {filterReason !== 'all' && onFilterReasonChange && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border">
-              <span>Reason: {filterReason}</span>
+              <span>{t('registry.reasonChip', { reason: filterReason })}</span>
               <button
                 type="button"
                 onClick={() => onFilterReasonChange('all')}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Remove reason filter"
+                aria-label={t('registry.removeReasonFilterAria')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -749,16 +789,16 @@ export default function RegistryFilterBar({
             className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline px-1.5 py-1 ml-auto cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Reset all</span>
+            <span>{t('registry.resetAllBtn')}</span>
           </button>
         </div>
       )}
 
       {/* Mobile live count (visible only on small screens) */}
       <div className="sm:hidden flex items-center justify-between pt-1 border-t border-border/40 text-xs">
-        <span className="text-muted-foreground">Results:</span>
+        <span className="text-muted-foreground">{t('registry.resultsLabel')}</span>
         <span className={cn('font-mono font-bold', filteredCount === 0 && 'text-danger')}>
-          {filteredCount} of {totalCount}
+          {t('registry.resultsRatio', { filtered: String(filteredCount), total: String(totalCount) })}
         </span>
       </div>
     </div>

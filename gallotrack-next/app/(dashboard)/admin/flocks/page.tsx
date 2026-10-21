@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { CheckCircle, Dna, Users, Search } from 'lucide-react';import ChickenIcon from '@/components/ChickenIcon';
+import { CheckCircle, Dna, Users, Search } from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
 import { useToast } from '@/components/ui';
 import { supabase } from '@/lib/registry';
 import { adminGuard } from '@/lib/admin';
@@ -58,7 +59,8 @@ export default function AdminFlockAuditPage() {
         });
       }
     } catch {
-      pushToast({ title: 'Failed to load chickens', variant: 'danger' });
+      pushToast({ title: 'Failed to load chickens', variant: 'danger' });
+
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,8 @@ export default function AdminFlockAuditPage() {
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-400/5 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full">
+
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
@@ -197,7 +200,7 @@ export default function AdminFlockAuditPage() {
             <h2 className="text-sm font-black uppercase tracking-widest text-card-foreground">All Registered Chickens</h2>
             <span className="text-sm font-mono text-muted-foreground font-bold uppercase tracking-wider">{filtered.length} of {fowls.length} records</span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-0 max-w-full">
             <table className="w-full text-left min-w-[900px]">
               <thead>
                 <tr className="text-sm font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-muted/30">

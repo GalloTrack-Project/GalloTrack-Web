@@ -45,6 +45,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Match Add/Edit form: keep a focused field above the sticky action bar
+   (below lg). scroll-margin-bottom lives on the fields themselves. */
+html:has(.match-form-scroll) {
+  scroll-padding-bottom: 10rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

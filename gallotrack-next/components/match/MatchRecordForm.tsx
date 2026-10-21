@@ -34,12 +34,13 @@ import {
   validatePhotoFile,
   validateVideoFile,
 } from '@/lib/media-format';
+import { filterAllowedColumns } from '@/lib/schema-contract';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 function SelectChevron() {
   return (
-    <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-      <div className="h-2 w-2 border-r-2 border-b-2 border-muted-foreground rotate-45 -translate-y-[2px]" />
+    <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
+      <div className="border-muted-foreground h-2 w-2 -translate-y-[2px] rotate-45 border-r-2 border-b-2" />
     </div>
   );
 }
@@ -114,37 +115,46 @@ export default function MatchRecordForm({
     }
 
     if (initialRecord) {
-      if (initialRecord.fowl_id != null) return { initialFowlIdValue: initialRecord.fowl_id, initialPreselectWarning: null };
-      const found = fowls.find(
-        (f) => (f.name || '').trim().toLowerCase() === (initialRecord.entry_name || '').trim().toLowerCase()
-      );
-      if (found) return { initialFowlIdValue: found.id, initialPreselectWarning: null };
+      // In edit mode: use the stored fowl_id directly. Never auto-attach by name.
+      if (initialRecord.fowl_id != null)
+        return { initialFowlIdValue: initialRecord.fowl_id, initialPreselectWarning: null };
+      // fowl_id is null → historical match; no auto-attach.
     }
 
     return { initialFowlIdValue: null, initialPreselectWarning: null };
   }, [mode, initialFowlId, initialRecord, fowls]);
 
-  const initialFormState: FormState = useMemo(() => ({
-    fowlId: initialFowlIdValue,
-    date: initialRecord?.date || new Date().toISOString().split('T')[0],
-    opponentName: initialRecord?.opponent || '',
-    opponentBreed: initialRecord?.opponent_breed || '',
-    opponentBloodline: initialRecord?.opponent_bloodline || '',
-    opponentHatch: initialRecord?.opponent_birthdate || '',
-    matchLocation: initialRecord?.location || '',
-    matchType: initialRecord?.type || 'Main Event',
-    matchSide: initialRecord?.side || '',
-    matchNotes: initialRecord?.notes || '',
-    derbyMatchNumber: initialRecord?.derby_match_number || 1,
-    matchOutcome: initialRecord?.outcome || 'Win',
-    matchPostFight: initialRecord?.post_fight_condition || 'Fit / Recovered',
-    cockCount: initialRecord?.cock_count || 2,
-    ageCategory: initialRecord?.age_category || 'Cock',
-    eventType: initialRecord?.event_type || 'Derby',
-  }), [initialRecord, initialFowlIdValue]);
+  const initialFormState: FormState = useMemo(
+    () => ({
+      fowlId: initialFowlIdValue,
+      date: initialRecord?.date || new Date().toISOString().split('T')[0],
+      opponentName: initialRecord?.opponent || '',
+      opponentBreed: initialRecord?.opponent_breed || '',
+      opponentBloodline: initialRecord?.opponent_bloodline || '',
+      opponentHatch: initialRecord?.opponent_birthdate || '',
+      matchLocation: initialRecord?.location || '',
+      matchType: initialRecord?.type || 'Main Event',
+      matchSide: initialRecord?.side || '',
+      matchNotes: initialRecord?.notes || '',
+      derbyMatchNumber: initialRecord?.derby_match_number || 1,
+      matchOutcome: initialRecord?.outcome || 'Win',
+      matchPostFight: initialRecord?.post_fight_condition || 'Fit / Recovered',
+      cockCount: initialRecord?.cock_count || 2,
+      ageCategory: initialRecord?.age_category || 'Cock',
+      eventType: initialRecord?.event_type || 'Derby',
+    }),
+    [initialRecord, initialFowlIdValue],
+  );
 
   const [form, setForm] = useState<FormState>(initialFormState);
   const [preselectWarning, setPreselectWarning] = useState<string | null>(initialPreselectWarning);
+
+  // True when editing a match that has no linked chicken in the DB.
+  // In this mode: fowlId is not required, entry_name is shown read-only,
+  // and the user may optionally link a chicken.
+  const isHistoricalMatch = mode === 'edit' && (initialRecord?.fowl_id ?? null) === null;
+  // Whether the user has chosen to link a chicken to this historical match
+  const [linkChickenId, setLinkChickenId] = useState<number | null>(null);
 
   useEffect(() => {
     setPreselectWarning(initialPreselectWarning);
@@ -164,6 +174,15 @@ export default function MatchRecordForm({
   const [newVideoFiles, setNewVideoFiles] = useState<File[]>([]);
   const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([]);
   const [mediaUploadProgress, setMediaUploadProgress] = useState<Record<string, number>>({});
+  // Legacy single-video column (match.video_url). It is preserved on save and
+  // only cleared when the user explicitly removes it.
+  const [legacyVideoRemoved, setLegacyVideoRemoved] = useState(false);
+  const legacyVideoUrl =
+    mode === 'edit' &&
+    typeof initialRecord?.video_url === 'string' &&
+    initialRecord.video_url.trim() !== ''
+      ? initialRecord.video_url.trim()
+      : null;
 
   // Submitting / Dirty states
   const [saving, setSaving] = useState(false);
@@ -183,10 +202,7 @@ export default function MatchRecordForm({
         // Sign private URLs for preview
         const vUrls = details.videos.map((v) => v.url);
         const pUrls = details.photos.map((p) => p.url);
-        const [signedV, signedP] = await Promise.all([
-          signMediaUrls(vUrls),
-          signMediaUrls(pUrls),
-        ]);
+        const [signedV, signedP] = await Promise.all([signMediaUrls(vUrls), signMediaUrls(pUrls)]);
         if (!isMounted) return;
 
         const vMap: Record<number, string> = {};
@@ -262,7 +278,8 @@ export default function MatchRecordForm({
   // Registry options
   const eventOptions = mergeOptions(rows, 'event_type', form.eventType || 'Derby');
   const eventValues = eventOptions.map((o) => o.value);
-  const eventTypeIsCustom = form.eventType === '__custom__' || !eventValues.includes(form.eventType);
+  const eventTypeIsCustom =
+    form.eventType === '__custom__' || !eventValues.includes(form.eventType);
   const eventTypeSelectValue = eventValues.includes(form.eventType) ? form.eventType : '__custom__';
   const effectiveEventType = form.eventType === '__custom__' ? customEventType : form.eventType;
 
@@ -289,7 +306,9 @@ export default function MatchRecordForm({
       else accepted.push(file);
     }
     if (accepted.length > 0) {
-      setNewVideoFiles((prev) => [...prev, ...accepted].slice(0, MAX_MATCH_VIDEOS - existingVideos.length));
+      setNewVideoFiles((prev) =>
+        [...prev, ...accepted].slice(0, MAX_MATCH_VIDEOS - existingVideos.length),
+      );
     }
   };
 
@@ -307,12 +326,19 @@ export default function MatchRecordForm({
       else accepted.push(file);
     }
     if (accepted.length > 0) {
-      setNewPhotoFiles((prev) => [...prev, ...accepted].slice(0, MAX_MATCH_PHOTOS - existingPhotos.length));
+      setNewPhotoFiles((prev) =>
+        [...prev, ...accepted].slice(0, MAX_MATCH_PHOTOS - existingPhotos.length),
+      );
     }
   };
 
   const handleDeleteExistingVideo = async (rowId: number) => {
-    if (!window.confirm('Delete this video from the match? This will remove the video file permanently.')) return;
+    if (
+      !window.confirm(
+        'Delete this video from the match? This will remove the video file permanently.',
+      )
+    )
+      return;
     const res = await mediaService.deleteMatchMedia('video', rowId);
     if (res.error) {
       toastMessage(res.error, 'error');
@@ -323,7 +349,12 @@ export default function MatchRecordForm({
   };
 
   const handleDeleteExistingPhoto = async (rowId: number) => {
-    if (!window.confirm('Delete this photo from the match? This will remove the photo file permanently.')) return;
+    if (
+      !window.confirm(
+        'Delete this photo from the match? This will remove the photo file permanently.',
+      )
+    )
+      return;
     const res = await mediaService.deleteMatchMedia('photo', rowId);
     if (res.error) {
       toastMessage(res.error, 'error');
@@ -333,9 +364,21 @@ export default function MatchRecordForm({
     }
   };
 
+  const handleRemoveLegacyVideo = () => {
+    if (
+      !window.confirm(
+        'Remove this video from the match? The video file and its link will be cleared on save.',
+      )
+    )
+      return;
+    setLegacyVideoRemoved(true);
+    toastMessage('Legacy video will be removed when you save.', 'success');
+  };
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!form.fowlId) {
+    // fowlId required in add mode always; in edit mode only for non-historical matches.
+    if (!isHistoricalMatch && !form.fowlId) {
       errs.fowlId = 'Please select a chicken entry.';
     }
     if (!form.opponentName.trim()) {
@@ -386,7 +429,8 @@ export default function MatchRecordForm({
     setSaveError(null);
 
     const errs: Record<string, string> = {};
-    if (!form.fowlId) {
+    // fowlId required in add mode, or in edit mode when the match already has a linked chicken.
+    if (!isHistoricalMatch && !form.fowlId) {
       errs.fowlId = 'Please select a chicken entry.';
     }
     if (!form.opponentName.trim()) {
@@ -421,11 +465,37 @@ export default function MatchRecordForm({
     setSaving(true);
 
     try {
-      const selectedFowl = fowls.find((f) => f.id === form.fowlId);
-      if (!selectedFowl) throw new Error('Selected chicken record could not be found.');
-
       const activeUserId = (await supabase.auth.getUser()).data.user?.id;
       if (!activeUserId) throw new Error('Active session user ID not detected.');
+
+      // Resolve fowl snapshot for the payload.
+      // For historical matches the user may optionally link a chicken this save;
+      // if they didn't choose one, preserve the existing entry_name/breed/fowl_id.
+      let resolvedFowlId: number | null;
+      let resolvedEntryName: string;
+      let resolvedBreed: string;
+
+      if (isHistoricalMatch) {
+        if (linkChickenId != null) {
+          // User explicitly linked a chicken this session
+          const linked = fowls.find((f) => f.id === linkChickenId);
+          if (!linked) throw new Error('Linked chicken record could not be found.');
+          resolvedFowlId = linked.id;
+          resolvedEntryName = linked.name;
+          resolvedBreed = linked.breed || 'Unknown';
+        } else {
+          // Keep the historical snapshot — do NOT overwrite fowl_id, entry_name, or breed
+          resolvedFowlId = initialRecord?.fowl_id ?? null;
+          resolvedEntryName = initialRecord?.entry_name ?? '';
+          resolvedBreed = initialRecord?.breed ?? 'Unknown';
+        }
+      } else {
+        const selectedFowl = fowls.find((f) => f.id === form.fowlId);
+        if (!selectedFowl) throw new Error('Selected chicken record could not be found.');
+        resolvedFowlId = selectedFowl.id;
+        resolvedEntryName = selectedFowl.name;
+        resolvedBreed = selectedFowl.breed || 'Unknown';
+      }
 
       // 1. Upload new videos with progress
       const uploadedVideoUrls: string[] = [];
@@ -435,7 +505,7 @@ export default function MatchRecordForm({
         const vRes = await matchService.uploadMatchVideo(vFile, (pct) => {
           setMediaUploadProgress((prev) => ({ ...prev, [key]: pct }));
         });
-        if (vRes.error) throw new Error(vRes.error);
+        if (vRes.error) throw new Error(`Video upload failed: ${vRes.error}`);
         if (vRes.url) {
           uploadedVideoUrls.push(vRes.url);
           let posterUrl: string | null = null;
@@ -445,7 +515,7 @@ export default function MatchRecordForm({
               const posterFile = new File(
                 [posterBlob],
                 `${vFile.name.replace(/\.[^.]+$/, '') || 'video'}-poster.jpg`,
-                { type: 'image/jpeg' }
+                { type: 'image/jpeg' },
               );
               const posterUpload = await mediaService.uploadMatchPhotoFile(posterFile);
               posterUrl = posterUpload.url || null;
@@ -464,18 +534,17 @@ export default function MatchRecordForm({
         const pRes = await mediaService.uploadMatchPhotoFile(pFile, (pct) => {
           setMediaUploadProgress((prev) => ({ ...prev, [key]: pct }));
         });
-        if (pRes.error) throw new Error(pRes.error);
+        if (pRes.error) throw new Error(`Photo upload failed: ${pRes.error}`);
         if (pRes.url) uploadedPhotoUrls.push(pRes.url);
       }
 
-      // 3. Assemble database payload
-      // Link matches to chickens by fowl ID (authoritative foreign key) and write entry_name as snapshot
-      const matchPayload: Record<string, unknown> = {
+      // 3. Assemble database payload — only include fields in the schema contract.
+      // fowl_id: only include it if we have a resolved value (don't send null to overwrite non-null).
+      const rawMatchPayload: Record<string, unknown> = {
         user_id: activeUserId,
-        fowl_id: selectedFowl.id,
-        entry_name: selectedFowl.name,
-        breed: selectedFowl.breed || 'Unknown',
         date: form.date || new Date().toISOString().split('T')[0],
+        entry_name: resolvedEntryName,
+        breed: resolvedBreed,
         opponent: form.opponentName.trim(),
         opponent_breed: form.opponentBreed.trim() || '',
         opponent_bloodline: form.opponentBloodline.trim() || null,
@@ -493,37 +562,87 @@ export default function MatchRecordForm({
         event_type: effectiveEventType,
       };
 
+      // Include fowl_id when we have a resolved one
+      if (resolvedFowlId != null) {
+        rawMatchPayload.fowl_id = resolvedFowlId;
+      }
+
+      // Only set video_url when a new video was uploaded
       if (uploadedVideoUrls.length > 0) {
-        matchPayload.video_url = uploadedVideoUrls[0];
+        rawMatchPayload.video_url = uploadedVideoUrls[0];
+      } else if (legacyVideoRemoved) {
+        // Explicit user action only: clear the legacy single-video column.
+        rawMatchPayload.video_url = null;
+      }
+
+      // Pass through the schema contract. Treat a dropped user-editable field as a visible error.
+      const USER_EDITABLE_KEYS: ReadonlyArray<string> = [
+        'date',
+        'entry_name',
+        'breed',
+        'opponent',
+        'opponent_breed',
+        'opponent_bloodline',
+        'opponent_birthdate',
+        'location',
+        'type',
+        'derby_match_number',
+        'outcome',
+        'post_fight_condition',
+        'side',
+        'notes',
+        'cock_count',
+        'age_category',
+        'event_type',
+        'video_url',
+      ];
+      const filteredPayload = filterAllowedColumns('match', rawMatchPayload);
+      const droppedKeys = Object.keys(rawMatchPayload).filter((k) => !(k in filteredPayload));
+      const droppedEditable = droppedKeys.filter((k) => USER_EDITABLE_KEYS.includes(k));
+      if (droppedEditable.length > 0) {
+        console.warn(
+          '[match-form] Dropped user-editable keys (schema mismatch):',
+          droppedEditable.join(', '),
+        );
+        throw new Error(
+          `The change could not be saved: the following fields are not recognised by the database schema: ${droppedEditable.join(', ')}. Contact support.`,
+        );
       }
 
       let matchId: number;
 
       if (mode === 'add') {
-        const result = await matchService.insertMatch(matchPayload);
-        if (result.error || !result.id) throw new Error(result.error || 'Failed to save match record.');
+        const result = await matchService.insertMatch(filteredPayload);
+        if (result.error || !result.id)
+          throw new Error(result.error || 'Failed to save match record.');
         matchId = result.id;
       } else {
         if (!initialRecord?.id) throw new Error('Missing match ID for edit.');
         matchId = initialRecord.id;
-        const result = await matchService.updateMatch(matchId, matchPayload);
-        if (result.error) throw new Error(result.error || 'Failed to update match record.');
+        const result = await matchService.updateMatch(matchId, filteredPayload);
+        if (result.error) throw new Error(result.error);
       }
 
       // 4. Save newly uploaded media rows
       const existingVideoCount = existingVideos.length;
       for (let i = 0; i < uploadedVideoUrls.length; i++) {
-        await mediaService.insertMatchVideo(
+        const vInsertRes = await mediaService.insertMatchVideo(
           matchId,
           uploadedVideoUrls[i],
           existingVideoCount + i + 1,
-          uploadedVideoPosters[i] ?? null
+          uploadedVideoPosters[i] ?? null,
         );
+        if (vInsertRes.error) throw new Error(`Failed to save video record: ${vInsertRes.error}`);
       }
 
       const existingPhotoCount = existingPhotos.length;
       for (let i = 0; i < uploadedPhotoUrls.length; i++) {
-        await mediaService.insertMatchPhoto(matchId, uploadedPhotoUrls[i], existingPhotoCount + i + 1);
+        const pInsertRes = await mediaService.insertMatchPhoto(
+          matchId,
+          uploadedPhotoUrls[i],
+          existingPhotoCount + i + 1,
+        );
+        if (pInsertRes.error) throw new Error(`Failed to save photo record: ${pInsertRes.error}`);
       }
 
       // 5. Invalidate & refresh everything that depends on matches
@@ -531,14 +650,15 @@ export default function MatchRecordForm({
 
       toastMessage(
         mode === 'add' ? 'Match record logged successfully!' : 'Match record updated successfully!',
-        'success'
+        'success',
       );
 
       // Redirect back to Match Logs
       router.push(onSuccessRedirect);
     } catch (err) {
-      console.error('Error saving match record:', err);
+      console.error('[match-form] Error saving match record:', err);
       const msg = err instanceof Error ? err.message : String(err);
+      // Keep user input — do not navigate, do not clear the form
       setSaveError(msg);
       toastMessage(`Save failed: ${msg}`, 'error');
     } finally {
@@ -549,12 +669,12 @@ export default function MatchRecordForm({
   const selectClass = (hasError?: boolean) =>
     `match-field h-11 sm:h-12 w-full cursor-pointer rounded-lg border ${
       hasError ? 'border-danger focus:border-danger' : 'border-input-border focus:border-success'
-    } bg-white dark:bg-input px-3.5 sm:px-4 pr-10 text-sm sm:text-base font-semibold text-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px]`;
+    } bg-white dark:bg-input px-3.5 sm:px-4 pr-10 text-sm sm:text-base font-semibold text-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px] scroll-mb-40`;
 
   const inputClass = (hasError?: boolean) =>
     `match-field h-11 sm:h-12 min-w-0 w-full rounded-lg border ${
       hasError ? 'border-danger focus:border-danger' : 'border-input-border focus:border-success'
-    } bg-white dark:bg-input px-3.5 sm:px-4 text-sm sm:text-base font-semibold text-foreground placeholder:text-muted-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px]`;
+    } bg-white dark:bg-input px-3.5 sm:px-4 text-sm sm:text-base font-semibold text-foreground placeholder:text-muted-foreground transition-colors duration-150 focus:shadow-[0_0_0_3px_rgba(19,169,131,.12)] min-h-[44px] scroll-mb-40`;
 
   // Derive return label for breadcrumb
   const backLabel = useMemo(() => {
@@ -567,31 +687,34 @@ export default function MatchRecordForm({
   }, [onSuccessRedirect]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-32 sm:pb-40 w-full">
+    <div className="mx-auto w-full max-w-6xl scroll-pb-40 space-y-8 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-4">
       {/* Breadcrumb & Navigation */}
-      <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-sm sm:text-base text-muted-foreground font-semibold">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-muted-foreground flex items-center space-x-2 text-sm font-semibold sm:text-base"
+      >
         <button
           type="button"
           onClick={() => handleCancel(onSuccessRedirect)}
-          className="hover:text-foreground transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="hover:text-foreground flex cursor-pointer items-center gap-1.5 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>{backLabel}</span>
         </button>
-        <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+        <ChevronRight className="text-muted-foreground/60 h-4 w-4" />
         <span className="text-foreground font-bold">
           {mode === 'add' ? 'Add Match Record' : 'Edit Match Record'}
         </span>
       </nav>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-5">
+      <div className="border-border flex flex-col justify-between gap-3 border-b pb-5 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight flex items-center gap-2.5">
+          <h1 className="text-foreground flex items-center gap-2.5 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
             <span>⚔️</span>
             <span>{mode === 'add' ? 'Add Match Record' : 'Edit Match Record'}</span>
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground font-medium mt-1.5">
+          <p className="text-muted-foreground mt-1.5 text-sm font-medium sm:text-base">
             {mode === 'add'
               ? 'Log a new competitive fight performance encounter with official verification'
               : `Updating match record #${initialRecord?.id ?? ''} · ${initialRecord?.entry_name || 'Chicken'}`}
@@ -601,77 +724,155 @@ export default function MatchRecordForm({
 
       {/* Save Error Banner */}
       {saveError && (
-        <div role="alert" className="p-4 sm:p-5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-danger flex items-start gap-3.5">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+        <div
+          role="alert"
+          className="text-danger flex items-start gap-3.5 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 sm:p-5"
+        >
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div className="text-sm sm:text-base">
-            <strong className="font-bold block">Save Failed</strong>
+            <strong className="block font-bold">Save Failed</strong>
             <span>{saveError}</span>
           </div>
         </div>
       )}
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit} noValidate className="bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-10 shadow-sm space-y-8 sm:space-y-10">
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="match-form-scroll bg-card border-border space-y-8 rounded-xl border p-6 shadow-sm sm:space-y-10 sm:p-8 lg:p-10"
+      >
         {/* Section 1: Match Details */}
         <section className="space-y-4">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="border-border border-b pb-3">
+            <h2 className="text-foreground flex items-center gap-2 text-base font-black sm:text-lg">
+              <Calendar className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span>Match Details</span>
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs font-medium sm:text-sm">
               Select your rooster entry, match date, event type, and arena location
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="fowlId">
-                Select Local Chicken Entry <span className="text-danger">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  id="fowlId"
-                  value={form.fowlId ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : null;
-                    setPreselectWarning(null);
-                    setForm((prev) => ({ ...prev, fowlId: val }));
-                    if (errors.fowlId) setErrors((prev) => ({ ...prev, fowlId: '' }));
-                  }}
-                  className={selectClass(!!errors.fowlId)}
-                  aria-invalid={!!errors.fowlId}
-                  aria-describedby={errors.fowlId ? 'err-fowlId' : undefined}
-                  required
-                >
-                  <option value="">-- Select Rooster --</option>
-                  {candidateFowls.map((f) => {
-                    const code = birdCodes.get(String(f.id));
-                    return (
-                      <option key={f.id} value={f.id}>
-                        {code ? `[${formatBirdCodeForDisplay(code)}] ` : ''}
-                        {f.name} ({f.breed})
-                      </option>
-                    );
-                  })}
-                </select>
-                <SelectChevron />
-              </div>
-              {preselectWarning && (
-                <div role="status" className="mt-1.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-warning text-xs font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{preselectWarning}</span>
-                </div>
-              )}
-              {errors.fowlId && (
-                <p id="err-fowlId" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
-                  {errors.fowlId}
-                </p>
+              {isHistoricalMatch ? (
+                /* Historical match: show recorded name read-only, offer optional link */
+                <>
+                  <div className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm">
+                    Chicken Entry (Historical Record)
+                  </div>
+                  <div className="border-input-border bg-muted/40 flex min-h-[44px] items-center gap-2 rounded-lg border px-3.5 py-3">
+                    <span className="text-foreground text-sm font-bold sm:text-base">
+                      {initialRecord?.entry_name || '—'}
+                    </span>
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                      Historical entry (no profile linked)
+                    </span>
+                  </div>
+                  {/* Optional: link to a current chicken */}
+                  <div className="mt-3">
+                    <label
+                      className="text-muted-foreground mb-1.5 block text-xs font-bold tracking-wider uppercase"
+                      htmlFor="link-chicken-id"
+                    >
+                      Link to a chicken <span className="font-normal normal-case">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="link-chicken-id"
+                        value={linkChickenId ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value ? Number(e.target.value) : null;
+                          setLinkChickenId(val);
+                        }}
+                        className={selectClass()}
+                      >
+                        <option value="">— Keep as historical (unlinked) —</option>
+                        {candidateFowls.map((f) => {
+                          const code = birdCodes.get(String(f.id));
+                          return (
+                            <option key={f.id} value={f.id}>
+                              {code ? `[${formatBirdCodeForDisplay(code)}] ` : ''}
+                              {f.name} ({f.breed})
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <SelectChevron />
+                    </div>
+                    {linkChickenId != null && (
+                      <p className="mt-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        Saving will link this match to the selected chicken and update the recorded
+                        name.
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* Normal (linked) mode */
+                <>
+                  <label
+                    className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                    htmlFor="fowlId"
+                  >
+                    Select Local Chicken Entry <span className="text-danger">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="fowlId"
+                      value={form.fowlId ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? Number(e.target.value) : null;
+                        setPreselectWarning(null);
+                        setForm((prev) => ({ ...prev, fowlId: val }));
+                        if (errors.fowlId) setErrors((prev) => ({ ...prev, fowlId: '' }));
+                      }}
+                      className={selectClass(!!errors.fowlId)}
+                      aria-invalid={!!errors.fowlId}
+                      aria-describedby={errors.fowlId ? 'err-fowlId' : undefined}
+                      required
+                    >
+                      <option value="">-- Select Rooster --</option>
+                      {candidateFowls.map((f) => {
+                        const code = birdCodes.get(String(f.id));
+                        return (
+                          <option key={f.id} value={f.id}>
+                            {code ? `[${formatBirdCodeForDisplay(code)}] ` : ''}
+                            {f.name} ({f.breed})
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <SelectChevron />
+                  </div>
+                  {preselectWarning && (
+                    <div
+                      role="status"
+                      className="text-warning mt-1.5 flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-2.5 text-xs font-semibold"
+                    >
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{preselectWarning}</span>
+                    </div>
+                  )}
+                  {errors.fowlId && (
+                    <p
+                      id="err-fowlId"
+                      role="alert"
+                      className="text-danger mt-1.5 text-xs font-semibold sm:text-sm"
+                    >
+                      {errors.fowlId}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="match-date">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="match-date"
+              >
                 Match Date <span className="text-danger">*</span>
               </label>
               <input
@@ -688,15 +889,23 @@ export default function MatchRecordForm({
                 aria-describedby={errors.date ? 'err-date' : undefined}
               />
               {errors.date && (
-                <p id="err-date" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                <p
+                  id="err-date"
+                  role="alert"
+                  className="text-danger mt-1.5 text-xs font-semibold sm:text-sm"
+                >
                   {errors.date}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="arena-location-hub">
-                Arena Location Hub {settings.match_location_required && <span className="text-danger">*</span>}
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="arena-location-hub"
+              >
+                Arena Location Hub{' '}
+                {settings.match_location_required && <span className="text-danger">*</span>}
               </label>
               <input
                 list="arena-locations"
@@ -707,7 +916,11 @@ export default function MatchRecordForm({
                   if (errors.matchLocation) setErrors((prev) => ({ ...prev, matchLocation: '' }));
                 }}
                 className={inputClass(!!errors.matchLocation)}
-                placeholder={settings.match_location_required ? 'Select or type arena...' : 'Select or type arena (optional)...'}
+                placeholder={
+                  settings.match_location_required
+                    ? 'Select or type arena...'
+                    : 'Select or type arena (optional)...'
+                }
                 required={settings.match_location_required}
                 aria-invalid={!!errors.matchLocation}
                 aria-describedby={errors.matchLocation ? 'err-location' : undefined}
@@ -718,14 +931,21 @@ export default function MatchRecordForm({
                 ))}
               </datalist>
               {errors.matchLocation && (
-                <p id="err-location" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                <p
+                  id="err-location"
+                  role="alert"
+                  className="text-danger mt-1.5 text-xs font-semibold sm:text-sm"
+                >
                   {errors.matchLocation}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="event-type">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="event-type"
+              >
                 Event Type
               </label>
               <div className="relative">
@@ -763,7 +983,11 @@ export default function MatchRecordForm({
                 />
               )}
               {errors.eventType && (
-                <p id="err-event" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                <p
+                  id="err-event"
+                  role="alert"
+                  className="text-danger mt-1.5 text-xs font-semibold sm:text-sm"
+                >
                   {errors.eventType}
                 </p>
               )}
@@ -773,19 +997,22 @@ export default function MatchRecordForm({
 
         {/* Section 2: Opponent */}
         <section className="space-y-4">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
-              <Swords className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="border-border border-b pb-3">
+            <h2 className="text-foreground flex items-center gap-2 text-base font-black sm:text-lg">
+              <Swords className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span>Opponent</span>
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs font-medium sm:text-sm">
               Record identity and breed classification of the challenger entry
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             <div className="sm:col-span-1 lg:col-span-2">
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="opponent-entry-identity">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="opponent-entry-identity"
+              >
                 Opponent Entry Identity <span className="text-danger">*</span>
               </label>
               <input
@@ -803,14 +1030,21 @@ export default function MatchRecordForm({
                 required
               />
               {errors.opponentName && (
-                <p id="err-opponent" role="alert" className="mt-1.5 text-xs sm:text-sm font-semibold text-danger">
+                <p
+                  id="err-opponent"
+                  role="alert"
+                  className="text-danger mt-1.5 text-xs font-semibold sm:text-sm"
+                >
                   {errors.opponentName}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="opponent-breed-rasa">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="opponent-breed-rasa"
+              >
                 Opponent Breed / Rasa
               </label>
               <input
@@ -827,19 +1061,22 @@ export default function MatchRecordForm({
 
         {/* Section 3: Match Configuration */}
         <section className="space-y-4">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="border-border border-b pb-3">
+            <h2 className="text-foreground flex items-center gap-2 text-base font-black sm:text-lg">
+              <Sliders className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span>Match Configuration</span>
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs font-medium sm:text-sm">
               Specify fight structure, chicken class, and strategic combat observations
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="number-of-cocks">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="number-of-cocks"
+              >
                 Number of Cocks
               </label>
               <div className="flex items-center gap-2">
@@ -853,16 +1090,19 @@ export default function MatchRecordForm({
                     const count = Number(e.target.value) || 0;
                     setForm((prev) => ({ ...prev, cockCount: count }));
                   }}
-                  className={`${inputClass()} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  className={`${inputClass()} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
                 />
-                <span className="rounded-lg bg-muted px-4 py-3 text-xs sm:text-sm font-bold text-muted-foreground shrink-0 h-11 sm:h-12 flex items-center">
+                <span className="bg-muted text-muted-foreground flex h-11 shrink-0 items-center rounded-lg px-4 py-3 text-xs font-bold sm:h-12 sm:text-sm">
                   cocks
                 </span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="chicken-class">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="chicken-class"
+              >
                 Chicken Class
               </label>
               <div className="relative">
@@ -881,18 +1121,25 @@ export default function MatchRecordForm({
             </div>
 
             {form.cockCount > 0 && (
-              <div className="sm:col-span-2 lg:col-span-1 flex flex-col justify-end">
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 flex items-center gap-2.5 h-11 sm:h-12">
-                  <span className="h-2.5 w-2.5 rounded-full bg-success animate-pulse shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-success shrink-0">Live Preview:</span>
-                  <span className="text-xs sm:text-sm font-extrabold text-foreground truncate">{buildPreview()}</span>
+              <div className="flex flex-col justify-end sm:col-span-2 lg:col-span-1">
+                <div className="flex h-11 items-center gap-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 sm:h-12">
+                  <span className="bg-success h-2.5 w-2.5 shrink-0 animate-pulse rounded-full" />
+                  <span className="text-success shrink-0 text-xs font-bold tracking-wider uppercase">
+                    Live Preview:
+                  </span>
+                  <span className="text-foreground truncate text-xs font-extrabold sm:text-sm">
+                    {buildPreview()}
+                  </span>
                 </div>
               </div>
             )}
 
             {/* Notes: Spanning full width of its row */}
             <div className="col-span-full">
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="match-notes">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="match-notes"
+              >
                 Notes
               </label>
               <input
@@ -910,19 +1157,22 @@ export default function MatchRecordForm({
 
         {/* Section 4: Result */}
         <section className="space-y-4">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="border-border border-b pb-3">
+            <h2 className="text-foreground flex items-center gap-2 text-base font-black sm:text-lg">
+              <Trophy className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span>Result</span>
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs font-medium sm:text-sm">
               Official fight verdict and post-encounter physical health status
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="fight-outcome">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="fight-outcome"
+              >
                 Fight Outcome <span className="text-danger">*</span>
               </label>
               <div className="relative">
@@ -930,7 +1180,7 @@ export default function MatchRecordForm({
                   id="fight-outcome"
                   value={form.matchOutcome}
                   onChange={(e) => setForm((prev) => ({ ...prev, matchOutcome: e.target.value }))}
-                  className="w-full h-11 sm:h-12 px-3.5 sm:px-4 pr-10 border border-amber-300 dark:border-amber-700/80 rounded-lg text-sm sm:text-base bg-amber-50 dark:bg-amber-950/40 font-black text-amber-900 dark:text-amber-200 cursor-pointer min-h-[44px]"
+                  className="h-11 min-h-[44px] w-full cursor-pointer rounded-lg border border-amber-300 bg-amber-50 px-3.5 pr-10 text-sm font-black text-amber-900 sm:h-12 sm:px-4 sm:text-base dark:border-amber-700/80 dark:bg-amber-950/40 dark:text-amber-200"
                   required
                 >
                   <option value="Win">WIN</option>
@@ -942,7 +1192,10 @@ export default function MatchRecordForm({
             </div>
 
             <div className="sm:col-span-1 lg:col-span-2">
-              <label className="block text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2" htmlFor="post-fight-condition">
+              <label
+                className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
+                htmlFor="post-fight-condition"
+              >
                 Post-Fight Condition
               </label>
               <div className="relative">
@@ -966,12 +1219,12 @@ export default function MatchRecordForm({
 
         {/* Section 5: Media Evidence Management (Full Width) */}
         <section className="space-y-6 pt-2">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
-              <Video className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="border-border border-b pb-3">
+            <h2 className="text-foreground flex items-center gap-2 text-base font-black sm:text-lg">
+              <Video className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span>Media</span>
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs font-medium sm:text-sm">
               Attach official fight video recordings and high-resolution photo documentation
             </p>
           </div>
@@ -980,33 +1233,78 @@ export default function MatchRecordForm({
             {/* Video Evidence */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <Video className="w-4 h-4 text-emerald-600" />
+                <span className="text-muted-foreground flex items-center gap-2 text-xs font-bold tracking-wider uppercase sm:text-sm">
+                  <Video className="h-4 w-4 text-emerald-600" />
                   <span>Video Evidence (up to {MAX_MATCH_VIDEOS})</span>
                 </span>
-                <span className="text-xs sm:text-sm text-muted-foreground font-semibold">
+                <span className="text-muted-foreground text-xs font-semibold sm:text-sm">
                   {existingVideos.length + newVideoFiles.length} / {MAX_MATCH_VIDEOS} attached
                 </span>
               </div>
 
+              {/* Legacy single-video column (match.video_url) with no match_videos row.
+                  Kept visible so the user can see it and remove it deliberately. */}
+              {mode === 'edit' && legacyVideoUrl && existingVideos.length === 0 && (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
+                    Current Videos:
+                  </p>
+                  <ul className="space-y-2">
+                    <li
+                      className="border-border bg-muted/30 flex items-center justify-between rounded-lg border p-3.5 text-xs font-semibold sm:text-sm"
+                      data-testid="legacy-video-row"
+                    >
+                      <div className="flex min-w-0 items-center gap-2.5 truncate pr-2">
+                        <Video className="text-success h-4 w-4 shrink-0" />
+                        <span className="truncate font-bold">Video 1</span>
+                        <a
+                          href={legacyVideoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-1 shrink-0 text-xs font-bold text-emerald-600 hover:underline sm:text-sm dark:text-emerald-400"
+                        >
+                          (View Video)
+                        </a>
+                      </div>
+                      {legacyVideoRemoved ? (
+                        <span className="text-muted-foreground shrink-0 text-xs font-bold">
+                          Will be removed on save
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleRemoveLegacyVideo}
+                          className="text-danger flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-bold hover:underline sm:text-sm"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </li>
+                  </ul>
+                </div>
+              )}
+
               {/* Existing Videos List (Edit mode) */}
               {existingVideos.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Current Videos:</p>
+                  <p className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
+                    Current Videos:
+                  </p>
                   <ul className="space-y-2">
                     {existingVideos.map((v, idx) => (
                       <li
                         key={v.id}
-                        className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-muted/30 text-xs sm:text-sm font-semibold"
+                        className="border-border bg-muted/30 flex items-center justify-between rounded-lg border p-3.5 text-xs font-semibold sm:text-sm"
                       >
                         <div className="flex items-center gap-2.5 truncate pr-2">
-                          <Video className="w-4 h-4 text-success shrink-0" />
+                          <Video className="text-success h-4 w-4 shrink-0" />
                           <span className="truncate font-bold">Video {idx + 1}</span>
                           <a
                             href={signedVideoUrls[v.id] || v.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 hover:underline shrink-0 ml-1 font-bold"
+                            className="ml-1 shrink-0 text-xs font-bold text-emerald-600 hover:underline sm:text-sm dark:text-emerald-400"
                           >
                             (View Video)
                           </a>
@@ -1014,9 +1312,9 @@ export default function MatchRecordForm({
                         <button
                           type="button"
                           onClick={() => handleDeleteExistingVideo(v.id)}
-                          className="text-danger hover:underline font-bold flex items-center gap-1.5 cursor-pointer shrink-0 text-xs sm:text-sm"
+                          className="text-danger flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-bold hover:underline sm:text-sm"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                           <span>Remove</span>
                         </button>
                       </li>
@@ -1028,14 +1326,14 @@ export default function MatchRecordForm({
               {/* New Video Upload Dropzone */}
               {existingVideos.length + newVideoFiles.length < MAX_MATCH_VIDEOS && (
                 <label
-                  className="flex flex-col items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-border rounded-xl cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors p-4"
+                  className="border-border bg-muted/20 hover:bg-muted/40 flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors sm:h-28"
                   htmlFor="video-input"
                 >
-                  <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-muted-foreground">
-                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm font-bold sm:text-base">
+                    <Upload className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5 dark:text-emerald-400" />
                     <span>+ Add fight match recording</span>
                   </div>
-                  <span className="text-xs text-muted-foreground font-medium mt-1">
+                  <span className="text-muted-foreground mt-1 text-xs font-medium">
                     MP4, MOV, AVI, WebM, MKV up to 50MB
                   </span>
                   <input
@@ -1059,7 +1357,10 @@ export default function MatchRecordForm({
                   {newVideoFiles.map((file, idx) => {
                     const pct = mediaUploadProgress[uploadKey('video', file)];
                     return (
-                      <li key={`${file.name}-${idx}`} className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs sm:text-sm font-bold">
+                      <li
+                        key={`${file.name}-${idx}`}
+                        className="border-border bg-muted/40 rounded-lg border px-4 py-3 text-xs font-bold sm:text-sm"
+                      >
                         <div className="flex items-center justify-between">
                           <span className="truncate pr-2">
                             New Video {idx + 1}: {file.name}
@@ -1068,14 +1369,16 @@ export default function MatchRecordForm({
                           <button
                             type="button"
                             disabled={saving}
-                            onClick={() => setNewVideoFiles(newVideoFiles.filter((_, i) => i !== idx))}
-                            className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40"
+                            onClick={() =>
+                              setNewVideoFiles(newVideoFiles.filter((_, i) => i !== idx))
+                            }
+                            className="text-danger shrink-0 cursor-pointer hover:underline disabled:opacity-40"
                           >
                             Remove
                           </button>
                         </div>
                         {pct !== undefined && (
-                          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                          <div className="bg-muted mt-2 h-2 w-full overflow-hidden rounded-full">
                             <div
                               className="h-full rounded-full bg-emerald-500 transition-all duration-200"
                               style={{ width: `${pct}%` }}
@@ -1092,11 +1395,11 @@ export default function MatchRecordForm({
             {/* Photo Evidence */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-emerald-600" />
+                <span className="text-muted-foreground flex items-center gap-2 text-xs font-bold tracking-wider uppercase sm:text-sm">
+                  <ImageIcon className="h-4 w-4 text-emerald-600" />
                   <span>Match Photos (up to {MAX_MATCH_PHOTOS})</span>
                 </span>
-                <span className="text-xs sm:text-sm text-muted-foreground font-semibold">
+                <span className="text-muted-foreground text-xs font-semibold sm:text-sm">
                   {existingPhotos.length + newPhotoFiles.length} / {MAX_MATCH_PHOTOS} attached
                 </span>
               </div>
@@ -1104,24 +1407,26 @@ export default function MatchRecordForm({
               {/* Existing Photos List (Edit mode) */}
               {existingPhotos.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Current Photos:</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <p className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
+                    Current Photos:
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                     {existingPhotos.map((p, idx) => (
                       <div
                         key={p.id}
-                        className="relative rounded-lg border border-border overflow-hidden bg-muted group p-1.5"
+                        className="border-border bg-muted group relative overflow-hidden rounded-lg border p-1.5"
                       >
                         <img
                           src={signedPhotoUrls[p.id] || p.url}
                           alt={`Match attachment ${idx + 1}`}
-                          className="w-full h-28 object-cover rounded-md"
+                          className="h-28 w-full rounded-md object-cover"
                         />
                         <button
                           type="button"
                           onClick={() => handleDeleteExistingPhoto(p.id)}
-                          className="mt-2 w-full py-1.5 text-xs font-bold text-danger hover:bg-rose-500/10 rounded-md flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                          className="text-danger mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-bold transition-colors hover:bg-rose-500/10"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="h-3.5 w-3.5" />
                           <span>Remove</span>
                         </button>
                       </div>
@@ -1133,14 +1438,14 @@ export default function MatchRecordForm({
               {/* New Photo Upload Dropzone */}
               {existingPhotos.length + newPhotoFiles.length < MAX_MATCH_PHOTOS && (
                 <label
-                  className="flex flex-col items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-border rounded-xl cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors p-4"
+                  className="border-border bg-muted/20 hover:bg-muted/40 flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors sm:h-28"
                   htmlFor="photo-input"
                 >
-                  <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-muted-foreground">
-                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm font-bold sm:text-base">
+                    <Upload className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5 dark:text-emerald-400" />
                     <span>+ Attach photos of this match</span>
                   </div>
-                  <span className="text-xs text-muted-foreground font-medium mt-1">
+                  <span className="text-muted-foreground mt-1 text-xs font-medium">
                     JPG, PNG, WebP up to 10MB
                   </span>
                   <input
@@ -1164,7 +1469,10 @@ export default function MatchRecordForm({
                   {newPhotoFiles.map((file, idx) => {
                     const pct = mediaUploadProgress[uploadKey('photo', file)];
                     return (
-                      <li key={`${file.name}-${idx}`} className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs sm:text-sm font-bold">
+                      <li
+                        key={`${file.name}-${idx}`}
+                        className="border-border bg-muted/40 rounded-lg border px-4 py-3 text-xs font-bold sm:text-sm"
+                      >
                         <div className="flex items-center justify-between">
                           <span className="truncate pr-2">
                             New Photo {idx + 1}: {file.name}
@@ -1173,14 +1481,16 @@ export default function MatchRecordForm({
                           <button
                             type="button"
                             disabled={saving}
-                            onClick={() => setNewPhotoFiles(newPhotoFiles.filter((_, i) => i !== idx))}
-                            className="text-danger hover:underline shrink-0 cursor-pointer disabled:opacity-40"
+                            onClick={() =>
+                              setNewPhotoFiles(newPhotoFiles.filter((_, i) => i !== idx))
+                            }
+                            className="text-danger shrink-0 cursor-pointer hover:underline disabled:opacity-40"
                           >
                             Remove
                           </button>
                         </div>
                         {pct !== undefined && (
-                          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                          <div className="bg-muted mt-2 h-2 w-full overflow-hidden rounded-full">
                             <div
                               className="h-full rounded-full bg-teal-500 transition-all duration-200"
                               style={{ width: `${pct}%` }}
@@ -1199,13 +1509,17 @@ export default function MatchRecordForm({
         {/* Clear bottom spacer so form content is never hidden behind the sticky bar */}
         <div className="h-4 sm:h-6" />
 
-        {/* Sticky Action Bar */}
-        <div className="sticky bottom-0 z-30 -mx-6 sm:-mx-8 lg:-mx-10 -mb-6 sm:-mb-8 lg:-mb-10 px-6 sm:px-8 lg:px-10 py-4 sm:py-5 bg-card/95 backdrop-blur-md border-t border-border rounded-b-xl flex items-center justify-between gap-4 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+        {/* Action bar.
+            - Below lg: sticky to the bottom of the viewport, fully opaque, with a
+              top border and shadow, kept INSIDE the page container (no negative
+              margins) and padded for the iOS safe-area inset.
+            - lg and up: static, at the end of the form, so it never covers a field. */}
+        <div className="bg-card border-border sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] sm:gap-4 sm:pt-5 lg:static lg:border-t-0 lg:bg-transparent lg:pt-6 lg:pb-0 lg:shadow-none dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
           <button
             type="button"
             onClick={() => handleCancel(onSuccessRedirect)}
             disabled={saving}
-            className="h-11 sm:h-12 px-6 rounded-lg border border-border font-bold text-sm sm:text-base text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-[44px]"
+            className="border-border text-foreground hover:bg-muted h-auto min-h-[44px] min-w-0 cursor-pointer rounded-lg border px-3 py-2 text-center text-sm leading-tight font-bold transition-colors disabled:opacity-50 sm:px-6 sm:text-base"
           >
             Cancel
           </button>
@@ -1213,17 +1527,19 @@ export default function MatchRecordForm({
           <button
             type="submit"
             disabled={saving}
-            className="h-11 sm:h-12 px-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+            className="flex h-auto min-h-[44px] min-w-0 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-center text-sm leading-tight font-extrabold text-white shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-base"
           >
-            {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-            <span>
+            {saving && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            )}
+            <span className="min-w-0 break-words">
               {saving
                 ? mode === 'add'
                   ? 'Saving Record...'
                   : 'Updating Record...'
                 : mode === 'add'
-                ? 'Save Match Record'
-                : 'Update Match Record'}
+                  ? 'Save Match Record'
+                  : 'Update Match Record'}
             </span>
           </button>
         </div>
@@ -1235,27 +1551,28 @@ export default function MatchRecordForm({
           role="dialog"
           aria-modal="true"
           aria-labelledby="discard-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
+          className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
         >
-          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 id="discard-title" className="text-lg font-black text-foreground">
+          <div className="bg-card border-border w-full max-w-md space-y-4 rounded-lg border p-6 shadow-xl">
+            <h3 id="discard-title" className="text-foreground text-lg font-black">
               Unsaved Changes
             </h3>
-            <p className="text-sm text-muted-foreground font-semibold leading-relaxed">
-              You have unsaved changes on this match record. Are you sure you want to leave? All entered information will be discarded.
+            <p className="text-muted-foreground text-sm leading-relaxed font-semibold">
+              You have unsaved changes on this match record. Are you sure you want to leave? All
+              entered information will be discarded.
             </p>
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowDiscardDialog(false)}
-                className="px-4 py-2 rounded-md border border-border text-sm font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="border-border text-foreground hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-bold transition-colors"
               >
                 Keep Editing
               </button>
               <button
                 type="button"
                 onClick={confirmDiscard}
-                className="px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-extrabold transition-colors cursor-pointer shadow-sm"
+                className="cursor-pointer rounded-md bg-rose-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-rose-700"
               >
                 Discard &amp; Leave
               </button>

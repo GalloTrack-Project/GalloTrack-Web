@@ -16,7 +16,7 @@ function EditMatchContent() {
 
   const idParam = params?.id;
   const matchId = idParam ? Number(idParam) : null;
-  const returnTo = sanitizeRedirectPath(searchParams?.get('returnTo'), '/profiling?tab=matchForm');
+  const returnTo = sanitizeRedirectPath(searchParams?.get('returnTo'), '/match-logs');
 
   const [record, setRecord] = useState<MatchRecord | null>(null);
   const [loading, setLoading] = useState(true);

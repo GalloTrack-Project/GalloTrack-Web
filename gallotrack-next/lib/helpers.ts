@@ -9,6 +9,21 @@ export const POST_FIGHT_CONDITIONS = [
 
 export const STRAIN_LIST: string[] = [];
 
+/**
+ * Canonical growth-stage stored values.
+ * These are the exact strings persisted in `growth_stage`; they must never be
+ * translated or renamed, and every filter that offers a stage must offer all
+ * six so a stage never silently disappears from the list.
+ */
+export const GROWTH_STAGE_VALUES = [
+  'Chick',
+  'Stag',
+  'Bull Stag',
+  'Pullet',
+  'Cock',
+  'Hen',
+] as const;
+
 export const MATCH_EVENT_TYPES = ['Derby', 'Lusong'] as const;
 
 export const COCK_COUNT_OPTIONS = [2, 3, 4, 5] as const;
