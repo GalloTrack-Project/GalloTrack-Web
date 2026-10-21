@@ -2,8 +2,19 @@
 import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import type { FowlRecord, MatchRecord, PageId, ProfilingSubTab } from '@/lib/types';
 import { generateBreedCompliance } from '@/lib/breed-standards';
-import { formatBirdCodeForDisplay, resolveBirdCodes, compareBirdCodesNatural } from '@/lib/bird-code';
-import { genderLabel, parentBreedOf, parentBloodlineOf, isMale, isFemale, formatColorDisplay } from '@/lib/helpers';
+import {
+  formatBirdCodeForDisplay,
+  resolveBirdCodes,
+  compareBirdCodesNatural,
+} from '@/lib/bird-code';
+import {
+  genderLabel,
+  parentBreedOf,
+  parentBloodlineOf,
+  isMale,
+  isFemale,
+  formatColorDisplay,
+} from '@/lib/helpers';
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
@@ -33,7 +44,13 @@ import RetiredFighterBadge from '@/components/profiling/RetiredFighterBadge';
 import { Search, X } from 'lucide-react';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { INVENTORY_STATUS_TABS } from '@/lib/nav-manifest';
-import { useUnitPrefs, weightFromStorage, heightFromStorage, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import {
+  useUnitPrefs,
+  weightFromStorage,
+  heightFromStorage,
+  weightUnitLabel,
+  heightUnitLabel,
+} from '@/lib/units';
 import { UIContext } from '@/lib/contexts/ui-context';
 import {
   getBreedingClassification,
@@ -75,7 +92,9 @@ type Props = {
 };
 
 function getWinRate(fowlName: string, matches: MatchRecord[]) {
-  const m = matches.filter((x) => x.entry_name?.trim().toLowerCase() === fowlName.trim().toLowerCase());
+  const m = matches.filter(
+    (x) => x.entry_name?.trim().toLowerCase() === fowlName.trim().toLowerCase(),
+  );
   const wins = m.filter((x) => x.outcome?.toLowerCase() === 'win').length;
   const losses = m.filter((x) => x.outcome?.toLowerCase() === 'loss').length;
   const total = m.length;
@@ -114,11 +133,14 @@ function GenderIcon({ gender }: { gender: string }) {
 }
 
 function ComplianceBadge({ grade }: { grade: string }) {
-  const cls = grade.startsWith('A') ? 'bg-emerald-500/15 text-success border-emerald-500/30'
-    : grade.startsWith('B') ? 'bg-sky-500/15 text-info border-sky-500/30'
-    : grade.startsWith('C') ? 'bg-amber-500/15 text-warning border-amber-500/30'
-    : 'bg-muted border-border text-muted-foreground';
-  return <span className={`text-xs font-black px-2 py-0.5 rounded-sm border ${cls}`}>{grade}</span>;
+  const cls = grade.startsWith('A')
+    ? 'bg-emerald-500/15 text-success border-emerald-500/30'
+    : grade.startsWith('B')
+      ? 'bg-sky-500/15 text-info border-sky-500/30'
+      : grade.startsWith('C')
+        ? 'bg-amber-500/15 text-warning border-amber-500/30'
+        : 'bg-muted border-border text-muted-foreground';
+  return <span className={`rounded-sm border px-2 py-0.5 text-xs font-black ${cls}`}>{grade}</span>;
 }
 
 function FowlCard({
@@ -149,20 +171,40 @@ function FowlCard({
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
-  const regWeight = (fowl.structural_weight !== undefined && fowl.structural_weight !== null && fowl.structural_weight !== '')
-    ? String(fowl.structural_weight)
-    : (fowl.weight || '');
-  const regHeight = (fowl.structural_height !== undefined && fowl.structural_height !== null && fowl.structural_height !== '')
-    ? String(fowl.structural_height)
-    : (fowl.height || '');
+  const regWeight =
+    fowl.structural_weight !== undefined &&
+    fowl.structural_weight !== null &&
+    fowl.structural_weight !== ''
+      ? String(fowl.structural_weight)
+      : fowl.weight || '';
+  const regHeight =
+    fowl.structural_height !== undefined &&
+    fowl.structural_height !== null &&
+    fowl.structural_height !== ''
+      ? String(fowl.structural_height)
+      : fowl.height || '';
   const compliance = useMemo(
-    () => generateBreedCompliance(fowl.breed, regWeight, regHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
-    [fowl.breed, regWeight, regHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
+    () =>
+      generateBreedCompliance(
+        fowl.breed,
+        regWeight,
+        regHeight,
+        fowl.leg_color,
+        fowl.color_category,
+        fowl.gender,
+        fowl.registry_role,
+      ),
+    [
+      fowl.breed,
+      regWeight,
+      regHeight,
+      fowl.leg_color,
+      fowl.color_category,
+      fowl.gender,
+      fowl.registry_role,
+    ],
   );
-  const { foughtFowlIds, foughtNames } = useMemo(
-    () => extractFoughtLookups(matches),
-    [matches],
-  );
+  const { foughtFowlIds, foughtNames } = useMemo(() => extractFoughtLookups(matches), [matches]);
   const regCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
   const isRetired = isRetiredFighter(fowl, foughtFowlIds, foughtNames, regCtx);
   const accent = isActiveStatus(fowl)
@@ -176,15 +218,23 @@ function FowlCard({
     <div
       role="button"
       tabIndex={0}
-      onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; onClick(); }}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-      className="group bg-card p-5 rounded-lg border border-border shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all duration-200 text-left w-full relative overflow-hidden cursor-pointer focus:ring-2 focus:ring-emerald-400/60"
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button')) return;
+        onClick();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group bg-card border-border relative w-full cursor-pointer overflow-hidden rounded-lg border p-5 text-left shadow-sm transition-all duration-200 hover:border-emerald-500/40 hover:shadow-md focus:ring-2 focus:ring-emerald-400/60"
     >
       {/* Top accent */}
-      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent}`}></div>
+      <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-r ${accent}`}></div>
 
       {/* Status + Compliance */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <StatusBadge status={fowl.status} />
         {compliance.complianceGrade && compliance.matchedStandard && (
           <ComplianceBadge grade={compliance.complianceGrade} />
@@ -192,33 +242,45 @@ function FowlCard({
       </div>
 
       {/* Photo + Identifier + Name + Breed */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-16 h-16 rounded-md bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="bg-muted border-border flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border shadow-inner">
           {fowl.image_url ? (
-            <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" />
+            <img src={fowl.image_url} alt={fowl.name} className="h-full w-full object-cover" />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground/50"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="text-muted-foreground/50"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
             {code && (
-              <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-success border border-emerald-500/20 uppercase shrink-0">
+              <span className="text-success shrink-0 rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase">
                 <HighlightText text={formatBirdCodeForDisplay(code)} query={query} />
               </span>
             )}
-            <h4 className="text-sm font-black text-card-foreground truncate group-hover:text-success transition-colors">
+            <h4 className="text-card-foreground group-hover:text-success truncate text-sm font-black transition-colors">
               <HighlightText text={fowl.name} query={query} />
             </h4>
           </div>
           {parentHint && (
-            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
-              <span className="opacity-80 font-normal">Matched via:</span>
+            <div className="mt-1 inline-flex items-center gap-1 rounded-sm border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400">
+              <span className="font-normal opacity-80">Matched via:</span>
               <span className="font-extrabold">{parentHint}</span>
             </div>
           )}
-          <div className="flex items-center flex-wrap gap-2 mt-1">
-            <span className="text-xs font-black text-success bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="text-success rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-xs font-black">
               {classification?.type === 'Crossbred' ? classification.derivedBreed : fowl.breed}
             </span>
             {classification && <BreedingTypeBadge classification={classification} />}
@@ -227,32 +289,40 @@ function FowlCard({
             )}
             {isRetired && <RetiredFighterBadge />}
             {fowl.wing_band ? (
-              <span className="text-xs font-mono font-bold text-muted-foreground">
+              <span className="text-muted-foreground font-mono text-xs font-bold">
                 🏷 <HighlightText text={fowl.wing_band} query={query} />
               </span>
             ) : null}
           </div>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="mt-1 flex items-center gap-2">
             <GenderIcon gender={fowl.gender} />
-              <span className="text-xs font-semibold text-muted-foreground">{genderLabel(fowl.gender)}</span>
+            <span className="text-muted-foreground text-xs font-semibold">
+              {genderLabel(fowl.gender)}
+            </span>
             <span className="text-muted-foreground/40">{'\u00B7'}</span>
-            <span className="text-xs font-semibold text-muted-foreground">{getAgeDisplay(fowl.birthdate)}</span>
+            <span className="text-muted-foreground text-xs font-semibold">
+              {getAgeDisplay(fowl.birthdate)}
+            </span>
             {readyInDays !== null && (
-              <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-1.5 py-0.5 text-xs font-black tracking-wider text-amber-700 uppercase dark:text-amber-400">
                 Ready in {readyInDays} {readyInDays === 1 ? 'day' : 'days'}
               </span>
             )}
           </div>
-          {((fowl.feather_color || fowl.color) || (fowl.trait || fowl.behavior_trait)) && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground font-semibold truncate">
+          {(fowl.feather_color || fowl.color || fowl.trait || fowl.behavior_trait) && (
+            <div className="text-muted-foreground mt-1 flex items-center gap-1.5 truncate text-xs font-semibold">
               {(fowl.feather_color || fowl.color) && (
-                <span>🎨 {formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</span>
+                <span>
+                  🎨 {formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}
+                </span>
               )}
               {(fowl.feather_color || fowl.color) && (fowl.trait || fowl.behavior_trait) && (
                 <span className="text-muted-foreground/40">·</span>
               )}
               {(fowl.trait || fowl.behavior_trait) && (
-                <span className="text-emerald-700 dark:text-emerald-300 font-bold">⚡ {fowl.trait || fowl.behavior_trait}</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                  ⚡ {fowl.trait || fowl.behavior_trait}
+                </span>
               )}
             </div>
           )}
@@ -260,42 +330,59 @@ function FowlCard({
       </div>
 
       {/* Data grid */}
-      <div className="grid grid-cols-3 gap-2 text-center mb-3">
-        <div className="bg-muted/50 rounded-md py-2 px-1">
-          <p className="text-xs font-bold text-muted-foreground uppercase">Age</p>
-          <p className="text-sm font-black text-card-foreground">{getAgeDisplay(fowl.birthdate)}</p>
+      <div className="mb-3 grid grid-cols-3 gap-2 text-center">
+        <div className="bg-muted/50 rounded-md px-1 py-2">
+          <p className="text-muted-foreground text-xs font-bold uppercase">Age</p>
+          <p className="text-card-foreground text-sm font-black">{getAgeDisplay(fowl.birthdate)}</p>
         </div>
-        <div className="bg-muted/50 rounded-md py-2 px-1">
-          <p className="text-xs font-bold text-muted-foreground uppercase">Weight</p>
-          <p className="text-sm font-black text-card-foreground">{regWeight ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</p>
+        <div className="bg-muted/50 rounded-md px-1 py-2">
+          <p className="text-muted-foreground text-xs font-bold uppercase">Weight</p>
+          <p className="text-card-foreground text-sm font-black">
+            {regWeight
+              ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}`
+              : '\u2014'}
+          </p>
         </div>
-        <div className="bg-muted/50 rounded-md py-2 px-1">
-          <p className="text-xs font-bold text-muted-foreground uppercase">Stage</p>
-          <p className="text-sm font-black text-card-foreground truncate">{fowl.growth_stage || '\u2014'}</p>
+        <div className="bg-muted/50 rounded-md px-1 py-2">
+          <p className="text-muted-foreground text-xs font-bold uppercase">Stage</p>
+          <p className="text-card-foreground truncate text-sm font-black">
+            {fowl.growth_stage || '\u2014'}
+          </p>
         </div>
       </div>
 
       {/* Win rate */}
       {stats.total > 0 && (
-        <div className="pt-3 border-t border-border">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-bold text-muted-foreground uppercase">Performance</span>
-            <span className={`text-sm font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</span>
+        <div className="border-border border-t pt-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-muted-foreground text-xs font-bold uppercase">Performance</span>
+            <span
+              className={`text-sm font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+            >
+              {stats.winRate}%
+            </span>
           </div>
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all ${stats.winRate >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`} style={{ width: `${stats.winRate}%` }}></div>
+          <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+            <div
+              className={`h-full rounded-full transition-all ${stats.winRate >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`}
+              style={{ width: `${stats.winRate}%` }}
+            ></div>
           </div>
-          <p className="text-xs text-muted-foreground font-semibold mt-1.5">{stats.wins}W {'\u00B7'} {stats.losses}L {'\u00B7'} {stats.total} total</p>
+          <p className="text-muted-foreground mt-1.5 text-xs font-semibold">
+            {stats.wins}W {'\u00B7'} {stats.losses}L {'\u00B7'} {stats.total} total
+          </p>
         </div>
       )}
 
       {/* Lineage */}
       {(fowl.sire || fowl.dam) && (
-        <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xs font-bold text-muted-foreground uppercase">Lineage:</span>
-            <span className="text-xs text-muted-foreground font-semibold truncate">
-              {fowl.sire || '—'}{sireBreed ? ` (${sireBreed})` : ''} {'×'} {fowl.dam || '—'}{damBreed ? ` (${damBreed})` : ''}
+        <div className="border-border/50 mt-3 flex items-center justify-between gap-2 border-t pt-2.5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="text-muted-foreground text-xs font-bold uppercase">Lineage:</span>
+            <span className="text-muted-foreground truncate text-xs font-semibold">
+              {fowl.sire || '—'}
+              {sireBreed ? ` (${sireBreed})` : ''} {'×'} {fowl.dam || '—'}
+              {damBreed ? ` (${damBreed})` : ''}
             </span>
           </div>
         </div>
@@ -303,12 +390,15 @@ function FowlCard({
 
       {/* Card actions: profile link + restore */}
       {(onOpenProfile || onRestore) && (
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
+        <div className="border-border mt-3 flex items-center justify-between gap-2 border-t pt-3">
           {onOpenProfile && (
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile(); }}
-              className="text-xs font-black text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenProfile();
+              }}
+              className="cursor-pointer text-xs font-black text-emerald-700 hover:underline dark:text-emerald-300"
             >
               Full profile →
             </button>
@@ -316,10 +406,26 @@ function FowlCard({
           {onRestore && (
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onRestore(); }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer ml-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRestore();
+              }}
+              className="text-success ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-emerald-200/80 bg-emerald-50 px-3 py-1.5 text-xs font-bold transition-all hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
               Restore to Active
             </button>
           )}
@@ -329,166 +435,323 @@ function FowlCard({
   );
 }
 
-function FowlDetailModal({ fowl, matches, onClose, fowls, code }: { fowl: FowlRecord; matches: MatchRecord[]; onClose: () => void; fowls: FowlRecord[]; code?: string }) {
+function FowlDetailModal({
+  fowl,
+  matches,
+  onClose,
+  fowls,
+  code,
+}: {
+  fowl: FowlRecord;
+  matches: MatchRecord[];
+  onClose: () => void;
+  fowls: FowlRecord[];
+  code?: string;
+}) {
   const unitPrefs = useUnitPrefs();
   const stats = getWinRate(fowl.name, matches);
   const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
-  const modalWeight = (fowl.structural_weight !== undefined && fowl.structural_weight !== null && fowl.structural_weight !== '')
-    ? String(fowl.structural_weight)
-    : (fowl.weight || '');
-  const modalHeight = (fowl.structural_height !== undefined && fowl.structural_height !== null && fowl.structural_height !== '')
-    ? String(fowl.structural_height)
-    : (fowl.height || '');
+  const modalWeight =
+    fowl.structural_weight !== undefined &&
+    fowl.structural_weight !== null &&
+    fowl.structural_weight !== ''
+      ? String(fowl.structural_weight)
+      : fowl.weight || '';
+  const modalHeight =
+    fowl.structural_height !== undefined &&
+    fowl.structural_height !== null &&
+    fowl.structural_height !== ''
+      ? String(fowl.structural_height)
+      : fowl.height || '';
   const compliance = useMemo(
-    () => generateBreedCompliance(fowl.breed, modalWeight, modalHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role),
-    [fowl.breed, modalWeight, modalHeight, fowl.leg_color, fowl.color_category, fowl.gender, fowl.registry_role]
+    () =>
+      generateBreedCompliance(
+        fowl.breed,
+        modalWeight,
+        modalHeight,
+        fowl.leg_color,
+        fowl.color_category,
+        fowl.gender,
+        fowl.registry_role,
+      ),
+    [
+      fowl.breed,
+      modalWeight,
+      modalHeight,
+      fowl.leg_color,
+      fowl.color_category,
+      fowl.gender,
+      fowl.registry_role,
+    ],
   );
   const readyInDays = isBreedingReadySoon(fowl) ? daysUntilBreedingReady(fowl) : null;
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      title={fowl.name}
-      className="max-w-lg"
-    >
+    <Modal open onClose={onClose} title={fowl.name} className="max-w-lg">
       {code ? (
-        <span className="self-start rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-xs font-semibold uppercase text-success">
+        <span className="text-success self-start rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-xs font-semibold uppercase">
           {formatBirdCodeForDisplay(code)}
         </span>
       ) : null}
 
-        <div className="space-y-5">
-          {/* Identity */}
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-lg bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
-              {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground/50"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <StatusBadge status={fowl.status} />
-                {readyInDays !== null && (
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                    Ready in {readyInDays} {readyInDays === 1 ? 'day' : 'days'}
-                  </span>
-                )}
-                {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
-              </div>
-              <p className="text-sm text-muted-foreground font-semibold">{genderLabel(fowl.gender)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'} {fowl.growth_stage}</p>
-              <p className="text-sm font-bold text-success">{fowl.breed}</p>
-            </div>
+      <div className="space-y-5">
+        {/* Identity */}
+        <div className="flex items-center gap-4">
+          <div className="bg-muted border-border flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border shadow-inner">
+            {fowl.image_url ? (
+              <img src={fowl.image_url} alt={fowl.name} className="h-full w-full object-cover" />
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="text-muted-foreground/50"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            )}
           </div>
-
-          {/* Physical traits */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
-            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Physical Profile</h4>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground font-semibold">Feather Color: </span><span className="font-black text-card-foreground">{formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Eye: </span><span className="font-black text-card-foreground">{fowl.eye_variant || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Leg: </span><span className="font-black text-card-foreground">{fowl.leg_color || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Trait: </span><span className="font-black text-success">{fowl.trait || fowl.behavior_trait || '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Weight: </span><span className="font-black text-card-foreground">{modalWeight ? `${weightFromStorage(modalWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}` : '\u2014'}</span></div>
-              <div><span className="text-muted-foreground font-semibold">Height: </span><span className="font-black text-card-foreground">{modalHeight ? `${heightFromStorage(modalHeight, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}` : '\u2014'}</span></div>
-            </div>
-          </div>
-
-          {/* Lineage */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
-            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Lineage</h4>
-            <BloodlineBreakdown
-              stats={getFowlBloodlineStats(fowl, fowls)}
-              title="Bloodline Percentage"
-              subtitle="Blood split per breed — 50% Sire, 50% Dam"
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-sky-500/10 border border-sky-500/30 rounded-md p-3">
-                <p className="text-xs font-black text-info uppercase">Sire</p>
-                <p className="text-sm font-black text-card-foreground mt-1">{fowl.sire || '\u2014'}</p>
-                {parentBreedOf(fowl.sire, fowls) && <p className="text-xs font-bold text-muted-foreground">{parentBreedOf(fowl.sire, fowls)}</p>}
-                {(() => { const s = parentBloodlineOf(fowl.sire, fowls); return s ? <p className="text-xs text-info font-bold">{s.specificPct}% {s.dominant.strain}</p> : null; })()}
-              </div>
-              <div className="bg-pink-500/10 border border-pink-500/30 rounded-md p-3">
-                <p className="text-xs font-black text-pink uppercase">Dam</p>
-                <p className="text-sm font-black text-card-foreground mt-1">{fowl.dam || '\u2014'}</p>
-                {parentBreedOf(fowl.dam, fowls) && <p className="text-xs font-bold text-muted-foreground">{parentBreedOf(fowl.dam, fowls)}</p>}
-                {(() => { const s = parentBloodlineOf(fowl.dam, fowls); return s ? <p className="text-xs text-pink font-bold">{s.specificPct}% {s.dominant.strain}</p> : null; })()}
-              </div>
-            </div>
-          </div>
-
-          {/* Performance */}
-          {!isDamRecord && stats.total > 0 && (
-            <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
-              <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Match Performance</h4>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-card rounded-md py-2.5 border border-border">
-                  <p className="text-xl font-black text-card-foreground">{stats.total}</p>
-                  <p className="text-xs font-bold text-muted-foreground uppercase">Total</p>
-                </div>
-                <div className="bg-emerald-500/10 rounded-md py-2.5 border border-emerald-500/30">
-                  <p className="text-xl font-black text-success">{stats.wins}</p>
-                  <p className="text-xs font-bold text-success uppercase">Wins</p>
-                </div>
-                <div className="bg-rose-500/10 rounded-md py-2.5 border border-rose-500/30">
-                  <p className="text-xl font-black text-danger">{stats.losses}</p>
-                  <p className="text-xs font-bold text-danger uppercase">Losses</p>
-                </div>
-                <div className={`rounded-md py-2.5 border ${stats.winRate >= 50 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
-                  <p className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>{stats.winRate}%</p>
-                  <p className={`text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}>Win Rate</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Breed Compliance */}
-          {compliance.matchedStandard && (
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-success uppercase tracking-widest">Breed Compliance</h4>
-                <div className="flex items-center gap-2">
-                  <ComplianceBadge grade={compliance.complianceGrade} />
-                  <span className="text-xs font-black text-success">{compliance.overallScore}/100</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground font-semibold">Standard: {compliance.matchedStandard.name} ({compliance.matchedStandard.origin})</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-muted-foreground font-semibold">Weight: </span>
-                  <span className={compliance.weightCompliance.status === 'within' ? 'text-success font-black' : 'text-warning font-black'}>
-                    {compliance.weightCompliance.actual}kg ({compliance.weightCompliance.status})
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground font-semibold">Height: </span>
-                  <span className={compliance.heightCompliance.status === 'within' ? 'text-success font-black' : 'text-warning font-black'}>
-                    {compliance.heightCompliance.actual}cm ({compliance.heightCompliance.status})
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground font-semibold">Legs: </span>
-                  <span className={compliance.legColorCompliance.status === 'matches' ? 'text-success font-black' : 'text-warning font-black'}>
-                    {compliance.legColorCompliance.actual}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground font-semibold">Plumage: </span>
-                  <span className={compliance.plumageCompliance.status === 'matches' ? 'text-success font-black' : 'text-warning font-black'}>
-                    {compliance.plumageCompliance.actual}
-                  </span>
-                </div>
-              </div>
-              {!isDamRecord && compliance.matchedStandard.fightingStyle && (
-                <p className="text-xs text-success/70 font-semibold">Fighting style: {compliance.matchedStandard.fightingStyle}</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <StatusBadge status={fowl.status} />
+              {readyInDays !== null && (
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-xs font-black tracking-wider text-amber-700 uppercase dark:text-amber-400">
+                  Ready in {readyInDays} {readyInDays === 1 ? 'day' : 'days'}
+                </span>
               )}
-              {compliance.recommendations.length > 0 && (
-                <div className="space-y-1">
-                  {compliance.recommendations.map((r, i) => <p key={i} className="text-xs text-warning">{'\uD83D\uDCA1'} {r}</p>)}
-                </div>
-              )}
+              {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
             </div>
-          )}
+            <p className="text-muted-foreground text-sm font-semibold">
+              {genderLabel(fowl.gender)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'}{' '}
+              {fowl.growth_stage}
+            </p>
+            <p className="text-success text-sm font-bold">{fowl.breed}</p>
+          </div>
         </div>
+
+        {/* Physical traits */}
+        <div className="bg-muted/50 border-border space-y-3 rounded-lg border p-4">
+          <h4 className="text-muted-foreground text-xs font-black tracking-widest uppercase">
+            Physical Profile
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground font-semibold">Feather Color: </span>
+              <span className="text-card-foreground font-black">
+                {formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground font-semibold">Eye: </span>
+              <span className="text-card-foreground font-black">
+                {fowl.eye_variant || '\u2014'}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground font-semibold">Leg: </span>
+              <span className="text-card-foreground font-black">{fowl.leg_color || '\u2014'}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground font-semibold">Trait: </span>
+              <span className="text-success font-black">
+                {fowl.trait || fowl.behavior_trait || '\u2014'}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground font-semibold">Weight: </span>
+              <span className="text-card-foreground font-black">
+                {modalWeight
+                  ? `${weightFromStorage(modalWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}`
+                  : '\u2014'}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground font-semibold">Height: </span>
+              <span className="text-card-foreground font-black">
+                {modalHeight
+                  ? `${heightFromStorage(modalHeight, unitPrefs.heightUnit)} ${heightUnitLabel(unitPrefs.heightUnit)}`
+                  : '\u2014'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Lineage */}
+        <div className="bg-muted/50 border-border space-y-3 rounded-lg border p-4">
+          <h4 className="text-muted-foreground text-xs font-black tracking-widest uppercase">
+            Lineage
+          </h4>
+          <BloodlineBreakdown
+            stats={getFowlBloodlineStats(fowl, fowls)}
+            title="Bloodline Percentage"
+            subtitle="Blood split per breed — 50% Sire, 50% Dam"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-md border border-sky-500/30 bg-sky-500/10 p-3">
+              <p className="text-info text-xs font-black uppercase">Sire</p>
+              <p className="text-card-foreground mt-1 text-sm font-black">
+                {fowl.sire || '\u2014'}
+              </p>
+              {parentBreedOf(fowl.sire, fowls) && (
+                <p className="text-muted-foreground text-xs font-bold">
+                  {parentBreedOf(fowl.sire, fowls)}
+                </p>
+              )}
+              {(() => {
+                const s = parentBloodlineOf(fowl.sire, fowls);
+                return s ? (
+                  <p className="text-info text-xs font-bold">
+                    {s.specificPct}% {s.dominant.strain}
+                  </p>
+                ) : null;
+              })()}
+            </div>
+            <div className="rounded-md border border-pink-500/30 bg-pink-500/10 p-3">
+              <p className="text-pink text-xs font-black uppercase">Dam</p>
+              <p className="text-card-foreground mt-1 text-sm font-black">{fowl.dam || '\u2014'}</p>
+              {parentBreedOf(fowl.dam, fowls) && (
+                <p className="text-muted-foreground text-xs font-bold">
+                  {parentBreedOf(fowl.dam, fowls)}
+                </p>
+              )}
+              {(() => {
+                const s = parentBloodlineOf(fowl.dam, fowls);
+                return s ? (
+                  <p className="text-pink text-xs font-bold">
+                    {s.specificPct}% {s.dominant.strain}
+                  </p>
+                ) : null;
+              })()}
+            </div>
+          </div>
+        </div>
+
+        {/* Performance */}
+        {!isDamRecord && stats.total > 0 && (
+          <div className="bg-muted/50 border-border space-y-3 rounded-lg border p-4">
+            <h4 className="text-muted-foreground text-xs font-black tracking-widest uppercase">
+              Match Performance
+            </h4>
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="bg-card border-border rounded-md border py-2.5">
+                <p className="text-card-foreground text-xl font-black">{stats.total}</p>
+                <p className="text-muted-foreground text-xs font-bold uppercase">Total</p>
+              </div>
+              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2.5">
+                <p className="text-success text-xl font-black">{stats.wins}</p>
+                <p className="text-success text-xs font-bold uppercase">Wins</p>
+              </div>
+              <div className="rounded-md border border-rose-500/30 bg-rose-500/10 py-2.5">
+                <p className="text-danger text-xl font-black">{stats.losses}</p>
+                <p className="text-danger text-xs font-bold uppercase">Losses</p>
+              </div>
+              <div
+                className={`rounded-md border py-2.5 ${stats.winRate >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
+              >
+                <p
+                  className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                >
+                  {stats.winRate}%
+                </p>
+                <p
+                  className={`text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                >
+                  Win Rate
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Breed Compliance */}
+        {compliance.matchedStandard && (
+          <div className="space-y-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-success text-xs font-black tracking-widest uppercase">
+                Breed Compliance
+              </h4>
+              <div className="flex items-center gap-2">
+                <ComplianceBadge grade={compliance.complianceGrade} />
+                <span className="text-success text-xs font-black">
+                  {compliance.overallScore}/100
+                </span>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-xs font-semibold">
+              Standard: {compliance.matchedStandard.name} ({compliance.matchedStandard.origin})
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-muted-foreground font-semibold">Weight: </span>
+                <span
+                  className={
+                    compliance.weightCompliance.status === 'within'
+                      ? 'text-success font-black'
+                      : 'text-warning font-black'
+                  }
+                >
+                  {compliance.weightCompliance.actual}kg ({compliance.weightCompliance.status})
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground font-semibold">Height: </span>
+                <span
+                  className={
+                    compliance.heightCompliance.status === 'within'
+                      ? 'text-success font-black'
+                      : 'text-warning font-black'
+                  }
+                >
+                  {compliance.heightCompliance.actual}cm ({compliance.heightCompliance.status})
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground font-semibold">Legs: </span>
+                <span
+                  className={
+                    compliance.legColorCompliance.status === 'matches'
+                      ? 'text-success font-black'
+                      : 'text-warning font-black'
+                  }
+                >
+                  {compliance.legColorCompliance.actual}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground font-semibold">Plumage: </span>
+                <span
+                  className={
+                    compliance.plumageCompliance.status === 'matches'
+                      ? 'text-success font-black'
+                      : 'text-warning font-black'
+                  }
+                >
+                  {compliance.plumageCompliance.actual}
+                </span>
+              </div>
+            </div>
+            {!isDamRecord && compliance.matchedStandard.fightingStyle && (
+              <p className="text-success/70 text-xs font-semibold">
+                Fighting style: {compliance.matchedStandard.fightingStyle}
+              </p>
+            )}
+            {compliance.recommendations.length > 0 && (
+              <div className="space-y-1">
+                {compliance.recommendations.map((r, i) => (
+                  <p key={i} className="text-warning text-xs">
+                    {'\uD83D\uDCA1'} {r}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </Modal>
   );
 }
@@ -532,7 +795,10 @@ export default function MarketplacePage({
     // User-driven changes write the URL via the effect below; re-applying them
     // here ping-pongs the two setters into an infinite update loop
     // ("Maximum update depth exceeded") that unmounts the page.
-    if (urlStatusMeta.change === 'popstate' || (urlStatusMeta.change === 'mount' && urlStatusMeta.paramPresent)) {
+    if (
+      urlStatusMeta.change === 'popstate' ||
+      (urlStatusMeta.change === 'mount' && urlStatusMeta.paramPresent)
+    ) {
       if (urlStatus !== activeTab) setActiveTab(urlStatus);
     }
   }, [urlStatus, urlStatusMeta, activeTab, setActiveTab]);
@@ -552,7 +818,10 @@ export default function MarketplacePage({
   });
   const prevUrlSyncBreedingTypeRef = useRef(internalBreedingType);
   useEffect(() => {
-    if (urlBreedingTypeMeta.change === 'popstate' || (urlBreedingTypeMeta.change === 'mount' && urlBreedingTypeMeta.paramPresent)) {
+    if (
+      urlBreedingTypeMeta.change === 'popstate' ||
+      (urlBreedingTypeMeta.change === 'mount' && urlBreedingTypeMeta.paramPresent)
+    ) {
       if (urlBreedingType !== internalBreedingType) setInternalBreedingType(urlBreedingType);
     }
   }, [urlBreedingType, urlBreedingTypeMeta, internalBreedingType]);
@@ -566,31 +835,36 @@ export default function MarketplacePage({
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [internalGenderFilter, setInternalGenderFilter] = useState<SexFilter>('all');
   const sexFilter = propGenderFilter ?? ui?.inventoryGenderFilter ?? internalGenderFilter;
-  const setSexFilter = propSetGenderFilter ?? ui?.setInventoryGenderFilter ?? setInternalGenderFilter;
+  const setSexFilter =
+    propSetGenderFilter ?? ui?.setInventoryGenderFilter ?? setInternalGenderFilter;
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [selectedFowl, setSelectedFowl] = useState<FowlRecord | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<FowlRecord | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [includeParents, setIncludeParents] = useState(false);
   const internalDebouncedQuery = useDebounce(search || '', 250);
-  const debouncedQuery = (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedQuery) || '';
+  const debouncedQuery =
+    (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedQuery) || '';
 
   const registryCtx = useMemo(() => buildRegistryContext(fowls), [fowls]);
   const counts = useMemo(() => inventoryCounts(fowls, registryCtx), [fowls, registryCtx]);
   const classificationMap = useMemo(() => classifyFlock(fowls), [fowls]);
 
-  const tabs: { id: FilterTab; label: string; count: number; tooltip?: string }[] = useMemo(() => [
-    { id: 'all', label: 'All Chickens', count: counts.all },
-    {
-      id: 'active',
-      label: 'Active Breeders',
-      count: counts.breedersStock,
-      tooltip: 'Living breeding herd — Breeding Males (sires) and Breeding Females (dams).',
-    },
-    { id: 'breeding', label: 'Ready to Breed', count: counts.breedingReady },
-    { id: 'archived', label: 'Archived', count: counts.archived },
-    { id: 'deceased', label: 'Deceased', count: counts.deceased },
-  ], [counts]);
+  const tabs: { id: FilterTab; label: string; count: number; tooltip?: string }[] = useMemo(
+    () => [
+      { id: 'all', label: 'All Chickens', count: counts.all },
+      {
+        id: 'active',
+        label: 'Active Breeders',
+        count: counts.breedersStock,
+        tooltip: 'Living breeding herd — Breeding Males (sires) and Breeding Females (dams).',
+      },
+      { id: 'breeding', label: 'Ready to Breed', count: counts.breedingReady },
+      { id: 'archived', label: 'Archived', count: counts.archived },
+      { id: 'deceased', label: 'Deceased', count: counts.deceased },
+    ],
+    [counts],
+  );
 
   const tabRefs = useRef<Map<FilterTab, HTMLButtonElement>>(new Map());
 
@@ -663,7 +937,10 @@ export default function MarketplacePage({
       }
 
       if (sortKey === 'identifier') {
-        const r = compareBirdCodesNatural(birdCodes.get(String(a.id)) || '', birdCodes.get(String(b.id)) || '');
+        const r = compareBirdCodesNatural(
+          birdCodes.get(String(a.id)) || '',
+          birdCodes.get(String(b.id)) || '',
+        );
         if (r !== 0) return r;
         return a.id - b.id;
       }
@@ -680,7 +957,20 @@ export default function MarketplacePage({
     });
 
     return { filteredFowls: result, matchMap: matches };
-  }, [fowls, debouncedQuery, includeParents, activeTab, roleFilter, sexFilter, internalBreedingType, classificationMap, registryCtx, sortKey, matchHistory, birdCodes]);
+  }, [
+    fowls,
+    debouncedQuery,
+    includeParents,
+    activeTab,
+    roleFilter,
+    sexFilter,
+    internalBreedingType,
+    classificationMap,
+    registryCtx,
+    sortKey,
+    matchHistory,
+    birdCodes,
+  ]);
 
   const confirmRestore = async () => {
     if (!restoreTarget || !onRestore) return;
@@ -694,21 +984,27 @@ export default function MarketplacePage({
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="animate-fadeIn space-y-6">
       {/* Header */}
-      <div className="rounded-lg border border-border bg-card/70 p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="border-border bg-card/70 flex flex-col justify-between gap-4 rounded-lg border p-6 sm:p-7 md:flex-row md:items-center">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0 shadow-inner">{'\uD83E\uDDEC'}</div>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-emerald-500/30 bg-emerald-500/15 text-xl shadow-inner">
+            {'\uD83E\uDDEC'}
+          </div>
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Inventory</h1>
-            <p className="text-sm text-muted-foreground font-semibold mt-1">All your chickens in one list — status, age, weight, stage, and lineage</p>
+            <h1 className="text-card-foreground text-xl font-black tracking-tight sm:text-2xl md:text-3xl">
+              Chicken Inventory
+            </h1>
+            <p className="text-muted-foreground mt-1 text-sm font-semibold">
+              All your chickens in one list — status, age, weight, stage, and lineage
+            </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <div className="flex flex-col gap-1.5 flex-1 md:flex-none">
+        <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center md:w-auto">
+          <div className="flex flex-1 flex-col gap-1.5 md:flex-none">
             <div className="relative flex-1 md:w-72">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                <Search className="w-4 h-4" />
+              <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2">
+                <Search className="h-4 w-4" />
               </span>
               <input
                 type="search"
@@ -722,31 +1018,50 @@ export default function MarketplacePage({
                     setSearch('');
                   }
                 }}
-                className="w-full pl-10 pr-9 py-2.5 sm:py-3 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-semibold [&::-webkit-search-cancel-button]:appearance-none"
+                className="border-border bg-card text-card-foreground placeholder:text-muted-foreground w-full rounded-lg border py-2.5 pr-9 pl-10 text-sm font-semibold transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:py-3 [&::-webkit-search-cancel-button]:appearance-none"
               />
               {search.length > 0 && (
                 <button
                   type="button"
                   aria-label="Clear search input"
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer rounded-md p-1 transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer select-none pl-1">
+            <label className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer items-center gap-1.5 pl-1 text-xs font-semibold select-none">
               <input
                 type="checkbox"
                 checked={includeParents}
                 onChange={(e) => setIncludeParents(e.target.checked)}
-                className="w-3.5 h-3.5 rounded border-border text-emerald-600 focus:ring-emerald-500/20 cursor-pointer accent-emerald-600"
+                className="border-border h-3.5 w-3.5 cursor-pointer rounded text-emerald-600 accent-emerald-600 focus:ring-emerald-500/20"
               />
               <span>Include parents</span>
             </label>
           </div>
-          <button type="button" onClick={() => { setCurrentPage('profiling'); setProfilingSubTab('form'); }} className="self-start sm:self-auto shrink-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-black px-4 py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentPage('profiling');
+              setProfilingSubTab('form');
+            }}
+            className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-lg bg-emerald-600 px-4 py-3 text-xs font-black whitespace-nowrap text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-[0.98] sm:self-auto"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
             <span className="hidden sm:inline">Add Chicken</span>
             <span className="sm:hidden">Add</span>
           </button>
@@ -758,7 +1073,7 @@ export default function MarketplacePage({
         role="tablist"
         aria-label="Chicken inventory status tabs"
         data-testid="inventory-tabs-container"
-        className="w-full grid grid-cols-2 md:flex md:flex-wrap items-stretch md:items-center gap-2 p-1.5 bg-muted/60 dark:bg-muted/40 rounded-lg border border-border"
+        className="bg-muted/60 dark:bg-muted/40 border-border grid w-full grid-cols-2 items-stretch gap-2 rounded-lg border p-1.5 md:flex md:flex-wrap md:items-center"
       >
         {tabs.map((tab, idx) => {
           const isSelected = activeTab === tab.id;
@@ -777,23 +1092,26 @@ export default function MarketplacePage({
               aria-controls="inventory-tabpanel"
               tabIndex={isSelected ? 0 : -1}
               title={tab.tooltip}
-              onClick={() => { setActiveTab(tab.id); setRoleFilter('all'); }}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setRoleFilter('all');
+              }}
               onKeyDown={(e) => handleTabKeyDown(e, idx)}
               className={cn(
-                'min-h-[44px] px-3.5 py-2 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center justify-between sm:justify-center gap-2 select-none outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60',
+                'flex min-h-[44px] cursor-pointer items-center justify-between gap-2 rounded-md px-3.5 py-2 text-xs font-bold transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:justify-center',
                 isFifth ? 'col-span-2 md:col-span-1 md:w-auto' : 'col-span-1 md:w-auto',
                 isSelected
-                  ? 'bg-emerald-600 text-white shadow-sm font-black'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-emerald-600 font-black text-white shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
-              <span className="leading-snug text-left sm:text-center whitespace-normal">{tab.label}</span>
+              <span className="text-left leading-snug whitespace-normal sm:text-center">
+                {tab.label}
+              </span>
               <span
                 className={cn(
-                  'text-xs font-black px-2 py-0.5 rounded-full shrink-0 transition-colors',
-                  isSelected
-                    ? 'bg-white/20 text-white'
-                    : 'bg-border text-muted-foreground'
+                  'shrink-0 rounded-full px-2 py-0.5 text-xs font-black transition-colors',
+                  isSelected ? 'bg-white/20 text-white' : 'bg-border text-muted-foreground',
                 )}
               >
                 {tab.count}
@@ -806,10 +1124,13 @@ export default function MarketplacePage({
       {/* 2. Filters Row (Role, Sex, Type, Sort) in a separate row below tabs */}
       <div
         data-testid="inventory-filters-row"
-        className="w-full grid grid-cols-2 [grid-template-columns:repeat(2,minmax(0,1fr))] md:flex md:flex-wrap items-center gap-2.5 p-2 bg-card rounded-lg border border-border shadow-xs"
+        className="bg-card border-border grid w-full [grid-template-columns:repeat(2,minmax(0,1fr))] grid-cols-2 items-center gap-2.5 rounded-lg border p-2 shadow-xs md:flex md:flex-wrap"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
-          <label htmlFor="inventory-role" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+        <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
+          <label
+            htmlFor="inventory-role"
+            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+          >
             Role
           </label>
           <select
@@ -817,19 +1138,26 @@ export default function MarketplacePage({
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
             className={cn(
-              'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
-              roleFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
+              'bg-card h-9 w-full max-w-full min-w-0 cursor-pointer truncate rounded-md border px-2.5 py-1.5 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 sm:w-auto',
+              roleFilter !== 'all'
+                ? 'text-success border-emerald-500/50 bg-emerald-500/5'
+                : 'text-card-foreground border-border',
             )}
           >
             <option value="all">All roles</option>
             {ROLE_FILTER_OPTIONS.map((r) => (
-              <option key={r} value={r}>{roleLabel(r)}</option>
+              <option key={r} value={r}>
+                {roleLabel(r)}
+              </option>
             ))}
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
-          <label htmlFor="inventory-sex" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+        <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
+          <label
+            htmlFor="inventory-sex"
+            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+          >
             Sex
           </label>
           <select
@@ -838,8 +1166,10 @@ export default function MarketplacePage({
             value={sexFilter}
             onChange={(e) => setSexFilter(e.target.value as SexFilter)}
             className={cn(
-              'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
-              sexFilter !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
+              'bg-card h-9 w-full max-w-full min-w-0 cursor-pointer truncate rounded-md border px-2.5 py-1.5 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 sm:w-auto',
+              sexFilter !== 'all'
+                ? 'text-success border-emerald-500/50 bg-emerald-500/5'
+                : 'text-card-foreground border-border',
             )}
           >
             <option value="all">All sexes</option>
@@ -848,8 +1178,11 @@ export default function MarketplacePage({
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto">
-          <label htmlFor="inventory-breeding-type" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+        <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
+          <label
+            htmlFor="inventory-breeding-type"
+            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+          >
             {t('registry.breedingTypeLabel')}
           </label>
           <select
@@ -858,8 +1191,10 @@ export default function MarketplacePage({
             value={internalBreedingType}
             onChange={(e) => setInternalBreedingType(e.target.value as BreedingTypeFilter)}
             className={cn(
-              'w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all',
-              internalBreedingType !== 'all' ? 'text-success border-emerald-500/50 bg-emerald-500/5' : 'text-card-foreground border-border'
+              'bg-card h-9 w-full max-w-full min-w-0 cursor-pointer truncate rounded-md border px-2.5 py-1.5 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 sm:w-auto',
+              internalBreedingType !== 'all'
+                ? 'text-success border-emerald-500/50 bg-emerald-500/5'
+                : 'text-card-foreground border-border',
             )}
             title={t('registry.breedingTypeHelp')}
           >
@@ -870,15 +1205,18 @@ export default function MarketplacePage({
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 w-full md:w-auto md:ml-auto">
-          <label htmlFor="inventory-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+        <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:ml-auto md:w-auto">
+          <label
+            htmlFor="inventory-sort"
+            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+          >
             Sort
           </label>
           <select
             id="inventory-sort"
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="w-full min-w-0 max-w-full truncate sm:w-auto h-9 px-2.5 py-1.5 rounded-md text-xs font-bold bg-card text-card-foreground border border-border cursor-pointer focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+            className="bg-card text-card-foreground border-border h-9 w-full max-w-full min-w-0 cursor-pointer truncate rounded-md border px-2.5 py-1.5 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 sm:w-auto"
           >
             <option value="name">Name (A–Z)</option>
             <option value="identifier">Identifier (1A2 before 1A10)</option>
@@ -894,16 +1232,21 @@ export default function MarketplacePage({
       {debouncedQuery.trim() && (
         <div
           data-testid="search-results-banner"
-          className="flex items-center justify-between bg-muted/60 px-3.5 py-2 rounded-lg border border-border text-xs font-medium animate-fadeIn"
+          className="bg-muted/60 border-border animate-fadeIn flex items-center justify-between rounded-lg border px-3.5 py-2 text-xs font-medium"
         >
           <span className="text-muted-foreground">
-            Showing <strong className="text-foreground font-black">{filteredFowls.length}</strong> {filteredFowls.length === 1 ? 'result' : 'results'} for &ldquo;<span className="text-emerald-700 dark:text-emerald-400 font-bold">{debouncedQuery}</span>&rdquo;
+            Showing <strong className="text-foreground font-black">{filteredFowls.length}</strong>{' '}
+            {filteredFowls.length === 1 ? 'result' : 'results'} for &ldquo;
+            <span className="font-bold text-emerald-700 dark:text-emerald-400">
+              {debouncedQuery}
+            </span>
+            &rdquo;
             {includeParents && <span className="ml-1 opacity-75">(including parents)</span>}
           </span>
           <button
             type="button"
             onClick={() => setSearch('')}
-            className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+            className="cursor-pointer text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
           >
             Clear search
           </button>
@@ -913,42 +1256,44 @@ export default function MarketplacePage({
       {/* Grid Tabpanel */}
       <div id="inventory-tabpanel" role="tabpanel" aria-labelledby={`inventory-tab-${activeTab}`}>
         {filteredFowls.length === 0 ? (
-          <div className="bg-card p-12 text-center rounded-lg border border-border shadow-sm space-y-3.5 max-w-md mx-auto my-6">
-            <div className="w-14 h-14 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/20">
+          <div className="bg-card border-border mx-auto my-6 max-w-md space-y-3.5 rounded-lg border p-12 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-2xl text-emerald-600 dark:text-emerald-400">
               🔍
             </div>
             <div className="space-y-1">
-              <h2 className="text-base font-extrabold text-card-foreground">
+              <h2 className="text-card-foreground text-base font-extrabold">
                 {debouncedQuery.trim()
                   ? `No chickens found for "${debouncedQuery}"`
                   : activeTab === 'active'
-                  ? 'No Active Breeders'
-                  : 'No Chickens Found'}
+                    ? 'No Active Breeders'
+                    : 'No Chickens Found'}
               </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground font-medium max-w-sm mx-auto">
+              <p className="text-muted-foreground mx-auto max-w-sm text-xs font-medium sm:text-sm">
                 {debouncedQuery.trim()
                   ? 'No chickens match your search in this tab. Check the spelling or enable "Include parents" to search lineage.'
                   : activeTab === 'active'
-                  ? 'No active breeding males or females found in the herd.'
-                  : 'No chickens match your current filters. Try adjusting your search or add new chickens.'}
+                    ? 'No active breeding males or females found in the herd.'
+                    : 'No chickens match your current filters. Try adjusting your search or add new chickens.'}
               </p>
             </div>
             {debouncedQuery.trim() && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all cursor-pointer"
+                className="mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700"
               >
                 Clear search
               </button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filteredFowls.map((fowl) => {
               const m = matchMap.get(fowl.id);
-              const parentHint = m?.reason === 'sire' || m?.reason === 'dam' ? m.parentHint : undefined;
-              const restorable = isArchivedStatus(fowl) || (isDeceasedStatus(fowl) && canRestoreDeceased);
+              const parentHint =
+                m?.reason === 'sire' || m?.reason === 'dam' ? m.parentHint : undefined;
+              const restorable =
+                isArchivedStatus(fowl) || (isDeceasedStatus(fowl) && canRestoreDeceased);
               return (
                 <FowlCard
                   key={fowl.id}
@@ -959,7 +1304,9 @@ export default function MarketplacePage({
                   onClick={() => setSelectedFowl(fowl)}
                   query={debouncedQuery}
                   parentHint={parentHint}
-                  onOpenProfile={setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined}
+                  onOpenProfile={
+                    setSelectedFowlForDetails ? () => setSelectedFowlForDetails(fowl) : undefined
+                  }
                   onRestore={onRestore && restorable ? () => setRestoreTarget(fowl) : undefined}
                   classification={classificationMap.get(String(fowl.id))}
                 />
@@ -984,30 +1331,34 @@ export default function MarketplacePage({
       {restoreTarget && (
         <Modal
           open
-          onClose={() => { if (!restoring) setRestoreTarget(null); }}
+          onClose={() => {
+            if (!restoring) setRestoreTarget(null);
+          }}
           title="Restore to Active?"
           className="max-w-md"
         >
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Move <strong className="text-foreground">{restoreTarget.name}</strong> back to the active
-              registry? It will reappear in the Chicken Registry tabs, count as Active, and a history
-              entry will be logged.
+            <p className="text-muted-foreground text-sm">
+              Move <strong className="text-foreground">{restoreTarget.name}</strong> back to the
+              active registry? It will reappear in the Chicken Registry tabs, count as Active, and a
+              history entry will be logged.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 disabled={restoring}
                 onClick={() => setRestoreTarget(null)}
-                className="px-4 py-2 rounded-md text-xs font-bold bg-muted text-foreground hover:bg-muted/80 transition-all cursor-pointer disabled:opacity-60"
+                className="bg-muted text-foreground hover:bg-muted/80 cursor-pointer rounded-md px-4 py-2 text-xs font-bold transition-all disabled:opacity-60"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 disabled={restoring}
-                onClick={() => { void confirmRestore(); }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all cursor-pointer disabled:opacity-60"
+                onClick={() => {
+                  void confirmRestore();
+                }}
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-60"
               >
                 {restoring ? 'Restoring…' : 'Restore to Active'}
               </button>

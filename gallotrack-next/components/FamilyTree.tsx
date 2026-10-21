@@ -21,7 +21,10 @@ import {
 import WinRatePill from '@/components/match/WinRatePill';
 import ChickenIcon from '@/components/ChickenIcon';
 import { getBreedingClassification } from '@/lib/breeding-classification';
-import { classifyPairingRelatedness, getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import {
+  classifyPairingRelatedness,
+  getOffspringParentageRelatedness,
+} from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
 
 type Depth = 1 | 2 | 3;
@@ -64,35 +67,42 @@ function ParentChip({
       : 'bg-pink-50 dark:bg-pink-950/40 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-400';
   const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '') : '';
   const classification = fowl ? getBreedingClassification(fowl, fowls) : null;
-  const displayBreed = classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
+  const displayBreed =
+    classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
 
   return (
     <button
       type="button"
       onClick={() => fowl && onPick?.(fowl)}
       disabled={!fowl}
-      className={`flex items-center gap-2.5 border rounded-2xl px-3.5 py-2 min-w-0 sm:min-w-[170px] text-left transition-all ${
+      className={`flex min-w-0 items-center gap-2.5 rounded-2xl border px-3.5 py-2 text-left transition-all sm:min-w-[170px] ${
         accent
-      } ${fowl ? 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : 'cursor-default opacity-90'}`}
+      } ${fowl ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : 'cursor-default opacity-90'}`}
     >
-      <ChickenIcon className="w-4 h-4 shrink-0" />
+      <ChickenIcon className="h-4 w-4 shrink-0" />
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-black uppercase tracking-widest">{roleLabel}</span>
-        <span className="block text-xs font-black text-card-foreground truncate">{name}</span>
+        <span className="block text-xs font-black tracking-widest uppercase">{roleLabel}</span>
+        <span className="text-card-foreground block truncate text-xs font-black">{name}</span>
         {displayBreed && (
-          <span className="block text-xs font-bold text-muted-foreground truncate" title={classification?.sourceLabel}>
+          <span
+            className="text-muted-foreground block truncate text-xs font-bold"
+            title={classification?.sourceLabel}
+          >
             {displayBreed}
-            {(classification?.compositionSource === 'assumed' || classification?.basedOnAssumed) && (
-              <span className="ml-1 text-[10px] opacity-75 font-mono" aria-label="Assumed lineage">~</span>
+            {(classification?.compositionSource === 'assumed' ||
+              classification?.basedOnAssumed) && (
+              <span className="ml-1 font-mono text-xs opacity-75" aria-label="Assumed lineage">
+                ~
+              </span>
             )}
           </span>
         )}
         {!fowl && (
-          <span className="block text-xs font-bold text-muted-foreground">Not in registry</span>
+          <span className="text-muted-foreground block text-xs font-bold">Not in registry</span>
         )}
       </span>
       {code && (
-        <span className="text-xs font-mono font-black bg-card/80 border border-current/20 px-1.5 py-0.5 rounded shrink-0">
+        <span className="bg-card/80 shrink-0 rounded border border-current/20 px-1.5 py-0.5 font-mono text-xs font-black">
           {code}
         </span>
       )}
@@ -125,34 +135,42 @@ function OffspringNode({
   const totalKids = node.children.length;
   const stats = matchStatsMap.get(fowl.name.trim().toLowerCase()) || computeWinRate(0, 0);
   const classification = getBreedingClassification(fowl, fowls);
-  const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
+  const displayBreed =
+    classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
 
   return (
     <div className="gt-kid">
-      <div className="group w-full bg-card border border-border rounded-2xl px-3.5 py-2.5 flex items-stretch gap-1.5 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all">
+      <div className="group bg-card border-border flex w-full items-stretch gap-1.5 rounded-2xl border px-3.5 py-2.5 shadow-sm transition-all hover:border-emerald-400 hover:shadow-md dark:hover:border-emerald-600">
         <button
           type="button"
           onClick={() => onPick?.(fowl)}
-          className="flex-1 flex items-center gap-3 text-left min-w-0 cursor-pointer"
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
         >
           <span
-            className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[fowl.status] || 'bg-muted-foreground'}`}
+            className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT[fowl.status] || 'bg-muted-foreground'}`}
             title={fowl.status}
           ></span>
           {code && (
-            <span className="text-xs font-mono font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded shrink-0">
+            <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-xs font-black text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
               {code}
             </span>
           )}
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-black text-card-foreground truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+            <span className="text-card-foreground block truncate text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
               {fowl.name}
             </span>
-            <span className="block text-xs font-semibold text-muted-foreground truncate">
+            <span className="text-muted-foreground block truncate text-xs font-semibold">
               {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {displayBreed || '—'}
-              {(classification.compositionSource === 'assumed' || classification.basedOnAssumed) && (
-                <span className="ml-1 text-[10px] opacity-75 font-mono" title={classification.sourceLabel} aria-label="Assumed lineage">~</span>
+              {(classification.compositionSource === 'assumed' ||
+                classification.basedOnAssumed) && (
+                <span
+                  className="ml-1 font-mono text-xs opacity-75"
+                  title={classification.sourceLabel}
+                  aria-label="Assumed lineage"
+                >
+                  ~
+                </span>
               )}
               {fowl.age ? ` · ${fowl.age}` : ''}
             </span>
@@ -168,7 +186,7 @@ function OffspringNode({
             <RelatednessBadge classification={parentage} compact />
           )}
           {totalKids > 0 && (
-            <span className="text-xs font-black bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full shrink-0">
+            <span className="bg-muted text-muted-foreground border-border shrink-0 rounded-full border px-2 py-0.5 text-xs font-black">
               {totalKids} {totalKids === 1 ? 'child' : 'children'}
             </span>
           )}
@@ -178,9 +196,9 @@ function OffspringNode({
           onClick={() => onShowFights?.(fowl)}
           aria-label={`View all fights for ${fowl.name}`}
           title="View all fights"
-          className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
+          className="text-muted-foreground border-border flex shrink-0 cursor-pointer items-center gap-1 self-center rounded-xl border px-2 py-1.5 text-xs font-black tracking-wider uppercase transition-colors hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400"
         >
-          <Swords className="w-3 h-3" />
+          <Swords className="h-3 w-3" />
           Fights
         </button>
       </div>
@@ -255,7 +273,10 @@ function PairTree({
       if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
       if (codeA) return -1;
       if (codeB) return 1;
-      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) || a.id - b.id;
+      return (
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) ||
+        a.id - b.id
+      );
     });
 
   const roosters = sortMembersByCode(pair.members.filter((m) => isMale(m)));
@@ -281,25 +302,39 @@ function PairTree({
   const pairCode = offspringBase(sireCode, damCode);
   const relatedness = useMemo(
     () => classifyPairingRelatedness(sireFowl, damFowl, fowls),
-    [sireFowl, damFowl, fowls]
+    [sireFowl, damFowl, fowls],
   );
 
   return (
-    <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
-      <div className="px-5 pt-5 pb-0 flex items-start gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
-          <ParentChip roleLabel="Sire" name={pair.sire} fowl={sireFowl} codes={codes} onPick={onPick} fowls={fowls} />
-          <span className="text-base font-black text-muted-foreground leading-none">×</span>
-          <ParentChip roleLabel="Dam" name={pair.dam} fowl={damFowl} codes={codes} onPick={onPick} fowls={fowls} />
+    <div className="bg-card border-border overflow-hidden rounded-3xl border shadow-sm">
+      <div className="flex flex-wrap items-start gap-3 px-5 pt-5 pb-0">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <ParentChip
+            roleLabel="Sire"
+            name={pair.sire}
+            fowl={sireFowl}
+            codes={codes}
+            onPick={onPick}
+            fowls={fowls}
+          />
+          <span className="text-muted-foreground text-base leading-none font-black">×</span>
+          <ParentChip
+            roleLabel="Dam"
+            name={pair.dam}
+            fowl={damFowl}
+            codes={codes}
+            onPick={onPick}
+            fowls={fowls}
+          />
           {pairCode && (
-            <span className="text-xs font-mono font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full">
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs font-black tracking-wider text-emerald-700 uppercase dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400">
               pair {pairCode}
             </span>
           )}
           <RelatednessBadge classification={relatedness} compact />
         </div>
-        <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          <span className="text-xs font-bold text-muted-foreground">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <span className="text-muted-foreground text-xs font-bold">
             {pair.members.length} offspring · {roosters.length} male · {hens.length} female
           </span>
           {foughtCount > 0 ? (
@@ -310,12 +345,12 @@ function PairTree({
               stats={pairTotalStats}
             />
           ) : (
-            <span className="text-xs font-bold text-muted-foreground/60">No fights</span>
+            <span className="text-muted-foreground/60 text-xs font-bold">No fights</span>
           )}
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="text-xs font-black text-emerald-600 dark:text-emerald-400 border border-border rounded-xl px-2.5 py-1.5 hover:bg-muted transition-colors cursor-pointer"
+            className="border-border hover:bg-muted cursor-pointer rounded-xl border px-2.5 py-1.5 text-xs font-black text-emerald-600 transition-colors dark:text-emerald-400"
           >
             {collapsed ? 'Expand' : 'Collapse'}
           </button>
@@ -323,17 +358,20 @@ function PairTree({
       </div>
 
       {!collapsed && (
-        <div className="px-5 pb-5 space-y-4 pt-4">
+        <div className="space-y-4 px-5 pt-4 pb-5">
           {roosters.length > 0 && (
             <div>
-              <p className="text-xs font-black text-sky-700 dark:text-sky-400 uppercase tracking-widest mb-1.5">
+              <p className="mb-1.5 text-xs font-black tracking-widest text-sky-700 uppercase dark:text-sky-400">
                 ♂ Males ({roosters.length})
               </p>
               <div className="gt-kids">
                 {roosters.map((member) => (
                   <OffspringNode
                     key={member.id}
-                    node={{ fowl: member, children: collectDescendants(member, index, maxDepth - 1) }}
+                    node={{
+                      fowl: member,
+                      children: collectDescendants(member, index, maxDepth - 1),
+                    }}
                     depth={1}
                     maxDepth={maxDepth}
                     codes={codes}
@@ -348,14 +386,17 @@ function PairTree({
           )}
           {hens.length > 0 && (
             <div>
-              <p className="text-xs font-black text-pink-700 dark:text-pink-400 uppercase tracking-widest mb-1.5">
+              <p className="mb-1.5 text-xs font-black tracking-widest text-pink-700 uppercase dark:text-pink-400">
                 ♀ Females ({hens.length})
               </p>
               <div className="gt-kids">
                 {hens.map((member) => (
                   <OffspringNode
                     key={member.id}
-                    node={{ fowl: member, children: collectDescendants(member, index, maxDepth - 1) }}
+                    node={{
+                      fowl: member,
+                      children: collectDescendants(member, index, maxDepth - 1),
+                    }}
                     depth={1}
                     maxDepth={maxDepth}
                     codes={codes}
@@ -388,22 +429,25 @@ function PairTree({
             : undefined
         }
         title="Total wins ÷ total decided matches. Draws excluded."
-        className={`px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold transition-colors select-none ${
-          foughtCount > 0 ? 'cursor-pointer hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-emerald-500' : ''
+        className={`bg-muted/30 border-border flex items-center justify-between gap-2 border-t px-5 py-3 text-xs font-bold transition-colors select-none ${
+          foughtCount > 0
+            ? 'hover:bg-muted/50 cursor-pointer focus:ring-1 focus:ring-emerald-500 focus:outline-none'
+            : ''
         }`}
       >
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="uppercase tracking-wider text-muted-foreground">Family total</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-muted-foreground tracking-wider uppercase">Family total</span>
           {foughtCount > 0 && (
             <>
               <span className="text-muted-foreground/60 select-none">·</span>
               <span className="text-foreground">
-                {foughtCount} of {pair.members.length} offspring have fought · {pairTotalStats.wins}W-{pairTotalStats.losses}L · {pairTotalStats.winRate}%
+                {foughtCount} of {pair.members.length} offspring have fought · {pairTotalStats.wins}
+                W-{pairTotalStats.losses}L · {pairTotalStats.winRate}%
               </span>
             </>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           {foughtCount > 0 ? (
             <>
               <WinRatePill
@@ -413,7 +457,7 @@ function PairTree({
                 stats={pairTotalStats}
               />
               <ChevronDown
-                className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
+                className={`text-muted-foreground h-3.5 w-3.5 transition-transform duration-200 ${
                   isTotalExpanded ? 'rotate-180' : ''
                 }`}
               />
@@ -426,8 +470,8 @@ function PairTree({
 
       {/* Expandable Breakdown of Contributor Chickens */}
       {isTotalExpanded && foughtCount > 0 && (
-        <div className="px-5 py-2.5 bg-muted/50 border-t border-border/60 space-y-1.5 text-xs animate-fadeIn">
-          <p className="text-muted-foreground font-semibold text-xs mb-1">
+        <div className="bg-muted/50 border-border/60 animate-fadeIn space-y-1.5 border-t px-5 py-2.5 text-xs">
+          <p className="text-muted-foreground mb-1 text-xs font-semibold">
             Contributors ({foughtCount} of {pair.members.length}):
           </p>
           <div className="flex flex-wrap gap-2">
@@ -439,25 +483,34 @@ function PairTree({
               .sort((a, b) => {
                 const sa = matchStatsMap.get(a.name.trim().toLowerCase());
                 const sb = matchStatsMap.get(b.name.trim().toLowerCase());
-                if ((sb?.winRate ?? 0) !== (sa?.winRate ?? 0)) return (sb?.winRate ?? 0) - (sa?.winRate ?? 0);
-                if ((sb?.decided ?? 0) !== (sa?.decided ?? 0)) return (sb?.decided ?? 0) - (sa?.decided ?? 0);
-                const codeA = a.birth_code || a.chicken_code || a.bird_code || codes.get(String(a.id)) || '';
-                const codeB = b.birth_code || b.chicken_code || b.bird_code || codes.get(String(b.id)) || '';
+                if ((sb?.winRate ?? 0) !== (sa?.winRate ?? 0))
+                  return (sb?.winRate ?? 0) - (sa?.winRate ?? 0);
+                if ((sb?.decided ?? 0) !== (sa?.decided ?? 0))
+                  return (sb?.decided ?? 0) - (sa?.decided ?? 0);
+                const codeA =
+                  a.birth_code || a.chicken_code || a.bird_code || codes.get(String(a.id)) || '';
+                const codeB =
+                  b.birth_code || b.chicken_code || b.bird_code || codes.get(String(b.id)) || '';
                 if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
                 return a.name.localeCompare(b.name);
               })
               .map((m) => {
                 const cs = matchStatsMap.get(m.name.trim().toLowerCase())!;
-                const code = m.birth_code || m.chicken_code || m.bird_code || codes.get(String(m.id)) || '';
+                const code =
+                  m.birth_code || m.chicken_code || m.bird_code || codes.get(String(m.id)) || '';
                 return (
                   <div
                     key={m.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-card border border-border font-bold text-card-foreground shadow-2xs"
+                    className="bg-card border-border text-card-foreground inline-flex items-center gap-1.5 rounded border px-2.5 py-1 font-bold shadow-2xs"
                   >
-                    {code && <span className="font-mono text-xs text-muted-foreground">[{formatBirdCodeForDisplay(code)}]</span>}
+                    {code && (
+                      <span className="text-muted-foreground font-mono text-xs">
+                        [{formatBirdCodeForDisplay(code)}]
+                      </span>
+                    )}
                     <span>{m.name}</span>
                     <span className="text-muted-foreground select-none">·</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-black">
+                    <span className="font-black text-emerald-600 dark:text-emerald-400">
                       {cs.wins}W-{cs.losses}L{cs.draws > 0 ? `-${cs.draws}D` : ''}
                     </span>
                     <span className="text-muted-foreground/60 select-none">·</span>
@@ -508,19 +561,23 @@ export default function FamilyTree({
   const [maxDepth, setMaxDepth] = useState<Depth>(2);
   const [internalCollapsed, setInternalCollapsed] = useState<Set<string>>(new Set());
 
-  const matchStatsMap = useMemo(() => buildChickenMatchStatsMap(matchHistory, fowls), [matchHistory, fowls]);
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   const collapsed = collapsedKeys !== undefined ? collapsedKeys : internalCollapsed;
-  const toggleCollapse = onToggleCollapse !== undefined
-    ? onToggleCollapse
-    : (key: string) => {
-        setInternalCollapsed((prev) => {
-          const next = new Set(prev);
-          if (next.has(key)) next.delete(key);
-          else next.add(key);
-          return next;
-        });
-      };
+  const toggleCollapse =
+    onToggleCollapse !== undefined
+      ? onToggleCollapse
+      : (key: string) => {
+          setInternalCollapsed((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+          });
+        };
 
   const byName = useMemo(() => {
     const m = new Map<string, FowlRecord>();
@@ -549,9 +606,9 @@ export default function FamilyTree({
 
   if (fowls.length === 0) {
     return (
-      <div className="bg-card p-10 text-center rounded-3xl border border-border shadow-sm space-y-2">
-        <p className="text-sm font-extrabold text-card-foreground">No Chickens Yet</p>
-        <p className="text-xs text-muted-foreground font-medium">
+      <div className="bg-card border-border space-y-2 rounded-3xl border p-10 text-center shadow-sm">
+        <p className="text-card-foreground text-sm font-extrabold">No Chickens Yet</p>
+        <p className="text-muted-foreground text-xs font-medium">
           Encode chickens with Sire and Dam to build the family tree.
         </p>
       </div>
@@ -560,23 +617,23 @@ export default function FamilyTree({
 
   return (
     <div className="space-y-5">
-      <div className="bg-card rounded-3xl border border-border shadow-sm p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
+      <div className="bg-card border-border flex flex-col gap-4 rounded-3xl border p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-400">
             🌳 Family Tree — Sire + Dam → Offspring
           </p>
-          <p className="text-xs text-muted-foreground font-semibold">
+          <p className="text-muted-foreground text-xs font-semibold">
             Each pair shows the sire, dam, and their offspring down to the selected generation.
             {normalizeParentName(query) && ' Searching for: "' + query + '"'}
           </p>
         </div>
-        <div className="flex items-center gap-1.5 bg-muted/60 border border-border rounded-2xl p-1.5 shrink-0">
+        <div className="bg-muted/60 border-border flex shrink-0 items-center gap-1.5 rounded-2xl border p-1.5">
           {([1, 2, 3] as Depth[]).map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => setMaxDepth(d)}
-              className={`px-3 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer ${
+              className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-black whitespace-nowrap transition-all ${
                 maxDepth === d
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -589,12 +646,12 @@ export default function FamilyTree({
       </div>
 
       {pairs.length === 0 ? (
-        <div className="bg-card p-10 text-center rounded-3xl border border-border shadow-sm space-y-2">
-          <div className="w-12 h-12 bg-muted text-muted-foreground rounded-full flex items-center justify-center mx-auto">
-            <ChickenIcon className="w-6 h-6" />
+        <div className="bg-card border-border space-y-2 rounded-3xl border p-10 text-center shadow-sm">
+          <div className="bg-muted text-muted-foreground mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+            <ChickenIcon className="h-6 w-6" />
           </div>
-          <h3 className="text-sm font-extrabold text-card-foreground">No Breeding Pairs Found</h3>
-          <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">
+          <h3 className="text-card-foreground text-sm font-extrabold">No Breeding Pairs Found</h3>
+          <p className="text-muted-foreground mx-auto max-w-sm text-xs font-medium">
             {normalizeParentName(query)
               ? 'No breeding pair or chicken matches your search.'
               : 'Encode chickens with both Sire and Dam names to see the sire + dam → offspring family tree.'}

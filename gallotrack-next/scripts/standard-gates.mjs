@@ -138,6 +138,37 @@ const GATES = [
   { id: 'unnamed-icon-button', label: 'Icon buttons need a name', fn: gateUnnamedIconButtons },
 ];
 
+/**
+ * Documented, visible exceptions with hard caps. This is NOT the ratchet
+ * baseline: nothing here can grow over time, every entry is printed on each run,
+ * and each one records why a mechanical fix is impossible. Use only for fixed
+ * pixel-size layouts and renderers that cannot read CSS variables.
+ */
+const ALLOWLIST = {
+  'sub-12px-type': {
+    'components/PedigreeTree.tsx': {
+      max: 6,
+      reason:
+        'Fixed 220x64 pedigree node cards: Not registered / code tag / status chips overflow the node at 12px',
+    },
+  },
+  'raw-hex': {
+    'app/layout.tsx': {
+      max: 1,
+      reason: 'Next.js metadata themeColor cannot reference CSS variables',
+    },
+    'app/opengraph-image.tsx': {
+      max: 10,
+      reason:
+        'Satori/ImageResponse renders without CSS variables, so hex literals are required for the share card',
+    },
+    'components/match/MatchActionsRegression.test.tsx': {
+      max: 1,
+      reason: 'False positive: "#999" is a fowl identifier inside a test string, not a colour',
+    },
+  },
+};
+
 /* ------------------------------------------------------------------- main */
 
 const files = SCAN_DIRS.flatMap((dir) => walk(join(root, dir)));
@@ -176,7 +207,8 @@ for (const gate of GATES) {
   const regressions = [];
 
   for (const [file, count] of Object.entries(now)) {
-    const ceiling = was[file] ?? 0;
+    const allow = ALLOWLIST[gate.id]?.[file];
+    const ceiling = allow?.max ?? was[file] ?? 0;
     if (count > ceiling) regressions.push(`${file}: ${ceiling} -> ${count}`);
   }
 
@@ -191,6 +223,13 @@ for (const gate of GATES) {
   } else {
     const delta = improved > 0 ? ` (down ${improved} from ${wasTotal})` : '';
     console.log(`✓ ${gate.label.padEnd(28)} ${nowTotal} outstanding${delta}`);
+  }
+
+  for (const [file, allow] of Object.entries(ALLOWLIST[gate.id] ?? {})) {
+    const count = now[file] ?? 0;
+    if (count > 0) {
+      console.log(`    allowlisted: ${file} (${count}/${allow.max}) — ${allow.reason}`);
+    }
   }
 }
 

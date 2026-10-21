@@ -7,31 +7,41 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border/80 bg-card py-8 sm:py-10 text-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <footer className="border-border/80 bg-card border-t py-8 text-sm sm:py-10">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           {/* Logo & Version */}
           <div className="space-y-2">
-            <Link href="/" className="flex flex-wrap items-center gap-2.5 group min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <Link href="/" className="group flex min-w-0 flex-wrap items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
                 </svg>
               </div>
-              <span className="text-lg font-black tracking-tight text-foreground">
+              <span className="text-foreground text-lg font-black tracking-tight">
                 GALLO<span className="text-emerald-600 dark:text-emerald-400">TRACK</span>
               </span>
-              <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest ml-1 px-1.5 py-0.5 rounded border border-border">
+              <span className="text-muted-foreground border-border ml-1 rounded border px-1.5 py-0.5 font-mono text-xs font-bold tracking-widest uppercase">
                 v1.0.0
               </span>
             </Link>
-            <p className="text-xs text-muted-foreground font-medium max-w-sm">
+            <p className="text-muted-foreground max-w-sm text-xs font-medium">
               Advanced Gamefowl Breeding &amp; Match Analytics Platform.
             </p>
           </div>
 
           {/* Quick Nav Links */}
-          <div className="flex flex-wrap items-center gap-6 text-xs font-bold text-muted-foreground">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-6 text-xs font-bold">
             <a href="#features" className="hover:text-foreground transition-colors">
               Features
             </a>
@@ -52,11 +62,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Credits & Copyright */}
-        <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p className="font-medium text-center sm:text-left">
+        <div className="border-border/60 text-muted-foreground flex flex-col items-center justify-between gap-4 border-t pt-6 text-xs sm:flex-row">
+          <p className="text-center font-medium sm:text-left">
             &copy; {currentYear} GalloTrack. All rights reserved.
           </p>
-          <p className="font-semibold text-center sm:text-right text-emerald-600 dark:text-emerald-400">
+          <p className="text-center font-semibold text-emerald-600 sm:text-right dark:text-emerald-400">
             ISUFST CICI Capstone Project
           </p>
         </div>

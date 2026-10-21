@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav aria-label="Primary" className="mt-2 space-y-4 p-4">
             {groupNavItems(navItems).map(({ group, items }) => (
               <div key={group}>
-                <p className="text-muted-foreground px-4 pb-1.5 text-[11px] font-black tracking-widest uppercase">
+                <p className="text-muted-foreground px-4 pb-1.5 text-xs font-black tracking-widest uppercase">
                   {group}
                 </p>
                 <div className="space-y-1.5">
@@ -216,11 +216,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="flex min-w-0 flex-col justify-center md:hidden">
                 <span className="text-card-foreground from-foreground to-accent truncate bg-gradient-to-r bg-clip-text text-sm leading-tight font-extrabold tracking-tight text-transparent">
                   {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'}{' '}
-                  <span className="text-muted-foreground font-mono text-[10px] font-normal">
+                  <span className="text-muted-foreground font-mono text-xs font-normal">
                     v1.0.0
                   </span>
                 </span>
-                <span className="text-muted-foreground truncate text-[10px] leading-tight font-medium tracking-wide">
+                <span className="text-muted-foreground truncate text-xs leading-tight font-medium tracking-wide">
                   {isAdmin ? 'Administrator console' : 'Farm management console'}
                 </span>
               </div>

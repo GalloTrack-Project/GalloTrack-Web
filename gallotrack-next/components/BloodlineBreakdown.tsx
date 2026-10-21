@@ -40,12 +40,20 @@ const findByName = (fowls: FowlRecord[], name?: string | null): FowlRecord | und
   return fowls.find((f) => strainKey(f.name || '') === key);
 };
 
-function countUnregisteredAncestors(fowl: FowlRecord | null | undefined, fowls: FowlRecord[] = []): number {
+function countUnregisteredAncestors(
+  fowl: FowlRecord | null | undefined,
+  fowls: FowlRecord[] = [],
+): number {
   if (!fowl) return 0;
   let count = 0;
   const visited = new Set<string>();
   const walk = (f: FowlRecord | undefined, parentName: string | null | undefined) => {
-    if (!f && parentName && parentName.trim() !== '' && strainKey(parentName) !== 'foundation stock') {
+    if (
+      !f &&
+      parentName &&
+      parentName.trim() !== '' &&
+      strainKey(parentName) !== 'foundation stock'
+    ) {
       count++;
       return;
     }
@@ -55,7 +63,8 @@ function countUnregisteredAncestors(fowl: FowlRecord | null | undefined, fowls: 
     if (key) visited.add(key);
     const sire = findByName(fowls, f.sire);
     const dam = findByName(fowls, f.dam);
-    if (!sire && f.sire && f.sire.trim() !== '' && strainKey(f.sire) !== 'foundation stock') count++;
+    if (!sire && f.sire && f.sire.trim() !== '' && strainKey(f.sire) !== 'foundation stock')
+      count++;
     else walk(sire, f.sire);
     if (!dam && f.dam && f.dam.trim() !== '' && strainKey(f.dam) !== 'foundation stock') count++;
     else walk(dam, f.dam);
@@ -66,7 +75,10 @@ function countUnregisteredAncestors(fowl: FowlRecord | null | undefined, fowls: 
 
 type SharedAncestor = { name: string; displayName: string };
 
-function findSharedAncestors(fowl: FowlRecord | null | undefined, fowls: FowlRecord[] = []): SharedAncestor[] {
+function findSharedAncestors(
+  fowl: FowlRecord | null | undefined,
+  fowls: FowlRecord[] = [],
+): SharedAncestor[] {
   if (!fowl) return [];
   const occurrences = new Map<string, { displayName: string; sides: Set<'sire' | 'dam'> }>();
   const visited = new Set<string>();
@@ -75,7 +87,7 @@ function findSharedAncestors(fowl: FowlRecord | null | undefined, fowls: FowlRec
     f: FowlRecord | undefined,
     parentName: string | null | undefined,
     side: 'sire' | 'dam' | null,
-    depth: number
+    depth: number,
   ) => {
     const name = f?.name || parentName || '';
     const key = strainKey(name);
@@ -155,17 +167,17 @@ export default function BloodlineBreakdown({
 
   const unregisteredCount = React.useMemo(
     () => countUnregisteredAncestors(fowl ?? null, fowls ?? []),
-    [fowl, fowls]
+    [fowl, fowls],
   );
 
   const sharedAncestors = React.useMemo(
     () => findSharedAncestors(fowl ?? null, fowls ?? []),
-    [fowl, fowls]
+    [fowl, fowls],
   );
 
   const sourceInfo = React.useMemo(
     () => (fowl ? getCompositionSourceInfo(fowl, fowls ?? []) : null),
-    [fowl, fowls]
+    [fowl, fowls],
   );
 
   const pedigreeSummary = React.useMemo(() => {
@@ -177,7 +189,7 @@ export default function BloodlineBreakdown({
 
   const show5050 = React.useMemo(
     () => hasBothParentsRecorded(fowl ?? null, fowls ?? []),
-    [fowl, fowls]
+    [fowl, fowls],
   );
 
   if (!resolved) return null;
@@ -190,35 +202,35 @@ export default function BloodlineBreakdown({
 
   if (compact) {
     return (
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg py-2 px-3 space-y-2">
+      <div className="space-y-2 rounded-lg border border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-3 py-2 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-teal-950/40">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
-            <p className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300">
               🧬 {title || 'Bloodline Breakdown'}
             </p>
-            <span className="inline-flex items-center bg-slate-700 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-wide">
+            <span className="inline-flex items-center rounded-full bg-slate-700 px-2 py-0.5 text-xs font-black tracking-wide text-white uppercase">
               {strainCount} strain{strainCount === 1 ? '' : 's'}
             </span>
           </div>
-          <span className="inline-flex items-center gap-1 bg-emerald-700 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-black tracking-wider text-white uppercase">
             {dominant.strain} {dominant.pct}%
           </span>
         </div>
 
         {sourceLine && (
           <div className="space-y-0.5">
-            <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+            <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
               Source: <span className="font-semibold">{sourceLine}</span>
             </p>
             {isAdjusted && pedigreeSummary && (
-              <p className="text-[11px] text-muted-foreground font-semibold">
+              <p className="text-muted-foreground text-xs font-semibold">
                 Calculated from parents: {pedigreeSummary}
               </p>
             )}
           </div>
         )}
 
-        <div className="h-4 w-full rounded-full bg-white/80 dark:bg-muted overflow-hidden border border-white/60 flex">
+        <div className="dark:bg-muted flex h-4 w-full overflow-hidden rounded-full border border-white/60 bg-white/80">
           {entries.map((entry, i) => (
             <div
               key={entry.strain}
@@ -232,17 +244,23 @@ export default function BloodlineBreakdown({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {entries.map((entry, i) => (
             <div key={entry.strain} className="flex items-center gap-1">
-              <span className={`inline-block w-2.5 h-2.5 rounded-sm shrink-0 ${barColor(entry.strain, i)}`} />
               <span
-                className={`text-xs font-black truncate ${
-                  entry.isUnknown ? 'text-muted-foreground' : 'text-slate-700 dark:text-card-foreground'
+                className={`inline-block h-2.5 w-2.5 shrink-0 rounded-sm ${barColor(entry.strain, i)}`}
+              />
+              <span
+                className={`truncate text-xs font-black ${
+                  entry.isUnknown
+                    ? 'text-muted-foreground'
+                    : 'dark:text-card-foreground text-slate-700'
                 }`}
               >
                 {entry.strain}
               </span>
               <span
-                className={`text-xs font-black tabular-nums shrink-0 ${
-                  entry.isUnknown ? 'text-muted-foreground' : 'text-slate-800 dark:text-card-foreground'
+                className={`shrink-0 text-xs font-black tabular-nums ${
+                  entry.isUnknown
+                    ? 'text-muted-foreground'
+                    : 'dark:text-card-foreground text-slate-800'
                 }`}
               >
                 {entry.pct}%
@@ -253,24 +271,31 @@ export default function BloodlineBreakdown({
 
         <div className="space-y-0.5">
           {show5050 && (
-            <p className="text-xs text-muted-foreground font-semibold">
+            <p className="text-muted-foreground text-xs font-semibold">
               50% Sire · 50% Dam · halved each gen
             </p>
           )}
           {isAssumed && (
-            <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold" title="No parents are recorded, so the system assumes this bird is 100% of its registered breed. You can declare the real composition by editing the chicken.">
+            <p
+              className="text-xs font-semibold text-amber-700 dark:text-amber-300"
+              title="No parents are recorded, so the system assumes this bird is 100% of its registered breed. You can declare the real composition by editing the chicken."
+            >
               Assumed 100% {dominant.strain}
             </p>
           )}
           {unknownPct > 0 && (
-            <p className="text-xs text-muted-foreground font-semibold">
-              {unknownPct}% unknown because {unregisteredCount || Math.max(1, Math.ceil(unknownPct / 25))} ancestor
-              {unregisteredCount === 1 || (unregisteredCount === 0 && Math.ceil(unknownPct / 25) === 1) ? '' : 's'} not
-              registered
+            <p className="text-muted-foreground text-xs font-semibold">
+              {unknownPct}% unknown because{' '}
+              {unregisteredCount || Math.max(1, Math.ceil(unknownPct / 25))} ancestor
+              {unregisteredCount === 1 ||
+              (unregisteredCount === 0 && Math.ceil(unknownPct / 25) === 1)
+                ? ''
+                : 's'}{' '}
+              not registered
             </p>
           )}
           {sharedAncestors.slice(0, 2).map((sa) => (
-            <p key={sa.name} className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
+            <p key={sa.name} className="text-xs font-semibold text-slate-600 dark:text-slate-400">
               Line-bred: {sa.displayName} appears on both sides
             </p>
           ))}
@@ -280,10 +305,10 @@ export default function BloodlineBreakdown({
   }
 
   return (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-teal-950/40">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
+          <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300">
             🧬 {title || 'Bloodline Percentage Breakdown'}
           </p>
           {sourceLine && (
@@ -292,23 +317,24 @@ export default function BloodlineBreakdown({
                 Source: <span className="font-semibold">{sourceLine}</span>
               </p>
               {isAdjusted && pedigreeSummary && (
-                <p className="text-xs text-muted-foreground font-semibold">
-                  Calculated from parents: <span className="font-bold text-foreground">{pedigreeSummary}</span>
+                <p className="text-muted-foreground text-xs font-semibold">
+                  Calculated from parents:{' '}
+                  <span className="text-foreground font-bold">{pedigreeSummary}</span>
                 </p>
               )}
             </div>
           )}
           {show5050 && (
-            <p className="text-xs text-muted-foreground font-semibold mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs font-semibold">
               {subtitle || '50% Sire · 50% Dam — halved each generation'}
             </p>
           )}
         </div>
         <div className="shrink-0 sm:text-right">
-          <span className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-xs font-black tracking-wider text-white uppercase">
             {dominant.strain} {dominant.pct}%
           </span>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mt-1">
+          <p className="text-muted-foreground mt-1 text-xs font-bold tracking-wide uppercase">
             {strainCount} bloodline{strainCount === 1 ? '' : 's'}
           </p>
         </div>
@@ -319,21 +345,25 @@ export default function BloodlineBreakdown({
           <div key={entry.strain} className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <span
-                className={`text-xs font-black truncate ${
-                  entry.isUnknown ? 'text-muted-foreground' : 'text-slate-700 dark:text-card-foreground'
+                className={`truncate text-xs font-black ${
+                  entry.isUnknown
+                    ? 'text-muted-foreground'
+                    : 'dark:text-card-foreground text-slate-700'
                 }`}
               >
                 {entry.strain}
               </span>
               <span
-                className={`text-xs font-black tabular-nums shrink-0 ${
-                  entry.isUnknown ? 'text-muted-foreground' : 'text-slate-800 dark:text-card-foreground'
+                className={`shrink-0 text-xs font-black tabular-nums ${
+                  entry.isUnknown
+                    ? 'text-muted-foreground'
+                    : 'dark:text-card-foreground text-slate-800'
                 }`}
               >
                 {entry.pct}%
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-white/80 dark:bg-muted overflow-hidden border border-white/60">
+            <div className="dark:bg-muted h-2 w-full overflow-hidden rounded-full border border-white/60 bg-white/80">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${barColor(entry.strain, i)}`}
                 style={{ width: `${Math.max(2, Math.min(100, entry.pct))}%` }}
@@ -344,19 +374,21 @@ export default function BloodlineBreakdown({
       </div>
 
       {isAssumed ? (
-        <div className="border-t border-emerald-100 dark:border-emerald-900/50 pt-2 space-y-2">
-          <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
-            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> Assumed 100% {dominant.strain}
+        <div className="space-y-2 border-t border-emerald-100 pt-2 dark:border-emerald-900/50">
+          <p className="text-muted-foreground text-xs leading-relaxed font-semibold">
+            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span>{' '}
+            Assumed 100% {dominant.strain}
           </p>
-          <div className="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col justify-between gap-2 rounded-md border border-amber-500/20 bg-amber-500/10 p-2.5 text-xs text-amber-900 sm:flex-row sm:items-center dark:text-amber-200">
             <p className="leading-relaxed">
-              No parents are recorded, so the system assumes this bird is 100% of its registered breed. You can declare the real composition by editing the chicken.
+              No parents are recorded, so the system assumes this bird is 100% of its registered
+              breed. You can declare the real composition by editing the chicken.
             </p>
             {canEditComposition && (
               <button
                 type="button"
                 onClick={onEditComposition}
-                className="text-xs font-bold text-amber-800 dark:text-amber-300 underline hover:no-underline shrink-0 cursor-pointer self-start sm:self-auto"
+                className="shrink-0 cursor-pointer self-start text-xs font-bold text-amber-800 underline hover:no-underline sm:self-auto dark:text-amber-300"
               >
                 Edit composition →
               </button>
@@ -364,17 +396,27 @@ export default function BloodlineBreakdown({
           </div>
         </div>
       ) : (
-        <div className="border-t border-emerald-100 dark:border-emerald-900/50 pt-2 space-y-1.5">
-          <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
-            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span> {summary}
+        <div className="space-y-1.5 border-t border-emerald-100 pt-2 dark:border-emerald-900/50">
+          <p className="text-muted-foreground text-xs leading-relaxed font-semibold">
+            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span>{' '}
+            {summary}
             {isAdjusted && pedigreeSummary && (
-              <> · <span className="font-semibold text-emerald-800 dark:text-emerald-300">Calculated from parents: {pedigreeSummary}</span></>
+              <>
+                {' '}
+                ·{' '}
+                <span className="font-semibold text-emerald-800 dark:text-emerald-300">
+                  Calculated from parents: {pedigreeSummary}
+                </span>
+              </>
             )}
             {unknownPct > 0 && (
               <>
                 {' '}
-                · <span className="font-black text-muted-foreground">{unknownPct}% unregistered ancestry</span> — set the
-                parents&apos; breed to complete the split.
+                ·{' '}
+                <span className="text-muted-foreground font-black">
+                  {unknownPct}% unregistered ancestry
+                </span>{' '}
+                — set the parents&apos; breed to complete the split.
               </>
             )}
             {knownPct > 0 && unknownPct === 0 && strainCount === 1 && !isAdjusted && (
@@ -386,7 +428,7 @@ export default function BloodlineBreakdown({
               <button
                 type="button"
                 onClick={onEditComposition}
-                className="text-xs font-bold text-emerald-700 dark:text-emerald-300 underline hover:no-underline cursor-pointer"
+                className="cursor-pointer text-xs font-bold text-emerald-700 underline hover:no-underline dark:text-emerald-300"
               >
                 Edit composition →
               </button>
@@ -396,14 +438,14 @@ export default function BloodlineBreakdown({
       )}
 
       {sharedAncestors.length > 0 && (
-        <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2">
-          <p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+        <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/40">
+          <p className="text-xs font-black tracking-wider text-slate-700 uppercase dark:text-slate-300">
             Line-bred ancestors
           </p>
           {sharedAncestors.map((sa) => (
             <p
               key={sa.name}
-              className="text-xs text-slate-600 dark:text-slate-400 font-semibold mt-0.5 leading-relaxed"
+              className="mt-0.5 text-xs leading-relaxed font-semibold text-slate-600 dark:text-slate-400"
             >
               {sa.displayName} appears on both sire and dam sides.
             </p>
@@ -412,12 +454,14 @@ export default function BloodlineBreakdown({
       )}
 
       {isDiluted && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-md px-3 py-2">
-          <p className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">⚠️ Banta ng “Galapsaw”</p>
-          <p className="text-xs text-amber-700/90 dark:text-amber-300/90 font-semibold mt-0.5 leading-relaxed">
-            Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang {dominant.pct}%).
-            Bumaba ang specific bloodline percentage — mas mahirap nang panatilihin ang magagandang katangian.
-            Maganda ang pure o kontroladong breeding.
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/60 dark:bg-amber-950/40">
+          <p className="text-xs font-black tracking-wider text-amber-700 uppercase dark:text-amber-300">
+            ⚠️ Banta ng “Galapsaw”
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed font-semibold text-amber-700/90 dark:text-amber-300/90">
+            Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang{' '}
+            {dominant.pct}%). Bumaba ang specific bloodline percentage — mas mahirap nang
+            panatilihin ang magagandang katangian. Maganda ang pure o kontroladong breeding.
           </p>
         </div>
       )}

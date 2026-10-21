@@ -524,7 +524,7 @@ export default function MatchLogsView() {
                             {log.entry_name}
                           </span>
                           {isOrphan && (
-                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                               Historical entry (no profile linked)
                             </span>
                           )}
@@ -535,7 +535,7 @@ export default function MatchLogsView() {
                             {hatch ? ` · ${t('registry.hatchedDate', { date: hatch })}` : ''}
                           </span>
                           {log.age_category && (
-                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                               {log.age_category}
                             </span>
                           )}

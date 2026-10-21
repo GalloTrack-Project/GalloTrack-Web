@@ -2,7 +2,11 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
-import { getFowlBloodlineStats, UNKNOWN_BLOODLINE, isFoundationName } from '@/lib/bloodline-composition';
+import {
+  getFowlBloodlineStats,
+  UNKNOWN_BLOODLINE,
+  isFoundationName,
+} from '@/lib/bloodline-composition';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
@@ -16,9 +20,22 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { Button } from '@/components/ui/Button';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ArrowLeft, ChevronLeft, ChevronRight, Printer, ExternalLink, Plus, UserPlus, Search, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Printer,
+  ExternalLink,
+  Plus,
+  UserPlus,
+  Search,
+  X,
+} from 'lucide-react';
 
-const keyFn = (v?: string | null) => String(v ?? '').trim().toLowerCase();
+const keyFn = (v?: string | null) =>
+  String(v ?? '')
+    .trim()
+    .toLowerCase();
 
 export type PedigreeNode = {
   id: string;
@@ -48,7 +65,7 @@ export function buildPedigreeGrid(
   subject: FowlRecord,
   fowls: FowlRecord[],
   byName: Map<string, FowlRecord>,
-  numGens: number
+  numGens: number,
 ): { nodes: PedigreeNode[]; totalRows: number } {
   const totalRows = Math.pow(2, numGens - 1);
   const nodes: PedigreeNode[] = [];
@@ -107,7 +124,7 @@ export function buildPedigreeGrid(
           startRow: sireStartRow,
           rowSpan: halfSpan,
           fowl: sireFowl ?? null,
-          name: sireFowl ? sireFowl.name : (sireName || 'Foundation stock'),
+          name: sireFowl ? sireFowl.name : sireName || 'Foundation stock',
           role: 'sire',
           childBreedHint: f.breed || undefined,
           childName: f.name,
@@ -118,7 +135,7 @@ export function buildPedigreeGrid(
           startRow: damStartRow,
           rowSpan: halfSpan,
           fowl: damFowl ?? null,
-          name: damFowl ? damFowl.name : (damName || 'Foundation stock'),
+          name: damFowl ? damFowl.name : damName || 'Foundation stock',
           role: 'dam',
           childBreedHint: f.breed || undefined,
           childName: f.name,
@@ -150,7 +167,7 @@ function computeGridConnectors(
   colGap = 48,
   rowHeight = 76,
   paddingLeft = 20,
-  paddingTop = 20
+  paddingTop = 20,
 ): ConnectorPath[] {
   const paths: ConnectorPath[] = [];
 
@@ -164,7 +181,10 @@ function computeGridConnectors(
     const parentLeftX = paddingLeft + (gen + 1) * (colWidth + colGap);
 
     const childNextGenNodes = nodes.filter(
-      (n) => n.gen === gen + 1 && n.startRow >= node.startRow && n.startRow < node.startRow + node.rowSpan
+      (n) =>
+        n.gen === gen + 1 &&
+        n.startRow >= node.startRow &&
+        n.startRow < node.startRow + node.rowSpan,
     );
 
     for (const pNode of childNextGenNodes) {
@@ -188,7 +208,7 @@ function AncestorAvatar({ image_url, gender }: { image_url?: string | null; gend
         src={image_url}
         alt=""
         aria-hidden="true"
-        className="w-8 h-8 rounded-full object-cover bg-muted shrink-0 border border-border"
+        className="bg-muted border-border h-8 w-8 shrink-0 rounded-full border object-cover"
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = 'none';
         }}
@@ -199,9 +219,9 @@ function AncestorAvatar({ image_url, gender }: { image_url?: string | null; gend
   return (
     <div
       aria-hidden="true"
-      className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border"
+      className="bg-muted border-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full border"
     >
-      <ChickenIcon className={`w-4 h-4 ${tone}`} />
+      <ChickenIcon className={`h-4 w-4 ${tone}`} />
     </div>
   );
 }
@@ -214,18 +234,35 @@ type CompactNodeCardProps = {
   onRecenter: (f: FowlRecord) => void;
   onViewProfile: (f: FowlRecord) => void;
   onRegisterMerged: (hint: { side?: 'sire' | 'dam'; breed?: string; childName: string }) => void;
-  onRegisterSingle: (hint: { side: 'sire' | 'dam'; breed?: string; childName: string; placeholderName: string }) => void;
+  onRegisterSingle: (hint: {
+    side: 'sire' | 'dam';
+    breed?: string;
+    childName: string;
+    placeholderName: string;
+  }) => void;
 };
 
 export function CompactNodeCard(props: CompactNodeCardProps) {
   const {
-    node, fowls, codes, canRegisterAncestor,
-    onRecenter, onViewProfile, onRegisterMerged, onRegisterSingle
+    node,
+    fowls,
+    codes,
+    canRegisterAncestor,
+    onRecenter,
+    onViewProfile,
+    onRegisterMerged,
+    onRegisterSingle,
   } = props;
   const { fowl, name, isMerged, role, childBreedHint, childName } = node;
 
-  const stats = useMemo(() => (!isMerged && fowl ? getFowlBloodlineStats(fowl, fowls ?? []) : null), [isMerged, fowl, fowls]);
-  const classification = useMemo(() => (!isMerged && fowl ? getBreedingClassification(fowl, fowls ?? []) : null), [isMerged, fowl, fowls]);
+  const stats = useMemo(
+    () => (!isMerged && fowl ? getFowlBloodlineStats(fowl, fowls ?? []) : null),
+    [isMerged, fowl, fowls],
+  );
+  const classification = useMemo(
+    () => (!isMerged && fowl ? getBreedingClassification(fowl, fowls ?? []) : null),
+    [isMerged, fowl, fowls],
+  );
   const recenter = useCallback(() => {
     if (!isMerged && fowl) onRecenter(fowl);
   }, [isMerged, fowl, onRecenter]);
@@ -242,10 +279,10 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
     role === 'subject'
       ? 'border-l-4 border-l-emerald-500 border-border bg-card'
       : role === 'sire'
-      ? 'border-l-4 border-l-sky-500 border-border bg-card'
-      : role === 'dam'
-      ? 'border-l-4 border-l-pink-500 border-border bg-card'
-      : 'border-l-4 border-l-slate-400 border-dashed border-border bg-card/85';
+        ? 'border-l-4 border-l-sky-500 border-border bg-card'
+        : role === 'dam'
+          ? 'border-l-4 border-l-pink-500 border-border bg-card'
+          : 'border-l-4 border-l-slate-400 border-dashed border-border bg-card/85';
 
   if (isMerged) {
     return (
@@ -254,26 +291,32 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
         data-gen={node.gen}
         data-start-row={node.startRow}
         data-row-span={node.rowSpan}
-        className={`w-[220px] h-[64px] shrink-0 text-left rounded-md border ${roleBorder} shadow-2xs px-2.5 py-1.5 flex items-center justify-between gap-2 self-center transition-all`}
+        className={`h-[64px] w-[220px] shrink-0 rounded-md border text-left ${roleBorder} flex items-center justify-between gap-2 self-center px-2.5 py-1.5 shadow-2xs transition-all`}
       >
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="w-8 h-8 rounded-full bg-muted/80 flex items-center justify-center text-muted-foreground shrink-0 border border-border">
-            <UserPlus className="w-4 h-4" />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="bg-muted/80 text-muted-foreground border-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full border">
+            <UserPlus className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black text-card-foreground leading-tight truncate">Foundation stock</p>
-            <p className="text-[10px] font-semibold text-muted-foreground truncate">Not registered</p>
+            <p className="text-card-foreground truncate text-xs leading-tight font-black">
+              Foundation stock
+            </p>
+            <p className="text-muted-foreground truncate text-[10px] font-semibold">
+              Not registered
+            </p>
           </div>
         </div>
         {canRegisterAncestor && (
           <Tooltip content="Register foundation ancestor">
             <button
               type="button"
-              onClick={() => onRegisterMerged({ breed: childBreedHint, childName: childName || '' })}
+              onClick={() =>
+                onRegisterMerged({ breed: childBreedHint, childName: childName || '' })
+              }
               aria-label="Register foundation ancestor"
-              className="w-7 h-7 rounded-md bg-muted hover:bg-emerald-500/20 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+              className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
             </button>
           </Tooltip>
         )}
@@ -281,19 +324,17 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
     );
   }
 
-  const code = fowl ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || birdCodeOf(fowl, fowls)) : '';
+  const code = fowl
+    ? formatBirdCodeForDisplay(codes.get(String(fowl.id)) || birdCodeOf(fowl, fowls))
+    : '';
   const missing = !fowl;
 
-  const displayBreed = classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
-  const isAssumed = classification?.compositionSource === 'assumed' || !!classification?.basedOnAssumed;
-  const baseSummary = stats
-    ? stats.summary
-    : displayBreed
-    ? displayBreed
-    : 'Not registered';
-  const summaryTitle = isAssumed
-    ? `${baseSummary} (assumed lineage)`
-    : baseSummary;
+  const displayBreed =
+    classification?.type === 'Crossbred' ? classification.derivedBreed : fowl?.breed;
+  const isAssumed =
+    classification?.compositionSource === 'assumed' || !!classification?.basedOnAssumed;
+  const baseSummary = stats ? stats.summary : displayBreed ? displayBreed : 'Not registered';
+  const summaryTitle = isAssumed ? `${baseSummary} (assumed lineage)` : baseSummary;
 
   const onKey = (e: React.KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && fowl) {
@@ -309,15 +350,20 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
         data-gen={node.gen}
         data-start-row={node.startRow}
         data-row-span={node.rowSpan}
-        className={`w-[220px] h-[64px] shrink-0 text-left rounded-md border ${roleBorder} shadow-2xs px-2.5 py-1.5 flex items-center justify-between gap-2 self-center transition-all`}
+        className={`h-[64px] w-[220px] shrink-0 rounded-md border text-left ${roleBorder} flex items-center justify-between gap-2 self-center px-2.5 py-1.5 shadow-2xs transition-all`}
       >
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <AncestorAvatar gender={role === 'dam' ? 'Hen' : 'Rooster'} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black text-card-foreground leading-tight truncate" title={name}>
+            <p
+              className="text-card-foreground truncate text-xs leading-tight font-black"
+              title={name}
+            >
               {name || 'Foundation stock'}
             </p>
-            <p className="text-[10px] font-semibold text-muted-foreground truncate">Not registered</p>
+            <p className="text-muted-foreground truncate text-[10px] font-semibold">
+              Not registered
+            </p>
           </div>
         </div>
         {canRegisterAncestor && (
@@ -333,9 +379,9 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
                 })
               }
               aria-label={`Register ancestor ${name || ''}`}
-              className="w-7 h-7 rounded-md bg-muted hover:bg-emerald-500/20 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+              className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
             </button>
           </Tooltip>
         )}
@@ -358,25 +404,31 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
       aria-level={node.gen + 1}
       onClick={recenter}
       onKeyDown={onKey}
-      className={`group w-[220px] h-[64px] shrink-0 text-left rounded-md border ${roleBorder} shadow-2xs px-2.5 py-1.5 flex items-center justify-between gap-2 self-center transition-all hover:shadow-xs hover:border-emerald-400/80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500`}
+      className={`group h-[64px] w-[220px] shrink-0 rounded-md border text-left ${roleBorder} flex cursor-pointer items-center justify-between gap-2 self-center px-2.5 py-1.5 shadow-2xs transition-all hover:border-emerald-400/80 hover:shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none`}
     >
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <AncestorAvatar image_url={fowl.image_url} gender={fowl.gender} />
         <div className="min-w-0 flex-1 space-y-0.5">
-          <div className="flex items-center gap-1 min-w-0">
+          <div className="flex min-w-0 items-center gap-1">
             {code && (
-              <span className="font-mono text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-1 py-0.2 rounded shrink-0">
+              <span className="py-0.2 shrink-0 rounded bg-emerald-100/80 px-1 font-mono text-[10px] font-black text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">
                 [{code}]
               </span>
             )}
-            <span className="text-xs font-black text-card-foreground truncate leading-tight" title={name}>
+            <span
+              className="text-card-foreground truncate text-xs leading-tight font-black"
+              title={name}
+            >
               {name}
             </span>
           </div>
-          <p className="text-[11px] font-bold text-muted-foreground truncate" title={summaryTitle}>
+          <p className="text-muted-foreground truncate text-[11px] font-bold" title={summaryTitle}>
             <span>{baseSummary}</span>
             {isAssumed && baseSummary !== 'Not registered' && (
-              <span className="ml-1 text-[10px] font-extrabold text-amber-600 dark:text-amber-400" aria-label="Assumed lineage">
+              <span
+                className="ml-1 text-xs font-extrabold text-amber-600 dark:text-amber-400"
+                aria-label="Assumed lineage"
+              >
                 ~
               </span>
             )}
@@ -384,26 +436,26 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex shrink-0 items-center gap-1">
         {fowl.status === 'Archived' ? (
-          <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100 dark:bg-amber-950/80 dark:text-amber-300 px-1 rounded uppercase">
+          <span className="rounded bg-amber-100 px-1 text-[9px] font-extrabold text-amber-700 uppercase dark:bg-amber-950/80 dark:text-amber-300">
             Archived
           </span>
         ) : fowl.status === 'Deceased' ? (
-          <span className="text-[9px] font-extrabold text-rose-700 bg-rose-100 dark:bg-rose-950/80 dark:text-rose-300 px-1 rounded uppercase">
+          <span className="rounded bg-rose-100 px-1 text-[9px] font-extrabold text-rose-700 uppercase dark:bg-rose-950/80 dark:text-rose-300">
             Deceased
           </span>
         ) : (
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Active" />
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" title="Active" />
         )}
         <button
           type="button"
           onClick={viewProfile}
           aria-label={`View profile of ${name}`}
           title={`View profile of ${name}`}
-          className="p-1 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 rounded transition-colors cursor-pointer"
+          className="text-muted-foreground cursor-pointer rounded p-1 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
         >
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ExternalLink className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
@@ -461,13 +513,13 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
   const displayLabel = `${formatBirdCodeForDisplay(subjectCode) ? `${formatBirdCodeForDisplay(subjectCode)} · ` : ''}${subject.name}`;
 
   return (
-    <div ref={dropdownRef} className="relative min-w-[260px] sm:min-w-[320px] flex-1">
+    <div ref={dropdownRef} className="relative min-w-[260px] flex-1 sm:min-w-[320px]">
       <div className="relative">
         <span
           aria-hidden="true"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10"
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2"
         >
-          <Search className="w-3.5 h-3.5" />
+          <Search className="h-3.5 w-3.5" />
         </span>
         <input
           type="search"
@@ -486,7 +538,7 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
               setDropdownOpen(false);
             }
           }}
-          className="w-full pl-9 pr-8 py-2 h-9 border border-input-border rounded-md bg-card text-card-foreground placeholder:text-foreground/90 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-bold [&::-webkit-search-cancel-button]:appearance-none"
+          className="border-input-border bg-card text-card-foreground placeholder:text-foreground/90 h-9 w-full rounded-md border py-2 pr-8 pl-9 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:text-sm [&::-webkit-search-cancel-button]:appearance-none"
         />
         {searchQuery.length > 0 && (
           <button
@@ -496,9 +548,9 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
               setSearchQuery('');
               setDropdownOpen(false);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded p-1 transition-colors"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
@@ -507,9 +559,9 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
         <div
           role="listbox"
           aria-label="Matching chickens"
-          className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-border/50 max-h-80 overflow-y-auto"
+          className="bg-card border-border divide-border/50 absolute top-full right-0 left-0 z-50 mt-1.5 max-h-80 divide-y overflow-hidden overflow-y-auto rounded-lg border shadow-xl"
         >
-          <div className="px-3 py-1.5 bg-muted/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="bg-muted/50 text-muted-foreground px-3 py-1.5 text-xs font-bold tracking-wider uppercase">
             Matching Chickens ({matchingFowls.length})
           </div>
           {matchingFowls.slice(0, 100).map((f) => {
@@ -526,20 +578,20 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
                   setDropdownOpen(false);
                   setSearchQuery('');
                 }}
-                className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors cursor-pointer group ${isSelected ? 'bg-emerald-500/10 dark:bg-emerald-950/30' : 'hover:bg-emerald-500/10 dark:hover:bg-emerald-950/30'}`}
+                className={`group flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left transition-colors ${isSelected ? 'bg-emerald-500/10 dark:bg-emerald-950/30' : 'hover:bg-emerald-500/10 dark:hover:bg-emerald-950/30'}`}
               >
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
                   {code && (
-                    <span className="font-mono text-[11px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
+                    <span className="shrink-0 rounded border border-emerald-200/60 bg-emerald-100 px-1.5 py-0.5 font-mono text-xs font-black text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
                       [{formatBirdCodeForDisplay(code)}]
                     </span>
                   )}
-                  <span className="font-bold text-xs text-card-foreground truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                  <span className="text-card-foreground truncate text-xs font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                     {f.name}
                   </span>
                 </div>
                 {f.registry_role && (
-                  <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                  <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-xs font-black uppercase">
                     {f.registry_role}
                   </span>
                 )}
@@ -588,7 +640,7 @@ export default function PedigreeTree({
   }, [fowls]);
 
   const subject = useMemo(
-    () => (activeId != null ? fowls.find((f) => f.id === activeId) ?? null : (fowls[0] ?? null)),
+    () => (activeId != null ? (fowls.find((f) => f.id === activeId) ?? null) : (fowls[0] ?? null)),
     [fowls, activeId],
   );
 
@@ -630,7 +682,17 @@ export default function PedigreeTree({
   const innerHeight = totalRows * rowHeight + paddingTop * 2;
 
   const connectorPaths = useMemo(
-    () => computeGridConnectors(nodes, numGens, totalRows, colWidth, colGap, rowHeight, paddingX, paddingTop),
+    () =>
+      computeGridConnectors(
+        nodes,
+        numGens,
+        totalRows,
+        colWidth,
+        colGap,
+        rowHeight,
+        paddingX,
+        paddingTop,
+      ),
     [nodes, numGens, totalRows, colWidth, colGap, rowHeight, paddingX, paddingTop],
   );
 
@@ -757,7 +819,15 @@ export default function PedigreeTree({
   const handleRegisterMerged = useCallback(
     (_hint: { side?: 'sire' | 'dam'; breed?: string; childName: string }) => {
       if (!subject) return;
-      const stub: Partial<FowlRecord> & { id: number; name: string; breed: string; gender: string; sire: string; dam: string; status: string } = {
+      const stub: Partial<FowlRecord> & {
+        id: number;
+        name: string;
+        breed: string;
+        gender: string;
+        sire: string;
+        dam: string;
+        status: string;
+      } = {
         id: 0,
         name: '',
         breed: _hint.breed || subject.breed || '',
@@ -772,10 +842,26 @@ export default function PedigreeTree({
   );
 
   const handleRegisterSingle = useCallback(
-    (hint: { side: 'sire' | 'dam'; breed?: string; childName: string; placeholderName: string }) => {
-      const stub: Partial<FowlRecord> & { id: number; name: string; breed: string; gender: string; sire: string; dam: string; status: string } = {
+    (hint: {
+      side: 'sire' | 'dam';
+      breed?: string;
+      childName: string;
+      placeholderName: string;
+    }) => {
+      const stub: Partial<FowlRecord> & {
+        id: number;
+        name: string;
+        breed: string;
+        gender: string;
+        sire: string;
+        dam: string;
+        status: string;
+      } = {
         id: 0,
-        name: hint.placeholderName && hint.placeholderName.toLowerCase() !== 'foundation stock' ? hint.placeholderName : '',
+        name:
+          hint.placeholderName && hint.placeholderName.toLowerCase() !== 'foundation stock'
+            ? hint.placeholderName
+            : '',
         breed: hint.breed || subject?.breed || '',
         gender: hint.side === 'dam' ? 'Hen' : 'Rooster',
         sire: '',
@@ -792,7 +878,7 @@ export default function PedigreeTree({
   if (loading && fowls.length === 0) {
     return (
       <Card>
-        <CardContent className="p-4 space-y-4">
+        <CardContent className="space-y-4 p-4">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-64 w-full" />
         </CardContent>
@@ -814,13 +900,13 @@ export default function PedigreeTree({
     <div className="space-y-4 print:space-y-2">
       <SkipLink href="#pedigree-main">Skip to pedigree chart</SkipLink>
 
-      <div className="flex flex-col lg:flex-row gap-4 items-start">
-        <div id="pedigree-main" className="min-w-0 flex-1 space-y-3 w-full">
-          <Card className="print:shadow-none print:border-none overflow-hidden">
-            <CardContent className="p-3 sm:p-4 space-y-3">
+      <div className="flex flex-col items-start gap-4 lg:flex-row">
+        <div id="pedigree-main" className="w-full min-w-0 flex-1 space-y-3">
+          <Card className="overflow-hidden print:border-none print:shadow-none">
+            <CardContent className="space-y-3 p-3 sm:p-4">
               {/* Toolbar */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 bg-muted/30 p-2.5 rounded-lg border border-border no-print">
-                <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+              <div className="bg-muted/30 border-border no-print flex flex-wrap items-center justify-between gap-2.5 rounded-lg border p-2.5">
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                   <SubjectSelector
                     fowls={fowls}
                     codes={codes}
@@ -828,7 +914,7 @@ export default function PedigreeTree({
                     onSelect={handleSubjectSelect}
                   />
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex shrink-0 items-center gap-1">
                     <Button
                       variant="secondary"
                       size="sm"
@@ -837,7 +923,7 @@ export default function PedigreeTree({
                       title="Previous chicken"
                       className="h-9 w-9 p-0"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="secondary"
@@ -847,7 +933,7 @@ export default function PedigreeTree({
                       title="Next chicken"
                       className="h-9 w-9 p-0"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
 
@@ -857,26 +943,32 @@ export default function PedigreeTree({
                       size="sm"
                       onClick={goBack}
                       aria-label={`Back to ${breadcrumb[breadcrumb.length - 1].name}`}
-                      className="h-9 text-xs gap-1 max-w-[160px] truncate"
+                      className="h-9 max-w-[160px] gap-1 truncate text-xs"
                     >
-                      <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">Back to {breadcrumb[breadcrumb.length - 1].name}</span>
+                      <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        Back to {breadcrumb[breadcrumb.length - 1].name}
+                      </span>
                     </Button>
                   )}
 
                   {parentageRelatedness && (
-                    <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " showSecondary />
+                    <RelatednessBadge
+                      classification={parentageRelatedness}
+                      prefix="Bred from: "
+                      showSecondary
+                    />
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="inline-flex items-center p-0.5 rounded-md bg-muted border border-border text-xs font-bold">
+                <div className="flex shrink-0 items-center gap-2">
+                  <div className="bg-muted border-border inline-flex items-center rounded-md border p-0.5 text-xs font-bold">
                     <button
                       type="button"
                       onClick={() => setNumGens(3)}
-                      className={`px-2.5 py-1 rounded text-xs font-black transition-colors cursor-pointer ${
+                      className={`cursor-pointer rounded px-2.5 py-1 text-xs font-black transition-colors ${
                         numGens === 3
-                          ? 'bg-card text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                          ? 'bg-card text-emerald-600 shadow-2xs dark:text-emerald-400'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
@@ -885,9 +977,9 @@ export default function PedigreeTree({
                     <button
                       type="button"
                       onClick={() => setNumGens(4)}
-                      className={`px-2.5 py-1 rounded text-xs font-black transition-colors cursor-pointer ${
+                      className={`cursor-pointer rounded px-2.5 py-1 text-xs font-black transition-colors ${
                         numGens === 4
-                          ? 'bg-card text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                          ? 'bg-card text-emerald-600 shadow-2xs dark:text-emerald-400'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
@@ -900,9 +992,9 @@ export default function PedigreeTree({
                     size="sm"
                     onClick={handlePrint}
                     aria-label="Print or export pedigree as PDF"
-                    className="h-9 text-xs gap-1.5"
+                    className="h-9 gap-1.5 text-xs"
                   >
-                    <Printer className="w-3.5 h-3.5" />
+                    <Printer className="h-3.5 w-3.5" />
                     Print / PDF
                   </Button>
                 </div>
@@ -910,22 +1002,27 @@ export default function PedigreeTree({
 
               {/* Mobile Outline View (<768px) */}
               <div className="block md:hidden">
-                <details className="rounded-md border border-border bg-card/60">
-                  <summary className="px-3 py-2 text-xs font-bold text-muted-foreground cursor-pointer select-none">
+                <details className="border-border bg-card/60 rounded-md border">
+                  <summary className="text-muted-foreground cursor-pointer px-3 py-2 text-xs font-bold select-none">
                     📜 Mobile Pedigree Lineage List (tap to view)
                   </summary>
-                  <ul className="px-3 pb-3 pt-1 border-t border-border divide-y divide-border space-y-1">
+                  <ul className="border-border divide-border space-y-1 divide-y border-t px-3 pt-1 pb-3">
                     {nodes.map((node) => (
-                      <li key={node.id} className="text-xs py-1.5 flex items-center justify-between">
-                        <span className="font-semibold text-muted-foreground">
+                      <li
+                        key={node.id}
+                        className="flex items-center justify-between py-1.5 text-xs"
+                      >
+                        <span className="text-muted-foreground font-semibold">
                           {'\u00A0\u00A0'.repeat(node.gen)}
-                          <span className="font-bold text-card-foreground">{node.role.toUpperCase()}: {node.name}</span>
+                          <span className="text-card-foreground font-bold">
+                            {node.role.toUpperCase()}: {node.name}
+                          </span>
                         </span>
                         {node.fowl && (
                           <button
                             type="button"
                             onClick={() => handleViewProfile(node.fowl!)}
-                            className="text-[11px] font-bold text-primary hover:underline"
+                            className="text-primary text-xs font-bold hover:underline"
                           >
                             Profile
                           </button>
@@ -937,10 +1034,10 @@ export default function PedigreeTree({
               </div>
 
               {/* Desktop CSS Grid Pedigree Chart (≥768px) */}
-              <div className="hidden md:block overflow-x-auto no-scrollbar border border-border rounded-md bg-muted/20 print:bg-white print:border-0 p-4">
+              <div className="no-scrollbar border-border bg-muted/20 hidden overflow-x-auto rounded-md border p-4 md:block print:border-0 print:bg-white">
                 {/* Column Headers */}
                 <div
-                  className="grid font-mono text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-2 mb-3"
+                  className="text-muted-foreground border-border/60 mb-3 grid border-b pb-2 font-mono text-xs font-black tracking-wider uppercase"
                   style={{
                     gridTemplateColumns: `repeat(${numGens}, ${colWidth}px)`,
                     columnGap: `${colGap}px`,
@@ -969,7 +1066,7 @@ export default function PedigreeTree({
 
                   {/* SVG Connector Overlay */}
                   <svg
-                    className="absolute inset-0 pointer-events-none z-0"
+                    className="pointer-events-none absolute inset-0 z-0"
                     width={innerWidth}
                     height={innerHeight}
                     viewBox={`0 0 ${innerWidth} ${innerHeight}`}
@@ -989,7 +1086,7 @@ export default function PedigreeTree({
 
                   {/* Mathematical CSS Grid */}
                   <div
-                    className="absolute grid z-10"
+                    className="absolute z-10 grid"
                     style={{
                       left: 0,
                       top: 0,
@@ -1035,7 +1132,7 @@ export default function PedigreeTree({
         </div>
 
         {/* Compact Right Bloodline Panel */}
-        <div className="w-full lg:w-[320px] shrink-0">
+        <div className="w-full shrink-0 lg:w-[320px]">
           <BloodlineBreakdown
             stats={stats ?? undefined}
             title={`Bloodline — ${subject.name}`}

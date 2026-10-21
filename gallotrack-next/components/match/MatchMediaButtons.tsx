@@ -130,7 +130,7 @@ export default function MatchMediaButtons({
           className="text-success focus-visible:ring-ring relative inline-flex h-8 min-h-[44px] w-8 min-w-[44px] cursor-pointer items-center justify-center rounded-sm border border-emerald-500/20 bg-emerald-500/10 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:outline-none sm:min-h-[32px] sm:min-w-[32px]"
         >
           <Play size={13} fill="currentColor" strokeWidth={0} />
-          <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] leading-none font-black text-white">
+          <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-xs leading-none font-black text-white">
             {totalMediaCount}
           </span>
         </button>

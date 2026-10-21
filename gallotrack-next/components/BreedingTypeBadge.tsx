@@ -39,9 +39,7 @@ export default function BreedingTypeBadge({
   }
 
   const hasQualifier = qualifierText !== '';
-  const fullTooltip = hasQualifier
-    ? `${tooltipText} · ${qualifierExplanation}`
-    : tooltipText;
+  const fullTooltip = hasQualifier ? `${tooltipText} · ${qualifierExplanation}` : tooltipText;
 
   let colorClasses = '';
   if (type === 'Purebred') {
@@ -58,18 +56,18 @@ export default function BreedingTypeBadge({
   return (
     <span
       className={cn(
-        'antigravity-badge inline-flex items-center gap-1 text-xs font-black border px-2.5 py-0.5 rounded-full uppercase tracking-tight transition-colors',
+        'antigravity-badge inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-black tracking-tight uppercase transition-colors',
         colorClasses,
-        className
+        className,
       )}
       title={fullTooltip}
       aria-label={hasQualifier ? `${badgeLabel} ${qualifierText}` : badgeLabel}
     >
       <span>{badgeLabel}</span>
-      {hasQualifier && (
-        compact ? (
+      {hasQualifier &&
+        (compact ? (
           <span
-            className="font-mono text-[10px] font-black opacity-80 shrink-0"
+            className="shrink-0 font-mono text-xs font-black opacity-80"
             aria-label={qualifierExplanation}
             title={qualifierExplanation}
           >
@@ -77,14 +75,13 @@ export default function BreedingTypeBadge({
           </span>
         ) : (
           <span
-            className="text-[10px] font-bold lowercase opacity-85 shrink-0"
+            className="shrink-0 text-xs font-bold lowercase opacity-85"
             aria-label={qualifierExplanation}
             title={qualifierExplanation}
           >
             {qualifierText}
           </span>
-        )
-      )}
+        ))}
     </span>
   );
 }

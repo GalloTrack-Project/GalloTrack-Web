@@ -11,7 +11,12 @@ import {
   type BloodlineComposition,
 } from '@/lib/bloodline-composition';
 import { getCompositionSource } from '@/lib/breeding-classification';
-import { formatBirdCodeForDisplay, validateIdentifierFormat, normalizeBirdCode, previewBirdCode } from '@/lib/bird-code';
+import {
+  formatBirdCodeForDisplay,
+  validateIdentifierFormat,
+  normalizeBirdCode,
+  previewBirdCode,
+} from '@/lib/bird-code';
 import { bloodlineOf, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
@@ -141,22 +146,28 @@ export default function EditFowlModal({
   const { rows: registryOptionRows } = useRegistryOptions();
   const baseColorOptions = React.useMemo(
     () => mergeOptions(registryOptionRows, 'feather_color'),
-    [registryOptionRows]
+    [registryOptionRows],
   );
   const baseTraitOptions = React.useMemo(
     () => mergeOptions(registryOptionRows, 'trait'),
-    [registryOptionRows]
+    [registryOptionRows],
   );
   const featherColorOptions = React.useMemo(
     () => mergeOptions(registryOptionRows, 'feather_color', editColor),
-    [registryOptionRows, editColor]
+    [registryOptionRows, editColor],
   );
   const traitOptions = React.useMemo(
     () => mergeOptions(registryOptionRows, 'trait', editBehaviorTrait),
-    [registryOptionRows, editBehaviorTrait]
+    [registryOptionRows, editBehaviorTrait],
   );
-  const isCustomColor = isCustomOption(editColor, baseColorOptions.map((o) => o.value));
-  const isCustomTrait = isCustomOption(editBehaviorTrait, baseTraitOptions.map((o) => o.value));
+  const isCustomColor = isCustomOption(
+    editColor,
+    baseColorOptions.map((o) => o.value),
+  );
+  const isCustomTrait = isCustomOption(
+    editBehaviorTrait,
+    baseTraitOptions.map((o) => o.value),
+  );
 
   const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
   const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
@@ -187,7 +198,9 @@ export default function EditFowlModal({
     if (!editingFowl) return false;
     const prev = JSON.stringify(editingFowl.declared_composition ?? null);
     const curr = JSON.stringify(
-      editDeclaredComposition && editDeclaredComposition.length > 0 ? editDeclaredComposition : null
+      editDeclaredComposition && editDeclaredComposition.length > 0
+        ? editDeclaredComposition
+        : null,
     );
     return prev !== curr;
   }, [editingFowl, editDeclaredComposition]);
@@ -212,7 +225,8 @@ export default function EditFowlModal({
 
   if (!editingFowl) return null;
 
-  const isFoundationStock = (name: string): boolean => (name || '').trim().toLowerCase() === 'foundation stock';
+  const isFoundationStock = (name: string): boolean =>
+    (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
 
   return (
@@ -221,388 +235,652 @@ export default function EditFowlModal({
       onClose={() => setEditingFowl(null)}
       title="Edit Node Registry"
       description={`Update parameters for ${editingFowl.name}`}
-      icon={<Pencil className="w-5 h-5" />}
+      icon={<Pencil className="h-5 w-5" />}
       className="max-w-lg"
     >
-
-        <form onSubmit={(e) => { if (!birthdateValidation.valid) { e.preventDefault(); return; } handleUpdateFowl(e); }} className="overflow-y-auto p-6 space-y-4 text-sm">
-          
-          <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/40 dark:border-border">
-            <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-xs uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
-              <Tag className="w-3.5 h-3.5" /> <span>Core Identity</span>
-            </h4>
-            <div>
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="identifier-name">Identifier Name</label>
-              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" required id="identifier-name" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="relative z-30">
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="genetic-strain">Genetic Strain</label>
-                <input 
-                  type="text"
-                  value={editBreed}
-                  onChange={(e) => setEditBreed(e.target.value)}
-                  className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium" 
-                  placeholder="Select or type strain"
-                  required 
-                id="genetic-strain" />
-                {availableStrains.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {availableStrains.filter((s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed).slice(0, 5).map((s) => (
-                      <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
-                        <button type="button" onClick={() => setEditBreed(s)} className="text-xs font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer">{s}</button>
-                        {customStrainNames.has(s) && (
-                            <button type="button" onClick={() => deleteCustomStrain(s)} aria-label={`Delete ${s}`} className="w-6 h-6 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title={`Delete "${s}"`}>✕</button>
-                        )}
-                      </div>
-                  ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="gender-class">Gender Class</label>
-                <select value={editGender} onChange={(e) => { const g = e.target.value; setEditGender(g); if (editAge.trim() !== '' && !isNaN(Number(editAge))) { setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g)); } else { setEditGrowthStage(''); } }} className="w-full p-2.5 border border-slate-200 dark:border-border rounded-md text-sm bg-white dark:bg-input font-bold text-slate-700 dark:text-card-foreground" id="gender-class">
-                  <option value="Rooster">Sire</option>
-                  <option value="Hen">Dam</option>
-                </select>
-              </div>
-            </div>
-
-            {!isOffspring && (
-              <div className="mt-3">
-                <DeclaredCompositionEditor
-                  registeredBreed={editBreed}
-                  availableBreeds={availableStrains ?? []}
-                  value={editDeclaredComposition ?? null}
-                  onChange={(val) => setEditDeclaredComposition?.(val)}
-                  hasParents={false}
-                  currentValue={editingFowl.declared_composition as any}
-                  source={compositionSource}
-                />
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="edit-feather-color">
-                  Feather Color
-                  {isCustomColor && (
-                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  list="edit-feather-color-options"
-                  value={editColor}
-                  onChange={(e) => {
-                    const c = e.target.value;
-                    setEditColor(c);
-                    setEditColorCategory(c.toLowerCase().includes('red') ? 'Red' : 'Light Color');
-                  }}
-                  onBlur={() => {
-                    if (editColor) {
-                      setEditColor(normalizeOptionValue(editColor, featherColorOptions.map((o) => o.value)));
-                    }
-                  }}
-                  placeholder="Select or enter feather color..."
-                  className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
-                  id="edit-feather-color"
-                />
-                <datalist id="edit-feather-color-options">
-                  {featherColorOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label || opt.value}
-                    </option>
-                  ))}
-                </datalist>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="edit-behavior-trait">
-                  Trait
-                  {isCustomTrait && (
-                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">custom</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  list="edit-trait-options"
-                  value={editBehaviorTrait}
-                  onChange={(e) => setEditBehaviorTrait(e.target.value)}
-                  onBlur={() => {
-                    if (editBehaviorTrait) {
-                      setEditBehaviorTrait(normalizeOptionValue(editBehaviorTrait, traitOptions.map((o) => o.value)));
-                    }
-                  }}
-                  placeholder="Select or enter trait..."
-                  className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
-                  id="edit-behavior-trait"
-                />
-                <datalist id="edit-trait-options">
-                  {traitOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label || opt.value}
-                    </option>
-                  ))}
-                </datalist>
-              </div>
-            </div>
+      <form
+        onSubmit={(e) => {
+          if (!birthdateValidation.valid) {
+            e.preventDefault();
+            return;
+          }
+          handleUpdateFowl(e);
+        }}
+        className="space-y-4 overflow-y-auto p-6 text-sm"
+      >
+        <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
+          <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+            <Tag className="h-3.5 w-3.5" /> <span>Core Identity</span>
+          </h4>
+          <div>
+            <label
+              className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+              htmlFor="identifier-name"
+            >
+              Identifier Name
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+              required
+              id="identifier-name"
+            />
           </div>
-
-          <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/40 dark:border-border">
-            <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-xs uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
-              <Ruler className="w-3.5 h-3.5" /> <span>Physical Parameters</span>
-            </h4>
-            <div className="mb-2">
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="birth-date">Birth Date <span className="text-success dark:text-emerald-300 font-black">· auto age</span></label>
-              <input
-                type="date"
-                value={editBirthdate}
-                onChange={(e) => handleEditBirthdateChange(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className={`w-full p-2.5 border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold ${
-                  birthdateValidation.errors.length > 0
-                    ? 'border-rose-500 focus:border-rose-500'
-                    : 'border-input-border focus:border-emerald-500'
-                }`}
-                id="birth-date"
-              />
-              {birthdateValidation.errors.map((err, i) => (
-                <p key={`edit-bd-err-${i}`} className="mt-1 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
-                  <span>⚠️</span>
-                  <span>{err}</span>
-                </p>
-              ))}
-              {birthdateValidation.warnings.map((warn, i) => (
-                <p key={`edit-bd-warn-${i}`} className="mt-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
-                  <span>⚠️</span>
-                  <span>{warn}</span>
-                </p>
-              ))}
-              {(() => {
-                const parts = getAgeParts(editBirthdate);
-                return parts ? (
-                  <p className="mt-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1"><Calendar className="w-3 h-3" /> Auto Age: {getAgeLabel(parts)} · <span className="font-mono">{getAgeMetrics(parts)}</span></p>
-                ) : (
-                  <p className="mt-1 text-xs text-muted-foreground font-medium">Set a birth date for automatic age &amp; milestone tracking.</p>
-                );
-              })()}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="age-mos">Age (Mos) {editBirthdate && <span className="text-success dark:text-emerald-300 font-black">· auto</span>}</label>
-                <input type="number" value={editBirthdate ? String((getAgeParts(editBirthdate)?.totalMonths ?? 0)) : editAge} onChange={(e) => handleEditAgeChange(e.target.value)} readOnly={!!editBirthdate} className="w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground" required id="age-mos" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="growth">Growth</label>
-                <input 
-                  type="text" 
-                  value={editGrowthStage} 
-                  readOnly 
-                  placeholder="Awaiting age..." 
-                  className={`w-full p-2.5 border rounded-md text-sm text-center font-bold transition-all ${
-                    editGrowthStage 
-                      ? 'border-emerald-100 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300' 
-                      : 'border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50 text-muted-foreground font-normal'
-                  }`} 
-                id="growth" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="height">Height ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editHeight} onChange={(e) => { const v = e.target.value; setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="weight">Weight ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-                <input type="number" step="0.1" min="0" value={editWeight} onChange={(e) => { const v = e.target.value; setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-2.5 border border-input-border rounded-md text-sm text-center font-bold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
-              </div>
-            </div>
-            <div className="mt-2">
-              <label className="block text-xs font-bold text-muted-foreground uppercase mb-1" htmlFor="leg-color">Leg Color</label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative z-30">
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="genetic-strain"
+              >
+                Genetic Strain
+              </label>
               <input
                 type="text"
-                value={editLegColor}
-                onChange={(e) => setEditLegColor(e.target.value)}
-                className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-medium"
-                placeholder="Select or type a leg color..."
-              id="leg-color" />
-              {availableLegColors.length > 0 && (
+                value={editBreed}
+                onChange={(e) => setEditBreed(e.target.value)}
+                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+                placeholder="Select or type strain"
+                required
+                id="genetic-strain"
+              />
+              {availableStrains.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {availableLegColors.filter((s) => s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor).slice(0, 5).map((s) => (
-                    <div key={s} className="flex items-center bg-slate-100 dark:bg-muted rounded-full group">
-                      <button type="button" onClick={() => setEditLegColor(s)} className="text-xs font-bold px-2.5 py-1 text-slate-600 dark:text-muted-foreground hover:text-emerald-700 cursor-pointer">{s}</button>
-                        <button type="button" onClick={() => deleteCustomLegColor(s)} aria-label={`Delete ${s}`} className="w-6 h-6 mr-1 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-danger hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title={`Delete "${s}"`}>✕</button>
-                    </div>
-                  ))}
+                  {availableStrains
+                    .filter(
+                      (s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed,
+                    )
+                    .slice(0, 5)
+                    .map((s) => (
+                      <div
+                        key={s}
+                        className="dark:bg-muted group flex items-center rounded-full bg-slate-100"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setEditBreed(s)}
+                          className="dark:text-muted-foreground cursor-pointer px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700 dark:hover:text-emerald-300"
+                        >
+                          {s}
+                        </button>
+                        {customStrainNames.has(s) && (
+                          <button
+                            type="button"
+                            onClick={() => deleteCustomStrain(s)}
+                            aria-label={`Delete ${s}`}
+                            className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
+                            title={`Delete "${s}"`}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="space-y-3 bg-slate-50/50 dark:bg-muted/50 p-4 rounded-lg border border-slate-200/40 dark:border-border">
-            <h4 className="font-black text-emerald-700 dark:text-emerald-300 text-xs uppercase tracking-wider flex items-center space-x-1 border-b pb-1">
-              <TreePine className="w-3.5 h-3.5" /> <span>Ancestry Heritage Roots</span>
-            </h4>
-            {(() => {
-              const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
-              const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
-              const isOffspring = hasSire || hasDam;
-              const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : editGender === 'Hen' || editGender === 'Female' ? 'dam' : 'sire';
-              const formatCheck = editBirdCode.trim() ? validateIdentifierFormat(editBirdCode.trim(), role) : null;
-              const isDuplicate = fowls.some(f => f.id !== editingFowl?.id && normalizeBirdCode(f.bird_code).toLowerCase() === normalizeBirdCode(editBirdCode).toLowerCase());
-
-              return (
-                <div className="bg-slate-50/80 dark:bg-muted/40 p-3 rounded-lg border border-slate-200/80 dark:border-border space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
-                      Unique Chicken Identifier
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setManualCodeOpen(!manualCodeOpen)}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>{manualCodeOpen ? 'Lock Identifier' : 'Edit identifier manually'}</span>
-                    </button>
-                  </div>
-                  {!manualCodeOpen ? (
-                    <div className="flex items-center justify-between p-2.5 rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card">
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <span className="font-mono text-sm font-extrabold text-slate-800 dark:text-card-foreground">
-                          [{formatBirdCodeForDisplay(editBirdCode) || '—'}]
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground font-semibold">Permanent Assigned Code</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <input
-                        type="text"
-                        value={editBirdCode}
-                        onChange={(e) => setEditBirdCode(e.target.value)}
-                        className="w-full p-2.5 border border-emerald-500 rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-mono font-bold focus:border-emerald-500"
-                        placeholder="e.g. 1, A, 1A1"
-                        id="chicken-code"
-                      />
-                      <div className="flex items-center justify-between text-xs font-semibold">
-                        {editBirdCode.trim() ? (
-                          formatCheck && !formatCheck.valid ? (
-                            <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
-                          ) : isDuplicate ? (
-                            <span className="text-rose-600 dark:text-rose-400 font-bold">❌ Already taken by another chicken</span>
-                          ) : (
-                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Valid format for {role}</span>
-                          )
-                        ) : (
-                          <span className="text-muted-foreground">Code is required</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-amber-700 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded p-1.5">
-                        ⚠️ Changing this will update the official registry code and will be logged in the history audit.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-            {(() => {
-              const trimmedBand = editWingBand.trim();
-              const isBandDuplicate = trimmedBand
-                ? fowls.some((f) => f.id !== editingFowl?.id && (f.wing_band || '').trim().toLowerCase() === trimmedBand.toLowerCase())
-                : false;
-
-              return (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-muted-foreground uppercase" htmlFor="wing-band-id">
-                      Wing Band ID <span className="text-muted-foreground font-normal lowercase">(numero sa metal wing band — dapat natatangi)</span>
-                    </label>
-                  </div>
-                  <input
-                    type="text"
-                    value={editWingBand}
-                    onChange={(e) => setEditWingBand(e.target.value)}
-                    maxLength={50}
-                    className="w-full p-2.5 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-mono font-bold"
-                    placeholder="e.g. W-001"
-                    id="wing-band-id"
-                  />
-                  {isBandDuplicate && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 font-bold mt-1">
-                      ❌ Wing Band ID &quot;{trimmedBand}&quot; is already assigned to another chicken.
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1 font-semibold">
-                    {trimmedBand ? 'Physical metal wing band number.' : 'Optional — the number stamped on the physical metal wing band.'}
-                  </p>
-                </div>
-              );
-            })()}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                  <label htmlFor="edit-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1">
-                    Sire (Father) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
-                  </label>
-                  <ParentSelector id="edit-sire" value={editSire} onChange={(v) => { setEditSire(v); if (isFoundationStock(v)) setEditSirePct(100); }} onPick={(f) => setEditSirePct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Male" placeholder="Foundation Stock" compact />
-              </div>
-              <div>
-                  <label htmlFor="edit-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1">
-                    Dam (Mother) <span className="text-muted-foreground font-normal lowercase">(optional)</span>
-                  </label>
-                  <ParentSelector id="edit-dam" value={editDam} onChange={(v) => { setEditDam(v); if (isFoundationStock(v)) setEditDamPct(100); }} onPick={(f) => setEditDamPct(parentBloodlinePct(f))} fowls={fowls} preferredGender="Female" accent="amber" placeholder="Foundation Stock" compact />
-              </div>
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="gender-class"
+              >
+                Gender Class
+              </label>
+              <select
+                value={editGender}
+                onChange={(e) => {
+                  const g = e.target.value;
+                  setEditGender(g);
+                  if (editAge.trim() !== '' && !isNaN(Number(editAge))) {
+                    setEditGrowthStage(autoComputeGrowthStage(Number(editAge), g));
+                  } else {
+                    setEditGrowthStage('');
+                  }
+                }}
+                className="dark:border-border dark:bg-input dark:text-card-foreground w-full rounded-md border border-slate-200 bg-white p-2.5 text-sm font-bold text-slate-700"
+                id="gender-class"
+              >
+                <option value="Rooster">Sire</option>
+                <option value="Hen">Dam</option>
+              </select>
             </div>
-
-            {isOffspring && (
-              <div className="pt-2">
-                <DeclaredCompositionEditor
-                  registeredBreed={editBreed}
-                  availableBreeds={availableStrains ?? []}
-                  value={editDeclaredComposition ?? null}
-                  onChange={(val) => setEditDeclaredComposition?.(val)}
-                  hasParents={true}
-                  pedigreeComposition={pedigreeComposition}
-                  currentValue={editingFowl.declared_composition as any}
-                  calculatedValue={pedigreeComposition}
-                  source={compositionSource}
-                />
-              </div>
-            )}
           </div>
 
-          {declaredChanged && descendants.length > 0 && (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3.5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-              <span className="text-base shrink-0">⚠️</span>
-              <div className="w-full">
-                <p className="font-bold">
-                  Descendant Bloodline Recomputation ({descendants.length} chicken{descendants.length === 1 ? '' : 's'})
-                </p>
-                <p className="mt-0.5 leading-relaxed">
-                  Changing this bird&apos;s breed composition will automatically recompute the bloodline of its {descendants.length} descendant{descendants.length === 1 ? '' : 's'}.
-                </p>
-                <details className="mt-2 text-[11px]">
-                  <summary className="font-semibold text-amber-800 dark:text-amber-300 cursor-pointer hover:underline">
-                    View affected descendants ({descendants.length})
-                  </summary>
-                  <p className="mt-1 font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-900/40 p-2 rounded-md max-h-28 overflow-y-auto">
-                    {descendants.map((d) => d.name).join(', ')}
-                  </p>
-                </details>
-              </div>
+          {!isOffspring && (
+            <div className="mt-3">
+              <DeclaredCompositionEditor
+                registeredBreed={editBreed}
+                availableBreeds={availableStrains ?? []}
+                value={editDeclaredComposition ?? null}
+                onChange={(val) => setEditDeclaredComposition?.(val)}
+                hasParents={false}
+                currentValue={editingFowl.declared_composition as any}
+                source={compositionSource}
+              />
             </div>
           )}
 
-          <div className="pt-2">
-            <button 
-              type="submit" 
-              disabled={loading || !birthdateValidation.valid || !declaredValidation.valid}
-              className="w-full bg-slate-900 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-md text-sm shadow-md uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-              <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>
-            </button>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="edit-feather-color"
+              >
+                Feather Color
+                {isCustomColor && (
+                  <span className="ml-2 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs font-bold tracking-normal text-amber-700 normal-case dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
+                    custom
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                list="edit-feather-color-options"
+                value={editColor}
+                onChange={(e) => {
+                  const c = e.target.value;
+                  setEditColor(c);
+                  setEditColorCategory(c.toLowerCase().includes('red') ? 'Red' : 'Light Color');
+                }}
+                onBlur={() => {
+                  if (editColor) {
+                    setEditColor(
+                      normalizeOptionValue(
+                        editColor,
+                        featherColorOptions.map((o) => o.value),
+                      ),
+                    );
+                  }
+                }}
+                placeholder="Select or enter feather color..."
+                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+                id="edit-feather-color"
+              />
+              <datalist id="edit-feather-color-options">
+                {featherColorOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label || opt.value}
+                  </option>
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="edit-behavior-trait"
+              >
+                Trait
+                {isCustomTrait && (
+                  <span className="ml-2 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs font-bold tracking-normal text-amber-700 normal-case dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
+                    custom
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                list="edit-trait-options"
+                value={editBehaviorTrait}
+                onChange={(e) => setEditBehaviorTrait(e.target.value)}
+                onBlur={() => {
+                  if (editBehaviorTrait) {
+                    setEditBehaviorTrait(
+                      normalizeOptionValue(
+                        editBehaviorTrait,
+                        traitOptions.map((o) => o.value),
+                      ),
+                    );
+                  }
+                }}
+                placeholder="Select or enter trait..."
+                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+                id="edit-behavior-trait"
+              />
+              <datalist id="edit-trait-options">
+                {traitOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label || opt.value}
+                  </option>
+                ))}
+              </datalist>
+            </div>
           </div>
-        </form>
-      </Modal>
+        </div>
+
+        <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
+          <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+            <Ruler className="h-3.5 w-3.5" /> <span>Physical Parameters</span>
+          </h4>
+          <div className="mb-2">
+            <label
+              className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+              htmlFor="birth-date"
+            >
+              Birth Date{' '}
+              <span className="text-success font-black dark:text-emerald-300">· auto age</span>
+            </label>
+            <input
+              type="date"
+              value={editBirthdate}
+              onChange={(e) => handleEditBirthdateChange(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className={`dark:bg-input dark:text-foreground w-full rounded-md border bg-white p-2.5 text-sm font-semibold text-neutral-900 ${
+                birthdateValidation.errors.length > 0
+                  ? 'border-rose-500 focus:border-rose-500'
+                  : 'border-input-border focus:border-emerald-500'
+              }`}
+              id="birth-date"
+            />
+            {birthdateValidation.errors.map((err, i) => (
+              <p
+                key={`edit-bd-err-${i}`}
+                className="mt-1 flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300"
+              >
+                <span>⚠️</span>
+                <span>{err}</span>
+              </p>
+            ))}
+            {birthdateValidation.warnings.map((warn, i) => (
+              <p
+                key={`edit-bd-warn-${i}`}
+                className="mt-1 flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-300"
+              >
+                <span>⚠️</span>
+                <span>{warn}</span>
+              </p>
+            ))}
+            {(() => {
+              const parts = getAgeParts(editBirthdate);
+              return parts ? (
+                <p className="mt-1 flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  <Calendar className="h-3 w-3" /> Auto Age: {getAgeLabel(parts)} ·{' '}
+                  <span className="font-mono">{getAgeMetrics(parts)}</span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground mt-1 text-xs font-medium">
+                  Set a birth date for automatic age &amp; milestone tracking.
+                </p>
+              );
+            })()}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="age-mos"
+              >
+                Age (Mos){' '}
+                {editBirthdate && (
+                  <span className="text-success font-black dark:text-emerald-300">· auto</span>
+                )}
+              </label>
+              <input
+                type="number"
+                value={
+                  editBirthdate ? String(getAgeParts(editBirthdate)?.totalMonths ?? 0) : editAge
+                }
+                onChange={(e) => handleEditAgeChange(e.target.value)}
+                readOnly={!!editBirthdate}
+                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-center text-sm font-bold text-neutral-900"
+                required
+                id="age-mos"
+              />
+            </div>
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="growth"
+              >
+                Growth
+              </label>
+              <input
+                type="text"
+                value={editGrowthStage}
+                readOnly
+                placeholder="Awaiting age..."
+                className={`w-full rounded-md border p-2.5 text-center text-sm font-bold transition-all ${
+                  editGrowthStage
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                    : 'dark:border-border dark:bg-muted/50 text-muted-foreground border-slate-200 bg-slate-50 font-normal'
+                }`}
+                id="growth"
+              />
+            </div>
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="height"
+              >
+                Height ({heightUnitLabel(unitPrefs.heightUnit)})
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={editHeight}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setEditHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10));
+                }}
+                className="no-spinner border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-center text-sm font-bold text-neutral-900 focus:border-emerald-500"
+                placeholder="e.g. 45.0"
+                id="height"
+              />
+            </div>
+            <div>
+              <label
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+                htmlFor="weight"
+              >
+                Weight ({weightUnitLabel(unitPrefs.weightUnit)})
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={editWeight}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setEditWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10));
+                }}
+                className="no-spinner border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-center text-sm font-bold text-neutral-900 focus:border-emerald-500"
+                placeholder="e.g. 2.0"
+                id="weight"
+              />
+            </div>
+          </div>
+          <div className="mt-2">
+            <label
+              className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+              htmlFor="leg-color"
+            >
+              Leg Color
+            </label>
+            <input
+              type="text"
+              value={editLegColor}
+              onChange={(e) => setEditLegColor(e.target.value)}
+              className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+              placeholder="Select or type a leg color..."
+              id="leg-color"
+            />
+            {availableLegColors.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {availableLegColors
+                  .filter(
+                    (s) =>
+                      s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor,
+                  )
+                  .slice(0, 5)
+                  .map((s) => (
+                    <div
+                      key={s}
+                      className="dark:bg-muted group flex items-center rounded-full bg-slate-100"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setEditLegColor(s)}
+                        className="dark:text-muted-foreground cursor-pointer px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"
+                      >
+                        {s}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteCustomLegColor(s)}
+                        aria-label={`Delete ${s}`}
+                        className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
+                        title={`Delete "${s}"`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
+          <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+            <TreePine className="h-3.5 w-3.5" /> <span>Ancestry Heritage Roots</span>
+          </h4>
+          {(() => {
+            const hasSire =
+              !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
+            const hasDam = !!editDam.trim() && editDam.trim().toLowerCase() !== 'foundation stock';
+            const isOffspring = hasSire || hasDam;
+            const role: 'sire' | 'dam' | 'offspring' = isOffspring
+              ? 'offspring'
+              : editGender === 'Hen' || editGender === 'Female'
+                ? 'dam'
+                : 'sire';
+            const formatCheck = editBirdCode.trim()
+              ? validateIdentifierFormat(editBirdCode.trim(), role)
+              : null;
+            const isDuplicate = fowls.some(
+              (f) =>
+                f.id !== editingFowl?.id &&
+                normalizeBirdCode(f.bird_code).toLowerCase() ===
+                  normalizeBirdCode(editBirdCode).toLowerCase(),
+            );
+
+            return (
+              <div className="dark:bg-muted/40 dark:border-border space-y-2 rounded-lg border border-slate-200/80 bg-slate-50/80 p-3">
+                <div className="flex items-center justify-between">
+                  <label
+                    className="dark:text-card-foreground block text-xs font-black tracking-wider text-slate-800 uppercase"
+                    htmlFor="chicken-code"
+                  >
+                    Unique Chicken Identifier
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setManualCodeOpen(!manualCodeOpen)}
+                    className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    <span>{manualCodeOpen ? 'Lock Identifier' : 'Edit identifier manually'}</span>
+                  </button>
+                </div>
+                {!manualCodeOpen ? (
+                  <div className="dark:border-border dark:bg-card flex items-center justify-between rounded-md border border-slate-200 bg-white p-2.5">
+                    <div className="flex items-center gap-2">
+                      <Lock className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                      <span className="dark:text-card-foreground font-mono text-sm font-extrabold text-slate-800">
+                        [{formatBirdCodeForDisplay(editBirdCode) || '—'}]
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground text-xs font-semibold">
+                      Permanent Assigned Code
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <input
+                      type="text"
+                      value={editBirdCode}
+                      onChange={(e) => setEditBirdCode(e.target.value)}
+                      className="dark:bg-input dark:text-foreground w-full rounded-md border border-emerald-500 bg-white p-2.5 font-mono text-sm font-bold text-neutral-900 focus:border-emerald-500"
+                      placeholder="e.g. 1, A, 1A1"
+                      id="chicken-code"
+                    />
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      {editBirdCode.trim() ? (
+                        formatCheck && !formatCheck.valid ? (
+                          <span className="font-bold text-rose-600 dark:text-rose-400">
+                            ⚠️ {formatCheck.error}
+                          </span>
+                        ) : isDuplicate ? (
+                          <span className="font-bold text-rose-600 dark:text-rose-400">
+                            ❌ Already taken by another chicken
+                          </span>
+                        ) : (
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                            ✓ Valid format for {role}
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-muted-foreground">Code is required</span>
+                      )}
+                    </div>
+                    <p className="rounded border border-amber-200 bg-amber-50 p-1.5 text-xs font-medium text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                      ⚠️ Changing this will update the official registry code and will be logged in
+                      the history audit.
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          {(() => {
+            const trimmedBand = editWingBand.trim();
+            const isBandDuplicate = trimmedBand
+              ? fowls.some(
+                  (f) =>
+                    f.id !== editingFowl?.id &&
+                    (f.wing_band || '').trim().toLowerCase() === trimmedBand.toLowerCase(),
+                )
+              : false;
+
+            return (
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label
+                    className="text-muted-foreground block text-xs font-bold uppercase"
+                    htmlFor="wing-band-id"
+                  >
+                    Wing Band ID{' '}
+                    <span className="text-muted-foreground font-normal lowercase">
+                      (numero sa metal wing band — dapat natatangi)
+                    </span>
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  value={editWingBand}
+                  onChange={(e) => setEditWingBand(e.target.value)}
+                  maxLength={50}
+                  className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 font-mono text-sm font-bold text-neutral-900 focus:border-emerald-500"
+                  placeholder="e.g. W-001"
+                  id="wing-band-id"
+                />
+                {isBandDuplicate && (
+                  <p className="mt-1 text-xs font-bold text-rose-600 dark:text-rose-400">
+                    ❌ Wing Band ID &quot;{trimmedBand}&quot; is already assigned to another
+                    chicken.
+                  </p>
+                )}
+                <p className="text-muted-foreground mt-1 text-xs font-semibold">
+                  {trimmedBand
+                    ? 'Physical metal wing band number.'
+                    : 'Optional — the number stamped on the physical metal wing band.'}
+                </p>
+              </div>
+            );
+          })()}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                htmlFor="edit-sire"
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+              >
+                Sire (Father){' '}
+                <span className="text-muted-foreground font-normal lowercase">(optional)</span>
+              </label>
+              <ParentSelector
+                id="edit-sire"
+                value={editSire}
+                onChange={(v) => {
+                  setEditSire(v);
+                  if (isFoundationStock(v)) setEditSirePct(100);
+                }}
+                onPick={(f) => setEditSirePct(parentBloodlinePct(f))}
+                fowls={fowls}
+                preferredGender="Male"
+                placeholder="Foundation Stock"
+                compact
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="edit-dam"
+                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
+              >
+                Dam (Mother){' '}
+                <span className="text-muted-foreground font-normal lowercase">(optional)</span>
+              </label>
+              <ParentSelector
+                id="edit-dam"
+                value={editDam}
+                onChange={(v) => {
+                  setEditDam(v);
+                  if (isFoundationStock(v)) setEditDamPct(100);
+                }}
+                onPick={(f) => setEditDamPct(parentBloodlinePct(f))}
+                fowls={fowls}
+                preferredGender="Female"
+                accent="amber"
+                placeholder="Foundation Stock"
+                compact
+              />
+            </div>
+          </div>
+
+          {isOffspring && (
+            <div className="pt-2">
+              <DeclaredCompositionEditor
+                registeredBreed={editBreed}
+                availableBreeds={availableStrains ?? []}
+                value={editDeclaredComposition ?? null}
+                onChange={(val) => setEditDeclaredComposition?.(val)}
+                hasParents={true}
+                pedigreeComposition={pedigreeComposition}
+                currentValue={editingFowl.declared_composition as any}
+                calculatedValue={pedigreeComposition}
+                source={compositionSource}
+              />
+            </div>
+          )}
+        </div>
+
+        {declaredChanged && descendants.length > 0 && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <span className="shrink-0 text-base">⚠️</span>
+            <div className="w-full">
+              <p className="font-bold">
+                Descendant Bloodline Recomputation ({descendants.length} chicken
+                {descendants.length === 1 ? '' : 's'})
+              </p>
+              <p className="mt-0.5 leading-relaxed">
+                Changing this bird&apos;s breed composition will automatically recompute the
+                bloodline of its {descendants.length} descendant
+                {descendants.length === 1 ? '' : 's'}.
+              </p>
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer font-semibold text-amber-800 hover:underline dark:text-amber-300">
+                  View affected descendants ({descendants.length})
+                </summary>
+                <p className="mt-1 max-h-28 overflow-y-auto rounded-md bg-amber-100/60 p-2 font-mono font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  {descendants.map((d) => d.name).join(', ')}
+                </p>
+              </details>
+            </div>
+          </div>
+        )}
+
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={loading || !birthdateValidation.valid || !declaredValidation.valid}
+            className="flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+            )}
+            <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

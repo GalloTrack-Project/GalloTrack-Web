@@ -20,7 +20,7 @@ export function LanguageSelect({ className = '' }: { className?: string }) {
         value={language}
         onChange={(e) => setLanguage(e.target.value as AppLanguage)}
         aria-label={t('preferences.languageFieldLabel')}
-        className="p-2.5 px-3 pr-8 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm cursor-pointer min-w-[200px]"
+        className="border-input-border min-w-[200px] cursor-pointer rounded-md border bg-white p-2.5 px-3 pr-8 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       >
         {languages.map((lang) => (
           <option key={lang.code} value={lang.code}>
@@ -49,12 +49,12 @@ export function CompactLanguageSwitcher({
   if (variant === 'select') {
     return (
       <div className={`inline-flex items-center gap-1.5 ${className}`}>
-        <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        <Globe className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as AppLanguage)}
           aria-label={t('header.languageSwitcher')}
-          className="bg-transparent border border-border/80 rounded px-2 py-1 text-xs font-bold text-foreground cursor-pointer focus:border-accent focus:outline-none max-w-[8.5rem] lg:max-w-none"
+          className="border-border/80 text-foreground focus:border-accent max-w-[8.5rem] cursor-pointer rounded border bg-transparent px-2 py-1 text-xs font-bold focus:outline-none lg:max-w-none"
         >
           {languages.map((lang) => (
             <option key={lang.code} value={lang.code} className="bg-card text-card-foreground">
@@ -86,12 +86,14 @@ export function CompactLanguageSwitcher({
       onClick={handleCycle}
       aria-label={`${t('header.languageSwitcher')}: ${currentOption?.nativeName}`}
       title={`${t('header.languageSwitcher')}: ${currentOption?.nativeName}`}
-      className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-md border border-border bg-muted/50 hover:bg-muted text-[11px] sm:text-xs font-bold text-foreground transition-colors cursor-pointer select-none min-h-[44px] shrink-0 ${className}`}
+      className={`border-border bg-muted/50 hover:bg-muted text-foreground inline-flex min-h-[44px] shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-bold transition-colors select-none sm:px-2.5 ${className}`}
     >
-      <Globe className="w-3.5 h-3.5 text-accent shrink-0 hidden sm:block" aria-hidden="true" />
-      <span className="whitespace-nowrap">{currentOption?.nativeName ?? language.toUpperCase()}</span>
+      <Globe className="text-accent hidden h-3.5 w-3.5 shrink-0 sm:block" aria-hidden="true" />
+      <span className="whitespace-nowrap">
+        {currentOption?.nativeName ?? language.toUpperCase()}
+      </span>
       {isBeta(language) && (
-        <span className="text-[9px] sm:text-xs uppercase font-mono px-0.5 sm:px-1 py-0.5 rounded bg-amber-500/20 text-warning font-black leading-none shrink-0">
+        <span className="text-warning shrink-0 rounded bg-amber-500/20 px-0.5 py-0.5 font-mono text-xs leading-none font-black uppercase sm:px-1">
           {t('common.beta')}
         </span>
       )}

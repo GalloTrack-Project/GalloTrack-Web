@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Plus, Trash2, RotateCcw, AlertTriangle, Info, SlidersHorizontal, Check } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  RotateCcw,
+  AlertTriangle,
+  Info,
+  SlidersHorizontal,
+  Check,
+} from 'lucide-react';
 import type { DeclaredBreedShare } from '@/lib/types';
 import {
   validateDeclaredComposition,
@@ -50,10 +58,7 @@ export default function DeclaredCompositionEditor({
 
   // Resolve pedigree summary string
   const activePedigree = pedigreeComposition ?? calculatedValue ?? null;
-  const pedigreeSummary = useMemo(
-    () => formatCompositionSummary(activePedigree),
-    [activePedigree]
-  );
+  const pedigreeSummary = useMemo(() => formatCompositionSummary(activePedigree), [activePedigree]);
 
   // Validation
   const validation: DeclaredCompositionValidationResult = useMemo(() => {
@@ -99,7 +104,7 @@ export default function DeclaredCompositionEditor({
       // Turn on manual adjustment -> prefill from calculated pedigree
       if (activePedigree && Object.keys(activePedigree).length > 0) {
         const prefilled: DeclaredBreedShare[] = Object.entries(activePedigree).map(
-          ([breed, percent]) => ({ breed, percent })
+          ([breed, percent]) => ({ breed, percent }),
         );
         onChange(prefilled);
       } else {
@@ -184,18 +189,18 @@ export default function DeclaredCompositionEditor({
     <div
       id="purity-composition-section"
       data-testid="purity-composition-editor"
-      className="rounded-xl border border-border bg-card p-4 space-y-3.5 shadow-xs"
+      className="border-border bg-card space-y-3.5 rounded-xl border p-4 shadow-xs"
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <h4 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase">
             Purity (breed composition)
-            <span className="text-[10px] font-normal normal-case px-1.5 py-0.5 rounded-full border border-border bg-muted/50 text-foreground">
+            <span className="border-border bg-muted/50 text-foreground rounded-full border px-1.5 py-0.5 text-xs font-normal normal-case">
               {hasParents ? 'Recorded Lineage' : 'Foundation Stock'}
             </span>
           </h4>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-muted-foreground mt-0.5 text-xs">
             {hasParents
               ? 'Expected values calculated from parents; you may adjust manually based on bird traits.'
               : 'Enter it manually if you know it. Leave blank if unknown; the system assumes 100% of the selected breed and marks it Assumed.'}
@@ -207,10 +212,10 @@ export default function DeclaredCompositionEditor({
           {hasParents ? (
             <span
               className={cn(
-                'text-[10px] font-semibold px-2 py-0.5 rounded-md border inline-flex items-center gap-1',
+                'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold',
                 isCustomDeclared
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
-                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
               )}
             >
               {isCustomDeclared ? 'Adjusted by owner' : 'Derived from parents'}
@@ -218,13 +223,15 @@ export default function DeclaredCompositionEditor({
           ) : (
             <span
               className={cn(
-                'text-[10px] font-semibold px-2 py-0.5 rounded-md border inline-flex items-center gap-1',
+                'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold',
                 isCustomDeclared
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
-                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
               )}
             >
-              {isCustomDeclared ? 'Declared by owner' : 'Assumed from registered breed (not verified)'}
+              {isCustomDeclared
+                ? 'Declared by owner'
+                : 'Assumed from registered breed (not verified)'}
             </span>
           )}
         </div>
@@ -232,11 +239,11 @@ export default function DeclaredCompositionEditor({
 
       {/* Edit modal summary if current vs calculated values exist */}
       {(currentValue !== undefined || calculatedValue !== undefined) && (
-        <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 text-xs space-y-1">
+        <div className="border-border/80 bg-muted/20 space-y-1 rounded-lg border p-2.5 text-xs">
           {calculatedValue && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">Calculated from parents:</span>
-              <span className="font-mono font-medium text-foreground">
+              <span className="text-foreground font-mono font-medium">
                 {formatCompositionSummary(calculatedValue)}
               </span>
             </div>
@@ -244,7 +251,7 @@ export default function DeclaredCompositionEditor({
           {currentValue && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">Current declaration:</span>
-              <span className="font-mono font-medium text-foreground">
+              <span className="text-foreground font-mono font-medium">
                 {currentValue.map((c) => `${c.percent}% ${c.breed}`).join(' / ')}
               </span>
             </div>
@@ -252,7 +259,7 @@ export default function DeclaredCompositionEditor({
           {source && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">Source:</span>
-              <span className="font-medium text-foreground capitalize">{source}</span>
+              <span className="text-foreground font-medium capitalize">{source}</span>
             </div>
           )}
         </div>
@@ -261,9 +268,9 @@ export default function DeclaredCompositionEditor({
       {/* ── PARENTS RECORDED VIEW ── */}
       {hasParents && (
         <div className="space-y-3">
-          <div className="p-3 rounded-lg border border-border/70 bg-muted/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-start sm:items-center gap-2 text-xs">
-              <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
+          <div className="border-border/70 bg-muted/30 flex flex-col justify-between gap-2.5 rounded-lg border p-3 sm:flex-row sm:items-center">
+            <div className="flex items-start gap-2 text-xs sm:items-center">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 sm:mt-0 dark:text-emerald-400" />
               <div>
                 <span className="text-muted-foreground">Calculated from parents: </span>
                 <strong className="text-foreground">{pedigreeSummary}</strong>
@@ -274,20 +281,22 @@ export default function DeclaredCompositionEditor({
               disabled={disabled}
               onClick={handleToggleOffspringAdjust}
               className={cn(
-                'min-h-[44px] px-3 py-2 text-xs font-medium rounded-lg border transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0',
+                'inline-flex min-h-[44px] shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
                 isCustomDeclared
-                  ? 'border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20'
-                  : 'border-border bg-background hover:bg-muted text-foreground'
+                  ? 'border-amber-500/50 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-400'
+                  : 'border-border bg-background hover:bg-muted text-foreground',
               )}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <SlidersHorizontal className="h-3.5 w-3.5" />
               {isCustomDeclared ? 'Adjusting manually (Active)' : 'Adjust manually'}
             </button>
           </div>
 
           {!isCustomDeclared ? (
-            <p className="text-[11px] text-muted-foreground px-1">
-              By default, this bird inherits the 50/50 pedigree average from its parents. Toggle &quot;Adjust manually&quot; if you observed specific breed traits differing from the expectation.
+            <p className="text-muted-foreground px-1 text-xs">
+              By default, this bird inherits the 50/50 pedigree average from its parents. Toggle
+              &quot;Adjust manually&quot; if you observed specific breed traits differing from the
+              expectation.
             </p>
           ) : (
             /* Offspring manual adjustment rows */
@@ -297,14 +306,14 @@ export default function DeclaredCompositionEditor({
                   const pedPct = getPedigreePct(item.breed);
                   const isLineage = pedPct !== null && pedPct > 0;
                   return (
-                    <div key={idx} className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <div key={idx} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                       {/* Breed selector */}
-                      <div className="flex-1 min-w-[140px]">
+                      <div className="min-w-[140px] flex-1">
                         <select
                           disabled={disabled}
                           value={item.breed}
                           onChange={(e) => handleRowChange(idx, 'breed', e.target.value)}
-                          className="w-full min-h-[44px] h-11 px-3 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-hidden focus:border-emerald-500"
+                          className="border-border bg-background text-foreground h-11 min-h-[44px] w-full rounded-lg border px-3 text-xs focus:border-emerald-500 focus:outline-hidden"
                           aria-label={`Breed for share ${idx + 1}`}
                         >
                           {availableBreeds.map((b) => (
@@ -316,7 +325,7 @@ export default function DeclaredCompositionEditor({
                       </div>
 
                       {/* Percent input with pedigree indicator */}
-                      <div className="w-32 shrink-0 flex items-center gap-1">
+                      <div className="flex w-32 shrink-0 items-center gap-1">
                         <input
                           type="number"
                           disabled={disabled}
@@ -326,15 +335,23 @@ export default function DeclaredCompositionEditor({
                           value={item.percent === 0 ? '' : item.percent}
                           onChange={(e) => handleRowChange(idx, 'percent', e.target.value)}
                           placeholder="0"
-                          className="w-full min-h-[44px] h-11 px-2.5 text-xs text-right rounded-lg border border-border bg-background text-foreground focus:outline-hidden focus:border-emerald-500 font-mono"
+                          className="border-border bg-background text-foreground h-11 min-h-[44px] w-full rounded-lg border px-2.5 text-right font-mono text-xs focus:border-emerald-500 focus:outline-hidden"
                           aria-label={`Percentage for ${item.breed}`}
                         />
-                        <span className="text-xs text-muted-foreground font-semibold shrink-0">%</span>
+                        <span className="text-muted-foreground shrink-0 text-xs font-semibold">
+                          %
+                        </span>
                       </div>
 
                       {/* Pedigree reference tag */}
-                      <div className="w-24 shrink-0 text-[11px] font-mono text-muted-foreground">
-                        {isLineage ? `(Ped: ${pedPct}%)` : <span className="text-amber-600 dark:text-amber-400 font-sans text-[10px]">Non-lineage</span>}
+                      <div className="text-muted-foreground w-24 shrink-0 font-mono text-xs">
+                        {isLineage ? (
+                          `(Ped: ${pedPct}%)`
+                        ) : (
+                          <span className="font-sans text-xs text-amber-600 dark:text-amber-400">
+                            Non-lineage
+                          </span>
+                        )}
                       </div>
 
                       {/* Remove row */}
@@ -343,11 +360,11 @@ export default function DeclaredCompositionEditor({
                           type="button"
                           disabled={disabled}
                           onClick={() => handleRemoveRow(idx)}
-                          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+                          className="text-muted-foreground flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-lg p-2 transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
                           title="Remove breed share"
                           aria-label={`Remove breed share ${item.breed}`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -356,16 +373,16 @@ export default function DeclaredCompositionEditor({
               </div>
 
               {/* Action buttons & Total indicator */}
-              <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-border/50">
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="border-border/50 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {value.length < 4 && (
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={handleAddRow}
-                      className="min-h-[44px] text-xs font-medium px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer inline-flex items-center gap-1"
+                      className="border-border bg-background hover:bg-muted text-foreground inline-flex min-h-[44px] cursor-pointer items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="h-3.5 w-3.5" />
                       Add Another Breed
                     </button>
                   )}
@@ -373,27 +390,27 @@ export default function DeclaredCompositionEditor({
                     type="button"
                     disabled={disabled}
                     onClick={handleResetToCalculated}
-                    className="min-h-[44px] text-xs text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                    className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs transition-colors"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="h-3.5 w-3.5" />
                     Reset to calculated
                   </button>
                 </div>
 
                 {/* Total indicator */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-muted-foreground">Total:</span>
+                  <span className="text-muted-foreground text-xs font-semibold">Total:</span>
                   <span
                     className={cn(
-                      'text-xs font-bold font-mono px-2.5 py-1 rounded-md border min-h-[30px] flex items-center',
+                      'flex min-h-[30px] items-center rounded-md border px-2.5 py-1 font-mono text-xs font-bold',
                       Math.abs(currentTotal - 100) <= 0.11
                         ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                        : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400',
                     )}
                   >
                     {currentTotal}%
                     {Math.abs(currentTotal - 100) > 0.11 && (
-                      <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                      <span className="text-muted-foreground ml-1 text-xs font-normal">
                         ({remainingPercent}% left)
                       </span>
                     )}
@@ -405,17 +422,17 @@ export default function DeclaredCompositionEditor({
               {validation.warnings.map((w, i) => (
                 <div
                   key={i}
-                  className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2"
+                  className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-300"
                 >
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span className="leading-relaxed">{w}</span>
                 </div>
               ))}
 
               {/* Errors (blocking save) */}
               {validation.error && (
-                <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400 text-xs flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-700 dark:text-red-400">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span className="leading-relaxed">{validation.error}</span>
                 </div>
               )}
@@ -428,14 +445,14 @@ export default function DeclaredCompositionEditor({
       {!hasParents && (
         <div className="space-y-3">
           {availableBreeds.length === 0 ? (
-            <div className="p-3 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Info className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="border-border/60 bg-muted/20 flex flex-col justify-between gap-2.5 rounded-lg border p-3 sm:flex-row sm:items-center">
+              <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                <Info className="text-muted-foreground h-4 w-4 shrink-0" />
                 <span>No breeds yet. Add your breeds first to declare custom composition.</span>
               </div>
               <a
                 href="/breeds"
-                className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0 min-h-[44px] flex items-center"
+                className="flex min-h-[44px] shrink-0 items-center text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
               >
                 Add Breeds →
               </a>
@@ -445,13 +462,15 @@ export default function DeclaredCompositionEditor({
               {/* Rows */}
               <div className="space-y-2">
                 {/* Always render at least Row 0: Registered Breed */}
-                {(!value || value.length === 0) ? (
-                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    <div className="flex-1 min-w-[140px] flex items-center px-3 min-h-[44px] h-11 text-xs rounded-lg border border-border bg-muted/30 font-medium text-foreground">
+                {!value || value.length === 0 ? (
+                  <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                    <div className="border-border bg-muted/30 text-foreground flex h-11 min-h-[44px] min-w-[140px] flex-1 items-center rounded-lg border px-3 text-xs font-medium">
                       {currentBreed}
-                      <span className="ml-2 text-[10px] text-muted-foreground font-normal">(Registered)</span>
+                      <span className="text-muted-foreground ml-2 text-xs font-normal">
+                        (Registered)
+                      </span>
                     </div>
-                    <div className="w-32 shrink-0 flex items-center gap-1">
+                    <div className="flex w-32 shrink-0 items-center gap-1">
                       <input
                         type="number"
                         disabled={disabled}
@@ -468,18 +487,20 @@ export default function DeclaredCompositionEditor({
                             onChange([{ breed: currentBreed, percent: parseFloat(val) || 0 }]);
                           }
                         }}
-                        className="w-full min-h-[44px] h-11 px-2.5 text-xs text-right rounded-lg border border-border bg-background text-foreground focus:outline-hidden focus:border-emerald-500 font-mono"
+                        className="border-border bg-background text-foreground h-11 min-h-[44px] w-full rounded-lg border px-2.5 text-right font-mono text-xs focus:border-emerald-500 focus:outline-hidden"
                         aria-label={`Percentage for ${currentBreed}`}
                       />
-                      <span className="text-xs text-muted-foreground font-semibold shrink-0">%</span>
+                      <span className="text-muted-foreground shrink-0 text-xs font-semibold">
+                        %
+                      </span>
                     </div>
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={handleShortcut100}
-                      className="min-h-[44px] px-3 py-2 text-xs font-medium rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer inline-flex items-center gap-1 shrink-0"
+                      className="border-border bg-background hover:bg-muted text-foreground inline-flex min-h-[44px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                     >
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
                       100% {currentBreed}
                     </button>
                   </div>
@@ -487,19 +508,21 @@ export default function DeclaredCompositionEditor({
                   value.map((item, idx) => {
                     const isFirst = idx === 0;
                     return (
-                      <div key={idx} className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                        <div className="flex-1 min-w-[140px]">
+                      <div key={idx} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                        <div className="min-w-[140px] flex-1">
                           {isFirst ? (
-                            <div className="flex items-center px-3 min-h-[44px] h-11 text-xs rounded-lg border border-border bg-muted/30 font-medium text-foreground">
+                            <div className="border-border bg-muted/30 text-foreground flex h-11 min-h-[44px] items-center rounded-lg border px-3 text-xs font-medium">
                               {item.breed}
-                              <span className="ml-2 text-[10px] text-muted-foreground font-normal">(Registered)</span>
+                              <span className="text-muted-foreground ml-2 text-xs font-normal">
+                                (Registered)
+                              </span>
                             </div>
                           ) : (
                             <select
                               disabled={disabled}
                               value={item.breed}
                               onChange={(e) => handleRowChange(idx, 'breed', e.target.value)}
-                              className="w-full min-h-[44px] h-11 px-3 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-hidden focus:border-emerald-500"
+                              className="border-border bg-background text-foreground h-11 min-h-[44px] w-full rounded-lg border px-3 text-xs focus:border-emerald-500 focus:outline-hidden"
                               aria-label={`Breed for share ${idx + 1}`}
                             >
                               {availableBreeds.map((b) => (
@@ -511,7 +534,7 @@ export default function DeclaredCompositionEditor({
                           )}
                         </div>
 
-                        <div className="w-32 shrink-0 flex items-center gap-1">
+                        <div className="flex w-32 shrink-0 items-center gap-1">
                           <input
                             type="number"
                             disabled={disabled}
@@ -521,10 +544,12 @@ export default function DeclaredCompositionEditor({
                             value={item.percent === 0 ? '' : item.percent}
                             onChange={(e) => handleRowChange(idx, 'percent', e.target.value)}
                             placeholder="0"
-                            className="w-full min-h-[44px] h-11 px-2.5 text-xs text-right rounded-lg border border-border bg-background text-foreground focus:outline-hidden focus:border-emerald-500 font-mono"
+                            className="border-border bg-background text-foreground h-11 min-h-[44px] w-full rounded-lg border px-2.5 text-right font-mono text-xs focus:border-emerald-500 focus:outline-hidden"
                             aria-label={`Percentage for ${item.breed}`}
                           />
-                          <span className="text-xs text-muted-foreground font-semibold shrink-0">%</span>
+                          <span className="text-muted-foreground shrink-0 text-xs font-semibold">
+                            %
+                          </span>
                         </div>
 
                         {/* If single row and not 100%, show 100% shortcut */}
@@ -533,9 +558,9 @@ export default function DeclaredCompositionEditor({
                             type="button"
                             disabled={disabled}
                             onClick={handleShortcut100}
-                            className="min-h-[44px] px-3 py-2 text-xs font-medium rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer inline-flex items-center gap-1 shrink-0"
+                            className="border-border bg-background hover:bg-muted text-foreground inline-flex min-h-[44px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                           >
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
                             100% {currentBreed}
                           </button>
                         )}
@@ -545,11 +570,11 @@ export default function DeclaredCompositionEditor({
                             type="button"
                             disabled={disabled}
                             onClick={() => handleRemoveRow(idx)}
-                            className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+                            className="text-muted-foreground flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-lg p-2 transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
                             title="Remove breed share"
                             aria-label={`Remove breed share ${item.breed}`}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         )}
                       </div>
@@ -559,17 +584,16 @@ export default function DeclaredCompositionEditor({
               </div>
 
               {/* Action buttons & Total indicator */}
-              <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-border/50">
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="border-border/50 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {(!value || value.length < 4) && (
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={handleAddRow}
-                      className="min-h-[44px] text-xs font-medium px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer inline-flex items-center gap-1"
+                      className="border-border bg-background hover:bg-muted text-foreground inline-flex min-h-[44px] cursor-pointer items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      + Add another breed
+                      <Plus className="h-3.5 w-3.5" />+ Add another breed
                     </button>
                   )}
                   {isCustomDeclared && (
@@ -577,9 +601,9 @@ export default function DeclaredCompositionEditor({
                       type="button"
                       disabled={disabled}
                       onClick={() => onChange(null)}
-                      className="min-h-[44px] text-xs text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
+                      className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-xs transition-colors"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
+                      <RotateCcw className="h-3.5 w-3.5" />
                       Clear (assumed pure)
                     </button>
                   )}
@@ -587,20 +611,20 @@ export default function DeclaredCompositionEditor({
 
                 {/* Total indicator */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-muted-foreground">Total:</span>
+                  <span className="text-muted-foreground text-xs font-semibold">Total:</span>
                   <span
                     className={cn(
-                      'text-xs font-bold font-mono px-2.5 py-1 rounded-md border min-h-[30px] flex items-center',
+                      'flex min-h-[30px] items-center rounded-md border px-2.5 py-1 font-mono text-xs font-bold',
                       !isCustomDeclared
                         ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                         : Math.abs(currentTotal - 100) <= 0.11
-                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                          : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400',
                     )}
                   >
                     {!isCustomDeclared ? '100% (Assumed)' : `${currentTotal}%`}
                     {isCustomDeclared && Math.abs(currentTotal - 100) > 0.11 && (
-                      <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                      <span className="text-muted-foreground ml-1 text-xs font-normal">
                         ({remainingPercent}% left)
                       </span>
                     )}
@@ -610,8 +634,8 @@ export default function DeclaredCompositionEditor({
 
               {/* Inline Validation Error */}
               {isCustomDeclared && validation.error && (
-                <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400 text-xs flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-700 dark:text-red-400">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span className="leading-relaxed">{validation.error}</span>
                 </div>
               )}
@@ -621,18 +645,18 @@ export default function DeclaredCompositionEditor({
                 validation.warnings.map((w, idx) => (
                   <div
                     key={idx}
-                    className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2"
+                    className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-300"
                   >
-                    <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                     <span className="leading-relaxed">{w}</span>
                   </div>
                 ))}
 
               {/* Preview of resulting type */}
               {previewClassification && validation.valid && (
-                <div className="p-2.5 rounded-lg border border-border/80 bg-muted/30 text-xs flex items-center justify-between gap-2">
+                <div className="border-border/80 bg-muted/30 flex items-center justify-between gap-2 rounded-lg border p-2.5 text-xs">
                   <span className="text-muted-foreground">Preview Classification:</span>
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     {previewClassification.badgeLabel}
                   </span>
                 </div>

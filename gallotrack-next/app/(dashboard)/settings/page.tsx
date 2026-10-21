@@ -1,27 +1,48 @@
-'use client'
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/registry'
-import type { AdminSettings } from '@/lib/admin'
-import type { RegistryOption } from '@/lib/types'
-import { User, Home, Settings, Bell, Database, Monitor, X, ListChecks, AlertTriangle } from 'lucide-react'
-import { Modal } from '@/components/ui'
-import { fetchUserSettings, setUserSetting } from '@/lib/services/settings-service'
-import { parseBackup, restoreBackup } from '@/lib/backup'
-import { useFowl } from '@/lib/contexts/fowl-context'
-import { RANKING_METRICS, RANKING_METRIC_LABELS, DEFAULT_SETTINGS, type UserSettings as FarmSettings, type SettingsKey } from '@/lib/settings'
-import { fetchRegistryOptions, addRegistryOption, setRegistryOptionActive, toggleTemplateOption } from '@/lib/services/options-service'
-import { LanguageSelect } from '@/components/i18n/LanguageSwitcher'
-import { useLanguage } from '@/lib/i18n'
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/registry';
+import type { AdminSettings } from '@/lib/admin';
+import type { RegistryOption } from '@/lib/types';
+import {
+  User,
+  Home,
+  Settings,
+  Bell,
+  Database,
+  Monitor,
+  X,
+  ListChecks,
+  AlertTriangle,
+} from 'lucide-react';
+import { Modal } from '@/components/ui';
+import { fetchUserSettings, setUserSetting } from '@/lib/services/settings-service';
+import { parseBackup, restoreBackup } from '@/lib/backup';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import {
+  RANKING_METRICS,
+  RANKING_METRIC_LABELS,
+  DEFAULT_SETTINGS,
+  type UserSettings as FarmSettings,
+  type SettingsKey,
+} from '@/lib/settings';
+import {
+  fetchRegistryOptions,
+  addRegistryOption,
+  setRegistryOptionActive,
+  toggleTemplateOption,
+} from '@/lib/services/options-service';
+import { LanguageSelect } from '@/components/i18n/LanguageSwitcher';
+import { useLanguage } from '@/lib/i18n';
 
 interface UserSettings extends AdminSettings {
-  farm_name?: string
-  farm_location?: string
-  farm_description?: string
-  contact_number?: string
+  farm_name?: string;
+  farm_location?: string;
+  farm_description?: string;
+  contact_number?: string;
 }
 
-type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'registry' | 'data' | 'system'
+type Tab = 'account' | 'farm' | 'preferences' | 'notifications' | 'registry' | 'data' | 'system';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'account', label: 'Account', icon: <User size={14} /> },
@@ -31,7 +52,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'registry', label: 'Option Lists', icon: <ListChecks size={14} /> },
   { id: 'data', label: 'Data Management', icon: <Database size={14} /> },
   { id: 'system', label: 'System Info', icon: <Monitor size={14} /> },
-]
+];
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -42,57 +63,119 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-emerald-500/20 focus:ring-offset-2 ${checked ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
     >
-      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`}
+      />
     </button>
-  )
+  );
 }
 
-function Field({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 py-3.5 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-      <div className="space-y-0.5 min-w-0">
-        <span className="block text-sm font-extrabold text-slate-800 dark:text-slate-100">{label}</span>
-        {description && <span className="text-xs text-muted-foreground dark:text-muted-foreground font-medium block">{description}</span>}
+    <div className="flex flex-col justify-between gap-3 border-b border-slate-100 py-3.5 last:border-0 sm:flex-row sm:items-center dark:border-slate-700/50">
+      <div className="min-w-0 space-y-0.5">
+        <span className="block text-sm font-extrabold text-slate-800 dark:text-slate-100">
+          {label}
+        </span>
+        {description && (
+          <span className="text-muted-foreground dark:text-muted-foreground block text-xs font-medium">
+            {description}
+          </span>
+        )}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
-  )
+  );
 }
 
-function SelectInput({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+function SelectInput({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm cursor-pointer min-w-[160px]">
-      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="border-input-border min-w-[160px] cursor-pointer rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
     </select>
-  )
+  );
 }
 
-function TextInput({ value, onChange, placeholder, type = 'text' }: { value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
   return (
-    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm min-w-[200px]" />
-  )
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="border-input-border min-w-[200px] rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+    />
+  );
 }
 
-function SectionCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-700/50 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50">
-        <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">{title}</h4>
-        {description && <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium mt-0.5">{description}</p>}
+    <div className="overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900">
+      <div className="border-b border-slate-100 bg-slate-50/50 px-5 py-4 dark:border-slate-700/50 dark:bg-slate-800/50">
+        <h4 className="text-sm font-black tracking-wide text-slate-800 uppercase dark:text-slate-100">
+          {title}
+        </h4>
+        {description && (
+          <p className="text-muted-foreground dark:text-muted-foreground mt-0.5 text-xs font-medium">
+            {description}
+          </p>
+        )}
       </div>
-      <div className="px-5 divide-y divide-slate-50 dark:divide-slate-700/50">{children}</div>
+      <div className="divide-y divide-slate-50 px-5 dark:divide-slate-700/50">{children}</div>
     </div>
-  )
+  );
 }
 
 interface SystemConfig {
-  system_name: string
-  system_status: string
-  maintenance_message: string
-  default_strain: string
-  default_arena: string
-  weight_unit: string
-  height_unit: string
+  system_name: string;
+  system_status: string;
+  maintenance_message: string;
+  default_strain: string;
+  default_arena: string;
+  weight_unit: string;
+  height_unit: string;
 }
 
 const defaultSystemConfig: SystemConfig = {
@@ -103,12 +186,12 @@ const defaultSystemConfig: SystemConfig = {
   default_arena: '',
   weight_unit: 'kg',
   height_unit: 'cm',
-}
+};
 
 export default function SettingsPage() {
-  const router = useRouter()
-  const { t, language, isBeta } = useLanguage()
-  const [activeTab, setActiveTab] = useState<Tab>('account')
+  const router = useRouter();
+  const { t, language, isBeta } = useLanguage();
+  const [activeTab, setActiveTab] = useState<Tab>('account');
   const [settings, setSettings] = useState<UserSettings>({
     default_strain: 'Sweater',
     cloud_logs: true,
@@ -119,154 +202,194 @@ export default function SettingsPage() {
     overdue_alerts: true,
     auto_calculate_age: true,
     theme: 'light',
-  })
-  const [systemConfig, setSystemConfig] = useState<SystemConfig>(defaultSystemConfig)
-  const [loading, setLoading] = useState(false)
-  const [savedNotice, setSavedNotice] = useState(false)
-  const [loadError, setLoadError] = useState('')
-  const [clearNotice, setClearNotice] = useState('')
-  const [clearing, setClearing] = useState('')
-  const [restoring, setRestoring] = useState(false)
-  const restoreInputRef = useRef<HTMLInputElement | null>(null)
-  const fowl = useFowl()
+  });
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>(defaultSystemConfig);
+  const [loading, setLoading] = useState(false);
+  const [savedNotice, setSavedNotice] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [clearNotice, setClearNotice] = useState('');
+  const [clearing, setClearing] = useState('');
+  const [restoring, setRestoring] = useState(false);
+  const restoreInputRef = useRef<HTMLInputElement | null>(null);
+  const fowl = useFowl();
   const [dangerModal, setDangerModal] = useState<{
-    type: 'match' | 'fowl' | 'all'
-    title: string
-    label: string
-  } | null>(null)
-  const [dangerConfirmInput, setDangerConfirmInput] = useState('')
-  const [alsoDeleteMatches, setAlsoDeleteMatches] = useState(false)
-  const [userEmail, setUserEmail] = useState('')
-  const [userName, setUserName] = useState('')
-  const [userCreatedAt, setUserCreatedAt] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [changingPw, setChangingPw] = useState(false)
-  const [pwMessage, setPwMessage] = useState('')
+    type: 'match' | 'fowl' | 'all';
+    title: string;
+    label: string;
+  } | null>(null);
+  const [dangerConfirmInput, setDangerConfirmInput] = useState('');
+  const [alsoDeleteMatches, setAlsoDeleteMatches] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [userCreatedAt, setUserCreatedAt] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPw, setChangingPw] = useState(false);
+  const [pwMessage, setPwMessage] = useState('');
 
   // Farm-level settings stored in user_settings (ranking, match rules)
-  const [farmCfg, setFarmCfg] = useState<FarmSettings>(DEFAULT_SETTINGS)
-  const [farmCfgNotice, setFarmCfgNotice] = useState('')
+  const [farmCfg, setFarmCfg] = useState<FarmSettings>(DEFAULT_SETTINGS);
+  const [farmCfgNotice, setFarmCfgNotice] = useState('');
   // Editable registry option lists (event types, match types, conditions, locations)
-  const [optRows, setOptRows] = useState<RegistryOption[]>([])
-  const [newOptValues, setNewOptValues] = useState<Record<string, string>>({})
-  const [optNotice, setOptNotice] = useState('')
+  const [optRows, setOptRows] = useState<RegistryOption[]>([]);
+  const [newOptValues, setNewOptValues] = useState<Record<string, string>>({});
+  const [optNotice, setOptNotice] = useState('');
 
   const MANAGED_LISTS: { key: string; label: string; desc: string }[] = [
-    { key: 'feather_color', label: 'Feather Colors', desc: 'Plumage color suggestions (Black-Breasted Red, Wheaten, Dark Red, etc.) for registration and editing' },
-    { key: 'trait', label: 'Fighting / Behavioral Traits', desc: 'Fighting and behavioral trait suggestions (Aggressive, Smart Fighter, High Velocity Cutter, etc.) for registration and editing' },
-    { key: 'event_type', label: 'Event Types', desc: 'Derby, Lusok, and any custom events offered when logging a fight' },
-    { key: 'match_type', label: 'Match Types', desc: 'Main Event, Elimination, Finals, Exhibition — the format of the match' },
-    { key: 'post_match_condition', label: 'Post-Fight Conditions', desc: 'Condition options recorded after each fight (never changes a status automatically)' },
-    { key: 'location', label: 'Arena Locations', desc: 'Arenas and venues offered in the match form' },
-  ]
+    {
+      key: 'feather_color',
+      label: 'Feather Colors',
+      desc: 'Plumage color suggestions (Black-Breasted Red, Wheaten, Dark Red, etc.) for registration and editing',
+    },
+    {
+      key: 'trait',
+      label: 'Fighting / Behavioral Traits',
+      desc: 'Fighting and behavioral trait suggestions (Aggressive, Smart Fighter, High Velocity Cutter, etc.) for registration and editing',
+    },
+    {
+      key: 'event_type',
+      label: 'Event Types',
+      desc: 'Derby, Lusok, and any custom events offered when logging a fight',
+    },
+    {
+      key: 'match_type',
+      label: 'Match Types',
+      desc: 'Main Event, Elimination, Finals, Exhibition — the format of the match',
+    },
+    {
+      key: 'post_match_condition',
+      label: 'Post-Fight Conditions',
+      desc: 'Condition options recorded after each fight (never changes a status automatically)',
+    },
+    {
+      key: 'location',
+      label: 'Arena Locations',
+      desc: 'Arenas and venues offered in the match form',
+    },
+  ];
 
   async function saveFarmSetting(key: SettingsKey, value: unknown) {
-    setFarmCfg((prev) => ({ ...prev, [key]: value }) as FarmSettings)
-    const { error } = await setUserSetting(key, value as FarmSettings[SettingsKey])
-    setFarmCfgNotice(error ? `Failed to save: ${error}` : 'Farm setting saved.')
-    setTimeout(() => setFarmCfgNotice(''), 3000)
+    setFarmCfg((prev) => ({ ...prev, [key]: value }) as FarmSettings);
+    const { error } = await setUserSetting(key, value as FarmSettings[SettingsKey]);
+    setFarmCfgNotice(error ? `Failed to save: ${error}` : 'Farm setting saved.');
+    setTimeout(() => setFarmCfgNotice(''), 3000);
   }
 
   async function reloadRegistryOptions() {
-    setOptRows(await fetchRegistryOptions())
+    setOptRows(await fetchRegistryOptions());
   }
 
   async function handleAddOption(listKey: string) {
-    const value = (newOptValues[listKey] || '').trim()
-    if (!value) return
-    const { error } = await addRegistryOption(listKey, value)
+    const value = (newOptValues[listKey] || '').trim();
+    if (!value) return;
+    const { error } = await addRegistryOption(listKey, value);
     if (error) {
-      setOptNotice(error)
+      setOptNotice(error);
     } else {
-      setNewOptValues((prev) => ({ ...prev, [listKey]: '' }))
-      setOptNotice(`"${value}" added.`)
-      await reloadRegistryOptions()
+      setNewOptValues((prev) => ({ ...prev, [listKey]: '' }));
+      setOptNotice(`"${value}" added.`);
+      await reloadRegistryOptions();
     }
-    setTimeout(() => setOptNotice(''), 3000)
+    setTimeout(() => setOptNotice(''), 3000);
   }
 
   async function handleToggleOption(row: RegistryOption) {
     if (row.id != null && row.user_id) {
-      const { error } = await setRegistryOptionActive(row.id, row.is_active === false)
-      if (error) setOptNotice(error)
+      const { error } = await setRegistryOptionActive(row.id, row.is_active === false);
+      if (error) setOptNotice(error);
     } else {
       const { error } = await toggleTemplateOption(
         row.list_key,
         row.value,
         row.label || row.value,
         row.is_active === false,
-      )
-      if (error) setOptNotice(error)
+      );
+      if (error) setOptNotice(error);
     }
-    await reloadRegistryOptions()
-    setTimeout(() => setOptNotice(''), 3000)
+    await reloadRegistryOptions();
+    setTimeout(() => setOptNotice(''), 3000);
   }
 
-  const update = (key: keyof UserSettings, value: unknown) => setSettings((prev) => ({ ...prev, [key]: value }))
+  const update = (key: keyof UserSettings, value: unknown) =>
+    setSettings((prev) => ({ ...prev, [key]: value }));
 
-  const STORAGE_KEY = 'gallotrack_user_preferences'
+  const STORAGE_KEY = 'gallotrack_user_preferences';
 
   function loadPrefsFromStorage() {
     try {
-      if (typeof window === 'undefined') return {}
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : {}
-    } catch { return {} }
+      if (typeof window === 'undefined') return {};
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
   }
 
   function savePrefsToStorage(prefs: Record<string, unknown>) {
     try {
-      if (typeof window === 'undefined') return
-      const existing = loadPrefsFromStorage()
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...prefs }))
-    } catch { /* silent */ }
+      if (typeof window === 'undefined') return;
+      const existing = loadPrefsFromStorage();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...prefs }));
+    } catch {
+      /* silent */
+    }
   }
 
   useEffect(() => {
     async function load() {
       try {
         const [systemRes, userRes] = await Promise.all([
-          fetch('/api/admin/system-settings').then(r => r.ok ? r.json() : defaultSystemConfig).catch(() => defaultSystemConfig),
+          fetch('/api/admin/system-settings')
+            .then((r) => (r.ok ? r.json() : defaultSystemConfig))
+            .catch(() => defaultSystemConfig),
           supabase.auth.getUser(),
-        ])
+        ]);
 
-      const sysCfg: SystemConfig = {
-        system_name: systemRes.system_name || 'GalloTrack',
-        system_status: systemRes.system_status || 'Operational',
-        maintenance_message: systemRes.maintenance_message || '',
-        default_strain: systemRes.default_strain || 'Sweater',
-        default_arena: systemRes.default_arena || '',
-        weight_unit: systemRes.weight_unit || 'kg',
-        height_unit: systemRes.height_unit || 'cm',
-      }
-      setSystemConfig(sysCfg)
+        const sysCfg: SystemConfig = {
+          system_name: systemRes.system_name || 'GalloTrack',
+          system_status: systemRes.system_status || 'Operational',
+          maintenance_message: systemRes.maintenance_message || '',
+          default_strain: systemRes.default_strain || 'Sweater',
+          default_arena: systemRes.default_arena || '',
+          weight_unit: systemRes.weight_unit || 'kg',
+          height_unit: systemRes.height_unit || 'cm',
+        };
+        setSystemConfig(sysCfg);
 
-      const { data: { user: authUser } } = userRes
-      if (authUser) {
-          setUserEmail(authUser.email || '')
-          setUserName(authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '')
-          setUserCreatedAt(new Date(authUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
+        const {
+          data: { user: authUser },
+        } = userRes;
+        if (authUser) {
+          setUserEmail(authUser.email || '');
+          setUserName(authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '');
+          setUserCreatedAt(
+            new Date(authUser.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+          );
 
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', authUser.id)
-            .maybeSingle()
+            .maybeSingle();
 
           const { data: farm } = await supabase
             .from('farms')
             .select('farm_name, farm_location, farm_description, contact_number')
             .eq('owner_id', authUser.id)
-            .maybeSingle()
+            .maybeSingle();
 
-          const storedPrefs = loadPrefsFromStorage()
+          const storedPrefs = loadPrefsFromStorage();
 
           if (profile) {
             setSettings((prev) => ({
               ...prev,
               farm_name: farm?.farm_name || profile.farm_name || storedPrefs.farm_name || '',
               farm_location: farm?.farm_location || storedPrefs.farm_location || '',
-              contact_number: farm?.contact_number || storedPrefs.contact_number || profile.phone_number || '',
+              contact_number:
+                farm?.contact_number || storedPrefs.contact_number || profile.phone_number || '',
               farm_description: farm?.farm_description || storedPrefs.farm_description || '',
               default_arena: storedPrefs.default_arena || sysCfg.default_arena || '',
               default_strain: storedPrefs.default_strain || sysCfg.default_strain || 'Sweater',
@@ -278,28 +401,34 @@ export default function SettingsPage() {
               event_alerts: storedPrefs.event_alerts !== false,
               cloud_logs: storedPrefs.cloud_logs !== false,
               theme: storedPrefs.theme || 'light',
-            }))
+            }));
           }
         }
       } catch (err: unknown) {
-        setLoadError(err instanceof Error ? err.message : 'Failed to load settings')
+        setLoadError(err instanceof Error ? err.message : 'Failed to load settings');
       }
     }
-    load()
-  }, [])
+    load();
+  }, []);
 
   useEffect(() => {
-    let live = true
-    fetchUserSettings().then((s) => { if (live) setFarmCfg(s) })
-    fetchRegistryOptions().then((rows) => { if (live) setOptRows(rows) })
-    return () => { live = false }
-  }, [])
+    let live = true;
+    fetchUserSettings().then((s) => {
+      if (live) setFarmCfg(s);
+    });
+    fetchRegistryOptions().then((rows) => {
+      if (live) setOptRows(rows);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setSavedNotice(false)
-    setLoadError('')
+    e.preventDefault();
+    setLoading(true);
+    setSavedNotice(false);
+    setLoadError('');
     try {
       savePrefsToStorage({
         default_arena: settings.default_arena || '',
@@ -312,9 +441,11 @@ export default function SettingsPage() {
         event_alerts: settings.event_alerts !== false,
         cloud_logs: settings.cloud_logs !== false,
         theme: settings.theme || 'light',
-      })
+      });
 
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         if (settings.farm_name) {
           await supabase.from('farms').upsert(
@@ -326,62 +457,67 @@ export default function SettingsPage() {
               contact_number: settings.contact_number || '',
               updated_at: new Date().toISOString(),
             },
-            { onConflict: 'owner_id' }
-          )
+            { onConflict: 'owner_id' },
+          );
         }
       }
 
-      window.dispatchEvent(new Event('admin-profile-update'))
-      setSavedNotice(true)
-      setTimeout(() => setSavedNotice(false), 4000)
+      window.dispatchEvent(new Event('admin-profile-update'));
+      setSavedNotice(true);
+      setTimeout(() => setSavedNotice(false), 4000);
     } catch (err: unknown) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to save')
+      setLoadError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleChangePassword() {
-    if (!newPassword || newPassword.length < 6) { setPwMessage('Password must be at least 6 characters.'); return }
-    setChangingPw(true)
-    setPwMessage('')
+    if (!newPassword || newPassword.length < 6) {
+      setPwMessage('Password must be at least 6 characters.');
+      return;
+    }
+    setChangingPw(true);
+    setPwMessage('');
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
-      if (error) throw error
-      setPwMessage('Password updated successfully.')
-      setNewPassword('')
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setPwMessage('Password updated successfully.');
+      setNewPassword('');
     } catch (err: unknown) {
-      setPwMessage(err instanceof Error ? err.message : 'Failed to change password')
+      setPwMessage(err instanceof Error ? err.message : 'Failed to change password');
     } finally {
-      setChangingPw(false)
-      setTimeout(() => setPwMessage(''), 4000)
+      setChangingPw(false);
+      setTimeout(() => setPwMessage(''), 4000);
     }
   }
 
   const [dangerCounts, setDangerCounts] = useState<{
-    pairingsCount: number
-    mediaCounts: { videos: number; photos: number; fowlImages: number; total: number }
+    pairingsCount: number;
+    mediaCounts: { videos: number; photos: number; fowlImages: number; total: number };
   }>({
     pairingsCount: 0,
     mediaCounts: { videos: 0, photos: 0, fowlImages: 0, total: 0 },
-  })
+  });
 
   async function openDangerModal(type: 'match' | 'fowl' | 'all', title: string, label: string) {
-    setDangerModal({ type, title, label })
-    setDangerConfirmInput('')
-    setAlsoDeleteMatches(false)
+    setDangerModal({ type, title, label });
+    setDangerConfirmInput('');
+    setAlsoDeleteMatches(false);
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.access_token) {
         const res = await fetch('/api/user/purge-media', {
           headers: { Authorization: `Bearer ${session.access_token}` },
-        })
+        });
         if (res.ok) {
-          const data = await res.json()
+          const data = await res.json();
           setDangerCounts({
             pairingsCount: data.pairingsCount ?? 0,
             mediaCounts: data.mediaCounts ?? { videos: 0, photos: 0, fowlImages: 0, total: 0 },
-          })
+          });
         }
       }
     } catch {
@@ -390,40 +526,56 @@ export default function SettingsPage() {
   }
 
   async function handleConfirmDangerAction() {
-    if (!dangerModal || dangerConfirmInput.trim() !== 'DELETE') return
-    const { type } = dangerModal
-    setClearing(type)
-    setClearNotice('')
+    if (!dangerModal || dangerConfirmInput.trim() !== 'DELETE') return;
+    const { type } = dangerModal;
+    setClearing(type);
+    setClearNotice('');
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!user) return
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!user) return;
 
-      let mediaResult: { success?: boolean; removedCount?: number; errors?: string[] } | null = null
+      let mediaResult: { success?: boolean; removedCount?: number; errors?: string[] } | null =
+        null;
 
       if (type === 'fowl') {
         // 1. Delete dependent breeding pairings first so no rows with null sire_id/dam_id remain
-        const { error: pairErr } = await supabase.from('breeding_pairings').delete().eq('user_id', user.id)
-        if (pairErr) throw pairErr
+        const { error: pairErr } = await supabase
+          .from('breeding_pairings')
+          .delete()
+          .eq('user_id', user.id);
+        if (pairErr) throw pairErr;
 
         // 2. Delete chicken-dependent safety incidents
-        await supabase.from('safety_incidents').delete().eq('user_id', user.id)
+        await supabase.from('safety_incidents').delete().eq('user_id', user.id);
 
         // 3. Delete share links for fowl
-        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'fowl')
+        await supabase
+          .from('share_links')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('entity_type', 'fowl');
 
         // 4. Delete identifier sequence counters
-        await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
+        await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id);
 
         // 5. Delete fowl records (cascades fowl_photos and fowl_status_history)
-        const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
-        if (fowlErr) throw fowlErr
+        const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id);
+        if (fowlErr) throw fowlErr;
 
         // 5b. If user checked "Also delete these match records (recommended)", remove matches and match shares
         if (alsoDeleteMatches) {
-          await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
-          const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
-          if (matchErr) throw matchErr
+          await supabase
+            .from('share_links')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('entity_type', 'match');
+          const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id);
+          if (matchErr) throw matchErr;
         }
 
         // 6. Purge storage files for fowl (and match files if alsoDeleteMatches is checked)
@@ -431,99 +583,141 @@ export default function SettingsPage() {
           try {
             const res = await fetch('/api/user/purge-media', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+              },
               body: JSON.stringify({ scope: alsoDeleteMatches ? 'all' : 'fowl' }),
-            })
-            mediaResult = await res.json()
+            });
+            mediaResult = await res.json();
           } catch (e: unknown) {
-            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] }
+            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] };
           }
         }
 
-        const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
-        const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
-        setClearNotice(`Chicken profiles, breeding pairings, counters${alsoDeleteMatches ? ', and match records' : ''} deleted.${mediaMsg}${errorMsg}`)
+        const mediaMsg = mediaResult?.removedCount
+          ? ` Purged ${mediaResult.removedCount} media file(s).`
+          : '';
+        const errorMsg = mediaResult?.errors?.length
+          ? ` Storage warning: ${mediaResult.errors.join('; ')}`
+          : '';
+        setClearNotice(
+          `Chicken profiles, breeding pairings, counters${alsoDeleteMatches ? ', and match records' : ''} deleted.${mediaMsg}${errorMsg}`,
+        );
       } else if (type === 'match') {
         // 1. Delete share links for matches
-        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
+        await supabase
+          .from('share_links')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('entity_type', 'match');
 
         // 2. Delete matches (cascades match_options, match_photos, match_videos)
-        const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
-        if (matchErr) throw matchErr
+        const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id);
+        if (matchErr) throw matchErr;
 
         // 3. Purge storage files for matches (match-videos, match-photos)
         if (session?.access_token) {
           try {
             const res = await fetch('/api/user/purge-media', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+              },
               body: JSON.stringify({ scope: 'match' }),
-            })
-            mediaResult = await res.json()
+            });
+            mediaResult = await res.json();
           } catch (e: unknown) {
-            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] }
+            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] };
           }
         }
 
-        const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
-        const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
-        setClearNotice(`All match records deleted.${mediaMsg}${errorMsg}`)
+        const mediaMsg = mediaResult?.removedCount
+          ? ` Purged ${mediaResult.removedCount} media file(s).`
+          : '';
+        const errorMsg = mediaResult?.errors?.length
+          ? ` Storage warning: ${mediaResult.errors.join('; ')}`
+          : '';
+        setClearNotice(`All match records deleted.${mediaMsg}${errorMsg}`);
       } else if (type === 'all') {
         // 1. Clear match records and child links
-        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'match')
-        const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id)
-        if (matchErr) throw matchErr
+        await supabase
+          .from('share_links')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('entity_type', 'match');
+        const { error: matchErr } = await supabase.from('match').delete().eq('user_id', user.id);
+        if (matchErr) throw matchErr;
 
         // 2. Clear chicken dependent records (pairings, incidents, share_links)
-        const { error: pairErr } = await supabase.from('breeding_pairings').delete().eq('user_id', user.id)
-        if (pairErr) throw pairErr
-        await supabase.from('safety_incidents').delete().eq('user_id', user.id)
-        await supabase.from('share_links').delete().eq('user_id', user.id).eq('entity_type', 'fowl')
+        const { error: pairErr } = await supabase
+          .from('breeding_pairings')
+          .delete()
+          .eq('user_id', user.id);
+        if (pairErr) throw pairErr;
+        await supabase.from('safety_incidents').delete().eq('user_id', user.id);
+        await supabase
+          .from('share_links')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('entity_type', 'fowl');
 
         // 3. Clear counters and fowls
-        await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id)
-        const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id)
-        if (fowlErr) throw fowlErr
+        await supabase.from('fowl_identifier_counters').delete().eq('user_id', user.id);
+        const { error: fowlErr } = await supabase.from('fowl').delete().eq('user_id', user.id);
+        if (fowlErr) throw fowlErr;
 
         // 4. Purge storage files across all buckets
         if (session?.access_token) {
           try {
             const res = await fetch('/api/user/purge-media', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+              },
               body: JSON.stringify({ scope: 'all' }),
-            })
-            mediaResult = await res.json()
+            });
+            mediaResult = await res.json();
           } catch (e: unknown) {
-            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] }
+            mediaResult = { success: false, errors: [e instanceof Error ? e.message : String(e)] };
           }
         }
 
-        const mediaMsg = mediaResult?.removedCount ? ` Purged ${mediaResult.removedCount} media file(s).` : ''
-        const errorMsg = mediaResult?.errors?.length ? ` Storage warning: ${mediaResult.errors.join('; ')}` : ''
-        setClearNotice(`All chicken profiles, breeding pairings, match records, and sequence counters deleted.${mediaMsg}${errorMsg}`)
+        const mediaMsg = mediaResult?.removedCount
+          ? ` Purged ${mediaResult.removedCount} media file(s).`
+          : '';
+        const errorMsg = mediaResult?.errors?.length
+          ? ` Storage warning: ${mediaResult.errors.join('; ')}`
+          : '';
+        setClearNotice(
+          `All chicken profiles, breeding pairings, match records, and sequence counters deleted.${mediaMsg}${errorMsg}`,
+        );
       }
-      window.dispatchEvent(new Event('admin-profile-update'))
-      void fowl.fetchDatabaseResources()
-      setDangerModal(null)
-      setDangerConfirmInput('')
+      window.dispatchEvent(new Event('admin-profile-update'));
+      void fowl.fetchDatabaseResources();
+      setDangerModal(null);
+      setDangerConfirmInput('');
     } catch (err: unknown) {
-      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
+      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setClearing('')
-      setTimeout(() => setClearNotice(''), 7000)
+      setClearing('');
+      setTimeout(() => setClearNotice(''), 7000);
     }
   }
 
   async function handleExport() {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
       const [fowls, matches, pairings] = await Promise.all([
         supabase.from('fowl').select('*').eq('user_id', user.id),
         supabase.from('match').select('*').eq('user_id', user.id),
         supabase.from('breeding_pairings').select('*').eq('user_id', user.id),
-      ])
+      ]);
       const blob = new Blob(
         [
           JSON.stringify(
@@ -539,56 +733,59 @@ export default function SettingsPage() {
           ),
         ],
         { type: 'application/json' },
-      )
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = `gallotrack-backup-${new Date().toISOString().split('T')[0]}.json`
-      a.click()
-      setClearNotice('Data exported successfully (chickens, matches, and breeding pairings).')
-      setTimeout(() => setClearNotice(''), 5000)
+      );
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `gallotrack-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      setClearNotice('Data exported successfully (chickens, matches, and breeding pairings).');
+      setTimeout(() => setClearNotice(''), 5000);
     } catch {
-      setClearNotice('Export failed.')
+      setClearNotice('Export failed.');
     }
   }
 
   async function handleRestoreFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setRestoring(true)
-    setClearNotice('')
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setRestoring(true);
+    setClearNotice('');
     try {
-      const parsed = parseBackup(await file.text())
+      const parsed = parseBackup(await file.text());
       if (!parsed.ok) {
-        setClearNotice(`Error: ${parsed.error}`)
-        return
+        setClearNotice(`Error: ${parsed.error}`);
+        return;
       }
-      const summary = `${parsed.fowls} chicken${parsed.fowls === 1 ? '' : 's'}, ${parsed.matches} match${parsed.matches === 1 ? '' : 'es'}, and ${parsed.pairings} breeding pairing${parsed.pairings === 1 ? '' : 's'}`
+      const summary = `${parsed.fowls} chicken${parsed.fowls === 1 ? '' : 's'}, ${parsed.matches} match${parsed.matches === 1 ? '' : 'es'}, and ${parsed.pairings} breeding pairing${parsed.pairings === 1 ? '' : 's'}`;
       if (
         !window.confirm(
           `Restore ${summary} from "${file.name}"? Records already in the registry are skipped.\n\nNote: Media files (photos and videos) and status history audit logs are not included. For a complete server and media backup, use: npm run db:backup`,
         )
       ) {
-        return
+        return;
       }
 
-      const result = await restoreBackup(parsed.backup, { includeProfiles: false })
-      const collisionMsg = result.collisions.length > 0 ? ` (${result.collisions.length} colliding record(s) skipped)` : ''
+      const result = await restoreBackup(parsed.backup, { includeProfiles: false });
+      const collisionMsg =
+        result.collisions.length > 0
+          ? ` (${result.collisions.length} colliding record(s) skipped)`
+          : '';
       if (result.errors.length > 0) {
         setClearNotice(
           `Error: restored ${result.fowls} chickens, ${result.matches} matches, ${result.pairings} pairings, but ${result.errors.length} failed — ${result.errors[0]}${collisionMsg}`,
-        )
+        );
       } else {
         setClearNotice(
           `Restored ${result.fowls} chickens, ${result.matches} matches, and ${result.pairings} breeding pairings${collisionMsg}.`,
-        )
+        );
       }
-      window.dispatchEvent(new Event('admin-profile-update'))
-      void fowl.fetchDatabaseResources()
+      window.dispatchEvent(new Event('admin-profile-update'));
+      void fowl.fetchDatabaseResources();
     } catch (err: unknown) {
-      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`)
+      setClearNotice(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setRestoring(false)
+      setRestoring(false);
     }
   }
 
@@ -597,248 +794,459 @@ export default function SettingsPage() {
       case 'account':
         return (
           <div className="space-y-4">
-            <SectionCard title="Profile Information" description="Your account details from Supabase Authentication">
+            <SectionCard
+              title="Profile Information"
+              description="Your account details from Supabase Authentication"
+            >
               <Field label="Email Address" description="Used for login and notifications">
-                <span className="text-sm font-semibold text-slate-700 dark:text-muted-foreground bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-sm border border-slate-100 dark:border-slate-700">{userEmail || '—'}</span>
+                <span className="dark:text-muted-foreground rounded-sm border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800">
+                  {userEmail || '—'}
+                </span>
               </Field>
               <Field label="Display Name">
                 <TextInput value={userName} onChange={setUserName} placeholder="Your name" />
               </Field>
               <Field label="Member Since">
-                <span className="text-sm font-medium text-muted-foreground">{userCreatedAt || '—'}</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  {userCreatedAt || '—'}
+                </span>
               </Field>
             </SectionCard>
-            <SectionCard title="Change Password" description="Update your account password. You will remain logged in.">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 py-3.5">
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min. 6 chars)" className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm min-w-[240px]" />
-                <button type="button" onClick={handleChangePassword} disabled={changingPw} className="bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer disabled:opacity-50 shrink-0">
+            <SectionCard
+              title="Change Password"
+              description="Update your account password. You will remain logged in."
+            >
+              <div className="flex flex-col items-start gap-3 py-3.5 sm:flex-row sm:items-center">
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password (min. 6 chars)"
+                  className="border-input-border min-w-[240px] rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  disabled={changingPw}
+                  className="shrink-0 cursor-pointer rounded-md bg-slate-900 px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
+                >
                   {changingPw ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
-              {pwMessage && <p className={`text-xs font-bold pb-3 ${pwMessage.includes('success') ? 'text-success' : 'text-danger'}`}>{pwMessage}</p>}
+              {pwMessage && (
+                <p
+                  className={`pb-3 text-xs font-bold ${pwMessage.includes('success') ? 'text-success' : 'text-danger'}`}
+                >
+                  {pwMessage}
+                </p>
+              )}
             </SectionCard>
             <SectionCard title="Account Status">
               <Field label="Authentication Provider">
-                <span className="text-sm font-semibold text-slate-600 dark:text-muted-foreground bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-sm border border-slate-100 dark:border-slate-700">Supabase Auth</span>
+                <span className="dark:text-muted-foreground rounded-sm border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800">
+                  Supabase Auth
+                </span>
               </Field>
               <Field label="Session Status">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-200/60 dark:border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>{' '}
+                  Active
                 </span>
               </Field>
             </SectionCard>
           </div>
-        )
+        );
 
       case 'farm':
         return (
           <div className="space-y-4">
             <SectionCard title="Farm Identity" description="Your breeding yard or farm information">
               <Field label="Farm / Yard Name" description="Displayed on reports and dashboard">
-                <TextInput value={settings.farm_name || ''} onChange={(v) => update('farm_name', v)} placeholder="e.g. Dingle Cockpit Farm" />
+                <TextInput
+                  value={settings.farm_name || ''}
+                  onChange={(v) => update('farm_name', v)}
+                  placeholder="e.g. Dingle Cockpit Farm"
+                />
               </Field>
               <Field label="Location / Address" description="Physical location or campus cluster">
-                <TextInput value={settings.farm_location || ''} onChange={(v) => update('farm_location', v)} placeholder="e.g. Dingle, Iloilo" />
+                <TextInput
+                  value={settings.farm_location || ''}
+                  onChange={(v) => update('farm_location', v)}
+                  placeholder="e.g. Dingle, Iloilo"
+                />
               </Field>
               <Field label="Contact Number" description="Primary contact for farm records">
-                <TextInput value={settings.contact_number || ''} onChange={(v) => update('contact_number', v)} placeholder="e.g. 09171234567" type="tel" />
+                <TextInput
+                  value={settings.contact_number || ''}
+                  onChange={(v) => update('contact_number', v)}
+                  placeholder="e.g. 09171234567"
+                  type="tel"
+                />
               </Field>
               <Field label="Farm Description" description="Short description shown on profile">
-                <textarea value={settings.farm_description || ''} onChange={(e) => update('farm_description', e.target.value)} placeholder="Brief description of your farm..." rows={3} className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm w-full resize-none" />
+                <textarea
+                  value={settings.farm_description || ''}
+                  onChange={(e) => update('farm_description', e.target.value)}
+                  placeholder="Brief description of your farm..."
+                  rows={3}
+                  className="border-input-border w-full resize-none rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                />
               </Field>
             </SectionCard>
-            <SectionCard title="Default Match Settings" description="Pre-filled values when logging new matches (admin defaults applied if not overridden)">
+            <SectionCard
+              title="Default Match Settings"
+              description="Pre-filled values when logging new matches (admin defaults applied if not overridden)"
+            >
               <Field label="Default Arena" description="Pre-filled arena location">
-                <TextInput value={settings.default_arena || ''} onChange={(v) => update('default_arena', v)} placeholder={systemConfig.default_arena || 'e.g. Dingle Arena'} />
+                <TextInput
+                  value={settings.default_arena || ''}
+                  onChange={(v) => update('default_arena', v)}
+                  placeholder={systemConfig.default_arena || 'e.g. Dingle Arena'}
+                />
               </Field>
               <Field label="Default Genetic Strain">
-                <SelectInput value={settings.default_strain || 'Sweater'} onChange={(v) => update('default_strain', v)} options={[
-                  { value: 'Sweater', label: 'Sweater' },
-                  { value: 'Roundhead', label: 'Roundhead' },
-                  { value: 'Hatch', label: 'Hatch' },
-                  { value: 'Kelso', label: 'Kelso' },
-                  { value: 'Lemon 84', label: 'Lemon 84' },
-                  { value: 'Albany', label: 'Albany' },
-                  { value: 'Claret', label: 'Claret' },
-                  { value: 'Brood', label: 'Brood' },
-                  { value: 'Classic', label: 'Classic' },
-                  { value: 'Hybrid', label: 'Hybrid' },
-                ]} />
+                <SelectInput
+                  value={settings.default_strain || 'Sweater'}
+                  onChange={(v) => update('default_strain', v)}
+                  options={[
+                    { value: 'Sweater', label: 'Sweater' },
+                    { value: 'Roundhead', label: 'Roundhead' },
+                    { value: 'Hatch', label: 'Hatch' },
+                    { value: 'Kelso', label: 'Kelso' },
+                    { value: 'Lemon 84', label: 'Lemon 84' },
+                    { value: 'Albany', label: 'Albany' },
+                    { value: 'Claret', label: 'Claret' },
+                    { value: 'Brood', label: 'Brood' },
+                    { value: 'Classic', label: 'Classic' },
+                    { value: 'Hybrid', label: 'Hybrid' },
+                  ]}
+                />
               </Field>
             </SectionCard>
           </div>
-        )
+        );
 
       case 'preferences':
         return (
           <div className="space-y-4">
-            <SectionCard title={t('preferences.languageSectionTitle')} description={t('preferences.languageSectionDesc')}>
-              <Field label={t('preferences.languageFieldLabel')} description={t('preferences.languageFieldDesc')}>
+            <SectionCard
+              title={t('preferences.languageSectionTitle')}
+              description={t('preferences.languageSectionDesc')}
+            >
+              <Field
+                label={t('preferences.languageFieldLabel')}
+                description={t('preferences.languageFieldDesc')}
+              >
                 <LanguageSelect />
               </Field>
               {isBeta(language) && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold py-1">
+                <p className="py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
                   ⚠️ {t('preferences.betaNotice')}
                 </p>
               )}
             </SectionCard>
-            <SectionCard title="Measurement Units" description="Units used throughout the system (admin defaults applied if not overridden)">
+            <SectionCard
+              title="Measurement Units"
+              description="Units used throughout the system (admin defaults applied if not overridden)"
+            >
               <Field label="Weight Unit">
-                <SelectInput value={settings.weight_unit || 'kg'} onChange={(v) => update('weight_unit', v)} options={[
-                  { value: 'kg', label: 'Kilograms (kg)' },
-                  { value: 'lbs', label: 'Pounds (lbs)' },
-                ]} />
+                <SelectInput
+                  value={settings.weight_unit || 'kg'}
+                  onChange={(v) => update('weight_unit', v)}
+                  options={[
+                    { value: 'kg', label: 'Kilograms (kg)' },
+                    { value: 'lbs', label: 'Pounds (lbs)' },
+                  ]}
+                />
               </Field>
               <Field label="Height Unit">
-                <SelectInput value={settings.height_unit || 'cm'} onChange={(v) => update('height_unit', v)} options={[
-                  { value: 'cm', label: 'Centimeters (cm)' },
-                  { value: 'inches', label: 'Inches (in)' },
-                ]} />
+                <SelectInput
+                  value={settings.height_unit || 'cm'}
+                  onChange={(v) => update('height_unit', v)}
+                  options={[
+                    { value: 'cm', label: 'Centimeters (cm)' },
+                    { value: 'inches', label: 'Inches (in)' },
+                  ]}
+                />
               </Field>
             </SectionCard>
-            <SectionCard title="System Behavior" description="How the system calculates and displays data">
-              <Field label="Auto-Calculate Age" description="Compute age and growth stage from birth date automatically">
-                <Toggle checked={settings.auto_calculate_age !== false} onChange={(v) => update('auto_calculate_age', v)} />
+            <SectionCard
+              title="System Behavior"
+              description="How the system calculates and displays data"
+            >
+              <Field
+                label="Auto-Calculate Age"
+                description="Compute age and growth stage from birth date automatically"
+              >
+                <Toggle
+                  checked={settings.auto_calculate_age !== false}
+                  onChange={(v) => update('auto_calculate_age', v)}
+                />
               </Field>
               <Field label="Appearance">
-                <SelectInput value={settings.theme || 'light'} onChange={(v) => update('theme', v)} options={[
-                  { value: 'light', label: 'Light' },
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'system', label: 'System Default' },
-                ]} />
+                <SelectInput
+                  value={settings.theme || 'light'}
+                  onChange={(v) => update('theme', v)}
+                  options={[
+                    { value: 'light', label: 'Light' },
+                    { value: 'dark', label: 'Dark' },
+                    { value: 'system', label: 'System Default' },
+                  ]}
+                />
               </Field>
             </SectionCard>
-            <SectionCard title="Ranking & Match Rules" description="Saved to your farm's cloud settings — applies across the whole app">
+            <SectionCard
+              title="Ranking & Match Rules"
+              description="Saved to your farm's cloud settings — applies across the whole app"
+            >
               {farmCfgNotice && (
-                <p className={`text-xs font-bold py-2.5 ${farmCfgNotice.startsWith('Failed') ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{farmCfgNotice}</p>
+                <p
+                  className={`py-2.5 text-xs font-bold ${farmCfgNotice.startsWith('Failed') ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                >
+                  {farmCfgNotice}
+                </p>
               )}
-              <Field label="Best Ranking Metric" description="How the Best label and ranked offspring lists are decided">
-                <SelectInput value={farmCfg.ranking_metric} onChange={(v) => saveFarmSetting('ranking_metric', v as FarmSettings['ranking_metric'])} options={RANKING_METRICS.map((m) => ({ value: m, label: RANKING_METRIC_LABELS[m] }))} />
+              <Field
+                label="Best Ranking Metric"
+                description="How the Best label and ranked offspring lists are decided"
+              >
+                <SelectInput
+                  value={farmCfg.ranking_metric}
+                  onChange={(v) =>
+                    saveFarmSetting('ranking_metric', v as FarmSettings['ranking_metric'])
+                  }
+                  options={RANKING_METRICS.map((m) => ({
+                    value: m,
+                    label: RANKING_METRIC_LABELS[m],
+                  }))}
+                />
               </Field>
-              <Field label="Minimum Decided Matches" description="Only used by the 'Win rate (minimum matches)' metric">
+              <Field
+                label="Minimum Decided Matches"
+                description="Only used by the 'Win rate (minimum matches)' metric"
+              >
                 <input
                   type="number"
                   min={1}
                   max={99}
                   value={farmCfg.ranking_min_matches}
-                  onChange={(e) => saveFarmSetting('ranking_min_matches', Math.max(1, Number(e.target.value) || 1))}
-                  className="p-2.5 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm w-24"
+                  onChange={(e) =>
+                    saveFarmSetting('ranking_min_matches', Math.max(1, Number(e.target.value) || 1))
+                  }
+                  className="border-input-border w-24 rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 />
               </Field>
-              <Field label="Match Location Required" description="When off, arena location can be left blank for a match">
-                <Toggle checked={farmCfg.match_location_required} onChange={(v) => saveFarmSetting('match_location_required', v)} />
+              <Field
+                label="Match Location Required"
+                description="When off, arena location can be left blank for a match"
+              >
+                <Toggle
+                  checked={farmCfg.match_location_required}
+                  onChange={(v) => saveFarmSetting('match_location_required', v)}
+                />
               </Field>
-              <Field label="Family View Headline" description="Which count leads the family overview">
-                <SelectInput value={farmCfg.family_headline} onChange={(v) => saveFarmSetting('family_headline', v as FarmSettings['family_headline'])} options={[
-                  { value: 'offspring', label: 'Offspring (registered children)' },
-                  { value: 'total_birds', label: 'Total chickens' },
-                  { value: 'pairs', label: 'Breeding pairs' },
-                ]} />
+              <Field
+                label="Family View Headline"
+                description="Which count leads the family overview"
+              >
+                <SelectInput
+                  value={farmCfg.family_headline}
+                  onChange={(v) =>
+                    saveFarmSetting('family_headline', v as FarmSettings['family_headline'])
+                  }
+                  options={[
+                    { value: 'offspring', label: 'Offspring (registered children)' },
+                    { value: 'total_birds', label: 'Total chickens' },
+                    { value: 'pairs', label: 'Breeding pairs' },
+                  ]}
+                />
               </Field>
             </SectionCard>
           </div>
-        )
+        );
 
       case 'notifications':
         return (
           <div className="space-y-4">
-            <SectionCard title="Alert Preferences" description="Control which notifications appear in the system">
-              <Field label="Milestone Alerts" description="Notifications for upcoming growth stage transitions">
-                <Toggle checked={settings.milestone_alerts !== false} onChange={(v) => update('milestone_alerts', v)} />
+            <SectionCard
+              title="Alert Preferences"
+              description="Control which notifications appear in the system"
+            >
+              <Field
+                label="Milestone Alerts"
+                description="Notifications for upcoming growth stage transitions"
+              >
+                <Toggle
+                  checked={settings.milestone_alerts !== false}
+                  onChange={(v) => update('milestone_alerts', v)}
+                />
               </Field>
-              <Field label="Overdue Stage Warnings" description="Highlight chickens past their expected stage transition">
-                <Toggle checked={settings.overdue_alerts !== false} onChange={(v) => update('overdue_alerts', v)} />
+              <Field
+                label="Overdue Stage Warnings"
+                description="Highlight chickens past their expected stage transition"
+              >
+                <Toggle
+                  checked={settings.overdue_alerts !== false}
+                  onChange={(v) => update('overdue_alerts', v)}
+                />
               </Field>
-              <Field label="System Event Toasts" description="Show toast notifications on save, delete, errors">
-                <Toggle checked={settings.event_alerts !== false} onChange={(v) => update('event_alerts', v)} />
+              <Field
+                label="System Event Toasts"
+                description="Show toast notifications on save, delete, errors"
+              >
+                <Toggle
+                  checked={settings.event_alerts !== false}
+                  onChange={(v) => update('event_alerts', v)}
+                />
               </Field>
-              <p className="text-xs text-muted-foreground font-medium">
-                Administrator audit logs are always recorded and are reviewed from the admin console.
+              <p className="text-muted-foreground text-xs font-medium">
+                Administrator audit logs are always recorded and are reviewed from the admin
+                console.
               </p>
             </SectionCard>
           </div>
-        )
+        );
 
       case 'registry':
         return (
           <div className="space-y-4">
-            <SectionCard title="Editable Option Lists" description="Templates come from the system; add farm-specific options or hide ones you never use. History always keeps rendering.">
+            <SectionCard
+              title="Editable Option Lists"
+              description="Templates come from the system; add farm-specific options or hide ones you never use. History always keeps rendering."
+            >
               {optNotice && (
-                <p className={`text-xs font-bold py-2.5 ${optNotice.startsWith('Failed') || optNotice.includes('already') ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{optNotice}</p>
+                <p
+                  className={`py-2.5 text-xs font-bold ${optNotice.startsWith('Failed') || optNotice.includes('already') ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                >
+                  {optNotice}
+                </p>
               )}
               {MANAGED_LISTS.map((list) => {
-                const rows = optRows.filter((r) => r.list_key === list.key).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                const rows = optRows
+                  .filter((r) => r.list_key === list.key)
+                  .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
                 return (
-                  <div key={list.key} className="py-4 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-                    <span className="block text-sm font-extrabold text-slate-800 dark:text-slate-100">{list.label}</span>
-                    <span className="block text-xs text-muted-foreground font-medium mb-2.5">{list.desc}</span>
-                    <div className="flex flex-wrap gap-1.5 mb-2.5">
+                  <div
+                    key={list.key}
+                    className="border-b border-slate-100 py-4 last:border-0 dark:border-slate-700/50"
+                  >
+                    <span className="block text-sm font-extrabold text-slate-800 dark:text-slate-100">
+                      {list.label}
+                    </span>
+                    <span className="text-muted-foreground mb-2.5 block text-xs font-medium">
+                      {list.desc}
+                    </span>
+                    <div className="mb-2.5 flex flex-wrap gap-1.5">
                       {rows.map((row) => {
-                        const isTemplate = row.user_id == null
-                        const active = row.is_active !== false
+                        const isTemplate = row.user_id == null;
+                        const active = row.is_active !== false;
                         return (
                           <span
                             key={`${row.id ?? 't'}-${row.value}`}
-                            className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${active ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/70 dark:border-emerald-500/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 line-through'}`}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold ${active ? 'border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 bg-slate-50 text-slate-400 line-through dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500'}`}
                           >
                             {row.label || row.value}
                             {isTemplate && (
-                              <span className="text-[10px] uppercase tracking-wider opacity-70">suggestion</span>
+                              <span className="text-xs tracking-wider uppercase opacity-70">
+                                suggestion
+                              </span>
                             )}
                             <button
                               type="button"
                               onClick={() => handleToggleOption(row)}
-                              className="cursor-pointer underline underline-offset-2 hover:opacity-70 ml-0.5"
-                              title={active ? 'Hide this option from forms' : 'Show this option again'}
+                              className="ml-0.5 cursor-pointer underline underline-offset-2 hover:opacity-70"
+                              title={
+                                active ? 'Hide this option from forms' : 'Show this option again'
+                              }
                             >
                               {active ? 'hide' : 'show'}
                             </button>
                           </span>
-                        )
+                        );
                       })}
-                      {rows.length === 0 && <span className="text-xs font-semibold text-muted-foreground">No options yet.</span>}
+                      {rows.length === 0 && (
+                        <span className="text-muted-foreground text-xs font-semibold">
+                          No options yet.
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         value={newOptValues[list.key] || ''}
-                        onChange={(e) => setNewOptValues((prev) => ({ ...prev, [list.key]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddOption(list.key) } }}
+                        onChange={(e) =>
+                          setNewOptValues((prev) => ({ ...prev, [list.key]: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddOption(list.key);
+                          }
+                        }}
                         placeholder={`Add custom ${list.label.toLowerCase().replace(/s$/, '')}...`}
                         maxLength={80}
-                        className="p-2 px-3 border border-input-border dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 transition-all shadow-sm min-w-[200px]"
+                        className="border-input-border min-w-[200px] rounded-md border bg-white p-2 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       />
                       <button
                         type="button"
                         onClick={() => handleAddOption(list.key)}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-emerald-600"
                       >
                         Add
                       </button>
                     </div>
                   </div>
-                )
+                );
               })}
             </SectionCard>
           </div>
-        )
+        );
 
       case 'data':
         return (
           <div className="space-y-4">
             {clearNotice && (
-              <div className={`p-3 rounded-md text-sm font-bold ${clearNotice.startsWith('Error') || clearNotice.includes('failed') ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'}`}>
+              <div
+                className={`rounded-md p-3 text-sm font-bold ${clearNotice.startsWith('Error') || clearNotice.includes('failed') ? 'border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300' : 'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'}`}
+              >
                 {clearNotice}
               </div>
             )}
-            <SectionCard title="Backup & Restore" description="Download your data for safekeeping, or reload an earlier backup">
-              <Field label="Export All Data" description="Data export of chicken profiles, match records, and breeding pairings. Photos, videos, and status history are not included — for a complete full backup, use the production backup script (npm run db:backup).">
-                <button type="button" onClick={handleExport} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <SectionCard
+              title="Backup & Restore"
+              description="Download your data for safekeeping, or reload an earlier backup"
+            >
+              <Field
+                label="Export All Data"
+                description="Data export of chicken profiles, match records, and breeding pairings. Photos, videos, and status history are not included — for a complete full backup, use the production backup script (npm run db:backup)."
+              >
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  className="flex cursor-pointer items-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-600"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
                   Export JSON
                 </button>
               </Field>
-              <Field label="Restore from Backup" description="Upload a GalloTrack JSON backup — records already in the registry are skipped, lineage and codes are preserved. Media files and status history are not included; recommend npm run db:backup for a complete backup.">
+              <Field
+                label="Restore from Backup"
+                description="Upload a GalloTrack JSON backup — records already in the registry are skipped, lineage and codes are preserved. Media files and status history are not included; recommend npm run db:backup for a complete backup."
+              >
                 <div className="flex flex-wrap items-center gap-3 py-1">
                   <input
                     ref={restoreInputRef}
@@ -851,46 +1259,77 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => restoreInputRef.current?.click()}
                     disabled={restoring}
-                    className="bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-md text-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                    className="flex cursor-pointer items-center gap-2 rounded-md bg-slate-900 px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    {restoring && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                    {restoring && (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    )}
                     {restoring ? 'Restoring...' : 'Restore JSON'}
                   </button>
-                  <span className="text-xs font-semibold text-muted-foreground">Accepts backups exported from this tab or admin console. Photos/videos not included — use <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">npm run db:backup</code> for full media.</span>
+                  <span className="text-muted-foreground text-xs font-semibold">
+                    Accepts backups exported from this tab or admin console. Photos/videos not
+                    included — use{' '}
+                    <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-xs dark:bg-slate-800">
+                      npm run db:backup
+                    </code>{' '}
+                    for full media.
+                  </span>
                 </div>
               </Field>
             </SectionCard>
-            <SectionCard title="Danger Zone" description="Irreversible actions. Proceed with caution.">
-              <Field label="Clear Match Records" description="Deletes all logged match history. Chicken profiles are kept.">
+            <SectionCard
+              title="Danger Zone"
+              description="Irreversible actions. Proceed with caution."
+            >
+              <Field
+                label="Clear Match Records"
+                description="Deletes all logged match history. Chicken profiles are kept."
+              >
                 <button
                   type="button"
                   onClick={() => openDangerModal('match', 'Clear Match Records', 'match records')}
                   disabled={clearing !== ''}
-                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md bg-rose-500 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-rose-600 disabled:opacity-50"
                 >
-                  {clearing === 'match' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                  {clearing === 'match' && (
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  )}
                   {clearing === 'match' ? 'Clearing...' : 'Clear Matches'}
                 </button>
               </Field>
-              <Field label="Clear Chicken Profiles" description="Deletes all registered chickens. Match history kept.">
+              <Field
+                label="Clear Chicken Profiles"
+                description="Deletes all registered chickens. Match history kept."
+              >
                 <button
                   type="button"
-                  onClick={() => openDangerModal('fowl', 'Clear Chicken Profiles', 'chicken profiles')}
+                  onClick={() =>
+                    openDangerModal('fowl', 'Clear Chicken Profiles', 'chicken profiles')
+                  }
                   disabled={clearing !== ''}
-                  className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-amber-600 disabled:opacity-50"
                 >
-                  {clearing === 'fowl' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                  {clearing === 'fowl' && (
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  )}
                   {clearing === 'fowl' ? 'Clearing...' : 'Clear Chickens'}
                 </button>
               </Field>
-              <Field label="Clear Everything" description="Deletes ALL chicken profiles and match records. Fresh start.">
+              <Field
+                label="Clear Everything"
+                description="Deletes ALL chicken profiles and match records. Fresh start."
+              >
                 <button
                   type="button"
-                  onClick={() => openDangerModal('all', 'Clear Everything (Full Reset)', 'all farm data')}
+                  onClick={() =>
+                    openDangerModal('all', 'Clear Everything (Full Reset)', 'all farm data')
+                  }
                   disabled={clearing !== ''}
-                  className="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md bg-rose-700 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-rose-800 disabled:opacity-50"
                 >
-                  {clearing === 'all' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                  {clearing === 'all' && (
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  )}
                   {clearing === 'all' ? 'Clearing...' : 'Clear Everything'}
                 </button>
               </Field>
@@ -899,19 +1338,27 @@ export default function SettingsPage() {
             {dangerModal && (
               <Modal
                 open={true}
-                onClose={() => { if (!clearing) { setDangerModal(null); setDangerConfirmInput(''); } }}
+                onClose={() => {
+                  if (!clearing) {
+                    setDangerModal(null);
+                    setDangerConfirmInput('');
+                  }
+                }}
                 title={dangerModal.title}
                 description={t('dangerZone.description')}
-                icon={<AlertTriangle className="w-5 h-5" />}
+                icon={<AlertTriangle className="h-5 w-5" />}
                 iconClassName="bg-rose-100 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400"
                 className="max-w-lg"
                 footer={
-                  <div className="flex items-center justify-end gap-2.5 w-full">
+                  <div className="flex w-full items-center justify-end gap-2.5">
                     <button
                       type="button"
-                      onClick={() => { setDangerModal(null); setDangerConfirmInput(''); }}
+                      onClick={() => {
+                        setDangerModal(null);
+                        setDangerConfirmInput('');
+                      }}
                       disabled={clearing !== ''}
-                      className="px-4 py-2 rounded-md text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-50"
+                      className="cursor-pointer rounded-md border border-slate-200 px-4 py-2 text-xs font-bold transition-all hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     >
                       {t('dangerZone.cancelButton')}
                     </button>
@@ -919,9 +1366,11 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => handleConfirmDangerAction()}
                       disabled={dangerConfirmInput.trim() !== 'DELETE' || clearing !== ''}
-                      className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-md text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+                      className="flex cursor-pointer items-center gap-1.5 rounded-md bg-rose-600 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      {clearing !== '' && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                      {clearing !== '' && (
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                      )}
                       {clearing !== '' ? t('common.loading') : t('dangerZone.confirmButton')}
                     </button>
                   </div>
@@ -929,84 +1378,161 @@ export default function SettingsPage() {
               >
                 <div className="space-y-4 py-1">
                   {/* Recommended Backup Link */}
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30">
+                  <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-800/60 dark:bg-emerald-950/30">
                     <div className="space-y-0.5">
-                      <span className="block text-xs font-extrabold text-emerald-800 dark:text-emerald-300">Data export. Photos and videos are not included.</span>
-                      <span className="block text-xs text-emerald-700/80 dark:text-emerald-400 font-medium">Exports chickens and match history to JSON. For a complete server and media backup, use the production backup script.</span>
+                      <span className="block text-xs font-extrabold text-emerald-800 dark:text-emerald-300">
+                        Data export. Photos and videos are not included.
+                      </span>
+                      <span className="block text-xs font-medium text-emerald-700/80 dark:text-emerald-400">
+                        Exports chickens and match history to JSON. For a complete server and media
+                        backup, use the production backup script.
+                      </span>
                     </div>
                     <button
                       type="button"
                       onClick={handleExport}
-                      className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-md text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                      className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-emerald-700"
                     >
                       Export JSON
                     </button>
                   </div>
 
                   {/* Summary of What Will Be Deleted with Counts */}
-                  <div className="bg-slate-50 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/70 space-y-2">
-                    <span className="block text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                  <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700/70 dark:bg-slate-800/60">
+                    <span className="block text-xs font-black tracking-wider text-slate-700 uppercase dark:text-slate-200">
                       Items that will be permanently deleted:
                     </span>
-                    <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-disc list-inside font-medium">
+                    <ul className="list-inside list-disc space-y-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
                       {dangerModal.type === 'fowl' && (
                         <>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.fowls?.length ?? 0}</strong> Chicken Profiles</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.pairingsCount}</strong> Breeding Pairings (deleted so no orphaned pairings remain)</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.fowlImages}</strong> Storage image file(s) in owner directory</li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {fowl?.fowls?.length ?? 0}
+                            </strong>{' '}
+                            Chicken Profiles
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {dangerCounts.pairingsCount}
+                            </strong>{' '}
+                            Breeding Pairings (deleted so no orphaned pairings remain)
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {dangerCounts.mediaCounts.fowlImages}
+                            </strong>{' '}
+                            Storage image file(s) in owner directory
+                          </li>
                           <li>Status history audit records and photo links (cascaded)</li>
-                          <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
-                          <li><strong className="text-amber-700 dark:text-amber-300 font-bold">{(fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length}</strong> Match record(s) will become unlinked (historical entries)</li>
+                          <li>
+                            Identifier sequence counters (resets future chickens to Sire 1 / Dam A)
+                          </li>
+                          <li>
+                            <strong className="font-bold text-amber-700 dark:text-amber-300">
+                              {(fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length}
+                            </strong>{' '}
+                            Match record(s) will become unlinked (historical entries)
+                          </li>
                         </>
                       )}
                       {dangerModal.type === 'match' && (
                         <>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.matchHistory?.length ?? 0}</strong> Match Records</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.videos}</strong> Video file(s) in owner directory</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.photos}</strong> Photo file(s) in owner directory</li>
-                          <li>Match options, betting entries, and combat video/photo links (cascaded)</li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {fowl?.matchHistory?.length ?? 0}
+                            </strong>{' '}
+                            Match Records
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {dangerCounts.mediaCounts.videos}
+                            </strong>{' '}
+                            Video file(s) in owner directory
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {dangerCounts.mediaCounts.photos}
+                            </strong>{' '}
+                            Photo file(s) in owner directory
+                          </li>
+                          <li>
+                            Match options, betting entries, and combat video/photo links (cascaded)
+                          </li>
                           <li>Fight win-rate and performance analytics</li>
                         </>
                       )}
                       {dangerModal.type === 'all' && (
                         <>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.fowls?.length ?? 0}</strong> Chicken Profiles</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.pairingsCount}</strong> Breeding Pairings</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{fowl?.matchHistory?.length ?? 0}</strong> Match Records</li>
-                          <li><strong className="text-slate-900 dark:text-white font-bold">{dangerCounts.mediaCounts.total}</strong> Storage media file(s) ({dangerCounts.mediaCounts.videos} videos, {dangerCounts.mediaCounts.photos} photos, {dangerCounts.mediaCounts.fowlImages} images)</li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {fowl?.fowls?.length ?? 0}
+                            </strong>{' '}
+                            Chicken Profiles
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {dangerCounts.pairingsCount}
+                            </strong>{' '}
+                            Breeding Pairings
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {fowl?.matchHistory?.length ?? 0}
+                            </strong>{' '}
+                            Match Records
+                          </li>
+                          <li>
+                            <strong className="font-bold text-slate-900 dark:text-white">
+                              {dangerCounts.mediaCounts.total}
+                            </strong>{' '}
+                            Storage media file(s) ({dangerCounts.mediaCounts.videos} videos,{' '}
+                            {dangerCounts.mediaCounts.photos} photos,{' '}
+                            {dangerCounts.mediaCounts.fowlImages} images)
+                          </li>
                           <li>All photo/video metadata, status histories, and lineage links</li>
-                          <li>Identifier sequence counters (resets future chickens to Sire 1 / Dam A)</li>
+                          <li>
+                            Identifier sequence counters (resets future chickens to Sire 1 / Dam A)
+                          </li>
                         </>
                       )}
                     </ul>
-                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mt-2 bg-emerald-50/80 dark:bg-emerald-950/30 p-2.5 rounded-md border border-emerald-200 dark:border-emerald-800/50">
-                      ✓ Your user profile, farm settings, and profile avatar are intentionally preserved.
+                    <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50/80 p-2.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+                      ✓ Your user profile, farm settings, and profile avatar are intentionally
+                      preserved.
                     </p>
                   </div>
 
                   {/* Option to also delete matches when clearing chicken profiles */}
-                  {dangerModal.type === 'fowl' && (fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length > 0 && (
-                    <label className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50/80 dark:bg-amber-950/30 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={alsoDeleteMatches}
-                        onChange={(e) => setAlsoDeleteMatches(e.target.checked)}
-                        className="mt-0.5 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
-                      />
-                      <div className="space-y-0.5 text-xs">
-                        <span className="font-bold text-amber-900 dark:text-amber-200 block">
-                          Also delete these {(fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length} match record(s) (recommended)
-                        </span>
-                        <span className="text-amber-700 dark:text-amber-300 block font-medium">
-                          If checked, matches formerly linked to these chickens will be permanently deleted along with their videos and photos, preventing unlinked orphan entries.
-                        </span>
-                      </div>
-                    </label>
-                  )}
+                  {dangerModal.type === 'fowl' &&
+                    (fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length > 0 && (
+                      <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50/80 p-3 dark:border-amber-700/60 dark:bg-amber-950/30">
+                        <input
+                          type="checkbox"
+                          checked={alsoDeleteMatches}
+                          onChange={(e) => setAlsoDeleteMatches(e.target.checked)}
+                          className="mt-0.5 cursor-pointer rounded text-amber-600 focus:ring-amber-500"
+                        />
+                        <div className="space-y-0.5 text-xs">
+                          <span className="block font-bold text-amber-900 dark:text-amber-200">
+                            Also delete these{' '}
+                            {(fowl?.matchHistory || []).filter((m) => m.fowl_id != null).length}{' '}
+                            match record(s) (recommended)
+                          </span>
+                          <span className="block font-medium text-amber-700 dark:text-amber-300">
+                            If checked, matches formerly linked to these chickens will be
+                            permanently deleted along with their videos and photos, preventing
+                            unlinked orphan entries.
+                          </span>
+                        </div>
+                      </label>
+                    )}
 
                   {/* Typed Confirmation Field */}
                   <div className="space-y-1.5 pt-1">
-                    <label htmlFor="danger-delete-confirm-input" className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <label
+                      htmlFor="danger-delete-confirm-input"
+                      className="block text-xs font-bold text-slate-800 dark:text-slate-200"
+                    >
                       {t('dangerZone.confirmPrompt', { expected: 'DELETE' })}
                     </label>
                     <input
@@ -1015,153 +1541,259 @@ export default function SettingsPage() {
                       value={dangerConfirmInput}
                       onChange={(e) => setDangerConfirmInput(e.target.value)}
                       placeholder="Type DELETE"
-                      className="w-full p-2.5 px-3 border border-slate-300 dark:border-slate-700 rounded-md text-sm bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all shadow-xs"
+                      className="w-full rounded-md border border-slate-300 bg-white p-2.5 px-3 font-mono text-sm font-bold text-slate-800 shadow-xs transition-all focus:border-rose-500 focus:ring-1 focus:ring-rose-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                     />
                   </div>
                 </div>
               </Modal>
             )}
           </div>
-        )
+        );
 
       case 'system':
         return (
           <div className="space-y-4">
-            <SectionCard title="System Configuration" description="Global settings controlled by the administrator">
+            <SectionCard
+              title="System Configuration"
+              description="Global settings controlled by the administrator"
+            >
               <Field label="System Name">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{systemConfig.system_name}</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {systemConfig.system_name}
+                </span>
               </Field>
               <Field label="System Status">
-                <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${
-                  systemConfig.system_status === 'Operational'
-                    ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
-                    : systemConfig.system_status === 'Maintenance'
-                      ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
-                      : 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    systemConfig.system_status === 'Operational' ? 'bg-emerald-500' :
-                    systemConfig.system_status === 'Maintenance' ? 'bg-amber-500' : 'bg-rose-500'
-                  } animate-pulse`}></span>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${
+                    systemConfig.system_status === 'Operational'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400'
+                      : systemConfig.system_status === 'Maintenance'
+                        ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400'
+                        : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      systemConfig.system_status === 'Operational'
+                        ? 'bg-emerald-500'
+                        : systemConfig.system_status === 'Maintenance'
+                          ? 'bg-amber-500'
+                          : 'bg-rose-500'
+                    } animate-pulse`}
+                  ></span>
                   {systemConfig.system_status}
                 </span>
               </Field>
               {systemConfig.maintenance_message && (
                 <Field label="Maintenance Message">
-                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 rounded-sm border border-amber-200 dark:border-amber-500/30">{systemConfig.maintenance_message}</span>
+                  <span className="rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">
+                    {systemConfig.maintenance_message}
+                  </span>
                 </Field>
               )}
             </SectionCard>
-            <SectionCard title="Default Values" description="Pre-filled defaults set by the administrator">
+            <SectionCard
+              title="Default Values"
+              description="Pre-filled defaults set by the administrator"
+            >
               <Field label="Default Strain">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-sm border border-slate-100 dark:border-slate-700">{systemConfig.default_strain}</span>
+                <span className="rounded-sm border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                  {systemConfig.default_strain}
+                </span>
               </Field>
               <Field label="Default Arena">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-sm border border-slate-100 dark:border-slate-700">{systemConfig.default_arena || '—'}</span>
+                <span className="rounded-sm border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                  {systemConfig.default_arena || '—'}
+                </span>
               </Field>
               <Field label="Weight Unit">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-sm border border-slate-100 dark:border-slate-700">{systemConfig.weight_unit === 'kg' ? 'Kilograms (kg)' : 'Pounds (lbs)'}</span>
+                <span className="rounded-sm border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                  {systemConfig.weight_unit === 'kg' ? 'Kilograms (kg)' : 'Pounds (lbs)'}
+                </span>
               </Field>
               <Field label="Height Unit">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-sm border border-slate-100 dark:border-slate-700">{systemConfig.height_unit === 'cm' ? 'Centimeters (cm)' : 'Inches (in)'}</span>
+                <span className="rounded-sm border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                  {systemConfig.height_unit === 'cm' ? 'Centimeters (cm)' : 'Inches (in)'}
+                </span>
               </Field>
             </SectionCard>
             <SectionCard title="Platform Information" description="GalloTrack platform details">
               <Field label="Application">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">GalloTrack-Web</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  GalloTrack-Web
+                </span>
               </Field>
               <Field label="Version">
-                <span className="text-xs font-mono font-bold text-muted-foreground bg-slate-50 dark:bg-muted/50 px-2.5 py-1.5 rounded-sm border border-slate-100 dark:border-border">v1.0.0</span>
+                <span className="text-muted-foreground dark:bg-muted/50 dark:border-border rounded-sm border border-slate-100 bg-slate-50 px-2.5 py-1.5 font-mono text-xs font-bold">
+                  v1.0.0
+                </span>
               </Field>
               <Field label="Framework">
-                <span className="text-sm font-semibold text-slate-600 dark:text-foreground">Next.js + Tailwind CSS</span>
+                <span className="dark:text-foreground text-sm font-semibold text-slate-600">
+                  Next.js + Tailwind CSS
+                </span>
               </Field>
               <Field label="Backend">
-                <span className="text-sm font-semibold text-slate-600 dark:text-foreground">Supabase (PostgreSQL + Auth)</span>
+                <span className="dark:text-foreground text-sm font-semibold text-slate-600">
+                  Supabase (PostgreSQL + Auth)
+                </span>
               </Field>
             </SectionCard>
             <SectionCard title="Connection Status">
               <Field label="API Status">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-200/60 dark:border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Connected
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>{' '}
+                  Connected
                 </span>
               </Field>
               <Field label="Authentication">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-200/60 dark:border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active Session
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>{' '}
+                  Active Session
                 </span>
               </Field>
               <Field label="Last Sync">
-                <span className="text-sm font-medium text-muted-foreground">{new Date().toLocaleString()}</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  {new Date().toLocaleString()}
+                </span>
               </Field>
             </SectionCard>
             <SectionCard title="Academic Information">
               <Field label="Institution">
-                <span className="text-sm font-semibold text-slate-600 dark:text-foreground">ISUFST CICI — Capstone Project</span>
+                <span className="dark:text-foreground text-sm font-semibold text-slate-600">
+                  ISUFST CICI — Capstone Project
+                </span>
               </Field>
               <Field label="Repository">
-                <a href="https://github.com/GalloTrack-Project/GalloTrack-Web" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-success dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline underline-offset-2">github.com/GalloTrack-Project/GalloTrack-Web</a>
+                <a
+                  href="https://github.com/GalloTrack-Project/GalloTrack-Web"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-success text-sm font-bold underline underline-offset-2 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                >
+                  github.com/GalloTrack-Project/GalloTrack-Web
+                </a>
               </Field>
             </SectionCard>
           </div>
-        )
+        );
     }
   }
 
   return (
-    <div className="max-w-5xl mx-auto animate-fadeIn text-slate-800 dark:text-slate-100">
+    <div className="animate-fadeIn mx-auto max-w-5xl text-slate-800 dark:text-slate-100">
       {/* HEADER */}
-      <div className="bg-white/90 dark:bg-slate-900/90 p-5 rounded-lg border border-slate-200/80 dark:border-slate-700/50 shadow-sm mb-6 flex items-center gap-3">
-        <button type="button" onClick={() => router.back()} className="w-9 h-9 shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground hover:text-success hover:border-emerald-300 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 flex items-center justify-center transition-all cursor-pointer" title="Go Back">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      <div className="mb-6 flex items-center gap-3 rounded-lg border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/90">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="text-muted-foreground dark:text-muted-foreground hover:text-success flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-100 transition-all hover:border-emerald-300 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400"
+          title="Go Back"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
         </button>
         <div>
-            <h1 className="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">Settings</h1>
-          <p className="text-xs text-muted-foreground dark:text-muted-foreground font-semibold">Manage your account, farm, and system preferences</p>
+          <h1 className="text-lg font-black tracking-tight text-slate-900 md:text-xl dark:text-white">
+            Settings
+          </h1>
+          <p className="text-muted-foreground dark:text-muted-foreground text-xs font-semibold">
+            Manage your account, farm, and system preferences
+          </p>
         </div>
       </div>
 
       {loadError && (
-        <div className="bg-rose-50/90 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 p-4 rounded-lg text-sm font-bold flex items-center justify-between shadow-sm mb-4">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-rose-200 bg-rose-50/90 p-4 text-sm font-bold text-rose-800 shadow-sm dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
           <span>{loadError}</span>
-          <button onClick={() => setLoadError('')} className="text-danger hover:text-rose-800 font-bold cursor-pointer"><X size={14} /></button>
+          <button
+            onClick={() => setLoadError('')}
+            className="text-danger cursor-pointer font-bold hover:text-rose-800"
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       {systemConfig.system_status === 'Maintenance' && (
-        <div className="bg-amber-50/90 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 p-4 rounded-lg text-sm font-bold flex items-center gap-3 shadow-sm mb-4">
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm font-bold text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <span className="text-lg">🔧</span>
           <div>
             <p className="font-black">System Under Maintenance</p>
-            {systemConfig.maintenance_message && <p className="text-xs font-semibold opacity-80 mt-0.5">{systemConfig.maintenance_message}</p>}
+            {systemConfig.maintenance_message && (
+              <p className="mt-0.5 text-xs font-semibold opacity-80">
+                {systemConfig.maintenance_message}
+              </p>
+            )}
           </div>
         </div>
       )}
 
       {savedNotice && (
-        <div className="fixed top-4 right-4 z-50 animate-slideInRight">
-          <div className="bg-emerald-600 text-white px-5 py-3.5 rounded-lg shadow-xl shadow-emerald-500/30 flex items-center gap-3 border border-emerald-500">
-            <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div className="animate-slideInRight fixed top-4 right-4 z-50">
+          <div className="flex items-center gap-3 rounded-lg border border-emerald-500 bg-emerald-600 px-5 py-3.5 text-white shadow-xl shadow-emerald-500/30">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/20">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             <div>
               <p className="text-sm font-black">Settings saved!</p>
-              <p className="text-xs font-semibold text-emerald-100">Preferences saved on this device</p>
+              <p className="text-xs font-semibold text-emerald-100">
+                Preferences saved on this device
+              </p>
             </div>
-            <button onClick={() => setSavedNotice(false)} className="ml-2 text-emerald-200 hover:text-white cursor-pointer shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <button
+              onClick={() => setSavedNotice(false)}
+              className="ml-2 shrink-0 cursor-pointer text-emerald-200 hover:text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
             </button>
           </div>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col gap-6 md:flex-row">
         {/* SIDEBAR TABS */}
-        <div className="md:w-56 shrink-0">
+        <div className="shrink-0 md:w-56">
           <div
             role="tablist"
             aria-label="Settings Categories"
-            className="bg-white/90 dark:bg-slate-900/90 rounded-lg border border-slate-200/80 dark:border-slate-700/50 shadow-sm p-2 md:sticky md:top-4"
+            className="rounded-lg border border-slate-200/80 bg-white/90 p-2 shadow-sm md:sticky md:top-4 dark:border-slate-700/50 dark:bg-slate-900/90"
           >
             {TABS.map((tab) => (
               <button
@@ -1171,7 +1803,7 @@ export default function SettingsPage() {
                 id={`settings-tab-${tab.id}`}
                 aria-selected={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full text-left px-3.5 py-2.5 rounded-md text-sm font-bold transition-all flex items-center gap-2.5 cursor-pointer ${activeTab === tab.id ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/30 shadow-sm' : 'text-muted-foreground dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent'}`}
+                className={`flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3.5 py-2.5 text-left text-sm font-bold transition-all ${activeTab === tab.id ? 'border border-emerald-200/60 bg-emerald-50 text-emerald-700 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400' : 'text-muted-foreground dark:text-muted-foreground border border-transparent hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200'}`}
               >
                 <span className="text-sm">{tab.icon}</span>
                 {tab.label}
@@ -1181,18 +1813,26 @@ export default function SettingsPage() {
         </div>
 
         {/* CONTENT */}
-        <form onSubmit={handleSave} className="flex-1 min-w-0 space-y-4">
+        <form onSubmit={handleSave} className="min-w-0 flex-1 space-y-4">
           {renderTabContent()}
 
           <div className="flex items-center justify-between pt-2 pb-4">
-            <p className="text-xs text-muted-foreground font-medium">Farm profile saves to the cloud; preferences are stored on this device.</p>
-            <button type="submit" disabled={loading} className="bg-slate-900 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-md text-sm shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 tracking-wide uppercase flex items-center gap-2 shrink-0">
-              {loading && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+            <p className="text-muted-foreground text-xs font-medium">
+              Farm profile saves to the cloud; preferences are stored on this device.
+            </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-md bg-slate-900 px-6 py-2.5 text-sm font-bold tracking-wide text-white uppercase shadow-md transition-all duration-200 hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {loading && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+              )}
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -81,7 +81,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-describe('Hook Order Regression Tests (React Error #310 Prevention)', () => {
+describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
   it('FowlDetailsModal survives null -> bird -> null -> another bird transitions without hook-order error', () => {
     function TestContainer() {
       const [selected, setSelected] = useState<FowlRecord | null>(null);
