@@ -42,6 +42,49 @@ const family: FowlRecord[] = [
   bird({ id: 7, name: 'Grandchild', gender: 'Rooster', sire: 'Offspring 1A1', dam: 'Dam C', bird_code: '1A1C1', wing_band: 'WB-04' }),
 ];
 
+/** Builds `count` dams (Dam A, Dam B, ...) each with exactly one offspring. */
+function makeDamFamily(count: number): FowlRecord[] {
+  const fowls: FowlRecord[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const letter = String.fromCharCode(65 + (i % 26));
+    const suffix = i >= 26 ? String(Math.floor(i / 26)) : '';
+    const label = `${letter}${suffix}`;
+    fowls.push(
+      bird({ id: 1000 + i, name: `Dam ${label}`, gender: 'Hen', bird_code: label })
+    );
+    fowls.push(
+      bird({
+        id: 2000 + i,
+        name: `Child ${label}`,
+        gender: i % 2 === 0 ? 'Rooster' : 'Hen',
+        sire: 'Sire X',
+        dam: `Dam ${label}`,
+        bird_code: `${i + 1}A1`,
+      })
+    );
+  }
+  return fowls;
+}
+
+const rect = (
+  left: number,
+  top: number,
+  width: number,
+  height: number
+): DOMRect =>
+  ({
+    x: left,
+    y: top,
+    left,
+    top,
+    right: left + width,
+    bottom: top + height,
+    width,
+    height,
+    toJSON: () => ({}),
+  }) as DOMRect;
+
+
 function FightProbe() {
   const ui = useUI();
   return <div data-testid="fight-probe">{ui.fightHistoryFowl?.name ?? 'none'}</div>;
@@ -65,6 +108,7 @@ function renderDirectory(onPick: (f: FowlRecord) => void = vi.fn(), overrides = 
 describe('LineageDirectory redesigned top section', () => {
   beforeEach(() => {
     localStorage.clear();
+    document.body.style.overflow = '';
     window.history.replaceState({}, '', '/lineage');
   });
 
@@ -524,6 +568,181 @@ describe('LineageDirectory redesigned top section', () => {
       expect(screen.getByRole('button', { name: /Show all 12 dams/i })).toBeInTheDocument();
     });
 
+    it('auto-expands the collapsed chips row for a dam chosen from the ?dam= link', async () => {
+      window.history.replaceState({}, '', '/lineage?tab=dam&dam=L');
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(12) });
+
+      const chip = await screen.findByRole('option', { name: /Dam L/i });
+      expect(chip).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+    });
+
+    it('keeps the selected chip visible when prev/next moves it into the hidden chips', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(12) });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      expect(screen.getByRole('button', { name: /Show all 12 dams/i })).toBeInTheDocument();
+
+      // Dam K is the 11th dam, i.e. beyond the collapsed 10-chip slice.
+      for (let i = 0; i < 10; i += 1) {
+        fireEvent.click(screen.getByRole('button', { name: 'Next dam' }));
+      }
+
+      const chip = screen.getByRole('option', { name: /Dam K/i });
+      expect(chip).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Show all 12 dams/i })).not.toBeInTheDocument();
+    });
+
+    it('scrolls only the chips container when the selected chip overflows', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(12) });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Show all 12 dams/i }));
+
+      const container = screen.getByRole('listbox', { name: 'Dams' });
+      container.getBoundingClientRect = () => rect(0, 0, 400, 40);
+      const scrollTo = vi.fn();
+      Object.defineProperty(container, 'scrollTo', { value: scrollTo, configurable: true });
+
+      const chip = screen.getByRole('option', { name: /Dam A/i });
+      chip.getBoundingClientRect = () => rect(380, 0, 140, 28);
+
+      fireEvent.change(screen.getByLabelText('Sort options'), { target: { value: 'name' } });
+
+      expect(scrollTo).toHaveBeenCalled();
+      expect(scrollTo.mock.calls[0][0]).toMatchObject({ behavior: 'smooth' });
+
+      // Selection changes use the same container-only scroll path.
+      scrollTo.mockClear();
+      const nextChip = screen.getByRole('option', { name: /Dam B/i });
+      nextChip.getBoundingClientRect = () => rect(380, 0, 140, 28);
+      fireEvent.click(nextChip);
+
+      expect(nextChip).toHaveAttribute('aria-selected', 'true');
+      expect(scrollTo).toHaveBeenCalled();
+    });
+
+    it('focuses the search field, wires combobox semantics, and closes on backdrop press', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(21) });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      const trigger = screen.getByRole('combobox', { name: 'Select dam' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
+
+      fireEvent.click(trigger);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      const input = screen.getByLabelText('Filter dams');
+      const list = screen.getByRole('listbox', { name: 'Dams' });
+      expect(input).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+
+      const selectedOption = within(list)
+        .getAllByRole('option')
+        .find((option) => option.getAttribute('aria-selected') === 'true');
+      expect(selectedOption).toBeDefined();
+      expect(input).toHaveAttribute('aria-activedescendant', selectedOption?.id ?? '');
+
+      fireEvent.pointerDown(screen.getByTestId('dam-popover-backdrop'));
+      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('closes the popover on Escape and does not reopen when the trigger is clicked again', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(21) });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      const trigger = screen.getByRole('combobox', { name: 'Select dam' });
+
+      fireEvent.click(trigger);
+      expect(screen.getByRole('listbox', { name: 'Dams' })).toBeInTheDocument();
+
+      fireEvent.keyDown(window, { key: 'Escape' });
+      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+
+      fireEvent.click(trigger);
+      expect(screen.getByRole('listbox', { name: 'Dams' })).toBeInTheDocument();
+
+      // Clicking the trigger while open closes it, without an immediate reopen.
+      fireEvent.click(trigger);
+      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    });
+
+    it('selects a row, closes the popover, and returns focus to the trigger', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(21) });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      const trigger = screen.getByRole('combobox', { name: 'Select dam' });
+      fireEvent.click(trigger);
+
+      const list = screen.getByRole('listbox', { name: 'Dams' });
+      fireEvent.click(within(list).getByRole('option', { name: /Dam B/i }));
+
+      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
+      expect(screen.getByRole('region', { name: /Dam B details/i })).toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    });
+
+    it('keeps Tab focus inside the popover', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(21) });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: 'Select dam' }));
+
+      const input = screen.getByLabelText('Filter dams');
+      const list = screen.getByRole('listbox', { name: 'Dams' });
+
+      expect(input).toHaveFocus();
+      fireEvent.keyDown(input, { key: 'Tab' });
+      expect(list).toHaveFocus();
+      fireEvent.keyDown(list, { key: 'Tab' });
+      expect(input).toHaveFocus();
+    });
+
+    it('locks body scroll for the mobile sheet and restores it on close', async () => {
+      const originalMatchMedia = window.matchMedia;
+      window.matchMedia = ((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })) as unknown as typeof window.matchMedia;
+
+      try {
+        const scroller = document.createElement('div');
+        scroller.id = 'main-content';
+        scroller.style.overflow = 'auto';
+        document.body.appendChild(scroller);
+
+        renderDirectory();
+        fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+        const trigger = await screen.findByRole('combobox', { name: 'Select dam' });
+        expect(document.body.style.overflow).toBe('');
+        expect(scroller.style.overflow).toBe('auto');
+
+        fireEvent.click(trigger);
+        expect(document.body.style.overflow).toBe('hidden');
+        expect(scroller.style.overflow).toBe('hidden');
+
+        fireEvent.keyDown(window, { key: 'Escape' });
+        expect(document.body.style.overflow).toBe('');
+        expect(scroller.style.overflow).toBe('auto');
+
+        scroller.remove();
+      } finally {
+        window.matchMedia = originalMatchMedia;
+        document.body.style.overflow = '';
+      }
+    });
+
     it('forces the combobox on mobile regardless of dam count', async () => {
       const originalMatchMedia = window.matchMedia;
       window.matchMedia = ((query: string) => ({
@@ -541,7 +760,7 @@ describe('LineageDirectory redesigned top section', () => {
         renderDirectory();
         fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-        expect(await screen.findByRole('button', { name: 'Select dam' })).toBeInTheDocument();
+        expect(await screen.findByRole('combobox', { name: 'Select dam' })).toBeInTheDocument();
         expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
       } finally {
         window.matchMedia = originalMatchMedia;
@@ -570,7 +789,7 @@ describe('LineageDirectory redesigned top section', () => {
       renderDirectory(vi.fn(), { fowls: manyDams });
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      fireEvent.click(screen.getByRole('button', { name: 'Select dam' }));
+      fireEvent.click(screen.getByRole('combobox', { name: 'Select dam' }));
 
       expect(screen.getByLabelText('Filter dams')).toBeInTheDocument();
       expect(screen.getAllByRole('option').length).toBeGreaterThan(0);

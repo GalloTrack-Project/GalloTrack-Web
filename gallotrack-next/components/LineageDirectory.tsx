@@ -63,6 +63,11 @@ const isMaleChild = (c: FowlRecord) => isMale(c.gender);
 
 const DAM_POPOVER_ROW_H = 48;
 const DAM_POPOVER_VISIBLE_ROWS = 6;
+const DAM_POPOVER_LIST_ID = 'dam-popover-listbox';
+const DAM_POPOVER_INPUT_ID = 'dam-popover-search';
+const damOptionId = (index: number) => `dam-popover-option-${index}`;
+/** Explicit stacking tokens: above the sticky dam header (30), below the top bar (40). */
+const DAM_OVERLAY_Z = { backdrop: 35, panel: 36 } as const;
 
 function parseAgeMonths(ageStr?: string | null): number {
   if (!ageStr) return 0;
@@ -602,8 +607,11 @@ export default function LineageDirectory({
   const [damHeaderCompact, setDamHeaderCompact] = useState(false);
   const damCardsRowRef = useRef<HTMLDivElement | null>(null);
   const damChipsRowRef = useRef<HTMLDivElement | null>(null);
+  const damChipsSelectedRef = useRef<HTMLButtonElement | null>(null);
   const damPopoverListRef = useRef<HTMLDivElement | null>(null);
   const damPopoverInputRef = useRef<HTMLInputElement | null>(null);
+  const damPopoverTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const damPopoverWasOpen = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
@@ -1134,14 +1142,72 @@ export default function LineageDirectory({
     return () => window.removeEventListener('keydown', handler);
   }, [activeTab, moveDam]);
 
+  // Cards mode is a real horizontal scroller, so bringing the selected card
+  // into view only needs a nearest/center scroll inside that row.
   useEffect(() => {
     if (activeTab !== 'dam' || !selectedDamName) return;
-    const container = damCardsRowRef.current ?? damChipsRowRef.current;
-    const card = container?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+    const card = damCardsRowRef.current?.querySelector<HTMLElement>(
+      '[role="option"][aria-selected="true"]'
+    );
     if (card && typeof card.scrollIntoView === 'function') {
       card.scrollIntoView({ block: 'nearest', inline: 'center' });
     }
   }, [selectedDamName, activeTab, sortBy, damPaneFilter, showAllDamChips, isMobileDamMode]);
+
+  // Chips mode wraps instead of scrolling, so we never call scrollIntoView here
+  // (that could move the page). If the selected chip is collapsed behind
+  // "Show all", expand the row; otherwise nudge only the chips container.
+  useEffect(() => {
+    if (activeTab !== 'dam' || !selectedDamName) return;
+    const container = damChipsRowRef.current;
+    if (!container) return;
+
+    const chip = damChipsSelectedRef.current;
+    const isCollapsed = container.dataset.collapsed === 'true';
+
+    if (!chip) {
+      // The selected dam is beyond the collapsed slice: reveal the whole row.
+      if (sortedDamEntries.some(([name]) => name === selectedDamName)) {
+        setShowAllDamChips(true);
+      }
+      return;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const chipRect = chip.getBoundingClientRect();
+    const clipsVertically =
+      chipRect.top < containerRect.top || chipRect.bottom > containerRect.bottom;
+    const clipsHorizontally =
+      chipRect.left < containerRect.left || chipRect.right > containerRect.right;
+
+    if (isCollapsed && (clipsVertically || clipsHorizontally)) {
+      setShowAllDamChips(true);
+      return;
+    }
+    if (!clipsVertically && !clipsHorizontally) return;
+
+    const prefersReducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const scrollLeft = Math.max(
+      0,
+      container.scrollLeft +
+        (chipRect.left - containerRect.left) -
+        (container.clientWidth - chipRect.width) / 2
+    );
+    const scrollTop = Math.max(0, container.scrollTop + (chipRect.top - containerRect.top));
+
+    if (typeof container.scrollTo === 'function') {
+      container.scrollTo({
+        left: scrollLeft,
+        top: scrollTop,
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      });
+    } else {
+      container.scrollLeft = scrollLeft;
+      container.scrollTop = scrollTop;
+    }
+  }, [selectedDamName, activeTab, sortBy, damPaneFilter, isMobileDamMode, sortedDamEntries]);
 
   const updateDamCardsScroll = useCallback(() => {
     const row = damCardsRowRef.current;
@@ -1168,10 +1234,43 @@ export default function LineageDirectory({
     setDamPopoverScrollTop(list.scrollTop);
   }, [damPopoverOpen, damPopoverActiveIndex]);
 
+  // Focus the search field on open and hand focus back to the trigger on close.
+  useEffect(() => {
+    if (damPopoverOpen) {
+      damPopoverWasOpen.current = true;
+      damPopoverInputRef.current?.focus({ preventScroll: true });
+    } else if (damPopoverWasOpen.current) {
+      damPopoverWasOpen.current = false;
+      damPopoverTriggerRef.current?.focus({ preventScroll: true });
+    }
+  }, [damPopoverOpen]);
+
+  // Escape closes from anywhere inside the popover (input, list, backdrop).
   useEffect(() => {
     if (!damPopoverOpen) return;
-    damPopoverInputRef.current?.focus();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setDamPopoverOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [damPopoverOpen]);
+
+  // The mobile bottom sheet locks page scroll; desktop popovers do not.
+  useEffect(() => {
+    if (!damPopoverOpen || !isMobileDamMode || typeof document === 'undefined') return;
+    const scroller = document.getElementById('main-content');
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousScrollerOverflow = scroller?.style.overflow ?? '';
+    document.body.style.overflow = 'hidden';
+    if (scroller) scroller.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      if (scroller) scroller.style.overflow = previousScrollerOverflow;
+    };
+  }, [damPopoverOpen, isMobileDamMode]);
 
   const scrollDamCards = (direction: -1 | 1) => {
     const row = damCardsRowRef.current;
@@ -2618,6 +2717,7 @@ export default function LineageDirectory({
       return (
         <button
           key={name}
+          ref={isSelected ? damChipsSelectedRef : undefined}
           type="button"
           role="option"
           aria-selected={isSelected}
@@ -2639,14 +2739,8 @@ export default function LineageDirectory({
 
     const renderDamChips = () => {
       const total = sortedPaneEntries.length;
-      let visible = sortedPaneEntries;
-      if (!showAllDamChips && total > 10) {
-        visible = sortedPaneEntries.slice(0, 10);
-        if (activeParentName && !visible.some(([name]) => name === activeParentName)) {
-          const selected = sortedPaneEntries.find(([name]) => name === activeParentName);
-          if (selected) visible = [selected, ...visible.slice(0, 9)];
-        }
-      }
+      const isCollapsed = !showAllDamChips && total > 10;
+      const visible = isCollapsed ? sortedPaneEntries.slice(0, 10) : sortedPaneEntries;
       return (
         <div className="min-w-0">
           {total === 0 ? (
@@ -2655,9 +2749,10 @@ export default function LineageDirectory({
             <>
               <div
                 ref={damChipsRowRef}
+                data-collapsed={isCollapsed}
                 role="listbox"
                 aria-label="Dams"
-                className={`flex flex-wrap gap-1.5 ${showAllDamChips ? '' : 'max-h-[64px] overflow-hidden'}`}
+                className={`flex flex-wrap gap-1.5 ${isCollapsed ? 'max-h-[64px] overflow-hidden' : ''}`}
               >
                 {visible.map(renderDamChip)}
               </div>
@@ -2686,15 +2781,19 @@ export default function LineageDirectory({
       const start = Math.max(0, Math.floor(damPopoverScrollTop / DAM_POPOVER_ROW_H) - 2);
       const end = Math.min(rowCount, start + DAM_POPOVER_VISIBLE_ROWS + 4);
       const visibleRows = sortedPaneEntries.slice(start, end);
+      const activeRowRendered = damPopoverActiveIndex >= start && damPopoverActiveIndex < end;
 
       const openPopover = () => {
         const index = sortedPaneEntries.findIndex(([name]) => name === activeParentName);
-        setDamPopoverActiveIndex(index >= 0 ? index : 0);
-        setDamPopoverScrollTop(Math.max(0, (index >= 0 ? index : 0) * DAM_POPOVER_ROW_H - DAM_POPOVER_ROW_H));
+        const nextIndex = index >= 0 ? index : 0;
+        setDamPopoverActiveIndex(nextIndex);
+        setDamPopoverScrollTop(Math.max(0, nextIndex * DAM_POPOVER_ROW_H - DAM_POPOVER_ROW_H));
         setDamPopoverOpen(true);
       };
 
-      const handlePopoverKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const closePopover = () => setDamPopoverOpen(false);
+
+      const handlePopoverKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
         if (e.key === 'ArrowDown') {
           e.preventDefault();
           setDamPopoverActiveIndex((i) => Math.min(rowCount - 1, i + 1));
@@ -2705,19 +2804,34 @@ export default function LineageDirectory({
           e.preventDefault();
           const entry = sortedPaneEntries[damPopoverActiveIndex];
           if (entry) selectDamEntry(entry);
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          setDamPopoverOpen(false);
+        }
+      };
+
+      // Keep Tab cycling between the search field and the list so focus never
+      // leaks to the page behind the backdrop.
+      const handlePopoverTab = (e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key !== 'Tab') return;
+        const input = document.getElementById(DAM_POPOVER_INPUT_ID) as HTMLInputElement | null;
+        const list = document.getElementById(DAM_POPOVER_LIST_ID);
+        if (!input || !list) return;
+        e.preventDefault();
+        if (document.activeElement === input) {
+          list.focus({ preventScroll: true });
+        } else {
+          input.focus({ preventScroll: true });
         }
       };
 
       return (
         <div className="relative min-w-0 flex-1">
           <button
+            ref={damPopoverTriggerRef}
             type="button"
-            onClick={() => (damPopoverOpen ? setDamPopoverOpen(false) : openPopover())}
+            role="combobox"
+            onClick={() => (damPopoverOpen ? closePopover() : openPopover())}
             aria-haspopup="listbox"
             aria-expanded={damPopoverOpen}
+            aria-controls={DAM_POPOVER_LIST_ID}
             aria-label="Select dam"
             className="border-border bg-card text-card-foreground hover:bg-muted/50 flex h-10 w-full cursor-pointer items-center justify-between gap-2 rounded-md border px-3 text-left text-sm font-bold transition-colors"
           >
@@ -2735,15 +2849,24 @@ export default function LineageDirectory({
                 type="button"
                 tabIndex={-1}
                 aria-label="Close dam list"
-                className="fixed inset-0 z-40 cursor-default bg-black/20 md:bg-transparent"
-                onClick={() => setDamPopoverOpen(false)}
+                data-testid="dam-popover-backdrop"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  closePopover();
+                }}
+                onClick={closePopover}
+                className={`fixed inset-0 cursor-default ${
+                  isMobileDamMode ? 'bg-black/40' : 'bg-transparent'
+                }`}
+                style={{ zIndex: DAM_OVERLAY_Z.backdrop }}
               />
               <div
                 className={
                   isMobileDamMode
-                    ? 'bg-card border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[75vh] flex-col gap-2 rounded-t-xl border p-3 shadow-2xl'
-                    : 'bg-card border-border absolute top-full right-0 left-0 z-50 mt-1 flex max-h-80 flex-col gap-2 rounded-lg border p-2 shadow-xl'
+                    ? 'bg-card border-border fixed inset-x-0 bottom-0 flex max-h-[75dvh] flex-col gap-2 rounded-t-xl border p-3 shadow-2xl'
+                    : 'bg-card border-border absolute top-full right-0 left-0 mt-1 flex max-h-80 flex-col gap-2 rounded-lg border p-2 shadow-xl'
                 }
+                style={{ zIndex: DAM_OVERLAY_Z.panel }}
               >
                 <div className="relative">
                   <span
@@ -2754,8 +2877,14 @@ export default function LineageDirectory({
                   </span>
                   <input
                     ref={damPopoverInputRef}
+                    id={DAM_POPOVER_INPUT_ID}
                     type="text"
                     aria-label="Filter dams"
+                    aria-controls={DAM_POPOVER_LIST_ID}
+                    aria-activedescendant={
+                      activeRowRendered ? damOptionId(damPopoverActiveIndex) : undefined
+                    }
+                    aria-autocomplete="list"
                     placeholder="Filter dams..."
                     value={paneFilter}
                     onChange={(e) => {
@@ -2763,7 +2892,10 @@ export default function LineageDirectory({
                       setDamPopoverActiveIndex(0);
                       setDamPopoverScrollTop(0);
                     }}
-                    onKeyDown={handlePopoverKeyDown}
+                    onKeyDown={(e) => {
+                      handlePopoverKeyDown(e);
+                      handlePopoverTab(e);
+                    }}
                     className="border-input-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500 w-full rounded-md border py-2 pr-7 pl-8 text-xs font-semibold focus:ring-1"
                   />
                   {paneFilter.length > 0 && (
@@ -2784,8 +2916,14 @@ export default function LineageDirectory({
 
                 <div
                   ref={damPopoverListRef}
+                  id={DAM_POPOVER_LIST_ID}
                   role="listbox"
                   aria-label="Dams"
+                  tabIndex={-1}
+                  onKeyDown={(e) => {
+                    handlePopoverKeyDown(e);
+                    handlePopoverTab(e);
+                  }}
                   onScroll={(e) => setDamPopoverScrollTop(e.currentTarget.scrollTop)}
                   className="relative overflow-y-auto"
                   style={{ maxHeight: DAM_POPOVER_VISIBLE_ROWS * DAM_POPOVER_ROW_H }}
@@ -2818,8 +2956,10 @@ export default function LineageDirectory({
                         return (
                           <button
                             key={name}
+                            id={damOptionId(index)}
                             type="button"
                             role="option"
+                            tabIndex={-1}
                             aria-selected={isSelected}
                             onMouseEnter={() => setDamPopoverActiveIndex(index)}
                             onClick={() => selectDamEntry([name, kids])}
