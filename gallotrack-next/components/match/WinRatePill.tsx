@@ -27,6 +27,20 @@ export default function WinRatePill({
   const stats = propStats || computeWinRate(wins, losses, draws);
 
   if (stats.decided === 0) {
+    // A draw is still a logged fight: show the draw count instead of the
+    // misleading "No fights" label, but do not invent a win-rate percentage.
+    if (stats.total > 0) {
+      return (
+        <span
+          className={`border-border bg-muted/60 text-muted-foreground inline-flex items-center gap-1.5 rounded-full border font-black whitespace-nowrap ${
+            size === 'md' ? 'px-2.5 py-1 text-xs' : 'px-2 py-0.5 text-xs'
+          } ${className}`}
+          title={`No decisions yet (${stats.draws} draw${stats.draws === 1 ? '' : 's'})`}
+        >
+          —% · 0W-0L{stats.draws > 0 ? `-${stats.draws}D` : ''}
+        </span>
+      );
+    }
     if (!showNoFights) return null;
     return (
       <span className={`text-xs font-bold text-muted-foreground/60 ${className}`}>

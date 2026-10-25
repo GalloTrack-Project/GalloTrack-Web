@@ -27,7 +27,7 @@ import PedigreeTree from '@/components/PedigreeTree';
 import FamilyTree from '@/components/FamilyTree';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
-import { genderLabel, parentBreedOf } from '@/lib/helpers';
+import { genderLabel, isMale, parentBreedOf } from '@/lib/helpers';
 import { fowlMatchesQuery } from '@/lib/lineage';
 import {
   resolveBirdCodes,
@@ -58,8 +58,7 @@ import {
 
 export type PairSortOption = 'males-first' | 'code' | 'age' | 'wins' | 'winrate';
 
-const isMaleChild = (c: FowlRecord) =>
-  c.gender?.toLowerCase() === 'rooster' || c.gender?.toLowerCase() === 'male';
+const isMaleChild = (c: FowlRecord) => isMale(c.gender);
 
 function parseAgeMonths(ageStr?: string | null): number {
   if (!ageStr) return 0;
@@ -241,8 +240,11 @@ function FamilyCard({
   const sireBreed = parentBreedOf(g[0].sire, fowls);
   const damBreed = parentBreedOf(g[0].dam, fowls);
 
-  const foughtCount = g.filter((c) => getChildMatchStats(c.name).total > 0).length;
-  const familyTotal = combineWinRates(g.map((c) => getChildMatchStats(c.name)));
+  // Only cocks/stags are fighting birds. Hens may have historical/erroneous
+  // match rows, but they must never inflate the family fight record.
+  const fightingOffspring = g.filter(isMaleChild);
+  const familyTotal = combineWinRates(fightingOffspring.map((c) => getChildMatchStats(c.name)));
+  const foughtCount = familyTotal.foughtCount;
 
   const rankingStatsOf = (name: string) => {
     const s = getChildMatchStats(name);
@@ -368,7 +370,7 @@ function FamilyCard({
             <p className="text-xs text-muted-foreground font-semibold">
               {g.length} chickens · {males} male · {females} female
               {foughtCount > 0
-                ? ` · Family total: ${foughtCount} of ${g.length} fought · ${familyTotal.wins}W-${familyTotal.losses}L · ${familyTotal.winRate}%`
+                ? ` · Family total: ${foughtCount} of ${fightingOffspring.length} males fought · ${familyTotal.wins}W-${familyTotal.losses}L${familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''} · ${familyTotal.winRate === null ? '—' : `${familyTotal.winRate}%`}`
                 : ' · No fights recorded yet'}
             </p>
           </div>
@@ -461,7 +463,7 @@ function FamilyCard({
             <>
               <span className="text-muted-foreground/60 select-none">·</span>
               <span className="text-foreground">
-                {foughtCount} of {g.length} offspring have fought · {familyTotal.wins}W-{familyTotal.losses}L · {familyTotal.winRate}%
+                {foughtCount} of {fightingOffspring.length} males have fought · {familyTotal.wins}W-{familyTotal.losses}L{familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''} · {familyTotal.winRate === null ? '—' : `${familyTotal.winRate}%`}
               </span>
             </>
           ) : (
@@ -491,10 +493,10 @@ function FamilyCard({
       {isTotalExpanded && foughtCount > 0 && (
         <div className="px-5 py-2.5 bg-muted/50 border-t border-border/60 space-y-1.5 text-xs animate-fadeIn">
           <p className="text-muted-foreground font-semibold text-xs mb-1">
-            Contributors ({foughtCount} of {g.length}):
+            Contributors ({foughtCount} of {fightingOffspring.length} males):
           </p>
           <div className="flex flex-wrap gap-2">
-            {g
+            {fightingOffspring
               .filter((c) => getChildMatchStats(c.name).total > 0)
               .sort((a, b) => {
                 const sa = getChildMatchStats(a.name);

@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-import type { FowlRecord, PairingStats } from '@/lib/types';
+import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
 import LineageDirectory from './LineageDirectory';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';
 
@@ -137,6 +137,37 @@ describe('LineageDirectory redesigned top section', () => {
     // Default tab is 'families': 1 family · 3 offspring
     expect(contextBar).toHaveTextContent(/1 family/i);
     expect(contextBar).toHaveTextContent(/3 offspring/i);
+  });
+
+  it('excludes hens from the family fighting total', () => {
+    const familyWithFights: FowlRecord[] = [
+      bird({ id: 1, name: 'Sire X', gender: 'Rooster', bird_code: '9' }),
+      bird({ id: 2, name: 'Dam Z', gender: 'Hen', bird_code: 'Z' }),
+      bird({ id: 3, name: 'Male Fighter', gender: 'Rooster', sire: 'Sire X', dam: 'Dam Z', bird_code: '9Z1' }),
+      bird({ id: 4, name: 'Hen With Record', gender: 'Hen', sire: 'Sire X', dam: 'Dam Z', bird_code: '9Z2' }),
+    ];
+    const match = (id: number, fowlId: number, entryName: string): MatchRecord => ({
+      id,
+      fowl_id: fowlId,
+      date: '2026-10-01',
+      entry_name: entryName,
+      breed: 'Kelso',
+      opponent: 'Opponent',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+    });
+
+    renderDirectory(vi.fn(), {
+      fowls: familyWithFights,
+      matchHistory: [match(1, 3, 'Male Fighter'), match(2, 4, 'Hen With Record')],
+    });
+
+    const familyTotalLine = screen.getByText(/males have fought/i);
+    expect(familyTotalLine).toHaveTextContent(/1 of 1 males/);
+    expect(familyTotalLine).toHaveTextContent(/1W-0L/);
+    expect(familyTotalLine).not.toHaveTextContent(/2 of 2/);
   });
 
   it('renders every male and female offspring in a family without capping the list', () => {
