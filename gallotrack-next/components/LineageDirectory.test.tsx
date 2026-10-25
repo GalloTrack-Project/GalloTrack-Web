@@ -445,9 +445,60 @@ describe('LineageDirectory redesigned top section', () => {
       expect(table).toHaveClass('table-fixed');
     });
 
-    it('switches to a searchable dam dropdown when more than eight dams exist', () => {
+    it('keeps dam cards at a fixed 200×88 size and exposes the full name in a tooltip', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      const card = screen.getByRole('option', { name: /\[A\] Dam A/i });
+      expect(card).toHaveClass('h-[88px]', 'w-[200px]');
+      expect(card).toHaveAttribute('title', 'Dam A');
+    });
+
+    it('moves between dams with prev/next buttons and bracket shortcuts, persisting the URL', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      expect(screen.getByRole('region', { name: /Dam A details/i })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Next dam' }));
+      expect(screen.getByRole('region', { name: /Dam C details/i })).toBeInTheDocument();
+      expect(window.location.search).toContain('dam=C');
+
+      fireEvent.keyDown(window, { key: '[' });
+      expect(screen.getByRole('region', { name: /Dam A details/i })).toBeInTheDocument();
+
+      fireEvent.keyDown(window, { key: ']' });
+      expect(screen.getByRole('region', { name: /Dam C details/i })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Previous dam' }));
+      expect(screen.getByRole('region', { name: /Dam A details/i })).toBeInTheDocument();
+    });
+
+    it('restores the dam selection from the ?dam= query param', async () => {
+      window.history.replaceState({}, '', '/lineage?tab=dam&dam=C');
+      renderDirectory();
+
+      expect(
+        await screen.findByRole('region', { name: /Dam C details/i })
+      ).toBeInTheDocument();
+    });
+
+    it('collapses and expands only the selected dam pairing accordions', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThan(0);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
+      expect(screen.queryAllByText('Offspring 1A1')).toHaveLength(0);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Expand all' }));
+      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThan(0);
+    });
+
+    it('renders compact chips for 9–20 dams with a show-all toggle', () => {
       const manyDams: FowlRecord[] = [];
-      for (let i = 0; i < 9; i += 1) {
+      for (let i = 0; i < 12; i += 1) {
         const letter = String.fromCharCode(65 + i);
         manyDams.push(
           bird({ id: 100 + i, name: `Dam ${letter}`, gender: 'Hen', bird_code: letter })
@@ -468,8 +519,61 @@ describe('LineageDirectory redesigned top section', () => {
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
       expect(screen.getByLabelText('Filter dams')).toBeInTheDocument();
-      expect(screen.getByLabelText('Select dam')).toBeInTheDocument();
-      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
+      expect(screen.getByRole('listbox', { name: 'Dams' })).toBeInTheDocument();
+      expect(screen.queryByLabelText('Select dam')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Show all 12 dams/i })).toBeInTheDocument();
+    });
+
+    it('forces the combobox on mobile regardless of dam count', async () => {
+      const originalMatchMedia = window.matchMedia;
+      window.matchMedia = ((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })) as unknown as typeof window.matchMedia;
+
+      try {
+        renderDirectory();
+        fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+        expect(await screen.findByRole('button', { name: 'Select dam' })).toBeInTheDocument();
+        expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
+      } finally {
+        window.matchMedia = originalMatchMedia;
+      }
+    });
+
+    it('uses a virtualized combobox above 20 dams', () => {
+      const manyDams: FowlRecord[] = [];
+      for (let i = 0; i < 21; i += 1) {
+        const letter = String.fromCharCode(65 + i);
+        manyDams.push(
+          bird({ id: 100 + i, name: `Dam ${letter}`, gender: 'Hen', bird_code: letter })
+        );
+        manyDams.push(
+          bird({
+            id: 300 + i,
+            name: `Child ${letter}`,
+            gender: i % 2 === 0 ? 'Rooster' : 'Hen',
+            sire: 'Sire X',
+            dam: `Dam ${letter}`,
+            bird_code: `${i + 1}A1`,
+          })
+        );
+      }
+
+      renderDirectory(vi.fn(), { fowls: manyDams });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Select dam' }));
+
+      expect(screen.getByLabelText('Filter dams')).toBeInTheDocument();
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(0);
     });
 
     it('opens actions menu on ⋯ click and triggers View profile', () => {

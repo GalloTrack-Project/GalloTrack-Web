@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
 import {
@@ -18,6 +18,7 @@ import {
   User,
   Plus,
   ArrowLeft,
+  ChevronLeft,
   ChevronDown,
   ChevronUp,
   ChevronRight,
@@ -59,6 +60,9 @@ import {
 export type PairSortOption = 'males-first' | 'code' | 'age' | 'wins' | 'winrate';
 
 const isMaleChild = (c: FowlRecord) => isMale(c.gender);
+
+const DAM_POPOVER_ROW_H = 48;
+const DAM_POPOVER_VISIBLE_ROWS = 6;
 
 function parseAgeMonths(ageStr?: string | null): number {
   if (!ageStr) return 0;
@@ -586,6 +590,30 @@ export default function LineageDirectory({
   // Global search dropdown state
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
 
+  // Dam selector presentation state
+  const [isMobileDamMode, setIsMobileDamMode] = useState(false);
+  const [showAllDamChips, setShowAllDamChips] = useState(false);
+  const [damPopoverOpen, setDamPopoverOpen] = useState(false);
+  const [damPopoverActiveIndex, setDamPopoverActiveIndex] = useState(0);
+  const [damPopoverScrollTop, setDamPopoverScrollTop] = useState(0);
+  const [damCardsOverflow, setDamCardsOverflow] = useState(false);
+  const [damCardsAtStart, setDamCardsAtStart] = useState(true);
+  const [damCardsAtEnd, setDamCardsAtEnd] = useState(false);
+  const [damHeaderCompact, setDamHeaderCompact] = useState(false);
+  const damCardsRowRef = useRef<HTMLDivElement | null>(null);
+  const damChipsRowRef = useRef<HTMLDivElement | null>(null);
+  const damPopoverListRef = useRef<HTMLDivElement | null>(null);
+  const damPopoverInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobileDamMode(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
   useEffect(() => {
     if (activeMenuChildId === null) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -842,6 +870,23 @@ export default function LineageDirectory({
   useEffect(() => {
     if (damEntries.length > 0) {
       if (!selectedDamName || !damEntries.some(([name]) => name === selectedDamName)) {
+        // A shared ?dam=... link wins over the last-used dam in localStorage.
+        const urlParam =
+          typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search).get('dam')?.trim().toLowerCase()
+            : null;
+        const fromUrl = urlParam
+          ? damEntries.find(([name, kids]) => {
+              return (
+                name.toLowerCase() === urlParam ||
+                getParentCode(name, 'dam', kids[0]).toLowerCase() === urlParam
+              );
+            })
+          : undefined;
+        if (fromUrl) {
+          setSelectedDamName(fromUrl[0]);
+          return;
+        }
         const saved = typeof window !== 'undefined' ? localStorage.getItem('gt_last_selected_dam') : null;
         const found = saved && damEntries.find(([name]) => name === saved);
         setSelectedDamName(found ? found[0] : damEntries[0][0]);
@@ -1038,6 +1083,112 @@ export default function LineageDirectory({
     return [...list].sort((a, b) => b[1].length - a[1].length);
   }, [damEntries, q, sortBy, birdCodes]);
 
+  /** Dam selector order: global sortBy first, then the in-selector text filter. */
+  const sortedDamEntries = useMemo(() => {
+    const query = damPaneFilter.trim().toLowerCase();
+    if (!query) return filteredDamEntries;
+    return filteredDamEntries.filter(([name, children]) => {
+      const code = getParentCode(name, 'dam', children[0]).toLowerCase();
+      const parent = fowls.find(
+        (f) => f.name.trim().toLowerCase() === name.trim().toLowerCase()
+      );
+      const variety = (parent?.breed || children[0]?.breed || '').toLowerCase();
+      return name.toLowerCase().includes(query) || code.includes(query) || variety.includes(query);
+    });
+  }, [filteredDamEntries, damPaneFilter, fowls]);
+
+  const moveDam = useCallback(
+    (delta: number) => {
+      if (sortedDamEntries.length === 0) return;
+      const current = sortedDamEntries.findIndex(([name]) => name === selectedDamName);
+      const base = current >= 0 ? current : 0;
+      const next = (base + delta + sortedDamEntries.length) % sortedDamEntries.length;
+      const [name, kids] = sortedDamEntries[next];
+      handleSelectParent(name, 'dam', getParentCode(name, 'dam', kids[0]));
+    },
+    [sortedDamEntries, selectedDamName, handleSelectParent]
+  );
+
+  useEffect(() => {
+    if (activeTab !== 'dam') return;
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === '[') {
+        e.preventDefault();
+        moveDam(-1);
+      } else if (e.key === ']') {
+        e.preventDefault();
+        moveDam(1);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [activeTab, moveDam]);
+
+  useEffect(() => {
+    if (activeTab !== 'dam' || !selectedDamName) return;
+    const container = damCardsRowRef.current ?? damChipsRowRef.current;
+    const card = container?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+    if (card && typeof card.scrollIntoView === 'function') {
+      card.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+  }, [selectedDamName, activeTab, sortBy, damPaneFilter, showAllDamChips, isMobileDamMode]);
+
+  const updateDamCardsScroll = useCallback(() => {
+    const row = damCardsRowRef.current;
+    if (!row) return;
+    setDamCardsOverflow(row.scrollWidth > row.clientWidth + 1);
+    setDamCardsAtStart(row.scrollLeft <= 2);
+    setDamCardsAtEnd(row.scrollLeft + row.clientWidth >= row.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    updateDamCardsScroll();
+  }, [sortedDamEntries.length, isMobileDamMode, showAllDamChips, updateDamCardsScroll]);
+
+  useEffect(() => {
+    if (!damPopoverOpen) return;
+    const list = damPopoverListRef.current;
+    if (!list) return;
+    const top = damPopoverActiveIndex * DAM_POPOVER_ROW_H;
+    if (top < list.scrollTop) {
+      list.scrollTop = top;
+    } else if (top + DAM_POPOVER_ROW_H > list.scrollTop + list.clientHeight) {
+      list.scrollTop = top + DAM_POPOVER_ROW_H - list.clientHeight;
+    }
+    setDamPopoverScrollTop(list.scrollTop);
+  }, [damPopoverOpen, damPopoverActiveIndex]);
+
+  useEffect(() => {
+    if (!damPopoverOpen) return;
+    damPopoverInputRef.current?.focus();
+  }, [damPopoverOpen]);
+
+  const scrollDamCards = (direction: -1 | 1) => {
+    const row = damCardsRowRef.current;
+    if (!row) return;
+    row.scrollBy({ left: direction * 220, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'dam') return;
+    const scroller = document.getElementById('main-content');
+    if (!scroller) return;
+    const onScroll = () => setDamHeaderCompact(scroller.scrollTop > 150);
+    onScroll();
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', onScroll);
+  }, [activeTab]);
+
   const filteredBreedingPairs = useMemo(() => {
     let list = breedingPairs;
     if (q) {
@@ -1103,17 +1254,19 @@ export default function LineageDirectory({
         return next;
       });
     } else if (activeTab === 'dam') {
-      setExpandedDams(new Set(filteredDamEntries.map(([dam]) => dam)));
-      setExpandedPairs((prev) => {
-        const next = new Map(prev);
-        filteredDamEntries.forEach(([dam, children]) => {
+      const activeDam =
+        filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
+      if (activeDam) {
+        const [dam, children] = activeDam;
+        setExpandedPairs((prev) => {
+          const next = new Map(prev);
           children.forEach((c) => {
             const mate = isKnownParent(c.sire) ? normalizeParentName(c.sire) : 'Unknown sire';
             next.set(`dam|||${dam}|||${mate}`, true);
           });
+          return next;
         });
-        return next;
-      });
+      }
     } else if (activeTab === 'tree') {
       setTreeCollapsed(new Set());
     }
@@ -1123,7 +1276,19 @@ export default function LineageDirectory({
     if (activeTab === 'sire') {
       setExpandedSires(new Set());
     } else if (activeTab === 'dam') {
-      setExpandedDams(new Set());
+      const activeDam =
+        filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
+      if (activeDam) {
+        const [dam, children] = activeDam;
+        setExpandedPairs((prev) => {
+          const next = new Map(prev);
+          children.forEach((c) => {
+            const mate = isKnownParent(c.sire) ? normalizeParentName(c.sire) : 'Unknown sire';
+            next.set(`dam|||${dam}|||${mate}`, false);
+          });
+          return next;
+        });
+      }
     } else if (activeTab === 'tree') {
       setTreeCollapsed(new Set(filteredBreedingPairs.map((p) => p.key)));
     }
@@ -1277,32 +1442,38 @@ export default function LineageDirectory({
     const setPaneSort = kind === 'sire' ? setSirePaneSort : setDamPaneSort;
     const selectedName = kind === 'sire' ? selectedSireName : selectedDamName;
 
-    // Filter left pane
+    // Dam mode uses the shared toolbar sort/filter order; the sire pane keeps
+    // its own dedicated pane sort.
     const filterQ = paneFilter.trim().toLowerCase();
-    const filteredPaneEntries = entries.filter(([name, children]) => {
-      if (!filterQ) return true;
-      const code = getParentCode(name, kind, children[0]);
-      return name.toLowerCase().includes(filterQ) || code.toLowerCase().includes(filterQ);
-    });
+    const filteredPaneEntries =
+      kind === 'dam'
+        ? sortedDamEntries
+        : entries.filter(([name, children]) => {
+            if (!filterQ) return true;
+            const code = getParentCode(name, kind, children[0]);
+            return name.toLowerCase().includes(filterQ) || code.toLowerCase().includes(filterQ);
+          });
 
-    // Sort left pane
-    const sortedPaneEntries = [...filteredPaneEntries].sort((a, b) => {
-      if (paneSort === 'name') {
-        return a[0].localeCompare(b[0]);
-      }
-      if (paneSort === 'code') {
-        const codeA = getParentCode(a[0], kind, a[1][0]);
-        const codeB = getParentCode(b[0], kind, b[1][0]);
-        return compareBirdCodesNatural(codeA, codeB);
-      }
-      // 'most' offspring desc, then wins
-      if (b[1].length !== a[1].length) {
-        return b[1].length - a[1].length;
-      }
-      const winsA = a[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
-      const winsB = b[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
-      return winsB - winsA;
-    });
+    const sortedPaneEntries =
+      kind === 'dam'
+        ? sortedDamEntries
+        : [...filteredPaneEntries].sort((a, b) => {
+            if (paneSort === 'name') {
+              return a[0].localeCompare(b[0]);
+            }
+            if (paneSort === 'code') {
+              const codeA = getParentCode(a[0], kind, a[1][0]);
+              const codeB = getParentCode(b[0], kind, b[1][0]);
+              return compareBirdCodesNatural(codeA, codeB);
+            }
+            // 'most' offspring desc, then wins
+            if (b[1].length !== a[1].length) {
+              return b[1].length - a[1].length;
+            }
+            const winsA = a[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
+            const winsB = b[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
+            return winsB - winsA;
+          });
 
     // Active selected parent
     const activeEntry =
@@ -1534,6 +1705,8 @@ export default function LineageDirectory({
         );
       }
 
+      const compactDamHeader = kind === 'dam' && damHeaderCompact;
+
       return (
         <main
           role="region"
@@ -1557,42 +1730,71 @@ export default function LineageDirectory({
           )}
 
           {/* Right Pane Header Card */}
+          {/* The #main-content scroller starts below the 4rem top bar, so top-0
+              is exactly the top-bar edge. Keep the z-index under the header. */}
           <div
-            className={`bg-card rounded-lg border border-border p-4 sm:p-5 shadow-xs space-y-3 ${
-              kind === 'dam' ? 'sticky top-0 z-30 shadow-sm' : ''
-            }`}
+            className={`bg-card rounded-lg border border-border shadow-xs ${
+              compactDamHeader ? 'p-2.5 space-y-0' : 'p-4 sm:p-5 space-y-3'
+            } ${kind === 'dam' ? 'sticky top-0 z-30 shadow-sm' : ''}`}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div
+              className={
+                compactDamHeader
+                  ? 'flex items-center justify-between gap-2'
+                  : 'flex flex-col sm:flex-row sm:items-center justify-between gap-3'
+              }
+            >
               <div className="flex items-center gap-3.5 min-w-0">
                 {activeParentFowl?.image_url ? (
                   <img
                     src={activeParentFowl.image_url}
                     alt={activeParentName || ''}
-                    className="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-border shadow-xs"
+                    className={`rounded-full object-cover shrink-0 border-2 border-border shadow-xs ${
+                      compactDamHeader ? 'w-8 h-8' : 'w-12 h-12'
+                    }`}
                   />
                 ) : (
                   <div
-                    className={`w-12 h-12 rounded-full ${c.bg} ${c.border} border-2 flex items-center justify-center font-black text-sm ${c.text} shrink-0 select-none shadow-xs`}
+                    className={`rounded-full ${c.bg} ${c.border} border-2 flex items-center justify-center font-black ${c.text} shrink-0 select-none shadow-xs ${
+                      compactDamHeader ? 'w-8 h-8 text-xs' : 'w-12 h-12 text-sm'
+                    }`}
                   >
                     {getInitials(activeParentName || '')}
                   </div>
                 )}
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div
+                    className={`flex items-center gap-2 ${
+                      compactDamHeader ? 'min-w-0 flex-nowrap' : 'flex-wrap'
+                    }`}
+                  >
                     {activeParentCode && (
-                      <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted text-foreground border border-border font-black uppercase shrink-0">
+                      <span
+                        className={`font-mono px-2 py-0.5 rounded bg-muted text-foreground border border-border font-black uppercase shrink-0 ${
+                          compactDamHeader ? 'text-[10px]' : 'text-xs'
+                        }`}
+                      >
                         [{formatBirdCodeForDisplay(activeParentCode)}]
                       </span>
                     )}
-                    <h2 className="text-base sm:text-lg font-black text-card-foreground truncate">
+                    <h2
+                      className={`min-w-0 font-black text-card-foreground truncate ${
+                        compactDamHeader ? 'text-sm' : 'text-base sm:text-lg'
+                      }`}
+                    >
                       {activeParentName}
                     </h2>
-                    {(activeParentFowl?.breed || activeChildren[0]?.breed) && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                        {activeParentFowl?.breed || activeChildren[0]?.breed}
-                      </span>
+                    {!compactDamHeader &&
+                      (activeParentFowl?.breed || activeChildren[0]?.breed) && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                          {activeParentFowl?.breed || activeChildren[0]?.breed}
+                        </span>
+                      )}
+                    {compactDamHeader && kind === 'dam' && (
+                      <WinRatePill stats={activeParentStats} className="shrink-0" />
                     )}
                   </div>
+                  {!compactDamHeader && (
                   <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5 flex-wrap mt-0.5">
                     <span>{activeChildren.length} offspring</span>
                     <span className="text-muted-foreground/50 select-none">·</span>
@@ -1629,11 +1831,16 @@ export default function LineageDirectory({
                       </>
                     )}
                   </div>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                {hasMoreThan12 && (
+              <div
+                className={`flex items-center gap-2 shrink-0 ${
+                  compactDamHeader ? 'self-center' : 'self-start sm:self-center'
+                }`}
+              >
+                {!compactDamHeader && hasMoreThan12 && (
                   <button
                     type="button"
                     onClick={toggleAllPairs}
@@ -2233,6 +2440,83 @@ export default function LineageDirectory({
       );
     };
 
+    const selectDamEntry = ([name, kids]: [string, FowlRecord[]]) => {
+      handleSelectParent(name, 'dam', getParentCode(name, 'dam', kids[0]));
+      setDamPopoverOpen(false);
+    };
+
+    const renderDamEmpty = () => (
+      <div className="flex h-[88px] flex-col items-center justify-center gap-1 text-center text-xs text-muted-foreground">
+        <p>No dams match</p>
+        {paneFilter && (
+          <button
+            type="button"
+            onClick={() => setPaneFilter('')}
+            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+          >
+            Clear filter
+          </button>
+        )}
+      </div>
+    );
+
+    const renderDamNav = () => {
+      const disabled = sortedDamEntries.length <= 1;
+      return (
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => moveDam(-1)}
+            disabled={disabled}
+            aria-label="Previous dam"
+            title="Previous dam ([)"
+            className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-8 w-8 items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => moveDam(1)}
+            disabled={disabled}
+            aria-label="Next dam"
+            title="Next dam (])"
+            className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-8 w-8 items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    };
+
+    const renderDamFilter = () => (
+      <div className="relative w-40 shrink-0 sm:w-48">
+        <span
+          aria-hidden="true"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+        >
+          <Search className="w-3.5 h-3.5" />
+        </span>
+        <input
+          type="text"
+          aria-label="Filter dams"
+          placeholder="Filter dams..."
+          value={paneFilter}
+          onChange={(e) => setPaneFilter(e.target.value)}
+          className="border-input-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500 w-full rounded-md border py-2 pr-7 pl-8 text-xs font-semibold focus:ring-1"
+        />
+        {paneFilter.length > 0 && (
+          <button
+            type="button"
+            aria-label="Clear dams filter"
+            onClick={() => setPaneFilter('')}
+            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer p-0.5"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+    );
+
     const renderDamCard = ([name, kids]: [string, FowlRecord[]]) => {
       const code = getParentCode(name, kind, kids[0]);
       const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
@@ -2243,6 +2527,7 @@ export default function LineageDirectory({
           type="button"
           role="option"
           aria-selected={isSelected}
+          title={name}
           aria-label={`[${formatBirdCodeForDisplay(code)}] ${name} · ${kids.length} offspring${
             stats.total > 0
               ? ` · ${stats.winRate === null ? '—' : `${stats.winRate}%`} · ${stats.wins}W-${stats.losses}L${
@@ -2250,8 +2535,8 @@ export default function LineageDirectory({
                 }`
               : ' · No fights'
           }`}
-          onClick={() => handleSelectParent(name, kind, code)}
-          className={`snap-start shrink-0 w-52 text-left rounded-lg border p-3 transition-all cursor-pointer ${
+          onClick={() => selectDamEntry([name, kids])}
+          className={`snap-start flex h-[88px] w-[200px] shrink-0 flex-col rounded-lg border p-2 text-left transition-all cursor-pointer ${
             isSelected
               ? 'border-pink-400 dark:border-pink-700 bg-pink-50 dark:bg-pink-950/40 ring-1 ring-pink-400/60 shadow-2xs'
               : 'border-border bg-card hover:bg-muted/50'
@@ -2271,127 +2556,334 @@ export default function LineageDirectory({
               {kids.length} offspring
             </span>
           </div>
-          <p className="mt-2 text-sm font-black text-card-foreground truncate">{name}</p>
-          <div className="mt-1.5 flex items-center gap-1.5">
+          <p className="mt-1 text-sm font-black text-card-foreground truncate" title={name}>
+            {name}
+          </p>
+          <div className="mt-auto flex h-6 items-center">
             <WinRatePill stats={stats} showNoFights />
           </div>
         </button>
       );
     };
 
-    const renderDamSelector = () => {
-      const moreThan8 = entries.length > 8;
-      const totalProduced = entries.reduce((sum, [, kids]) => sum + kids.length, 0);
-      const visibleProduced = sortedPaneEntries.reduce((sum, [, kids]) => sum + kids.length, 0);
-      const selectEntries = sortedPaneEntries.some(([n]) => n === activeParentName)
-        ? sortedPaneEntries
-        : activeEntry
-        ? [activeEntry, ...sortedPaneEntries]
-        : sortedPaneEntries;
-
-      return (
-        <div className="bg-card rounded-lg border border-border p-3.5 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-              {paneFilter ? `${sortedPaneEntries.length} of ${entries.length}` : entries.length}{' '}
-              {entries.length === 1 ? 'dam' : 'dams'} ·{' '}
-              {paneFilter ? `${visibleProduced} of ${totalProduced}` : totalProduced} offspring produced
-            </p>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground font-semibold">Sort:</span>
-              <select
-                value={paneSort}
-                onChange={(e) => setPaneSort(e.target.value as 'most' | 'code' | 'name')}
-                aria-label="Sort dams"
-                className="text-xs bg-muted border border-input-border rounded px-2 py-1 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
-              >
-                <option value="most">Most offspring</option>
-                <option value="code">Code</option>
-                <option value="name">Name</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <span
-                aria-hidden="true"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-              >
-                <Search className="w-3.5 h-3.5" />
-              </span>
-              <input
-                type="text"
-                aria-label="Filter dams"
-                placeholder="Filter dams..."
-                value={paneFilter}
-                onChange={(e) => setPaneFilter(e.target.value)}
-                className="w-full pl-8 pr-7 py-2 text-xs bg-muted/60 border border-input-border rounded-md text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold"
-              />
-              {paneFilter.length > 0 && (
-                <button
-                  type="button"
-                  aria-label="Clear dams filter"
-                  onClick={() => setPaneFilter('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-            {moreThan8 && (
-              <select
-                value={activeParentName ?? ''}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  const kids = entries.find(([n]) => n === name)?.[1] ?? [];
-                  handleSelectParent(name, kind, getParentCode(name, kind, kids[0]));
-                }}
-                aria-label="Select dam"
-                className="w-full sm:w-80 text-xs bg-muted border border-input-border rounded-md px-2.5 py-2 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
-              >
-                {selectEntries.map(([name, kids]) => {
-                  const code = getParentCode(name, kind, kids[0]);
-                  const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
-                  const record =
-                    stats.total > 0
-                      ? `${stats.winRate === null ? '—' : `${stats.winRate}%`} · ${stats.wins}W-${stats.losses}L${
-                          stats.draws > 0 ? `-${stats.draws}D` : ''
-                        }`
-                      : 'No fights';
-                  return (
-                    <option key={name} value={name}>
-                      {`[${formatBirdCodeForDisplay(code)}] ${name} · ${kids.length} offspring · ${record}`}
-                    </option>
-                  );
-                })}
-              </select>
+    const renderDamCards = () => (
+      <div className="relative min-w-0">
+        {sortedPaneEntries.length === 0 ? (
+          renderDamEmpty()
+        ) : (
+          <>
+            {damCardsOverflow && !damCardsAtStart && (
+              <div className="from-card pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r to-transparent" />
             )}
-          </div>
+            {damCardsOverflow && !damCardsAtEnd && (
+              <div className="from-card pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l to-transparent" />
+            )}
+            {damCardsOverflow && !damCardsAtStart && (
+              <button
+                type="button"
+                aria-label="Scroll dams left"
+                onClick={() => scrollDamCards(-1)}
+                className="border-border bg-card/95 text-muted-foreground hover:text-foreground absolute top-1/2 left-0 z-20 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-sm"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {damCardsOverflow && !damCardsAtEnd && (
+              <button
+                type="button"
+                aria-label="Scroll dams right"
+                onClick={() => scrollDamCards(1)}
+                className="border-border bg-card/95 text-muted-foreground hover:text-foreground absolute top-1/2 right-0 z-20 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-sm"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <div
+              ref={damCardsRowRef}
+              onScroll={updateDamCardsScroll}
+              role="listbox"
+              aria-label="Dams"
+              className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {sortedPaneEntries.map(renderDamCard)}
+            </div>
+          </>
+        )}
+      </div>
+    );
 
-          {!moreThan8 &&
-            (sortedPaneEntries.length === 0 ? (
-              <div className="py-4 text-center text-xs text-muted-foreground space-y-1">
-                <p>No dams match filter</p>
-                {paneFilter && (
-                  <button
-                    type="button"
-                    onClick={() => setPaneFilter('')}
-                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
-                  >
-                    Clear filter
-                  </button>
-                )}
-              </div>
-            ) : (
+    const renderDamChip = ([name, kids]: [string, FowlRecord[]]) => {
+      const code = getParentCode(name, kind, kids[0]);
+      const isSelected = name === activeParentName;
+      return (
+        <button
+          key={name}
+          type="button"
+          role="option"
+          aria-selected={isSelected}
+          title={`${name} · ${kids.length} offspring`}
+          onClick={() => selectDamEntry([name, kids])}
+          className={`inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border px-2 text-xs font-bold transition-colors cursor-pointer ${
+            isSelected
+              ? 'border-pink-400 bg-pink-50 text-pink-700 dark:border-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
+              : 'border-border bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+          }`}
+        >
+          <span className="font-mono uppercase shrink-0">[{formatBirdCodeForDisplay(code)}]</span>
+          <span className="max-w-[150px] truncate">{name}</span>
+          <span className="text-muted-foreground/60 shrink-0">·</span>
+          <span className="shrink-0">{kids.length}</span>
+        </button>
+      );
+    };
+
+    const renderDamChips = () => {
+      const total = sortedPaneEntries.length;
+      let visible = sortedPaneEntries;
+      if (!showAllDamChips && total > 10) {
+        visible = sortedPaneEntries.slice(0, 10);
+        if (activeParentName && !visible.some(([name]) => name === activeParentName)) {
+          const selected = sortedPaneEntries.find(([name]) => name === activeParentName);
+          if (selected) visible = [selected, ...visible.slice(0, 9)];
+        }
+      }
+      return (
+        <div className="min-w-0">
+          {total === 0 ? (
+            renderDamEmpty()
+          ) : (
+            <>
               <div
+                ref={damChipsRowRef}
                 role="listbox"
                 aria-label="Dams"
-                className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className={`flex flex-wrap gap-1.5 ${showAllDamChips ? '' : 'max-h-[64px] overflow-hidden'}`}
               >
-                {sortedPaneEntries.map(renderDamCard)}
+                {visible.map(renderDamChip)}
               </div>
-            ))}
+              {total > 10 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllDamChips((v) => !v)}
+                  className="text-emerald-600 dark:text-emerald-400 hover:underline mt-1 cursor-pointer text-xs font-bold"
+                >
+                  {showAllDamChips ? 'Show less' : `Show all ${total} dams`}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      );
+    };
+
+    const renderDamCombobox = () => {
+      const selectedEntry =
+        sortedPaneEntries.find(([name]) => name === activeParentName) ?? activeEntry;
+      const selectedCode = selectedEntry
+        ? getParentCode(selectedEntry[0], 'dam', selectedEntry[1][0])
+        : '';
+      const rowCount = sortedPaneEntries.length;
+      const start = Math.max(0, Math.floor(damPopoverScrollTop / DAM_POPOVER_ROW_H) - 2);
+      const end = Math.min(rowCount, start + DAM_POPOVER_VISIBLE_ROWS + 4);
+      const visibleRows = sortedPaneEntries.slice(start, end);
+
+      const openPopover = () => {
+        const index = sortedPaneEntries.findIndex(([name]) => name === activeParentName);
+        setDamPopoverActiveIndex(index >= 0 ? index : 0);
+        setDamPopoverScrollTop(Math.max(0, (index >= 0 ? index : 0) * DAM_POPOVER_ROW_H - DAM_POPOVER_ROW_H));
+        setDamPopoverOpen(true);
+      };
+
+      const handlePopoverKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setDamPopoverActiveIndex((i) => Math.min(rowCount - 1, i + 1));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setDamPopoverActiveIndex((i) => Math.max(0, i - 1));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          const entry = sortedPaneEntries[damPopoverActiveIndex];
+          if (entry) selectDamEntry(entry);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          setDamPopoverOpen(false);
+        }
+      };
+
+      return (
+        <div className="relative min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => (damPopoverOpen ? setDamPopoverOpen(false) : openPopover())}
+            aria-haspopup="listbox"
+            aria-expanded={damPopoverOpen}
+            aria-label="Select dam"
+            className="border-border bg-card text-card-foreground hover:bg-muted/50 flex h-10 w-full cursor-pointer items-center justify-between gap-2 rounded-md border px-3 text-left text-sm font-bold transition-colors"
+          >
+            <span className="truncate">
+              {selectedEntry
+                ? `[${formatBirdCodeForDisplay(selectedCode)}] ${selectedEntry[0]}`
+                : 'Select dam'}
+            </span>
+            <ChevronDown className="text-muted-foreground h-4 w-4 shrink-0" />
+          </button>
+
+          {damPopoverOpen && (
+            <>
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label="Close dam list"
+                className="fixed inset-0 z-40 cursor-default bg-black/20 md:bg-transparent"
+                onClick={() => setDamPopoverOpen(false)}
+              />
+              <div
+                className={
+                  isMobileDamMode
+                    ? 'bg-card border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[75vh] flex-col gap-2 rounded-t-xl border p-3 shadow-2xl'
+                    : 'bg-card border-border absolute top-full right-0 left-0 z-50 mt-1 flex max-h-80 flex-col gap-2 rounded-lg border p-2 shadow-xl'
+                }
+              >
+                <div className="relative">
+                  <span
+                    aria-hidden="true"
+                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                  </span>
+                  <input
+                    ref={damPopoverInputRef}
+                    type="text"
+                    aria-label="Filter dams"
+                    placeholder="Filter dams..."
+                    value={paneFilter}
+                    onChange={(e) => {
+                      setPaneFilter(e.target.value);
+                      setDamPopoverActiveIndex(0);
+                      setDamPopoverScrollTop(0);
+                    }}
+                    onKeyDown={handlePopoverKeyDown}
+                    className="border-input-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500 w-full rounded-md border py-2 pr-7 pl-8 text-xs font-semibold focus:ring-1"
+                  />
+                  {paneFilter.length > 0 && (
+                    <button
+                      type="button"
+                      aria-label="Clear dams filter"
+                      onClick={() => {
+                        setPaneFilter('');
+                        setDamPopoverActiveIndex(0);
+                        setDamPopoverScrollTop(0);
+                      }}
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  ref={damPopoverListRef}
+                  role="listbox"
+                  aria-label="Dams"
+                  onScroll={(e) => setDamPopoverScrollTop(e.currentTarget.scrollTop)}
+                  className="relative overflow-y-auto"
+                  style={{ maxHeight: DAM_POPOVER_VISIBLE_ROWS * DAM_POPOVER_ROW_H }}
+                >
+                  {rowCount === 0 ? (
+                    <div className="text-muted-foreground py-4 text-center text-xs">
+                      No dams match
+                      {paneFilter && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaneFilter('');
+                            setDamPopoverActiveIndex(0);
+                            setDamPopoverScrollTop(0);
+                          }}
+                          className="text-emerald-600 dark:text-emerald-400 mt-1 block w-full cursor-pointer text-xs font-bold hover:underline"
+                        >
+                          Clear filter
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ height: rowCount * DAM_POPOVER_ROW_H, position: 'relative' }}>
+                      {visibleRows.map(([name, kids], i) => {
+                        const index = start + i;
+                        const code = getParentCode(name, 'dam', kids[0]);
+                        const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
+                        const isSelected = name === activeParentName;
+                        const isActive = index === damPopoverActiveIndex;
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onMouseEnter={() => setDamPopoverActiveIndex(index)}
+                            onClick={() => selectDamEntry([name, kids])}
+                            className={`absolute right-0 left-0 flex cursor-pointer items-center gap-2 px-2 text-left text-xs transition-colors ${
+                              isActive || isSelected
+                                ? 'bg-pink-50 dark:bg-pink-950/30'
+                                : 'hover:bg-muted/60'
+                            }`}
+                            style={{ top: index * DAM_POPOVER_ROW_H, height: DAM_POPOVER_ROW_H }}
+                          >
+                            <span className="bg-muted text-foreground border-border shrink-0 rounded border px-1.5 py-0.5 font-mono font-black uppercase">
+                              [{formatBirdCodeForDisplay(code)}]
+                            </span>
+                            <span className="text-card-foreground min-w-0 flex-1 truncate font-bold">
+                              {name}
+                            </span>
+                            <WinRatePill stats={stats} size="sm" className="shrink-0" />
+                            <span className="text-muted-foreground shrink-0 font-bold">
+                              {kids.length}
+                            </span>
+                            {isSelected && (
+                              <CheckCircle className="text-success h-3.5 w-3.5 shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    };
+
+    const renderDamSelector = () => {
+      const mode: 'cards' | 'chips' | 'combobox' =
+        isMobileDamMode || damEntries.length > 20
+          ? 'combobox'
+          : damEntries.length <= 8
+          ? 'cards'
+          : 'chips';
+
+      return (
+        <div
+          className={`bg-card border-border rounded-lg border ${
+            mode === 'cards' ? 'p-1.5' : 'p-2'
+          }`}
+        >
+          {mode === 'combobox' ? (
+            <div className="flex items-center gap-2">
+              {renderDamCombobox()}
+              {renderDamNav()}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                {mode === 'cards' ? renderDamCards() : renderDamChips()}
+              </div>
+              {renderDamFilter()}
+              {renderDamNav()}
+            </div>
+          )}
         </div>
       );
     };
@@ -2490,19 +2982,20 @@ export default function LineageDirectory({
       }
       case 'dam': {
         const damTotal = damEntries.length;
-        const damFiltered = filteredDamEntries.length;
+        const damFiltered = sortedDamEntries.length;
         const totalOff = damEntries.reduce((s, [, c]) => s + c.length, 0);
-        const filteredOff = filteredDamEntries.reduce((s, [, c]) => s + c.length, 0);
+        const filteredOff = sortedDamEntries.reduce((s, [, c]) => s + c.length, 0);
+        const isFiltered = Boolean(q || damPaneFilter.trim());
 
         return (
           <>
             <span>
-              <strong className="font-extrabold text-foreground">{q ? `${damFiltered} of ${damTotal}` : damTotal}</strong>{' '}
+              <strong className="font-extrabold text-foreground">{isFiltered ? `${damFiltered} of ${damTotal}` : damTotal}</strong>{' '}
               {damTotal === 1 ? 'dam' : 'dams'}
             </span>
             <span className="opacity-40 select-none">·</span>
             <span>
-              <strong className="font-extrabold text-foreground">{q ? `${filteredOff} of ${totalOff}` : totalOff}</strong> offspring produced
+              <strong className="font-extrabold text-foreground">{isFiltered ? `${filteredOff} of ${totalOff}` : totalOff}</strong> offspring produced
             </span>
           </>
         );
