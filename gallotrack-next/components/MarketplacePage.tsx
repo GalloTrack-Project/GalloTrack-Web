@@ -8,7 +8,7 @@ import {
   compareBirdCodesNatural,
 } from '@/lib/bird-code';
 import {
-  genderLabel,
+  sexLabel,
   parentBreedOf,
   parentBloodlineOf,
   isMale,
@@ -297,7 +297,7 @@ function FowlCard({
           <div className="mt-1 flex items-center gap-2">
             <GenderIcon gender={fowl.gender} />
             <span className="text-muted-foreground text-xs font-semibold">
-              {genderLabel(fowl.gender)}
+              {sexLabel(fowl)}
             </span>
             <span className="text-muted-foreground/40">{'\u00B7'}</span>
             <span className="text-muted-foreground text-xs font-semibold">
@@ -527,7 +527,7 @@ function FowlDetailModal({
               {compliance.matchedStandard && <ComplianceBadge grade={compliance.complianceGrade} />}
             </div>
             <p className="text-muted-foreground text-sm font-semibold">
-              {genderLabel(fowl.gender)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'}{' '}
+              {sexLabel(fowl)} {'\u00B7'} {getAgeDisplay(fowl.birthdate)} {'\u00B7'}{' '}
               {fowl.growth_stage}
             </p>
             <p className="text-success text-sm font-bold">{fowl.breed}</p>

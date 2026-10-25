@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isMale,
   isFemale,
-  genderLabel,
+  sexLabel,
   parentBreedOf,
   cleanPct,
   isFoundationStock,
@@ -44,19 +44,30 @@ describe('isFemale', () => {
   });
 });
 
-describe('genderLabel', () => {
-  it('maps rooster and hen to Sire and Dam', () => {
-    expect(genderLabel('Rooster')).toBe('Sire');
-    expect(genderLabel('rooster')).toBe('Sire');
-    expect(genderLabel('Hen')).toBe('Dam');
-    expect(genderLabel('HEN')).toBe('Dam');
+describe('sexLabel', () => {
+  it('returns Cock for males', () => {
+    expect(sexLabel('Rooster')).toBe('Cock');
+    expect(sexLabel('rooster')).toBe('Cock');
+    expect(sexLabel('Cock')).toBe('Cock');
+    expect(sexLabel('Stag')).toBe('Cock');
+    expect(sexLabel('Male')).toBe('Cock');
+    expect(sexLabel({ gender: 'Rooster' })).toBe('Cock');
   });
 
-  it('passes through other values unchanged', () => {
-    expect(genderLabel('Male')).toBe('Male');
-    expect(genderLabel('')).toBe('');
-    expect(genderLabel(undefined)).toBe('');
-    expect(genderLabel(null)).toBe('');
+  it('returns Hen for females', () => {
+    expect(sexLabel('Hen')).toBe('Hen');
+    expect(sexLabel('HEN')).toBe('Hen');
+    expect(sexLabel('Pullet')).toBe('Hen');
+    expect(sexLabel('Female')).toBe('Hen');
+    expect(sexLabel({ gender: 'Hen' })).toBe('Hen');
+  });
+
+  it('returns Unknown for everything else', () => {
+    expect(sexLabel('')).toBe('Unknown');
+    expect(sexLabel('Other')).toBe('Unknown');
+    expect(sexLabel(undefined)).toBe('Unknown');
+    expect(sexLabel(null)).toBe('Unknown');
+    expect(sexLabel({})).toBe('Unknown');
   });
 });
 

@@ -28,7 +28,7 @@ import PedigreeTree from '@/components/PedigreeTree';
 import FamilyTree from '@/components/FamilyTree';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
-import { genderLabel, isMale, parentBreedOf } from '@/lib/helpers';
+import { sexLabel, isMale, parentBreedOf } from '@/lib/helpers';
 import { fowlMatchesQuery } from '@/lib/lineage';
 import {
   resolveBirdCodes,
@@ -60,6 +60,25 @@ import {
 export type PairSortOption = 'males-first' | 'code' | 'age' | 'wins' | 'winrate';
 
 const isMaleChild = (c: FowlRecord) => isMale(c.gender);
+
+/**
+ * Sex chip shared by every offspring view: Cock/Hen wording with the app's
+ * existing male (sky) / female (pink) colors. Never says Sire or Dam.
+ */
+function SexBadge({ chicken }: { chicken: Pick<FowlRecord, 'gender'> }) {
+  const label = sexLabel(chicken);
+  const tone =
+    label === 'Cock'
+      ? 'text-sky-600 dark:text-sky-400'
+      : label === 'Hen'
+      ? 'text-pink-600 dark:text-pink-400'
+      : 'text-muted-foreground';
+  return (
+    <span className={`inline-flex items-center gap-1 font-bold ${tone}`}>
+      {label === 'Cock' ? '♂' : label === 'Hen' ? '♀' : ''} {label}
+    </span>
+  );
+}
 
 const DAM_POPOVER_ROW_H = 48;
 const DAM_POPOVER_VISIBLE_ROWS = 6;
@@ -487,8 +506,8 @@ function FamilyCard({
                           {child.name}
                         </button>
                       </td>
-                      <td className="text-muted-foreground px-2 py-1.5 font-semibold whitespace-nowrap">
-                        {genderLabel(child.gender)}
+                      <td className="px-2 py-1.5 font-semibold whitespace-nowrap">
+                        <SexBadge chicken={child} />
                       </td>
                       <td className="text-card-foreground px-2 py-1.5 font-bold whitespace-nowrap">
                         {recordLabel(cs)}
@@ -2088,7 +2107,7 @@ export default function LineageDirectory({
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
-                            ♂ Males ({pg.maleCount})
+                            ♂ Cocks ({pg.maleCount})
                           </button>
                           <button
                             type="button"
@@ -2099,7 +2118,7 @@ export default function LineageDirectory({
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
-                            ♀ Females ({pg.femaleCount})
+                            ♀ Hens ({pg.femaleCount})
                           </button>
                         </div>
 
@@ -2111,7 +2130,7 @@ export default function LineageDirectory({
                             aria-label="Sort pair offspring"
                             className="text-xs bg-muted border border-input-border rounded px-2 py-1 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
                           >
-                            <option value="males-first">Males first, then code</option>
+                            <option value="males-first">Cocks first, then code</option>
                             <option value="winrate">Win rate</option>
                             <option value="code">Code only</option>
                             <option value="age">Age</option>
@@ -2209,15 +2228,7 @@ export default function LineageDirectory({
                                       </div>
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap">
-                                      <span
-                                        className={`inline-flex items-center gap-1 font-bold ${
-                                          isMale
-                                            ? 'text-sky-600 dark:text-sky-400'
-                                            : 'text-pink-600 dark:text-pink-400'
-                                        }`}
-                                      >
-                                        {isMale ? '♂ Cock' : '♀ Hen'}
-                                      </span>
+                                      <SexBadge chicken={child} />
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap text-muted-foreground font-semibold">
                                       {formatAge(child.birthdate, child.age)}
@@ -2310,7 +2321,7 @@ export default function LineageDirectory({
                                           colSpan={7}
                                           className="py-1 px-2.5 text-xs font-bold text-sky-700 dark:text-sky-400 tracking-wide"
                                         >
-                                          ♂ Males ({males.length})
+                                          ♂ Cocks ({males.length})
                                         </td>
                                       </tr>
                                     )}
@@ -2321,7 +2332,7 @@ export default function LineageDirectory({
                                           colSpan={7}
                                           className="py-1 px-2.5 text-xs font-bold text-pink-700 dark:text-pink-400 tracking-wide"
                                         >
-                                          ♀ Females ({females.length})
+                                          ♀ Hens ({females.length})
                                         </td>
                                       </tr>
                                     )}
@@ -2464,15 +2475,7 @@ export default function LineageDirectory({
 
                                 <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold pt-1 border-t border-border/40 gap-2 flex-wrap">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span
-                                      className={
-                                        isMale
-                                          ? 'text-sky-600 dark:text-sky-400 font-bold'
-                                          : 'text-pink-600 dark:text-pink-400 font-bold'
-                                      }
-                                    >
-                                      {isMale ? '♂' : '♀'}
-                                    </span>
+                                    <SexBadge chicken={child} />
                                     <span>{formatAge(child.birthdate, child.age)}</span>
                                     {isDifferentBreed && <span>· {child.breed}</span>}
                                     <WinRatePill stats={stats} />
@@ -2502,13 +2505,13 @@ export default function LineageDirectory({
                                     <>
                                       {males.length > 0 && (
                                         <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-xs font-bold text-sky-700 dark:text-sky-400">
-                                          ♂ Males ({males.length})
+                                          ♂ Cocks ({males.length})
                                         </div>
                                       )}
                                       {males.map(renderCard)}
                                       {females.length > 0 && (
                                         <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-xs font-bold text-pink-700 dark:text-pink-400 mt-2">
-                                          ♀ Females ({females.length})
+                                          ♀ Hens ({females.length})
                                         </div>
                                       )}
                                       {females.map(renderCard)}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, Award } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
-import { genderLabel, isMale, isFemale } from '@/lib/helpers';
+import { sexLabel, isMale, isFemale } from '@/lib/helpers';
 import type { FowlRecord } from '@/lib/types';
 import { buildRegistryContext, roleOf, isActiveStatus, ROLE_LABEL } from '@/lib/registry-roles';
 import { buildCodeSet, nextFoundationCode } from '@/lib/bird-code';
@@ -214,7 +214,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
                           )}
                         </span>
                         <span className="block text-xs font-semibold text-muted-foreground truncate">
-                          {f.breed} · {f.growth_stage || 'Stag'} · {genderLabel(f.gender) || 'Unset'}
+                          {f.breed} · {f.growth_stage || 'Stag'} · {sexLabel(f)}
                         </span>
                       </span>
                     </button>

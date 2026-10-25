@@ -28,7 +28,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { genderLabel, parentBreedOf } from '@/lib/helpers';
+import { sexLabel, parentBreedOf } from '@/lib/helpers';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
@@ -576,7 +576,7 @@ function BreedingPairCard({
                         {fowl.name}
                       </p>
                       <p className="text-muted-foreground truncate text-xs font-semibold">
-                        {genderLabel(fowl.gender)} · {fowl.breed}
+                        {sexLabel(fowl)} · {fowl.breed}
                       </p>
                     </div>
                   </div>
@@ -1371,7 +1371,7 @@ function BirdIdentityCard({
             {fowl.name}
           </p>
           <p className="text-muted-foreground truncate text-xs font-semibold">
-            {fowl.breed} · {genderLabel(fowl.gender)}
+            {fowl.breed} · {sexLabel(fowl)}
           </p>
           {fowl.wing_band && (
             <p className="mt-0.5 text-xs font-bold text-violet-600 dark:text-violet-400">

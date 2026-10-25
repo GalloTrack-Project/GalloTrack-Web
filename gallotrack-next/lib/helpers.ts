@@ -140,13 +140,19 @@ export const DATE_RANGES: { id: '7d' | '30d' | 'month' | '3m' | 'all'; label: st
 export const isMale = (g?: string) => !!g && ['rooster', 'cock', 'stag', 'male'].includes(g.trim().toLowerCase());
 export const isFemale = (g?: string) => !!g && ['hen', 'pullet', 'female'].includes(g.trim().toLowerCase());
 
-/** Display label for gender values — the app only uses "Sire" (male) and "Dam" (female). */
-export const genderLabel = (g?: string | null): string => {
-  const v = (g || '').trim();
-  const l = v.toLowerCase();
-  if (l === 'rooster') return 'Sire';
-  if (l === 'hen') return 'Dam';
-  return v;
+export type SexLabel = 'Cock' | 'Hen' | 'Unknown';
+
+/**
+ * Display label for a chicken's SEX. "Sire" and "Dam" are parent roles only and
+ * must never be used to label an offspring's sex.
+ */
+export const sexLabel = (
+  chicken?: { gender?: string | null } | string | null
+): SexLabel => {
+  const raw = typeof chicken === 'string' ? chicken : chicken?.gender;
+  if (isMale(raw ?? undefined)) return 'Cock';
+  if (isFemale(raw ?? undefined)) return 'Hen';
+  return 'Unknown';
 };
 
 export const cleanPct = (v: unknown): number => {

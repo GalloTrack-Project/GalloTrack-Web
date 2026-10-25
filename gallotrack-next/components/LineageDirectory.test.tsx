@@ -274,6 +274,44 @@ describe('LineageDirectory redesigned top section', () => {
     }
   });
 
+  it('never labels offspring sex as Sire or Dam in the sire and dam offspring tables', () => {
+    renderDirectory();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+    const sireTable = within(screen.getByRole('region', { name: /Sire 1 details/i })).getByRole(
+      'table'
+    );
+    expect(within(sireTable).getAllByText(/Cock/).length).toBeGreaterThan(0);
+    expect(within(sireTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
+    expect(within(sireTable).queryByText(/\bSire\b/)).not.toBeInTheDocument();
+    expect(within(sireTable).queryByText(/\bDam\b/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+    const damTable = within(screen.getByRole('region', { name: /Dam A details/i })).getByRole(
+      'table'
+    );
+    expect(within(damTable).getAllByText(/Cock/).length).toBeGreaterThan(0);
+    expect(within(damTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
+    expect(within(damTable).queryByText(/\bSire\b/)).not.toBeInTheDocument();
+    expect(within(damTable).queryByText(/\bDam\b/)).not.toBeInTheDocument();
+  });
+
+  it('keeps Sire and Dam as parent roles while family-tree offspring rows show Cock/Hen', () => {
+    renderDirectory();
+    fireEvent.click(screen.getByRole('tab', { name: /Family Tree/i }));
+
+    // Parent role boxes still render SIRE and DAM.
+    expect(screen.getAllByText('Sire').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Dam').length).toBeGreaterThanOrEqual(2);
+
+    const offspringNodes = Array.from(document.querySelectorAll('.gt-kid'));
+    expect(offspringNodes.length).toBeGreaterThan(0);
+    offspringNodes.forEach((node) => {
+      expect(node.textContent).not.toMatch(/\bSire\b|\bDam\b/);
+      expect(node.textContent).toMatch(/Cock|Hen/);
+    });
+  });
+
   describe('Full Siblings & Families tab (family-level comparison)', () => {
     const fowls: FowlRecord[] = [
       bird({ id: 1, name: 'Sire X', gender: 'Rooster', bird_code: '9' }),
@@ -335,6 +373,10 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(table).getByRole('columnheader', { name: 'Sex' })).toBeInTheDocument();
       expect(within(table).getByRole('columnheader', { name: 'Record' })).toBeInTheDocument();
       expect(within(table).getAllByRole('row')).toHaveLength(5);
+      expect(within(table).getAllByText(/Cock/)).toHaveLength(3);
+      expect(within(table).getAllByText(/Hen/)).toHaveLength(1);
+      expect(within(table).queryByText(/\bSire\b/)).not.toBeInTheDocument();
+      expect(within(table).queryByText(/\bDam\b/)).not.toBeInTheDocument();
 
       expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument();
       expect(within(table).queryByText(/^Sire ·/i)).not.toBeInTheDocument();
@@ -600,8 +642,8 @@ describe('LineageDirectory redesigned top section', () => {
 
       // Filter chips inside pair
       expect(within(detailsRegion).getByRole('button', { name: /^All \(3\)$/i })).toBeInTheDocument();
-      expect(within(detailsRegion).getByRole('button', { name: /^♂ Males \(1\)$/i })).toBeInTheDocument();
-      expect(within(detailsRegion).getByRole('button', { name: /^♀ Females \(2\)$/i })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('button', { name: /^♂ Cocks \(1\)$/i })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('button', { name: /^♀ Hens \(2\)$/i })).toBeInTheDocument();
 
       // Verify NO duplicate listing sections exist
       expect(screen.queryByText(/Sibling Subgroups by Dam/i)).not.toBeInTheDocument();
@@ -627,16 +669,16 @@ describe('LineageDirectory redesigned top section', () => {
 
       const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
 
-      // Filter to Males
-      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♂ Males \(1\)$/i }));
+      // Filter to Cocks
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♂ Cocks \(1\)$/i }));
       expect(within(detailsRegion).getAllByText('[1A1]').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).queryByText('[1A2]')).not.toBeInTheDocument();
       expect(within(detailsRegion).queryByText('[1A3]')).not.toBeInTheDocument();
       expect(within(detailsRegion).queryByText('Offspring 1A2')).not.toBeInTheDocument();
       expect(within(detailsRegion).queryByText('Offspring 1A3')).not.toBeInTheDocument();
 
-      // Filter to Females
-      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♀ Females \(2\)$/i }));
+      // Filter to Hens
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♀ Hens \(2\)$/i }));
       expect(within(detailsRegion).queryByText('[1A1]')).not.toBeInTheDocument();
       expect(within(detailsRegion).getAllByText('[1A2]').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
@@ -1087,8 +1129,8 @@ describe('LineageDirectory redesigned top section', () => {
       const table = within(detailsRegion).getByRole('table');
 
       // Verify subheaders exist in the table
-      expect(within(table).getByText('♂ Males (3)')).toBeInTheDocument();
-      expect(within(table).getByText('♀ Females (2)')).toBeInTheDocument();
+      expect(within(table).getByText('♂ Cocks (3)')).toBeInTheDocument();
+      expect(within(table).getByText('♀ Hens (2)')).toBeInTheDocument();
 
       // In default 'males-first' sort:
       // Males: 1A2, 1A3, 1A10 (natural order where 1A2 < 1A10)
@@ -1107,8 +1149,8 @@ describe('LineageDirectory redesigned top section', () => {
       expect(sortSelect).toHaveValue('code');
 
       // Sub-headers must be removed
-      expect(within(table).queryByText('♂ Males (3)')).not.toBeInTheDocument();
-      expect(within(table).queryByText('♀ Females (2)')).not.toBeInTheDocument();
+      expect(within(table).queryByText('♂ Cocks (3)')).not.toBeInTheDocument();
+      expect(within(table).queryByText('♀ Hens (2)')).not.toBeInTheDocument();
 
       // In 'code' sort: natural birth code order 1A1, 1A2, 1A3, 1A4, 1A10
       expect(getCodeOrder()).toEqual(['[1A1]', '[1A2]', '[1A3]', '[1A4]', '[1A10]']);

@@ -40,8 +40,8 @@ describe('FamilyTree', () => {
 
   it('groups offspring into roosters and hens with counts', () => {
     render(<FamilyTree fowls={family} codes={new Map()} />);
-    expect(screen.getAllByText(/Males \(1\)/i)).toHaveLength(2);
-    expect(screen.getByText(/Females \(2\)/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Cocks \(1\)/i)).toHaveLength(2);
+    expect(screen.getByText(/Hens \(2\)/i)).toBeInTheDocument();
     const roosterGroup = screen
       .getAllByText('Offspring 1A1')
       .map((el) => el.closest('.gt-kids'))
@@ -50,6 +50,21 @@ describe('FamilyTree', () => {
     expect(roosterGroup).toBeTruthy();
     expect(henGroup).toBeTruthy();
     expect(roosterGroup).not.toBe(henGroup);
+  });
+
+  it('labels offspring sex as Cock/Hen and never as Sire/Dam', () => {
+    render(<FamilyTree fowls={family} codes={new Map()} />);
+
+    const maleKid = screen
+      .getAllByText('Offspring 1A1')
+      .map((el) => el.closest('.gt-kid'))
+      .find((el): el is HTMLElement => el !== null) as HTMLElement;
+    const femaleKid = screen.getByText('Offspring 1A2').closest('.gt-kid') as HTMLElement;
+
+    expect(maleKid).toHaveTextContent('Cock');
+    expect(femaleKid).toHaveTextContent('Hen');
+    expect(maleKid.textContent).not.toMatch(/\bSire\b|\bDam\b/);
+    expect(femaleKid.textContent).not.toMatch(/\bSire\b|\bDam\b/);
   });
 
   it('nests grandchildren under their parent when depth allows', () => {

@@ -29,7 +29,7 @@ import {
 } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { isMale, isFemale, parentBloodlineOf, winRateOf, formatColorDisplay } from '@/lib/helpers';
+import { isMale, isFemale, sexLabel, parentBloodlineOf, winRateOf, formatColorDisplay } from '@/lib/helpers';
 import { getBreedingClassification, isFoundationStockRecord } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
@@ -292,7 +292,7 @@ export default function FowlDetailsModal({
             { label: 'Bird code', value: formatBirdCodeForDisplay(birdCodeOf(bird, fowls)) || '—' },
             { label: 'Wing band', value: bird.wing_band || '—' },
             { label: 'Name', value: bird.name },
-            { label: 'Gender', value: bird.gender || '—' },
+            { label: 'Gender', value: sexLabel(bird) },
             {
               label: 'Breed / strain',
               value:

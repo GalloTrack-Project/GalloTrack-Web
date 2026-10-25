@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Play, Image as ImageIcon, Feather, Share2, Download, AlertTriangle } from 'lucide-react';
-import { genderLabel } from '@/lib/helpers';
+import { sexLabel } from '@/lib/helpers';
 import { downloadMediaUrl, playableKind, videoFileNameFromUrl } from '@/lib/media-format';
 
 type SharedMatch = {
@@ -240,7 +240,7 @@ export default function SharePage() {
                 <h2 className="text-xl font-black text-foreground">{payload.fowl.name}</h2>
                 <div className="flex flex-wrap gap-2">
                   <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-200">{payload.fowl.breed}</span>
-                  <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{genderLabel(payload.fowl.gender)}</span>
+                  <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{sexLabel(payload.fowl)}</span>
                   <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{payload.fowl.status}</span>
                   {payload.fowl.bird_code && (
                     <span className="text-xs font-mono font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-200">{payload.fowl.bird_code}</span>

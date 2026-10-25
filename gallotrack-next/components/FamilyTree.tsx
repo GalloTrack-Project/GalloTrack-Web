@@ -21,6 +21,7 @@ import {
 import WinRatePill from '@/components/match/WinRatePill';
 import ChickenIcon from '@/components/ChickenIcon';
 import { getBreedingClassification } from '@/lib/breeding-classification';
+import { sexLabel } from '@/lib/helpers';
 import {
   classifyPairingRelatedness,
   getOffspringParentageRelatedness,
@@ -138,6 +139,7 @@ function OffspringNode({
   const displayBreed =
     classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
+  const sex = sexLabel(fowl);
 
   return (
     <div className="gt-kid">
@@ -161,7 +163,18 @@ function OffspringNode({
               {fowl.name}
             </span>
             <span className="text-muted-foreground block truncate text-xs font-semibold">
-              {isMale(fowl) ? '🐓 Sire' : '🐔 Dam'} · {displayBreed || '—'}
+              <span
+                className={
+                  sex === 'Cock'
+                    ? 'text-sky-600 dark:text-sky-400'
+                    : sex === 'Hen'
+                    ? 'text-pink-600 dark:text-pink-400'
+                    : 'text-muted-foreground'
+                }
+              >
+                {sex === 'Cock' ? '♂' : sex === 'Hen' ? '♀' : ''} {sex}
+              </span>{' '}
+              · {displayBreed || '—'}
               {(classification.compositionSource === 'assumed' ||
                 classification.basedOnAssumed) && (
                 <span
@@ -362,7 +375,7 @@ function PairTree({
           {roosters.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs font-black tracking-widest text-sky-700 uppercase dark:text-sky-400">
-                ♂ Males ({roosters.length})
+                ♂ Cocks ({roosters.length})
               </p>
               <div className="gt-kids">
                 {roosters.map((member) => (
@@ -387,7 +400,7 @@ function PairTree({
           {hens.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs font-black tracking-widest text-pink-700 uppercase dark:text-pink-400">
-                ♀ Females ({hens.length})
+                ♀ Hens ({hens.length})
               </p>
               <div className="gt-kids">
                 {hens.map((member) => (

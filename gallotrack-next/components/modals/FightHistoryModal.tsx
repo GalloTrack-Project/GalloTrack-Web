@@ -6,7 +6,7 @@ import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { genderLabel } from '@/lib/helpers';
+import { sexLabel } from '@/lib/helpers';
 import { videosFor, photosFor, postersFor } from '@/lib/services/media-service';
 import { downloadCsv, printReport } from '@/lib/report-export';
 
@@ -69,7 +69,7 @@ export default function FightHistoryModal() {
   const exportPrintable = () =>
     printReport({
       title: `Fight History — ${bird.name}`,
-      meta: [code, bird.breed || '', genderLabel(bird.gender) || '', bird.status || ''].filter(Boolean).join(' · '),
+      meta: [code, bird.breed || '', sexLabel(bird), bird.status || ''].filter(Boolean).join(' · '),
       sections: [
         { heading: 'Performance Summary', fields: summary.map((s) => ({ label: s.label, value: s.value })) },
         { heading: 'Fight Log', table: { columns: reportColumns, rows: reportRows } },
@@ -93,7 +93,7 @@ export default function FightHistoryModal() {
           </span>
         )}
         <span className="text-xs font-bold text-muted-foreground">
-          {bird.breed || '—'} · {genderLabel(bird.gender) || '—'}
+          {bird.breed || '—'} · {sexLabel(bird)}
           {bird.status ? ` · ${bird.status}` : ''}
         </span>
       </div>
