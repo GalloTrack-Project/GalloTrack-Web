@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
+import MatchRecordForm from '@/components/match/MatchRecordForm';
+import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -33,6 +35,7 @@ export default function MatchLogsView() {
   const t = useT();
   const ui = useUI();
   const { fowls, matchHistory, matchMedia, birdCodes, loading } = useFowl();
+  const [editingMatch, setEditingMatch] = useState<MatchRecord | null>(null);
 
   // Read URL query params
   const urlSearch = searchParams.get('q') || '';
@@ -669,6 +672,7 @@ export default function MatchLogsView() {
                           photos={photosFor(matchMedia, log.id, log)}
                           posters={postersFor(matchMedia, log.id, log)}
                           returnTo={currentReturnPath}
+                          onEdit={() => setEditingMatch(log)}
                         />
                       </td>
                     </tr>
@@ -718,6 +722,23 @@ export default function MatchLogsView() {
           </div>
         )}
       </div>
+
+      {editingMatch && (
+        <Modal
+          open
+          onClose={() => setEditingMatch(null)}
+          title="Edit Match Record"
+          description="Update the recorded details for this match."
+          className="max-w-6xl"
+        >
+          <MatchRecordForm
+            mode="edit"
+            initialRecord={editingMatch}
+            onSuccess={() => setEditingMatch(null)}
+            onCancel={() => setEditingMatch(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

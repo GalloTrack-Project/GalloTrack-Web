@@ -116,14 +116,14 @@ describe('Match Actions Regression & Accessibility Suite', () => {
   });
 
   describe('1. Match Logs Table (/dashboard)', () => {
-    it('renders exactly one Edit action per row with accessible name and returnTo=/dashboard', () => {
+    it('renders exactly one Edit action per row and opens the inline editor', () => {
       render(<MatchLogsTable matches={mockMatches} />);
 
-      const editLinks = screen.getAllByRole('link', { name: 'Edit match record' });
-      // Exactly 1 edit link per match row (2 rows = 2 links total)
-      expect(editLinks).toHaveLength(2);
-      expect(editLinks[0].getAttribute('href')).toBe('/match-logs/101/edit?returnTo=%2Fdashboard');
-      expect(editLinks[1].getAttribute('href')).toBe('/match-logs/102/edit?returnTo=%2Fdashboard');
+      const editButtons = screen.getAllByRole('button', { name: 'Edit match record' });
+      // Exactly 1 edit action per match row (2 rows = 2 buttons total)
+      expect(editButtons).toHaveLength(2);
+      fireEvent.click(editButtons[0]);
+      expect(screen.getByRole('dialog', { name: /Edit Match Record/i })).toBeInTheDocument();
     });
 
     it('renders Play media only when media exists with media count badge', () => {
@@ -159,9 +159,9 @@ describe('Match Actions Regression & Accessibility Suite', () => {
       expect(mockSetShareTarget).toHaveBeenCalledTimes(1);
       expect(mockPush).not.toHaveBeenCalled();
 
-      const editLink = screen.getAllByRole('link', { name: 'Edit match record' })[0];
-      fireEvent.click(editLink);
-      // Normal click stops row propagation
+      const editButton = screen.getAllByRole('button', { name: 'Edit match record' })[0];
+      fireEvent.click(editButton);
+      // Normal click opens the inline editor and never navigates away
       expect(mockPush).not.toHaveBeenCalledWith('/match-logs/101/edit');
     });
 
@@ -196,13 +196,11 @@ describe('Match Actions Regression & Accessibility Suite', () => {
   });
 
   describe('2. Match Logs View (/match-logs)', () => {
-    it('renders exactly one Edit action per row linking with returnTo=/match-logs', () => {
+    it('renders exactly one inline Edit action per row', () => {
       render(<MatchLogsView />);
 
-      const editLinks = screen.getAllByRole('link', { name: 'Edit match record' });
-      const hrefs = editLinks.map((l) => l.getAttribute('href'));
-      expect(hrefs).toContain('/match-logs/101/edit?returnTo=%2Fmatch-logs');
-      expect(hrefs).toContain('/match-logs/102/edit?returnTo=%2Fmatch-logs');
+      const editButtons = screen.getAllByRole('button', { name: 'Edit match record' });
+      expect(editButtons).toHaveLength(2);
     });
   });
 

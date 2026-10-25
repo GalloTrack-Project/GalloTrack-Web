@@ -50,6 +50,10 @@ export type MatchRecordFormProps = {
   initialRecord?: MatchRecord | null;
   initialFowlId?: number | null;
   onSuccessRedirect?: string;
+  /** Called instead of navigating after a successful save (modal usage). */
+  onSuccess?: () => void;
+  /** Called instead of navigating when the user cancels/backs out (modal usage). */
+  onCancel?: () => void;
 };
 
 interface FormState {
@@ -76,6 +80,8 @@ export default function MatchRecordForm({
   initialRecord,
   initialFowlId,
   onSuccessRedirect = '/profiling?tab=matchForm',
+  onSuccess,
+  onCancel,
 }: MatchRecordFormProps) {
   const router = useRouter();
   const { fowls, birdCodes, fetchDatabaseResources } = useFowl();
@@ -409,6 +415,8 @@ export default function MatchRecordForm({
     if (isDirty) {
       setPendingNavigationUrl(destination);
       setShowDiscardDialog(true);
+    } else if (onCancel) {
+      onCancel();
     } else {
       router.push(destination);
     }
@@ -416,7 +424,9 @@ export default function MatchRecordForm({
 
   const confirmDiscard = () => {
     setShowDiscardDialog(false);
-    if (pendingNavigationUrl) {
+    if (onCancel) {
+      onCancel();
+    } else if (pendingNavigationUrl) {
       router.push(pendingNavigationUrl);
     } else {
       router.push(onSuccessRedirect);
@@ -653,8 +663,12 @@ export default function MatchRecordForm({
         'success',
       );
 
-      // Redirect back to Match Logs
-      router.push(onSuccessRedirect);
+      // Redirect back to Match Logs (or close the modal when used inline)
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(onSuccessRedirect);
+      }
     } catch (err) {
       console.error('[match-form] Error saving match record:', err);
       const msg = err instanceof Error ? err.message : String(err);

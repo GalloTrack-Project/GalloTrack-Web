@@ -175,13 +175,11 @@ describe('MatchLogsView', () => {
     expect(screen.getByText('Tough Opponent A')).toBeDefined();
   });
 
-  it('offers an edit link for each match row', () => {
+  it('offers an inline edit action for match rows', () => {
     render(<MatchLogsView />);
 
-    const editLink = screen
-      .getAllByRole('link', { name: 'Edit match record' })
-      .find((link) => link.getAttribute('href')?.includes('/match-logs/1/edit'));
-    expect(editLink?.getAttribute('href')).toContain('/match-logs/1/edit?returnTo=');
+    const editButtons = screen.getAllByRole('button', { name: 'Edit match record' });
+    expect(editButtons.length).toBeGreaterThan(0);
   });
 
   it('filters matches by chicken class (Open)', () => {

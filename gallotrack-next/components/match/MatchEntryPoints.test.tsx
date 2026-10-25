@@ -137,41 +137,31 @@ describe('Match Logs entry points', () => {
     mockPathname.current = '/match-logs';
   });
 
-  it('Chicken Registry > Match Logs tab: the edit link keeps the registry returnTo', async () => {
+  it('Chicken Registry > Match Logs tab: the pencil opens the inline editor', async () => {
     mockPathname.current = '/profiling';
     render(<MatchLogsView />);
     await screen.findByText('Lemon');
-    const editLink = screen.getByRole('link', { name: 'Edit match record' });
-    expect(editLink.getAttribute('href')).toBe(
-      '/match-logs/1/edit?returnTo=%2Fprofiling%3Ftab%3DmatchForm',
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Edit match record' }));
+    expect(screen.getByRole('dialog', { name: /Edit Match Record/i })).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('/match-logs list: the edit link keeps the list returnTo', async () => {
+  it('/match-logs list: the pencil opens the inline editor', async () => {
     render(<MatchLogsView />);
     await screen.findByText('Lemon');
-    const editLink = screen.getByRole('link', { name: 'Edit match record' });
-    expect(editLink.getAttribute('href')).toBe('/match-logs/1/edit?returnTo=%2Fmatch-logs');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit match record' }));
+    expect(screen.getByRole('dialog', { name: /Edit Match Record/i })).toBeInTheDocument();
   });
 
-  it('Dashboard match table: the edit link returns to /dashboard', async () => {
+  it('Dashboard match table: the pencil opens the inline editor', async () => {
     render(<MatchLogsTable />);
     // The table renders rows from the context when no matches prop is given.
     await screen.findByText('Lemon');
-    const editLink = screen.getByRole('link', { name: 'Edit match record' });
-    expect(editLink.getAttribute('href')).toBe('/match-logs/1/edit?returnTo=%2Fdashboard');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit match record' }));
+    expect(screen.getByRole('dialog', { name: /Edit Match Record/i })).toBeInTheDocument();
   });
 
-  it('shared match table honors an explicit returnTo for pencil navigation', async () => {
-    render(<MatchLogsTable returnTo="/profiling?tab=matchForm&q=Lemon" />);
-    await screen.findByText('Lemon');
-    const editLink = screen.getByRole('link', { name: 'Edit match record' });
-    expect(editLink.getAttribute('href')).toBe(
-      '/match-logs/1/edit?returnTo=%2Fprofiling%3Ftab%3DmatchForm%26q%3DLemon',
-    );
-  });
-
-  it('does not navigate when a table row is clicked; use the Edit link instead', async () => {
+  it('does not navigate when a table row is clicked', async () => {
     render(<MatchLogsView />);
     const row = await screen.findByText('Lemon');
     fireEvent.click(row.closest('tr') as HTMLElement);

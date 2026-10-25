@@ -2,6 +2,8 @@
 import React from 'react';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
+import MatchRecordForm from '@/components/match/MatchRecordForm';
+import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -32,6 +34,7 @@ export default function MatchLogsTable({
   const ui = useUI();
   const { fowls, matchHistory, matchMedia, birdCodes } = useFowl();
   const rows = matches ?? matchHistory;
+  const [editingMatch, setEditingMatch] = React.useState<MatchRecord | null>(null);
 
   const fowlById = React.useMemo(() => {
     const m = new Map<number, FowlRecord>();
@@ -40,8 +43,9 @@ export default function MatchLogsTable({
   }, [fowls]);
 
   return (
-    <div className="max-w-full min-w-0 overflow-x-auto">
-      <table className="w-full min-w-[640px] table-fixed border-collapse text-left text-sm">
+    <>
+      <div className="max-w-full min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[640px] table-fixed border-collapse text-left text-sm">
         <thead>
           <tr className="bg-muted/50 text-muted-foreground border-border border-b font-extrabold uppercase">
             <th className="w-[9%] p-2.5 pl-3 lg:p-3 lg:pl-4">Match Date</th>
@@ -225,6 +229,7 @@ export default function MatchLogsTable({
                       photos={photosFor(matchMedia, log.id, log)}
                       posters={postersFor(matchMedia, log.id, log)}
                       returnTo={returnTo}
+                      onEdit={() => setEditingMatch(log)}
                     />
                   </td>
                 </tr>
@@ -232,7 +237,24 @@ export default function MatchLogsTable({
             })
           )}
         </tbody>
-      </table>
-    </div>
+        </table>
+      </div>
+      {editingMatch && (
+        <Modal
+          open
+          onClose={() => setEditingMatch(null)}
+          title="Edit Match Record"
+          description="Update the recorded details for this match."
+          className="max-w-6xl"
+        >
+          <MatchRecordForm
+            mode="edit"
+            initialRecord={editingMatch}
+            onSuccess={() => setEditingMatch(null)}
+            onCancel={() => setEditingMatch(null)}
+          />
+        </Modal>
+      )}
+    </>
   );
 }

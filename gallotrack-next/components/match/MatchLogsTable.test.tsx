@@ -112,7 +112,7 @@ describe('Match Media Resolution and MatchLogsTable', () => {
     expect(enriched[1].photos).toEqual([]);
   });
 
-  it('renders Play media button and exactly one Edit match record link for a match with media', () => {
+  it('renders Play media button and exactly one Edit match record action for a match with media', () => {
     const matchesWithMedia: MatchRecord[] = [
       {
         id: 201,
@@ -138,10 +138,9 @@ describe('Match Media Resolution and MatchLogsTable', () => {
     expect(playBtn).toBeInTheDocument();
     expect(playBtn).toHaveTextContent('2');
 
-    // Exactly one Edit match record action exists linking to edit page with returnTo
-    const editLinks = screen.getAllByRole('link', { name: 'Edit match record' });
-    expect(editLinks).toHaveLength(1);
-    expect(editLinks[0].getAttribute('href')).toBe('/match-logs/201/edit?returnTo=%2Fdashboard');
+    // Exactly one Edit match record action exists
+    const editButtons = screen.getAllByRole('button', { name: 'Edit match record' });
+    expect(editButtons).toHaveLength(1);
 
     // Share action exists
     expect(screen.getByRole('button', { name: 'Share match' })).toBeInTheDocument();
@@ -182,8 +181,8 @@ describe('Match Media Resolution and MatchLogsTable', () => {
 
     expect(screen.getByText('No media')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Play media' })).not.toBeInTheDocument();
-    // Exactly one Edit match record link still exists
-    expect(screen.getAllByRole('link', { name: 'Edit match record' })).toHaveLength(1);
+    // Exactly one Edit match record action still exists
+    expect(screen.getAllByRole('button', { name: 'Edit match record' })).toHaveLength(1);
   });
 
   it('confirms videos being converted show "Processing…" instead of "No media"', () => {
