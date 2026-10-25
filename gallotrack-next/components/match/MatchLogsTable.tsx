@@ -8,7 +8,8 @@ import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
-import type { MatchRecord } from '@/lib/types';
+import { toastMessage } from '@/lib/toast-bus';
+import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 type Props = {
   /** Rows to render — defaults to the full match history from context. */
@@ -35,7 +36,7 @@ export default function MatchLogsTable({
   const rows = matches ?? matchHistory;
 
   const fowlById = React.useMemo(() => {
-    const m = new Map<number, any>();
+    const m = new Map<number, FowlRecord>();
     fowls.forEach((f) => m.set(f.id, f));
     return m;
   }, [fowls]);
@@ -68,16 +69,28 @@ export default function MatchLogsTable({
             </tr>
           ) : (
             rows.map((log) => {
-              const fowl = log.fowl_id != null ? fowlById.get(log.fowl_id) : null;
+              const fowl =
+                log.fowl_id != null ? fowlById.get(log.fowl_id) ?? null : null;
               const code = fowl ? birdCodes.get(String(fowl.id)) : '';
               const hatch = fowl?.birthdate;
-              const isOrphan = log.fowl_id == null;
+              const isOrphan = !fowl;
               const openFowlInfo = fowl
                 ? (event: React.MouseEvent) => {
                     event.stopPropagation();
                     ui.setSelectedFowlForDetails(fowl);
                   }
                 : undefined;
+              const handleChickenCellClick = (event: React.MouseEvent) => {
+                event.stopPropagation();
+                if (fowl) {
+                  ui.setSelectedFowlForDetails(fowl);
+                } else {
+                  toastMessage(
+                    'No chicken profile is linked to this historical match.',
+                    'warning',
+                  );
+                }
+              };
               return (
                 <tr
                   key={log.id}
@@ -91,7 +104,11 @@ export default function MatchLogsTable({
                   <td className="text-muted-foreground p-2.5 pl-3 font-mono whitespace-nowrap lg:p-3 lg:pl-4">
                     {log.date}
                   </td>
-                  <td className="min-w-0 p-2.5 lg:p-3">
+                  <td
+                    className="min-w-0 cursor-pointer p-2.5 lg:p-3"
+                    onClick={handleChickenCellClick}
+                    title={fowl ? `View info for ${log.entry_name}` : undefined}
+                  >
                     {openFowlInfo ? (
                       <button
                         type="button"

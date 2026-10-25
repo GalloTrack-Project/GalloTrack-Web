@@ -10,6 +10,7 @@ import type { MatchRecord, FowlRecord } from '@/lib/types';
 const mockPush = vi.fn();
 const mockOpenMatchMediaViewer = vi.fn();
 const mockSetShareTarget = vi.fn();
+const mockSetSelectedFowlForDetails = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn(), back: vi.fn() }),
@@ -22,7 +23,7 @@ vi.mock('@/lib/contexts/ui-context', () => ({
     openMatchMediaViewer: mockOpenMatchMediaViewer,
     setShareTarget: mockSetShareTarget,
     selectedFowlForDetails: null,
-    setSelectedFowlForDetails: vi.fn(),
+    setSelectedFowlForDetails: mockSetSelectedFowlForDetails,
     fightHistoryFowl: null,
     setFightHistoryFowl: vi.fn(),
   }),
@@ -162,6 +163,35 @@ describe('Match Actions Regression & Accessibility Suite', () => {
       fireEvent.click(editLink);
       // Normal click stops row propagation
       expect(mockPush).not.toHaveBeenCalledWith('/match-logs/101/edit');
+    });
+
+    it('opens chicken details instead of navigating to the edit page when the chicken identifier is clicked', () => {
+      render(<MatchLogsTable matches={mockMatches} />);
+
+      fireEvent.click(
+        screen.getAllByRole('button', { name: /View info for Thunder King/i })[0],
+      );
+
+      expect(mockSetSelectedFowlForDetails).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 10 }),
+      );
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('does not navigate to the edit page when an unlinked historical chicken cell is clicked', () => {
+      const unlinkedMatch = {
+        ...mockMatches[0],
+        id: 999,
+        fowl_id: null,
+        entry_name: 'Unknown Historical Bird',
+      } as MatchRecord;
+
+      render(<MatchLogsTable matches={[unlinkedMatch]} />);
+
+      fireEvent.click(screen.getByText('Unknown Historical Bird'));
+
+      expect(mockSetSelectedFowlForDetails).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 
