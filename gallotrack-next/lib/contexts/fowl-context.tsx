@@ -1207,7 +1207,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         return;
       }
 
-      // ── Wing band ID: physical band number, unique across the farm ──
+      // ── Wing Banding: physical band number, unique across the farm ──
       const editBand = editWingBand.trim();
       if (editBand && !isValidWingBand(editBand)) {
         toastMessage(WING_BAND_ERROR, 'error');

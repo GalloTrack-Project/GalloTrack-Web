@@ -470,7 +470,7 @@ export default function FowlDetailsModal({
             {selectedFowlForDetails.wing_band ? (
               <span
                 className="text-teal rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 font-mono text-xs font-black uppercase dark:border-teal-800 dark:bg-teal-950/50"
-                title="Wing Band ID"
+                title="Wing Banding"
               >
                 ⌁ {selectedFowlForDetails.wing_band}
               </span>

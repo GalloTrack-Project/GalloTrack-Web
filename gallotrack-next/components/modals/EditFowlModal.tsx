@@ -749,7 +749,7 @@ export default function EditFowlModal({
                     className="text-muted-foreground block text-xs font-bold uppercase"
                     htmlFor="wing-band-id"
                   >
-                    Wing Band ID{' '}
+                    Wing Banding{' '}
                     <span className="text-muted-foreground font-normal lowercase">
                       (optional — number on metal wing band; must be unique if provided)
                     </span>
@@ -766,7 +766,7 @@ export default function EditFowlModal({
                 />
                 {isBandDuplicate && (
                   <p className="mt-1 text-xs font-bold text-rose-600 dark:text-rose-400">
-                    ❌ Wing Band ID &quot;{trimmedBand}&quot; is already assigned to another
+                    ❌ Wing Banding &quot;{trimmedBand}&quot; is already assigned to another
                     chicken.
                   </p>
                 )}

@@ -1,5 +1,5 @@
 /**
- * Wing Band ID helper and validation rules.
+ * Wing Banding helper and validation rules.
  *
  * Supports alphanumeric input (letters, numbers, subscripts/notations
  * such as 1A₁, WB-001, Hatch#3, Gen₂, etc.) as requested by Sir Ragde Nalla
@@ -21,7 +21,7 @@ export const WING_BAND_HINT =
   'Alphanumeric physical tag (letters, numbers, notations, or subscripts like WB-001, 1A₁, Hatch#3)';
 
 export const WING_BAND_ERROR =
-  'Wing Band ID: use alphanumeric characters, subscripts, or notations (- . _ / # : () spaces), up to 50 characters.';
+  'Wing Banding: use alphanumeric characters, subscripts, or notations (- . _ / # : () spaces), up to 50 characters.';
 
 export function isValidWingBand(value: unknown): boolean {
   const raw = String(value ?? '').trim();

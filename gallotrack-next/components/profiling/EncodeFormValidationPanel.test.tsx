@@ -145,7 +145,7 @@ describe('Validation & Summary Panel and StatusItem', () => {
     expect(screen.getByText(/Unique Chicken Identifier/i)).toBeInTheDocument();
     expect(screen.getByText(/Edit identifier manually/i)).toBeInTheDocument();
 
-    const wingBandInput = screen.getByLabelText(/Wing Band ID/i);
+    const wingBandInput = screen.getByLabelText(/Wing Banding/i);
     expect(wingBandInput).toBeInTheDocument();
     expect(wingBandInput).toHaveAttribute('maxLength', '50');
 
