@@ -218,328 +218,302 @@ interface LineageDirectoryProps {
 
 type LineageTab = 'tree' | 'families' | 'sire' | 'dam' | 'pedigree';
 type SortOption = 'most' | 'name' | 'newest';
+type FamilySortOption = 'winrate' | 'offspring' | 'fights' | 'name';
+
+interface FamilyCardProps {
+  g: FowlRecord[];
+  index: number;
+  getChildMatchStats: (name: string) => WinRateStats;
+  birdCodes: Map<string, string>;
+  setSelectedFowlForDetails: (f: FowlRecord) => void;
+  onShowFights: (f: FowlRecord) => void;
+  fowls: FowlRecord[];
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  onOpenInFamilyTree: () => void;
+}
 
 function FamilyCard({
   g,
   index,
-  pairingAnalytics,
   getChildMatchStats,
+  birdCodes,
   setSelectedFowlForDetails,
   onShowFights,
-  rankingMetric,
-  rankingMinMatches,
-  matchHistory,
   fowls,
-}: {
-  g: FowlRecord[];
-  index: number;
-  pairingAnalytics: { all: Map<string, PairingStats> };
-  getChildMatchStats: (name: string) => WinRateStats;
-  setSelectedFowlForDetails: (f: FowlRecord) => void;
-  onShowFights: (f: FowlRecord) => void;
-  rankingMetric: RankingMetric;
-  rankingMinMatches: number;
-  matchHistory: MatchRecord[];
-  fowls: FowlRecord[];
-}) {
-  const [familySortBy, setFamilySortBy] = useState<'ranked' | 'winrate' | 'name'>('ranked');
-  const [isTotalExpanded, setIsTotalExpanded] = useState(false);
+  expanded,
+  onToggleExpanded,
+  onOpenInFamilyTree,
+}: FamilyCardProps) {
+  const panelId = `family-members-${index}`;
+  const sire = (g[0].sire || '').trim();
+  const dam = (g[0].dam || '').trim();
+  const sireBreed = parentBreedOf(sire, fowls);
+  const damBreed = parentBreedOf(dam, fowls);
 
-  const ps = pairingAnalytics.all.get(`${(g[0].sire || '').trim().toLowerCase()}|||${(g[0].dam || '').trim().toLowerCase()}`);
-  const sireBreed = parentBreedOf(g[0].sire, fowls);
-  const damBreed = parentBreedOf(g[0].dam, fowls);
+  const codeOf = (child: FowlRecord) =>
+    child.bird_code ||
+    child.chicken_code ||
+    child.birth_code ||
+    birdCodes.get(String(child.id)) ||
+    '';
+
+  const recordLabel = (stats: WinRateStats) =>
+    stats.total === 0
+      ? 'No fights'
+      : `${stats.wins}W-${stats.losses}L${stats.draws > 0 ? `-${stats.draws}D` : ''}${
+          stats.winRate !== null ? ` · ${stats.winRate}%` : ''
+        }`;
+
+  const males = g.filter(isMaleChild).length;
+  const females = g.length - males;
 
   // Only cocks/stags are fighting birds. Hens may have historical/erroneous
   // match rows, but they must never inflate the family fight record.
   const fightingOffspring = g.filter(isMaleChild);
   const familyTotal = combineWinRates(fightingOffspring.map((c) => getChildMatchStats(c.name)));
   const foughtCount = familyTotal.foughtCount;
+  const familyRecord = `${familyTotal.wins}W-${familyTotal.losses}L${
+    familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''
+  }`;
 
-  const rankingStatsOf = (name: string) => {
-    const s = getChildMatchStats(name);
-    return { ...s, winRate: s.winRate ?? 0 };
-  };
-  const ranked = useMemo(() => rankFowls(g, rankingStatsOf, 'win_rate', 1), [g, rankingStatsOf]);
-  const bestChild = bestFowl(g, rankingStatsOf, 'win_rate', 3);
-  const bestId = bestChild?.id ?? null;
-  const bestTitle = bestChild
-    ? `Best by win rate${bestYearFor(bestChild.name, matchHistory) ? ` · best year ${bestYearFor(bestChild.name, matchHistory)}` : ''}`
-    : undefined;
-
-  const sortedOffspring = useMemo(() => {
-    if (familySortBy === 'winrate') {
-      return [...g].sort((a, b) => {
-        const sa = getChildMatchStats(a.name);
-        const sb = getChildMatchStats(b.name);
-        const rateA = sa.decided > 0 ? (sa.winRate ?? -1) : -1;
-        const rateB = sb.decided > 0 ? (sb.winRate ?? -1) : -1;
-        if (rateB !== rateA) return rateB - rateA;
-        if (sb.decided !== sa.decided) return sb.decided - sa.decided;
-        if (sb.wins !== sa.wins) return sb.wins - sa.wins;
-        const codeA = a.bird_code || a.chicken_code || a.birth_code || '';
-        const codeB = b.bird_code || b.chicken_code || b.birth_code || '';
+  // Members read as a roster: males first, then natural code order.
+  const members = useMemo(
+    () =>
+      [...g].sort((a, b) => {
+        const aMale = isMaleChild(a);
+        const bMale = isMaleChild(b);
+        if (aMale !== bMale) return aMale ? -1 : 1;
+        const codeA =
+          a.bird_code || a.chicken_code || a.birth_code || birdCodes.get(String(a.id)) || '';
+        const codeB =
+          b.bird_code || b.chicken_code || b.birth_code || birdCodes.get(String(b.id)) || '';
         if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
         if (codeA) return -1;
         if (codeB) return 1;
         return a.name.localeCompare(b.name);
-      });
-    }
-    if (familySortBy === 'name') {
-      return [...g].sort((a, b) => a.name.localeCompare(b.name));
-    }
-    return ranked;
-  }, [g, familySortBy, ranked, getChildMatchStats]);
+      }),
+    [g, birdCodes]
+  );
 
-  const males = g.filter(isMaleChild).length;
-  const females = g.length - males;
-  const roosterOffspring = sortedOffspring.filter(isMaleChild);
-  const henOffspring = sortedOffspring.filter((c) => !isMaleChild(c));
+  // Best performer = highest family-relevant win rate, then most decided fights.
+  const bestPerformer = useMemo(() => {
+    const fought = g
+      .map((child) => ({ child, stats: getChildMatchStats(child.name) }))
+      .filter(({ stats }) => stats.total > 0);
+    if (fought.length === 0) return null;
+    return fought.sort((a, b) => {
+      const rateA = a.stats.decided > 0 ? a.stats.winRate ?? -1 : -1;
+      const rateB = b.stats.decided > 0 ? b.stats.winRate ?? -1 : -1;
+      if (rateB !== rateA) return rateB - rateA;
+      if (b.stats.decided !== a.stats.decided) return b.stats.decided - a.stats.decided;
+      if (b.stats.wins !== a.stats.wins) return b.stats.wins - a.stats.wins;
+      return a.child.name.localeCompare(b.child.name);
+    })[0];
+  }, [g, getChildMatchStats]);
 
-  const renderOffspringRow = (child: FowlRecord, i: number) => {
-    const cs = getChildMatchStats(child.name);
-    const isBest = child.id === bestId;
-    return (
-      <div
-        key={child.id}
-        className="group w-full flex items-stretch gap-1.5 bg-muted/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-border hover:border-emerald-300 dark:hover:border-emerald-700 rounded-md pl-3.5 pr-2 py-2 transition-all"
-      >
-        <button
-          type="button"
-          onClick={() => setSelectedFowlForDetails(child)}
-          className="flex-1 flex items-center justify-between gap-3 text-left min-w-0 cursor-pointer"
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-xs font-black text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
-            <span
-              className={`w-2 h-2 rounded-full shrink-0 ${
-                child.status === 'Active'
-                  ? 'bg-emerald-500'
-                  : child.status === 'Archived'
-                  ? 'bg-amber-400'
-                  : child.status === 'Deceased'
-                  ? 'bg-rose-400'
-                  : 'bg-muted-foreground'
-              }`}
-            ></span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1">
-                {child.bird_code && (
-                  <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-foreground border border-border font-bold uppercase shrink-0">
-                    [{formatBirdCodeForDisplay(child.bird_code)}]
-                  </span>
-                )}
-                <p className="text-xs font-black text-card-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">
-                  {child.name}
-                </p>
-                {isBest && cs.decided >= 3 && (
-                  <span className="text-xs font-black bg-amber-400 text-amber-900 px-1 py-0.5 rounded uppercase tracking-wider shrink-0" title={bestTitle}>
-                    Best
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground font-semibold truncate">
-                {genderLabel(child.gender)} · {child.age || 'N/A'}
-              </p>
-            </div>
-          </div>
-          <div className="shrink-0 flex items-center">
-            <WinRatePill stats={cs} />
-          </div>
-        </button>
-        <button
-          type="button"
-          onClick={() => onShowFights(child)}
-          aria-label={`View all fights for ${child.name}`}
-          title="View all fights"
-          className="shrink-0 self-center flex items-center gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-border hover:border-emerald-400 rounded-md px-2 py-1.5 transition-colors cursor-pointer"
-        >
-          <Swords className="w-3 h-3" />
-          Fights
-        </button>
-      </div>
-    );
+  const trendOf = (stats: WinRateStats) => {
+    if (stats.decided === 0) {
+      return { key: 'none', dot: 'bg-muted-foreground/40' };
+    }
+    if ((stats.winRate ?? 0) >= 50) {
+      return { key: 'up', dot: 'bg-emerald-500' };
+    }
+    return { key: 'down', dot: 'bg-rose-500' };
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-xs overflow-hidden">
-      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-md flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
+    <article className="bg-card border-border shadow-xs flex h-full flex-col rounded-lg border">
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="text-card-foreground text-sm font-black">Family {index + 1}</h4>
+              <span className="dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-emerald-700 uppercase">
+                Full Siblings
+              </span>
+            </div>
+            <p className="text-card-foreground mt-1 truncate text-xs font-bold">
+              <span>
+                {sire}
+                {sireBreed && <span className="text-muted-foreground font-semibold"> ({sireBreed})</span>}
+              </span>
+              <span className="text-muted-foreground mx-1 select-none">×</span>
+              <span>
+                {dam}
+                {damBreed && <span className="text-muted-foreground font-semibold"> ({damBreed})</span>}
+              </span>
+            </p>
+            <p className="text-muted-foreground text-xs font-semibold">
+              {g.length} chickens · {males} M · {females} F
+            </p>
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-sm font-black text-card-foreground">Family {index + 1}</h4>
-              {foughtCount > 0 ? (
-                <WinRatePill stats={familyTotal} />
-              ) : (
-                <span className="text-xs font-bold text-muted-foreground/60">No fights</span>
+          <button
+            type="button"
+            onClick={onToggleExpanded}
+            aria-expanded={expanded}
+            aria-controls={expanded ? panelId : undefined}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} family ${index + 1}`}
+            className="border-border text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border transition-colors"
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+
+        {/* Family total lives here only - the old duplicated footer is gone. */}
+        <div className="border-border bg-muted/30 mt-3 rounded-md border px-3 py-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-card-foreground text-3xl leading-none font-black">
+                {familyTotal.decided > 0 && familyTotal.winRate !== null
+                  ? `${familyTotal.winRate}%`
+                  : '—'}
+              </span>
+              {familyTotal.isLowSample && (
+                <span className="text-muted-foreground rounded bg-black/5 px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase dark:bg-white/10">
+                  {familyTotal.decided === 1 ? '1 match' : 'low sample'}
+                </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground font-semibold">
-              {g.length} chickens · {males} male · {females} female
-              {foughtCount > 0
-                ? ` · Family total: ${foughtCount} of ${fightingOffspring.length} males fought · ${familyTotal.wins}W-${familyTotal.losses}L${familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''} · ${familyTotal.winRate === null ? '—' : `${familyTotal.winRate}%`}`
-                : ' · No fights recorded yet'}
-            </p>
+            <span className="text-card-foreground text-xs font-black whitespace-nowrap">
+              {familyRecord}
+            </span>
           </div>
+          <p className="text-muted-foreground mt-1 text-xs font-semibold">
+            {foughtCount} of {fightingOffspring.length} males fought
+          </p>
         </div>
-        <span className="text-xs font-black bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider">
-          Full Siblings
-        </span>
-      </div>
-      <div className="px-5 pb-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-3.5 text-center">
-            <p className="text-xs font-black text-info dark:text-sky-400 uppercase tracking-widest mb-1">
-              <ChickenIcon className="w-3 h-3 inline" /> Sire
-            </p>
-            <p className="text-sm font-black text-card-foreground truncate">{g[0].sire}</p>
-            {sireBreed && <p className="text-xs font-bold text-muted-foreground truncate">{sireBreed}</p>}
-          </div>
-          <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800 rounded-lg p-3.5 text-center">
-            <p className="text-xs font-black text-pink uppercase tracking-widest mb-1">
-              <ChickenIcon className="w-3 h-3 inline" /> Dam
-            </p>
-            <p className="text-sm font-black text-card-foreground truncate">{g[0].dam}</p>
-            {damBreed && <p className="text-xs font-bold text-muted-foreground truncate">{damBreed}</p>}
-          </div>
-        </div>
-      </div>
-      <div className="px-5 pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Offspring</p>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground font-semibold">Sort:</span>
-            <select
-              value={familySortBy}
-              onChange={(e) => setFamilySortBy(e.target.value as 'ranked' | 'winrate' | 'name')}
-              aria-label={`Sort offspring for family ${index + 1}`}
-              className="text-xs bg-muted border border-input-border rounded px-2 py-0.5 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
-            >
-              <option value="ranked">Ranked</option>
-              <option value="winrate">Win rate</option>
-              <option value="name">Name</option>
-            </select>
-          </div>
-        </div>
-        {roosterOffspring.length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs font-black text-sky-700 dark:text-sky-400 uppercase tracking-widest mb-1.5">
-              ♂ Males ({roosterOffspring.length})
-            </p>
-            <div className="space-y-1.5">
-              {roosterOffspring.map((child, i) => renderOffspringRow(child, i))}
-            </div>
-          </div>
-        )}
-        {henOffspring.length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs font-black text-pink-700 dark:text-pink-400 uppercase tracking-widest mb-1.5">
-              ♀ Females ({henOffspring.length})
-            </p>
-            <div className="space-y-1.5">
-              {henOffspring.map((child, i) => renderOffspringRow(child, i))}
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Bottom Family Total Row (expandable to show contributors) */}
-      <div
-        role={foughtCount > 0 ? 'button' : undefined}
-        tabIndex={foughtCount > 0 ? 0 : undefined}
-        aria-expanded={foughtCount > 0 ? isTotalExpanded : undefined}
-        onClick={foughtCount > 0 ? () => setIsTotalExpanded(!isTotalExpanded) : undefined}
-        onKeyDown={
-          foughtCount > 0
-            ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setIsTotalExpanded(!isTotalExpanded);
-                }
-              }
-            : undefined
-        }
-        title="Total wins ÷ total decided matches. Draws excluded."
-        className={`px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between gap-2 text-xs font-bold transition-colors select-none ${
-          foughtCount > 0 ? 'cursor-pointer hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-emerald-500' : ''
-        }`}
-      >
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="uppercase tracking-wider text-muted-foreground">Family total</span>
-          {foughtCount > 0 ? (
+        {/* Best performer */}
+        <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-xs">
+          <Trophy className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden="true" />
+          <span className="text-muted-foreground shrink-0 text-[10px] font-black tracking-wider uppercase">
+            Best
+          </span>
+          {bestPerformer ? (
             <>
-              <span className="text-muted-foreground/60 select-none">·</span>
-              <span className="text-foreground">
-                {foughtCount} of {fightingOffspring.length} males have fought · {familyTotal.wins}W-{familyTotal.losses}L{familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''} · {familyTotal.winRate === null ? '—' : `${familyTotal.winRate}%`}
+              <span className="bg-muted border-border shrink-0 rounded border px-1 py-0.5 font-mono text-[11px] font-black uppercase">
+                [{formatBirdCodeForDisplay(codeOf(bestPerformer.child))}]
+              </span>
+              <span className="text-card-foreground min-w-0 flex-1 truncate font-bold">
+                {bestPerformer.child.name}
+              </span>
+              <span className="text-muted-foreground shrink-0 font-bold">
+                {recordLabel(bestPerformer.stats)}
               </span>
             </>
           ) : (
-            <>
-              <span className="text-muted-foreground/60 select-none">·</span>
-              <span className="text-muted-foreground font-semibold">No fights recorded yet</span>
-            </>
+            <span className="text-muted-foreground/70 font-semibold">No fights yet</span>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {foughtCount > 0 ? (
-            <>
-              <WinRatePill stats={familyTotal} />
-              <ChevronDown
-                className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
-                  isTotalExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            </>
-          ) : (
-            <span className="text-muted-foreground/60 font-semibold">No fights recorded yet</span>
-          )}
+
+        {/* Offspring summary + compact win-rate chips */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+              Offspring
+            </p>
+            <p className="text-muted-foreground text-xs font-semibold">
+              {males} male · {females} female
+            </p>
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1" aria-label="Offspring win-rate chips">
+            {g.map((child) => {
+              const stats = getChildMatchStats(child.name);
+              const trend = trendOf(stats);
+              return (
+                <button
+                  key={child.id}
+                  type="button"
+                  onClick={() => setSelectedFowlForDetails(child)}
+                  title={`${child.name} · ${recordLabel(stats)}`}
+                  aria-label={`${child.name} · ${recordLabel(stats)}`}
+                  data-record-trend={trend.key}
+                  className="border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px] font-bold transition-colors"
+                >
+                  <span>[{formatBirdCodeForDisplay(codeOf(child))}]</span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${trend.dot}`} aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Expandable Breakdown of Contributor Chickens */}
-      {isTotalExpanded && foughtCount > 0 && (
-        <div className="px-5 py-2.5 bg-muted/50 border-t border-border/60 space-y-1.5 text-xs animate-fadeIn">
-          <p className="text-muted-foreground font-semibold text-xs mb-1">
-            Contributors ({foughtCount} of {fightingOffspring.length} males):
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {fightingOffspring
-              .filter((c) => getChildMatchStats(c.name).total > 0)
-              .sort((a, b) => {
-                const sa = getChildMatchStats(a.name);
-                const sb = getChildMatchStats(b.name);
-                if ((sb.winRate ?? 0) !== (sa.winRate ?? 0)) return (sb.winRate ?? 0) - (sa.winRate ?? 0);
-                if (sb.decided !== sa.decided) return sb.decided - sa.decided;
-                const codeA = a.bird_code || a.chicken_code || a.birth_code || '';
-                const codeB = b.bird_code || b.chicken_code || b.birth_code || '';
-                if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
-                return a.name.localeCompare(b.name);
-              })
-              .map((c) => {
-                const cs = getChildMatchStats(c.name);
-                const code = c.bird_code || c.chicken_code || c.birth_code || '';
-                return (
-                  <div
-                    key={c.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-card border border-border font-bold text-card-foreground shadow-2xs"
-                  >
-                    {code && <span className="font-mono text-xs text-muted-foreground">[{formatBirdCodeForDisplay(code)}]</span>}
-                    <span>{c.name}</span>
-                    <span className="text-muted-foreground select-none">·</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-black">
-                      {cs.wins}W-{cs.losses}L{cs.draws > 0 ? `-${cs.draws}D` : ''}
-                    </span>
-                    <span className="text-muted-foreground/60 select-none">·</span>
-                    <span className="text-muted-foreground">{cs.winRate}%</span>
-                  </div>
-                );
-              })}
+      {expanded && (
+        <div id={panelId} className="border-border bg-muted/20 border-t px-4 py-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+              Members
+            </p>
+            <button
+              type="button"
+              onClick={onOpenInFamilyTree}
+              className="text-emerald-600 dark:text-emerald-400 inline-flex cursor-pointer items-center gap-1 text-xs font-bold hover:underline"
+            >
+              <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Open in Family Tree
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr className="border-border/60 text-muted-foreground border-b font-bold">
+                  <th className="py-1.5 pr-2 font-bold">Code</th>
+                  <th className="px-2 py-1.5 font-bold">Chicken</th>
+                  <th className="px-2 py-1.5 font-bold">Sex</th>
+                  <th className="px-2 py-1.5 font-bold">Record</th>
+                  <th className="py-1.5 pl-2 text-right font-bold">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-border/40 divide-y">
+                {members.map((child) => {
+                  const cs = getChildMatchStats(child.name);
+                  return (
+                    <tr key={child.id} className="hover:bg-card/70">
+                      <td className="text-muted-foreground py-1.5 pr-2 font-mono font-bold uppercase">
+                        [{formatBirdCodeForDisplay(codeOf(child))}]
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFowlForDetails(child)}
+                          className="text-card-foreground cursor-pointer truncate font-bold hover:text-emerald-700 hover:underline dark:hover:text-emerald-400"
+                        >
+                          {child.name}
+                        </button>
+                      </td>
+                      <td className="text-muted-foreground px-2 py-1.5 font-semibold whitespace-nowrap">
+                        {genderLabel(child.gender)}
+                      </td>
+                      <td className="text-card-foreground px-2 py-1.5 font-bold whitespace-nowrap">
+                        {recordLabel(cs)}
+                      </td>
+                      <td className="py-1.5 pl-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => onShowFights(child)}
+                          aria-label={`View all fights for ${child.name}`}
+                          title="View all fights"
+                          className="border-border text-muted-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-1 text-[10px] font-black tracking-wider uppercase transition-colors hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400"
+                        >
+                          <Swords className="h-3 w-3" aria-hidden="true" />
+                          Fights
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
 
@@ -574,6 +548,10 @@ export default function LineageDirectory({
   const [treeCollapsed, setTreeCollapsed] = useState<Set<string>>(new Set());
   const [pairSortBy, setPairSortBy] = useState<PairSortOption>('males-first');
   const [activeMenuChildId, setActiveMenuChildId] = useState<number | null>(null);
+
+  // Full Siblings & Families tab: family-level sort and collapsed-by-default cards.
+  const [familySortBy, setFamilySortBy] = useState<FamilySortOption>('winrate');
+  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
 
   // Master-Detail selection state
   const [selectedSireName, setSelectedSireName] = useState<string | null>(null);
@@ -1000,6 +978,19 @@ export default function LineageDirectory({
   // Search query
   const q = debouncedSearch.trim().toLowerCase();
 
+  // Family-level totals, keyed like the tree pairs (sire|||dam).
+  const familyStatsLookup = useMemo(() => {
+    const map = new Map<string, WinRateStats & { foughtCount: number }>();
+    const statsOf = (name: string) =>
+      matchStatsLookup.get(name.trim().toLowerCase()) || computeWinRate(0, 0);
+    fullFamilies.forEach((g) => {
+      const key = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+      // Only fighting birds (males) count toward the family record.
+      map.set(key, combineWinRates(g.filter(isMaleChild).map((c) => statsOf(c.name))));
+    });
+    return map;
+  }, [fullFamilies, matchStatsLookup]);
+
   // Filtered & sorted collections
   const filteredFullFamilies = useMemo(() => {
     let list = fullFamilies;
@@ -1018,22 +1009,39 @@ export default function LineageDirectory({
         });
       });
     }
-    if (sortBy === 'name') {
-      return [...list].sort((a, b) => {
-        const nameA = `${a[0].sire || ''} ${a[0].dam || ''}`;
-        const nameB = `${b[0].sire || ''} ${b[0].dam || ''}`;
-        return nameA.localeCompare(nameB);
-      });
-    }
-    if (sortBy === 'newest') {
-      return [...list].sort((a, b) => {
-        const maxA = Math.max(...a.map((m) => m.id));
-        const maxB = Math.max(...b.map((m) => m.id));
-        return maxB - maxA;
-      });
-    }
-    return [...list].sort((a, b) => b.length - a.length);
-  }, [fullFamilies, q, sortBy, birdCodes]);
+
+    const keyOf = (g: FowlRecord[]) => `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+    const labelOf = (g: FowlRecord[]) =>
+      `${(g[0].sire || '').trim()} × ${(g[0].dam || '').trim()}`;
+    const statsOf = (g: FowlRecord[]) => familyStatsLookup.get(keyOf(g));
+
+    return [...list].sort((a, b) => {
+      if (familySortBy === 'name') {
+        return labelOf(a).localeCompare(labelOf(b));
+      }
+      if (familySortBy === 'offspring') {
+        return b.length - a.length || labelOf(a).localeCompare(labelOf(b));
+      }
+      if (familySortBy === 'fights') {
+        const fightsA = statsOf(a)?.total ?? 0;
+        const fightsB = statsOf(b)?.total ?? 0;
+        return fightsB - fightsA || labelOf(a).localeCompare(labelOf(b));
+      }
+      // Win rate: families without a decided fight always sort last.
+      const sa = statsOf(a);
+      const sb = statsOf(b);
+      const rateA = sa && sa.decided > 0 ? sa.winRate ?? -1 : null;
+      const rateB = sb && sb.decided > 0 ? sb.winRate ?? -1 : null;
+      if (rateA === null && rateB !== null) return 1;
+      if (rateB === null && rateA !== null) return -1;
+      if (rateA !== null && rateB !== null && rateB !== rateA) return rateB - rateA;
+      const decidedDiff = (sb?.decided ?? 0) - (sa?.decided ?? 0);
+      if (decidedDiff !== 0) return decidedDiff;
+      const winsDiff = (sb?.wins ?? 0) - (sa?.wins ?? 0);
+      if (winsDiff !== 0) return winsDiff;
+      return labelOf(a).localeCompare(labelOf(b));
+    });
+  }, [fullFamilies, q, familySortBy, birdCodes, familyStatsLookup]);
 
   const filteredSireEntries = useMemo(() => {
     let list = sireEntries;
@@ -1366,6 +1374,12 @@ export default function LineageDirectory({
           return next;
         });
       }
+    } else if (activeTab === 'families') {
+      setExpandedFamilies(
+        new Set(
+          filteredFullFamilies.map((g) => `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`)
+        )
+      );
     } else if (activeTab === 'tree') {
       setTreeCollapsed(new Set());
     }
@@ -1388,6 +1402,8 @@ export default function LineageDirectory({
           return next;
         });
       }
+    } else if (activeTab === 'families') {
+      setExpandedFamilies(new Set());
     } else if (activeTab === 'tree') {
       setTreeCollapsed(new Set(filteredBreedingPairs.map((p) => p.key)));
     }
@@ -3383,13 +3399,30 @@ export default function LineageDirectory({
                 <select
                   id="lineage-sort"
                   aria-label="Sort options"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  value={activeTab === 'families' ? familySortBy : sortBy}
+                  onChange={(e) => {
+                    if (activeTab === 'families') {
+                      setFamilySortBy(e.target.value as FamilySortOption);
+                    } else {
+                      setSortBy(e.target.value as SortOption);
+                    }
+                  }}
                   className="h-7 px-2 text-xs font-bold rounded border border-border bg-card text-foreground cursor-pointer focus:border-emerald-500 focus:outline-none transition-colors"
                 >
-                  <option value="most">Most offspring</option>
-                  <option value="name">Name (A–Z)</option>
-                  <option value="newest">Newest</option>
+                  {activeTab === 'families' ? (
+                    <>
+                      <option value="winrate">Win rate</option>
+                      <option value="offspring">Most offspring</option>
+                      <option value="fights">Most fights</option>
+                      <option value="name">Name (A–Z)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="most">Most offspring</option>
+                      <option value="name">Name (A–Z)</option>
+                      <option value="newest">Newest</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -3467,22 +3500,41 @@ export default function LineageDirectory({
                 hint="Chickens need at least one sibling with the same Sire and Dam to form a family."
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {filteredFullFamilies.map((g, i) => (
-                  <FamilyCard
-                    key={`full-${i}`}
-                    g={g}
-                    index={i}
-                    pairingAnalytics={pairingAnalytics}
-                    getChildMatchStats={getChildMatchStats}
-                    setSelectedFowlForDetails={setSelectedFowlForDetails}
-                    onShowFights={openFights}
-                    rankingMetric={settings.ranking_metric}
-                    rankingMinMatches={settings.ranking_min_matches}
-                    matchHistory={matchHistory}
-                    fowls={fowls}
-                  />
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+                {filteredFullFamilies.map((g, i) => {
+                  const familyKey = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+                  return (
+                    <FamilyCard
+                      key={familyKey}
+                      g={g}
+                      index={i}
+                      getChildMatchStats={getChildMatchStats}
+                      birdCodes={birdCodes}
+                      setSelectedFowlForDetails={setSelectedFowlForDetails}
+                      onShowFights={openFights}
+                      fowls={fowls}
+                      expanded={expandedFamilies.has(familyKey)}
+                      onToggleExpanded={() =>
+                        setExpandedFamilies((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(familyKey)) next.delete(familyKey);
+                          else next.add(familyKey);
+                          return next;
+                        })
+                      }
+                      onOpenInFamilyTree={() => {
+                        // Same key format as the Family Tree pairs, so this also
+                        // guarantees that family is expanded when the tab opens.
+                        setTreeCollapsed((prev) => {
+                          const next = new Set(prev);
+                          next.delete(familyKey);
+                          return next;
+                        });
+                        setActiveTab('tree');
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
 
