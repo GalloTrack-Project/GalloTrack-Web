@@ -52,6 +52,19 @@ export default function DashboardPage() {
   } = fowl;
 
   const [reportsMenuOpen, setReportsMenuOpen] = React.useState(false);
+  const [selectedCrossbreedIndex, setSelectedCrossbreedIndex] = React.useState<number | null>(null);
+
+  const crossbreedItems = crossbreedChartData.labels.map((label, i) => ({
+    label,
+    share: crossbreedChartData.data[i] ?? 0,
+    winRate: crossbreedChartData.winRates[i] ?? 0,
+    wins: crossbreedChartData.wins[i] ?? 0,
+    losses: crossbreedChartData.losses[i] ?? 0,
+    total: crossbreedChartData.totals[i] ?? 0,
+    color: chart.series[i % chart.series.length],
+  }));
+  const selectedCrossbreed =
+    selectedCrossbreedIndex !== null ? crossbreedItems[selectedCrossbreedIndex] ?? null : null;
 
   const navigate = (page: string, subTab?: string) => {
     if (subTab) ui.setProfilingSubTab(subTab as never);
@@ -195,8 +208,15 @@ export default function DashboardPage() {
         {
           heading: 'Bloodline Win Ratios',
           table: {
-            columns: ['Bloodline cross', 'Win rate %'],
-            rows: crossbreedChartData.labels.map((l, i) => [l, crossbreedChartData.data[i]]),
+            columns: ['Bloodline cross', 'Wins', 'Losses', 'Matches', 'Win rate %', 'Win share %'],
+            rows: crossbreedItems.map((item) => [
+              item.label,
+              item.wins,
+              item.losses,
+              item.total,
+              item.winRate,
+              item.share,
+            ]),
           },
         },
         {
@@ -782,10 +802,10 @@ export default function DashboardPage() {
               <div className="relative mx-auto my-4 h-52 w-52 sm:h-56 sm:w-56">
                 <Doughnut
                   data={{
-                    labels: crossbreedChartData.labels.map((l, i) => `${l} ${crossbreedChartData.data[i]}%`),
+                    labels: crossbreedItems.map((item) => item.label),
                     datasets: [{
-                      data: crossbreedChartData.data,
-                      backgroundColor: chart.series,
+                      data: crossbreedItems.map((item) => item.share),
+                      backgroundColor: crossbreedItems.map((item) => item.color),
                       borderWidth: 3,
                       borderColor: chart.card,
                       hoverOffset: 6,
@@ -795,9 +815,35 @@ export default function DashboardPage() {
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '68%',
+                    onClick: (_event, elements) => {
+                      if (elements.length > 0) {
+                        const index = elements[0].index;
+                        setSelectedCrossbreedIndex((current) => (current === index ? null : index));
+                      }
+                    },
                     plugins: {
                       legend: { display: false },
-                      tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}` }, backgroundColor: chart.card, titleColor: chart.foreground, bodyColor: chart.foreground, borderColor: chart.border, borderWidth: 1, padding: 10, cornerRadius: 8 },
+                      tooltip: {
+                        callbacks: {
+                          title: (items) => crossbreedItems[items[0]?.dataIndex ?? -1]?.label ?? '',
+                          label: (ctx) => {
+                            const item = crossbreedItems[ctx.dataIndex];
+                            if (!item) return '';
+                            return [
+                              ` ${item.wins}W · ${item.losses}L · ${item.total} matches`,
+                              ` ${item.winRate}% win rate`,
+                              ` ${item.share}% of total wins`,
+                            ];
+                          },
+                        },
+                        backgroundColor: chart.card,
+                        titleColor: chart.foreground,
+                        bodyColor: chart.foreground,
+                        borderColor: chart.border,
+                        borderWidth: 1,
+                        padding: 10,
+                        cornerRadius: 8,
+                      },
                     },
                   }}
                 />
@@ -808,19 +854,65 @@ export default function DashboardPage() {
                   <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Win Rate</span>
                 </div>
               </div>
-              <ul className="mx-auto flex flex-col items-center gap-1.5">
-                {crossbreedChartData.labels.map((label, i) => (
-                  <li key={label} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <span
-                      aria-hidden="true"
-                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                      style={{ backgroundColor: chart.series[i % chart.series.length] }}
-                    />
-                    <span>{label} {crossbreedChartData.data[i]}%</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-center text-sm text-muted-foreground font-semibold pb-1 mt-3">Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'}</p>
+              <div className="mx-auto w-full max-w-sm">
+                <div className="mb-1 flex items-center justify-between px-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                  <span>Strain</span>
+                  <span>Share · Win rate</span>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {crossbreedItems.map((item, i) => {
+                    const isSelected = selectedCrossbreedIndex === i;
+                    return (
+                      <li key={item.label}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCrossbreedIndex((current) => (current === i ? null : i))}
+                          aria-pressed={isSelected}
+                          aria-label={`${item.label}: ${item.wins} wins, ${item.losses} losses, ${item.total} matches, ${item.winRate}% win rate, ${item.share}% of total wins`}
+                          title={`${item.wins}W · ${item.losses}L · ${item.total} matches · ${item.winRate}% win rate · ${item.share}% of total wins`}
+                          className={`flex w-full cursor-pointer items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm font-medium transition-colors ${
+                            isSelected
+                              ? 'border-emerald-500/40 bg-emerald-500/10 text-foreground'
+                              : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted/60'
+                          }`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          <span className="shrink-0 font-black text-foreground">{item.share}%</span>
+                          <span className="shrink-0 text-[11px] font-bold text-muted-foreground">{item.winRate}% WR</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {selectedCrossbreed && (
+                  <div className="mt-3 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-black text-card-foreground">{selectedCrossbreed.label}</p>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCrossbreedIndex(null)}
+                        className="cursor-pointer text-[11px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <p className="mt-0.5 text-xs font-bold text-foreground">
+                      {selectedCrossbreed.wins}W · {selectedCrossbreed.losses}L · {selectedCrossbreed.total} matches
+                    </p>
+                    <p className="text-[11px] font-semibold text-muted-foreground">
+                      {selectedCrossbreed.winRate}% win rate · {selectedCrossbreed.share}% of total wins
+                    </p>
+                  </div>
+                )}
+              </div>
+              <p className="mt-3 text-center text-sm font-semibold text-muted-foreground">
+                Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'} · click a strain for exact W-L
+              </p>
             </>
           ) : (
             <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">

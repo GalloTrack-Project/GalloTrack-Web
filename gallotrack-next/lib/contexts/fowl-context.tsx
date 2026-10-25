@@ -55,7 +55,7 @@ import { generateColorReport } from '@/lib/color-genetics';
 import { nameKey } from '@/lib/family-tree';
 import { parentLinkIds } from '@/lib/lineage';
 import { generateBreedCompliance } from '@/lib/breed-standards';
-import { useFowlAnalytics } from '@/lib/hooks/use-fowl-analytics';
+import { useFowlAnalytics, type CrossbreedChartData } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
 import { archiveDraftIssue, archiveKindLabel, type ArchiveDraft } from '@/lib/lifecycle';
@@ -181,7 +181,7 @@ interface FowlContextValue {
   legColorOpen: boolean; setLegColorOpen: (v: boolean | ((o: boolean) => boolean)) => void;
 
   pairingAnalytics: PairingAnalytics;
-  crossbreedChartData: { labels: string[]; data: number[]; hasData: boolean };
+  crossbreedChartData: CrossbreedChartData;
   winRatePct: number;
   winsCount: number;
   lossesCount: number;

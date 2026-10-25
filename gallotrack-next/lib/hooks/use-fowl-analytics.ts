@@ -11,9 +11,21 @@ import {
 } from '@/lib/helpers';
 import type { FowlRecord, MatchRecord, PairingAnalytics } from '@/lib/types';
 
+export interface CrossbreedChartData {
+  labels: string[];
+  /** Share of all decided wins, as a percentage (the doughnut slice size). */
+  data: number[];
+  /** Each strain's own win rate (wins / decided fights). */
+  winRates: number[];
+  wins: number[];
+  losses: number[];
+  totals: number[];
+  hasData: boolean;
+}
+
 export interface FowlAnalytics {
   pairingAnalytics: PairingAnalytics;
-  crossbreedChartData: { labels: string[]; data: number[]; hasData: boolean };
+  crossbreedChartData: CrossbreedChartData;
   winRatePct: number;
   winsCount: number;
   lossesCount: number;
@@ -60,9 +72,28 @@ export function useFowlAnalytics(
         if (outcome === 'loss') breedStats[breedKey].losses += 1;
       });
       const labels = Object.keys(breedStats);
-      const data = labels.map((label) => winRateOf(breedStats[label].wins, breedStats[label].losses));
-      const hasData = labels.length > 0 && matchHistory.length > 0;
-      return { labels: hasData ? labels : [], data: hasData ? data : [], hasData };
+      const wins = labels.map((label) => breedStats[label].wins);
+      const losses = labels.map((label) => breedStats[label].losses);
+      const totals = labels.map((label) => breedStats[label].total);
+      const winRates = labels.map((label) => winRateOf(breedStats[label].wins, breedStats[label].losses));
+
+      // Doughnut slice size = share of all decided wins per strain, matching
+      // the documented "Win share per strain = wins / total decided wins" rule.
+      const totalWins = wins.reduce((sum, n) => sum + n, 0);
+      const data = labels.map((_, i) =>
+        totalWins > 0 ? Math.round((wins[i] / totalWins) * 1000) / 10 : 0
+      );
+      const hasData = labels.length > 0 && matchHistory.length > 0 && totalWins > 0;
+
+      return {
+        labels: hasData ? labels : [],
+        data: hasData ? data : [],
+        winRates: hasData ? winRates : [],
+        wins: hasData ? wins : [],
+        losses: hasData ? losses : [],
+        totals: hasData ? totals : [],
+        hasData,
+      };
     })();
 
     const winsCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
