@@ -2314,10 +2314,10 @@ export default function LineageDirectory({
 
   return (
     <div className="space-y-4 animate-fadeIn pb-[calc(65px+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-6">
-      {/* TOP CONTAINER: Scrolls naturally on phones (< md) so it never covers content; sticky only from md up */}
+      {/* TOP CONTAINER: Scrolls naturally with the page on every viewport so it never covers content */}
       <div
         data-testid="lineage-top-container"
-        className="static md:sticky md:top-0 z-20 bg-background/95 backdrop-blur-md pt-1 pb-2.5 space-y-2 border-b border-border shadow-2xs"
+        className="static bg-background/95 backdrop-blur-md pt-1 pb-2.5 space-y-2 border-b border-border shadow-2xs"
       >
         {/* A. Compact Header Row (~56px tall) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-h-[48px] sm:min-h-[56px] px-1">

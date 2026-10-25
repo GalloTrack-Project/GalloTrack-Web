@@ -116,18 +116,19 @@ describe('LineageDirectory redesigned top section', () => {
     expect(pedigreeTab).toHaveClass('col-span-2', 'sm:col-span-1');
   });
 
-  it('ensures context bar and top container have no sticky class below md', () => {
+  it('ensures context bar and top container never stick while scrolling', () => {
     renderDirectory();
     const contextBar = screen.getByTestId('lineage-context-bar');
     expect(contextBar).toHaveClass('static');
-    // Ensure it does not have bare 'sticky' without breakpoint prefix
     const contextBarClasses = contextBar.className.split(/\s+/);
     expect(contextBarClasses.includes('sticky')).toBe(false);
+    expect(contextBarClasses.includes('md:sticky')).toBe(false);
 
     const topContainer = screen.getByTestId('lineage-top-container');
-    expect(topContainer).toHaveClass('static', 'md:sticky');
+    expect(topContainer).toHaveClass('static');
     const topContainerClasses = topContainer.className.split(/\s+/);
     expect(topContainerClasses.includes('sticky')).toBe(false);
+    expect(topContainerClasses.includes('md:sticky')).toBe(false);
   });
 
   it('shows dynamic summary text in context bar for Full Siblings & Families by default', () => {
