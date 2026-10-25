@@ -709,11 +709,11 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* MIDDLE CHARTS ROW — 2 CARDS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* MIDDLE CHARTS ROW — 2 EQUAL CARDS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* GAMEFOWL POPULATION & PERFORMANCE TRENDS */}
-        <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
+        <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
               <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Last 6 Months)</h3>
