@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
@@ -29,7 +28,6 @@ export default function MatchLogsTable({
   emptyText = 'No data available',
   returnTo = '/dashboard',
 }: Props) {
-  const router = useRouter();
   const t = useT();
   const ui = useUI();
   const { fowls, matchHistory, matchMedia, birdCodes } = useFowl();
@@ -94,12 +92,7 @@ export default function MatchLogsTable({
               return (
                 <tr
                   key={log.id}
-                  onClick={() =>
-                    router.push(
-                      `/match-logs/${log.id}/edit?returnTo=${encodeURIComponent(returnTo)}`,
-                    )
-                  }
-                  className="hover:bg-muted/30 group cursor-pointer transition-colors duration-150"
+                  className="hover:bg-muted/30 group transition-colors duration-150"
                 >
                   <td className="text-muted-foreground p-2.5 pl-3 font-mono whitespace-nowrap lg:p-3 lg:pl-4">
                     {log.date}

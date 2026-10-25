@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { toastMessage } from '@/lib/toast-bus';
 import {
   Plus,
   Search,
@@ -493,32 +494,42 @@ export default function MatchLogsView() {
               </thead>
               <tbody className="divide-border text-muted-foreground divide-y font-semibold">
                 {paginatedRows.map((log) => {
-                  const fowl = log.fowl_id != null ? fowlById.get(log.fowl_id) : null;
+                  const fowl = log.fowl_id != null ? fowlById.get(log.fowl_id) ?? null : null;
                   const code = fowl ? birdCodes.get(String(fowl.id)) : '';
                   const hatch = fowl?.birthdate;
-                  const isOrphan = log.fowl_id == null;
+                  const isOrphan = !fowl;
                   const openFowlInfo = fowl
                     ? (event: React.MouseEvent) => {
                         event.stopPropagation();
                         ui.setSelectedFowlForDetails(fowl);
                       }
                     : undefined;
+                  const handleChickenCellClick = (event: React.MouseEvent) => {
+                    event.stopPropagation();
+                    if (fowl) {
+                      ui.setSelectedFowlForDetails(fowl);
+                    } else {
+                      toastMessage(
+                        'No chicken profile is linked to this historical match.',
+                        'warning',
+                      );
+                    }
+                  };
 
                   return (
                     <tr
                       key={log.id}
-                      onClick={() =>
-                        router.push(
-                          `/match-logs/${log.id}/edit?returnTo=${encodeURIComponent(currentReturnPath)}`,
-                        )
-                      }
-                      className="hover:bg-muted/30 group cursor-pointer transition-colors duration-150"
+                      className="hover:bg-muted/30 group transition-colors duration-150"
                     >
                       <td className="text-muted-foreground p-2.5 pl-3 font-mono whitespace-nowrap lg:p-3 lg:pl-4">
                         {log.date}
                       </td>
 
-                      <td className="min-w-0 p-2.5 lg:p-3">
+                      <td
+                        className="min-w-0 cursor-pointer p-2.5 lg:p-3"
+                        onClick={handleChickenCellClick}
+                        title={fowl ? `View info for ${log.entry_name}` : undefined}
+                      >
                         {openFowlInfo ? (
                           <button
                             type="button"

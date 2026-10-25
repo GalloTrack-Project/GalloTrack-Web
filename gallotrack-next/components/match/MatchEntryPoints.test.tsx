@@ -9,7 +9,7 @@
  *   - legacy URL /match-logs/{id}
  *   - direct URL /match-logs/{id}/edit
  *
- * And the return contract: row click and pencil open the edit page, Save and
+ * And the return contract: the pencil opens the edit page, Save and
  * Cancel return to the page the user came from (same-origin returnTo with its
  * query string), and the fallback is /match-logs - never the landing page.
  */
@@ -137,51 +137,45 @@ describe('Match Logs entry points', () => {
     mockPathname.current = '/match-logs';
   });
 
-  it('Chicken Registry > Match Logs tab: clicking a row opens the edit page with the registry returnTo', async () => {
+  it('Chicken Registry > Match Logs tab: the edit link keeps the registry returnTo', async () => {
     mockPathname.current = '/profiling';
     render(<MatchLogsView />);
-    const row = await screen.findByText('Lemon');
-    fireEvent.click(row.closest('tr') as HTMLElement);
-    expect(mockPush).toHaveBeenCalledWith(
+    await screen.findByText('Lemon');
+    const editLink = screen.getByRole('link', { name: 'Edit match record' });
+    expect(editLink.getAttribute('href')).toBe(
       '/match-logs/1/edit?returnTo=%2Fprofiling%3Ftab%3DmatchForm',
     );
   });
 
-  it('/match-logs list: clicking a row opens the edit page with the list returnTo', async () => {
+  it('/match-logs list: the edit link keeps the list returnTo', async () => {
     render(<MatchLogsView />);
-    const row = await screen.findByText('Lemon');
-    fireEvent.click(row.closest('tr') as HTMLElement);
-    expect(mockPush).toHaveBeenCalledWith('/match-logs/1/edit?returnTo=%2Fmatch-logs');
+    await screen.findByText('Lemon');
+    const editLink = screen.getByRole('link', { name: 'Edit match record' });
+    expect(editLink.getAttribute('href')).toBe('/match-logs/1/edit?returnTo=%2Fmatch-logs');
   });
 
-  it('Dashboard match table: clicking a row opens the edit page and returns to /dashboard', async () => {
+  it('Dashboard match table: the edit link returns to /dashboard', async () => {
     render(<MatchLogsTable />);
     // The table renders rows from the context when no matches prop is given.
-    const row = await screen.findByText('Lemon');
-    fireEvent.click(row.closest('tr') as HTMLElement);
-    expect(mockPush).toHaveBeenCalledWith('/match-logs/1/edit?returnTo=%2Fdashboard');
+    await screen.findByText('Lemon');
+    const editLink = screen.getByRole('link', { name: 'Edit match record' });
+    expect(editLink.getAttribute('href')).toBe('/match-logs/1/edit?returnTo=%2Fdashboard');
   });
 
-  it('shared match table honors an explicit returnTo for row and pencil navigation', async () => {
+  it('shared match table honors an explicit returnTo for pencil navigation', async () => {
     render(<MatchLogsTable returnTo="/profiling?tab=matchForm&q=Lemon" />);
-    const row = await screen.findByText('Lemon');
+    await screen.findByText('Lemon');
     const editLink = screen.getByRole('link', { name: 'Edit match record' });
     expect(editLink.getAttribute('href')).toBe(
       '/match-logs/1/edit?returnTo=%2Fprofiling%3Ftab%3DmatchForm%26q%3DLemon',
     );
-    fireEvent.click(row.closest('tr') as HTMLElement);
-    expect(mockPush).toHaveBeenCalledWith(
-      '/match-logs/1/edit?returnTo=%2Fprofiling%3Ftab%3DmatchForm%26q%3DLemon',
-    );
   });
 
-  it('never sends the user to the landing page', async () => {
+  it('does not navigate when a table row is clicked; use the Edit link instead', async () => {
     render(<MatchLogsView />);
     const row = await screen.findByText('Lemon');
     fireEvent.click(row.closest('tr') as HTMLElement);
-    const targets = mockPush.mock.calls.map((c) => String(c[0]));
-    expect(targets.every((t) => !t.startsWith('/') || t === '/')).toBe(false);
-    expect(targets.some((t) => t === '/' || t === '')).toBe(false);
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });
 
