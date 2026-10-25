@@ -401,7 +401,7 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
     });
 
-    it('mirrors the master-detail layout in Dam Offspring Tree (dam -> sire pairs -> offspring)', () => {
+    it('renders the dam card selector and dam detail (dam -> sire pairs -> offspring)', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
@@ -426,6 +426,50 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getAllByText('Offspring 1A3').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('removes the inner dam sidebar, uses a sticky full-width header, and a fixed table', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      expect(screen.queryByRole('complementary', { name: /Dams selection/i })).not.toBeInTheDocument();
+
+      const details = screen.getByRole('region', { name: /Dam A details/i });
+      expect(details.className).not.toMatch(/max-h|overflow-y-auto/);
+
+      const heading = within(details).getByRole('heading', { name: 'Dam A' });
+      const headerCard = heading.closest('div.bg-card');
+      expect(headerCard).toHaveClass('sticky', 'top-0');
+
+      const table = within(details).getByRole('table');
+      expect(table).toHaveClass('table-fixed');
+    });
+
+    it('switches to a searchable dam dropdown when more than eight dams exist', () => {
+      const manyDams: FowlRecord[] = [];
+      for (let i = 0; i < 9; i += 1) {
+        const letter = String.fromCharCode(65 + i);
+        manyDams.push(
+          bird({ id: 100 + i, name: `Dam ${letter}`, gender: 'Hen', bird_code: letter })
+        );
+        manyDams.push(
+          bird({
+            id: 200 + i,
+            name: `Child ${letter}`,
+            gender: i % 2 === 0 ? 'Rooster' : 'Hen',
+            sire: 'Sire X',
+            dam: `Dam ${letter}`,
+            bird_code: `${i + 1}A1`,
+          })
+        );
+      }
+
+      renderDirectory(vi.fn(), { fowls: manyDams });
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      expect(screen.getByLabelText('Filter dams')).toBeInTheDocument();
+      expect(screen.getByLabelText('Select dam')).toBeInTheDocument();
+      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
     });
 
     it('opens actions menu on ⋯ click and triggers View profile', () => {

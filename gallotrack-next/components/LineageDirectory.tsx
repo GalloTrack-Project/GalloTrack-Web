@@ -1538,22 +1538,30 @@ export default function LineageDirectory({
         <main
           role="region"
           aria-label={`${activeParentName} details`}
-          className="flex-1 min-w-0 space-y-4 lg:max-h-[calc(100vh-210px)] lg:overflow-y-auto pr-1"
+          className={`flex-1 min-w-0 space-y-4 ${
+            kind === 'sire' ? 'lg:max-h-[calc(100vh-210px)] lg:overflow-y-auto pr-1' : ''
+          }`}
         >
-          {/* Mobile Back Button (< 1024px) */}
-          <div className="lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileView('list')}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-muted hover:bg-muted/80 px-3 py-2 rounded-md transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to all {kind === 'sire' ? 'sires' : 'dams'}
-            </button>
-          </div>
+          {/* Mobile Back Button (< 1024px) — only needed for the sire master-detail split */}
+          {kind === 'sire' && (
+            <div className="lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileView('list')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-muted hover:bg-muted/80 px-3 py-2 rounded-md transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to all sires
+              </button>
+            </div>
+          )}
 
           {/* Right Pane Header Card */}
-          <div className="bg-card rounded-lg border border-border p-4 sm:p-5 shadow-xs space-y-3">
+          <div
+            className={`bg-card rounded-lg border border-border p-4 sm:p-5 shadow-xs space-y-3 ${
+              kind === 'dam' ? 'sticky top-0 z-30 shadow-sm' : ''
+            }`}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3.5 min-w-0">
                 {activeParentFowl?.image_url ? (
@@ -1588,19 +1596,38 @@ export default function LineageDirectory({
                   <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5 flex-wrap mt-0.5">
                     <span>{activeChildren.length} offspring</span>
                     <span className="text-muted-foreground/50 select-none">·</span>
-                    <span>{activeMales}♂ {activeFemales}♀</span>
-                    <span className="text-muted-foreground/50 select-none">·</span>
-                    <span className={c.text}>
-                      {pairGroups.length} {otherLabel}{pairGroups.length !== 1 ? 's' : ''}
-                    </span>
-                    <span className="text-muted-foreground/50 select-none">·</span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-muted-foreground font-semibold">
-                        {kind === 'sire' ? 'Sire' : 'Dam'} total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought
-                        {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
-                      </span>
-                      <WinRatePill stats={activeParentStats} />
-                    </div>
+                    {kind === 'dam' ? (
+                      <>
+                        <span className={c.text}>
+                          {pairGroups.length} {pairGroups.length === 1 ? 'sire' : 'sires'}
+                        </span>
+                        <span className="text-muted-foreground/50 select-none">·</span>
+                        <span className="text-muted-foreground font-semibold">
+                          {activeParentStats.total > 0
+                            ? `${activeParentStats.wins}W-${activeParentStats.losses}L${
+                                activeParentStats.draws > 0 ? `-${activeParentStats.draws}D` : ''
+                              }`
+                            : 'No fights'}
+                        </span>
+                        <WinRatePill stats={activeParentStats} />
+                      </>
+                    ) : (
+                      <>
+                        <span>{activeMales}♂ {activeFemales}♀</span>
+                        <span className="text-muted-foreground/50 select-none">·</span>
+                        <span className={c.text}>
+                          {pairGroups.length} {otherLabel}{pairGroups.length !== 1 ? 's' : ''}
+                        </span>
+                        <span className="text-muted-foreground/50 select-none">·</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-muted-foreground font-semibold">
+                            Sire total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought
+                            {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
+                          </span>
+                          <WinRatePill stats={activeParentStats} />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1662,7 +1689,9 @@ export default function LineageDirectory({
                   <button
                     type="button"
                     onClick={() => togglePair(pg.key, isPairOpen)}
-                    className="w-full sticky top-0 z-10 flex items-center justify-between gap-3 px-3.5 py-2.5 text-left bg-muted/50 hover:bg-muted/80 backdrop-blur-xs border-b border-border transition-colors cursor-pointer"
+                    className={`w-full ${
+                      kind === 'dam' ? '' : 'sticky top-0 z-10'
+                    } flex items-center justify-between gap-3 px-3.5 py-2.5 text-left bg-muted/50 hover:bg-muted/80 backdrop-blur-xs border-b border-border transition-colors cursor-pointer`}
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-wrap">
                       <span className="text-xs font-black text-card-foreground truncate">
@@ -1770,17 +1799,21 @@ export default function LineageDirectory({
                       </div>
 
                       {/* Desktop Table Layout (>= md) */}
-                      <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
+                      <div className={kind === 'dam' ? 'hidden md:block' : 'hidden md:block overflow-x-auto'}>
+                        <table
+                          className={`w-full text-left text-xs border-collapse ${
+                            kind === 'dam' ? 'table-fixed' : ''
+                          }`}
+                        >
                           <thead>
                             <tr className="border-b border-border/60 text-muted-foreground font-bold">
-                              <th className="py-2 px-2.5">Code</th>
-                              <th className="py-2 px-2.5">Chicken</th>
-                              <th className="py-2 px-2.5">Sex</th>
-                              <th className="py-2 px-2.5">Age</th>
-                              <th className="py-2 px-2.5">Status</th>
-                              <th className="py-2 px-2.5">Record</th>
-                              <th className="py-2 px-2.5 text-right">Actions</th>
+                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[8%]' : ''}`}>Code</th>
+                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[22%]' : ''}`}>Chicken</th>
+                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[8%]' : ''}`}>Sex</th>
+                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[8%]' : ''}`}>Age</th>
+                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[10%]' : ''}`}>Status</th>
+                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[36%]' : ''}`}>Record</th>
+                              <th className={`py-2 px-2.5 text-right ${kind === 'dam' ? 'w-[8%]' : ''}`}>Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border/40">
@@ -1881,7 +1914,7 @@ export default function LineageDirectory({
                                         <button
                                           type="button"
                                           onClick={() => openFights(child)}
-                                          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
+                                          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
                                           title={`View ${child.name} fight history`}
                                         >
                                           <Swords className="w-3.5 h-3.5" />
@@ -2199,6 +2232,180 @@ export default function LineageDirectory({
         </main>
       );
     };
+
+    const renderDamCard = ([name, kids]: [string, FowlRecord[]]) => {
+      const code = getParentCode(name, kind, kids[0]);
+      const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
+      const isSelected = name === activeParentName;
+      return (
+        <button
+          key={name}
+          type="button"
+          role="option"
+          aria-selected={isSelected}
+          aria-label={`[${formatBirdCodeForDisplay(code)}] ${name} · ${kids.length} offspring${
+            stats.total > 0
+              ? ` · ${stats.winRate === null ? '—' : `${stats.winRate}%`} · ${stats.wins}W-${stats.losses}L${
+                  stats.draws > 0 ? `-${stats.draws}D` : ''
+                }`
+              : ' · No fights'
+          }`}
+          onClick={() => handleSelectParent(name, kind, code)}
+          className={`snap-start shrink-0 w-52 text-left rounded-lg border p-3 transition-all cursor-pointer ${
+            isSelected
+              ? 'border-pink-400 dark:border-pink-700 bg-pink-50 dark:bg-pink-950/40 ring-1 ring-pink-400/60 shadow-2xs'
+              : 'border-border bg-card hover:bg-muted/50'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`font-mono text-xs px-1.5 py-0.5 rounded font-black border uppercase shrink-0 ${
+                isSelected
+                  ? 'bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800'
+                  : 'bg-muted text-muted-foreground border-border'
+              }`}
+            >
+              [{formatBirdCodeForDisplay(code)}]
+            </span>
+            <span className="text-xs font-bold text-muted-foreground shrink-0">
+              {kids.length} offspring
+            </span>
+          </div>
+          <p className="mt-2 text-sm font-black text-card-foreground truncate">{name}</p>
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <WinRatePill stats={stats} showNoFights />
+          </div>
+        </button>
+      );
+    };
+
+    const renderDamSelector = () => {
+      const moreThan8 = entries.length > 8;
+      const totalProduced = entries.reduce((sum, [, kids]) => sum + kids.length, 0);
+      const visibleProduced = sortedPaneEntries.reduce((sum, [, kids]) => sum + kids.length, 0);
+      const selectEntries = sortedPaneEntries.some(([n]) => n === activeParentName)
+        ? sortedPaneEntries
+        : activeEntry
+        ? [activeEntry, ...sortedPaneEntries]
+        : sortedPaneEntries;
+
+      return (
+        <div className="bg-card rounded-lg border border-border p-3.5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+              {paneFilter ? `${sortedPaneEntries.length} of ${entries.length}` : entries.length}{' '}
+              {entries.length === 1 ? 'dam' : 'dams'} ·{' '}
+              {paneFilter ? `${visibleProduced} of ${totalProduced}` : totalProduced} offspring produced
+            </p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-semibold">Sort:</span>
+              <select
+                value={paneSort}
+                onChange={(e) => setPaneSort(e.target.value as 'most' | 'code' | 'name')}
+                aria-label="Sort dams"
+                className="text-xs bg-muted border border-input-border rounded px-2 py-1 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="most">Most offspring</option>
+                <option value="code">Code</option>
+                <option value="name">Name</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <span
+                aria-hidden="true"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </span>
+              <input
+                type="text"
+                aria-label="Filter dams"
+                placeholder="Filter dams..."
+                value={paneFilter}
+                onChange={(e) => setPaneFilter(e.target.value)}
+                className="w-full pl-8 pr-7 py-2 text-xs bg-muted/60 border border-input-border rounded-md text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold"
+              />
+              {paneFilter.length > 0 && (
+                <button
+                  type="button"
+                  aria-label="Clear dams filter"
+                  onClick={() => setPaneFilter('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {moreThan8 && (
+              <select
+                value={activeParentName ?? ''}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  const kids = entries.find(([n]) => n === name)?.[1] ?? [];
+                  handleSelectParent(name, kind, getParentCode(name, kind, kids[0]));
+                }}
+                aria-label="Select dam"
+                className="w-full sm:w-80 text-xs bg-muted border border-input-border rounded-md px-2.5 py-2 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
+              >
+                {selectEntries.map(([name, kids]) => {
+                  const code = getParentCode(name, kind, kids[0]);
+                  const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
+                  const record =
+                    stats.total > 0
+                      ? `${stats.winRate === null ? '—' : `${stats.winRate}%`} · ${stats.wins}W-${stats.losses}L${
+                          stats.draws > 0 ? `-${stats.draws}D` : ''
+                        }`
+                      : 'No fights';
+                  return (
+                    <option key={name} value={name}>
+                      {`[${formatBirdCodeForDisplay(code)}] ${name} · ${kids.length} offspring · ${record}`}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+          </div>
+
+          {!moreThan8 &&
+            (sortedPaneEntries.length === 0 ? (
+              <div className="py-4 text-center text-xs text-muted-foreground space-y-1">
+                <p>No dams match filter</p>
+                {paneFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setPaneFilter('')}
+                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div
+                role="listbox"
+                aria-label="Dams"
+                className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {sortedPaneEntries.map(renderDamCard)}
+              </div>
+            ))}
+        </div>
+      );
+    };
+
+    const renderDamLayout = () => (
+      <div className="space-y-4 min-w-0">
+        {renderDamSelector()}
+        {renderRightPane()}
+      </div>
+    );
+
+    if (kind === 'dam') {
+      return renderDamLayout();
+    }
 
     return (
       <div className="flex flex-col lg:flex-row gap-4 items-start">
