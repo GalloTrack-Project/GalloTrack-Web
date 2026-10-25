@@ -751,7 +751,7 @@ export default function EditFowlModal({
                   >
                     Wing Band ID{' '}
                     <span className="text-muted-foreground font-normal lowercase">
-                      (numero sa metal wing band — dapat natatangi)
+                      (optional — number on metal wing band; must be unique if provided)
                     </span>
                   </label>
                 </div>
@@ -772,7 +772,7 @@ export default function EditFowlModal({
                 )}
                 <p className="text-muted-foreground mt-1 text-xs font-semibold">
                   {trimmedBand
-                    ? 'Physical metal wing band number.'
+                    ? 'Optional — physical metal wing band number (must be unique if provided).'
                     : 'Optional — the number stamped on the physical metal wing band.'}
                 </p>
               </div>
