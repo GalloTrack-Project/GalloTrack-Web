@@ -143,6 +143,7 @@ export default function FowlDetailsModal({
   const t = useT();
 
   const fowlId = selectedFowlForDetails?.id ?? null;
+  const ownerId = selectedFowlForDetails?.user_id ?? null;
   // State is keyed by fowl id so switching birds never shows stale history
   // or another chicken's notes draft (no effect + setState needed).
   const [historyState, setHistoryState] = useState<{
@@ -165,13 +166,13 @@ export default function FowlDetailsModal({
   useEffect(() => {
     if (fowlId === null) return;
     let cancelled = false;
-    fetchFowlPhotos(fowlId).then((photos) => {
+    fetchFowlPhotos(fowlId, ownerId).then((photos) => {
       if (!cancelled) setGallery({ fowlId, photos });
     });
     return () => {
       cancelled = true;
     };
-  }, [fowlId]);
+  }, [fowlId, ownerId]);
 
   useEffect(() => {
     if (fowlId === null) return;
@@ -197,7 +198,7 @@ export default function FowlDetailsModal({
       if (up.error || !up.url) throw new Error(up.error || 'Upload failed');
       const ins = await insertFowlPhoto(fowlId, up.url);
       if (ins.error) throw new Error(ins.error);
-      const photos = await fetchFowlPhotos(fowlId);
+      const photos = await fetchFowlPhotos(fowlId, ownerId);
       setGallery({ fowlId, photos });
       toastMessage('Photo added to gallery.', 'success');
     } catch (err) {

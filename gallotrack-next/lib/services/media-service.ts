@@ -176,14 +176,24 @@ export async function insertMatchPhoto(matchId: number, url: string, sortOrder: 
   return error ? { error: error.message } : {};
 }
 
-export async function fetchFowlPhotos(fowlId: number): Promise<FowlPhotoRecord[]> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+export async function fetchFowlPhotos(
+  fowlId: number,
+  ownerId?: string | number | null,
+): Promise<FowlPhotoRecord[]> {
+  // Prefer the owner id already stored on the fowl record. Calling getUser()
+  // here performs a background auth round-trip that can emit SIGNED_OUT while
+  // the owner is just opening a profile, kicking them back to the login page.
+  let userId = ownerId != null ? String(ownerId).trim() : '';
+  if (!userId) {
+    const { data: { session } } = await supabase.auth.getSession();
+    userId = session?.user?.id ?? '';
+  }
+  if (!userId) return [];
   const { data, error } = await supabase
     .from('fowl_photos')
     .select('*')
     .eq('fowl_id', fowlId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true });
   if (error) {
