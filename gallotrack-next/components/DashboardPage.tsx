@@ -223,7 +223,11 @@ export default function DashboardPage() {
           heading: 'Monthly Activity',
           table: {
             columns: ['Month', 'Matches', 'Win rate %'],
-            rows: monthLabels.map((l, i) => [l, matchesByMonth[i], trendWinRate[i]]),
+            rows: monthLabels.map((l, i) => [
+              l,
+              matchesByMonth[i],
+              trendWinRate[i] ?? 'No matches',
+            ]),
           },
         },
         { heading: 'Fowl Registry', table: { columns: registryColumns, rows: registryRows } },
@@ -712,7 +716,7 @@ export default function DashboardPage() {
         <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
-              <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Q3 2026)</h3>
+              <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Last 6 Months)</h3>
               <p className="text-sm text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
             </div>
             <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
@@ -721,7 +725,7 @@ export default function DashboardPage() {
             </div>
           </div>
           {fowls.length > 0 || matchHistory.length > 0 ? (
-            <div className="w-full h-72 my-4">
+            <div className="w-full flex-1 min-h-72 my-4">
               <Line
                 data={{
                   labels: monthLabels,
@@ -744,6 +748,7 @@ export default function DashboardPage() {
                       borderColor: chart.info,
                       backgroundColor: withAlpha(chart.info, 0.06),
                       fill: false,
+                      spanGaps: false,
                       borderWidth: 2,
                       borderDash: [6, 5],
                       pointRadius: 3,
@@ -756,10 +761,22 @@ export default function DashboardPage() {
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
+                  layout: { padding: { right: 12 } },
                   interaction: { mode: 'index', intersect: false },
                   plugins: {
                     legend: { display: false },
                     tooltip: {
+                      callbacks: {
+                        label: (ctx) => {
+                          if (ctx.dataset.label === 'Win Rate %') {
+                            const matches = matchesByMonth[ctx.dataIndex] ?? 0;
+                            return matches > 0
+                              ? ` Win Rate: ${ctx.formattedValue}%`
+                              : ' Win Rate: No matches';
+                          }
+                          return ` Population: ${ctx.formattedValue}`;
+                        },
+                      },
                       backgroundColor: chart.card,
                       titleColor: chart.foreground,
                       bodyColor: chart.foreground,

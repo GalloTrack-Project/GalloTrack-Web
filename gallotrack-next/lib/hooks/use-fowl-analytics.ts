@@ -33,7 +33,8 @@ export interface FowlAnalytics {
   matchesByMonth: number[];
   winsByMonth: number[];
   activeSpark: number[];
-  trendWinRate: number[];
+  /** Null means no matches were logged that month, so no honest win rate exists. */
+  trendWinRate: (number | null)[];
   upcomingMilestones: { fowl: FowlRecord; info: NonNullable<ReturnType<typeof getMilestoneInfoHelper>> }[];
   dateRangeLabel: string;
 }
@@ -158,7 +159,9 @@ export function useFowlAnalytics(
       return arr;
     })();
 
-    const trendWinRate = monthLabels.map((_, i) => winRateOf(winsByMonth[i], lossesByMonth[i]));
+    const trendWinRate = monthLabels.map((_, i) =>
+      matchesByMonth[i] > 0 ? winRateOf(winsByMonth[i], lossesByMonth[i]) : null
+    );
 
     const upcomingMilestones = activeFowls
       .map((f) => ({ fowl: f, info: getMilestoneInfoHelper(f.birthdate, f.gender) }))

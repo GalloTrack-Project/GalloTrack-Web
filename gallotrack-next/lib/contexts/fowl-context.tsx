@@ -189,7 +189,7 @@ interface FowlContextValue {
   matchesByMonth: number[];
   winsByMonth: number[];
   activeSpark: number[];
-  trendWinRate: number[];
+  trendWinRate: (number | null)[];
   upcomingMilestones: { fowl: FowlRecord; info: NonNullable<ReturnType<typeof getMilestoneInfoHelper>> }[];
   dateRangeLabel: string;
   nextNodeId: string;
