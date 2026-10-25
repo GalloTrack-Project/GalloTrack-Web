@@ -138,6 +138,45 @@ describe('LineageDirectory redesigned top section', () => {
     expect(contextBar).toHaveTextContent(/3 offspring/i);
   });
 
+  it('renders every male and female offspring in a family without capping the list', () => {
+    const manyOffspring: FowlRecord[] = [
+      bird({ id: 1, name: 'Sire X', gender: 'Rooster', bird_code: '9' }),
+      bird({ id: 2, name: 'Dam Z', gender: 'Hen', bird_code: 'Z' }),
+      ...Array.from({ length: 5 }, (_, i) =>
+        bird({
+          id: 10 + i,
+          name: `Male ${i + 1}`,
+          gender: 'Rooster',
+          sire: 'Sire X',
+          dam: 'Dam Z',
+          bird_code: `9Z${i + 1}`,
+        })
+      ),
+      ...Array.from({ length: 2 }, (_, i) =>
+        bird({
+          id: 20 + i,
+          name: `Female ${i + 1}`,
+          gender: 'Hen',
+          sire: 'Sire X',
+          dam: 'Dam Z',
+          bird_code: `9Z${i + 6}`,
+        })
+      ),
+    ];
+
+    renderDirectory(vi.fn(), { fowls: manyOffspring });
+
+    expect(screen.getByText('♂ Males (5)')).toBeInTheDocument();
+    expect(screen.getByText('♀ Females (2)')).toBeInTheDocument();
+
+    for (let i = 1; i <= 5; i += 1) {
+      expect(screen.getByText(`Male ${i}`)).toBeInTheDocument();
+    }
+    for (let i = 1; i <= 2; i += 1) {
+      expect(screen.getByText(`Female ${i}`)).toBeInTheDocument();
+    }
+  });
+
   it('updates context bar summary text dynamically when switching to other tabs', () => {
     renderDirectory();
     const contextBar = screen.getByTestId('lineage-context-bar');

@@ -222,8 +222,6 @@ function FamilyCard({
   rankingMinMatches,
   matchHistory,
   fowls,
-  isExpanded: controlledExpanded,
-  onToggleExpand,
 }: {
   g: FowlRecord[];
   index: number;
@@ -235,13 +233,7 @@ function FamilyCard({
   rankingMinMatches: number;
   matchHistory: MatchRecord[];
   fowls: FowlRecord[];
-  isExpanded?: boolean;
-  onToggleExpand?: () => void;
 }) {
-  const [internalExpanded, setInternalExpanded] = useState(false);
-  const expanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
-  const toggleExpanded = onToggleExpand !== undefined ? onToggleExpand : () => setInternalExpanded(!internalExpanded);
-
   const [familySortBy, setFamilySortBy] = useState<'ranked' | 'winrate' | 'name'>('ranked');
   const [isTotalExpanded, setIsTotalExpanded] = useState(false);
 
@@ -291,9 +283,6 @@ function FamilyCard({
   const females = g.length - males;
   const roosterOffspring = sortedOffspring.filter(isMaleChild);
   const henOffspring = sortedOffspring.filter((c) => !isMaleChild(c));
-  const visibleRoosters = expanded ? roosterOffspring : roosterOffspring.slice(0, 3);
-  const visibleHens = expanded ? henOffspring : henOffspring.slice(0, 3);
-  const hasMore = sortedOffspring.length > 6;
 
   const renderOffspringRow = (child: FowlRecord, i: number) => {
     const cs = getChildMatchStats(child.name);
@@ -429,7 +418,7 @@ function FamilyCard({
               ♂ Males ({roosterOffspring.length})
             </p>
             <div className="space-y-1.5">
-              {visibleRoosters.map((child, i) => renderOffspringRow(child, i))}
+              {roosterOffspring.map((child, i) => renderOffspringRow(child, i))}
             </div>
           </div>
         )}
@@ -439,18 +428,9 @@ function FamilyCard({
               ♀ Females ({henOffspring.length})
             </p>
             <div className="space-y-1.5">
-              {visibleHens.map((child, i) => renderOffspringRow(child, i))}
+              {henOffspring.map((child, i) => renderOffspringRow(child, i))}
             </div>
           </div>
-        )}
-        {hasMore && (
-          <button
-            type="button"
-            onClick={toggleExpanded}
-            className="w-full mt-2 text-xs font-black text-success dark:text-emerald-400 hover:underline py-1 cursor-pointer"
-          >
-            {expanded ? 'Show less' : `View all ${ranked.length} offspring`}
-          </button>
         )}
       </div>
 
@@ -580,7 +560,6 @@ export default function LineageDirectory({
   const [treeSexFilter, setTreeSexFilter] = useState<'all' | 'males' | 'females'>('all');
   const [expandedPairs, setExpandedPairs] = useState<Map<string, boolean>>(new Map());
 
-  const [expandedFamilies, setExpandedFamilies] = useState<Set<number>>(new Set());
   const [treeCollapsed, setTreeCollapsed] = useState<Set<string>>(new Set());
   const [pairSortBy, setPairSortBy] = useState<PairSortOption>('males-first');
   const [activeMenuChildId, setActiveMenuChildId] = useState<number | null>(null);
@@ -704,15 +683,6 @@ export default function LineageDirectory({
     const base = offspringBase(sireCode, damCode);
     if (base) return base;
     return `${sireCode || UNKNOWN_SIRE_CODE}${damCode || UNKNOWN_DAM_CODE}`;
-  };
-
-  const toggleFamily = (index: number) => {
-    setExpandedFamilies((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
   };
 
   const linked = useMemo(() => {
@@ -1142,8 +1112,6 @@ export default function LineageDirectory({
         });
         return next;
       });
-    } else if (activeTab === 'families') {
-      setExpandedFamilies(new Set(filteredFullFamilies.map((_, i) => i)));
     } else if (activeTab === 'tree') {
       setTreeCollapsed(new Set());
     }
@@ -1154,8 +1122,6 @@ export default function LineageDirectory({
       setExpandedSires(new Set());
     } else if (activeTab === 'dam') {
       setExpandedDams(new Set());
-    } else if (activeTab === 'families') {
-      setExpandedFamilies(new Set());
     } else if (activeTab === 'tree') {
       setTreeCollapsed(new Set(filteredBreedingPairs.map((p) => p.key)));
     }
@@ -2673,8 +2639,6 @@ export default function LineageDirectory({
                     rankingMinMatches={settings.ranking_min_matches}
                     matchHistory={matchHistory}
                     fowls={fowls}
-                    isExpanded={expandedFamilies.has(i)}
-                    onToggleExpand={() => toggleFamily(i)}
                   />
                 ))}
               </div>
