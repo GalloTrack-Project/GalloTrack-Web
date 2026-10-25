@@ -314,15 +314,15 @@ export default function DashboardPage() {
             <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Chicken Registry</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
-          {/* Main Total: 29 Active chickens (tooltip: Breeding Male + Breeding Female + Total Offspring) */}
+          {/* Main Total: 29 Active chickens (tooltip: Cocks + Hens + Total Offspring) */}
           <div className="flex flex-col gap-1 mt-1">
             <div className="flex items-baseline gap-2">
               <button
                 type="button"
                 onClick={() => navigate('profiling', 'males')}
                 className="text-left text-3xl font-black text-card-foreground tracking-tight leading-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                title="Breeding Male + Breeding Female + Total Offspring"
-                aria-label={`${registryCounts.total} Active chickens. Breeding Male + Breeding Female + Total Offspring. Click to view Chicken Registry`}
+                title="Cocks + Hens + Total Offspring"
+                aria-label={`${registryCounts.total} Active chickens. Cocks + Hens + Total Offspring. Click to view Chicken Registry`}
               >
                 {registryCounts.total}
               </button>
@@ -330,8 +330,8 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => navigate('profiling', 'males')}
                 className="text-left text-sm font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                title="Breeding Male + Breeding Female + Total Offspring"
-                aria-label="Active chickens: Breeding Male + Breeding Female + Total Offspring"
+                title="Cocks + Hens + Total Offspring"
+                aria-label="Active chickens: Cocks + Hens + Total Offspring"
               >
                 Active chickens
               </button>
@@ -376,24 +376,22 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => navigate('profiling', 'males')}
-              className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 dark:border-sky-500/30 hover:bg-sky-500/20 dark:hover:bg-sky-500/25 hover:border-sky-500/40 transition-all cursor-pointer group/m"
-              title="View Breeding Males in Chicken Registry"
-              aria-label={`Breeding Male: ${registryCounts.breedingMales} sires`}
+              className="flex flex-col items-center justify-center text-center gap-1 p-2 rounded-md bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 dark:border-sky-500/30 hover:bg-sky-500/20 dark:hover:bg-sky-500/25 hover:border-sky-500/40 transition-all cursor-pointer group/m"
+              title="View Cocks in Chicken Registry"
+              aria-label={`Cocks: ${registryCounts.breedingMales}`}
             >
               <p className="text-base font-black text-sky-700 dark:text-sky-300 leading-none">{registryCounts.breedingMales}</p>
-              <p className="text-xs font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 mt-1 leading-tight group-hover/m:underline">Breeding Male</p>
-              <p className="text-xs font-semibold text-sky-700/80 dark:text-sky-300/80 leading-tight">(sires)</p>
+              <p className="text-xs font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 leading-tight group-hover/m:underline">Cocks</p>
             </button>
             <button
               type="button"
               onClick={() => navigate('profiling', 'females')}
-              className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-pink-500/10 dark:bg-pink-500/15 border border-pink-500/20 dark:border-pink-500/30 hover:bg-pink-500/20 dark:hover:bg-pink-500/25 hover:border-pink-500/40 transition-all cursor-pointer group/f"
-              title="View Breeding Females in Chicken Registry"
-              aria-label={`Breeding Female: ${registryCounts.breedingFemales} dams`}
+              className="flex flex-col items-center justify-center text-center gap-1 p-2 rounded-md bg-pink-500/10 dark:bg-pink-500/15 border border-pink-500/20 dark:border-pink-500/30 hover:bg-pink-500/20 dark:hover:bg-pink-500/25 hover:border-pink-500/40 transition-all cursor-pointer group/f"
+              title="View Hens in Chicken Registry"
+              aria-label={`Hens: ${registryCounts.breedingFemales}`}
             >
               <p className="text-base font-black text-pink-700 dark:text-pink-300 leading-none">{registryCounts.breedingFemales}</p>
-              <p className="text-xs font-black uppercase tracking-wider text-pink-700 dark:text-pink-300 mt-1 leading-tight group-hover/f:underline">Breeding Female</p>
-              <p className="text-xs font-semibold text-pink-700/80 dark:text-pink-300/80 leading-tight">(dams)</p>
+              <p className="text-xs font-black uppercase tracking-wider text-pink-700 dark:text-pink-300 leading-tight group-hover/f:underline">Hens</p>
             </button>
             <button
               type="button"

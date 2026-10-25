@@ -26,10 +26,10 @@ describe('RegistryNav', () => {
 
     // Verify the 4 desktop tabs in exact order
     const desktopTabs = tabs.slice(0, 4);
-    expect(desktopTabs[0]).toHaveTextContent(/Breeding Male/i);
+    expect(desktopTabs[0]).toHaveTextContent(/Cocks/i);
     expect(desktopTabs[0]).toHaveTextContent('11');
 
-    expect(desktopTabs[1]).toHaveTextContent(/Breeding Female/i);
+    expect(desktopTabs[1]).toHaveTextContent(/Hens/i);
     expect(desktopTabs[1]).toHaveTextContent('14');
 
     expect(desktopTabs[2]).toHaveTextContent(/Offspring/i);
@@ -49,11 +49,11 @@ describe('RegistryNav', () => {
       />
     );
 
-    const maleTabs = screen.getAllByRole('tab', { name: /Breeding Male/i });
+    const maleTabs = screen.getAllByRole('tab', { name: /Cocks/i });
     expect(maleTabs[0]).toHaveAttribute('aria-selected', 'true');
     expect(maleTabs[0]).toHaveAttribute('tabindex', '0');
 
-    const femaleTabs = screen.getAllByRole('tab', { name: /Breeding Female/i });
+    const femaleTabs = screen.getAllByRole('tab', { name: /Hens/i });
     expect(femaleTabs[0]).toHaveAttribute('aria-selected', 'false');
     expect(femaleTabs[0]).toHaveAttribute('tabindex', '-1');
   });
@@ -68,7 +68,7 @@ describe('RegistryNav', () => {
       />
     );
 
-    const femaleTab = screen.getAllByRole('tab', { name: /Breeding Female/i })[0];
+    const femaleTab = screen.getAllByRole('tab', { name: /Hens/i })[0];
     fireEvent.click(femaleTab);
     expect(handleSelect).toHaveBeenCalledWith('females');
   });
@@ -83,7 +83,7 @@ describe('RegistryNav', () => {
       />
     );
 
-    const firstTab = screen.getAllByRole('tab', { name: /Breeding Male/i })[0];
+    const firstTab = screen.getAllByRole('tab', { name: /Cocks/i })[0];
     fireEvent.keyDown(firstTab, { key: 'ArrowRight' });
     expect(handleSelect).toHaveBeenCalledWith('females');
 
@@ -114,8 +114,8 @@ describe('RegistryNav', () => {
     });
 
     // Check short labels
-    expect(mobileButtons?.[0]).toHaveTextContent('Male');
-    expect(mobileButtons?.[1]).toHaveTextContent('Female');
+    expect(mobileButtons?.[0]).toHaveTextContent('Cocks');
+    expect(mobileButtons?.[1]).toHaveTextContent('Hens');
     expect(mobileButtons?.[2]).toHaveTextContent('Offspring');
     expect(mobileButtons?.[3]).toHaveTextContent('Matches');
 

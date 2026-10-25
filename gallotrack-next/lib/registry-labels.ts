@@ -19,4 +19,4 @@ export const RETIRED_FIGHTER_LABEL = 'Retired Fighter';
 export const RETIRED_FIGHTER_TOOLTIP = 'Fought in recorded matches and is now used for breeding.';
 
 export const SIRE_MATERIAL_MOVED_MESSAGE =
-  'Sire Material has moved. Breeding males are under Breeding Male, and offspring kept for breeding are under Breeding Stock.';
+  'Sire Material has moved. Breeding males are under Cocks, and offspring kept for breeding are under Breeding Stock.';

@@ -33,7 +33,7 @@ describe('Sire Material Tab Removal and Redirect Specification', () => {
     expect(params.get('tab')).toBe('offspring');
     expect(params.get('class')).toBe('breeding-stock');
     expect(notification).toBe(
-      'Sire Material has moved. Breeding males are under Breeding Male, and offspring kept for breeding are under Breeding Stock.'
+      'Sire Material has moved. Breeding males are under Cocks, and offspring kept for breeding are under Breeding Stock.'
     );
     // Generic notification must NOT hardcode any bird name
     expect(notification).not.toContain('Iron Lemon');

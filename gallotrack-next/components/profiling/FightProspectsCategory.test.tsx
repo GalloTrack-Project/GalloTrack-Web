@@ -162,7 +162,7 @@ describe('Offspring Breeding Classification & Fighting Status Registry', () => {
     expect(breedingStockTab).toHaveAttribute('aria-selected', 'false');
     expect(breedingStockTab).toHaveAttribute(
       'title',
-      'Offspring kept as future breeders. They move to Breeding Male or Female when promoted.'
+      'Offspring kept as future breeders. They move to Cocks or Hens when promoted.'
     );
 
     expect(nonBreedingTab).toBeInTheDocument();

@@ -30,7 +30,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
   const { t } = useT();
 
   // 4 MAIN TABS in strict order requested:
-  // Breeding Male | Breeding Female | Offspring | Match Logs
+  // Cocks | Hens | Offspring | Match Logs
   const tabs: MainRegistryTabItem[] = [
     {
       id: 'males',
