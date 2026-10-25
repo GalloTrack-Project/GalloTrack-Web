@@ -766,8 +766,6 @@ export default function MarketplacePage({
   setGenderFilter: propSetGenderFilter,
   statusFilter: propStatusFilter,
   setStatusFilter: propSetStatusFilter,
-  setCurrentPage,
-  setProfilingSubTab,
   onRestore,
   canRestoreDeceased = false,
   setSelectedFowlForDetails,
@@ -1041,30 +1039,6 @@ export default function MarketplacePage({
               <span>Include parents</span>
             </label>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setCurrentPage('profiling');
-              setProfilingSubTab('form');
-            }}
-            className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-lg bg-emerald-600 px-4 py-3 text-xs font-black whitespace-nowrap text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-[0.98] sm:self-auto"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span className="hidden sm:inline">Add Chicken</span>
-            <span className="sm:hidden">Add</span>
-          </button>
         </div>
       </div>
 
