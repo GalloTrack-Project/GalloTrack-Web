@@ -296,20 +296,23 @@ describe('LineageDirectory redesigned top section', () => {
     expect(within(damTable).queryByText(/\bDam\b/)).not.toBeInTheDocument();
   });
 
-  it('keeps Sire and Dam as parent roles while family-tree offspring rows show Cock/Hen', () => {
+  it('keeps Sire and Dam as parent roles while pedigree cards show Cock/Hen', () => {
     renderDirectory();
     fireEvent.click(screen.getByRole('tab', { name: /Family Tree/i }));
 
-    // Parent role boxes still render SIRE and DAM.
-    expect(screen.getAllByText('Sire').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('Dam').length).toBeGreaterThanOrEqual(2);
-
-    const offspringNodes = Array.from(document.querySelectorAll('.gt-kid'));
-    expect(offspringNodes.length).toBeGreaterThan(0);
-    offspringNodes.forEach((node) => {
-      expect(node.textContent).not.toMatch(/\bSire\b|\bDam\b/);
-      expect(node.textContent).toMatch(/Cock|Hen/);
+    // Bird cards label sex as Cock/Hen and never as Sire/Dam.
+    const cards = screen.getAllByTestId('lineage-bird-card');
+    expect(cards.length).toBeGreaterThan(0);
+    cards.forEach((card) => {
+      expect(card.textContent).not.toMatch(/\bSire\b|\bDam\b/);
+      expect(card.textContent).toMatch(/Cock|Hen/);
     });
+
+    // Pair details still render the parent role boxes.
+    fireEvent.click(screen.getAllByTestId('lineage-pair-hub')[0]);
+    const details = screen.getByTestId('lineage-details');
+    expect(within(details).getAllByText('Sire').length).toBeGreaterThanOrEqual(1);
+    expect(within(details).getAllByText('Dam').length).toBeGreaterThanOrEqual(1);
   });
 
   describe('Full Siblings & Families tab (family-level comparison)', () => {

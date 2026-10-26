@@ -25,11 +25,12 @@ import {
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import PedigreeTree from '@/components/PedigreeTree';
-import FamilyTree from '@/components/FamilyTree';
+import LineageFlow from '@/components/lineage/LineageFlow';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
 import { sexLabel, isMale, parentBreedOf } from '@/lib/helpers';
-import { fowlMatchesQuery } from '@/lib/lineage';
+import { fowlMatchesQuery, parentRecordOf } from '@/lib/lineage';
+import type { LineageDirection } from '@/lib/lineage-graph';
 import {
   resolveBirdCodes,
   formatBirdCodeForDisplay,
@@ -564,7 +565,9 @@ export default function LineageDirectory({
   const [treeSexFilter, setTreeSexFilter] = useState<'all' | 'males' | 'females'>('all');
   const [expandedPairs, setExpandedPairs] = useState<Map<string, boolean>>(new Map());
 
-  const [treeCollapsed, setTreeCollapsed] = useState<Set<string>>(new Set());
+  const [treeRootName, setTreeRootName] = useState<string | null>(null);
+  const [treeDirection, setTreeDirection] = useState<LineageDirection>('down');
+  const [collapsedFlowNodes, setCollapsedFlowNodes] = useState<Set<string>>(new Set());
   const [pairSortBy, setPairSortBy] = useState<PairSortOption>('males-first');
   const [activeMenuChildId, setActiveMenuChildId] = useState<number | null>(null);
 
@@ -722,6 +725,18 @@ export default function LineageDirectory({
 
   const linked = useMemo(() => {
     return fowls.filter((f) => isKnownParent(f.sire) && isKnownParent(f.dam));
+  }, [fowls]);
+
+  /** Bird ids that are a resolved parent — used by the shared "Collapse all" action. */
+  const lineageParentIds = useMemo(() => {
+    const ids = new Set<string>();
+    fowls.forEach((child) => {
+      const sire = parentRecordOf(child, 'sire', fowls);
+      const dam = parentRecordOf(child, 'dam', fowls);
+      if (sire) ids.add(String(sire.id));
+      if (dam) ids.add(String(dam.id));
+    });
+    return ids;
   }, [fowls]);
 
   const matchStatsLookup = useMemo(() => buildChickenMatchStatsMap(matchHistory, fowls), [matchHistory, fowls]);
@@ -917,6 +932,15 @@ export default function LineageDirectory({
         // ignore
       }
     }
+  };
+
+  /** Jump from the pedigree canvas into the existing parent-role tabs. */
+  const openParentOffspringTree = (fowl: FowlRecord, kind: 'sire' | 'dam') => {
+    const sampleChild = fowls.find(
+      (child) => parentRecordOf(child, kind, fowls)?.id === fowl.id
+    );
+    handleSelectParent(fowl.name, kind, getParentCode(fowl.name, kind, sampleChild));
+    setActiveTab(kind);
   };
 
   const handleListKeyDown = (
@@ -1400,7 +1424,7 @@ export default function LineageDirectory({
         )
       );
     } else if (activeTab === 'tree') {
-      setTreeCollapsed(new Set());
+      setCollapsedFlowNodes(new Set());
     }
   };
 
@@ -1424,7 +1448,7 @@ export default function LineageDirectory({
     } else if (activeTab === 'families') {
       setExpandedFamilies(new Set());
     } else if (activeTab === 'tree') {
-      setTreeCollapsed(new Set(filteredBreedingPairs.map((p) => p.key)));
+      setCollapsedFlowNodes(new Set(lineageParentIds));
     }
   };
 
@@ -3465,23 +3489,31 @@ export default function LineageDirectory({
             {filteredBreedingPairs.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
             ) : (
-              <FamilyTree
+              <LineageFlow
                 fowls={fowls}
                 codes={birdCodes}
                 matchHistory={matchHistory}
                 query={debouncedSearch}
-                onPick={setSelectedFowlForDetails}
-                onShowFights={openFights}
                 sortBy={sortBy}
-                collapsedKeys={treeCollapsed}
-                onToggleCollapse={(k) =>
-                  setTreeCollapsed((prev) => {
+                rootName={treeRootName}
+                onRootChange={setTreeRootName}
+                direction={treeDirection}
+                onDirectionChange={setTreeDirection}
+                collapsedNodes={collapsedFlowNodes}
+                onToggleCollapsed={(id) =>
+                  setCollapsedFlowNodes((prev) => {
                     const next = new Set(prev);
-                    if (next.has(k)) next.delete(k);
-                    else next.add(k);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
                     return next;
                   })
                 }
+                onExpandAll={() => setCollapsedFlowNodes(new Set())}
+                onCollapseAll={() => setCollapsedFlowNodes(new Set(lineageParentIds))}
+                onPick={setSelectedFowlForDetails}
+                onShowFights={openFights}
+                onOpenAsSire={(fowl) => openParentOffspringTree(fowl, 'sire')}
+                onOpenAsDam={(fowl) => openParentOffspringTree(fowl, 'dam')}
               />
             )}
           </section>
@@ -3526,13 +3558,14 @@ export default function LineageDirectory({
                         })
                       }
                       onOpenInFamilyTree={() => {
-                        // Same key format as the Family Tree pairs, so this also
-                        // guarantees that family is expanded when the tab opens.
-                        setTreeCollapsed((prev) => {
-                          const next = new Set(prev);
-                          next.delete(familyKey);
-                          return next;
-                        });
+                        // Open the pedigree canvas rooted at this family's
+                        // resolved parent, in the descendants direction.
+                        const parent =
+                          parentRecordOf(g[0], 'sire', fowls) ??
+                          parentRecordOf(g[0], 'dam', fowls);
+                        if (parent) setTreeRootName(parent.name);
+                        setTreeDirection('down');
+                        setCollapsedFlowNodes(new Set());
                         setActiveTab('tree');
                       }}
                     />
