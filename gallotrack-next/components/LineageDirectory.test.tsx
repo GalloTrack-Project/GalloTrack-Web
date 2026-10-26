@@ -754,6 +754,38 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).getAllByText('Grandchild').length).toBeGreaterThanOrEqual(1);
     });
 
+    it('uses the same non-sticky pair header and fixed table as the dam view', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      const sireRegion = screen.getByRole('region', { name: /Sire 1 details/i });
+      const sireTable = within(sireRegion).getByRole('table');
+      expect(sireTable).toHaveClass('table-fixed');
+      expect(sireTable.parentElement).not.toHaveClass('overflow-x-auto');
+
+      const pairHeader = within(sireRegion)
+        .getByText(/Sire 1 \(1\)/i)
+        .closest('button')!;
+      expect(pairHeader.className).not.toMatch(/sticky/);
+
+      const sireHeaders = within(sireTable)
+        .getAllByRole('columnheader')
+        .map((header) => header.className);
+      expect(sireHeaders).toHaveLength(7);
+      expect(sireHeaders[5]).toMatch(/w-\[36%\]/);
+
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      const damRegion = screen.getByRole('region', { name: /Dam A details/i });
+      const damTable = within(damRegion).getByRole('table');
+      expect(damTable).toHaveClass('table-fixed');
+      expect(damTable.parentElement).not.toHaveClass('overflow-x-auto');
+      expect(
+        within(damTable)
+          .getAllByRole('columnheader')
+          .map((header) => header.className)
+      ).toEqual(sireHeaders);
+    });
+
     it('filters offspring by sex inside the pair groups and persists filter state', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));

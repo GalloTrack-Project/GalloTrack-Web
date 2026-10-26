@@ -1812,13 +1812,11 @@ export default function LineageDirectory({
                   key={pg.key}
                   className="bg-card rounded-lg border border-border shadow-xs overflow-hidden"
                 >
-                  {/* Sticky Slim Pair Header */}
+                  {/* Pair header */}
                   <button
                     type="button"
                     onClick={() => togglePair(pg.key, isPairOpen)}
-                    className={`w-full ${
-                      kind === 'dam' ? '' : 'sticky top-0 z-10'
-                    } flex items-center justify-between gap-3 px-3.5 py-2.5 text-left bg-muted/50 hover:bg-muted/80 backdrop-blur-xs border-b border-border transition-colors cursor-pointer`}
+                    className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-left bg-muted/50 hover:bg-muted/80 backdrop-blur-xs border-b border-border transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-wrap">
                       <span className="text-xs font-black text-card-foreground truncate">
@@ -1926,21 +1924,17 @@ export default function LineageDirectory({
                       </div>
 
                       {/* Desktop Table Layout (>= md) */}
-                      <div className={kind === 'dam' ? 'hidden md:block' : 'hidden md:block overflow-x-auto'}>
-                        <table
-                          className={`w-full text-left text-xs border-collapse ${
-                            kind === 'dam' ? 'table-fixed' : ''
-                          }`}
-                        >
+                      <div className="hidden md:block">
+                        <table className="w-full text-left text-xs border-collapse table-fixed">
                           <thead>
                             <tr className="border-b border-border/60 text-muted-foreground font-bold">
-                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[8%]' : ''}`}>Code</th>
-                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[22%]' : ''}`}>Chicken</th>
-                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[8%]' : ''}`}>Sex</th>
-                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[8%]' : ''}`}>Age</th>
-                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[10%]' : ''}`}>Status</th>
-                              <th className={`py-2 px-2.5 ${kind === 'dam' ? 'w-[36%]' : ''}`}>Record</th>
-                              <th className={`py-2 px-2.5 text-right ${kind === 'dam' ? 'w-[8%]' : ''}`}>Actions</th>
+                              <th className="py-2 px-2.5 w-[8%]">Code</th>
+                              <th className="py-2 px-2.5 w-[22%]">Chicken</th>
+                              <th className="py-2 px-2.5 w-[8%]">Sex</th>
+                              <th className="py-2 px-2.5 w-[8%]">Age</th>
+                              <th className="py-2 px-2.5 w-[10%]">Status</th>
+                              <th className="py-2 px-2.5 w-[36%]">Record</th>
+                              <th className="py-2 px-2.5 text-right w-[8%]">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border/40">
