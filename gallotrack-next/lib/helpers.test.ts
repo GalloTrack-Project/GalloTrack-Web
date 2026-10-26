@@ -3,6 +3,8 @@ import {
   isMale,
   isFemale,
   sexLabel,
+  canFight,
+  fightersOf,
   parentBreedOf,
   cleanPct,
   isFoundationStock,
@@ -68,6 +70,39 @@ describe('sexLabel', () => {
     expect(sexLabel(undefined)).toBe('Unknown');
     expect(sexLabel(null)).toBe('Unknown');
     expect(sexLabel({})).toBe('Unknown');
+  });
+});
+
+describe('canFight', () => {
+  it('returns true only for cocks/stags', () => {
+    expect(canFight('Rooster')).toBe(true);
+    expect(canFight('Cock')).toBe(true);
+    expect(canFight('Stag')).toBe(true);
+    expect(canFight('Male')).toBe(true);
+    expect(canFight({ gender: 'Rooster' })).toBe(true);
+  });
+
+  it('returns false for hens and unknown sex', () => {
+    expect(canFight('Hen')).toBe(false);
+    expect(canFight('Pullet')).toBe(false);
+    expect(canFight('Female')).toBe(false);
+    expect(canFight({ gender: 'Hen' })).toBe(false);
+    expect(canFight('')).toBe(false);
+    expect(canFight('Other')).toBe(false);
+    expect(canFight(undefined)).toBe(false);
+    expect(canFight(null)).toBe(false);
+    expect(canFight({})).toBe(false);
+  });
+
+  it('fightersOf keeps only fighting birds', () => {
+    const birds = [
+      { name: 'Cock', gender: 'Rooster' },
+      { name: 'Hen', gender: 'Hen' },
+      { name: 'Unknown', gender: '' },
+      { name: 'Stag', gender: 'Stag' },
+    ];
+    expect(fightersOf(birds).map((b) => b.name)).toEqual(['Cock', 'Stag']);
+    expect(fightersOf([])).toEqual([]);
   });
 });
 

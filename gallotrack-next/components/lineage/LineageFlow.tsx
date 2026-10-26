@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
-import { isMale, sexLabel } from '@/lib/helpers';
+import { isMale, canFight, fightersOf, sexLabel } from '@/lib/helpers';
 import { nameKey } from '@/lib/family-tree';
 import {
   buildChickenMatchStatsMap,
@@ -275,7 +275,7 @@ export default function LineageFlow({
         .map((id) => index.byId.get(id))
         .filter((fowl): fowl is FowlRecord => Boolean(fowl))
     : [];
-  const pairFightingBirds = pairOffspring.filter((fowl) => isMale(fowl.gender));
+  const pairFightingBirds = fightersOf(pairOffspring);
   const pairStats = combineWinRates(pairFightingBirds.map((fowl) => statsOf(fowl)));
 
   const fitToView = useCallback((): boolean => {
@@ -495,11 +495,14 @@ export default function LineageFlow({
     const isDimmed =
       sexFocus !== 'all' && (sexFocus === 'male') !== isMale(fowl.gender);
     const offspringCount = (index.childrenByParent.get(node.id) ?? []).length;
+    const fightsEnabled = canFight(fowl);
     const rowNumber =
       (layout?.generations.findIndex((row) => row.gen === node.generation) ?? -1) + 1;
     const label = `${fowl.name}, ${sexLabel(fowl)}, ${
       code ? `code ${code}` : 'no code'
-    }, ${rowNumber > 0 ? `generation ${rowNumber}` : 'root generation'}, ${offspringCount} offspring, ${recordLabel(stats)}`;
+    }, ${rowNumber > 0 ? `generation ${rowNumber}` : 'root generation'}, ${offspringCount} offspring${
+      fightsEnabled ? `, ${recordLabel(stats)}` : ''
+    }`;
 
     return (
       <div
@@ -580,7 +583,9 @@ export default function LineageFlow({
                 ? `${offspringCount} offspring`
                 : (fowl.breed || 'No offspring')}
             </span>
-            <span className="shrink-0">{recordLabel(stats)}</span>
+            <span className="shrink-0">
+              {fightsEnabled ? recordLabel(stats) : ''}
+            </span>
           </div>
         </button>
         {branchControl(node)}
@@ -1171,12 +1176,14 @@ export default function LineageFlow({
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                    Record
-                  </span>
-                  <WinRatePill stats={selectedBirdStats ?? computeWinRate(0, 0)} />
-                </div>
+                {canFight(selectedBird) && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                      Record
+                    </span>
+                    <WinRatePill stats={selectedBirdStats ?? computeWinRate(0, 0)} />
+                  </div>
+                )}
 
                 <div className="space-y-2 border-t border-border/60 pt-3">
                   <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
@@ -1278,13 +1285,15 @@ export default function LineageFlow({
                   >
                     <User className="h-3.5 w-3.5" /> View profile
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onShowFights(selectedBird)}
-                    className="border-border hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold"
-                  >
-                    <Swords className="h-3.5 w-3.5" /> Fight history
-                  </button>
+                  {canFight(selectedBird) && (
+                    <button
+                      type="button"
+                      onClick={() => onShowFights(selectedBird)}
+                      className="border-border hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold"
+                    >
+                      <Swords className="h-3.5 w-3.5" /> Fight history
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => focusInTree(selectedBird)}
@@ -1390,9 +1399,11 @@ export default function LineageFlow({
                           <span className={`shrink-0 text-[10px] font-bold ${sexTone(child)}`}>
                             {sexLabel(child)}
                           </span>
-                          <span className="text-muted-foreground shrink-0 text-[10px] font-semibold">
-                            {recordLabel(stats)}
-                          </span>
+                          {canFight(child) && (
+                            <span className="text-muted-foreground shrink-0 text-[10px] font-semibold">
+                              {recordLabel(stats)}
+                            </span>
+                          )}
                         </button>
                       );
                     })}

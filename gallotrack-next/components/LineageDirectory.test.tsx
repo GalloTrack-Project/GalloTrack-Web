@@ -232,6 +232,113 @@ describe('LineageDirectory redesigned top section', () => {
     expect(card).not.toHaveTextContent(/2 of 2 males fought/);
   });
 
+  it('applies the hen/fight rule across the canvas, Full Siblings, Sire and Dam tabs', () => {
+    const fowls: FowlRecord[] = [
+      bird({ id: 1, name: 'Sire X', gender: 'Rooster', bird_code: '9' }),
+      bird({ id: 2, name: 'Dam Z', gender: 'Hen', bird_code: 'Z' }),
+      bird({ id: 3, name: 'Male Zero', gender: 'Rooster', sire: 'Sire X', dam: 'Dam Z', bird_code: '9Z1' }),
+      bird({ id: 4, name: 'Male Fighter', gender: 'Rooster', sire: 'Sire X', dam: 'Dam Z', bird_code: '9Z2' }),
+      bird({ id: 5, name: 'Hen With Record', gender: 'Hen', sire: 'Sire X', dam: 'Dam Z', bird_code: '9Z3' }),
+    ];
+    const matches: MatchRecord[] = [
+      matchRecord(1, 4, 'Male Fighter', 'Win'),
+      matchRecord(2, 5, 'Hen With Record', 'Win'),
+    ];
+
+    renderDirectory(vi.fn(), { fowls, matchHistory: matches });
+
+    // 1. Family Tree canvas
+    fireEvent.click(screen.getByRole('tab', { name: /Family Tree/i }));
+    const henCard = screen
+      .getAllByTestId('lineage-bird-card')
+      .find((el) => el.textContent?.includes('Hen With Record'))!;
+    expect(henCard.textContent).not.toMatch(/No fights|\dW-\dL/);
+    fireEvent.click(henCard);
+    const flowDetails = screen.getByTestId('lineage-details');
+    expect(within(flowDetails).queryByText('Record')).not.toBeInTheDocument();
+    expect(
+      within(flowDetails).queryByRole('button', { name: /Fight history/i })
+    ).not.toBeInTheDocument();
+
+    // 2. Full Siblings
+    fireEvent.click(screen.getByRole('tab', { name: /Full Siblings/i }));
+    const familyCard = screen.getByRole('article');
+    expect(familyCard).toHaveTextContent('1 of 2 males fought');
+    expect(familyCard).toHaveTextContent('1W-0L');
+    expect(familyCard.textContent).toMatch(/Best[\s\S]*Male Fighter/);
+    expect(familyCard.textContent).not.toMatch(/Best[\s\S]*Hen With Record/);
+
+    const henChip = within(familyCard).getByRole('button', { name: 'Hen With Record' });
+    expect(henChip).not.toHaveAttribute('data-record-trend');
+    expect(
+      within(familyCard).getByRole('button', { name: /Male Zero · No fights/i })
+    ).toHaveAttribute('data-record-trend', 'none');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand family 1' }));
+    const familyTable = screen.getByRole('table');
+    const henMemberRow = within(familyTable).getByText('Hen With Record').closest('tr')!;
+    expect(henMemberRow).toHaveTextContent('—');
+    expect(henMemberRow.textContent).not.toMatch(/No fights|\dW-\dL/);
+    expect(
+      within(henMemberRow).queryByRole('button', { name: /View all fights/i })
+    ).not.toBeInTheDocument();
+    const zeroMemberRow = within(familyTable).getByText('Male Zero').closest('tr')!;
+    expect(zeroMemberRow).toHaveTextContent('No fights');
+    expect(
+      within(zeroMemberRow).getByRole('button', { name: 'View all fights for Male Zero' })
+    ).toBeInTheDocument();
+
+    // 3. Sire Offspring Tree (desktop table + mobile card + totals)
+    fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+    const sireRegion = screen.getByRole('region', { name: /Sire X details/i });
+    const sireTable = within(sireRegion).getByRole('table');
+    const sireHenRow = within(sireTable).getByText('Hen With Record').closest('tr')!;
+    expect(sireHenRow).toHaveTextContent('—');
+    expect(sireHenRow.textContent).not.toMatch(/No fights|\dW-\dL/);
+    expect(within(sireHenRow).queryByRole('button', { name: 'Fights' })).not.toBeInTheDocument();
+    const sireZeroRow = within(sireTable).getByText('Male Zero').closest('tr')!;
+    expect(sireZeroRow).toHaveTextContent('No fights');
+    expect(within(sireZeroRow).getByRole('button', { name: 'Fights' })).toBeInTheDocument();
+    expect(screen.queryAllByTitle('View Hen With Record fight history')).toHaveLength(0);
+    expect(screen.getAllByTitle('View Male Zero fight history')).toHaveLength(2);
+
+    const sireHenMobile = document.getElementById('fowl-row-5')!;
+    expect(sireHenMobile).toHaveTextContent('—');
+    expect(sireHenMobile.textContent).not.toMatch(/No fights|\dW-\dL/);
+    const sireZeroMobile = document.getElementById('fowl-row-3')!;
+    expect(sireZeroMobile).toHaveTextContent('No fights');
+
+    expect(
+      within(sireRegion).getByText(/Sire total · 1 of 2 males have fought/)
+    ).toBeInTheDocument();
+    expect(
+      within(sireRegion).getByText(/Sire overall total · 1 of 2 males have fought/)
+    ).toBeInTheDocument();
+    expect(
+      within(sireRegion).getAllByText(/Pair total · 1 of 2 males have fought/).length
+    ).toBeGreaterThanOrEqual(1);
+    expect(within(sireRegion).queryByText(/2W-0L/)).not.toBeInTheDocument();
+
+    // 4. Dam Offspring Tree (desktop table + selector family total)
+    fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+    const damRegion = screen.getByRole('region', { name: /Dam Z details/i });
+    const damTable = within(damRegion).getByRole('table');
+    const damHenRow = within(damTable).getByText('Hen With Record').closest('tr')!;
+    expect(damHenRow).toHaveTextContent('—');
+    expect(within(damHenRow).queryByRole('button', { name: 'Fights' })).not.toBeInTheDocument();
+    const damZeroRow = within(damTable).getByText('Male Zero').closest('tr')!;
+    expect(damZeroRow).toHaveTextContent('No fights');
+    expect(within(damZeroRow).getByRole('button', { name: 'Fights' })).toBeInTheDocument();
+    expect(
+      within(damRegion).getAllByText(/1 of 2 males have fought/).length
+    ).toBeGreaterThanOrEqual(1);
+
+    const damOption = screen.getByRole('option', { name: /Dam Z/i });
+    const damLabel = damOption.getAttribute('aria-label') ?? '';
+    expect(damLabel).toContain('1W-0L');
+    expect(damLabel).not.toContain('2W');
+  });
+
   it('renders every male and female offspring in the expanded member table', () => {
     const manyOffspring: FowlRecord[] = [
       bird({ id: 1, name: 'Sire X', gender: 'Rooster', bird_code: '9' }),
@@ -346,10 +453,10 @@ describe('LineageDirectory redesigned top section', () => {
       expect(card).toHaveTextContent('2W-0L · 100%');
 
       const chips = card.querySelectorAll('[data-record-trend]');
-      expect(chips).toHaveLength(4);
+      expect(chips).toHaveLength(3);
       expect(card.querySelectorAll('[data-record-trend="up"]')).toHaveLength(1);
       expect(card.querySelectorAll('[data-record-trend="down"]')).toHaveLength(1);
-      expect(card.querySelectorAll('[data-record-trend="none"]')).toHaveLength(2);
+      expect(card.querySelectorAll('[data-record-trend="none"]')).toHaveLength(1);
 
       expect(within(card).queryByRole('table')).not.toBeInTheDocument();
       expect(
@@ -586,8 +693,8 @@ describe('LineageDirectory redesigned top section', () => {
   it('opens standalone fight history from an expanded member row', () => {
     renderDirectory();
     fireEvent.click(screen.getByRole('button', { name: 'Expand family 1' }));
-    fireEvent.click(screen.getByRole('button', { name: 'View all fights for Offspring 1A2' }));
-    expect(screen.getByTestId('fight-probe')).toHaveTextContent('Offspring 1A2');
+    fireEvent.click(screen.getByRole('button', { name: 'View all fights for Offspring 1A1' }));
+    expect(screen.getByTestId('fight-probe')).toHaveTextContent('Offspring 1A1');
   });
 
   it('opens chicken profile when an offspring chip is clicked', () => {

@@ -274,6 +274,41 @@ describe('LineageFlow pedigree canvas', () => {
     expect(cardFor('Dam A').className).not.toMatch(/opacity-40/);
   });
 
+  it('hides hen fight records and actions while cocks keep "No fights" and Fights', () => {
+    const matches = [match(10, 4, 'Offspring 1A2', 'Win')];
+    render(<Harness matchHistory={matches} />);
+
+    const henCard = cardFor('Offspring 1A2');
+    expect(henCard.textContent).not.toMatch(/No fights|\dW-\dL/);
+
+    fireEvent.click(henCard);
+    const henDetails = screen.getByTestId('lineage-details');
+    expect(within(henDetails).queryByText('Record')).not.toBeInTheDocument();
+    expect(
+      within(henDetails).queryByRole('button', { name: /Fight history/i })
+    ).not.toBeInTheDocument();
+
+    // A cock with zero fights keeps both the record and the action.
+    fireEvent.click(cardFor('Offspring 1A1'));
+    const cockDetails = screen.getByTestId('lineage-details');
+    expect(within(cockDetails).getByText('Record')).toBeInTheDocument();
+    expect(within(cockDetails).getByText('No fights')).toBeInTheDocument();
+    expect(
+      within(cockDetails).getByRole('button', { name: /Fight history/i })
+    ).toBeInTheDocument();
+
+    // Pair panel: hen row has no record, and her win never enters the pair total.
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Breeding pair Sire 1 × Dam A, 3 offspring' })
+    );
+    const pairDetails = screen.getByTestId('lineage-details');
+    const henRow = within(pairDetails).getByRole('button', { name: /Offspring 1A2/ });
+    expect(henRow.textContent).not.toMatch(/No fights|\dW-\dL/);
+    const cockRow = within(pairDetails).getByRole('button', { name: /Offspring 1A1/ });
+    expect(cockRow).toHaveTextContent('No fights');
+    expect(pairDetails).toHaveTextContent('0 of 1 cocks fought');
+  });
+
   it('offers parent-role navigation only when the bird is a parent', () => {
     const onOpenAsSire = vi.fn();
     render(<Harness onOpenAsSire={onOpenAsSire} />);

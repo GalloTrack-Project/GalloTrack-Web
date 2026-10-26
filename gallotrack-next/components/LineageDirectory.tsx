@@ -28,7 +28,7 @@ import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
-import { sexLabel, isMale, parentBreedOf } from '@/lib/helpers';
+import { sexLabel, isMale, canFight, fightersOf, parentBreedOf } from '@/lib/helpers';
 import { fowlMatchesQuery, parentRecordOf } from '@/lib/lineage';
 import type { LineageDirection } from '@/lib/lineage-graph';
 import {
@@ -290,7 +290,7 @@ function FamilyCard({
 
   // Only cocks/stags are fighting birds. Hens may have historical/erroneous
   // match rows, but they must never inflate the family fight record.
-  const fightingOffspring = g.filter(isMaleChild);
+  const fightingOffspring = fightersOf(g);
   const familyTotal = combineWinRates(fightingOffspring.map((c) => getChildMatchStats(c.name)));
   const foughtCount = familyTotal.foughtCount;
   const familyRecord = `${familyTotal.wins}W-${familyTotal.losses}L${
@@ -316,9 +316,10 @@ function FamilyCard({
     [g, birdCodes]
   );
 
-  // Best performer = highest family-relevant win rate, then most decided fights.
+  // Best performer = highest family-relevant win rate among fighting birds
+  // (cocks/stags only), then most decided fights.
   const bestPerformer = useMemo(() => {
-    const fought = g
+    const fought = fightersOf(g)
       .map((child) => ({ child, stats: getChildMatchStats(child.name) }))
       .filter(({ stats }) => stats.total > 0);
     if (fought.length === 0) return null;
@@ -441,20 +442,29 @@ function FamilyCard({
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1" aria-label="Offspring win-rate chips">
             {g.map((child) => {
+              const fightsEnabled = canFight(child);
               const stats = getChildMatchStats(child.name);
               const trend = trendOf(stats);
+              const chipLabel = fightsEnabled
+                ? `${child.name} · ${recordLabel(stats)}`
+                : child.name;
               return (
                 <button
                   key={child.id}
                   type="button"
                   onClick={() => setSelectedFowlForDetails(child)}
-                  title={`${child.name} · ${recordLabel(stats)}`}
-                  aria-label={`${child.name} · ${recordLabel(stats)}`}
-                  data-record-trend={trend.key}
+                  title={chipLabel}
+                  aria-label={chipLabel}
+                  data-record-trend={fightsEnabled ? trend.key : undefined}
                   className="border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px] font-bold transition-colors"
                 >
                   <span>[{formatBirdCodeForDisplay(codeOf(child))}]</span>
-                  <span className={`h-1.5 w-1.5 rounded-full ${trend.dot}`} aria-hidden="true" />
+                  {fightsEnabled && (
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${trend.dot}`}
+                      aria-hidden="true"
+                    />
+                  )}
                 </button>
               );
             })}
@@ -511,19 +521,21 @@ function FamilyCard({
                         <SexBadge chicken={child} />
                       </td>
                       <td className="text-card-foreground px-2 py-1.5 font-bold whitespace-nowrap">
-                        {recordLabel(cs)}
+                        {canFight(child) ? recordLabel(cs) : '—'}
                       </td>
                       <td className="py-1.5 pl-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => onShowFights(child)}
-                          aria-label={`View all fights for ${child.name}`}
-                          title="View all fights"
-                          className="border-border text-muted-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-1 text-[10px] font-black tracking-wider uppercase transition-colors hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400"
-                        >
-                          <Swords className="h-3 w-3" aria-hidden="true" />
-                          Fights
-                        </button>
+                        {canFight(child) && (
+                          <button
+                            type="button"
+                            onClick={() => onShowFights(child)}
+                            aria-label={`View all fights for ${child.name}`}
+                            title="View all fights"
+                            className="border-border text-muted-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-1 text-[10px] font-black tracking-wider uppercase transition-colors hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400"
+                          >
+                            <Swords className="h-3 w-3" aria-hidden="true" />
+                            Fights
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -750,7 +762,7 @@ export default function LineageDirectory({
   };
 
   const groupStats = (children: FowlRecord[]) => {
-    return combineWinRates(children.map((c) => getChildMatchStats(c.name)));
+    return combineWinRates(fightersOf(children).map((c) => getChildMatchStats(c.name)));
   };
 
   const rankingStatsOf = (name: string) => {
@@ -1029,7 +1041,7 @@ export default function LineageDirectory({
     fullFamilies.forEach((g) => {
       const key = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
       // Only fighting birds (males) count toward the family record.
-      map.set(key, combineWinRates(g.filter(isMaleChild).map((c) => statsOf(c.name))));
+      map.set(key, combineWinRates(fightersOf(g).map((c) => statsOf(c.name))));
     });
     return map;
   }, [fullFamilies, matchStatsLookup]);
@@ -1804,7 +1816,7 @@ export default function LineageDirectory({
             {sortedPaneEntries.map(([name, kids]) => {
               const code = getParentCode(name, kind, kids[0]);
               const isSelected = name === activeParentName;
-              const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
+              const stats = groupStats(kids);
 
               return (
                 <button
@@ -1981,7 +1993,7 @@ export default function LineageDirectory({
                         <span className="text-muted-foreground/50 select-none">·</span>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-muted-foreground font-semibold">
-                            Sire total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought
+                            Sire total · {fightersOf(activeChildren).filter((ch) => cachedStats(ch.name).total > 0).length} of {fightersOf(activeChildren).length} males have fought
                             {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
                           </span>
                           <WinRatePill stats={activeParentStats} />
@@ -2262,21 +2274,27 @@ export default function LineageDirectory({
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap">
                                       <div className="flex items-center gap-2">
-                                        <WinRatePill
-                                          wins={stats.wins}
-                                          losses={stats.losses}
-                                          draws={stats.draws}
-                                          stats={stats}
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => openFights(child)}
-                                          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
-                                          title={`View ${child.name} fight history`}
-                                        >
-                                          <Swords className="w-3.5 h-3.5" />
-                                          <span>Fights</span>
-                                        </button>
+                                        {canFight(child) ? (
+                                          <>
+                                            <WinRatePill
+                                              wins={stats.wins}
+                                              losses={stats.losses}
+                                              draws={stats.draws}
+                                              stats={stats}
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => openFights(child)}
+                                              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
+                                              title={`View ${child.name} fight history`}
+                                            >
+                                              <Swords className="w-3.5 h-3.5" />
+                                              <span>Fights</span>
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <span className="text-muted-foreground font-semibold">—</span>
+                                        )}
                                       </div>
                                     </td>
                                     <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
@@ -2309,13 +2327,15 @@ export default function LineageDirectory({
                                             >
                                               View details
                                             </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleAddMatch(child)}
-                                              className="w-full text-left px-3 py-1.5 hover:bg-muted transition-colors cursor-pointer font-semibold"
-                                            >
-                                              Record fight
-                                            </button>
+                                            {canFight(child) && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleAddMatch(child)}
+                                                className="w-full text-left px-3 py-1.5 hover:bg-muted transition-colors cursor-pointer font-semibold"
+                                              >
+                                                Record fight
+                                              </button>
+                                            )}
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -2374,7 +2394,7 @@ export default function LineageDirectory({
                               className="bg-muted/40 font-bold border-t-2 border-border text-xs"
                             >
                               <td colSpan={5} className="py-2.5 px-2.5 text-card-foreground">
-                                Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} offspring have fought
+                                Pair total · {fightersOf(pg.offspring).filter((ch) => cachedStats(ch.name).total > 0).length} of {fightersOf(pg.offspring).length} males have fought
                                 {pg.stats.decided > 0 ? ` · ${pg.stats.wins}W-${pg.stats.losses}L · ${pg.stats.winRate}%` : ''}
                               </td>
                               <td colSpan={2} className="py-2.5 px-2.5 text-right whitespace-nowrap">
@@ -2475,13 +2495,15 @@ export default function LineageDirectory({
                                         >
                                           View details
                                         </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleAddMatch(child)}
-                                          className="w-full text-left px-3 py-1.5 hover:bg-muted transition-colors cursor-pointer font-semibold"
-                                        >
-                                          Record fight
-                                        </button>
+                                        {canFight(child) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleAddMatch(child)}
+                                            className="w-full text-left px-3 py-1.5 hover:bg-muted transition-colors cursor-pointer font-semibold"
+                                          >
+                                            Record fight
+                                          </button>
+                                        )}
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -2502,16 +2524,22 @@ export default function LineageDirectory({
                                     <SexBadge chicken={child} />
                                     <span>{formatAge(child.birthdate, child.age)}</span>
                                     {isDifferentBreed && <span>· {child.breed}</span>}
-                                    <WinRatePill stats={stats} />
-                                    <button
-                                      type="button"
-                                      onClick={() => openFights(child)}
-                                      className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-1.5 py-0.5 rounded transition-colors cursor-pointer"
-                                      title={`View ${child.name} fight history`}
-                                    >
-                                      <Swords className="w-3 h-3" />
-                                      <span>Fights</span>
-                                    </button>
+                                    {canFight(child) ? (
+                                      <>
+                                        <WinRatePill stats={stats} />
+                                        <button
+                                          type="button"
+                                          onClick={() => openFights(child)}
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                                          title={`View ${child.name} fight history`}
+                                        >
+                                          <Swords className="w-3 h-3" />
+                                          <span>Fights</span>
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <span className="font-bold">—</span>
+                                    )}
                                   </div>
                                   <StatusPill status={child.status} />
                                 </div>
@@ -2551,7 +2579,7 @@ export default function LineageDirectory({
                                 className="p-2.5 bg-muted/40 rounded-md border border-border flex items-center justify-between text-xs font-semibold gap-2"
                               >
                                 <span className="text-card-foreground">
-                                  Pair total · {pg.offspring.filter((ch) => cachedStats(ch.name).total > 0).length} of {pg.offspring.length} offspring have fought
+                                  Pair total · {fightersOf(pg.offspring).filter((ch) => cachedStats(ch.name).total > 0).length} of {fightersOf(pg.offspring).length} males have fought
                                   {pg.stats.decided > 0 ? ` · ${pg.stats.wins}W-${pg.stats.losses}L · ${pg.stats.winRate}%` : ''}
                                 </span>
                                 <WinRatePill stats={pg.stats} />
@@ -2572,7 +2600,7 @@ export default function LineageDirectory({
               className="p-3 bg-muted/50 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-bold"
             >
               <span className="text-card-foreground">
-                {kind === 'sire' ? 'Sire' : 'Dam'} overall total · {activeChildren.filter((ch) => cachedStats(ch.name).total > 0).length} of {activeChildren.length} offspring have fought
+                {kind === 'sire' ? 'Sire' : 'Dam'} overall total · {fightersOf(activeChildren).filter((ch) => cachedStats(ch.name).total > 0).length} of {fightersOf(activeChildren).length} males have fought
                 {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
               </span>
               <WinRatePill stats={activeParentStats} />
@@ -2661,7 +2689,7 @@ export default function LineageDirectory({
 
     const renderDamCard = ([name, kids]: [string, FowlRecord[]]) => {
       const code = getParentCode(name, kind, kids[0]);
-      const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
+      const stats = groupStats(kids);
       const isSelected = name === activeParentName;
       return (
         <button
@@ -2993,7 +3021,7 @@ export default function LineageDirectory({
                       {visibleRows.map(([name, kids], i) => {
                         const index = start + i;
                         const code = getParentCode(name, 'dam', kids[0]);
-                        const stats = combineWinRates(kids.map((k) => cachedStats(k.name)));
+                        const stats = groupStats(kids);
                         const isSelected = name === activeParentName;
                         const isActive = index === damPopoverActiveIndex;
                         return (

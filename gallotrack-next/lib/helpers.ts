@@ -155,6 +155,23 @@ export const sexLabel = (
   return 'Unknown';
 };
 
+/**
+ * Only cocks/stags are fighting birds. Hens (and birds with unknown sex) never
+ * carry a fight record in the Lineage Directory, even if a historical match row
+ * exists for them.
+ */
+export const canFight = (
+  chicken?: { gender?: string | null } | string | null
+): boolean => {
+  const raw = typeof chicken === 'string' ? chicken : chicken?.gender;
+  return isMale(raw ?? undefined);
+};
+
+/** Keep only the birds that can fight (cocks/stags) from a child list. */
+export const fightersOf = <T extends { gender?: string | null }>(
+  children: readonly T[]
+): T[] => children.filter((child) => canFight(child));
+
 export const cleanPct = (v: unknown): number => {
   const n = Number(v);
   return !isNaN(n) && n > 0 ? Math.min(n, 100) : 0;
