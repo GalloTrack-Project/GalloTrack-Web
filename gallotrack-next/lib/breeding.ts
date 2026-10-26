@@ -1,4 +1,5 @@
 import type { FowlRecord } from './types';
+import { isFemale, isMale } from './helpers';
 
 /** Pairing status values stored in `breeding_pairings.outcome`. */
 export const PAIRING_OUTCOMES = ['Active', 'Completed', 'Discontinued'] as const;
@@ -27,8 +28,8 @@ export function isSireGender(fowl: Pick<FowlRecord, 'gender'>): boolean {
 /** Split a flock into the sire (number) and dam (letter) sides. */
 export function splitByGender(fowls: FowlRecord[]): { sires: FowlRecord[]; dams: FowlRecord[] } {
   return {
-    sires: fowls.filter(isSireGender),
-    dams: fowls.filter((f) => !isSireGender(f)),
+    sires: fowls.filter((f) => isMale(f.gender)),
+    dams: fowls.filter((f) => isFemale(f.gender)),
   };
 }
 
@@ -65,8 +66,8 @@ export function validatePairing(
 ): string | null {
   if (!sire || !dam) return 'Select a sire and a dam first.';
   if (sire.id === dam.id) return 'The sire and dam must be different chickens.';
-  if (!isSireGender(sire)) return `"${sire.name}" is not a male chicken (sire).`;
-  if (isSireGender(dam)) return `"${dam.name}" is not a female chicken (dam).`;
+  if (!isMale(sire.gender)) return `"${sire.name}" is not a male chicken (sire).`;
+  if (!isFemale(dam.gender)) return `"${dam.name}" is not a female chicken (dam).`;
   return null;
 }
 

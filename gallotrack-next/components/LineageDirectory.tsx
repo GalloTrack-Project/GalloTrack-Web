@@ -27,7 +27,7 @@ import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
-import { sexLabel, isMale, canFight, fightersOf, parentBreedOf } from '@/lib/helpers';
+import { sexLabel, isMale, isFemale, canFight, fightersOf, parentBreedOf } from '@/lib/helpers';
 import { fowlMatchesQuery, parentRecordOf } from '@/lib/lineage';
 import type { LineageDirection } from '@/lib/lineage-graph';
 import {
@@ -724,6 +724,9 @@ export default function LineageDirectory({
     fowls.forEach((f) => {
       const sire = (f.sire || '').trim();
       if (!isKnownParent(sire)) return;
+      // A sire must be a cock (male); legacy rows with a female/unknown parent
+      // are excluded from the Sire Offspring Tree rather than displayed as sires.
+      if (!canFight(parentRecordOf(f, 'sire', fowls))) return;
       const arr = map.get(sire) || [];
       arr.push(f);
       map.set(sire, arr);
@@ -741,6 +744,9 @@ export default function LineageDirectory({
     fowls.forEach((f) => {
       const dam = (f.dam || '').trim();
       if (!isKnownParent(dam)) return;
+      // A dam must be a hen (female); exclude mismatched legacy parents.
+      const damParent = parentRecordOf(f, 'dam', fowls);
+      if (!damParent || !isFemale(damParent.gender)) return;
       const arr = map.get(dam) || [];
       arr.push(f);
       map.set(dam, arr);

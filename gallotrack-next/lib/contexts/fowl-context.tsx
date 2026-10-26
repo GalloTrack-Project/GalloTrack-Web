@@ -54,6 +54,7 @@ import { isValidWingBand, WING_BAND_ERROR } from '@/lib/wing-band';
 import { generateColorReport } from '@/lib/color-genetics';
 import { nameKey } from '@/lib/family-tree';
 import { parentLinkIds } from '@/lib/lineage';
+import { parentSexMismatchMessage, validateParentRoles } from '@/lib/parent-sex';
 import { generateBreedCompliance } from '@/lib/breed-standards';
 import { useFowlAnalytics, type CrossbreedChartData } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
@@ -672,6 +673,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     const isOffspring = hasSire || hasDam;
     const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : isFemaleHelper(newGender) ? 'dam' : 'sire';
 
+    // Role/sex rule: a sire must be a cock, a dam must be a hen.
+    const parentSexError = validateParentRoles({ sire: sireName, dam: damName }, fowls);
+    if (parentSexError) {
+      toastMessage(parentSexError, 'error');
+      return;
+    }
+
     if (submittedCode) {
       const formatCheck = validateIdentifierFormat(submittedCode, role);
       if (!formatCheck.valid) {
@@ -944,11 +952,20 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       targetRole: 'Breeding Male' | 'Breeding Female',
       customCode?: string,
     ): Promise<{ success: boolean; breederCode?: string; error?: string }> => {
+      const isMaleTarget = targetRole === 'Breeding Male';
+      if (
+        (isMaleTarget && !isMaleHelper(fowl.gender)) ||
+        (!isMaleTarget && !isFemaleHelper(fowl.gender))
+      ) {
+        const error = parentSexMismatchMessage(isMaleTarget ? 'sire' : 'dam', fowl);
+        toastMessage(error, 'error');
+        return { success: false, error };
+      }
+
       setLoading(true);
       const takenCodes = buildCodeSet(
         fowls.map((f) => f.chicken_code || f.bird_code).filter(Boolean) as string[],
       );
-      const isMaleTarget = targetRole === 'Breeding Male';
       const assignedCode =
         (customCode || '').trim() || nextFoundationCode(isMaleTarget ? 'Male' : 'Female', takenCodes);
       const birthCode = (fowl.birth_code || fowl.bird_code || fowl.chicken_code || '').trim();
@@ -1238,6 +1255,20 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const editSireValue = editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock';
       const editDamValue = editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock';
       const editing = ui.editingFowl;
+
+      // Role/sex rule on changed parent fields; untouched legacy links stay editable.
+      const editParentSexError = validateParentRoles(
+        { sire: editSireValue, dam: editDamValue },
+        fowls,
+        {
+          child: { id: editing.id, user_id: editing.user_id },
+          previous: { sire: editing.sire, dam: editing.dam },
+        }
+      );
+      if (editParentSexError) {
+        toastMessage(editParentSexError, 'error');
+        return;
+      }
       const resolvedParents = parentLinkIds(
         { id: editing.id, user_id: editing.user_id },
         editSireValue,

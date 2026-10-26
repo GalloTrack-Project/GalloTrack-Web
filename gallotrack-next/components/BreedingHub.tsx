@@ -28,7 +28,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { sexLabel, parentBreedOf } from '@/lib/helpers';
+import { sexLabel, parentBreedOf, isFemale } from '@/lib/helpers';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
@@ -145,7 +145,7 @@ function CodingSystemExplainer({
     .filter(isSireGender)
     .filter((f) => classifyBirdCode(codeOf(f, codes)) === 'sire');
   const dams = fowls
-    .filter((f) => !isSireGender(f))
+    .filter((f) => isFemale(f.gender))
     .filter((f) => classifyBirdCode(codeOf(f, codes)) === 'dam');
   const offspring = fowls.filter((f) => classifyBirdCode(codeOf(f, codes)) === 'offspring');
 
@@ -661,7 +661,7 @@ function AddPairingForm({
   }, [sireId, damId]);
 
   const males = fowls.filter(isSireGender);
-  const females = fowls.filter((f) => !isSireGender(f));
+  const females = fowls.filter((f) => isFemale(f.gender));
 
   const selectedSire = fowls.find((f) => f.id === Number(sireId));
   const selectedDam = fowls.find((f) => f.id === Number(damId));

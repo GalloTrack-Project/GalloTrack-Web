@@ -15,6 +15,7 @@ import {
 import { isFoundationStock, normalizeOptionValue, FEATHER_COLOR_LIST, TRAIT_LIST } from '@/lib/helpers';
 import { isValidWingBand, WING_BAND_ERROR } from '@/lib/wing-band';
 import { parentLinkIds } from '@/lib/lineage';
+import { validateParentRoles } from '@/lib/parent-sex';
 import { filterAllowedColumns } from '@/lib/schema-contract';
 import { DB_UPDATE_NEEDED_MESSAGE } from '@/lib/services/fowl-service';
 
@@ -104,6 +105,12 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('user_id', auth.user.id);
     const fowls = (registryRows || []) as FowlRecord[];
+
+    // ── Parent role/sex rule: sire = cock (male), dam = hen (female) ──
+    const parentSexError = validateParentRoles({ sire: sireValue, dam: damValue }, fowls);
+    if (parentSexError) {
+      return NextResponse.json({ error: parentSexError }, { status: 400 });
+    }
 
     const payload = {
       user_id: auth.user.id,

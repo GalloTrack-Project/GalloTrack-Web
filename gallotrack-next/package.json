@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "check:exclusivity": "tsx scripts/check-tab-exclusivity.ts",
     "check:encoding": "tsx scripts/check-encoding.ts",
+    "check:parent-sex": "tsx scripts/check-parent-sex.ts",
     "db:backup": "tsx scripts/backup-production.ts",
     "db:restore": "tsx scripts/restore-database.ts",
     "db:compare": "tsx scripts/compare-row-counts.ts",

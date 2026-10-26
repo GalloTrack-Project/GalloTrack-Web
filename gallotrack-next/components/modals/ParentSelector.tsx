@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Eye, Award } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { sexLabel, isMale, isFemale } from '@/lib/helpers';
+import { parentHasRequiredSex, parentSexMismatchMessage } from '@/lib/parent-sex';
 import type { FowlRecord } from '@/lib/types';
 import { buildRegistryContext, roleOf, isActiveStatus, ROLE_LABEL } from '@/lib/registry-roles';
 import { buildCodeSet, nextFoundationCode } from '@/lib/bird-code';
@@ -100,6 +101,14 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
       ? fowls.find((f) => (f.name || '').trim().toLowerCase() === matchedKey)
       : undefined;
 
+  const role = preferredGender === 'Male' ? 'sire' : 'dam';
+  // A typed/picked parent that exists in the registry but has the wrong sex is
+  // rejected inline as well as on submit (and server-side).
+  const matchedParentSexError =
+    matchedParent && preferredGender && !parentHasRequiredSex(matchedParent, role)
+      ? parentSexMismatchMessage(role, matchedParent)
+      : null;
+
   const targetRole = preferredGender === 'Male' ? 'Breeding Male' : 'Breeding Female';
   const regCtx = buildRegistryContext(fowls);
 
@@ -108,6 +117,10 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
     .filter((f) => {
       if (!isActiveStatus(f)) return false;
       if (roleOf(f, regCtx) !== targetRole) return false;
+      // Enforce sex independently of the stored role: a hen is never a sire
+      // and a cock is never a dam, even if a legacy role says otherwise.
+      if (preferredGender === 'Male' && !isMale(f.gender)) return false;
+      if (preferredGender === 'Female' && !isFemale(f.gender)) return false;
       const name = (f.name || '').trim().toLowerCase();
       const code = (f.chicken_code || f.bird_code || '').trim().toLowerCase();
       if (!name || name === 'foundation stock') return false;
@@ -167,6 +180,11 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
         className={`w-full ${pad} border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />
+      {matchedParentSexError && (
+        <p role="alert" className="mt-1 text-xs font-bold text-red-600 dark:text-rose-400">
+          {matchedParentSexError}
+        </p>
+      )}
       {open && (
         <div className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
           {/* SECTION 1: Breeding Stock (Exclusive role) */}

@@ -981,6 +981,49 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(damList).getAllByRole('option')[0]).toHaveTextContent('Dam A');
     });
 
+    it('lists only cocks as sires and only hens as dams, excluding role/sex mismatches', () => {
+      const fowls = [
+        bird({ id: 1, name: 'Real Sire', gender: 'Rooster', bird_code: '1' }),
+        bird({ id: 2, name: 'Real Dam', gender: 'Hen', bird_code: 'A' }),
+        bird({ id: 3, name: 'Hen Parent', gender: 'Hen', bird_code: 'B' }),
+        bird({ id: 4, name: 'Cock Parent', gender: 'Rooster', bird_code: '2' }),
+        bird({
+          id: 5,
+          name: 'Good Child',
+          gender: 'Rooster',
+          sire: 'Real Sire',
+          dam: 'Real Dam',
+          bird_code: '1A1',
+        }),
+        bird({
+          id: 6,
+          name: 'Bad Role Child',
+          gender: 'Hen',
+          sire: 'Hen Parent',
+          dam: 'Cock Parent',
+          bird_code: 'B2',
+        }),
+      ];
+
+      renderDirectory(vi.fn(), { fowls });
+      expect(screen.getByRole('tab', { name: /Sire Offspring Tree\s*1/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Dam Offspring Tree\s*1/i })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+      const sireList = screen.getByRole('listbox', { name: /Sires list/i });
+      expect(within(sireList).getAllByRole('option')).toHaveLength(1);
+      expect(within(sireList).getByRole('option', { name: /Real Sire/ })).toBeInTheDocument();
+      expect(within(sireList).queryByRole('option', { name: /Hen Parent/ })).not.toBeInTheDocument();
+      expect(screen.queryByText('Bad Role Child')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      const damList = screen.getByRole('listbox', { name: /Dams list/i });
+      expect(within(damList).getAllByRole('option')).toHaveLength(1);
+      expect(within(damList).getByRole('option', { name: /Real Dam/ })).toBeInTheDocument();
+      expect(within(damList).queryByRole('option', { name: /Cock Parent/ })).not.toBeInTheDocument();
+      expect(screen.queryByText('Bad Role Child')).not.toBeInTheDocument();
+    });
+
     it('collapses and expands only the selected dam pairing accordions', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
