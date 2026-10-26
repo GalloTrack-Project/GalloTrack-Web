@@ -851,6 +851,26 @@ describe('LineageDirectory redesigned top section', () => {
       ).toBeInTheDocument();
     });
 
+    it('returns from the selected dam to the parent list on mobile', () => {
+      renderDirectory();
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      fireEvent.click(screen.getByRole('option', { name: /\[C\]\s*Dam C/i }));
+
+      const details = screen.getByRole('region', { name: /Dam C details/i });
+      const detailWrapper = details.parentElement!;
+      const aside = screen.getByRole('complementary', { name: /Dams selection/i });
+      const listWrapper = aside.parentElement!;
+
+      expect(listWrapper.className).toMatch(/hidden/);
+      expect(detailWrapper.className).toMatch(/\bblock\b/);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Back to all dams' }));
+
+      expect(listWrapper.className).not.toMatch(/hidden/);
+      expect(detailWrapper.className).toMatch(/hidden/);
+    });
+
     it('renders one breeding-pair section per sire and keeps offspring under the right pair', () => {
       const fowls: FowlRecord[] = [
         bird({ id: 1, name: 'Sire One', gender: 'Rooster', bird_code: '1' }),
