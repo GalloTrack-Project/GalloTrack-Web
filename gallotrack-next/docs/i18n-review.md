@@ -91,10 +91,11 @@ wrote it. The review did change the *remaining* inconsistencies (see 4.2).
 | `registry.offspringOf` | `Mga Offspring ng {name}` → `Mga Anak ng {name}` | `Mga Offspring sang {name}` → `Mga Bata sang {name}` | Plural noun rule |
 | `registry.sortOffspring` | unchanged (`Pinakamaraming anak`) | unchanged (`Pinakadamo nga bata`) | Already compliant |
 
-Sire and Dam stay in English in all three languages (`roleSire: 'Sire'`,
-`roleDam: 'Dam'`, `sireOption: 'Sire'`, `damOption: 'Dam'`). There is no
-"Ama/Ina" or "Amay/Iloy" label anywhere in the dictionaries; native glosses are
-tooltip-only.
+Sire and Dam stay in English in all three languages where they mean parent
+roles (`roleSire: 'Sire'`, `roleDam: 'Dam'`). The Gender Class options use sex
+labels instead (`cockOption: 'Cock'`, `henOption: 'Hen'`), while the stored
+values remain `Rooster` and `Hen`. There is no "Ama/Ina" or "Amay/Iloy" label
+anywhere in the dictionaries; native glosses are tooltip-only.
 
 ---
 

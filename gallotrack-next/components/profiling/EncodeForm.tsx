@@ -19,6 +19,7 @@ import {
   normalizeBirdCode,
 } from '@/lib/bird-code';
 import { isFoundationStock, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
@@ -528,8 +529,15 @@ export default function EncodeForm({
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
             <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required id="gender-class">
               <option value="" disabled className="bg-popover text-muted-foreground">{t('registry.selectGenderClass')}</option>
-              <option value="Rooster" className="bg-popover text-popover-foreground">{t('registry.sireOption')}</option>
-              <option value="Hen" className="bg-popover text-popover-foreground">{t('registry.damOption')}</option>
+              {GENDER_CLASS_OPTIONS.map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  className="bg-popover text-popover-foreground"
+                >
+                  {t(option.labelKey)}
+                </option>
+              ))}
             </select>
           </div>
           {!hasAnyParent && (

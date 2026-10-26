@@ -18,6 +18,8 @@ import {
   previewBirdCode,
 } from '@/lib/bird-code';
 import { bloodlineOf, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
+import { useT } from '@/lib/i18n';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
@@ -140,6 +142,7 @@ export default function EditFowlModal({
   generationOf,
   generationPurity,
 }: EditFowlModalProps) {
+  const { t } = useT();
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
 
@@ -325,7 +328,7 @@ export default function EditFowlModal({
                 className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
                 htmlFor="gender-class"
               >
-                Gender Class
+                {t('registry.genderClass')}
               </label>
               <select
                 value={editGender}
@@ -341,8 +344,11 @@ export default function EditFowlModal({
                 className="dark:border-border dark:bg-input dark:text-card-foreground w-full rounded-md border border-slate-200 bg-white p-2.5 text-sm font-bold text-slate-700"
                 id="gender-class"
               >
-                <option value="Rooster">Sire</option>
-                <option value="Hen">Dam</option>
+                {GENDER_CLASS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

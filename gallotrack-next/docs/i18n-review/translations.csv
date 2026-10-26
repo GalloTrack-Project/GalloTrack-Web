@@ -232,8 +232,8 @@ registry.geneticStrain,Genetic Strain,Lahi / Genetic Strain,unreviewed,Awaiting 
 registry.removeStrainAria,Remove strain,Alisin ang strain,unreviewed,Awaiting native reviewer confirmation.,Kuhaon ang strain,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.genderClass,Gender Class,Kasarian at Klase,unreviewed,"""Kasarian at Klase"" - ""Klase"" is a direct English loan; ""Uri"" may be clearer.",Kinaiya kag Klase,unreviewed,"""Kinaiya kag Klase"" - ""Klase"" is an English loan and ""Kinaiya"" collides with the trait label."
 registry.selectGenderClass,Select Gender Class,Pumili ng Kasarian at Klase,unreviewed,Awaiting native reviewer confirmation.,Pilia ang Kinaiya kag Klase,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
-registry.sireOption,Sire,Sire,reviewed,,Sire,reviewed,
-registry.damOption,Dam,Dam,reviewed,,Dam,reviewed,
+registry.cockOption,Cock,Cock,reviewed,,Cock,reviewed,
+registry.henOption,Hen,Hen,reviewed,,Hen,reviewed,
 registry.featherColor,Feather Color,Kulay ng Balahibo,unreviewed,"""Kulay ng Balahibo"" - standard Tagalog.",Kolor sang Bulbol,unreviewed,"""Bulbol"" (feather) is Visayan; confirm it is used for chicken feathers in Hiligaynon."
 registry.featherColorPlaceholder,Select or enter feather color...,Pumili o maglagay ng kulay ng balahibo...,unreviewed,Awaiting native reviewer confirmation.,Pilia ukon ibutang ang kolor sang bulbol...,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.trait,Trait,Katangian / Trait,unreviewed,"""Katangian / Trait"". ""Katangian"" (attribute) is generic; confirm the term breeders use for gamefowl traits.",Kinaiya / Trait,unreviewed,"""Kinaiya"" is also used for gender in genderClass, so the two labels collide. Suggest a different word or keep ""Trait""."
