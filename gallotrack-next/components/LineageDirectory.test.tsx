@@ -685,15 +685,23 @@ describe('LineageDirectory redesigned top section', () => {
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Offspring 1A1' }));
   });
 
-  describe('Master-Detail Sire Offspring Tree & Dam Offspring Tree (grouped by pair)', () => {
-    it('renders master-detail layout with left sire list and automatically selects the first sire with full family visible in 0 clicks', () => {
+  describe('Sire Offspring Tree & Dam Offspring Tree (horizontal parent strip, grouped by pair)', () => {
+    it('renders the horizontal sire strip and automatically selects the first sire with the full family visible in 0 clicks', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
-      // Left pane has option for Sire 1
-      const sireOption = screen.getByRole('option', { name: /\[1\]\s*Sire 1/i });
+      // Horizontal parent strip (no left sidebar).
+      expect(screen.queryByRole('complementary', { name: /Sires selection/i })).not.toBeInTheDocument();
+      const strip = screen.getByRole('listbox', { name: /Sires list/i });
+      expect(screen.getByLabelText('Filter sires')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous sire' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Next sire' })).toBeInTheDocument();
+
+      // Selected parent card.
+      const sireOption = within(strip).getByRole('option', { name: /\[1\]\s*Sire 1/i });
       expect(sireOption).toBeInTheDocument();
       expect(sireOption).toHaveAttribute('aria-selected', 'true');
+      expect(sireOption).toHaveClass('h-[88px]', 'w-[200px]');
       expect(sireOption).toHaveTextContent('[1]');
       expect(sireOption).toHaveTextContent('Sire 1');
       expect(sireOption).toHaveTextContent('3');
@@ -740,7 +748,7 @@ describe('LineageDirectory redesigned top section', () => {
       expect(screen.queryByText(/Sibling Subgroups by Dam/i)).not.toBeInTheDocument();
     });
 
-    it('switches selected sire in one click from the left list', () => {
+    it('switches selected sire in one click from the horizontal strip', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
@@ -815,40 +823,37 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
     });
 
-    it('renders the dam view with the shared master-detail sidebar and profile header', () => {
+    it('renders the dam view with the horizontal parent strip and profile card', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      // Same left sidebar pattern as the Sire Offspring Tree.
-      const aside = screen.getByRole('complementary', { name: /Dams selection/i });
-      expect(aside).toHaveClass('lg:overflow-y-auto');
-      expect(within(aside).getByLabelText('Filter dams')).toBeInTheDocument();
-      expect(within(aside).getByLabelText('Sort dams')).toHaveValue('most');
-      expect(within(aside).getByText('2 dams')).toBeInTheDocument();
-      const list = within(aside).getByRole('listbox', { name: /Dams list/i });
-      const damA = within(list).getByRole('option', { name: /\[A\]\s*Dam A/i });
+      // Horizontal parent strip — no left sidebar and no mobile detail switch.
+      expect(screen.queryByRole('complementary', { name: /Dams selection/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Back to all dams/i })).not.toBeInTheDocument();
+      const strip = screen.getByRole('listbox', { name: /Dams list/i });
+      expect(screen.getByLabelText('Filter dams')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous dam' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Next dam' })).toBeInTheDocument();
+
+      const damA = within(strip).getByRole('option', { name: /\[A\]\s*Dam A/i });
       expect(damA).toHaveAttribute('aria-selected', 'true');
-      expect(within(list).getByRole('option', { name: /\[C\]\s*Dam C/i })).toBeInTheDocument();
-
-      // The old horizontal selector is gone.
+      expect(damA).toHaveClass('h-[88px]', 'w-[200px]');
+      expect(within(strip).getByRole('option', { name: /\[C\]\s*Dam C/i })).toBeInTheDocument();
       expect(screen.queryByRole('combobox', { name: 'Select dam' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Show all/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('listbox', { name: 'Dams' })).not.toBeInTheDocument();
 
-      // Same profile header structure and scroll container as the sire view.
+      // Same profile header structure as the sire view, with a Hen identity.
       const details = screen.getByRole('region', { name: /Dam A details/i });
-      expect(details.className).toMatch(/lg:overflow-y-auto/);
+      expect(details.className).not.toMatch(/max-h|overflow-y-auto/);
       const heading = within(details).getByRole('heading', { name: 'Dam A' });
       const headerCard = heading.closest('div.bg-card');
       expect(headerCard).not.toHaveClass('sticky');
-      expect(headerCard).not.toHaveClass('top-0');
       expect(within(details).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
       expect(within(details).getByText(/1 sire/i)).toBeInTheDocument();
       expect(within(headerCard as HTMLElement).getByText('1♂ 2♀')).toBeInTheDocument();
       expect(within(details).getByRole('button', { name: 'View profile' })).toBeInTheDocument();
       expect(within(headerCard as HTMLElement).getByText('♀ Hen')).toBeInTheDocument();
 
-      // Same pair section + table.
+      // Same pair section + fixed table.
       expect(within(details).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
       expect(within(details).getByText(/Dam A \(A\)/i)).toBeInTheDocument();
       const table = within(details).getByRole('table');
@@ -862,7 +867,7 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(table).getAllByText(/Hen/).length).toBeGreaterThan(0);
     });
 
-    it('switches dams from the shared sidebar and persists the selection in the URL', () => {
+    it('switches dams from the horizontal strip and persists the selection in the URL', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
@@ -883,24 +888,22 @@ describe('LineageDirectory redesigned top section', () => {
       ).toBeInTheDocument();
     });
 
-    it('returns from the selected dam to the parent list on mobile', () => {
+    it('moves between dams with the previous/next strip controls', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      fireEvent.click(screen.getByRole('option', { name: /\[C\]\s*Dam C/i }));
+      expect(screen.getByRole('region', { name: /Dam A details/i })).toBeInTheDocument();
 
-      const details = screen.getByRole('region', { name: /Dam C details/i });
-      const detailWrapper = details.parentElement!;
-      const aside = screen.getByRole('complementary', { name: /Dams selection/i });
-      const listWrapper = aside.parentElement!;
+      fireEvent.click(screen.getByRole('button', { name: 'Next dam' }));
+      expect(screen.getByRole('region', { name: /Dam C details/i })).toBeInTheDocument();
+      expect(
+        screen
+          .getByRole('listbox', { name: /Dams list/i })
+          .querySelector('[role="option"][aria-selected="true"]')
+      ).toHaveTextContent('Dam C');
 
-      expect(listWrapper.className).toMatch(/hidden/);
-      expect(detailWrapper.className).toMatch(/\bblock\b/);
-
-      fireEvent.click(screen.getByRole('button', { name: 'Back to all dams' }));
-
-      expect(listWrapper.className).not.toMatch(/hidden/);
-      expect(detailWrapper.className).toMatch(/hidden/);
+      fireEvent.click(screen.getByRole('button', { name: 'Previous dam' }));
+      expect(screen.getByRole('region', { name: /Dam A details/i })).toBeInTheDocument();
     });
 
     it('renders one breeding-pair section per sire and keeps offspring under the right pair', () => {
@@ -955,24 +958,26 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(damTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
     });
 
-    it('filters and sorts the shared dam sidebar', () => {
+    it('filters the horizontal dam strip and applies the toolbar sort order', () => {
       renderDirectory(vi.fn(), { fowls: makeDamFamily(12) });
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      const aside = screen.getByRole('complementary', { name: /Dams selection/i });
-      expect(within(aside).getByText('12 dams')).toBeInTheDocument();
+      expect(screen.getByTestId('lineage-context-bar')).toHaveTextContent('12 dams');
 
-      const filter = within(aside).getByLabelText('Filter dams');
+      const filter = screen.getByLabelText('Filter dams');
       fireEvent.change(filter, { target: { value: 'Dam L' } });
-      expect(within(aside).getByText('1 dam')).toBeInTheDocument();
-      fireEvent.click(within(aside).getByRole('option', { name: /Dam L/ }));
+      const filteredStrip = screen.getByRole('listbox', { name: /Dams list/i });
+      expect(within(filteredStrip).getAllByRole('option')).toHaveLength(1);
+      expect(screen.getByTestId('lineage-context-bar')).toHaveTextContent('1 of 12');
+
+      fireEvent.click(within(filteredStrip).getByRole('option', { name: /Dam L/ }));
       expect(screen.getByRole('region', { name: /Dam L details/i })).toBeInTheDocument();
 
       fireEvent.change(filter, { target: { value: '' } });
-      const sort = within(aside).getByLabelText('Sort dams');
+      const sort = screen.getByLabelText('Sort options');
       fireEvent.change(sort, { target: { value: 'name' } });
       expect(sort).toHaveValue('name');
-      const damList = within(aside).getByRole('listbox', { name: /Dams list/i });
+      const damList = screen.getByRole('listbox', { name: /Dams list/i });
       expect(within(damList).getAllByRole('option')[0]).toHaveTextContent('Dam A');
     });
 
@@ -1065,7 +1070,7 @@ describe('LineageDirectory redesigned top section', () => {
 
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
-      // Sire M is automatically selected in the master-detail layout
+      // Sire M is automatically selected in the horizontal strip
       const detailsRegion = screen.getByRole('region', { name: /Sire M details/i });
 
       // Verify default sort is 'males-first'

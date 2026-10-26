@@ -17,9 +17,9 @@ import {
   MoreHorizontal,
   User,
   Plus,
-  ArrowLeft,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
@@ -53,7 +53,6 @@ import {
   computeWinRate,
   combineWinRates,
   buildChickenMatchStatsMap,
-  getWinRatePillClasses,
   type WinRateStats,
 } from '@/lib/win-rate';
 
@@ -563,8 +562,6 @@ export default function LineageDirectory({
   const settings = useUserSettings();
   const openFights = (f: FowlRecord) => ui.setFightHistoryFowl(f);
 
-  const [expandedSires, setExpandedSires] = useState<Set<string>>(new Set());
-  const [expandedDams, setExpandedDams] = useState<Set<string>>(new Set());
   const [treeSexFilter, setTreeSexFilter] = useState<'all' | 'males' | 'females'>('all');
   const [expandedPairs, setExpandedPairs] = useState<Map<string, boolean>>(new Map());
 
@@ -583,14 +580,12 @@ export default function LineageDirectory({
   const [selectedDamName, setSelectedDamName] = useState<string | null>(null);
   const [selectedPedigreeId, setSelectedPedigreeId] = useState<number | null>(null);
 
-  // Left pane filter & sort
+  // Parent strip filter
   const [sirePaneFilter, setSirePaneFilter] = useState('');
   const [damPaneFilter, setDamPaneFilter] = useState('');
-  const [sirePaneSort, setSirePaneSort] = useState<'most' | 'code' | 'name'>('most');
-  const [damPaneSort, setDamPaneSort] = useState<'most' | 'code' | 'name'>('most');
 
-  // Mobile master-detail view mode: 'list' (shows left pane) | 'detail' (shows right pane)
-  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
+  // Horizontal parent strip + selected parent
+  const parentStripRef = useRef<HTMLDivElement | null>(null);
 
   // Highlighted chicken ID (for smooth scroll & flash)
   const [highlightedFowlId, setHighlightedFowlId] = useState<number | null>(null);
@@ -624,24 +619,6 @@ export default function LineageDirectory({
 
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
   const breedingPairs = useMemo(() => buildBreedingPairs(fowls), [fowls]);
-
-  const toggleSire = (name: string) => {
-    setExpandedSires((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
-  };
-
-  const toggleDam = (name: string) => {
-    setExpandedDams((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
-  };
 
   const togglePair = (key: string, currentOpen: boolean) => {
     setExpandedPairs((prev) => {
@@ -795,7 +772,6 @@ export default function LineageDirectory({
         if (found) {
           setSelectedSireName(found[0]);
           setActiveTab('sire');
-          setMobileView('detail');
         }
       }
       const damParam = params.get('dam');
@@ -809,7 +785,6 @@ export default function LineageDirectory({
         if (found) {
           setSelectedDamName(found[0]);
           setActiveTab('dam');
-          setMobileView('detail');
         }
       }
       const childParam = params.get('child');
@@ -896,7 +871,6 @@ export default function LineageDirectory({
     } else {
       setSelectedDamName(name);
     }
-    setMobileView('detail');
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(`gt_last_selected_${kind}`, name);
@@ -919,37 +893,6 @@ export default function LineageDirectory({
     setActiveTab(kind);
   };
 
-  const handleListKeyDown = (
-    e: React.KeyboardEvent,
-    list: [string, FowlRecord[]][],
-    kind: 'sire' | 'dam'
-  ) => {
-    if (list.length === 0) return;
-    const currentName = kind === 'sire' ? (selectedSireName || list[0][0]) : (selectedDamName || list[0][0]);
-    const currentIndex = list.findIndex(([name]) => name === currentName);
-
-    let nextIndex = currentIndex;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      nextIndex = currentIndex < list.length - 1 ? currentIndex + 1 : 0;
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      nextIndex = currentIndex > 0 ? currentIndex - 1 : list.length - 1;
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      nextIndex = 0;
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      nextIndex = list.length - 1;
-    } else {
-      return;
-    }
-
-    const [nextName, nextChildren] = list[nextIndex];
-    const code = getParentCode(nextName, kind, nextChildren[0]);
-    handleSelectParent(nextName, kind, code);
-  };
-
   const handleSelectSearchedChicken = (child: FowlRecord) => {
     setSearch('');
     setIsSearchDropdownOpen(false);
@@ -959,14 +902,12 @@ export default function LineageDirectory({
     if (hasSire) {
       setActiveTab('sire');
       setSelectedSireName(child.sire);
-      setMobileView('detail');
-      const mate = isKnownParent(child.dam) ? normalizeParentName(child.dam) : 'Unknown dam';
+        const mate = isKnownParent(child.dam) ? normalizeParentName(child.dam) : 'Unknown dam';
       setExpandedPairs((prev) => new Map(prev).set(`sire|||${child.sire}|||${mate}`, true));
     } else if (hasDam) {
       setActiveTab('dam');
       setSelectedDamName(child.dam);
-      setMobileView('detail');
-      const mate = isKnownParent(child.sire) ? normalizeParentName(child.sire) : 'Unknown sire';
+        const mate = isKnownParent(child.sire) ? normalizeParentName(child.sire) : 'Unknown sire';
       setExpandedPairs((prev) => new Map(prev).set(`dam|||${child.dam}|||${mate}`, true));
     }
 
@@ -1118,38 +1059,35 @@ export default function LineageDirectory({
     return [...list].sort((a, b) => b[1].length - a[1].length);
   }, [damEntries, q, sortBy, birdCodes]);
 
-  /** Dam sidebar order: same filter/sort controls as the sire sidebar. */
-  const sortedDamEntries = useMemo(() => {
-    const query = damPaneFilter.trim().toLowerCase();
-    const list = query
-      ? filteredDamEntries.filter(([name, children]) => {
-          const code = getParentCode(name, 'dam', children[0]).toLowerCase();
-          const parent = fowls.find(
-            (f) => f.name.trim().toLowerCase() === name.trim().toLowerCase()
-          );
-          const variety = (parent?.breed || children[0]?.breed || '').toLowerCase();
-          return (
-            name.toLowerCase().includes(query) ||
-            code.includes(query) ||
-            variety.includes(query)
-          );
-        })
-      : filteredDamEntries;
-
-    return [...list].sort((a, b) => {
-      if (damPaneSort === 'name') return a[0].localeCompare(b[0]);
-      if (damPaneSort === 'code') {
-        return compareBirdCodesNatural(
-          getParentCode(a[0], 'dam', a[1][0]),
-          getParentCode(b[0], 'dam', b[1][0])
-        );
-      }
-      if (b[1].length !== a[1].length) return b[1].length - a[1].length;
-      const winsA = a[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
-      const winsB = b[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
-      return winsB - winsA;
+  const visibleSireEntries = useMemo(() => {
+    const query = sirePaneFilter.trim().toLowerCase();
+    if (!query) return filteredSireEntries;
+    return filteredSireEntries.filter(([name, children]) => {
+      const code = getParentCode(name, 'sire', children[0]).toLowerCase();
+      const variety = (parentBreedOf(name, fowls) || children[0]?.breed || '').toLowerCase();
+      return name.toLowerCase().includes(query) || code.includes(query) || variety.includes(query);
     });
-  }, [filteredDamEntries, damPaneFilter, damPaneSort, fowls, getParentCode, cachedStats]);
+  }, [filteredSireEntries, sirePaneFilter, fowls, getParentCode]);
+
+  const visibleDamEntries = useMemo(() => {
+    const query = damPaneFilter.trim().toLowerCase();
+    if (!query) return filteredDamEntries;
+    return filteredDamEntries.filter(([name, children]) => {
+      const code = getParentCode(name, 'dam', children[0]).toLowerCase();
+      const variety = (parentBreedOf(name, fowls) || children[0]?.breed || '').toLowerCase();
+      return name.toLowerCase().includes(query) || code.includes(query) || variety.includes(query);
+    });
+  }, [filteredDamEntries, damPaneFilter, fowls, getParentCode]);
+
+  // Keep the selected parent visible in the horizontal strip.
+  useEffect(() => {
+    if (activeTab !== 'sire' && activeTab !== 'dam') return;
+    const strip = parentStripRef.current;
+    const selected = strip?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+    if (selected && typeof selected.scrollIntoView === 'function') {
+      selected.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }, [activeTab, selectedSireName, selectedDamName, sortBy, sirePaneFilter, damPaneFilter]);
 
   const filteredBreedingPairs = useMemo(() => {
     let list = breedingPairs;
@@ -1204,7 +1142,6 @@ export default function LineageDirectory({
   // Tab tools handlers
   const handleExpandAll = () => {
     if (activeTab === 'sire') {
-      setExpandedSires(new Set(filteredSireEntries.map(([sire]) => sire)));
       setExpandedPairs((prev) => {
         const next = new Map(prev);
         filteredSireEntries.forEach(([sire, children]) => {
@@ -1242,7 +1179,6 @@ export default function LineageDirectory({
 
   const handleCollapseAll = () => {
     if (activeTab === 'sire') {
-      setExpandedSires(new Set());
     } else if (activeTab === 'dam') {
       const activeDam =
         filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
@@ -1379,8 +1315,6 @@ export default function LineageDirectory({
 
   const renderParentTree = (
     entries: [string, FowlRecord[]][],
-    expandedSet: Set<string>,
-    toggleFn: (name: string) => void,
     kind: 'sire' | 'dam',
     color: 'sky' | 'pink',
   ) => {
@@ -1408,48 +1342,18 @@ export default function LineageDirectory({
 
     const paneFilter = kind === 'sire' ? sirePaneFilter : damPaneFilter;
     const setPaneFilter = kind === 'sire' ? setSirePaneFilter : setDamPaneFilter;
-    const paneSort = kind === 'sire' ? sirePaneSort : damPaneSort;
-    const setPaneSort = kind === 'sire' ? setSirePaneSort : setDamPaneSort;
     const selectedName = kind === 'sire' ? selectedSireName : selectedDamName;
 
-    // Dam mode uses the shared toolbar sort/filter order; the sire pane keeps
-    // its own dedicated pane sort.
-    const filterQ = paneFilter.trim().toLowerCase();
-    const filteredPaneEntries =
-      kind === 'dam'
-        ? sortedDamEntries
-        : entries.filter(([name, children]) => {
-            if (!filterQ) return true;
-            const code = getParentCode(name, kind, children[0]);
-            return name.toLowerCase().includes(filterQ) || code.toLowerCase().includes(filterQ);
-          });
+    // The tab already supplies the globally searched/sorted list; the strip
+    // filter is applied at the top level so the summary and strip agree.
+    const allEntries = kind === 'sire' ? sireEntries : damEntries;
+    const visibleEntries = entries;
 
-    const sortedPaneEntries =
-      kind === 'dam'
-        ? sortedDamEntries
-        : [...filteredPaneEntries].sort((a, b) => {
-            if (paneSort === 'name') {
-              return a[0].localeCompare(b[0]);
-            }
-            if (paneSort === 'code') {
-              const codeA = getParentCode(a[0], kind, a[1][0]);
-              const codeB = getParentCode(b[0], kind, b[1][0]);
-              return compareBirdCodesNatural(codeA, codeB);
-            }
-            // 'most' offspring desc, then wins
-            if (b[1].length !== a[1].length) {
-              return b[1].length - a[1].length;
-            }
-            const winsA = a[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
-            const winsB = b[1].reduce((sum, ch) => sum + cachedStats(ch.name).wins, 0);
-            return winsB - winsA;
-          });
-
-    // Active selected parent
+    // Keep the selected parent in the detail card even when it is filtered out.
     const activeEntry =
-      entries.find(([name]) => name === selectedName) ||
-      sortedPaneEntries[0] ||
-      entries[0];
+      allEntries.find(([name]) => name === selectedName) ||
+      visibleEntries[0] ||
+      allEntries[0];
 
     const activeParentName = activeEntry ? activeEntry[0] : null;
     const activeChildren = activeEntry ? activeEntry[1] : [];
@@ -1541,133 +1445,149 @@ export default function LineageDirectory({
       });
     };
 
-    const renderLeftPane = () => (
-      <aside
-        aria-label={`${kind === 'sire' ? 'Sires' : 'Dams'} selection`}
-        className="w-full lg:w-72 xl:w-80 shrink-0 bg-card rounded-lg border border-border p-3.5 space-y-3 lg:max-h-[calc(100vh-210px)] lg:overflow-y-auto"
-      >
-        {/* Pane Controls: Search & Sort */}
-        <div className="space-y-2">
-          <div className="relative">
+    const moveParent = (delta: number) => {
+      if (visibleEntries.length === 0) return;
+      const current = visibleEntries.findIndex(([name]) => name === activeParentName);
+      const base = current >= 0 ? current : delta > 0 ? -1 : 0;
+      const next = (base + delta + visibleEntries.length) % visibleEntries.length;
+      const [name, kids] = visibleEntries[next];
+      handleSelectParent(name, kind, getParentCode(name, kind, kids[0]));
+    };
+
+    const renderParentCard = ([name, kids]: [string, FowlRecord[]]) => {
+      const code = getParentCode(name, kind, kids[0]);
+      const stats = groupStats(kids);
+      const isSelected = name === activeParentName;
+      return (
+        <button
+          key={name}
+          type="button"
+          role="option"
+          aria-selected={isSelected}
+          title={name}
+          aria-label={`[${formatBirdCodeForDisplay(code)}] ${name} · ${kids.length} offspring${
+            stats.decided > 0
+              ? ` · ${stats.winRate === null ? '—' : `${stats.winRate}%`} · ${stats.wins}W-${stats.losses}L${
+                  stats.draws > 0 ? `-${stats.draws}D` : ''
+                }`
+              : ' · No fights'
+          }`}
+          onClick={() => handleSelectParent(name, kind, code)}
+          className={`snap-start flex h-[88px] w-[200px] shrink-0 flex-col rounded-lg border p-2 text-left transition-all cursor-pointer ${
+            isSelected
+              ? `${c.activeRing} ring-inset shadow-2xs`
+              : 'border-border bg-card hover:bg-muted/50'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`font-mono text-xs px-1.5 py-0.5 rounded font-black border uppercase shrink-0 ${
+                isSelected
+                  ? `${c.bg} ${c.text} ${c.border}`
+                  : 'bg-muted text-muted-foreground border-border'
+              }`}
+            >
+              [{formatBirdCodeForDisplay(code)}]
+            </span>
+            <span className="text-xs font-bold text-muted-foreground shrink-0">
+              {kids.length} offspring
+            </span>
+          </div>
+          <p className="mt-1 text-sm font-black text-card-foreground truncate" title={name}>
+            {name}
+          </p>
+          <div className="mt-auto flex h-6 items-center">
+            <WinRatePill stats={stats} showNoFights />
+          </div>
+        </button>
+      );
+    };
+
+    const parentNoun = kind === 'sire' ? 'sire' : 'dam';
+    const parentNounPlural = kind === 'sire' ? 'sires' : 'dams';
+
+    const renderParentStrip = () => (
+      <div className="bg-card border-border rounded-lg border p-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative w-full shrink-0 sm:w-48">
             <span
               aria-hidden="true"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
             >
-              <Search className="w-3.5 h-3.5" />
+              <Search className="h-3.5 w-3.5" />
             </span>
             <input
               type="text"
-              aria-label={`Filter ${kind === 'sire' ? 'sires' : 'dams'}`}
-              placeholder={`Filter ${kind === 'sire' ? 'sires' : 'dams'}…`}
+              aria-label={`Filter ${parentNounPlural}`}
+              placeholder={`Filter ${parentNounPlural}...`}
               value={paneFilter}
               onChange={(e) => setPaneFilter(e.target.value)}
-              className="w-full pl-8 pr-7 py-1.5 text-xs bg-muted/60 border border-input-border rounded-md text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold"
+              className="border-input-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500 w-full rounded-md border py-2 pr-7 pl-8 text-xs font-semibold focus:ring-1"
             />
             {paneFilter.length > 0 && (
               <button
                 type="button"
-                aria-label={`Clear ${kind === 'sire' ? 'sires' : 'dams'} filter`}
+                aria-label={`Clear ${parentNounPlural} filter`}
                 onClick={() => setPaneFilter('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer p-0.5"
               >
-                <X className="w-3 h-3" />
+                <X className="h-3 w-3" />
               </button>
             )}
           </div>
 
-          <div className="flex items-center justify-between text-xs text-muted-foreground px-0.5">
-            <span className="font-bold">
-              {filteredPaneEntries.length} {kind === 'sire' ? (filteredPaneEntries.length === 1 ? 'sire' : 'sires') : (filteredPaneEntries.length === 1 ? 'dam' : 'dams')}
-            </span>
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold">Sort:</span>
-              <select
-                value={paneSort}
-                onChange={(e) => setPaneSort(e.target.value as 'most' | 'code' | 'name')}
-                aria-label={`Sort ${kind === 'sire' ? 'sires' : 'dams'}`}
-                className="text-xs bg-transparent border-0 font-bold text-foreground focus:ring-0 p-0 cursor-pointer"
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center">
+            {visibleEntries.length === 0 ? (
+              <div className="text-muted-foreground flex h-[88px] flex-1 flex-col items-center justify-center gap-1 text-center text-xs">
+                <p>No {parentNounPlural} match</p>
+                {paneFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setPaneFilter('')}
+                    className="text-emerald-600 dark:text-emerald-400 cursor-pointer text-xs font-bold hover:underline"
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div
+                ref={parentStripRef}
+                role="listbox"
+                aria-label={`${kind === 'sire' ? 'Sires' : 'Dams'} list`}
+                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
-                <option value="most" className="bg-card text-card-foreground">Most offspring</option>
-                <option value="code" className="bg-card text-card-foreground">Code</option>
-                <option value="name" className="bg-card text-card-foreground">Name</option>
-              </select>
-            </div>
+                {visibleEntries.map(renderParentCard)}
+              </div>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => moveParent(-1)}
+              disabled={visibleEntries.length <= 1}
+              aria-label={`Previous ${parentNoun}`}
+              title={`Previous ${parentNoun}`}
+              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => moveParent(1)}
+              disabled={visibleEntries.length <= 1}
+              aria-label={`Next ${parentNoun}`}
+              title={`Next ${parentNoun}`}
+              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
           </div>
         </div>
-
-        {/* List of Sires/Dams */}
-        {sortedPaneEntries.length === 0 ? (
-          <div className="py-6 text-center text-xs text-muted-foreground space-y-1">
-            <p>No {kind === 'sire' ? 'sires' : 'dams'} match filter</p>
-            {paneFilter && (
-              <button
-                type="button"
-                onClick={() => setPaneFilter('')}
-                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
-              >
-                Clear filter
-              </button>
-            )}
-          </div>
-        ) : (
-          <div
-            role="listbox"
-            tabIndex={0}
-            aria-label={`${kind === 'sire' ? 'Sires' : 'Dams'} list`}
-            onKeyDown={(e) => handleListKeyDown(e, sortedPaneEntries, kind)}
-            className="space-y-1.5 focus:outline-none"
-          >
-            {sortedPaneEntries.map(([name, kids]) => {
-              const code = getParentCode(name, kind, kids[0]);
-              const isSelected = name === activeParentName;
-              const stats = groupStats(kids);
-
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => handleSelectParent(name, kind, code)}
-                  className={`w-full min-h-[44px] text-left px-3 py-2.5 rounded-md flex items-center justify-between gap-2.5 transition-all cursor-pointer border ${
-                    isSelected
-                      ? `${c.activeRing} font-black shadow-2xs`
-                      : 'border-transparent hover:bg-muted/60 text-card-foreground font-semibold'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span
-                      className={`font-mono text-xs px-1.5 py-0.5 rounded font-black border uppercase shrink-0 ${
-                        isSelected
-                          ? `${c.bg} ${c.text} ${c.border}`
-                          : 'bg-muted text-muted-foreground border-border'
-                      }`}
-                    >
-                      [{formatBirdCodeForDisplay(code)}]
-                    </span>
-                    <span className="text-xs truncate">{name}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {stats.decided > 0 && (
-                      <span
-                        className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${getWinRatePillClasses(
-                          stats,
-                        )}`}
-                      >
-                        {stats.winRate}% · {stats.wins}W-{stats.losses}L
-                      </span>
-                    )}
-                    <span className="text-xs font-bold text-muted-foreground">
-                      {kids.length}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </aside>
+      </div>
     );
 
     const renderRightPane = () => {
@@ -1683,20 +1603,8 @@ export default function LineageDirectory({
         <main
           role="region"
           aria-label={`${activeParentName} details`}
-          className="flex-1 min-w-0 space-y-4 lg:max-h-[calc(100vh-210px)] lg:overflow-y-auto pr-1"
+          className="min-w-0 space-y-4"
         >
-          {/* Mobile Back Button (< 1024px) */}
-          <div className="lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileView('list')}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-muted hover:bg-muted/80 px-3 py-2 rounded-md transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to all {kind === 'sire' ? 'sires' : 'dams'}
-            </button>
-          </div>
-
           {/* Selected parent profile header */}
           <div className="bg-card rounded-lg border border-border shadow-xs p-4 sm:p-5 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2353,16 +2261,9 @@ export default function LineageDirectory({
     };
 
     return (
-      <div className="flex flex-col lg:flex-row gap-4 items-start">
-        {/* Left Pane: on mobile hidden if mobileView === 'detail', on lg always visible */}
-        <div className={`w-full lg:w-72 xl:w-80 shrink-0 ${mobileView === 'detail' ? 'hidden lg:block' : 'block'}`}>
-          {renderLeftPane()}
-        </div>
-
-        {/* Right Pane: on mobile hidden if mobileView === 'list', on lg always visible */}
-        <div className={`flex-1 min-w-0 w-full ${mobileView === 'list' ? 'hidden lg:block' : 'block'}`}>
-          {renderRightPane()}
-        </div>
+      <div className="space-y-4 min-w-0">
+        {renderParentStrip()}
+        {renderRightPane()}
       </div>
     );
   };
@@ -2416,28 +2317,29 @@ export default function LineageDirectory({
       }
       case 'sire': {
         const sireTotal = sireEntries.length;
-        const sireFiltered = filteredSireEntries.length;
+        const sireFiltered = visibleSireEntries.length;
         const totalOff = sireEntries.reduce((s, [, c]) => s + c.length, 0);
-        const filteredOff = filteredSireEntries.reduce((s, [, c]) => s + c.length, 0);
+        const filteredOff = visibleSireEntries.reduce((s, [, c]) => s + c.length, 0);
+        const isFiltered = Boolean(q || sirePaneFilter.trim());
 
         return (
           <>
             <span>
-              <strong className="font-extrabold text-foreground">{q ? `${sireFiltered} of ${sireTotal}` : sireTotal}</strong>{' '}
+              <strong className="font-extrabold text-foreground">{isFiltered ? `${sireFiltered} of ${sireTotal}` : sireTotal}</strong>{' '}
               {sireTotal === 1 ? 'sire' : 'sires'}
             </span>
             <span className="opacity-40 select-none">·</span>
             <span>
-              <strong className="font-extrabold text-foreground">{q ? `${filteredOff} of ${totalOff}` : totalOff}</strong> offspring sired
+              <strong className="font-extrabold text-foreground">{isFiltered ? `${filteredOff} of ${totalOff}` : totalOff}</strong> offspring sired
             </span>
           </>
         );
       }
       case 'dam': {
         const damTotal = damEntries.length;
-        const damFiltered = sortedDamEntries.length;
+        const damFiltered = visibleDamEntries.length;
         const totalOff = damEntries.reduce((s, [, c]) => s + c.length, 0);
-        const filteredOff = sortedDamEntries.reduce((s, [, c]) => s + c.length, 0);
+        const filteredOff = visibleDamEntries.reduce((s, [, c]) => s + c.length, 0);
         const isFiltered = Boolean(q || damPaneFilter.trim());
 
         return (
@@ -2915,7 +2817,7 @@ export default function LineageDirectory({
             ) : filteredSireEntries.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
             ) : (
-              renderParentTree(filteredSireEntries, expandedSires, toggleSire, 'sire', 'sky')
+              renderParentTree(visibleSireEntries, 'sire', 'sky')
             )}
           </section>
         )}
@@ -2931,7 +2833,7 @@ export default function LineageDirectory({
             ) : filteredDamEntries.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
             ) : (
-              renderParentTree(filteredDamEntries, expandedDams, toggleDam, 'dam', 'pink')
+              renderParentTree(visibleDamEntries, 'dam', 'pink')
             )}
           </section>
         )}
