@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import ChickenIcon from '@/components/ChickenIcon';
+import MatchLogsRecordBadge from '@/components/match/MatchLogsRecordBadge';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
 import { Modal } from '@/components/ui';
@@ -11,6 +12,7 @@ import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
 import { toastMessage } from '@/lib/toast-bus';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
+import { buildChickenMatchStatsMap } from '@/lib/win-rate';
 
 type Props = {
   /** Rows to render — defaults to the full match history from context. */
@@ -41,6 +43,13 @@ export default function MatchLogsTable({
     fowls.forEach((f) => m.set(f.id, f));
     return m;
   }, [fowls]);
+
+  // Lifetime records come from ALL matches, never from the (possibly filtered)
+  // rows passed to this table.
+  const matchStats = React.useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   return (
     <>
@@ -76,6 +85,9 @@ export default function MatchLogsTable({
               const code = fowl ? birdCodes.get(String(fowl.id)) : '';
               const hatch = fowl?.birthdate;
               const isOrphan = !fowl;
+              const recordStats = fowl
+                ? matchStats.get(fowl.name.trim().toLowerCase())
+                : undefined;
               const openFowlInfo = fowl
                 ? (event: React.MouseEvent) => {
                     event.stopPropagation();
@@ -172,6 +184,11 @@ export default function MatchLogsTable({
                         </div>
                       </>
                     )}
+                    <MatchLogsRecordBadge
+                      fowl={fowl}
+                      stats={recordStats}
+                      className="mt-1.5 inline-flex"
+                    />
                   </td>
                   <td className="min-w-0 p-2.5 lg:p-3">
                     <div className="flex min-w-0 items-center gap-1.5">

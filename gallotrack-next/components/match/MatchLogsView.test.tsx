@@ -1,17 +1,18 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import MatchLogsView from './MatchLogsView';
 import type { MatchRecord, FowlRecord, MatchMedia } from '@/lib/types';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
 const mockOpenFowlDetails = vi.fn();
+let mockSearchParams = new URLSearchParams();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => '/match-logs',
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 vi.mock('@/lib/contexts/ui-context', () => ({
@@ -96,6 +97,7 @@ vi.mock('@/lib/contexts/fowl-context', () => ({
 describe('MatchLogsView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
     mockFowlContext = {
       fowls: mockFowls as FowlRecord[],
       matchHistory: mockMatches as MatchRecord[],
@@ -203,5 +205,61 @@ describe('MatchLogsView', () => {
     // Match 4 has unknown class 'Derby Special'
     expect(screen.getByText('Vintage Rival D')).toBeDefined();
     expect(screen.getByText('Derby Special')).toBeDefined();
+  });
+
+  it('keeps the lifetime record on page 2 and summarizes the active filter', () => {
+    const deepFowl = {
+      id: 99,
+      name: 'Deep Record',
+      breed: 'Kelso',
+      gender: 'Rooster',
+    } as FowlRecord;
+
+    const deepMatches: MatchRecord[] = Array.from({ length: 12 }, (_, i) => ({
+      id: 500 + i,
+      fowl_id: 99,
+      entry_name: 'Deep Record',
+      breed: 'Kelso',
+      opponent: `Opponent ${i + 1}`,
+      location: 'Test Arena',
+      type: 'Derby',
+      outcome: i < 11 ? 'Win' : 'Loss',
+      status: 'Verified',
+      date: `2026-10-${String(i + 1).padStart(2, '0')}`,
+    }));
+
+    mockFowlContext = {
+      ...mockFowlContext,
+      fowls: [deepFowl],
+      matchHistory: deepMatches,
+    };
+    mockSearchParams = new URLSearchParams('page=2');
+
+    render(<MatchLogsView />);
+
+    // Page 2 only shows two wins, but the badge must still show the chicken's
+    // full lifetime record (11W-1L = 92%), not 100% · 2W-0L.
+    const pageTwoBadges = screen.getAllByTestId('match-record-99');
+    expect(pageTwoBadges).toHaveLength(2);
+    pageTwoBadges.forEach((badge) => {
+      expect(badge).toHaveTextContent('92% · 11W-1L');
+    });
+
+    const summary = screen.getByTestId('match-logs-filter-summary');
+    expect(within(summary).getByText('12 matches')).toBeInTheDocument();
+    expect(within(summary).getByText('11W-1L-0D')).toBeInTheDocument();
+    expect(within(summary).getByText('92%')).toBeInTheDocument();
+
+    // The summary follows the filter while the chicken record stays lifetime.
+    fireEvent.change(screen.getByLabelText(/Filter by outcome/i), { target: { value: 'LOSS' } });
+
+    const filteredSummary = screen.getByTestId('match-logs-filter-summary');
+    expect(within(filteredSummary).getByText('1 match')).toBeInTheDocument();
+    expect(within(filteredSummary).getByText('0W-1L-0D')).toBeInTheDocument();
+    expect(within(filteredSummary).getByText('0%')).toBeInTheDocument();
+
+    const filteredBadges = screen.getAllByTestId('match-record-99');
+    expect(filteredBadges).toHaveLength(1);
+    expect(filteredBadges[0]).toHaveTextContent('92% · 11W-1L');
   });
 });

@@ -15,6 +15,7 @@ import {
   Swords,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import MatchLogsRecordBadge from '@/components/match/MatchLogsRecordBadge';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
 import { Modal } from '@/components/ui';
@@ -24,6 +25,11 @@ import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
 import type { MatchRecord, FowlRecord } from '@/lib/types';
+import {
+  buildChickenMatchStatsMap,
+  computeWinRate,
+  getWinRatePillClasses,
+} from '@/lib/win-rate';
 
 const PAGE_SIZE = 10;
 
@@ -185,6 +191,13 @@ export default function MatchLogsView() {
     return map;
   }, [fowls]);
 
+  // Per-chicken lifetime records always use the complete history, so filters,
+  // sorting and pagination can never change a chicken's record badge.
+  const matchStats = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
+
   // Filter & sort rows
   const filteredMatches = useMemo(() => {
     let rows = [...matchHistory];
@@ -264,6 +277,20 @@ export default function MatchLogsView() {
     fowlByName,
     birdCodes,
   ]);
+
+  // Summary of the rows currently matching the active search/filters.
+  const filterStats = useMemo(() => {
+    let wins = 0;
+    let losses = 0;
+    let draws = 0;
+    for (const match of filteredMatches) {
+      const outcome = (match.outcome || '').trim().toLowerCase();
+      if (outcome === 'win') wins += 1;
+      else if (outcome === 'loss') losses += 1;
+      else if (outcome === 'draw') draws += 1;
+    }
+    return computeWinRate(wins, losses, draws);
+  }, [filteredMatches]);
 
   // Pagination calculation
   const totalItems = filteredMatches.length;
@@ -430,6 +457,48 @@ export default function MatchLogsView() {
 
       {/* Main Table Card */}
       <div className="bg-card border-border overflow-hidden rounded-lg border shadow-sm">
+        {!loading && matchHistory.length > 0 && (
+          <div
+            data-testid="match-logs-filter-summary"
+            className="border-border bg-muted/20 flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                Current filter totals
+              </span>
+              <span className="text-muted-foreground text-xs font-semibold">
+                Follows the active search and filters
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <span className="text-foreground">
+                {filteredMatches.length === 1
+                  ? '1 match'
+                  : `${filteredMatches.length} matches`}
+              </span>
+              <span className="text-border" aria-hidden="true">
+                |
+              </span>
+              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                W-L-D
+              </span>
+              <span className="text-foreground">
+                {filterStats.wins}W-{filterStats.losses}L-{filterStats.draws}D
+              </span>
+              <span className="text-border" aria-hidden="true">
+                |
+              </span>
+              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                Overall win rate
+              </span>
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(filterStats)}`}
+              >
+                {filterStats.winRate === null ? '—%' : `${filterStats.winRate}%`}
+              </span>
+            </div>
+          </div>
+        )}
         {loading ? (
           <div className="animate-pulse space-y-4 p-8">
             <div className="bg-muted h-6 w-1/3 rounded" />
@@ -501,6 +570,9 @@ export default function MatchLogsView() {
                   const code = fowl ? birdCodes.get(String(fowl.id)) : '';
                   const hatch = fowl?.birthdate;
                   const isOrphan = !fowl;
+                  const recordStats = fowl
+                    ? matchStats.get(fowl.name.trim().toLowerCase())
+                    : undefined;
                   const openFowlInfo = fowl
                     ? (event: React.MouseEvent) => {
                         event.stopPropagation();
@@ -599,6 +671,11 @@ export default function MatchLogsView() {
                             </div>
                           </>
                         )}
+                        <MatchLogsRecordBadge
+                          fowl={fowl}
+                          stats={recordStats}
+                          className="mt-1.5 inline-flex"
+                        />
                       </td>
 
                       <td className="min-w-0 p-2.5 lg:p-3">
