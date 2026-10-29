@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     'build/**',
     'next-env.d.ts',
     'scripts/**',
+    'generate-source-one-file.js',
   ]),
   {
     rules: {
