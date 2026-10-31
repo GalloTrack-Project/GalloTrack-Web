@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import HeroCarousel from '@/components/hero/HeroCarousel';
+import { getPrimaryHeroImage } from '@/lib/hero-config';
 
 export default function HeroSection() {
   const auth = useAuth();
@@ -76,9 +77,13 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right Column: Farm photo carousel */}
+          {/* Right Column: Primary farm photo */}
           <div className="lg:col-span-6 w-full flex justify-center">
-            <HeroCarousel className="max-w-xl" />
+            <HeroCarousel
+              images={[getPrimaryHeroImage()]}
+              showThumbnails={false}
+              className="max-w-xl"
+            />
           </div>
         </div>
       </div>
