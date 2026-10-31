@@ -121,7 +121,7 @@ export default function LoginPage() {
             </Link>
 
             <div className="flex flex-wrap items-center justify-end gap-3">
-              <CompactLanguageSwitcher variant="select" />
+              <CompactLanguageSwitcher />
               <Link
                 href="/"
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-emerald-100/80 transition-colors hover:bg-white/15 hover:text-white"
@@ -206,7 +206,7 @@ export default function LoginPage() {
               </span>
             </Link>
             <div className="flex shrink-0 items-center gap-2">
-              <CompactLanguageSwitcher variant="button" />
+              <CompactLanguageSwitcher />
               <Link
                 href="/"
                 className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-bold"

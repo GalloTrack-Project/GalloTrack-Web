@@ -336,7 +336,7 @@ export default function RegisterPage() {
                     GALLO<span className="text-accent">TRACK</span>
                   </p>
                 </div>
-                <CompactLanguageSwitcher variant="button" />
+                <CompactLanguageSwitcher />
               </div>
               <div className="space-y-1.5">
                 <h1 className="text-card-foreground text-2xl leading-tight font-semibold tracking-tight">

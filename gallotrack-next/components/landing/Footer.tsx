@@ -61,7 +61,7 @@ export default function Footer() {
             <Link href="/register" className="hover:text-foreground transition-colors">
               Sign up
             </Link>
-            <CompactLanguageSwitcher variant="select" />
+            <CompactLanguageSwitcher />
           </div>
         </div>
 
