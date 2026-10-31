@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { adminGuard, fetchSystemSettings, updateSystemSettings } from '@/lib/admin';
 import type { AdminProfileRow, AdminSettings } from '@/lib/admin';
 import { parseBackup, restoreBackup } from '@/lib/backup';
 import { useFowl } from '@/lib/contexts/fowl-context';
-import { Shield, Settings, Bell, Users, ArrowRightLeft, HardDrive, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, Upload, FileJson } from 'lucide-react';
-
-type Tab = 'general' | 'alerts' | 'users' | 'transfer' | 'backup';
+import { useSystemConfigNav } from '@/lib/contexts/system-config-nav';
+import { getSystemConfigLabel, parseSystemConfigSection } from '@/lib/system-config-nav';
+import { Shield, Tag, CircleDot, Megaphone, Dna, User, Mail, Download, Upload, FileJson } from 'lucide-react';
 
 const defaultSettings: AdminSettings = {
   system_name: 'GalloTrack',
@@ -46,21 +47,25 @@ function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: st
   );
 }
 
-const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'general', label: 'General', icon: <Settings size={14} /> },
-  { id: 'alerts', label: 'Alerts', icon: <Bell size={14} /> },
-  { id: 'users', label: 'Users', icon: <Users size={14} /> },
-  { id: 'transfer', label: 'Transfer', icon: <ArrowRightLeft size={14} /> },
-  { id: 'backup', label: 'Backup', icon: <HardDrive size={14} /> },
-];
-
 export default function AdminSettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminSettingsContent />
+    </Suspense>
+  );
+}
+
+function AdminSettingsContent() {
   const [adminProfile, setAdminProfile] = useState<AdminProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
-  const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [savedSettings, setSavedSettings] = useState<AdminSettings>(defaultSettings);
+  const searchParams = useSearchParams();
+  const section = parseSystemConfigSection(searchParams.get('section'));
+  const sectionLabel = getSystemConfigLabel(section);
+  const { setActiveSection, setDirty, setDiscardHandler } = useSystemConfigNav();
   const { setTheme } = useTheme();
 
   const [transferEmail, setTransferEmail] = useState('');
@@ -77,6 +82,28 @@ export default function AdminSettingsPage() {
     setSettings((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
+
+  // Keep the sidebar submenu in sync with the URL section.
+  useEffect(() => {
+    setActiveSection(section);
+  }, [section, setActiveSection]);
+
+  // Tell the navigation layer whether it needs to confirm before leaving.
+  useEffect(() => {
+    setDirty(isDirty);
+  }, [isDirty, setDirty]);
+
+  useEffect(() => () => setDirty(false), [setDirty]);
+
+  // Confirmed navigation restores the last saved values before switching.
+  useEffect(() => {
+    setDiscardHandler(() => {
+      setSettings(savedSettings);
+    });
+    return () => setDiscardHandler(null);
+  }, [savedSettings, setDiscardHandler]);
+
   useEffect(() => {
     (async () => {
       const profile = await adminGuard();
@@ -84,7 +111,9 @@ export default function AdminSettingsPage() {
       setAdminProfile(profile);
       try {
         const s = await fetchSystemSettings();
-        setSettings({ ...defaultSettings, ...s });
+        const loaded = { ...defaultSettings, ...s };
+        setSettings(loaded);
+        setSavedSettings(loaded);
         setTheme(s.theme || 'dark');
       } catch (err) {
         setMessage({ type: 'error', text: `Failed to load settings: ${(err as Error).message}` });
@@ -100,6 +129,7 @@ export default function AdminSettingsPage() {
     setMessage(null);
     try {
       await updateSystemSettings(settings);
+      setSavedSettings(settings);
       setTheme(settings.theme || 'dark');
       setMessage({ type: 'success', text: 'System configuration saved successfully.' });
       window.setTimeout(() => setMessage(null), 3000);
@@ -200,7 +230,7 @@ export default function AdminSettingsPage() {
   if (!adminProfile) return null;
 
   const renderTab = () => {
-    switch (activeTab) {
+    switch (section) {
       case 'general':
         return (
           <div className="grid gap-4 xl:grid-cols-2">
@@ -390,7 +420,7 @@ export default function AdminSettingsPage() {
             <h1 className="text-xl sm:text-2xl font-black text-card-foreground tracking-tight leading-none">
               System <span className="text-warning">Settings</span>
             </h1>
-            <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">Admin-Controlled Application Configuration</p>
+            <p className="text-xs font-mono text-muted-foreground font-bold tracking-widest uppercase mt-1">System Settings · {sectionLabel}</p>
           </div>
           <button type="submit" form="system-settings-form" disabled={saving}
             className="self-start sm:self-auto text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
@@ -407,29 +437,7 @@ export default function AdminSettingsPage() {
           }`}>{message.text}</div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-4 items-start">
-          {/* TAB RAIL — vertical on desktop, wrapped rows below lg */}
-          <nav aria-label="Settings sections" className="w-full lg:w-56 shrink-0 bg-card/95 border border-border rounded-lg shadow-2xs p-2 flex flex-wrap lg:flex-nowrap lg:flex-col gap-1.5">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                aria-current={activeTab === tab.id ? 'page' : undefined}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                }`}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
-
-          {/* PANEL — fills remaining width */}
-          <div className="flex-1 min-w-0 w-full space-y-4">
+        <div className="w-full space-y-4">
             {/* ADMIN IDENTITY */}
             <div className="bg-card/95 border border-border rounded-lg shadow-2xs p-4">
               <div className="flex items-center space-x-3">
@@ -445,7 +453,6 @@ export default function AdminSettingsPage() {
             <form id="system-settings-form" onSubmit={handleSave} className="bg-card/95 border border-border rounded-lg shadow-2xs p-5">
               {renderTab()}
             </form>
-          </div>
         </div>
 
         <p className="text-center text-xs font-mono text-muted-foreground tracking-widest uppercase">

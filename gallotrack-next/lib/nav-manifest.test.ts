@@ -59,6 +59,24 @@ describe('nav-manifest', () => {
     ]);
   });
 
+  it('exposes the five System Config sections as a submenu', () => {
+    const config = ADMIN_NAV.find((item) => item.href === '/admin/settings')!;
+    expect(config.submenu?.map((section) => section.id)).toEqual([
+      'general',
+      'alerts',
+      'users',
+      'transfer',
+      'backup',
+    ]);
+    expect(config.submenu?.map((section) => section.href)).toEqual([
+      '/admin/settings?section=general',
+      '/admin/settings?section=alerts',
+      '/admin/settings?section=users',
+      '/admin/settings?section=transfer',
+      '/admin/settings?section=backup',
+    ]);
+  });
+
   it('isActiveNav honours exact vs prefix matching', () => {
     const admin = ADMIN_NAV.find((i) => i.href === '/admin')!;
     expect(isActiveNav(admin, '/admin')).toBe(true);
