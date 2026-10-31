@@ -269,6 +269,81 @@ describe('lineage graph — layout', () => {
   });
 });
 
+describe('lineage graph — wrapped layout', () => {
+  const wideFamily: FowlRecord[] = [
+    bird({ id: 1, name: 'Root Sire', gender: 'Rooster' }),
+    bird({ id: 2, name: 'Root Dam', gender: 'Hen' }),
+    ...Array.from({ length: 8 }, (_, i) =>
+      bird({
+        id: 10 + i,
+        name: `Child ${i + 1}`,
+        sire: 'Root Sire',
+        dam: 'Root Dam',
+        bird_code: `1A${i + 1}`,
+      })
+    ),
+  ];
+  const wideIndex = buildLineageIndex(wideFamily);
+  const wideTopology = buildLineageTopology(wideIndex, {
+    rootId: '1',
+    direction: 'down',
+    maxDepth: 2,
+    collapsed: new Set(),
+  })!;
+  const MAX_ROW_WIDTH = 500;
+  const PADDING_X = 92;
+  const wrapped = layoutLineageTopology(wideTopology, {
+    maxRowWidth: MAX_ROW_WIDTH,
+    paddingX: PADDING_X,
+  });
+
+  it('wraps a wide generation into extra rows and keeps every card in bounds', () => {
+    const children = wrapped.nodes.filter((node) => node.generation === 1);
+    expect(new Set(children.map((node) => node.y)).size).toBeGreaterThan(1);
+
+    wrapped.nodes.forEach((node) => {
+      expect(node.x).toBeGreaterThanOrEqual(PADDING_X);
+      expect(node.x + node.width).toBeLessThanOrEqual(wrapped.width - PADDING_X);
+    });
+    expect(wrapped.width).toBeLessThanOrEqual(MAX_ROW_WIDTH + PADDING_X * 2);
+  });
+
+  it('does not overlap cards that share a wrapped sub-row', () => {
+    const rows = new Map<number, typeof wrapped.nodes>();
+    wrapped.nodes.forEach((node) => {
+      const row = rows.get(node.y) ?? [];
+      row.push(node);
+      rows.set(node.y, row);
+    });
+
+    rows.forEach((row) => {
+      const sorted = [...row].sort((a, b) => a.x - b.x);
+      sorted.forEach((node, i) => {
+        if (i > 0) {
+          expect(node.x).toBeGreaterThanOrEqual(
+            sorted[i - 1].x + sorted[i - 1].width
+          );
+        }
+      });
+    });
+  });
+
+  it('keeps partners adjacent and connectors aligned after wrapping', () => {
+    const pair = wrapped.pairs.find((item) => item.key === '1|||2')!;
+    const sire = wrapped.nodes.find((node) => node.id === pair.sireId)!;
+    const dam = wrapped.nodes.find((node) => node.id === pair.damId)!;
+    expect(Math.abs(sire.x - dam.x)).toBe(LINEAGE_NODE_WIDTH + 28);
+
+    pair.childIds.forEach((id, index) => {
+      const child = wrapped.nodes.find((node) => node.id === id)!;
+      expect(child.y).toBeGreaterThan(pair.busY);
+      expect(pair.childPaths[index]).toBe(
+        `M ${child.centerX} ${pair.busY} V ${child.y}`
+      );
+    });
+  });
+});
+
 describe('lineage graph — helpers', () => {
   it('picks the most prolific registered parent as the default root', () => {
     expect(pickDefaultRootId(family)).toBe('1');
