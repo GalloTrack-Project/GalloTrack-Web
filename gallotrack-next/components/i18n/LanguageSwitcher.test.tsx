@@ -148,7 +148,9 @@ describe('LanguageSwitcher Component', () => {
     const button = screen.getByRole('button');
 
     fireEvent.click(button);
-    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+    fireEvent.keyDown(screen.getByRole('menuitemradio', { name: /English/ }), {
+      key: 'Escape',
+    });
 
     expect(screen.queryByRole('menu')).toBeNull();
     expect(button).toHaveFocus();

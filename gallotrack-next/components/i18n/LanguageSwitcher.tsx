@@ -112,7 +112,7 @@ export function CompactLanguageSwitcher({ className = '' }: { className?: string
     }
   };
 
-  const handleMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const handleMenuKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const items = itemRefs.current.filter(Boolean) as HTMLButtonElement[];
     if (items.length === 0) return;
     const current = items.indexOf(document.activeElement as HTMLButtonElement);
@@ -187,7 +187,6 @@ export function CompactLanguageSwitcher({ className = '' }: { className?: string
         role="menu"
         aria-label={t('header.languageSwitcher')}
         hidden={!open}
-        onKeyDown={handleMenuKeyDown}
         className="border-border bg-card text-card-foreground absolute right-0 top-full z-40 mt-1 w-44 overflow-hidden rounded-md border p-1 shadow-lg shadow-black/10 dark:shadow-black/40"
       >
         {languages.map((lang, index) => {
@@ -204,6 +203,7 @@ export function CompactLanguageSwitcher({ className = '' }: { className?: string
               aria-checked={isActive}
               tabIndex={-1}
               onClick={() => selectLanguage(lang.code)}
+              onKeyDown={handleMenuKeyDown}
               className={cn(
                 'focus-visible:ring-accent flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none',
                 isActive
