@@ -28,7 +28,15 @@ import LineageFlow from '@/components/lineage/LineageFlow';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
 import { sexLabel, isMale, isFemale, canFight, fightersOf, parentBreedOf } from '@/lib/helpers';
-import { fowlMatchesQuery, parentRecordOf } from '@/lib/lineage';
+import {
+  fowlMatchesQuery,
+  parentRecordOf,
+  classifyCrisscross,
+  crisscrossAlternation,
+  type CrisscrossClassification,
+} from '@/lib/lineage';
+import { classifyPairingRelatedness } from '@/lib/relatedness-classification';
+import CrisscrossBadge from '@/components/CrisscrossBadge';
 import type { LineageDirection } from '@/lib/lineage-graph';
 import {
   resolveBirdCodes,
@@ -229,6 +237,14 @@ interface LineageDirectoryProps {
 type LineageTab = 'tree' | 'families' | 'sire' | 'dam' | 'pedigree';
 type SortOption = 'most' | 'name' | 'newest';
 type FamilySortOption = 'winrate' | 'offspring' | 'fights' | 'name';
+type FamilyPairFilter = 'all' | 'crisscross' | 'outcross' | 'others';
+
+const FAMILY_PAIR_FILTER_LABELS: Record<FamilyPairFilter, string> = {
+  all: 'All',
+  crisscross: 'Crisscross',
+  outcross: 'Outcross',
+  others: 'Others',
+};
 
 interface FamilyCardProps {
   g: FowlRecord[];
@@ -241,6 +257,8 @@ interface FamilyCardProps {
   expanded: boolean;
   onToggleExpanded: () => void;
   onOpenInFamilyTree: () => void;
+  crisscross: CrisscrossClassification;
+  alternation: string | null;
 }
 
 function FamilyCard({
@@ -254,6 +272,8 @@ function FamilyCard({
   expanded,
   onToggleExpanded,
   onOpenInFamilyTree,
+  crisscross,
+  alternation,
 }: FamilyCardProps) {
   const panelId = `family-members-${index}`;
   const sire = (g[0].sire || '').trim();
@@ -343,6 +363,7 @@ function FamilyCard({
               <span className="dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-emerald-700 uppercase">
                 Full Siblings
               </span>
+              <CrisscrossBadge classification={crisscross} compact />
             </div>
             <p className="text-card-foreground mt-1 truncate text-xs font-bold">
               <span>
@@ -464,6 +485,16 @@ function FamilyCard({
 
       {expanded && (
         <div id={panelId} className="border-border bg-muted/20 border-t px-4 py-3">
+          {crisscross.isCrisscross && alternation && (
+            <div className="mb-3 rounded-md border border-amber-200/70 bg-amber-50/60 px-3 py-2 dark:border-amber-800/60 dark:bg-amber-950/30">
+              <p className="text-[10px] font-black tracking-widest text-amber-700 uppercase dark:text-amber-300">
+                Alternation
+              </p>
+              <p className="text-card-foreground mt-0.5 text-xs font-semibold">
+                {alternation}
+              </p>
+            </div>
+          )}
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
               Members
@@ -573,6 +604,7 @@ export default function LineageDirectory({
 
   // Full Siblings & Families tab: family-level sort and collapsed-by-default cards.
   const [familySortBy, setFamilySortBy] = useState<FamilySortOption>('winrate');
+  const [familyPairFilter, setFamilyPairFilter] = useState<FamilyPairFilter>('all');
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
 
   // Master-Detail selection state
@@ -767,6 +799,16 @@ export default function LineageDirectory({
       if (tabParam === 'sire' || tabParam === 'dam' || tabParam === 'families' || tabParam === 'tree' || tabParam === 'pedigree') {
         setActiveTab(tabParam as LineageTab);
       }
+      const pairParam = params.get('pair');
+      if (
+        pairParam === 'crisscross' ||
+        pairParam === 'outcross' ||
+        pairParam === 'others' ||
+        pairParam === 'all'
+      ) {
+        setFamilyPairFilter(pairParam as FamilyPairFilter);
+        if (!tabParam) setActiveTab('families');
+      }
       const sireParam = params.get('sire');
       if (sireParam && sireEntries.length > 0) {
         const norm = sireParam.trim().toLowerCase();
@@ -871,6 +913,16 @@ export default function LineageDirectory({
     }
   }, [damEntries, selectedDamName]);
 
+  const handleFamilyPairFilterChange = (value: FamilyPairFilter) => {
+    setFamilyPairFilter(value);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (value === 'all') url.searchParams.delete('pair');
+      else url.searchParams.set('pair', value);
+      window.history.pushState({}, '', url.toString());
+    }
+  };
+
   const handleSelectParent = (name: string, kind: 'sire' | 'dam', code: string) => {
     if (kind === 'sire') {
       setSelectedSireName(name);
@@ -941,6 +993,26 @@ export default function LineageDirectory({
     return Array.from(familyMap.values()).filter((g) => g.length >= 2);
   }, [familyMap]);
 
+  const familyClassifications = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        crisscross: CrisscrossClassification;
+        relatedness: ReturnType<typeof classifyPairingRelatedness>;
+      }
+    >();
+    fullFamilies.forEach((g) => {
+      const key = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+      const sire = parentRecordOf(g[0], 'sire', fowls);
+      const dam = parentRecordOf(g[0], 'dam', fowls);
+      map.set(key, {
+        crisscross: classifyCrisscross(sire, dam, fowls),
+        relatedness: classifyPairingRelatedness(sire, dam, fowls),
+      });
+    });
+    return map;
+  }, [fullFamilies, fowls]);
+
   // Search query
   const q = debouncedSearch.trim().toLowerCase();
 
@@ -957,9 +1029,52 @@ export default function LineageDirectory({
     return map;
   }, [fullFamilies, matchStatsLookup]);
 
+  const familyTypeSummary = useMemo(() => {
+    const buckets: Record<'crisscross' | 'outcross' | 'others', FowlRecord[][]> = {
+      crisscross: [],
+      outcross: [],
+      others: [],
+    };
+
+    fullFamilies.forEach((g) => {
+      const key = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+      const info = familyClassifications.get(key);
+      const type = info?.crisscross.isCrisscross
+        ? 'crisscross'
+        : info?.relatedness.type === 'outcross'
+        ? 'outcross'
+        : 'others';
+      buckets[type].push(g);
+    });
+
+    const summarize = (families: FowlRecord[][]) => {
+      const cocks = families.flatMap((g) => fightersOf(g));
+      const stats = combineWinRates(
+        cocks.map(
+          (c) =>
+            matchStatsLookup.get(c.name.trim().toLowerCase()) || computeWinRate(0, 0)
+        )
+      );
+      return {
+        pairs: families.length,
+        cocks: cocks.length,
+        fought: stats.foughtCount,
+        stats,
+      };
+    };
+
+    return {
+      crisscross: summarize(buckets.crisscross),
+      outcross: summarize(buckets.outcross),
+      others: summarize(buckets.others),
+    };
+  }, [fullFamilies, familyClassifications, matchStatsLookup]);
+
   // Filtered & sorted collections
   const filteredFullFamilies = useMemo(() => {
+    const keyOf = (g: FowlRecord[]) => `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
     let list = fullFamilies;
+
     if (q) {
       list = list.filter((g) => {
         const sire = (g[0].sire || '').toLowerCase();
@@ -976,7 +1091,18 @@ export default function LineageDirectory({
       });
     }
 
-    const keyOf = (g: FowlRecord[]) => `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+    if (familyPairFilter !== 'all') {
+      list = list.filter((g) => {
+        const info = familyClassifications.get(keyOf(g));
+        if (!info) return familyPairFilter === 'others';
+        if (familyPairFilter === 'crisscross') return info.crisscross.isCrisscross;
+        if (familyPairFilter === 'outcross') {
+          return !info.crisscross.isCrisscross && info.relatedness.type === 'outcross';
+        }
+        return !info.crisscross.isCrisscross && info.relatedness.type !== 'outcross';
+      });
+    }
+
     const labelOf = (g: FowlRecord[]) =>
       `${(g[0].sire || '').trim()} × ${(g[0].dam || '').trim()}`;
     const statsOf = (g: FowlRecord[]) => familyStatsLookup.get(keyOf(g));
@@ -1007,7 +1133,15 @@ export default function LineageDirectory({
       if (winsDiff !== 0) return winsDiff;
       return labelOf(a).localeCompare(labelOf(b));
     });
-  }, [fullFamilies, q, familySortBy, birdCodes, familyStatsLookup]);
+  }, [
+    fullFamilies,
+    q,
+    familySortBy,
+    familyPairFilter,
+    familyClassifications,
+    birdCodes,
+    familyStatsLookup,
+  ]);
 
   const filteredSireEntries = useMemo(() => {
     let list = sireEntries;
@@ -1410,6 +1544,15 @@ export default function LineageDirectory({
       const archivedCount = pairChildren.filter((c) => c.status === 'Archived').length;
       const deceasedCount = pairChildren.filter((c) => c.status === 'Deceased').length;
       const pairStats = groupStats(pairChildren);
+      const sireRecord =
+        kind === 'sire'
+          ? activeParentFowl
+          : parentRecordOf(pairChildren[0], 'sire', fowls);
+      const damRecord =
+        kind === 'dam'
+          ? activeParentFowl
+          : parentRecordOf(pairChildren[0], 'dam', fowls);
+      const crisscross = classifyCrisscross(sireRecord, damRecord, fowls);
 
       return {
         key: pairKey,
@@ -1423,6 +1566,7 @@ export default function LineageDirectory({
         archivedCount,
         deceasedCount,
         stats: pairStats,
+        crisscross,
       };
     });
 
@@ -1743,6 +1887,7 @@ export default function LineageDirectory({
                       <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-card text-foreground border border-border shrink-0">
                         {pg.pairCode}
                       </span>
+                      <CrisscrossBadge classification={pg.crisscross} compact />
                       <span className="text-muted-foreground/60 select-none">·</span>
                       <span className="text-xs text-muted-foreground font-semibold shrink-0">
                         {pg.offspring.length} offspring
@@ -2631,6 +2776,34 @@ export default function LineageDirectory({
                 </select>
               </div>
 
+              {activeTab === 'families' && (
+                <div className="flex items-center gap-1.5">
+                  <label
+                    htmlFor="lineage-pair-filter"
+                    className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+                  >
+                    Pair type:
+                  </label>
+                  <select
+                    id="lineage-pair-filter"
+                    aria-label="Pair type filter"
+                    value={familyPairFilter}
+                    onChange={(e) =>
+                      handleFamilyPairFilterChange(e.target.value as FamilyPairFilter)
+                    }
+                    className="border-border bg-card text-foreground focus:border-emerald-500 h-7 cursor-pointer rounded border px-2 text-xs font-bold transition-colors focus:outline-none"
+                  >
+                    {(['all', 'crisscross', 'outcross', 'others'] as const).map(
+                      (value) => (
+                        <option key={value} value={value}>
+                          {FAMILY_PAIR_FILTER_LABELS[value]}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+              )}
+
               <div className="flex items-center gap-1 sm:pl-2 sm:border-l sm:border-border/80">
                 <button
                   type="button"
@@ -2700,6 +2873,50 @@ export default function LineageDirectory({
         {/* TAB 2: Full Siblings & Families */}
         {activeTab === 'families' && (
           <section className="space-y-4">
+            {fullFamilies.length > 0 && (
+              <div className="space-y-2" data-testid="family-type-summary">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {(['crisscross', 'outcross', 'others'] as const).map((type) => {
+                    const item = familyTypeSummary[type];
+                    const rate = item.stats.winRate;
+                    return (
+                      <div
+                        key={type}
+                        className="bg-card border-border rounded-lg border p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                            {FAMILY_PAIR_FILTER_LABELS[type]}
+                          </span>
+                          <span className="text-muted-foreground text-xs font-bold">
+                            {item.pairs} {item.pairs === 1 ? 'pair' : 'pairs'}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-baseline gap-2">
+                          <span className="text-card-foreground text-2xl font-black tabular-nums">
+                            {rate === null ? '—%' : `${rate}%`}
+                          </span>
+                          {item.stats.isLowSample && (
+                            <span className="text-muted-foreground rounded bg-black/5 px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase dark:bg-white/10">
+                              {item.stats.sampleNote}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground text-xs font-semibold">
+                          {item.fought} of {item.cocks} cocks fought ·{' '}
+                          {`${item.stats.wins}W-${item.stats.losses}L`}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-muted-foreground text-[10px] font-semibold">
+                  Small samples are not conclusive. Win rate excludes draws and counts cocks
+                  only.
+                </p>
+              </div>
+            )}
+
             {linked.length === 0 ? (
               <EmptyState
                 title="No Lineage Data Yet"
@@ -2707,6 +2924,11 @@ export default function LineageDirectory({
               />
             ) : filteredFullFamilies.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
+            ) : filteredFullFamilies.length === 0 && familyPairFilter !== 'all' ? (
+              <EmptyState
+                title={`No ${FAMILY_PAIR_FILTER_LABELS[familyPairFilter]} pairs found`}
+                hint="Switch the Pair type filter to see other families."
+              />
             ) : filteredFullFamilies.length === 0 ? (
               <EmptyState
                 title="No Full-Sibling Families Found"
@@ -2716,6 +2938,12 @@ export default function LineageDirectory({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
                 {filteredFullFamilies.map((g, i) => {
                   const familyKey = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
+                  const familyInfo = familyClassifications.get(familyKey);
+                  const sireRecord = parentRecordOf(g[0], 'sire', fowls);
+                  const damRecord = parentRecordOf(g[0], 'dam', fowls);
+                  const crisscross =
+                    familyInfo?.crisscross ??
+                    classifyCrisscross(sireRecord, damRecord, fowls);
                   return (
                     <FamilyCard
                       key={familyKey}
@@ -2727,6 +2955,8 @@ export default function LineageDirectory({
                       onShowFights={openFights}
                       fowls={fowls}
                       expanded={expandedFamilies.has(familyKey)}
+                      crisscross={crisscross}
+                      alternation={crisscrossAlternation(sireRecord, damRecord, fowls)}
                       onToggleExpanded={() =>
                         setExpandedFamilies((prev) => {
                           const next = new Set(prev);
@@ -2738,9 +2968,7 @@ export default function LineageDirectory({
                       onOpenInFamilyTree={() => {
                         // Open the pedigree canvas rooted at this family's
                         // resolved parent, in the descendants direction.
-                        const parent =
-                          parentRecordOf(g[0], 'sire', fowls) ??
-                          parentRecordOf(g[0], 'dam', fowls);
+                        const parent = sireRecord ?? damRecord;
                         if (parent) setTreeRootName(parent.name);
                         setTreeDirection('down');
                         setCollapsedFlowNodes(new Set());

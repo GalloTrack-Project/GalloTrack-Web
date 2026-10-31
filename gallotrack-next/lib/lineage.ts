@@ -2,6 +2,8 @@ import type { BreedingPairRecord, FowlRecord } from './types';
 import { isKnownParent, nameKey, normalizeParentName } from './family-tree';
 import { normalizeBirdCode } from './bird-code';
 import { offspringBaseCode } from './breeding';
+import { canFight, sexLabel } from './helpers';
+import type { LineageIndex } from './lineage-graph';
 
 /** 'foundation stock' and blank names never resolve to a registry row. */
 export const isResolvableParentName = (value?: string | null): boolean =>
@@ -339,4 +341,260 @@ export function compareFowlSearchRelevance(
     return 5;
   };
   return rank(matchA) - rank(matchB);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Crisscross pair classification                                             */
+/* -------------------------------------------------------------------------- */
+
+export type CrisscrossStatus = 'crisscross' | 'not-crisscross' | 'unknown';
+
+export interface CrisscrossClassification {
+  status: CrisscrossStatus;
+  /** True only when status is 'crisscross'. */
+  isCrisscross: boolean;
+  sireLine: string | null;
+  damSireLine: string | null;
+  damDamLine: string | null;
+  /** Plain-language explanation / tooltip. */
+  reason: string;
+}
+
+type Line = { key: string; label: string };
+
+/** Stable comparison key for a recorded line/strain/variety. */
+function normalizeLine(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[×x/&+,]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * A bird's line is its recorded breed/strain/variety. Foundation Stock,
+ * unspecified, and blank values are unknown — never guessed.
+ */
+function lineOf(fowl: FowlRecord | null | undefined): Line | null {
+  if (!fowl) return null;
+  const nameKeyValue = (fowl.name || '').trim().toLowerCase();
+  if (nameKeyValue === 'foundation stock') return null;
+
+  const label = (fowl.breed || '').trim();
+  if (!label) return null;
+
+  const key = normalizeLine(label);
+  if (
+    !key ||
+    key === 'foundation stock' ||
+    key === 'unspecified strain' ||
+    key === 'unknown'
+  ) {
+    return null;
+  }
+
+  return { key, label };
+}
+
+const crisscrossPartial = (
+  sireLine: Line | null,
+  damSireLine: Line | null,
+  damDamLine: Line | null
+) => ({
+  sireLine: sireLine?.label ?? null,
+  damSireLine: damSireLine?.label ?? null,
+  damDamLine: damDamLine?.label ?? null,
+});
+
+function crisscrossUnknown(
+  reason: string,
+  sireLine: Line | null,
+  damSireLine: Line | null,
+  damDamLine: Line | null
+): CrisscrossClassification {
+  return {
+    status: 'unknown',
+    isCrisscross: false,
+    ...crisscrossPartial(sireLine, damSireLine, damDamLine),
+    reason,
+  };
+}
+
+function crisscrossNo(
+  reason: string,
+  sireLine: Line | null,
+  damSireLine: Line | null,
+  damDamLine: Line | null
+): CrisscrossClassification {
+  return {
+    status: 'not-crisscross',
+    isCrisscross: false,
+    ...crisscrossPartial(sireLine, damSireLine, damDamLine),
+    reason,
+  };
+}
+
+/**
+ * CRISSCROSS detection — the one place this rule lives.
+ *
+ * A pair alternates lines only when:
+ * - the dam is crossbred (her sire and dam are known and are different lines);
+ * - the sire's line is one of those two lines; and
+ * - the sire's line differs from the dam's own sire's line.
+ *
+ * Unknown / Foundation Stock / unregistered ancestry returns 'unknown' with a
+ * reason instead of guessing.
+ */
+export function classifyCrisscross(
+  sire: FowlRecord | null | undefined,
+  dam: FowlRecord | null | undefined,
+  indexOrFowls: LineageIndex | FowlRecord[]
+): CrisscrossClassification {
+  const fowls = Array.isArray(indexOrFowls)
+    ? indexOrFowls
+    : Array.from(indexOrFowls.byId.values());
+
+  const sireLine = lineOf(sire);
+  const damSire = dam ? parentRecordOf(dam, 'sire', fowls) : null;
+  const damDam = dam ? parentRecordOf(dam, 'dam', fowls) : null;
+  const damSireLine = lineOf(damSire);
+  const damDamLine = lineOf(damDam);
+
+  if (!sire || !dam) {
+    return crisscrossUnknown(
+      'Sire and dam must both be recorded.',
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (!canFight(sire)) {
+    return crisscrossUnknown(
+      `Sire ${sire.name} is not a cock.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (sexLabel(dam) !== 'Hen') {
+    return crisscrossUnknown(
+      `Dam ${dam.name} is not a hen.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (!sireLine) {
+    return crisscrossUnknown(
+      `Sire ${sire.name} has no recorded line (Foundation Stock or unknown).`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (!damSire) {
+    return crisscrossUnknown(
+      `Dam ${dam.name}'s sire is not registered.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (!damDam) {
+    return crisscrossUnknown(
+      `Dam ${dam.name}'s dam is not registered.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (!damSireLine) {
+    return crisscrossUnknown(
+      `Dam ${dam.name}'s sire has no recorded line (Foundation Stock or unknown).`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (!damDamLine) {
+    return crisscrossUnknown(
+      `Dam ${dam.name}'s dam has no recorded line (Foundation Stock or unknown).`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (damSireLine.key === damDamLine.key) {
+    return crisscrossNo(
+      `Dam is not crossbred; both parents are ${damSireLine.label}.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (sireLine.key !== damSireLine.key && sireLine.key !== damDamLine.key) {
+    return crisscrossNo(
+      `Sire is ${sireLine.label}; the dam's parents are ${damSireLine.label} × ${damDamLine.label}.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  if (sireLine.key === damSireLine.key) {
+    return crisscrossNo(
+      `Dam's sire was ${damSireLine.label}, this sire is ${sireLine.label}, so the line does not alternate.`,
+      sireLine,
+      damSireLine,
+      damDamLine
+    );
+  }
+
+  return {
+    status: 'crisscross',
+    isCrisscross: true,
+    ...crisscrossPartial(sireLine, damSireLine, damDamLine),
+    reason: `Dam is ${damSireLine.label} × ${damDamLine.label}. Her sire was ${damSireLine.label}, this sire is ${sireLine.label}, so the line alternates.`,
+  };
+}
+
+/**
+ * Oldest-to-newest alternation for a pair's expanded card. Stops at an
+ * unregistered/unknown ancestor instead of inventing another generation.
+ */
+export function crisscrossAlternation(
+  sire: FowlRecord | null | undefined,
+  dam: FowlRecord | null | undefined,
+  indexOrFowls: LineageIndex | FowlRecord[]
+): string | null {
+  if (!sire || !dam) return null;
+  const fowls = Array.isArray(indexOrFowls)
+    ? indexOrFowls
+    : Array.from(indexOrFowls.byId.values());
+
+  const damSire = parentRecordOf(dam, 'sire', fowls);
+  const damDam = parentRecordOf(dam, 'dam', fowls);
+  const sireLine = lineOf(sire);
+  const damSireLine = lineOf(damSire);
+  const damDamLine = lineOf(damDam);
+
+  const gen1 = `Gen 1: ${damSireLine?.label ?? 'not registered'} × ${
+    damDamLine?.label ?? 'not registered'
+  }`;
+
+  if (!damSireLine || !damDamLine || !sireLine) {
+    return `${gen1} -> stopped: unregistered ancestor`;
+  }
+
+  return `${gen1} -> Gen 2: ${dam.name} × ${sireLine.label}`;
 }

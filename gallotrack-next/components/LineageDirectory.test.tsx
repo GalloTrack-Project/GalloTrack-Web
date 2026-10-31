@@ -66,6 +66,37 @@ function makeDamFamily(count: number): FowlRecord[] {
   return fowls;
 }
 
+const crisscrossFamily: FowlRecord[] = [
+  bird({ id: 101, name: 'Lemon Sire', gender: 'Rooster', breed: 'Lemon', bird_code: 'L' }),
+  bird({ id: 102, name: 'Hatch Dam', gender: 'Hen', breed: 'Hatch', bird_code: 'H' }),
+  bird({
+    id: 103,
+    name: 'Cross Dam',
+    gender: 'Hen',
+    breed: 'Lemon × Hatch',
+    sire: 'Lemon Sire',
+    dam: 'Hatch Dam',
+    bird_code: 'LH',
+  }),
+  bird({ id: 104, name: 'Hatch Sire', gender: 'Rooster', breed: 'Hatch', bird_code: '2' }),
+  bird({
+    id: 105,
+    name: 'Cross Son 1',
+    gender: 'Rooster',
+    sire: 'Hatch Sire',
+    dam: 'Cross Dam',
+    bird_code: '2LH1',
+  }),
+  bird({
+    id: 106,
+    name: 'Cross Son 2',
+    gender: 'Rooster',
+    sire: 'Hatch Sire',
+    dam: 'Cross Dam',
+    bird_code: '2LH2',
+  }),
+];
+
 const matchRecord = (
   id: number,
   fowlId: number,
@@ -1149,5 +1180,75 @@ describe('LineageDirectory redesigned top section', () => {
       // In 'code' sort: natural birth code order 1A1, 1A2, 1A3, 1A4, 1A10
       expect(getCodeOrder()).toEqual(['[1A1]', '[1A2]', '[1A3]', '[1A4]', '[1A10]']);
     });
+  });
+});
+
+describe('Crisscross pair tagging', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.replaceState({}, '', '/lineage');
+  });
+
+  it('tags crisscross families, filters by pair type, persists the URL, and shows alternation', () => {
+    renderDirectory(vi.fn(), { fowls: crisscrossFamily });
+
+    const summary = screen.getByTestId('family-type-summary');
+    expect(within(summary).getByText('Crisscross')).toBeInTheDocument();
+    expect(within(summary).getByText('Outcross')).toBeInTheDocument();
+    expect(within(summary).getByText('Others')).toBeInTheDocument();
+    expect(within(summary).getByText(/0 of 2 cocks fought/)).toBeInTheDocument();
+
+    const card = screen.getByText('Family 1').closest('article')!;
+    expect(within(card).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(card).queryByText(/^Outcross$/i)).not.toBeInTheDocument();
+
+    fireEvent.click(within(card).getByRole('button', { name: 'Expand family 1' }));
+    expect(within(card).getByText('Alternation')).toBeInTheDocument();
+    expect(
+      within(card).getByText('Gen 1: Lemon × Hatch -> Gen 2: Cross Dam × Hatch')
+    ).toBeInTheDocument();
+
+    const filter = screen.getByLabelText('Pair type filter');
+    fireEvent.change(filter, { target: { value: 'crisscross' } });
+    expect(window.location.search).toContain('pair=crisscross');
+    expect(screen.getByText('Family 1')).toBeInTheDocument();
+
+    fireEvent.change(filter, { target: { value: 'outcross' } });
+    expect(screen.getByText('No Outcross pairs found')).toBeInTheDocument();
+    expect(screen.queryByText('Family 1')).toBeNull();
+
+    fireEvent.change(filter, { target: { value: 'others' } });
+    expect(screen.getByText('No Others pairs found')).toBeInTheDocument();
+
+    fireEvent.change(filter, { target: { value: 'all' } });
+    expect(window.location.search).not.toContain('pair=');
+    expect(screen.getByText('Family 1')).toBeInTheDocument();
+  });
+
+  it('shows the crisscross tag on Sire and Dam pair headers', () => {
+    renderDirectory(vi.fn(), { fowls: crisscrossFamily });
+
+    fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+    const sireList = screen.getByRole('listbox', { name: /Sires list/i });
+    fireEvent.click(within(sireList).getByRole('option', { name: /Hatch Sire/ }));
+    const sireRegion = screen.getByRole('region', { name: /Hatch Sire details/i });
+    expect(within(sireRegion).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(sireRegion).queryByText(/^Outcross$/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+    const damList = screen.getByRole('listbox', { name: /Dams list/i });
+    fireEvent.click(within(damList).getByRole('option', { name: /Cross Dam/ }));
+    const damRegion = screen.getByRole('region', { name: /Cross Dam details/i });
+    expect(within(damRegion).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(damRegion).queryByText(/^Outcross$/i)).not.toBeInTheDocument();
+  });
+
+  it('restores the pair filter from ?pair=crisscross', async () => {
+    window.history.replaceState({}, '', '/lineage?pair=crisscross');
+    renderDirectory(vi.fn(), { fowls: crisscrossFamily });
+
+    const filter = await screen.findByLabelText('Pair type filter');
+    await waitFor(() => expect(filter).toHaveValue('crisscross'));
+    expect(screen.getByText('Family 1')).toBeInTheDocument();
   });
 });

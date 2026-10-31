@@ -287,6 +287,41 @@ describe('LineageFlow pedigree canvas', () => {
     ).toBeInTheDocument();
   });
 
+  it('tags a crisscross pair in the pair hub and details panel', () => {
+    const crisscrossFamily: FowlRecord[] = [
+      bird({ id: 1, name: 'Lemon Sire', gender: 'Rooster', breed: 'Lemon' }),
+      bird({ id: 2, name: 'Hatch Dam', gender: 'Hen', breed: 'Hatch' }),
+      bird({
+        id: 3,
+        name: 'Cross Dam',
+        gender: 'Hen',
+        breed: 'Lemon × Hatch',
+        sire: 'Lemon Sire',
+        dam: 'Hatch Dam',
+      }),
+      bird({ id: 4, name: 'Hatch Sire', gender: 'Rooster', breed: 'Hatch' }),
+      bird({
+        id: 5,
+        name: 'Cross Offspring',
+        gender: 'Rooster',
+        sire: 'Hatch Sire',
+        dam: 'Cross Dam',
+      }),
+    ];
+
+    render(<Harness fowls={crisscrossFamily} initialRoot="Hatch Sire" />);
+
+    const hub = screen.getByRole('button', {
+      name: /Breeding pair Hatch Sire × Cross Dam/,
+    });
+    expect(screen.getByTestId('crisscross-badge')).toBeInTheDocument();
+
+    fireEvent.click(hub);
+    const details = screen.getByTestId('lineage-details');
+    expect(within(details).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(details).getByText(/Her sire was Lemon/i)).toBeInTheDocument();
+  });
+
   it('never fabricates a parent that is not registered', () => {
     const fowls: FowlRecord[] = [
       bird({ id: 10, name: 'External Sire' }),

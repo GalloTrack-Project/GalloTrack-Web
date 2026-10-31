@@ -63,6 +63,8 @@ import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { BREEDING_TABS } from '@/lib/nav-manifest';
 import { classifyPairingRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
+import CrisscrossBadge from '@/components/CrisscrossBadge';
+import { classifyCrisscross } from '@/lib/lineage';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import { computeBloodlineComposition, blendCompositions } from '@/lib/bloodline-composition';
@@ -406,6 +408,10 @@ function BreedingPairCard({
     () => classifyPairingRelatedness(sire, dam, fowls),
     [sire, dam, fowls],
   );
+  const crisscross = useMemo(
+    () => classifyCrisscross(sire, dam, fowls),
+    [sire, dam, fowls],
+  );
 
   const offspring = offspringForPairing(pair, fowls);
 
@@ -460,7 +466,11 @@ function BreedingPairCard({
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            <RelatednessBadge classification={relatedness} compact />
+            {crisscross.isCrisscross ? (
+              <CrisscrossBadge classification={crisscross} compact />
+            ) : (
+              <RelatednessBadge classification={relatedness} compact />
+            )}
             <span
               className={`rounded-full border px-2 py-1 text-xs font-black ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}
             >
@@ -698,6 +708,11 @@ function AddPairingForm({
     return classifyPairingRelatedness(selectedSire, selectedDam, fowls);
   }, [selectedSire, selectedDam, fowls]);
 
+  const crisscross = useMemo(
+    () => classifyCrisscross(selectedSire ?? null, selectedDam ?? null, fowls),
+    [selectedSire, selectedDam, fowls],
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const problem = validatePairing(selectedSire, selectedDam);
@@ -871,7 +886,16 @@ function AddPairingForm({
               <p className="text-muted-foreground text-xs font-black tracking-wider uppercase">
                 Pairing Relatedness
               </p>
-              {relatedness ? (
+              {crisscross.isCrisscross ? (
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CrisscrossBadge classification={crisscross} />
+                  </div>
+                  <p className="text-muted-foreground text-xs font-semibold">
+                    {crisscross.reason}
+                  </p>
+                </div>
+              ) : relatedness ? (
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <RelatednessBadge classification={relatedness} showSecondary />

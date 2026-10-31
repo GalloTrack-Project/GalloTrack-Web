@@ -12,6 +12,8 @@ import {
   parentLinkIds,
   parentRecordOf,
   resolveParentId,
+  classifyCrisscross,
+  crisscrossAlternation,
 } from './lineage';
 
 const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -61,6 +63,111 @@ const chick = bird({
   user_id: 'u1',
 });
 const flock = [sire, dam, chick];
+
+describe('crisscross classification', () => {
+  const lemonSire = bird({ id: 10, name: 'Lemon Sire', gender: 'Rooster', breed: 'Lemon' });
+  const hatchDam = bird({ id: 11, name: 'Hatch Dam', gender: 'Hen', breed: 'Hatch' });
+  const crossDam = bird({
+    id: 12,
+    name: 'Cross Dam',
+    gender: 'Hen',
+    breed: 'Lemon × Hatch',
+    sire: 'Lemon Sire',
+    dam: 'Hatch Dam',
+  });
+  const hatchSire = bird({ id: 13, name: 'Hatch Sire', gender: 'Rooster', breed: 'Hatch' });
+  const lemonCock = bird({ id: 14, name: 'Lemon Cock', gender: 'Rooster', breed: 'Lemon' });
+  const pureDam = bird({
+    id: 15,
+    name: 'Pure Dam',
+    gender: 'Hen',
+    breed: 'Lemon',
+    sire: 'Lemon Sire',
+    dam: 'Lemon Dam',
+  });
+  const lemonDam = bird({ id: 16, name: 'Lemon Dam', gender: 'Hen', breed: 'Lemon' });
+  const unregisteredDam = bird({
+    id: 17,
+    name: 'Unknown Ancestor Dam',
+    gender: 'Hen',
+    breed: 'Lemon × Hatch',
+    sire: 'Not In Registry',
+    dam: 'Hatch Dam',
+  });
+  const foundationParent = bird({
+    id: 18,
+    name: 'Foundation Stock',
+    gender: 'Rooster',
+    breed: 'Lemon',
+  });
+  const foundationDam = bird({
+    id: 19,
+    name: 'Foundation Ancestor Dam',
+    gender: 'Hen',
+    breed: 'Lemon × Hatch',
+    sire_id: 18,
+    sire: 'Foundation Stock',
+    dam: 'Hatch Dam',
+  });
+  const flock = [
+    lemonSire,
+    hatchDam,
+    crossDam,
+    hatchSire,
+    lemonCock,
+    pureDam,
+    lemonDam,
+    unregisteredDam,
+    foundationParent,
+    foundationDam,
+  ];
+
+  it('marks a Hatch sire over a Lemon × Hatch dam as crisscross', () => {
+    const result = classifyCrisscross(hatchSire, crossDam, flock);
+    expect(result.isCrisscross).toBe(true);
+    expect(result.status).toBe('crisscross');
+    expect(result.sireLine).toBe('Hatch');
+    expect(result.damSireLine).toBe('Lemon');
+    expect(result.damDamLine).toBe('Hatch');
+    expect(result.reason).toMatch(/line alternates/i);
+  });
+
+  it('rejects a Lemon sire over the same dam because the line does not alternate', () => {
+    const result = classifyCrisscross(lemonCock, crossDam, flock);
+    expect(result.isCrisscross).toBe(false);
+    expect(result.status).toBe('not-crisscross');
+    expect(result.reason).toMatch(/does not alternate/i);
+  });
+
+  it('rejects a purebred dam', () => {
+    const result = classifyCrisscross(hatchSire, pureDam, flock);
+    expect(result.isCrisscross).toBe(false);
+    expect(result.status).toBe('not-crisscross');
+    expect(result.reason).toMatch(/not crossbred/i);
+  });
+
+  it('returns unknown for unregistered or Foundation Stock ancestry', () => {
+    const missing = classifyCrisscross(hatchSire, unregisteredDam, flock);
+    expect(missing.isCrisscross).toBe(false);
+    expect(missing.status).toBe('unknown');
+    expect(missing.reason).toMatch(/not registered/i);
+
+    const foundation = classifyCrisscross(hatchSire, foundationDam, flock);
+    expect(foundation.isCrisscross).toBe(false);
+    expect(foundation.status).toBe('unknown');
+    expect(foundation.reason).toMatch(/no recorded line/i);
+  });
+
+  it('builds an oldest-to-newest alternation line and stops at an unregistered parent', () => {
+    expect(crisscrossAlternation(hatchSire, crossDam, flock)).toBe(
+      'Gen 1: Lemon × Hatch -> Gen 2: Cross Dam × Hatch'
+    );
+
+    expect(crisscrossAlternation(hatchSire, unregisteredDam, flock)).toMatch(
+      /Gen 1: not registered × Hatch -> stopped: unregistered ancestor/
+    );
+  });
+});
 
 describe('resolveParentId', () => {
   it('resolves a unique non-self name', () => {
