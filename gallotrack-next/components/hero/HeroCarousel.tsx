@@ -126,10 +126,12 @@ export function HeroCarousel({
               )}
             </div>
 
-            {/* Slide indicator pill */}
-            <div className="bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[10px] font-mono font-bold text-emerald-400">
-              {activeIndex + 1} / {images.length}
-            </div>
+            {/* Slide indicator pill (hidden for a single image) */}
+            {images.length > 1 && (
+              <div className="bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[10px] font-mono font-bold text-emerald-400">
+                {activeIndex + 1} / {images.length}
+              </div>
+            )}
           </div>
         )}
 

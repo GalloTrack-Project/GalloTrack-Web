@@ -22,12 +22,22 @@ import {
 } from '@/lib/nav-manifest';
 import GlobalSearch from '@/components/nav/GlobalSearch';
 import MobileNav from '@/components/nav/MobileNav';
+import SystemConfigSidebarItem from '@/components/nav/SystemConfigSidebarItem';
+import { SystemConfigNavProvider } from '@/lib/contexts/system-config-nav';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useT } from '@/lib/i18n';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SystemConfigNavProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </SystemConfigNavProvider>
+  );
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const ui = useUI();
@@ -104,22 +114,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {group}
                 </p>
                 <div className="space-y-1.5">
-                  {items.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
-                      className={cn(
-                        'flex w-full items-center gap-3 rounded-sm px-4 py-2.5 text-left text-sm tracking-wide transition-colors duration-150',
-                        isActiveNav(item, pathname)
-                          ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
-                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground font-medium',
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
+                  {items.map((item) =>
+                    item.submenu ? (
+                      <SystemConfigSidebarItem key={item.href} item={item} />
+                    ) : (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={isActiveNav(item, pathname) ? 'page' : undefined}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-sm px-4 py-2.5 text-left text-sm tracking-wide transition-colors duration-150',
+                          isActiveNav(item, pathname)
+                            ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
+                            : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground font-medium',
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ),
+                  )}
                 </div>
               </div>
             ))}
