@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 import LineageFlow from './LineageFlow';
 import type { LineageDirection } from '@/lib/lineage-graph';
@@ -223,20 +223,68 @@ describe('LineageFlow pedigree canvas', () => {
     expect(within(details).getByText('Offspring 1A3')).toBeInTheDocument();
   });
 
-  it('zooms, resets and toggles the expanded canvas', () => {
+  it('removes pan, zoom, fit, and reset controls', () => {
     render(<Harness />);
 
-    expect(screen.getByText('100%')).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('Zoom in'));
-    expect(screen.queryByText('100%')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('Reset view'));
-    expect(screen.getByText('100%')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Zoom in')).toBeNull();
+    expect(screen.queryByLabelText('Zoom out')).toBeNull();
+    expect(screen.queryByLabelText('Fit to view')).toBeNull();
+    expect(screen.queryByLabelText('Reset view')).toBeNull();
+    expect(screen.queryByText('100%')).toBeNull();
+    expect(screen.queryByText(/Drag to pan/i)).toBeNull();
+    expect(screen.queryByText(/Scroll to zoom/i)).toBeNull();
 
-    const expand = screen.getByRole('button', { name: 'Expand canvas' });
-    fireEvent.click(expand);
-    expect(screen.getByRole('button', { name: 'Exit expanded canvas' })).toBeInTheDocument();
+    const canvas = screen.getByRole('region', { name: 'Pedigree canvas' });
+    expect(canvas).not.toHaveAttribute('tabindex');
+    expect(canvas.className).not.toMatch(/cursor-grab/);
+  });
+
+  it('auto-fits to the container width and re-fits on resize', async () => {
+    render(<Harness />);
+    const region = screen.getByRole('region', { name: 'Pedigree canvas' });
+
+    Object.defineProperty(region, 'clientWidth', {
+      configurable: true,
+      value: 900,
+    });
+    fireEvent(window, new Event('resize'));
+
+    await waitFor(() => {
+      const canvas = screen.getByTestId('lineage-canvas');
+      const scale = Number(canvas.getAttribute('data-scale'));
+      const width = Number(canvas.getAttribute('data-layout-width'));
+      expect(scale).toBeLessThanOrEqual(1);
+      expect(scale).toBeGreaterThanOrEqual(0.7);
+      expect(width * scale).toBeLessThanOrEqual(901);
+    });
+
+    Object.defineProperty(region, 'clientWidth', {
+      configurable: true,
+      value: 500,
+    });
+    fireEvent(window, new Event('resize'));
+
+    await waitFor(() => {
+      const canvas = screen.getByTestId('lineage-canvas');
+      const scale = Number(canvas.getAttribute('data-scale'));
+      const width = Number(canvas.getAttribute('data-layout-width'));
+      expect(scale).toBeGreaterThanOrEqual(0.7);
+      expect(width * scale).toBeLessThanOrEqual(501);
+    });
+  });
+
+  it('toggles the expanded canvas', () => {
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand canvas' }));
+    expect(
+      screen.getByRole('button', { name: 'Exit expanded canvas' })
+    ).toBeInTheDocument();
+
     fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.getByRole('button', { name: 'Expand canvas' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Expand canvas' })
+    ).toBeInTheDocument();
   });
 
   it('never fabricates a parent that is not registered', () => {

@@ -100,11 +100,27 @@ export interface LineageLayout {
   height: number;
 }
 
+export interface LineageLayoutOptions {
+  /**
+   * Maximum width available for cards in one visual row, in layout units.
+   * When omitted the layout keeps one row per generation (legacy behavior).
+   */
+  maxRowWidth?: number;
+  nodeGap?: number;
+  chainGap?: number;
+  rowGap?: number;
+  wrapGap?: number;
+  paddingX?: number;
+  paddingY?: number;
+}
+
 export const LINEAGE_NODE_WIDTH = 196;
 export const LINEAGE_NODE_HEIGHT = 104;
 const NODE_GAP = 28;
 const CHAIN_GAP = 74;
 const ROW_GAP = 138;
+/** Vertical gap between wrapped sub-rows inside the same generation. */
+const WRAP_GAP = 84;
 const PAD_X = 92;
 const PAD_Y = 64;
 const PAIR_DROP = 30;
@@ -366,14 +382,25 @@ export function buildLineageTopology(
  * Deterministic layered layout. Partners that share a visible child are kept
  * adjacent within a generation so pair connectors stay short and readable.
  */
-export function layoutLineageTopology(topology: LineageTopology): LineageLayout {
+export function layoutLineageTopology(
+  topology: LineageTopology,
+  options: LineageLayoutOptions = {}
+): LineageLayout {
+  const nodeWidth = LINEAGE_NODE_WIDTH;
+  const nodeHeight = LINEAGE_NODE_HEIGHT;
+  const nodeGap = options.nodeGap ?? NODE_GAP;
+  const chainGap = options.chainGap ?? CHAIN_GAP;
+  const rowGap = options.rowGap ?? ROW_GAP;
+  const wrapGap = options.wrapGap ?? WRAP_GAP;
+  const paddingX = options.paddingX ?? PAD_X;
+  const paddingY = options.paddingY ?? PAD_Y;
+  const maxRowWidth = options.maxRowWidth ?? Number.POSITIVE_INFINITY;
+
   const nodeById = new Map(topology.nodes.map((node) => [node.id, node]));
   const orderIndex = new Map(topology.nodeOrder.map((id, i) => [id, i]));
   const gens = Array.from(new Set(topology.nodes.map((n) => n.generation))).sort(
     (a, b) => a - b
   );
-  const minGen = gens[0] ?? 0;
-  const rowY = (gen: number) => PAD_Y + (gen - minGen) * (LINEAGE_NODE_HEIGHT + ROW_GAP);
 
   const partnerAdjacency = new Map<string, Set<string>>();
   topology.pairs.forEach((pair) => {
@@ -388,10 +415,11 @@ export function layoutLineageTopology(topology: LineageTopology): LineageLayout 
     partnerAdjacency.set(pair.damId, damSet);
   });
 
-  const positions = new Map<string, { x: number; y: number; centerX: number }>();
-  let maxRowWidth = 0;
-  const rowChains = new Map<number, string[][]>();
+  const chainWidth = (chain: string[]) =>
+    chain.length * nodeWidth + Math.max(0, chain.length - 1) * nodeGap;
 
+  // Build partner-aware chains for each generation.
+  const chainsByGen = new Map<number, string[][]>();
   gens.forEach((gen) => {
     const rowIds = topology.nodes
       .filter((n) => n.generation === gen)
@@ -421,46 +449,111 @@ export function layoutLineageTopology(topology: LineageTopology): LineageLayout 
       chains.push(chain);
     });
 
-    const chainWidth = (chain: string[]) =>
-      chain.length * LINEAGE_NODE_WIDTH + (chain.length - 1) * NODE_GAP;
-    const width = chains.reduce((sum, chain) => sum + chainWidth(chain), 0);
-    const totalWidth = width + Math.max(0, chains.length - 1) * CHAIN_GAP;
-    maxRowWidth = Math.max(maxRowWidth, totalWidth);
-    rowChains.set(gen, chains);
+    chainsByGen.set(gen, chains);
   });
 
-  gens.forEach((gen) => {
-    const chains = rowChains.get(gen) ?? [];
-    const chainWidth = (chain: string[]) =>
-      chain.length * LINEAGE_NODE_WIDTH + (chain.length - 1) * NODE_GAP;
-    const rowWidth =
-      chains.reduce((sum, chain) => sum + chainWidth(chain), 0) +
-      Math.max(0, chains.length - 1) * CHAIN_GAP;
-    let cursor = PAD_X + (maxRowWidth - rowWidth) / 2;
-    const y = rowY(gen);
-
+  // Split chains only at points that do not separate a partner pair.
+  const splitChains = (chains: string[][]): string[][] => {
+    const chunks: string[][] = [];
     chains.forEach((chain) => {
-      chain.forEach((id, idx) => {
-        const x = cursor + idx * (LINEAGE_NODE_WIDTH + NODE_GAP);
-        positions.set(id, {
-          x,
-          y,
-          centerX: x + LINEAGE_NODE_WIDTH / 2,
-        });
+      let current: string[] = [];
+      const flush = () => {
+        if (current.length > 0) {
+          chunks.push(current);
+          current = [];
+        }
+      };
+
+      chain.forEach((id) => {
+        if (current.length > 0) {
+          const last = current[current.length - 1];
+          const partnerOfLast = partnerAdjacency.get(last)?.has(id) ?? false;
+          if (!partnerOfLast && chainWidth([...current, id]) > maxRowWidth) {
+            flush();
+          }
+        }
+        current.push(id);
       });
-      cursor += chainWidth(chain) + CHAIN_GAP;
+      flush();
+    });
+    return chunks;
+  };
+
+  const packChunks = (
+    chunks: string[][]
+  ): { chunks: string[][]; width: number }[] => {
+    const rows: { chunks: string[][]; width: number }[] = [];
+    chunks.forEach((chunk) => {
+      const width = chainWidth(chunk);
+      const last = rows[rows.length - 1];
+      if (last && last.width + chainGap + width <= maxRowWidth) {
+        last.chunks.push(chunk);
+        last.width += chainGap + width;
+      } else {
+        rows.push({ chunks: [chunk], width });
+      }
+    });
+    return rows;
+  };
+
+  const genRows = new Map<number, { chunks: string[][]; width: number }[]>();
+  let layoutRowWidth = 0;
+  gens.forEach((gen) => {
+    const rows = packChunks(splitChains(chainsByGen.get(gen) ?? []));
+    genRows.set(gen, rows);
+    rows.forEach((row) => {
+      layoutRowWidth = Math.max(layoutRowWidth, row.width);
+    });
+  });
+
+  // Vertical cursor: each generation consumes all of its wrapped sub-rows.
+  const rowStartY = new Map<number, number>();
+  let cursorY = paddingY;
+  gens.forEach((gen) => {
+    const rows = genRows.get(gen) ?? [];
+    rowStartY.set(gen, cursorY);
+    cursorY +=
+      rows.length * nodeHeight +
+      Math.max(0, rows.length - 1) * wrapGap +
+      rowGap;
+  });
+
+  const positions = new Map<string, { x: number; y: number; centerX: number }>();
+  gens.forEach((gen) => {
+    const rows = genRows.get(gen) ?? [];
+    const startY = rowStartY.get(gen) ?? paddingY;
+
+    rows.forEach((row, rowIndex) => {
+      const y = startY + rowIndex * (nodeHeight + wrapGap);
+      let cursor = paddingX + (layoutRowWidth - row.width) / 2;
+
+      row.chunks.forEach((chunk) => {
+        chunk.forEach((id, idx) => {
+          const x = cursor + idx * (nodeWidth + nodeGap);
+          positions.set(id, {
+            x,
+            y,
+            centerX: x + nodeWidth / 2,
+          });
+        });
+        cursor += chainWidth(chunk) + chainGap;
+      });
     });
   });
 
   const nodes: LineageLayoutNode[] = topology.nodes.map((node) => {
-    const pos = positions.get(node.id) ?? { x: PAD_X, y: rowY(node.generation), centerX: PAD_X + LINEAGE_NODE_WIDTH / 2 };
+    const pos = positions.get(node.id) ?? {
+      x: paddingX,
+      y: rowStartY.get(node.generation) ?? paddingY,
+      centerX: paddingX + nodeWidth / 2,
+    };
     return {
       ...node,
       x: pos.x,
       y: pos.y,
       centerX: pos.centerX,
-      width: LINEAGE_NODE_WIDTH,
-      height: LINEAGE_NODE_HEIGHT,
+      width: nodeWidth,
+      height: nodeHeight,
     };
   });
   const laidOutById = new Map(nodes.map((n) => [n.id, n]));
@@ -533,18 +626,18 @@ export function layoutLineageTopology(topology: LineageTopology): LineageLayout 
 
   const maxX = Math.max(
     ...nodes.map((node) => node.x + node.width),
-    PAD_X + LINEAGE_NODE_WIDTH
+    paddingX + nodeWidth
   );
   const maxY = Math.max(
     ...nodes.map((node) => node.y + node.height),
-    PAD_Y + LINEAGE_NODE_HEIGHT
+    paddingY + nodeHeight
   );
 
   const rootNode = nodes.find((node) => node.isRoot);
   const generations: LineageGenerationRow[] = gens.map((gen, idx) => ({
     gen,
     label: `Generation ${idx + 1}`,
-    y: rowY(gen),
+    y: rowStartY.get(gen) ?? paddingY,
     isRoot: rootNode?.generation === gen,
   }));
 
@@ -553,8 +646,8 @@ export function layoutLineageTopology(topology: LineageTopology): LineageLayout 
     pairs,
     singles,
     generations,
-    width: maxX + PAD_X,
-    height: maxY + PAD_Y,
+    width: maxX + paddingX,
+    height: maxY + paddingY,
   };
 }
 
