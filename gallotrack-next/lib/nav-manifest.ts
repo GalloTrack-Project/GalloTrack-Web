@@ -9,6 +9,11 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import {
+  SYSTEM_CONFIG_SECTIONS,
+  getSystemConfigHref,
+  type SystemConfigSection,
+} from '@/lib/system-config-nav';
 
 /**
  * Single source of truth for dashboard navigation: which pages exist for
@@ -16,6 +21,13 @@ import ChickenIcon from '@/components/ChickenIcon';
  * Sidebar rendering (groups, mobile sheet) is layered on top of this in
  * later phases; Phase 1 only consumes the flat arrays below.
  */
+
+export type NavSubItem = {
+  id: SystemConfigSection;
+  href: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+};
 
 export type NavItem = {
   href: string;
@@ -30,6 +42,8 @@ export type NavItem = {
   key?: 'dashboard' | 'registry' | 'inventory' | 'lineage' | 'breeding' | 'profile' | 'overview' | 'users' | 'config';
   /** Group key in nav dictionary (optional) */
   groupKey?: 'farmGroup' | 'consoleGroup' | 'accountGroup';
+  /** Optional expandable submenu rendered by the sidebar/mobile nav. */
+  submenu?: NavSubItem[];
 };
 
 /** Mobile bottom bar keeps this many primary items; the rest live under More. */
@@ -69,7 +83,22 @@ export const OWNER_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard', label: 'System Overview', shortLabel: 'Overview', icon: LayoutDashboard, match: 'exact', group: 'Console', key: 'overview', groupKey: 'consoleGroup' },
   { href: '/admin', label: 'User Registry', shortLabel: 'Users', icon: Users, match: 'exact', group: 'Console', key: 'users', groupKey: 'consoleGroup' },
-  { href: '/admin/settings', label: 'System Config', shortLabel: 'Config', icon: Settings, match: 'prefix', group: 'Console', key: 'config', groupKey: 'consoleGroup' },
+  {
+    href: '/admin/settings',
+    label: 'System Config',
+    shortLabel: 'Config',
+    icon: Settings,
+    match: 'prefix',
+    group: 'Console',
+    key: 'config',
+    groupKey: 'consoleGroup',
+    submenu: SYSTEM_CONFIG_SECTIONS.map((section) => ({
+      id: section.id,
+      href: getSystemConfigHref(section.id),
+      label: section.label,
+      icon: section.icon,
+    })),
+  },
   { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account', key: 'profile', groupKey: 'accountGroup' },
 ];
 
