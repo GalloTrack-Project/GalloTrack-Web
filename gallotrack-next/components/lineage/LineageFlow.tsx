@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   Link2,
   Maximize2,
   Minimize2,
   Minus,
-  Plus,
-  RotateCcw,
   Search,
   Swords,
   User,
@@ -58,12 +56,9 @@ export interface LineageFlowProps {
 
 type Selection = { kind: 'bird'; id: string } | { kind: 'pair'; key: string } | null;
 
-const MIN_SCALE = 0.35;
-const MAX_SCALE = 1.8;
+/** Never shrink below ~70%; wide generations wrap instead. */
+const MIN_SCALE = 0.7;
 const DEFAULT_DEPTH = 3;
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
 
 const STATUS_DOT: Record<string, string> = {
   Active: 'bg-emerald-500',
@@ -140,20 +135,17 @@ export default function LineageFlow({
   }, [rootName, fowls, defaultRootId, index]);
 
   const [depth, setDepth] = useState(DEFAULT_DEPTH);
-  const [view, setView] = useState({ scale: 1, x: 0, y: 0 });
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [finder, setFinder] = useState('');
   const [finderIndex, setFinderIndex] = useState(0);
-  const [dragging, setDragging] = useState(false);
   const [sexFocus, setSexFocus] = useState<'all' | 'male' | 'female'>('all');
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
   const finderRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<{ startX: number; startY: number; x: number; y: number } | null>(null);
-  const pendingCenterRef = useRef<string | null>(null);
-  const lastFitKeyRef = useRef('');
+  const scrollTargetRef = useRef<string | null>(null);
 
   const statsMap = useMemo(
     () => buildChickenMatchStatsMap(matchHistory, fowls),
@@ -208,10 +200,36 @@ export default function LineageFlow({
     });
   }, [index, root, direction, depth, collapsedNodes]);
 
+  const measuredWidth = containerWidth > 0 ? containerWidth : 1024;
+  const compact = measuredWidth < 640;
+  const paddingX = compact ? 8 : 92;
+  const nodeGap = compact ? 20 : 28;
+  const chainGap = compact ? 24 : 74;
+  const rowGap = compact ? 96 : 138;
+  const wrapGap = compact ? 56 : 84;
+  const paddingY = compact ? 40 : 64;
+  const maxRowWidth = Math.max(0, measuredWidth / MIN_SCALE - paddingX * 2);
+
   const layout = useMemo(
-    () => (topology ? layoutLineageTopology(topology) : null),
-    [topology]
+    () =>
+      topology
+        ? layoutLineageTopology(topology, {
+            maxRowWidth,
+            nodeGap,
+            chainGap,
+            rowGap,
+            wrapGap,
+            paddingX,
+            paddingY,
+          })
+        : null,
+    [topology, maxRowWidth, nodeGap, chainGap, rowGap, wrapGap, paddingX, paddingY]
   );
+
+  // Fit to the available width; wrapping keeps the scale at or above MIN_SCALE.
+  const scale = layout
+    ? Math.max(MIN_SCALE, Math.min(1, measuredWidth / layout.width))
+    : 1;
 
   const queryMatches = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -278,65 +296,28 @@ export default function LineageFlow({
   const pairFightingBirds = fightersOf(pairOffspring);
   const pairStats = combineWinRates(pairFightingBirds.map((fowl) => statsOf(fowl)));
 
-  const fitToView = useCallback((): boolean => {
-    const el = viewportRef.current;
-    if (!el || !layout) return false;
-    const width = el.clientWidth;
-    const height = el.clientHeight;
-    if (width === 0 || height === 0) return false;
-    const scale = clamp(
-      Math.min((width - 40) / layout.width, (height - 40) / layout.height),
-      MIN_SCALE,
-      1.2
-    );
-    setView({
-      scale,
-      x: (width - layout.width * scale) / 2,
-      y: (height - layout.height * scale) / 2,
-    });
-    return true;
-  }, [layout]);
-
-  const fitKey = `${root?.id ?? ''}|${direction}|${depth}`;
+  // Track the canvas width and re-fit whenever the container resizes.
   useEffect(() => {
-    if (!layout || lastFitKeyRef.current === fitKey) return;
-    if (fitToView()) lastFitKeyRef.current = fitKey;
-  }, [layout, fitKey, fitToView]);
-
-  const zoomBy = useCallback((factor: number, anchorX?: number, anchorY?: number) => {
-    const el = viewportRef.current;
-    setView((current) => {
-      const scale = clamp(current.scale * factor, MIN_SCALE, MAX_SCALE);
-      if (scale === current.scale) return current;
-      const cx = anchorX ?? (el ? el.clientWidth / 2 : 0);
-      const cy = anchorY ?? (el ? el.clientHeight / 2 : 0);
-      const ratio = scale / current.scale;
-      return {
-        scale,
-        x: cx - (cx - current.x) * ratio,
-        y: cy - (cy - current.y) * ratio,
-      };
-    });
-  }, []);
-
-  const resetView = useCallback(() => setView({ scale: 1, x: 0, y: 0 }), []);
-
-  // Wheel zoom needs a non-passive native listener.
-  useEffect(() => {
-    const el = viewportRef.current;
+    const el = canvasRef.current;
     if (!el) return;
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      const rect = el.getBoundingClientRect();
-      zoomBy(
-        event.deltaY > 0 ? 0.9 : 1.1,
-        event.clientX - rect.left,
-        event.clientY - rect.top
-      );
+
+    const measure = () => setContainerWidth(el.clientWidth);
+    measure();
+
+    const observer =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    observer?.observe(el);
+    window.addEventListener('resize', measure);
+
+    // The expanded class changes the available width after paint.
+    const timer = expanded ? window.setTimeout(measure, 0) : null;
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+      if (timer !== null) window.clearTimeout(timer);
     };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [zoomBy]);
+  }, [expanded]);
 
   // Dismiss the bird finder when clicking outside it.
   useEffect(() => {
@@ -350,35 +331,36 @@ export default function LineageFlow({
     return () => window.removeEventListener('pointerdown', onPointerDown);
   }, [finder]);
 
-  // Center a bird after the layout that contains it has been computed.
+  // Search/focus targets scroll the normal page, never an inner canvas.
   useEffect(() => {
-    const id = pendingCenterRef.current;
+    const id = scrollTargetRef.current;
     if (!id || !layout) return;
-    const node = layout.nodes.find((n) => n.id === id);
-    const el = viewportRef.current;
-    if (!node || !el || el.clientWidth === 0) return;
-    pendingCenterRef.current = null;
-    setView((current) => ({
-      ...current,
-      x: el.clientWidth / 2 - node.centerX * current.scale,
-      y: el.clientHeight / 2 - (node.y + node.height / 2) * current.scale,
-    }));
-  }, [layout]);
+    const el = canvasRef.current?.querySelector<HTMLElement>(
+      `[data-node-id="${id}"]`
+    );
+    if (!el) return;
+    scrollTargetRef.current = null;
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false);
+    try {
+      el.scrollIntoView?.({
+        block: 'center',
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      });
+    } catch {
+      /* jsdom and some embedded browsers do not implement scrolling. */
+    }
+  }, [layout, highlightId, selected]);
 
-  // Expanded canvas: Escape exits and the page scroller is locked.
+  // Expanded canvas: Escape exits.
   useEffect(() => {
     if (!expanded) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setExpanded(false);
     };
     window.addEventListener('keydown', onKeyDown);
-    const scroller = document.getElementById('main-content');
-    const previous = scroller?.style.overflow ?? '';
-    if (scroller) scroller.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      if (scroller) scroller.style.overflow = previous;
-    };
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [expanded]);
 
   const focusBird = useCallback(
@@ -390,7 +372,7 @@ export default function LineageFlow({
       setHighlightId(id);
       setFinder('');
       setFinderIndex(0);
-      pendingCenterRef.current = id;
+      scrollTargetRef.current = id;
     },
     [onRootChange, onDirectionChange]
   );
@@ -399,7 +381,7 @@ export default function LineageFlow({
     const id = String(fowl.id);
     setSelected({ kind: 'bird', id });
     setHighlightId(id);
-    if (center) pendingCenterRef.current = id;
+    if (center) scrollTargetRef.current = id;
   }, []);
 
   const selectPair = useCallback((key: string) => {
@@ -411,7 +393,7 @@ export default function LineageFlow({
     (fowl: FowlRecord) => {
       onRootChange?.(fowl.name);
       setSelected({ kind: 'bird', id: String(fowl.id) });
-      pendingCenterRef.current = String(fowl.id);
+      scrollTargetRef.current = String(fowl.id);
     },
     [onRootChange]
   );
@@ -621,9 +603,8 @@ export default function LineageFlow({
   };
 
   const rootLabel = root ? `${root.name}` : 'No bird selected';
-  const zoomPercent = `${Math.round(view.scale * 100)}%`;
   const isExpandedClass = expanded
-    ? 'fixed inset-x-0 top-16 bottom-0 z-20 flex flex-col gap-2 overflow-hidden bg-background p-3 sm:p-4'
+    ? 'flex min-h-[calc(100dvh-4rem)] w-full flex-col gap-2'
     : 'space-y-3';
 
   return (
@@ -827,49 +808,6 @@ export default function LineageFlow({
         </div>
 
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => zoomBy(0.87)}
-              aria-label="Zoom out"
-              title="Zoom out"
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded border"
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <span className="text-muted-foreground w-10 text-center text-xs font-black tabular-nums">
-              {zoomPercent}
-            </span>
-            <button
-              type="button"
-              onClick={() => zoomBy(1.15)}
-              aria-label="Zoom in"
-              title="Zoom in"
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded border"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={fitToView}
-              aria-label="Fit to view"
-              title="Fit the whole pedigree in view"
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground h-7 cursor-pointer rounded border px-2 text-xs font-bold"
-            >
-              Fit
-            </button>
-            <button
-              type="button"
-              onClick={resetView}
-              aria-label="Reset view"
-              title="Reset zoom and position"
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-7 cursor-pointer items-center gap-1 rounded border px-2 text-xs font-bold"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Reset
-            </button>
-          </div>
-
           <div className="flex flex-wrap items-center gap-2">
             {query.trim() !== '' && (
               <span className="text-muted-foreground text-xs font-semibold">
@@ -907,82 +845,18 @@ export default function LineageFlow({
 
       <div className={`flex min-h-0 flex-col gap-3 ${expanded ? 'flex-1 xl:flex-row' : 'xl:flex-row xl:items-start'}`}>
         {/* Canvas */}
-        <div
-          className={`relative min-w-0 ${
-            expanded ? 'min-h-0 flex-1' : 'h-[460px] flex-1 sm:h-[540px] lg:h-[620px]'
-          }`}
-        >
-          {/* The canvas is intentionally focusable: arrow keys pan the graph while
-              pointer drag and the toolbar buttons cover the other interactions. */}
-          {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
+        <div className="relative min-w-0 flex-1">
           <div
-            ref={viewportRef}
+            ref={canvasRef}
             role="region"
             aria-label="Pedigree canvas"
             aria-describedby="lineage-flow-help"
-            tabIndex={0}
-            onPointerDown={(event) => {
-              if (event.button !== 0) return;
-              const target = event.target as HTMLElement;
-              if (target.closest('[data-testid="lineage-bird-card"], [data-testid="lineage-pair-hub"], button, input, select')) {
-                return;
-              }
-              const el = viewportRef.current;
-              if (!el) return;
-              dragRef.current = {
-                startX: event.clientX,
-                startY: event.clientY,
-                x: view.x,
-                y: view.y,
-              };
-              el.setPointerCapture(event.pointerId);
-              setDragging(true);
-            }}
-            onPointerMove={(event) => {
-              const drag = dragRef.current;
-              if (!drag) return;
-              setView((current) => ({
-                ...current,
-                x: drag.x + (event.clientX - drag.startX),
-                y: drag.y + (event.clientY - drag.startY),
-              }));
-            }}
-            onPointerUp={(event) => {
-              const el = viewportRef.current;
-              if (el && el.hasPointerCapture(event.pointerId)) {
-                el.releasePointerCapture(event.pointerId);
-              }
-              dragRef.current = null;
-              setDragging(false);
-            }}
-            onPointerCancel={() => {
-              dragRef.current = null;
-              setDragging(false);
-            }}
-            onKeyDown={(event) => {
-              if (event.target !== event.currentTarget) return;
-              const step = 48;
-              if (event.key === 'ArrowLeft') {
-                event.preventDefault();
-                setView((v) => ({ ...v, x: v.x + step }));
-              } else if (event.key === 'ArrowRight') {
-                event.preventDefault();
-                setView((v) => ({ ...v, x: v.x - step }));
-              } else if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                setView((v) => ({ ...v, y: v.y + step }));
-              } else if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                setView((v) => ({ ...v, y: v.y - step }));
-              } else if (event.key === '0') {
-                event.preventDefault();
-                resetView();
-              }
-            }}
-            className={`bg-muted/20 border-border relative h-full w-full overflow-hidden rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
-              dragging ? 'cursor-grabbing' : 'cursor-grab'
-            }`}
-            style={{ touchAction: 'none' }}
+            className="bg-muted/20 border-border relative w-full overflow-hidden rounded-lg border"
+            style={
+              layout
+                ? { height: Math.max(1, layout.height * scale) }
+                : { minHeight: 320 }
+            }
           >
             <div
               aria-hidden="true"
@@ -996,12 +870,15 @@ export default function LineageFlow({
 
             {layout ? (
               <div
-                className="absolute top-0 left-0"
+                data-testid="lineage-canvas"
+                data-scale={scale.toFixed(3)}
+                data-layout-width={String(layout.width)}
+                className="absolute top-0 left-1/2"
                 style={{
                   width: layout.width,
                   height: layout.height,
-                  transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
-                  transformOrigin: '0 0',
+                  transform: `translateX(-50%) scale(${scale})`,
+                  transformOrigin: 'top center',
                 }}
               >
                 {layout.generations.map((row) => (
@@ -1067,7 +944,6 @@ export default function LineageFlow({
               </div>
             )}
           </div>
-          {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
 
           {layout && (
             <ul className="sr-only" aria-label="Visible pedigree relationships">
@@ -1104,9 +980,10 @@ export default function LineageFlow({
           )}
 
           <p id="lineage-flow-help" className="sr-only">
-            Pedigree canvas. Drag the background to pan, use the zoom buttons or the mouse wheel to
-            zoom, and use arrow keys when the canvas is focused to move around. Select a bird card to
-            open its details, or a pair badge to inspect the breeding pair.
+            Pedigree canvas. The tree automatically fits the available width and wraps wide
+            generations; scroll the page to see taller trees. Use Find a bird to highlight and jump
+            to a bird, select a card to open its details, or a pair badge to inspect the breeding
+            pair.
           </p>
         </div>
 
@@ -1450,7 +1327,8 @@ export default function LineageFlow({
                   <p className="text-card-foreground text-sm font-black">Explore the pedigree</p>
                   <p className="text-muted-foreground mt-1 text-xs font-semibold">
                     Select a bird card for its parents, offspring and records, or a pair badge to
-                    inspect the breeding pair. Drag the canvas to pan and scroll to zoom.
+                    inspect the breeding pair. The tree fits the page width automatically; scroll
+                    the page for taller trees.
                   </p>
                 </div>
                 <div className="border-border space-y-1.5 border-t border-border/60 pt-3">
@@ -1494,9 +1372,9 @@ export default function LineageFlow({
 
       {!expanded && (
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[10px] font-semibold">
-          <span>Drag to pan</span>
+          <span>Tree auto-fits the page width</span>
           <span aria-hidden="true">·</span>
-          <span>Scroll to zoom</span>
+          <span>Wide generations wrap into extra rows</span>
           <span aria-hidden="true">·</span>
           <span>Double-click a bird to make it the root</span>
           <span aria-hidden="true">·</span>
