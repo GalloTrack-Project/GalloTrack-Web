@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
-import ProductPreviewMockup from './ProductPreviewMockup';
+import HeroCarousel from '@/components/hero/HeroCarousel';
 
 export default function HeroSection() {
   const auth = useAuth();
@@ -76,9 +76,9 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right Column: Visual Mockup */}
+          {/* Right Column: Farm photo carousel */}
           <div className="lg:col-span-6 w-full flex justify-center">
-            <ProductPreviewMockup />
+            <HeroCarousel className="max-w-xl" />
           </div>
         </div>
       </div>
