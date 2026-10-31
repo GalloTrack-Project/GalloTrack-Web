@@ -278,7 +278,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               )}
               <GlobalSearch />
               <div className="hidden items-center sm:flex">
-                <CompactLanguageSwitcher variant="button" />
+                <CompactLanguageSwitcher />
               </div>
               {!isAdmin && (
                 <Link
