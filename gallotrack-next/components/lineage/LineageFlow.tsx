@@ -28,6 +28,7 @@ import {
   layoutLineageTopology,
   lineageBirdCode,
   pickDefaultRootId,
+  FAMILY_TREE_GENERATIONS,
   type LineageDirection,
   type LineageLayoutNode,
   type LineageLayoutPair,
@@ -58,7 +59,6 @@ type Selection = { kind: 'bird'; id: string } | { kind: 'pair'; key: string } | 
 
 /** Never shrink below ~70%; wide generations wrap instead. */
 const MIN_SCALE = 0.7;
-const DEFAULT_DEPTH = 3;
 
 const STATUS_DOT: Record<string, string> = {
   Active: 'bg-emerald-500',
@@ -134,7 +134,6 @@ export default function LineageFlow({
     return defaultRootId ? index.byId.get(defaultRootId) ?? null : null;
   }, [rootName, fowls, defaultRootId, index]);
 
-  const [depth, setDepth] = useState(DEFAULT_DEPTH);
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -194,11 +193,11 @@ export default function LineageFlow({
     return buildLineageTopology(index, {
       rootId: String(root.id),
       direction,
-      // The toolbar value is a generation (row) count; the graph walks edges.
-      maxDepth: Math.max(1, depth - 1),
+      // Starting bird = generation 1; walk at most two edges outward.
+      maxDepth: FAMILY_TREE_GENERATIONS - 1,
       collapsed: collapsedNodes,
     });
-  }, [index, root, direction, depth, collapsedNodes]);
+  }, [index, root, direction, collapsedNodes]);
 
   const measuredWidth = containerWidth > 0 ? containerWidth : 1024;
   const compact = measuredWidth < 640;
@@ -435,22 +434,9 @@ export default function LineageFlow({
       );
     }
 
-    if (node.hiddenChildren > 0) {
-      return (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            setDepth((current) => Math.min(6, current + 1));
-          }}
-          aria-label={`Show ${node.hiddenDescendants || node.hiddenChildren} more relatives of ${node.fowl.name}`}
-          title="Show one more generation"
-          className="absolute -top-2 -right-2 z-10 inline-flex h-5 min-w-5 cursor-pointer items-center justify-center rounded-full border border-amber-300 bg-amber-50 px-1 text-[10px] font-black text-amber-800 shadow-xs hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
-        >
-          +{node.hiddenDescendants || node.hiddenChildren}
-        </button>
-      );
-    }
+    // Depth-cut counters are not shown: the canvas is fixed at
+    // FAMILY_TREE_GENERATIONS, so branches at the edge simply stop.
+    if (Math.abs(node.generation) >= FAMILY_TREE_GENERATIONS - 1) return null;
 
     return (
       <button
@@ -740,25 +726,6 @@ export default function LineageFlow({
                 {label}
               </button>
             ))}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <label htmlFor="lineage-flow-depth" className="text-muted-foreground text-xs font-bold">
-              Generations
-            </label>
-            <select
-              id="lineage-flow-depth"
-              aria-label="Generation depth"
-              value={depth}
-              onChange={(event) => setDepth(Number(event.target.value))}
-              className="border-border bg-card text-foreground focus:border-emerald-500 h-8 cursor-pointer rounded border px-2 text-xs font-bold focus:outline-none"
-            >
-              {[2, 3, 4, 5, 6].map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="flex items-center gap-1">
