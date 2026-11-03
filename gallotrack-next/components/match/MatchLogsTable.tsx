@@ -264,7 +264,9 @@ export default function MatchLogsTable({
                         {log.post_fight_condition}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground text-sm font-bold">—</span>
+                      <span className="text-muted-foreground text-sm font-semibold">
+                        Not recorded
+                      </span>
                     )}
                   </td>
                   <td
