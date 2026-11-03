@@ -16,7 +16,6 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  Link2,
   Unlink,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
@@ -25,20 +24,22 @@ import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
 import ChickenEntryName from '@/components/match/ChickenEntryName';
 import LinkChickenModal from '@/components/match/LinkChickenModal';
+import HistoricalGroupModal from '@/components/match/HistoricalGroupModal';
+import ReviewUnlinkedGroupsModal from '@/components/match/ReviewUnlinkedGroupsModal';
+import { groupUnlinkedMatches, historicalGroupKey, type HistoricalMatchGroup } from '@/lib/historical-matches';
 import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
+import { canFight, sexLabel } from '@/lib/helpers';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
-import { canFight } from '@/lib/helpers';
-import { updateMatch } from '@/lib/services/match-service';
+import { linkHistoricalMatchesToFowl, unlinkHistoricalMatch } from '@/lib/services/match-link-service';
+import { fetchFowls } from '@/lib/services/fowl-service';
 import type { MatchRecord, FowlRecord } from '@/lib/types';
 import {
   buildChickenMatchStatsMap,
-  combineWinRates,
   computeWinRate,
-  getChickenMatchStats,
   getWinRatePillClasses,
 } from '@/lib/win-rate';
 
@@ -56,6 +57,10 @@ export default function MatchLogsView() {
   const [linkingMatch, setLinkingMatch] = useState<MatchRecord | null>(null);
   const [unlinkingMatch, setUnlinkingMatch] = useState<MatchRecord | null>(null);
   const [unlinking, setUnlinking] = useState(false);
+  const [historicalGroup, setHistoricalGroup] = useState<HistoricalMatchGroup | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [linkGroup, setLinkGroup] = useState<HistoricalMatchGroup | null>(null);
+  const [linkInitialTab, setLinkInitialTab] = useState<'link' | 'create'>('link');
 
   // Read URL query params
   const urlSearch = searchParams.get('q') || '';
@@ -65,6 +70,7 @@ export default function MatchLogsView() {
   const urlStartDate = searchParams.get('startDate') || '';
   const urlEndDate = searchParams.get('endDate') || '';
   const urlSort = searchParams.get('sort') || 'newest';
+  const urlUnlinked = searchParams.get('unlinked') === '1';
   const urlPage = parseInt(searchParams.get('page') || '1', 10);
 
   // Local filter states synced with URL
@@ -75,6 +81,7 @@ export default function MatchLogsView() {
   const [startDate, setStartDate] = useState(urlStartDate);
   const [endDate, setEndDate] = useState(urlEndDate);
   const [sortOrder, setSortOrder] = useState(urlSort);
+  const [unlinkedOnly, setUnlinkedOnly] = useState(urlUnlinked);
   const [currentPage, setCurrentPage] = useState(isNaN(urlPage) || urlPage < 1 ? 1 : urlPage);
 
   // Preserve active tab and filter state when navigating to match record creation/editing
@@ -96,8 +103,9 @@ export default function MatchLogsView() {
     setStartDate(urlStartDate);
     setEndDate(urlEndDate);
     setSortOrder(urlSort);
+    setUnlinkedOnly(urlUnlinked);
     setCurrentPage(isNaN(urlPage) || urlPage < 1 ? 1 : urlPage);
-  }, [urlSearch, urlOutcome, urlChickenId, urlClass, urlStartDate, urlEndDate, urlSort, urlPage]);
+  }, [urlSearch, urlOutcome, urlChickenId, urlClass, urlStartDate, urlEndDate, urlSort, urlUnlinked, urlPage]);
 
   // Update URL helper
   const updateUrlParams = useCallback(
@@ -158,6 +166,12 @@ export default function MatchLogsView() {
     updateUrlParams({ sort: val === 'newest' ? null : val, page: '1' });
   };
 
+  const handleUnlinkedOnlyChange = (value: boolean) => {
+    setUnlinkedOnly(value);
+    setCurrentPage(1);
+    updateUrlParams({ unlinked: value ? '1' : null, page: '1' });
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     updateUrlParams({ page: String(page) });
@@ -171,6 +185,7 @@ export default function MatchLogsView() {
     setStartDate('');
     setEndDate('');
     setSortOrder('newest');
+    setUnlinkedOnly(false);
     setCurrentPage(1);
     if (pathname === '/profiling') {
       router.replace('/profiling?tab=matchForm', { scroll: false });
@@ -186,7 +201,8 @@ export default function MatchLogsView() {
     classFilter !== 'ALL' ||
     startDate ||
     endDate ||
-    sortOrder !== 'newest',
+    sortOrder !== 'newest' ||
+    unlinkedOnly,
   );
 
   // Chicken lookup maps
@@ -211,14 +227,9 @@ export default function MatchLogsView() {
     () => buildChickenMatchStatsMap(matchHistory, fowls),
     [matchHistory, fowls],
   );
-  const overallStats = useMemo(
-    () =>
-      combineWinRates(
-        fowls
-          .filter((f) => canFight(f))
-          .map((f) => getChickenMatchStats(matchStats, f)),
-      ),
-    [matchStats, fowls],
+  const unlinkedCount = useMemo(
+    () => matchHistory.filter((m) => m.fowl_id == null).length,
+    [matchHistory],
   );
 
   // Filter & sort rows
@@ -237,6 +248,10 @@ export default function MatchLogsView() {
         // Authoritative fowl_id only: orphan matches (fowl_id == null) never match by name fallback
         return m.fowl_id === targetId;
       });
+    }
+
+    if (unlinkedOnly) {
+      rows = rows.filter((m) => m.fowl_id == null);
     }
 
     // Class filter
@@ -300,6 +315,7 @@ export default function MatchLogsView() {
     endDate,
     searchQuery,
     sortOrder,
+    unlinkedOnly,
     fowlById,
     fowlByName,
     birdCodes,
@@ -320,27 +336,83 @@ export default function MatchLogsView() {
   }, [filteredMatches]);
 
   // Pagination calculation
-  const handleLinkChicken = async (match: MatchRecord, fowl: FowlRecord): Promise<boolean> => {
-    const result = await updateMatch(match.id, {
-      fowl_id: fowl.id,
-      entry_name: fowl.name,
-      breed: fowl.breed || 'Unknown',
+  const linkMatchesToFowl = async (
+    matches: MatchRecord[],
+    fowlId: number,
+    fowlName: string,
+    fowlBreed: string,
+    options: { updateRecordedName: boolean },
+  ): Promise<boolean> => {
+    const result = await linkHistoricalMatchesToFowl({
+      matches,
+      fowlId,
+      fowlName,
+      fowlBreed,
+      updateRecordedName: options.updateRecordedName,
     });
     if (result.error) {
-      toastMessage(`Could not link match: ${result.error}`, 'error', {
-        id: `match-link-${match.id}`,
+      toastMessage(`Could not link match(es): ${result.error}`, 'error', {
+        id: `match-link-${matches[0]?.id ?? 'batch'}`,
       });
       return false;
     }
     await fetchDatabaseResources();
-    toastMessage(`Match linked to ${fowl.name}.`, 'success', { id: `match-link-${match.id}` });
+    toastMessage(
+      result.linked === 1
+        ? 'Match linked to its chicken profile.'
+        : `${result.linked} matches linked to the same chicken profile.`,
+      'success',
+      { id: `match-link-${matches[0]?.id ?? 'batch'}` },
+    );
     return true;
+  };
+
+  const handleLinkChicken = async (
+    fowl: FowlRecord,
+    matches: MatchRecord[],
+    options: { updateRecordedName: boolean },
+  ): Promise<boolean> => {
+    if (!canFight(fowl) || sexLabel(fowl) !== 'Cock') {
+      toastMessage('Only cocks can be linked to a fight.', 'error', {
+        id: 'match-link-invalid-sex',
+      });
+      return false;
+    }
+    return linkMatchesToFowl(
+      matches,
+      fowl.id,
+      fowl.name,
+      fowl.breed || 'Unknown',
+      options,
+    );
+  };
+
+  const handleCreateAndLink = async (
+    fowlId: number,
+    matches: MatchRecord[],
+    options: { updateRecordedName: boolean },
+  ): Promise<boolean> => {
+    const fresh = await fetchFowls();
+    const created = fresh.find((fowl) => fowl.id === fowlId);
+    if (!created) {
+      toastMessage('The new chicken could not be loaded. Refresh and try again.', 'error', {
+        id: 'match-link-new-missing',
+      });
+      return false;
+    }
+    return linkMatchesToFowl(
+      matches,
+      created.id,
+      created.name,
+      created.breed || 'Unknown',
+      options,
+    );
   };
 
   const handleUnlinkChicken = async (match: MatchRecord) => {
     if (unlinking) return;
     setUnlinking(true);
-    const result = await updateMatch(match.id, { fowl_id: null });
+    const result = await unlinkHistoricalMatch(match);
     if (result.error) {
       toastMessage(`Could not unlink match: ${result.error}`, 'error', {
         id: `match-unlink-${match.id}`,
@@ -354,6 +426,25 @@ export default function MatchLogsView() {
     });
     setUnlinking(false);
     setUnlinkingMatch(null);
+  };
+
+  const unlinkedGroups = useMemo(
+    () => groupUnlinkedMatches(matchHistory),
+    [matchHistory],
+  );
+
+  const closeLinkModal = () => {
+    setLinkingMatch(null);
+    setLinkGroup(null);
+    setLinkInitialTab('link');
+  };
+
+  const openGroupLink = (group: HistoricalMatchGroup, tab: 'link' | 'create') => {
+    setHistoricalGroup(null);
+    setReviewOpen(false);
+    setLinkGroup(group);
+    setLinkInitialTab(tab);
+    setLinkingMatch(group.matches[0] ?? null);
   };
 
   const totalItems = filteredMatches.length;
@@ -378,6 +469,29 @@ export default function MatchLogsView() {
           <p className="text-muted-foreground mt-1 text-sm font-semibold">
             Complete record of logged derby, arena, and championship performance encounters
           </p>
+          {unlinkedCount > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                aria-pressed={unlinkedOnly}
+                onClick={() => handleUnlinkedOnlyChange(!unlinkedOnly)}
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black transition-colors ${
+                  unlinkedOnly
+                    ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-300'
+                    : 'border-border bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {unlinkedCount} historical {unlinkedCount === 1 ? 'entry needs' : 'entries need'} a profile
+              </button>
+              <button
+                type="button"
+                onClick={() => setReviewOpen(true)}
+                className="inline-flex cursor-pointer items-center rounded-md bg-emerald-600 px-3 py-1 text-xs font-black text-white transition-colors hover:bg-emerald-700"
+              >
+                Review unlinked entries ({unlinkedGroups.length})
+              </button>
+            </div>
+          )}
         </div>
 
         <div>
@@ -505,6 +619,17 @@ export default function MatchLogsView() {
             />
           </div>
 
+          <label className="text-muted-foreground inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold">
+            <input
+              type="checkbox"
+              checked={unlinkedOnly}
+              onChange={(event) => handleUnlinkedOnlyChange(event.target.checked)}
+              aria-label="Unlinked only"
+              className="h-3.5 w-3.5 accent-emerald-600"
+            />
+            Unlinked only
+          </label>
+
           {hasActiveFilters && (
             <button
               type="button"
@@ -525,47 +650,40 @@ export default function MatchLogsView() {
             data-testid="match-logs-filter-summary"
             className="border-border bg-muted/20 flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-                <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                  Overall (all time)
-                </span>
-                <span className="text-foreground">
-                  {overallStats.wins}W-{overallStats.losses}L-{overallStats.draws}D
-                </span>
-                <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(overallStats)}`}
-                >
-                  {overallStats.winRate === null ? '—%' : `${overallStats.winRate}%`}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-                <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                  In selected range
-                </span>
-                <span className="text-foreground">
-                  {filteredMatches.length === 1
-                    ? '1 match'
-                    : `${filteredMatches.length} matches`}
-                </span>
-                <span className="text-border" aria-hidden="true">
-                  |
-                </span>
-                <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                  W-L-D
-                </span>
-                <span className="text-foreground">
-                  {filterStats.wins}W-{filterStats.losses}L-{filterStats.draws}D
-                </span>
-                <span className="text-border" aria-hidden="true">
-                  |
-                </span>
-                <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(filterStats)}`}
-                >
-                  {filterStats.winRate === null ? '—%' : `${filterStats.winRate}%`}
-                </span>
-              </div>
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                Current filter totals
+              </span>
+              <span className="text-muted-foreground text-xs font-semibold">
+                Follows the active search and filters
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <span className="text-foreground">
+                {filteredMatches.length === 1
+                  ? '1 match'
+                  : `${filteredMatches.length} matches`}
+              </span>
+              <span className="text-border" aria-hidden="true">
+                |
+              </span>
+              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                W-L-D
+              </span>
+              <span className="text-foreground">
+                {filterStats.wins}W-{filterStats.losses}L-{filterStats.draws}D
+              </span>
+              <span className="text-border" aria-hidden="true">
+                |
+              </span>
+              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                Overall win rate
+              </span>
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(filterStats)}`}
+              >
+                {filterStats.winRate === null ? '—%' : `${filterStats.winRate}%`}
+              </span>
             </div>
           </div>
         )}
@@ -669,7 +787,9 @@ export default function MatchLogsView() {
                   const code = fowl ? birdCodes.get(String(fowl.id)) : '';
                   const hatch = fowl?.birthdate;
                   const isOrphan = !fowl;
-                  const recordStats = fowl ? getChickenMatchStats(matchStats, fowl) : undefined;
+                  const recordStats = fowl
+                    ? matchStats.get(fowl.name.trim().toLowerCase())
+                    : undefined;
                   const openFowlInfo = fowl
                     ? (event: React.MouseEvent) => {
                         event.stopPropagation();
@@ -719,27 +839,29 @@ export default function MatchLogsView() {
                             </div>
                           </button>
                         ) : (
-                          <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const group = unlinkedGroups.find(
+                                (candidate) =>
+                                  candidate.key ===
+                                  historicalGroupKey(log.entry_name, log.breed || ''),
+                              );
+                              if (group) setHistoricalGroup(group);
+                            }}
+                            aria-label={`View historical analytics for ${log.entry_name}`}
+                            title={`View historical analytics for ${log.entry_name}`}
+                            className="focus-visible:ring-ring flex w-full min-w-0 cursor-pointer flex-col items-start rounded-md text-left focus-visible:ring-2 focus-visible:outline-none"
+                          >
                             <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
-                                <ChickenIcon className="text-success h-3.5 w-3.5" />
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                                <ChickenIcon className="text-muted-foreground h-3.5 w-3.5" />
                               </div>
-                              {code && (
-                                <span className="text-success rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase">
-                                  [{formatBirdCodeForDisplay(code)}]
-                                </span>
-                              )}
                               <ChickenEntryName name={log.entry_name} variant="historical" />
-                              {isOrphan && (
-                                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                                  Historical entry (no profile linked)
-                                </span>
-                              )}
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                               <span className="text-muted-foreground text-xs font-semibold">
                                 {log.breed || '—'}
-                                {hatch ? ` · ${t('registry.hatchedDate', { date: hatch })}` : ''}
                               </span>
                               {log.age_category && (
                                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
@@ -747,7 +869,7 @@ export default function MatchLogsView() {
                                 </span>
                               )}
                             </div>
-                          </>
+                          </button>
                         )}
                         <MatchLogsRecordBadge
                           fowl={fowl}
@@ -822,17 +944,7 @@ export default function MatchLogsView() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-center gap-1">
-                          {isOrphan ? (
-                            <button
-                              type="button"
-                              onClick={() => setLinkingMatch(log)}
-                              aria-label={`Link to profile for ${log.entry_name}`}
-                              title="Link to profile"
-                              className="border-border bg-card text-muted-foreground hover:border-emerald-400 hover:text-emerald-700 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border transition-colors"
-                            >
-                              <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
-                            </button>
-                          ) : (
+                          {!isOrphan && (
                             <button
                               type="button"
                               onClick={() => setUnlinkingMatch(log)}
@@ -918,13 +1030,45 @@ export default function MatchLogsView() {
         </Modal>
       )}
 
+      {historicalGroup && (
+        <HistoricalGroupModal
+          group={historicalGroup}
+          onClose={() => setHistoricalGroup(null)}
+          onLinkRequest={(group) => openGroupLink(group, 'link')}
+          onCreateRequest={(group) => openGroupLink(group, 'create')}
+        />
+      )}
+
+      {reviewOpen && (
+        <ReviewUnlinkedGroupsModal
+          groups={unlinkedGroups}
+          onClose={() => setReviewOpen(false)}
+          onLink={(group) => openGroupLink(group, 'link')}
+          onCreate={(group) => openGroupLink(group, 'create')}
+        />
+      )}
+
       {linkingMatch && (
         <LinkChickenModal
           match={linkingMatch}
           fowls={fowls}
           birdCodes={birdCodes}
-          onClose={() => setLinkingMatch(null)}
-          onConfirm={(fowl) => handleLinkChicken(linkingMatch, fowl)}
+          statsMap={matchStats}
+          historicalMatches={[]}
+          forcedMatches={linkGroup?.matches}
+          initialTab={linkInitialTab}
+          showBulk={!linkGroup}
+          onClose={closeLinkModal}
+          onLink={async (fowl, matches, options) => {
+            const ok = await handleLinkChicken(fowl, matches, options);
+            if (ok) closeLinkModal();
+            return false;
+          }}
+          onCreateAndLink={async (fowlId, matches, options) => {
+            const ok = await handleCreateAndLink(fowlId, matches, options);
+            if (ok) closeLinkModal();
+            return false;
+          }}
         />
       )}
 
