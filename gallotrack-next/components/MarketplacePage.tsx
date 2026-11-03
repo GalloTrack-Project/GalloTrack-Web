@@ -18,6 +18,7 @@ import {
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
@@ -243,10 +244,15 @@ function FowlCard({
 
       {/* Photo + Identifier + Name + Breed */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="bg-muted border-border flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border shadow-inner">
-          {fowl.image_url ? (
-            <img src={fowl.image_url} alt={fowl.name} className="h-full w-full object-cover" />
-          ) : (
+        <ChickenPhoto
+          name={fowl.name}
+          code={code}
+          imageUrl={fowl.image_url}
+          photoPath={fowl.photo_path}
+          photoThumbPath={fowl.photo_thumb_path}
+          size={64}
+          className="h-16 w-16 rounded-md border-border shadow-inner"
+          fallback={
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -260,8 +266,8 @@ function FowlCard({
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-          )}
-        </div>
+          }
+        />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             {code && (
@@ -497,10 +503,15 @@ function FowlDetailModal({
       <div className="space-y-5">
         {/* Identity */}
         <div className="flex items-center gap-4">
-          <div className="bg-muted border-border flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border shadow-inner">
-            {fowl.image_url ? (
-              <img src={fowl.image_url} alt={fowl.name} className="h-full w-full object-cover" />
-            ) : (
+          <ChickenPhoto
+            name={fowl.name}
+            code={code}
+            imageUrl={fowl.image_url}
+            photoPath={fowl.photo_path}
+            photoThumbPath={fowl.photo_thumb_path}
+            size={80}
+            className="h-20 w-20 rounded-lg border-border shadow-inner"
+            fallback={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="28"
@@ -514,8 +525,8 @@ function FowlDetailModal({
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-            )}
-          </div>
+            }
+          />
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <StatusBadge status={fowl.status} />

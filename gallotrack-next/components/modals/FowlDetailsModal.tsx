@@ -55,6 +55,7 @@ import {
 } from '@/lib/services/media-service';
 import { toastMessage } from '@/lib/toast-bus';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import {
   buildRegistryContext,
@@ -441,19 +442,18 @@ export default function FowlDetailsModal({
       />
 
       <div className="dark:bg-muted/50 dark:border-border flex flex-col items-center gap-4 rounded-lg border border-slate-200/70 bg-slate-50 p-4 sm:flex-row">
-        <div className="dark:bg-card dark:border-border relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white shadow-inner">
-          {selectedFowlForDetails.image_url ? (
-            <img
-              src={selectedFowlForDetails.image_url}
-              alt={selectedFowlForDetails.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="text-muted-foreground flex h-full w-full items-center justify-center font-mono text-xs font-bold">
-              NO PHOTO
-            </div>
-          )}
-        </div>
+        <ChickenPhoto
+          name={selectedFowlForDetails.name}
+          code={birdCodeOf(selectedFowlForDetails, fowls)}
+          imageUrl={selectedFowlForDetails.image_url}
+          photoPath={selectedFowlForDetails.photo_path}
+          photoThumbPath={selectedFowlForDetails.photo_thumb_path}
+          size={96}
+          className="h-24 w-24 rounded-md border border-slate-200 bg-white shadow-inner dark:border-border dark:bg-card"
+          fallback={
+            <span className="text-muted-foreground font-mono text-xs font-bold">NO PHOTO</span>
+          }
+        />
         <div className="flex-1 space-y-1.5 text-center sm:text-left">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             <h4 className="dark:text-card-foreground text-lg font-black text-slate-900">
@@ -699,22 +699,23 @@ export default function FowlDetailsModal({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {selectedFowlForDetails.image_url && (
-            <button
-              type="button"
-              onClick={() => ui.setImageViewerUrl(selectedFowlForDetails.image_url || '')}
-              className="group relative cursor-pointer"
-              title="View main photo"
-            >
-              <img
-                src={selectedFowlForDetails.image_url}
-                alt={`${selectedFowlForDetails.name} main`}
-                className="border-border h-16 w-16 rounded border object-cover"
+          {(selectedFowlForDetails.image_url ||
+            selectedFowlForDetails.photo_path ||
+            selectedFowlForDetails.photo_thumb_path) && (
+            <div className="group relative">
+              <ChickenPhoto
+                name={selectedFowlForDetails.name}
+                code={birdCodeOf(selectedFowlForDetails, fowls)}
+                imageUrl={selectedFowlForDetails.image_url}
+                photoPath={selectedFowlForDetails.photo_path}
+                photoThumbPath={selectedFowlForDetails.photo_thumb_path}
+                size={64}
+                className="border-border h-16 w-16 rounded"
               />
-              <span className="absolute right-0 bottom-0 left-0 rounded-b bg-black/50 text-center text-xs font-black text-white uppercase">
+              <span className="pointer-events-none absolute right-0 bottom-0 left-0 rounded-b bg-black/50 text-center text-xs font-black text-white uppercase">
                 Main
               </span>
-            </button>
+            </div>
           )}
           {galleryPhotos.map((photo) => (
             <div key={photo.id} className="group relative">
@@ -739,7 +740,10 @@ export default function FowlDetailsModal({
               </button>
             </div>
           ))}
-          {!selectedFowlForDetails.image_url && galleryPhotos.length === 0 && (
+          {!selectedFowlForDetails.image_url &&
+            !selectedFowlForDetails.photo_path &&
+            !selectedFowlForDetails.photo_thumb_path &&
+            galleryPhotos.length === 0 && (
             <p className="text-muted-foreground text-xs font-semibold">
               No photos yet — add the first one.
             </p>

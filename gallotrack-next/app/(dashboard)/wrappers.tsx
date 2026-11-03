@@ -83,6 +83,7 @@ export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
   const {
+    currentUserId,
     handleLogout,
     handleSendResetLink,
     forgotEmail,
@@ -139,6 +140,9 @@ export function ModalsWrapper() {
       getAgeMetrics={store.getAgeMetrics}
       generationOf={store.generationOf}
       generationPurity={store.generationPurity}
+      canEditPhoto={
+        !ui.editingFowl?.user_id || String(ui.editingFowl.user_id) === currentUserId
+      }
       generationInfo={store.generationInfo}
       bloodlineOf={store.bloodlineOf}
       getSiblingRelations={store.getSiblingRelations}

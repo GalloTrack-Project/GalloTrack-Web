@@ -75,6 +75,7 @@ type ModalsProps = {
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
+  canEditPhoto?: boolean;
   generationInfo: (gen: number) => { short: string; label: string; desc: string; tone: string };
   bloodlineOf: (f: FowlRecord) => number;
   getSiblingRelations: (f: FowlRecord) => SiblingRelation[];
@@ -249,6 +250,7 @@ export default function Modals(props: ModalsProps) {
         getAgeMetrics={props.getAgeMetrics}
         generationOf={props.generationOf}
         generationPurity={props.generationPurity}
+        canEditPhoto={props.canEditPhoto}
       />
 
       <LogoutModal

@@ -1,5 +1,6 @@
 'use client';
 
+import ChickenPhoto from '@/components/ChickenPhoto';
 import React, { useState, useMemo } from 'react';
 import { BarChart3, Filter, ArrowUpDown } from 'lucide-react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
@@ -307,17 +308,20 @@ export default function PerFowlBreakdownModal({
                     <td className="py-2.5 px-3 text-muted-foreground font-bold">{index + 1}</td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2.5">
-                        {row.fowl.image_url ? (
-                          <img
-                            src={row.fowl.image_url}
-                            alt={row.fowl.name}
-                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-border"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-xs font-black text-muted-foreground shrink-0 select-none">
-                            {row.fowl.name.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
+                        <ChickenPhoto
+                          name={row.fowl.name}
+                          code={code}
+                          imageUrl={row.fowl.image_url}
+                          photoPath={row.fowl.photo_path}
+                          photoThumbPath={row.fowl.photo_thumb_path}
+                          size={32}
+                          className="h-8 w-8 border-border"
+                          fallback={
+                            <span className="text-xs font-black text-muted-foreground select-none">
+                              {row.fowl.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          }
+                        />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {code && (
