@@ -175,12 +175,13 @@ describe('LineageDirectory redesigned top section', () => {
     expect(topContainerClasses.includes('md:sticky')).toBe(false);
   });
 
-  it('shows dynamic summary text in context bar for Full Siblings & Families by default', () => {
+  it('shows the cock-only summary row for Full Siblings & Families by default', () => {
     renderDirectory();
     const contextBar = screen.getByTestId('lineage-context-bar');
-    // Default tab is 'families': 1 family · 3 offspring
-    expect(contextBar).toHaveTextContent(/1 family/i);
-    expect(contextBar).toHaveTextContent(/3 offspring/i);
+    // Default fixture has 1 cock sibling and no logged matches.
+    expect(contextBar).toHaveTextContent(/0 of 1\s+cocks fought/i);
+    expect(contextBar).toHaveTextContent(/0W-0L/);
+    expect(contextBar).toHaveTextContent(/—%/);
   });
 
   it('excludes hens from the family fighting total', () => {
@@ -209,9 +210,12 @@ describe('LineageDirectory redesigned top section', () => {
     });
 
     const card = screen.getByRole('article');
-    expect(card).toHaveTextContent(/1 of 1 males fought/);
+    expect(card).toHaveTextContent(/1 of 1 cocks fought/);
     expect(card).toHaveTextContent(/1W-0L/);
-    expect(card).not.toHaveTextContent(/2 of 2 males fought/);
+    expect(card).not.toHaveTextContent(/2 of 2 cocks fought/);
+    const henRow = within(card).getByTestId('family-hen-4');
+    expect(henRow).toHaveTextContent('Hen With Record');
+    expect(henRow).not.toHaveTextContent(/1W-0L|100%|No fights/);
   });
 
   it('applies the hen/fight rule across the canvas, Full Siblings, Sire and Dam tabs', () => {
@@ -245,30 +249,28 @@ describe('LineageDirectory redesigned top section', () => {
     // 2. Full Siblings
     fireEvent.click(screen.getByRole('tab', { name: /Full Siblings/i }));
     const familyCard = screen.getByRole('article');
-    expect(familyCard).toHaveTextContent('1 of 2 males fought');
+    expect(familyCard).toHaveTextContent('1 of 2 cocks fought');
     expect(familyCard).toHaveTextContent('1W-0L');
-    expect(familyCard.textContent).toMatch(/Best[\s\S]*Male Fighter/);
-    expect(familyCard.textContent).not.toMatch(/Best[\s\S]*Hen With Record/);
+    const bestRow = within(familyCard).getByText('Best').closest('div')!;
+    expect(bestRow).toHaveTextContent('Male Fighter');
+    expect(bestRow).not.toHaveTextContent('Hen With Record');
 
-    const henChip = within(familyCard).getByRole('button', { name: 'Hen With Record' });
-    expect(henChip).not.toHaveAttribute('data-record-trend');
+    const henRow = within(familyCard).getByTestId('family-hen-5');
+    expect(henRow).toHaveTextContent('Hen With Record');
+    expect(henRow).not.toHaveTextContent(/No fights|\d+W-\d+L|%/);
     expect(
-      within(familyCard).getByRole('button', { name: /Male Zero · No fights/i })
-    ).toHaveAttribute('data-record-trend', 'none');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Expand family 1' }));
-    const familyTable = screen.getByRole('table');
-    const henMemberRow = within(familyTable).getByText('Hen With Record').closest('tr')!;
-    expect(henMemberRow).toHaveTextContent('—');
-    expect(henMemberRow.textContent).not.toMatch(/No fights|\dW-\dL/);
-    expect(
-      within(henMemberRow).queryByRole('button', { name: /View all fights/i })
+      within(henRow).queryByRole('button', { name: /View all fights/i })
     ).not.toBeInTheDocument();
-    const zeroMemberRow = within(familyTable).getByText('Male Zero').closest('tr')!;
-    expect(zeroMemberRow).toHaveTextContent('No fights');
+
+    const zeroCockRow = within(familyCard).getByTestId('family-cock-3');
+    expect(zeroCockRow).toHaveTextContent('No fights');
     expect(
-      within(zeroMemberRow).getByRole('button', { name: 'View all fights for Male Zero' })
+      within(zeroCockRow).getByRole('button', { name: 'View all fights for Male Zero' })
     ).toBeInTheDocument();
+
+    const fighterCockRow = within(familyCard).getByTestId('family-cock-4');
+    expect(fighterCockRow).toHaveTextContent('1W-0L');
+    expect(fighterCockRow).toHaveTextContent('100%');
 
     // 3. Sire Offspring Tree (desktop table + mobile card + totals)
     fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
@@ -320,7 +322,7 @@ describe('LineageDirectory redesigned top section', () => {
     expect(damOption).not.toHaveTextContent(/2W/);
   });
 
-  it('renders every male and female offspring in the expanded member table', () => {
+  it('renders every cock and hen sibling in the family card', () => {
     const manyOffspring: FowlRecord[] = [
       bird({ id: 1, name: 'Sire X', gender: 'Rooster', bird_code: '9' }),
       bird({ id: 2, name: 'Dam Z', gender: 'Hen', bird_code: 'Z' }),
@@ -348,17 +350,14 @@ describe('LineageDirectory redesigned top section', () => {
 
     renderDirectory(vi.fn(), { fowls: manyOffspring });
 
-    expect(screen.getByText('7 chickens · 5 M · 2 F')).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Expand family 1' }));
-
-    const table = screen.getByRole('table');
+    expect(screen.getByText(/7 chickens .* 5 cocks .* 2 hens/)).toBeInTheDocument();
+    const cocksSection = screen.getByTestId('family-cocks');
     for (let i = 1; i <= 5; i += 1) {
-      expect(within(table).getByText(`Male ${i}`)).toBeInTheDocument();
+      expect(within(cocksSection).getByText(`Male ${i}`)).toBeInTheDocument();
     }
+    const hensSection = screen.getByTestId('family-hens');
     for (let i = 1; i <= 2; i += 1) {
-      expect(within(table).getByText(`Female ${i}`)).toBeInTheDocument();
+      expect(within(hensSection).getByText(`Female ${i}`)).toBeInTheDocument();
     }
   });
 
@@ -419,68 +418,73 @@ describe('LineageDirectory redesigned top section', () => {
       matchRecord(4, 4, 'Male B', 'Loss'),
     ];
 
-    it('collapsed card shows the win rate, best performer, and chips but no Fights buttons', () => {
+    it('shows each cock record and a quiet hen roster without the old mixed chips', () => {
       renderDirectory(vi.fn(), { fowls, matchHistory: records });
 
       const card = screen.getByRole('article');
+      expect(card).toHaveTextContent('Family total');
       expect(card).toHaveTextContent('50%');
       expect(card).toHaveTextContent('2W-2L');
-      expect(card).toHaveTextContent('2 of 3 males fought');
-      expect(card).toHaveTextContent('4 chickens · 3 M · 1 F');
-      expect(card).toHaveTextContent('3 male · 1 female');
+      expect(card).toHaveTextContent('2 of 3 cocks fought');
+      expect(card).toHaveTextContent(/4 chickens .* 3 cocks .* 1 hen/);
 
       expect(card).toHaveTextContent('Best');
       expect(card).toHaveTextContent('Male A');
-      expect(card).toHaveTextContent('2W-0L · 100%');
+      expect(card).toHaveTextContent('2W-0L \u00b7 100%');
 
-      const chips = card.querySelectorAll('[data-record-trend]');
-      expect(chips).toHaveLength(3);
-      expect(card.querySelectorAll('[data-record-trend="up"]')).toHaveLength(1);
-      expect(card.querySelectorAll('[data-record-trend="down"]')).toHaveLength(1);
-      expect(card.querySelectorAll('[data-record-trend="none"]')).toHaveLength(1);
-
-      expect(within(card).queryByRole('table')).not.toBeInTheDocument();
+      const cocks = within(card).getByTestId('family-cocks');
+      expect(within(cocks).getByTestId('family-cock-3')).toHaveTextContent('2W-0L \u00b7 100%');
+      expect(within(cocks).getByTestId('family-cock-4')).toHaveTextContent('0W-2L \u00b7 0%');
+      const zeroCock = within(cocks).getByTestId('family-cock-5');
+      expect(zeroCock).toHaveTextContent('No fights');
       expect(
-        within(card).queryByRole('button', { name: /View all fights/i })
-      ).not.toBeInTheDocument();
+        within(zeroCock).getByRole('button', { name: 'View all fights for Male C' })
+      ).toBeInTheDocument();
+      expect(within(cocks).getAllByText(/low sample/i).length).toBeGreaterThanOrEqual(2);
+
+      const hens = within(card).getByTestId('family-hens');
+      const hen = within(hens).getByTestId('family-hen-6');
+      expect(hen).toHaveTextContent('[9Z4]');
+      expect(hen).toHaveTextContent('Female A');
+      expect(hen).not.toHaveTextContent(/No fights|\d+W-\d+L|%/);
+      expect(within(hen).queryByRole('button', { name: /View all fights/i })).toBeNull();
+      expect(within(hens).queryByRole('button', { name: /View all fights/i })).toBeNull();
+
+      expect(card.querySelectorAll('[data-record-trend]')).toHaveLength(0);
     });
 
     it('shows the family total exactly once', () => {
       renderDirectory(vi.fn(), { fowls, matchHistory: records });
 
-      expect(screen.getAllByText(/males fought/i)).toHaveLength(1);
-      expect(screen.queryByText(/Family total/i)).not.toBeInTheDocument();
+      expect(screen.getAllByText(/cocks fought/i)).toHaveLength(2);
+      expect(screen.getAllByText('Family total')).toHaveLength(1);
     });
 
-    it('expands into a compact member table with profile links and no N/A role text', () => {
+    it('sorts cocks by win rate, then code, with no-decided cocks last', () => {
+      renderDirectory(vi.fn(), { fowls, matchHistory: records });
+
+      const rows = within(screen.getByTestId('family-cocks')).getAllByTestId(/family-cock-/);
+      expect(rows.map((row) => row.getAttribute('data-testid'))).toEqual([
+        'family-cock-3',
+        'family-cock-4',
+        'family-cock-5',
+      ]);
+    });
+
+    it('expands to reveal Open in Family Tree and profile links', () => {
       const onPick = vi.fn();
       renderDirectory(onPick, { fowls, matchHistory: records });
 
+      expect(screen.queryByTestId('family-expanded')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Expand family 1' }));
+      expect(screen.getByTestId('family-expanded')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Open in Family Tree/i })).toBeInTheDocument();
 
-      const table = screen.getByRole('table');
-      expect(within(table).getByRole('columnheader', { name: 'Code' })).toBeInTheDocument();
-      expect(within(table).getByRole('columnheader', { name: 'Chicken' })).toBeInTheDocument();
-      expect(within(table).getByRole('columnheader', { name: 'Sex' })).toBeInTheDocument();
-      expect(within(table).getByRole('columnheader', { name: 'Record' })).toBeInTheDocument();
-      expect(within(table).getAllByRole('row')).toHaveLength(5);
-      expect(within(table).getAllByText(/Cock/)).toHaveLength(3);
-      expect(within(table).getAllByText(/Hen/)).toHaveLength(1);
-      expect(within(table).queryByText(/\bSire\b/)).not.toBeInTheDocument();
-      expect(within(table).queryByText(/\bDam\b/)).not.toBeInTheDocument();
-
-      expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument();
-      expect(within(table).queryByText(/^Sire ·/i)).not.toBeInTheDocument();
-      expect(within(table).queryByText(/^Dam ·/i)).not.toBeInTheDocument();
-
-      // Fights actions exist only inside the expanded rows.
-      fireEvent.click(within(table).getByRole('button', { name: 'View all fights for Male A' }));
-      expect(screen.getByTestId('fight-probe')).toHaveTextContent('Male A');
-
-      fireEvent.click(within(table).getByRole('button', { name: 'Male B' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Male B' }));
       expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Male B' }));
 
-      expect(screen.getByRole('button', { name: /Open in Family Tree/i })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'View all fights for Male A' }));
+      expect(screen.getByTestId('fight-probe')).toHaveTextContent('Male A');
     });
 
     it('opens the family in the Family Tree tab', () => {
@@ -494,9 +498,8 @@ describe('LineageDirectory redesigned top section', () => {
       );
     });
 
-    it('sorts by win rate, offspring, fights, then name and keeps no-fight families last', () => {
+    it('sorts families by win rate, offspring, fights, then name and keeps no-fight families last', () => {
       const multiFamily: FowlRecord[] = [
-        // B: 3 males, 3 decided losses (0%).
         bird({ id: 1, name: 'Sire B', gender: 'Rooster', bird_code: 'B' }),
         bird({ id: 2, name: 'Dam B', gender: 'Hen', bird_code: 'DB' }),
         ...Array.from({ length: 3 }, (_, i) =>
@@ -509,7 +512,6 @@ describe('LineageDirectory redesigned top section', () => {
             bird_code: `B${i + 1}`,
           })
         ),
-        // A: 2 males, 2 wins (100%).
         bird({ id: 20, name: 'Sire A', gender: 'Rooster', bird_code: 'A' }),
         bird({ id: 21, name: 'Dam A', gender: 'Hen', bird_code: 'DA' }),
         ...Array.from({ length: 2 }, (_, i) =>
@@ -522,7 +524,6 @@ describe('LineageDirectory redesigned top section', () => {
             bird_code: `A${i + 1}`,
           })
         ),
-        // C: 4 males, no fights at all.
         bird({ id: 40, name: 'Sire C', gender: 'Rooster', bird_code: 'C' }),
         bird({ id: 41, name: 'Dam C', gender: 'Hen', bird_code: 'DC' }),
         ...Array.from({ length: 4 }, (_, i) =>
@@ -548,7 +549,6 @@ describe('LineageDirectory redesigned top section', () => {
 
       const order = () => screen.getAllByRole('article').map((card) => card.textContent || '');
 
-      // Default: win rate, families without fights last.
       expect(order()[0]).toContain('Sire A');
       expect(order()[1]).toContain('Sire B');
       expect(order()[2]).toContain('Sire C');
@@ -579,14 +579,27 @@ describe('LineageDirectory redesigned top section', () => {
 
     it('expands and collapses every family from the toolbar', () => {
       renderDirectory(vi.fn(), { fowls, matchHistory: records });
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('family-expanded')).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: /Expand all/i }));
-      expect(screen.getAllByRole('table')).toHaveLength(1);
+      expect(screen.getAllByTestId('family-expanded')).toHaveLength(1);
       expect(screen.getByRole('button', { name: 'Collapse family 1' })).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: /Collapse all/i }));
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('family-expanded')).not.toBeInTheDocument();
+    });
+
+    it('family total ignores hen match rows', () => {
+      renderDirectory(vi.fn(), {
+        fowls,
+        matchHistory: [...records, matchRecord(9, 6, 'Female A', 'Win')],
+      });
+
+      const card = screen.getByRole('article');
+      expect(card).toHaveTextContent('2W-2L');
+      expect(card).toHaveTextContent('2 of 3 cocks fought');
+      expect(card).not.toHaveTextContent('3W-2L');
+      expect(within(card).getByTestId('family-hen-6')).not.toHaveTextContent(/\d+W-\d+L|%/);
     });
   });
 
@@ -646,7 +659,7 @@ describe('LineageDirectory redesigned top section', () => {
     // Wait for debounced search
     await waitFor(() => {
       const contextBar = screen.getByTestId('lineage-context-bar');
-      expect(contextBar).toHaveTextContent(/1 of 1 family/i);
+      expect(contextBar).toHaveTextContent(/1 of 1 families/i);
     });
 
     // Clear search with Escape
@@ -671,17 +684,16 @@ describe('LineageDirectory redesigned top section', () => {
     expect(familiesTab).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('opens standalone fight history from an expanded member row', () => {
+  it('opens standalone fight history from a cock sibling row', () => {
     renderDirectory();
-    fireEvent.click(screen.getByRole('button', { name: 'Expand family 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'View all fights for Offspring 1A1' }));
     expect(screen.getByTestId('fight-probe')).toHaveTextContent('Offspring 1A1');
   });
 
-  it('opens chicken profile when an offspring chip is clicked', () => {
+  it('opens chicken profile from a cock sibling row', () => {
     const onPick = vi.fn();
     renderDirectory(onPick);
-    fireEvent.click(screen.getByRole('button', { name: /Offspring 1A1 ·/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Offspring 1A1' }));
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Offspring 1A1' }));
   });
 
