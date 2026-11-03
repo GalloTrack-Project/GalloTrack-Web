@@ -12,7 +12,7 @@ import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
 import { toastMessage } from '@/lib/toast-bus';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
-import { buildChickenMatchStatsMap } from '@/lib/win-rate';
+import { buildChickenMatchStatsMap, getChickenMatchStats } from '@/lib/win-rate';
 
 type Props = {
   /** Rows to render — defaults to the full match history from context. */
@@ -85,9 +85,7 @@ export default function MatchLogsTable({
               const code = fowl ? birdCodes.get(String(fowl.id)) : '';
               const hatch = fowl?.birthdate;
               const isOrphan = !fowl;
-              const recordStats = fowl
-                ? matchStats.get(fowl.name.trim().toLowerCase())
-                : undefined;
+              const recordStats = fowl ? getChickenMatchStats(matchStats, fowl) : undefined;
               const openFowlInfo = fowl
                 ? (event: React.MouseEvent) => {
                     event.stopPropagation();

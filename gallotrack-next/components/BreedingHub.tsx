@@ -28,7 +28,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { sexLabel, parentBreedOf, isFemale } from '@/lib/helpers';
+import { sexLabel, parentBreedOf, isFemale, canFight } from '@/lib/helpers';
+import { buildChickenMatchStatsMap, getChickenMatchStats } from '@/lib/win-rate';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
@@ -408,27 +409,28 @@ function BreedingPairCard({
   );
 
   const offspring = offspringForPairing(pair, fowls);
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   const offspringMatchStats = offspring.map((o) => {
-    const matches = matchHistory.filter(
-      (m) => m.entry_name?.toLowerCase() === o.name.toLowerCase(),
-    );
-    const wins = matches.filter((m) => m.outcome?.toLowerCase() === 'win').length;
-    const losses = matches.filter((m) => m.outcome?.toLowerCase() === 'loss').length;
-    const decided = wins + losses;
+    const record = getChickenMatchStats(matchStatsMap, o);
     return {
       fowl: o,
-      wins,
-      losses,
-      decided,
-      winRate: decided > 0 ? Math.round((wins / decided) * 100) : 0,
+      wins: canFight(o) ? record.wins : 0,
+      losses: canFight(o) ? record.losses : 0,
+      decided: canFight(o) ? record.decided : 0,
+      draws: canFight(o) ? record.draws : 0,
+      total: canFight(o) ? record.total : 0,
+      winRate: canFight(o) ? record.winRate : null,
     };
   });
 
   const totalWins = offspringMatchStats.reduce((a, s) => a + s.wins, 0);
   const totalLosses = offspringMatchStats.reduce((a, s) => a + s.losses, 0);
   const totalDecided = totalWins + totalLosses;
-  const combinedWinRate = totalDecided > 0 ? Math.round((totalWins / totalDecided) * 100) : 0;
+  const combinedWinRate = totalDecided > 0 ? Math.round((totalWins / totalDecided) * 100) : null;
 
   const outCfg = OUTCOME_CONFIG[pair.outcome];
   const offspringBaseCode = buildOffspringBaseCode(pair.sire_code, pair.dam_code) || '—';
@@ -487,7 +489,7 @@ function BreedingPairCard({
           </div>
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p
-              className={`text-lg font-black ${combinedWinRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : totalDecided > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
+              className={`text-lg font-black ${(combinedWinRate ?? 0) >= 50 ? 'text-emerald-600 dark:text-emerald-400' : totalDecided > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
             >
               {totalDecided > 0 ? `${combinedWinRate}%` : '—'}
             </p>
@@ -558,7 +560,7 @@ function BreedingPairCard({
 
         {expanded && (
           <div className="mt-2 space-y-1.5">
-            {offspringMatchStats.map(({ fowl, wins, losses, decided, winRate }) => {
+            {offspringMatchStats.map(({ fowl, wins, losses, decided, draws, total, winRate }) => {
               const code = codes.get(String(fowl.id)) || fowl.bird_code || '';
               return (
                 <button
@@ -580,11 +582,11 @@ function BreedingPairCard({
                       </p>
                     </div>
                   </div>
-                  {decided > 0 ? (
+                  {total > 0 ? (
                     <span
-                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
                     >
-                      {winRate}% · {wins}W-{losses}L
+                      {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L{draws > 0 ? `-${draws}D` : ''}
                     </span>
                   ) : (
                     <span className="text-muted-foreground/50 shrink-0 text-xs font-bold">
@@ -1311,13 +1313,17 @@ function BirdIdentityCard({
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
 
-  const matches = matchHistory.filter(
-    (m) => m.entry_name?.toLowerCase() === fowl.name.toLowerCase(),
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
   );
-  const wins = matches.filter((m) => m.outcome?.toLowerCase() === 'win').length;
-  const losses = matches.filter((m) => m.outcome?.toLowerCase() === 'loss').length;
-  const decided = wins + losses;
-  const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+  const record = getChickenMatchStats(matchStatsMap, fowl);
+  const wins = canFight(fowl) ? record.wins : 0;
+  const losses = canFight(fowl) ? record.losses : 0;
+  const decided = canFight(fowl) ? record.decided : 0;
+  const total = canFight(fowl) ? record.total : 0;
+  const draws = canFight(fowl) ? record.draws : 0;
+  const winRate = canFight(fowl) ? record.winRate : null;
 
   const codeColorMap = {
     sire: {
@@ -1394,11 +1400,11 @@ function BirdIdentityCard({
           )}
         </div>
         <div className="shrink-0 text-right">
-          {decided > 0 ? (
+          {total > 0 ? (
             <span
-              className={`rounded-full border px-2 py-0.5 text-xs font-black ${winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+              className={`rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
             >
-              {winRate}%
+                      {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L{draws > 0 ? `-${draws}D` : ''}
             </span>
           ) : (
             <span className="text-muted-foreground/50 text-xs font-bold">No fights</span>
@@ -1891,7 +1897,7 @@ export default function BreedingHub({
                       <div className="flex shrink-0 items-center gap-2">
                         {ps.decided > 0 && (
                           <span
-                            className={`rounded-full border px-2 py-0.5 text-xs font-black ${ps.winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                            className={`rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
                           >
                             {ps.winRate}%
                           </span>
@@ -2015,7 +2021,7 @@ export default function BreedingHub({
                     </div>
                     {ps.decided > 0 && (
                       <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${ps.winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
                       >
                         {ps.winRate}% win rate
                       </span>

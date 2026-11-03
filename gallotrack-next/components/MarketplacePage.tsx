@@ -62,6 +62,11 @@ import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
 import { useT } from '@/lib/i18n';
+import {
+  buildChickenMatchStatsMap,
+  getChickenMatchStats,
+  type ChickenMatchStats,
+} from '@/lib/win-rate';
 
 const INVENTORY_BREEDING_TYPES = ['all', 'purebred', 'crossbred', 'unverified'] as const;
 type BreedingTypeFilter = (typeof INVENTORY_BREEDING_TYPES)[number];
@@ -91,16 +96,8 @@ type Props = {
   setSelectedFowlForDetails?: (fowl: FowlRecord) => void;
 };
 
-function getWinRate(fowlName: string, matches: MatchRecord[]) {
-  const m = matches.filter(
-    (x) => x.entry_name?.trim().toLowerCase() === fowlName.trim().toLowerCase(),
-  );
-  const wins = m.filter((x) => x.outcome?.toLowerCase() === 'win').length;
-  const losses = m.filter((x) => x.outcome?.toLowerCase() === 'loss').length;
-  const total = m.length;
-  const decided = wins + losses;
-  const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
-  return { total, wins, losses, winRate };
+function getWinRate(fowl: FowlRecord, statsMap: Map<string, ChickenMatchStats>) {
+  return getChickenMatchStats(statsMap, fowl);
 }
 
 function getAgeDisplay(birthdate: string) {
@@ -147,6 +144,7 @@ function FowlCard({
   fowl,
   fowls,
   matches,
+  statsMap,
   onClick,
   code,
   query,
@@ -158,6 +156,7 @@ function FowlCard({
   fowl: FowlRecord;
   fowls: FowlRecord[];
   matches: MatchRecord[];
+  statsMap: Map<string, ChickenMatchStats>;
   onClick: () => void;
   code?: string;
   query?: string;
@@ -167,7 +166,7 @@ function FowlCard({
   classification?: BreedingClassification;
 }) {
   const unitPrefs = useUnitPrefs();
-  const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
+  const stats = useMemo(() => getWinRate(fowl, statsMap), [fowl, statsMap]);
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
@@ -357,19 +356,21 @@ function FowlCard({
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-muted-foreground text-xs font-bold uppercase">Performance</span>
             <span
-              className={`text-sm font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+              className={`text-sm font-black ${(stats.winRate ?? 0) >= 50 ? 'text-success' : 'text-danger'}`}
             >
-              {stats.winRate}%
+              {isMale(fowl.gender) ? (stats.winRate === null ? '—%' : `${stats.winRate}%`) : '—'}
             </span>
           </div>
+          {isMale(fowl.gender) && (
           <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
             <div
-              className={`h-full rounded-full transition-all ${stats.winRate >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`}
-              style={{ width: `${stats.winRate}%` }}
+              className={`h-full rounded-full transition-all ${(stats.winRate ?? 0) >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`}
+              style={{ width: `${stats.winRate ?? 0}%` }}
             ></div>
           </div>
+          )}
           <p className="text-muted-foreground mt-1.5 text-xs font-semibold">
-            {stats.wins}W {'\u00B7'} {stats.losses}L {'\u00B7'} {stats.total} total
+            {isMale(fowl.gender) ? `${stats.wins}W · ${stats.losses}L · ${stats.total} total` : '—'}
           </p>
         </div>
       )}
@@ -437,19 +438,19 @@ function FowlCard({
 
 function FowlDetailModal({
   fowl,
-  matches,
+  statsMap,
   onClose,
   fowls,
   code,
 }: {
   fowl: FowlRecord;
-  matches: MatchRecord[];
+  statsMap: Map<string, ChickenMatchStats>;
   onClose: () => void;
   fowls: FowlRecord[];
   code?: string;
 }) {
   const unitPrefs = useUnitPrefs();
-  const stats = getWinRate(fowl.name, matches);
+  const stats = getWinRate(fowl, statsMap);
   const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
   const modalWeight =
     fowl.structural_weight !== undefined &&
@@ -632,34 +633,34 @@ function FowlDetailModal({
         </div>
 
         {/* Performance */}
-        {!isDamRecord && stats.total > 0 && (
+        {stats.total > 0 && (
           <div className="bg-muted/50 border-border space-y-3 rounded-lg border p-4">
             <h4 className="text-muted-foreground text-xs font-black tracking-widest uppercase">
               Match Performance
             </h4>
             <div className="grid grid-cols-4 gap-2 text-center">
               <div className="bg-card border-border rounded-md border py-2.5">
-                <p className="text-card-foreground text-xl font-black">{stats.total}</p>
+                <p className="text-card-foreground text-xl font-black">{isDamRecord ? '—' : stats.total}</p>
                 <p className="text-muted-foreground text-xs font-bold uppercase">Total</p>
               </div>
               <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2.5">
-                <p className="text-success text-xl font-black">{stats.wins}</p>
+                <p className="text-success text-xl font-black">{isDamRecord ? '—' : stats.wins}</p>
                 <p className="text-success text-xs font-bold uppercase">Wins</p>
               </div>
               <div className="rounded-md border border-rose-500/30 bg-rose-500/10 py-2.5">
-                <p className="text-danger text-xl font-black">{stats.losses}</p>
+                <p className="text-danger text-xl font-black">{isDamRecord ? '—' : stats.losses}</p>
                 <p className="text-danger text-xs font-bold uppercase">Losses</p>
               </div>
               <div
-                className={`rounded-md border py-2.5 ${stats.winRate >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
+                className={`rounded-md border py-2.5 ${(stats.winRate ?? 0) >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
               >
                 <p
-                  className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                  className={`text-xl font-black ${(stats.winRate ?? 0) >= 50 ? 'text-success' : 'text-danger'}`}
                 >
-                  {stats.winRate}%
+                  {isDamRecord ? '—' : stats.winRate === null ? '—%' : `${stats.winRate}%`}
                 </p>
                 <p
-                  className={`text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                  className={`text-xs font-bold uppercase ${(stats.winRate ?? 0) >= 50 ? 'text-success' : 'text-danger'}`}
                 >
                   Win Rate
                 </p>
@@ -891,6 +892,10 @@ export default function MarketplacePage({
   };
 
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   const { filteredFowls, matchMap } = useMemo(() => {
     let pool = fowls;
@@ -947,9 +952,9 @@ export default function MarketplacePage({
       if (sortKey === 'strain') return a.breed.localeCompare(b.breed);
       if (sortKey === 'weight') return (Number(a.weight) || 0) - (Number(b.weight) || 0);
       if (sortKey === 'winrate') {
-        const ra = getWinRate(a.name, matchHistory);
-        const rb = getWinRate(b.name, matchHistory);
-        return rb.winRate - ra.winRate;
+        const ra = getWinRate(a, matchStatsMap);
+        const rb = getWinRate(b, matchStatsMap);
+        return (rb.winRate ?? -1) - (ra.winRate ?? -1);
       }
       return 0;
     });
@@ -967,6 +972,7 @@ export default function MarketplacePage({
     registryCtx,
     sortKey,
     matchHistory,
+    matchStatsMap,
     birdCodes,
   ]);
 
@@ -1274,6 +1280,7 @@ export default function MarketplacePage({
                   fowl={fowl}
                   fowls={fowls}
                   matches={matchHistory}
+                  statsMap={matchStatsMap}
                   code={birdCodes.get(String(fowl.id))}
                   onClick={() => setSelectedFowl(fowl)}
                   query={debouncedQuery}
@@ -1294,7 +1301,7 @@ export default function MarketplacePage({
       {selectedFowl && (
         <FowlDetailModal
           fowl={selectedFowl}
-          matches={matchHistory}
+          statsMap={matchStatsMap}
           fowls={fowls}
           code={birdCodes.get(String(selectedFowl.id))}
           onClose={() => setSelectedFowl(null)}

@@ -8,13 +8,14 @@ import { useUI } from '@/lib/contexts/ui-context';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
 import { buildRegistryContext, roleOf, roleLabel, type RegistryRole } from '@/lib/registry-roles';
 import {
-  computeWinRate,
+  buildChickenMatchStatsMap,
   combineWinRates,
+  getChickenMatchStats,
   getWinRatePillClasses,
   type WinRateStats,
 } from '@/lib/win-rate';
 import WinRatePill from '@/components/match/WinRatePill';
-import { formatShortDate, presetDateKeys, type DateRangePreset } from '@/lib/helpers';
+import { canFight, presetDateKeys, type DateRangePreset } from '@/lib/helpers';
 
 interface Props {
   show: boolean;
@@ -76,91 +77,51 @@ export default function PerFowlBreakdownModal({
     });
   }, [matchHistory, datePreset, nowMs]);
 
-  // Compute breakdown for all chickens that have at least one match
+  // The same shared record helper and fowl_id resolution as Match Logs and the
+  // Lineage Directory. The date range below only ever narrows the selected-range
+  // view; "Overall (all time)" always reads the complete history.
+  const allTimeStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
+  const rangeStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(filteredMatches, fowls),
+    [filteredMatches, fowls],
+  );
+
+  // Rows are fighting cocks with at least one match in the selected range.
   const chickenRows = useMemo(() => {
-    // 1. Group matches by fowl entry_name
-    const matchesByFowl = new Map<string, MatchRecord[]>();
-    filteredMatches.forEach((m) => {
-      const name = (m.entry_name || '').trim().toLowerCase();
-      if (!name) return;
-      const list = matchesByFowl.get(name) || [];
-      list.push(m);
-      matchesByFowl.set(name, list);
-    });
-
-    // 2. Map every registered fowl that has matches
     const rows: ChickenBreakdownRow[] = [];
-    const matchedFowlNames = new Set<string>();
-
     fowls.forEach((f) => {
-      const lower = f.name.trim().toLowerCase();
-      const matches = matchesByFowl.get(lower);
-      if (!matches || matches.length === 0) return;
-
-      matchedFowlNames.add(lower);
-      const wins = matches.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
-      const losses = matches.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
-      const draws = matches.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
-      const stats = computeWinRate(wins, losses, draws);
-
-      // find last match date
-      let lastMatchDate: string | null = null;
-      matches.forEach((m) => {
-        if (m.date && (!lastMatchDate || m.date > lastMatchDate)) {
-          lastMatchDate = m.date;
-        }
-      });
-
-      const role = roleOf(f, registryCtx);
+      if (!canFight(f)) return;
+      const rangeStats = getChickenMatchStats(rangeStatsMap, f);
+      if (rangeStats.total === 0) return;
       rows.push({
         fowl: f,
-        stats,
-        matches,
-        lastMatchDate,
-        role,
+        stats: rangeStats,
+        matches: rangeStats.matches,
+        lastMatchDate: rangeStats.lastMatchDate,
+        role: roleOf(f, registryCtx),
       });
     });
-
-    // 3. Also include any matches for unregistered chickens to guarantee 100% reconciliation
-    matchesByFowl.forEach((matches, lowerName) => {
-      if (matchedFowlNames.has(lowerName)) return;
-      const wins = matches.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
-      const losses = matches.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
-      const draws = matches.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
-      const stats = computeWinRate(wins, losses, draws);
-
-      let lastMatchDate: string | null = null;
-      matches.forEach((m) => {
-        if (m.date && (!lastMatchDate || m.date > lastMatchDate)) {
-          lastMatchDate = m.date;
-        }
-      });
-
-      const synthFowl: FowlRecord = {
-        id: -1 * Math.abs(matches[0]?.id || 9999),
-        name: matches[0]?.entry_name || lowerName,
-        breed: matches[0]?.breed || '—',
-        gender: 'Rooster',
-        status: 'Active',
-      } as FowlRecord;
-
-      rows.push({
-        fowl: synthFowl,
-        stats,
-        matches,
-        lastMatchDate,
-        role: 'Non-Breeding',
-      });
-    });
-
     return rows;
-  }, [fowls, filteredMatches, registryCtx]);
+  }, [fowls, rangeStatsMap, registryCtx]);
 
   // Apply role filter
   const filteredRows = useMemo(() => {
     if (roleFilter === 'all') return chickenRows;
     return chickenRows.filter((row) => row.role === roleFilter);
   }, [chickenRows, roleFilter]);
+
+  // All-time total for the same role filter. Changing the date range must never
+  // change this figure.
+  const overallRows = useMemo(() => {
+    return fowls
+      .filter((f) => canFight(f))
+      .filter((f) => roleFilter === 'all' || roleOf(f, registryCtx) === roleFilter)
+      .map((f) => ({ fowl: f, stats: getChickenMatchStats(allTimeStatsMap, f) }))
+      .filter((row) => row.stats.total > 0);
+  }, [fowls, roleFilter, registryCtx, allTimeStatsMap]);
 
   // Apply sorting
   const sortedRows = useMemo(() => {
@@ -188,10 +149,15 @@ export default function PerFowlBreakdownModal({
     });
   }, [filteredRows, sortBy]);
 
-  // Overall Reconciled Totals
+  // Selected-range total (follows the date range) and the all-time total that
+  // must stay identical no matter which range is selected.
   const totalStats = useMemo(() => {
     return combineWinRates(filteredRows.map((r) => r.stats));
   }, [filteredRows]);
+  const overallStats = useMemo(
+    () => combineWinRates(overallRows.map((r) => r.stats)),
+    [overallRows],
+  );
 
   if (!show) return null;
 
@@ -272,6 +238,29 @@ export default function PerFowlBreakdownModal({
               </select>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div
+        data-testid="breakdown-overall-total"
+        className="border-border bg-muted/20 flex flex-wrap items-center justify-between gap-2 border-b px-6 py-2.5 text-xs font-bold"
+      >
+        <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+          Overall (all time)
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-foreground">
+            {overallRows.length} chickens · {overallStats.total} matches
+          </span>
+          <span className="text-border" aria-hidden="true">|</span>
+          <span className="text-foreground">
+            {overallStats.wins}W-{overallStats.losses}L
+            {overallStats.draws > 0 ? `-${overallStats.draws}D` : ''}
+          </span>
+          <span className="text-border" aria-hidden="true">|</span>
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(overallStats)}`}>
+            {overallStats.winRate === null ? '—%' : `${overallStats.winRate}%`}
+          </span>
         </div>
       </div>
 
@@ -386,7 +375,7 @@ export default function PerFowlBreakdownModal({
             <tfoot>
               <tr data-testid="breakdown-total-row" className="bg-muted/80 font-black border-t-2 border-border text-foreground">
                 <td colSpan={2} className="py-3 px-3 text-left">
-                  Total · {sortedRows.length} chickens · {totalStats.total} matches · {totalStats.wins}W-{totalStats.losses}L · {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}
+                  In selected range · {sortedRows.length} chickens · {totalStats.total} matches · {totalStats.wins}W-{totalStats.losses}L · {totalStats.winRate !== null ? `${totalStats.winRate}%` : '—%'}
                 </td>
                 <td className="py-3 px-3 text-center">{totalStats.total}</td>
                 <td className="py-3 px-3 text-center whitespace-nowrap">
@@ -399,7 +388,7 @@ export default function PerFowlBreakdownModal({
                       totalStats,
                     )}`}
                   >
-                    {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'} · {totalStats.wins}W-{totalStats.losses}L
+                    {totalStats.winRate !== null ? `${totalStats.winRate}%` : '—%'} · {totalStats.wins}W-{totalStats.losses}L
                   </span>
                 </td>
               </tr>
@@ -464,9 +453,9 @@ export default function PerFowlBreakdownModal({
           {/* Pinned Mobile Total Card */}
           <div data-testid="breakdown-mobile-total" className="bg-muted/80 border-2 border-border rounded-lg p-3 font-black text-xs space-y-1.5 mt-3">
             <div className="flex items-center justify-between gap-2">
-              <span>Total · {sortedRows.length} chickens · {totalStats.total} matches · {totalStats.wins}W-{totalStats.losses}L · {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}</span>
+              <span>In selected range · {sortedRows.length} chickens · {totalStats.total} matches · {totalStats.wins}W-{totalStats.losses}L · {totalStats.winRate !== null ? `${totalStats.winRate}%` : '—%'}</span>
               <span className={`px-2 py-0.5 rounded-full border text-xs ${getWinRatePillClasses(totalStats)}`}>
-                {totalStats.winRate !== null ? `${totalStats.winRate}%` : 'No fights'}
+                {totalStats.winRate !== null ? `${totalStats.winRate}%` : '—%'}
               </span>
             </div>
             <div className="text-xs text-muted-foreground font-semibold flex items-center justify-between">

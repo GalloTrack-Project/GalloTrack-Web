@@ -24,10 +24,13 @@ import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
+import { canFight } from '@/lib/helpers';
 import type { MatchRecord, FowlRecord } from '@/lib/types';
 import {
   buildChickenMatchStatsMap,
+  combineWinRates,
   computeWinRate,
+  getChickenMatchStats,
   getWinRatePillClasses,
 } from '@/lib/win-rate';
 
@@ -196,6 +199,15 @@ export default function MatchLogsView() {
   const matchStats = useMemo(
     () => buildChickenMatchStatsMap(matchHistory, fowls),
     [matchHistory, fowls],
+  );
+  const overallStats = useMemo(
+    () =>
+      combineWinRates(
+        fowls
+          .filter((f) => canFight(f))
+          .map((f) => getChickenMatchStats(matchStats, f)),
+      ),
+    [matchStats, fowls],
   );
 
   // Filter & sort rows
@@ -462,40 +474,47 @@ export default function MatchLogsView() {
             data-testid="match-logs-filter-summary"
             className="border-border bg-muted/20 flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                Current filter totals
-              </span>
-              <span className="text-muted-foreground text-xs font-semibold">
-                Follows the active search and filters
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-              <span className="text-foreground">
-                {filteredMatches.length === 1
-                  ? '1 match'
-                  : `${filteredMatches.length} matches`}
-              </span>
-              <span className="text-border" aria-hidden="true">
-                |
-              </span>
-              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                W-L-D
-              </span>
-              <span className="text-foreground">
-                {filterStats.wins}W-{filterStats.losses}L-{filterStats.draws}D
-              </span>
-              <span className="text-border" aria-hidden="true">
-                |
-              </span>
-              <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                Overall win rate
-              </span>
-              <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(filterStats)}`}
-              >
-                {filterStats.winRate === null ? '—%' : `${filterStats.winRate}%`}
-              </span>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                  Overall (all time)
+                </span>
+                <span className="text-foreground">
+                  {overallStats.wins}W-{overallStats.losses}L-{overallStats.draws}D
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(overallStats)}`}
+                >
+                  {overallStats.winRate === null ? '—%' : `${overallStats.winRate}%`}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                  In selected range
+                </span>
+                <span className="text-foreground">
+                  {filteredMatches.length === 1
+                    ? '1 match'
+                    : `${filteredMatches.length} matches`}
+                </span>
+                <span className="text-border" aria-hidden="true">
+                  |
+                </span>
+                <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+                  W-L-D
+                </span>
+                <span className="text-foreground">
+                  {filterStats.wins}W-{filterStats.losses}L-{filterStats.draws}D
+                </span>
+                <span className="text-border" aria-hidden="true">
+                  |
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full border px-2 py-0.5 font-black ${getWinRatePillClasses(filterStats)}`}
+                >
+                  {filterStats.winRate === null ? '—%' : `${filterStats.winRate}%`}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -570,9 +589,7 @@ export default function MatchLogsView() {
                   const code = fowl ? birdCodes.get(String(fowl.id)) : '';
                   const hatch = fowl?.birthdate;
                   const isOrphan = !fowl;
-                  const recordStats = fowl
-                    ? matchStats.get(fowl.name.trim().toLowerCase())
-                    : undefined;
+                  const recordStats = fowl ? getChickenMatchStats(matchStats, fowl) : undefined;
                   const openFowlInfo = fowl
                     ? (event: React.MouseEvent) => {
                         event.stopPropagation();

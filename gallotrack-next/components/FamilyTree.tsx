@@ -15,7 +15,7 @@ import { formatBirdCodeForDisplay, compareBirdCodesNatural, offspringBase } from
 import {
   buildChickenMatchStatsMap,
   combineWinRates,
-  computeWinRate,
+  getChickenMatchStats,
   type WinRateStats,
 } from '@/lib/win-rate';
 import WinRatePill from '@/components/match/WinRatePill';
@@ -134,7 +134,7 @@ function OffspringNode({
   const code = formatBirdCodeForDisplay(codes.get(String(fowl.id)) || '');
   const kids = depth < maxDepth ? node.children : [];
   const totalKids = node.children.length;
-  const stats = matchStatsMap.get(fowl.name.trim().toLowerCase()) || computeWinRate(0, 0);
+  const stats = getChickenMatchStats(matchStatsMap, fowl);
   const classification = getBreedingClassification(fowl, fowls);
   const displayBreed =
     classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
