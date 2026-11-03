@@ -1,16 +1,22 @@
 'use client';
 import React from 'react';
+import { Unlink } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchLogsRecordBadge from '@/components/match/MatchLogsRecordBadge';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
+import ChickenEntryName from '@/components/match/ChickenEntryName';
+import LinkProfileButton from '@/components/match/LinkProfileButton';
+import LinkChickenModal from '@/components/match/LinkChickenModal';
 import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
-import { toastMessage } from '@/lib/toast-bus';
+import { linkHistoricalMatchesToFowl, unlinkHistoricalMatch } from '@/lib/services/match-link-service';
+import { fetchFowls } from '@/lib/services/fowl-service';
+import { canFight, sexLabel } from '@/lib/helpers';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 import { buildChickenMatchStatsMap } from '@/lib/win-rate';
 
@@ -34,9 +40,12 @@ export default function MatchLogsTable({
 }: Props) {
   const t = useT();
   const ui = useUI();
-  const { fowls, matchHistory, matchMedia, birdCodes } = useFowl();
+  const { fowls, matchHistory, matchMedia, birdCodes, fetchDatabaseResources } = useFowl();
   const rows = matches ?? matchHistory;
   const [editingMatch, setEditingMatch] = React.useState<MatchRecord | null>(null);
+  const [linkingMatch, setLinkingMatch] = React.useState<MatchRecord | null>(null);
+  const [unlinkingMatch, setUnlinkingMatch] = React.useState<MatchRecord | null>(null);
+  const [unlinking, setUnlinking] = React.useState(false);
 
   const fowlById = React.useMemo(() => {
     const m = new Map<number, FowlRecord>();
@@ -50,6 +59,46 @@ export default function MatchLogsTable({
     () => buildChickenMatchStatsMap(matchHistory, fowls),
     [matchHistory, fowls],
   );
+
+  const handleLinkChicken = async (
+    fowl: FowlRecord,
+    matches: MatchRecord[],
+    options: { updateRecordedName: boolean },
+  ): Promise<boolean> => {
+    if (!canFight(fowl) || sexLabel(fowl) !== 'Cock') return false;
+    const result = await linkHistoricalMatchesToFowl({
+      matches,
+      fowlId: fowl.id,
+      fowlName: fowl.name,
+      fowlBreed: fowl.breed || 'Unknown',
+      updateRecordedName: options.updateRecordedName,
+    });
+    if (result.error) return false;
+    await fetchDatabaseResources();
+    return true;
+  };
+
+  const handleCreateAndLink = async (
+    fowlId: number,
+    matches: MatchRecord[],
+    options: { updateRecordedName: boolean },
+  ): Promise<boolean> => {
+    const fresh = await fetchFowls();
+    const created = fresh.find((fowl) => fowl.id === fowlId);
+    if (!created) return false;
+    return handleLinkChicken(created, matches, options);
+  };
+
+  const handleUnlink = async (match: MatchRecord) => {
+    if (unlinking) return;
+    setUnlinking(true);
+    const result = await unlinkHistoricalMatch(match);
+    if (!result.error) {
+      await fetchDatabaseResources();
+      setUnlinkingMatch(null);
+    }
+    setUnlinking(false);
+  };
 
   return (
     <>
@@ -94,17 +143,6 @@ export default function MatchLogsTable({
                     ui.setSelectedFowlForDetails(fowl);
                   }
                 : undefined;
-              const handleChickenCellClick = (event: React.MouseEvent) => {
-                event.stopPropagation();
-                if (fowl) {
-                  ui.setSelectedFowlForDetails(fowl);
-                } else {
-                  toastMessage(
-                    'No chicken profile is linked to this historical match.',
-                    'warning',
-                  );
-                }
-              };
               return (
                 <tr
                   key={log.id}
@@ -113,11 +151,7 @@ export default function MatchLogsTable({
                   <td className="text-muted-foreground p-2.5 pl-3 font-mono whitespace-nowrap lg:p-3 lg:pl-4">
                     {log.date}
                   </td>
-                  <td
-                    className="min-w-0 cursor-pointer p-2.5 lg:p-3"
-                    onClick={handleChickenCellClick}
-                    title={fowl ? `View info for ${log.entry_name}` : undefined}
-                  >
+                  <td className="min-w-0 p-2.5 lg:p-3">
                     {openFowlInfo ? (
                       <button
                         type="button"
@@ -135,9 +169,7 @@ export default function MatchLogsTable({
                               [{formatBirdCodeForDisplay(code)}]
                             </span>
                           )}
-                          <span className="text-card-foreground font-bold transition-colors group-hover:text-emerald-600">
-                            {log.entry_name}
-                          </span>
+                          <ChickenEntryName name={log.entry_name} variant="linked" />
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                           <span className="text-muted-foreground text-xs font-semibold">
@@ -162,13 +194,12 @@ export default function MatchLogsTable({
                               [{formatBirdCodeForDisplay(code)}]
                             </span>
                           )}
-                          <span className="text-card-foreground font-bold transition-colors group-hover:text-emerald-600">
-                            {log.entry_name}
-                          </span>
+                          <ChickenEntryName name={log.entry_name} variant="historical" />
                           {isOrphan && (
-                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                              Historical entry (no profile linked)
-                            </span>
+                            <LinkProfileButton
+                              entryName={log.entry_name}
+                              onClick={() => setLinkingMatch(log)}
+                            />
                           )}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
@@ -240,14 +271,27 @@ export default function MatchLogsTable({
                     className="bg-card sticky right-0 w-[15%] min-w-[160px] p-2.5 text-center lg:min-w-[120px] lg:p-2"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <MatchMediaButtons
-                      match={log}
-                      videos={videosFor(matchMedia, log.id, log)}
-                      photos={photosFor(matchMedia, log.id, log)}
-                      posters={postersFor(matchMedia, log.id, log)}
-                      returnTo={returnTo}
-                      onEdit={() => setEditingMatch(log)}
-                    />
+                    <div className="flex items-center justify-center gap-1">
+                      {!isOrphan && (
+                        <button
+                          type="button"
+                          onClick={() => setUnlinkingMatch(log)}
+                          aria-label={`Unlink chicken profile from ${log.entry_name}`}
+                          title="Unlink from profile"
+                          className="border-border bg-card text-muted-foreground hover:border-rose-400 hover:text-rose-700 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border transition-colors"
+                        >
+                          <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      )}
+                      <MatchMediaButtons
+                        match={log}
+                        videos={videosFor(matchMedia, log.id, log)}
+                        photos={photosFor(matchMedia, log.id, log)}
+                        posters={postersFor(matchMedia, log.id, log)}
+                        returnTo={returnTo}
+                        onEdit={() => setEditingMatch(log)}
+                      />
+                    </div>
                   </td>
                 </tr>
               );
@@ -270,6 +314,60 @@ export default function MatchLogsTable({
             onSuccess={() => setEditingMatch(null)}
             onCancel={() => setEditingMatch(null)}
           />
+        </Modal>
+      )}
+
+      {linkingMatch && (
+        <LinkChickenModal
+          match={linkingMatch}
+          fowls={fowls}
+          birdCodes={birdCodes}
+          statsMap={matchStats}
+          historicalMatches={matchHistory.filter(
+            (other) =>
+              other.id !== linkingMatch.id &&
+              other.fowl_id == null &&
+              (other.entry_name || '').trim().toLowerCase() ===
+                (linkingMatch.entry_name || '').trim().toLowerCase(),
+          )}
+          onClose={() => setLinkingMatch(null)}
+          onLink={handleLinkChicken}
+          onCreateAndLink={handleCreateAndLink}
+        />
+      )}
+
+      {unlinkingMatch && (
+        <Modal
+          open
+          onClose={() => (unlinking ? undefined : setUnlinkingMatch(null))}
+          title="Unlink chicken profile"
+          description={`Remove the profile link from the match vs ${unlinkingMatch.opponent || 'opponent'}?`}
+          className="max-w-md"
+        >
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm font-semibold">
+              The match will become a historical entry and stop counting toward the linked
+              chicken&apos;s Overall record.
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setUnlinkingMatch(null)}
+                disabled={unlinking}
+                className="border-border bg-card text-foreground hover:bg-muted h-11 cursor-pointer rounded-md border px-4 text-sm font-black transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUnlink(unlinkingMatch)}
+                disabled={unlinking}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-md bg-rose-600 px-5 text-sm font-black text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {unlinking ? 'Unlinking?' : 'Unlink'}
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </>

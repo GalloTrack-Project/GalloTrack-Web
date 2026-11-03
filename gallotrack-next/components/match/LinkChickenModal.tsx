@@ -18,11 +18,26 @@ type Props = {
   /** Other unlinked matches with the same entered name. */
   historicalMatches: MatchRecord[];
   onClose: () => void;
-  onLink: (fowl: FowlRecord, matches: MatchRecord[]) => Promise<boolean>;
-  onCreateAndLink: (fowlId: number, matches: MatchRecord[]) => Promise<boolean>;
+  onLink: (
+    fowl: FowlRecord,
+    matches: MatchRecord[],
+    options: { updateRecordedName: boolean },
+  ) => Promise<boolean>;
+  onCreateAndLink: (
+    fowlId: number,
+    matches: MatchRecord[],
+    options: { updateRecordedName: boolean },
+  ) => Promise<boolean>;
   /** The edit form already owns persistence, so it only needs the picker tab. */
   showCreateTab?: boolean;
   showBulk?: boolean;
+  queue?: {
+    index: number;
+    total: number;
+    onPrevious: () => void;
+    onNext: () => void;
+    onSkip: () => void;
+  };
 };
 
 type Tab = 'link' | 'create';
@@ -54,6 +69,7 @@ export default function LinkChickenModal({
   onCreateAndLink,
   showCreateTab = true,
   showBulk = true,
+  queue,
 }: Props) {
   const [tab, setTab] = useState<Tab>('link');
   const [query, setQuery] = useState('');
@@ -63,6 +79,7 @@ export default function LinkChickenModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmSexConflict, setConfirmSexConflict] = useState(false);
+  const [updateRecordedName, setUpdateRecordedName] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
 
   const enteredKey = (match.entry_name || '').trim().toLowerCase();
@@ -76,6 +93,17 @@ export default function LinkChickenModal({
   useEffect(() => {
     searchRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    setTab('link');
+    setQuery('');
+    setSelectedId(null);
+    setApplyBulk(false);
+    setCheckedIds(new Set());
+    setConfirmSexConflict(false);
+    setUpdateRecordedName(false);
+    setError(null);
+  }, [match.id]);
 
   const candidates = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -135,7 +163,7 @@ export default function LinkChickenModal({
     setError(null);
     setSaving(true);
     try {
-      const ok = await onLink(selected, linkTargets);
+      const ok = await onLink(selected, linkTargets, { updateRecordedName });
       if (ok) onClose();
     } finally {
       setSaving(false);
@@ -145,7 +173,7 @@ export default function LinkChickenModal({
   const handleCreated = async (fowlId: number) => {
     setSaving(true);
     try {
-      const ok = await onCreateAndLink(fowlId, linkTargets);
+      const ok = await onCreateAndLink(fowlId, linkTargets, { updateRecordedName });
       if (ok) onClose();
     } finally {
       setSaving(false);
@@ -290,13 +318,21 @@ export default function LinkChickenModal({
             </div>
 
             {nameDiffers && selected && (
-              <p
-                role="status"
-                className="rounded-md border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-              >
-                The selected chicken is named ?{selected.name}?, but this match is recorded as ?{match.entry_name}?.
-                Saving will update the recorded name.
-              </p>
+              <div className="rounded-md border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                <p>
+                  The selected chicken is named ?{selected.name}?, but this match is recorded as ?{match.entry_name}?.
+                  The historical name is preserved unless you opt in below.
+                </p>
+                <label className="mt-2 flex cursor-pointer items-center gap-2 font-bold">
+                  <input
+                    type="checkbox"
+                    checked={updateRecordedName}
+                    onChange={(event) => setUpdateRecordedName(event.target.checked)}
+                    className="h-4 w-4 accent-amber-600"
+                  />
+                  Also update the recorded name
+                </label>
+              </div>
             )}
 
             {sexConflict && selected && (
@@ -363,10 +399,42 @@ export default function LinkChickenModal({
               </div>
             )}
 
+            {queue && (
+              <div className="border-border flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+                <span className="text-muted-foreground text-xs font-black">
+                  {queue.index + 1} of {queue.total}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={queue.onPrevious}
+                    disabled={queue.index === 0}
+                    className="border-border bg-card text-foreground hover:bg-muted h-11 cursor-pointer rounded-md border px-3 text-xs font-black disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={queue.onNext}
+                    className="border-border bg-card text-foreground hover:bg-muted h-11 cursor-pointer rounded-md border px-3 text-xs font-black"
+                  >
+                    Next
+                  </button>
+                  <button
+                    type="button"
+                    onClick={queue.onSkip}
+                    className="text-muted-foreground hover:text-foreground h-11 cursor-pointer px-3 text-xs font-black underline-offset-2 hover:underline"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={queue ? queue.onSkip : onClose}
                 className="text-muted-foreground hover:text-foreground h-11 cursor-pointer px-2 text-xs font-black underline-offset-2 hover:underline"
               >
                 Keep as historical

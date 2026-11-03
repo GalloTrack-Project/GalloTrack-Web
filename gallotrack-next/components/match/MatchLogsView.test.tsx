@@ -499,10 +499,42 @@ describe('MatchLogsView', () => {
     await waitFor(() =>
       expect(mockUpdateMatch).toHaveBeenCalledWith(
         99,
-        expect.objectContaining({ fowl_id: 123, entry_name: 'Hatch Silver Jr' })
+        expect.objectContaining({ fowl_id: 123 })
       )
     );
     expect(mockFetchFowls).toHaveBeenCalled();
+  });
+
+  it('opens the guided review queue and steps through unlinked entries', () => {
+    const a = {
+      id: 300,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Queue A',
+      outcome: 'Win',
+      date: '2025-02-09',
+    } as MatchRecord;
+    const b = {
+      ...a,
+      id: 301,
+      entry_name: 'Hatch Crown',
+      opponent: 'Queue B',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [a, b] } as typeof mockFowlContext;
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Review unlinked' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('1 of 2')).toBeInTheDocument();
+    expect(within(dialog).getByText('Hatch Silver')).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Next' }));
+    expect(within(dialog).getByText('2 of 2')).toBeInTheDocument();
+    expect(within(dialog).getByText('Hatch Crown')).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Previous' }));
+    expect(within(dialog).getByText('1 of 2')).toBeInTheDocument();
   });
 
   it('shows the unlinked count and filters to unlinked rows only', () => {
@@ -552,7 +584,7 @@ describe('MatchLogsView', () => {
     fireEvent.click(name);
     expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Link to profile for Hatch Silver' })
+      screen.getByRole('button', { name: 'Link profile for Hatch Silver' })
     ).toBeInTheDocument();
   });
 
@@ -573,12 +605,42 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link to profile for Hatch Silver' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
 
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
     expect(screen.getByText(/selected chicken is named/i)).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Link chicken' }));
+
+    await waitFor(() =>
+      expect(mockUpdateMatch).toHaveBeenCalledWith(99, { fowl_id: 10 })
+    );
+    expect(mockFetchDatabaseResources).toHaveBeenCalled();
+  });
+
+  it('preserves entry_name unless the explicit rename option is ticked, then unlink restores it', async () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    const { rerender } = render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
+    fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
+
+    fireEvent.click(screen.getByLabelText('Also update the recorded name'));
     fireEvent.click(screen.getByRole('button', { name: 'Link chicken' }));
 
     await waitFor(() =>
@@ -588,7 +650,24 @@ describe('MatchLogsView', () => {
         breed: 'Hatch',
       })
     );
-    expect(mockFetchDatabaseResources).toHaveBeenCalled();
+
+    mockFowlContext = {
+      ...mockFowlContext,
+      matchHistory: [{ ...historical, fowl_id: 10, entry_name: 'Storm Rooster' }],
+    };
+    rerender(<MatchLogsView />);
+    const row = screen.getByText('Old Rival').closest('tr') as HTMLElement;
+    fireEvent.click(
+      within(row).getByRole('button', { name: 'Unlink chicken profile from Storm Rooster' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Unlink' }));
+
+    await waitFor(() =>
+      expect(mockUpdateMatch).toHaveBeenCalledWith(99, {
+        fowl_id: null,
+        entry_name: 'Hatch Silver',
+      })
+    );
   });
 
   it('unlinks a linked match and refreshes stats', async () => {

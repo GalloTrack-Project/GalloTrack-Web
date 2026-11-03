@@ -38,6 +38,8 @@ function useToast() {
   return context;
 }
 
+const MAX_VISIBLE_TOASTS = 3;
+
 const VARIANT_CLASS: Record<ToastVariant, string> = {
   default: 'border-border',
   success: 'border-success',
@@ -75,17 +77,29 @@ function ToastProvider({ children }: { children: ReactNode }) {
       const id = nextId.current++;
       const duration = input.duration ?? 5000;
       if (input.id) activeDedupeKeys.current.set(input.id, id);
-      setToasts((current) => [
-        ...current,
-        {
-          id,
-          dedupeKey: input.id,
-          title: input.title,
-          description: input.description,
-          variant: input.variant ?? 'default',
-          duration,
-        },
-      ]);
+      setToasts((current) => {
+        const next = [
+          ...current,
+          {
+            id,
+            dedupeKey: input.id,
+            title: input.title,
+            description: input.description,
+            variant: input.variant ?? 'default',
+            duration,
+          },
+        ];
+        if (next.length <= MAX_VISIBLE_TOASTS) return next;
+
+        const dropped = next.slice(0, next.length - MAX_VISIBLE_TOASTS);
+        dropped.forEach((item) => {
+          const timer = timers.current.get(item.id);
+          if (timer) clearTimeout(timer);
+          timers.current.delete(item.id);
+          if (item.dedupeKey) activeDedupeKeys.current.delete(item.dedupeKey);
+        });
+        return next.slice(-MAX_VISIBLE_TOASTS);
+      });
       if (duration > 0) {
         timers.current.set(
           id,

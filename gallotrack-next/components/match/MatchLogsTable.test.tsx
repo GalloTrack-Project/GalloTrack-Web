@@ -209,6 +209,31 @@ describe('Match Media Resolution and MatchLogsTable', () => {
     expect(screen.queryByText('No media')).not.toBeInTheDocument();
   });
 
+  it('unlinked historical rows expose only the Link profile badge button', () => {
+    const historical = {
+      id: 1002,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+    } as MatchRecord;
+
+    render(<MatchLogsTable matches={[historical]} />);
+
+    const name = screen.getByText('Hatch Silver');
+    expect(name.closest('button')).toBeNull();
+    fireEvent.click(name);
+    expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    expect(screen.getByRole('heading', { name: 'Link historical match' })).toBeInTheDocument();
+  });
+
   it('clicking the chicken identity opens the chicken info card instead of the match editor', () => {
     const fowl = {
       id: 501,
