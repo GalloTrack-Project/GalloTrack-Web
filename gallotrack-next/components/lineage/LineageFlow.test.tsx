@@ -27,6 +27,11 @@ const family: FowlRecord[] = [
   bird({ id: 7, name: 'Grandchild', gender: 'Rooster', sire: 'Offspring 1A1', dam: 'Dam C', bird_code: '1A1C1' }),
 ];
 
+const deepFamily: FowlRecord[] = [
+  ...family,
+  bird({ id: 8, name: 'Great Grandchild', gender: 'Rooster', sire: 'Grandchild', bird_code: '1A1C1D1' }),
+];
+
 const match = (id: number, fowlId: number, entryName: string, outcome: 'Win' | 'Loss'): MatchRecord => ({
   id,
   fowl_id: fowlId,
@@ -164,14 +169,29 @@ describe('LineageFlow pedigree canvas', () => {
     expect(screen.getAllByTestId('lineage-bird-card')).toHaveLength(new Set(family.map((f) => f.id)).size);
   });
 
-  it('reveals deeper generations from the depth control and the hidden-relative badge', () => {
+  it('limits the canvas to three generations and removes the depth selector', () => {
+    render(<Harness fowls={deepFamily} />);
+
+    expect(screen.queryByLabelText('Generation depth')).not.toBeInTheDocument();
+    expect(screen.queryByText('Generations')).not.toBeInTheDocument();
+
+    expect(cardFor('Sire 1')).toBeInTheDocument();
+    expect(cardFor('Offspring 1A1')).toBeInTheDocument();
+    expect(cardFor('Grandchild')).toBeInTheDocument();
+    expect(
+      screen.queryAllByTestId('lineage-bird-card').some((el) => el.textContent?.includes('Great Grandchild'))
+    ).toBe(false);
+
+    // No depth-cut "+N" controls; collapsed branches still show their +N.
+    expect(screen.queryByRole('button', { name: /Show .* more relatives/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the +N badge for a collapsed branch inside the three generations', () => {
     render(<Harness />);
 
-    fireEvent.change(screen.getByLabelText('Generation depth'), { target: { value: '2' } });
-    expect(screen.queryAllByTestId('lineage-bird-card').some((el) => el.textContent?.includes('Grandchild'))).toBe(false);
-
-    fireEvent.click(screen.getByRole('button', { name: /Show 1 more relatives of Offspring 1A1/i }));
-    expect(cardFor('Grandchild')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse branch of Sire 1' }));
+    const expand = screen.getByRole('button', { name: /Expand branch of Sire 1/ });
+    expect(expand).toHaveTextContent(/\+\d+/);
   });
 
   it('walks ancestors above the selected bird', () => {
@@ -199,6 +219,18 @@ describe('LineageFlow pedigree canvas', () => {
 
     fireEvent.change(finder, { target: { value: 'zzz' } });
     expect(screen.getByText('No birds match.')).toBeInTheDocument();
+  });
+
+  it('re-roots from search and still shows only three generations from the new root', () => {
+    render(<Harness fowls={deepFamily} />);
+
+    const finder = screen.getByLabelText('Find a bird');
+    fireEvent.change(finder, { target: { value: 'Offspring 1A1' } });
+    fireEvent.keyDown(finder, { key: 'Enter' });
+
+    expect(cardFor('Offspring 1A1')).toHaveTextContent('Root');
+    expect(cardFor('Grandchild')).toBeInTheDocument();
+    expect(cardFor('Great Grandchild')).toBeInTheDocument();
   });
 
   it('surfaces global search matches and can focus the first one', () => {

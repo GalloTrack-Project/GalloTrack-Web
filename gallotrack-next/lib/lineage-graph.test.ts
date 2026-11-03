@@ -7,6 +7,7 @@ import {
   lineageBirdCode,
   pickDefaultRootId,
   LINEAGE_NODE_WIDTH,
+  FAMILY_TREE_GENERATIONS,
 } from './lineage-graph';
 
 const bird = (partial: Partial<FowlRecord> & { id: number; name: string }): FowlRecord =>
@@ -64,7 +65,12 @@ describe('lineage graph — index', () => {
 
 describe('lineage graph — topology', () => {
   const index = buildLineageIndex(family);
-  const base = { rootId: '1', direction: 'down' as const, maxDepth: 4, collapsed: new Set<string>() };
+  const base = {
+    rootId: '1',
+    direction: 'down' as const,
+    maxDepth: FAMILY_TREE_GENERATIONS - 1,
+    collapsed: new Set<string>(),
+  };
 
   it('builds generations plus the unregistered lineage partner', () => {
     const topology = buildLineageTopology(index, base);
@@ -90,6 +96,39 @@ describe('lineage graph — topology', () => {
     expect(rootPair?.childIds).toEqual(['3', '4', '5']);
     const nextPair = topology.pairs.find((p) => p.key === '3|||6');
     expect(nextPair?.childIds).toEqual(['7']);
+  });
+
+  it('uses a fixed three-generation family tree depth', () => {
+    expect(FAMILY_TREE_GENERATIONS).toBe(3);
+    const deepFamily = [
+      ...family,
+      bird({
+        id: 8,
+        name: 'Great Grandchild',
+        gender: 'Rooster',
+        sire: 'Grandchild',
+        bird_code: '1A1C1D1',
+      }),
+    ];
+    const deepIndex = buildLineageIndex(deepFamily);
+    const topology = buildLineageTopology(deepIndex, {
+      rootId: '1',
+      direction: 'down',
+      maxDepth: FAMILY_TREE_GENERATIONS - 1,
+      collapsed: new Set(),
+    })!;
+    const gens = Object.fromEntries(topology.nodes.map((n) => [n.fowl.name, n.generation]));
+    expect(gens).toMatchObject({
+      'Sire 1': 0,
+      'Offspring 1A1': 1,
+      Grandchild: 2,
+    });
+    expect(topology.nodes.some((n) => n.fowl.name === 'Great Grandchild')).toBe(false);
+    expect(Array.from(new Set(topology.nodes.map((n) => n.generation))).sort()).toEqual([
+      0,
+      1,
+      2,
+    ]);
   });
 
   it('limits generations and reports hidden relatives', () => {
@@ -211,7 +250,7 @@ describe('lineage graph — layout', () => {
   const topology = buildLineageTopology(index, {
     rootId: '1',
     direction: 'down',
-    maxDepth: 4,
+    maxDepth: FAMILY_TREE_GENERATIONS - 1,
     collapsed: new Set(),
   })!;
   const layout = layoutLineageTopology(topology);
