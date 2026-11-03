@@ -238,9 +238,16 @@ interface FamilyCardProps {
   setSelectedFowlForDetails: (f: FowlRecord) => void;
   onShowFights: (f: FowlRecord) => void;
   fowls: FowlRecord[];
-  expanded: boolean;
-  onToggleExpanded: () => void;
-  onOpenInFamilyTree: () => void;
+}
+
+type FamilyViewMode = 'full-family' | 'full-siblings';
+
+/**
+ * ONE place for the pair-list rule. Full Family shows every breeding pair with
+ * at least one offspring; Full Siblings keeps only pairs with 2+ offspring.
+ */
+function familyMatchesMode(g: FowlRecord[], mode: FamilyViewMode): boolean {
+  return mode === 'full-siblings' ? g.length >= 2 : g.length >= 1;
 }
 
 function FamilyCard({
@@ -251,11 +258,7 @@ function FamilyCard({
   setSelectedFowlForDetails,
   onShowFights,
   fowls,
-  expanded,
-  onToggleExpanded,
-  onOpenInFamilyTree,
 }: FamilyCardProps) {
-  const panelId = `family-members-${index}`;
   const sire = (g[0].sire || '').trim();
   const dam = (g[0].dam || '').trim();
   const sireBreed = parentBreedOf(sire, fowls);
@@ -268,270 +271,247 @@ function FamilyCard({
     birdCodes.get(String(child.id)) ||
     '';
 
-  const recordLabel = (stats: WinRateStats) =>
-    stats.total === 0
-      ? 'No fights'
-      : `${stats.wins}W-${stats.losses}L${stats.draws > 0 ? `-${stats.draws}D` : ''}${
-          stats.winRate !== null ? ` · ${stats.winRate}%` : ''
-        }`;
+  const codeSort = (a: FowlRecord, b: FowlRecord) => {
+    const codeA = codeOf(a);
+    const codeB = codeOf(b);
+    if (codeA && codeB) {
+      const byCode = compareBirdCodesNatural(codeA, codeB);
+      if (byCode !== 0) return byCode;
+    }
+    if (codeA && !codeB) return -1;
+    if (!codeA && codeB) return 1;
+    return a.name.localeCompare(b.name);
+  };
 
-  const males = g.filter(isMaleChild).length;
-  const females = g.length - males;
-
-  // Only cocks/stags are fighting birds. Hens may have historical/erroneous
-  // match rows, but they must never inflate the family fight record.
-  const fightingOffspring = fightersOf(g);
-  const familyTotal = combineWinRates(fightingOffspring.map((c) => getChildMatchStats(c.name)));
-  const foughtCount = familyTotal.foughtCount;
-  const familyRecord = `${familyTotal.wins}W-${familyTotal.losses}L${
-    familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''
-  }`;
-
-  // Members read as a roster: males first, then natural code order.
-  const members = useMemo(
+  const cocks = useMemo(
     () =>
-      [...g].sort((a, b) => {
-        const aMale = isMaleChild(a);
-        const bMale = isMaleChild(b);
-        if (aMale !== bMale) return aMale ? -1 : 1;
-        const codeA =
-          a.bird_code || a.chicken_code || a.birth_code || birdCodes.get(String(a.id)) || '';
-        const codeB =
-          b.bird_code || b.chicken_code || b.birth_code || birdCodes.get(String(b.id)) || '';
-        if (codeA && codeB) return compareBirdCodesNatural(codeA, codeB);
-        if (codeA) return -1;
-        if (codeB) return 1;
-        return a.name.localeCompare(b.name);
-      }),
+      fightersOf(g)
+        .slice()
+        .sort((a, b) => {
+          const statsA = getChildMatchStats(a.name);
+          const statsB = getChildMatchStats(b.name);
+          const decidedA = statsA.decided > 0;
+          const decidedB = statsB.decided > 0;
+          if (decidedA !== decidedB) return decidedA ? -1 : 1;
+          if (decidedA && decidedB) {
+            const rateDiff = (statsB.winRate ?? -1) - (statsA.winRate ?? -1);
+            if (rateDiff !== 0) return rateDiff;
+          }
+          return codeSort(a, b);
+        }),
+    [g, getChildMatchStats, birdCodes]
+  );
+
+  const hens = useMemo(
+    () => g.filter((child) => !canFight(child)).slice().sort(codeSort),
     [g, birdCodes]
   );
 
-  // Best performer = highest family-relevant win rate among fighting birds
-  // (cocks/stags only), then most decided fights.
-  const bestPerformer = useMemo(() => {
-    const fought = fightersOf(g)
-      .map((child) => ({ child, stats: getChildMatchStats(child.name) }))
-      .filter(({ stats }) => stats.total > 0);
-    if (fought.length === 0) return null;
-    return fought.sort((a, b) => {
-      const rateA = a.stats.decided > 0 ? a.stats.winRate ?? -1 : -1;
-      const rateB = b.stats.decided > 0 ? b.stats.winRate ?? -1 : -1;
-      if (rateB !== rateA) return rateB - rateA;
-      if (b.stats.decided !== a.stats.decided) return b.stats.decided - a.stats.decided;
-      if (b.stats.wins !== a.stats.wins) return b.stats.wins - a.stats.wins;
-      return a.child.name.localeCompare(b.child.name);
-    })[0];
-  }, [g, getChildMatchStats]);
+  const familyTotal = combineWinRates(cocks.map((c) => getChildMatchStats(c.name)));
+  const foughtCount = familyTotal.foughtCount;
+  const totalRecord = `${familyTotal.wins}W-${familyTotal.losses}L${
+    familyTotal.draws > 0 ? `-${familyTotal.draws}D` : ''
+  }`;
+  const totalRate =
+    cocks.length === 0
+      ? '\u2014'
+      : familyTotal.winRate !== null
+        ? `${familyTotal.winRate}%`
+        : '\u2014%';
 
-  const trendOf = (stats: WinRateStats) => {
-    if (stats.decided === 0) {
-      return { key: 'none', dot: 'bg-muted-foreground/40' };
-    }
-    if ((stats.winRate ?? 0) >= 50) {
-      return { key: 'up', dot: 'bg-emerald-500' };
-    }
-    return { key: 'down', dot: 'bg-rose-500' };
-  };
+  const sampleBadge = (stats: WinRateStats) =>
+    stats.isLowSample ? (
+      <span className="inline-flex shrink-0 items-center rounded border border-amber-300/70 bg-amber-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-800 uppercase dark:border-amber-700/70 dark:bg-amber-950/60 dark:text-amber-300">
+        {stats.decided === 1 ? '1 MATCH' : 'LOW SAMPLE'}
+      </span>
+    ) : null;
 
   return (
-    <article className="bg-card border-border shadow-xs flex h-full flex-col rounded-lg border">
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h4 className="text-card-foreground text-sm font-black">Family {index + 1}</h4>
-              <span className="dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-emerald-700 uppercase">
-                Full Siblings
-              </span>
-            </div>
-            <p className="text-card-foreground mt-1 truncate text-xs font-bold">
-              <span>
-                {sire}
-                {sireBreed && <span className="text-muted-foreground font-semibold"> ({sireBreed})</span>}
-              </span>
-              <span className="text-muted-foreground mx-1 select-none">×</span>
-              <span>
-                {dam}
-                {damBreed && <span className="text-muted-foreground font-semibold"> ({damBreed})</span>}
-              </span>
-            </p>
-            <p className="text-muted-foreground text-xs font-semibold">
-              {g.length} chickens · {males} M · {females} F
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onToggleExpanded}
-            aria-expanded={expanded}
-            aria-controls={expanded ? panelId : undefined}
-            aria-label={`${expanded ? 'Collapse' : 'Expand'} family ${index + 1}`}
-            className="border-border text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border transition-colors"
-          >
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            />
-          </button>
-        </div>
-
-        {/* Family total lives here only - the old duplicated footer is gone. */}
-        <div className="border-border bg-muted/30 mt-3 rounded-md border px-3 py-2.5">
-          <div className="flex items-baseline justify-between gap-2">
-            <div className="flex items-baseline gap-2">
-              <span className="text-card-foreground text-3xl leading-none font-black">
-                {familyTotal.decided > 0 && familyTotal.winRate !== null
-                  ? `${familyTotal.winRate}%`
-                  : '—'}
-              </span>
-              {familyTotal.isLowSample && (
-                <span className="text-muted-foreground rounded bg-black/5 px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase dark:bg-white/10">
-                  {familyTotal.decided === 1 ? '1 match' : 'low sample'}
-                </span>
-              )}
-            </div>
-            <span className="text-card-foreground text-xs font-black whitespace-nowrap">
-              {familyRecord}
-            </span>
-          </div>
-          <p className="text-muted-foreground mt-1 text-xs font-semibold">
-            {foughtCount} of {fightingOffspring.length} males fought
-          </p>
-        </div>
-
-        {/* Best performer */}
-        <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-xs">
-          <Trophy className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden="true" />
-          <span className="text-muted-foreground shrink-0 text-[10px] font-black tracking-wider uppercase">
-            Best
+    <article className="bg-card border-border rounded-lg border shadow-xs">
+      <div className="flex flex-col gap-2 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <h4 className="text-card-foreground text-sm font-black">Family {index + 1}</h4>
+          <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-emerald-700 uppercase dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+            Full Siblings
           </span>
-          {bestPerformer ? (
-            <>
-              <span className="bg-muted border-border shrink-0 rounded border px-1 py-0.5 font-mono text-[11px] font-black uppercase">
-                [{formatBirdCodeForDisplay(codeOf(bestPerformer.child))}]
-              </span>
-              <span className="text-card-foreground min-w-0 flex-1 truncate font-bold">
-                {bestPerformer.child.name}
-              </span>
-              <span className="text-muted-foreground shrink-0 font-bold">
-                {recordLabel(bestPerformer.stats)}
-              </span>
-            </>
-          ) : (
-            <span className="text-muted-foreground/70 font-semibold">No fights yet</span>
-          )}
         </div>
-
-        {/* Offspring summary + compact win-rate chips */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-              Offspring
-            </p>
-            <p className="text-muted-foreground text-xs font-semibold">
-              {males} male · {females} female
-            </p>
-          </div>
-          <div className="mt-1.5 flex flex-wrap gap-1" aria-label="Offspring win-rate chips">
-            {g.map((child) => {
-              const fightsEnabled = canFight(child);
-              const stats = getChildMatchStats(child.name);
-              const trend = trendOf(stats);
-              const chipLabel = fightsEnabled
-                ? `${child.name} · ${recordLabel(stats)}`
-                : child.name;
-              return (
-                <button
-                  key={child.id}
-                  type="button"
-                  onClick={() => setSelectedFowlForDetails(child)}
-                  title={chipLabel}
-                  aria-label={chipLabel}
-                  data-record-trend={fightsEnabled ? trend.key : undefined}
-                  className="border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px] font-bold transition-colors"
-                >
-                  <span>[{formatBirdCodeForDisplay(codeOf(child))}]</span>
-                  {fightsEnabled && (
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${trend.dot}`}
-                      aria-hidden="true"
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <span className="border-border bg-muted/40 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
+            <span className="text-muted-foreground text-[9px] font-black tracking-widest uppercase">
+              Sire
+            </span>
+            <span className="text-card-foreground font-bold">{sire || '?'}</span>
+            {sireBreed && (
+              <span className="text-muted-foreground text-[10px] font-semibold">{sireBreed}</span>
+            )}
+          </span>
+          <span className="border-border bg-muted/40 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
+            <span className="text-muted-foreground text-[9px] font-black tracking-widest uppercase">
+              Dam
+            </span>
+            <span className="text-card-foreground font-bold">{dam || '?'}</span>
+            {damBreed && (
+              <span className="text-muted-foreground text-[10px] font-semibold">{damBreed}</span>
+            )}
+          </span>
         </div>
       </div>
 
-      {expanded && (
-        <div id={panelId} className="border-border bg-muted/20 border-t px-4 py-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-              Members
-            </p>
-            <button
-              type="button"
-              onClick={onOpenInFamilyTree}
-              className="text-emerald-600 dark:text-emerald-400 inline-flex cursor-pointer items-center gap-1 text-xs font-bold hover:underline"
-            >
-              <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Open in Family Tree
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="border-border/60 text-muted-foreground border-b font-bold">
-                  <th className="py-1.5 pr-2 font-bold">Code</th>
-                  <th className="px-2 py-1.5 font-bold">Chicken</th>
-                  <th className="px-2 py-1.5 font-bold">Sex</th>
-                  <th className="px-2 py-1.5 font-bold">Record</th>
-                  <th className="py-1.5 pl-2 text-right font-bold">
-                    <span className="sr-only">Actions</span>
-                  </th>
+      <div className="w-full overflow-hidden">
+        <table className="w-full table-fixed border-collapse text-left text-xs">
+          <thead>
+            <tr className="text-muted-foreground border-b border-border/60 text-[9px] font-black tracking-wider uppercase">
+              <th className="hidden w-16 px-3 py-2 md:table-cell">ID</th>
+              <th className="px-3 py-2">Name</th>
+              <th className="w-16 px-1 py-2 text-right">Record</th>
+              <th className="w-16 px-1 py-2 text-right">Win rate</th>
+              <th className="hidden w-28 px-3 py-2 md:table-cell">Sample</th>
+              <th className="w-12 px-1 py-2">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {cocks.map((cock) => {
+              const stats = getChildMatchStats(cock.name);
+              const code = formatBirdCodeForDisplay(codeOf(cock));
+              const decided = stats.decided > 0;
+              const rate = stats.winRate;
+              const rateTone =
+                rate === null
+                  ? 'text-muted-foreground'
+                  : rate >= 50
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-rose-700 dark:text-rose-400';
+              const tint = decided
+                ? rate !== null && rate >= 50
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/25'
+                  : 'bg-rose-50/70 dark:bg-rose-950/25'
+                : '';
+              const record =
+                stats.total === 0
+                  ? '\u2014'
+                  : `${stats.wins}W-${stats.losses}L${
+                      stats.draws > 0 ? `-${stats.draws}D` : ''
+                    }`;
+              const rateLabelI = stats.total === 0 ? '\u2014' : rate !== null ? `${rate}%` : '\u2014%';
+
+              return (
+                <tr
+                  key={cock.id}
+                  onClick={() => setSelectedFowlForDetails(cock)}
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setSelectedFowlForDetails(cock);
+                    }
+                  }}
+                  className={`group cursor-pointer border-b border-border/50 transition-colors last:border-b-0 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${tint}`}
+                >
+                  <td className="text-muted-foreground hidden px-3 py-2 font-mono font-bold whitespace-nowrap md:table-cell">
+                    <span className="border-border bg-muted/70 text-foreground rounded border px-1.5 py-0.5 text-[10px] font-black">
+                      {code || '?'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                      <span className="border-border bg-muted/70 text-muted-foreground rounded border px-1 py-0.5 font-mono text-[9px] font-black md:hidden">
+                        {code || '?'}
+                      </span>
+                      <span className="text-card-foreground min-w-0 truncate font-bold">
+                        {cock.name}
+                      </span>
+                      {stats.total === 0 && (
+                        <span className="text-muted-foreground shrink-0 text-[10px] font-semibold">
+                          No fights
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 md:hidden">{sampleBadge(stats)}</div>
+                  </td>
+                  <td className="text-card-foreground px-1 py-2 text-right font-mono font-black whitespace-nowrap">
+                    {record}
+                  </td>
+                  <td className={`px-1 py-2 text-right font-black whitespace-nowrap ${rateTone}`}>
+                    {rateLabelI}
+                  </td>
+                  <td className="hidden px-3 py-2 md:table-cell">{sampleBadge(stats)}</td>
+                  <td className="px-1 py-2 text-right" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onShowFights(cock);
+                      }}
+                      aria-label={`View all fights for ${cock.name}`}
+                      title="View all fights"
+                      className="border-border text-muted-foreground hover:border-emerald-400 hover:text-emerald-700 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded border transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:outline-none md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                    >
+                      <Swords className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-border/40 divide-y">
-                {members.map((child) => {
-                  const cs = getChildMatchStats(child.name);
-                  return (
-                    <tr key={child.id} className="hover:bg-card/70">
-                      <td className="text-muted-foreground py-1.5 pr-2 font-mono font-bold uppercase">
-                        [{formatBirdCodeForDisplay(codeOf(child))}]
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedFowlForDetails(child)}
-                          className="text-card-foreground cursor-pointer truncate font-bold hover:text-emerald-700 hover:underline dark:hover:text-emerald-400"
-                        >
-                          {child.name}
-                        </button>
-                      </td>
-                      <td className="px-2 py-1.5 font-semibold whitespace-nowrap">
-                        <SexBadge chicken={child} />
-                      </td>
-                      <td className="text-card-foreground px-2 py-1.5 font-bold whitespace-nowrap">
-                        {canFight(child) ? recordLabel(cs) : '—'}
-                      </td>
-                      <td className="py-1.5 pl-2 text-right">
-                        {canFight(child) && (
-                          <button
-                            type="button"
-                            onClick={() => onShowFights(child)}
-                            aria-label={`View all fights for ${child.name}`}
-                            title="View all fights"
-                            className="border-border text-muted-foreground inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-1 text-[10px] font-black tracking-wider uppercase transition-colors hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400"
-                          >
-                            <Swords className="h-3 w-3" aria-hidden="true" />
-                            Fights
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-border/70 bg-muted/20">
+              <td colSpan={6} className="px-3 py-2.5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span className="text-[9px] font-black tracking-widest text-muted-foreground uppercase">
+                      Total {'\u00b7'} Cocks only
+                    </span>
+                    <span className="text-muted-foreground text-[11px] font-semibold">
+                      {cocks.length === 0
+                        ? 'No cocks yet'
+                        : `${foughtCount} of ${cocks.length} cocks fought`}
+                    </span>
+                  </div>
+                  {cocks.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-card-foreground text-xs font-black whitespace-nowrap">
+                        {totalRecord}
+                      </span>
+                      <span
+                        className={`text-sm font-black whitespace-nowrap ${
+                          familyTotal.winRate === null
+                            ? 'text-muted-foreground'
+                            : familyTotal.winRate >= 50
+                              ? 'text-emerald-700 dark:text-emerald-400'
+                              : 'text-rose-700 dark:text-rose-400'
+                        }`}
+                      >
+                        {totalRate}
+                      </span>
+                      {sampleBadge(familyTotal)}
+                    </div>
+                  )}
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {hens.length > 0 && (
+        <div className="flex flex-col gap-2 border-t border-border/60 px-4 py-3">
+          <span className="text-muted-foreground text-[9px] font-black tracking-widest uppercase">
+            Hens {'\u00b7'} No matches
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {hens.map((hen) => (
+              <span
+                key={hen.id}
+                className="border-border bg-muted/40 text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold"
+              >
+                <span className="font-mono text-[9px] font-black text-foreground/80">
+                  {formatBirdCodeForDisplay(codeOf(hen)) || '?'}
+                </span>
+                <span className="text-foreground/80">{hen.name}</span>
+              </span>
+            ))}
           </div>
         </div>
       )}
@@ -573,7 +553,7 @@ export default function LineageDirectory({
 
   // Full Siblings & Families tab: family-level sort and collapsed-by-default cards.
   const [familySortBy, setFamilySortBy] = useState<FamilySortOption>('winrate');
-  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
+  const [familyViewMode, setFamilyViewMode] = useState<FamilyViewMode>('full-family');
 
   // Master-Detail selection state
   const [selectedSireName, setSelectedSireName] = useState<string | null>(null);
@@ -937,9 +917,11 @@ export default function LineageDirectory({
     return map;
   }, [linked]);
 
-  const fullFamilies = useMemo(() => {
-    return Array.from(familyMap.values()).filter((g) => g.length >= 2);
-  }, [familyMap]);
+  const allFamilies = useMemo(() => Array.from(familyMap.values()), [familyMap]);
+  const fullFamilies = useMemo(
+    () => allFamilies.filter((g) => familyMatchesMode(g, familyViewMode)),
+    [allFamilies, familyViewMode]
+  );
 
   // Search query
   const q = debouncedSearch.trim().toLowerCase();
@@ -1172,12 +1154,6 @@ export default function LineageDirectory({
           return next;
         });
       }
-    } else if (activeTab === 'families') {
-      setExpandedFamilies(
-        new Set(
-          filteredFullFamilies.map((g) => `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`)
-        )
-      );
     } else if (activeTab === 'tree') {
       setCollapsedFlowNodes(new Set());
     }
@@ -1199,8 +1175,6 @@ export default function LineageDirectory({
           return next;
         });
       }
-    } else if (activeTab === 'families') {
-      setExpandedFamilies(new Set());
     } else if (activeTab === 'tree') {
       setCollapsedFlowNodes(new Set(lineageParentIds));
     }
@@ -2409,10 +2383,39 @@ export default function LineageDirectory({
                 Family Lineage Directory
               </h1>
               <p className="text-xs text-muted-foreground font-semibold mt-1 break-words line-clamp-2 sm:line-clamp-none">
-                Track sibling groups, sire &amp; dam offspring trees to compare performance per bloodline
+                {activeTab === 'families'
+                  ? "Win rate sits at the end of each cock's row. Hens are listed separately."
+                  : 'Track sibling groups, sire & dam offspring trees to compare performance per bloodline'}
               </p>
             </div>
           </div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            {activeTab === 'families' && (
+              <div
+                role="group"
+                aria-label="Family view"
+                className="border-border bg-muted/40 flex items-center gap-0.5 rounded-lg border p-0.5"
+              >
+                {([
+                  ['full-family', 'Full Family'],
+                  ['full-siblings', 'Full Siblings'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={familyViewMode === value}
+                    onClick={() => setFamilyViewMode(value)}
+                    className={`h-8 cursor-pointer rounded-md px-3 text-xs font-black transition-colors ${
+                      familyViewMode === value
+                        ? 'bg-card text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           <div className="relative w-full sm:w-64 md:w-72 shrink-0">
             <span
               aria-hidden="true"
@@ -2524,6 +2527,7 @@ export default function LineageDirectory({
               </div>
             )}
           </div>
+          </div>
         </div>
 
         {/* B. Underline-Style Tabs Row: 2-column grid on phones (< sm) with 5th tab spanning 2 cols; flex on larger screens */}
@@ -2631,6 +2635,7 @@ export default function LineageDirectory({
                 </select>
               </div>
 
+              {activeTab !== 'families' && (
               <div className="flex items-center gap-1 sm:pl-2 sm:border-l sm:border-border/80">
                 <button
                   type="button"
@@ -2649,6 +2654,7 @@ export default function LineageDirectory({
                   Collapse all
                 </button>
               </div>
+              )}
             </div>
           )}
         </div>
@@ -2726,26 +2732,6 @@ export default function LineageDirectory({
                       setSelectedFowlForDetails={setSelectedFowlForDetails}
                       onShowFights={openFights}
                       fowls={fowls}
-                      expanded={expandedFamilies.has(familyKey)}
-                      onToggleExpanded={() =>
-                        setExpandedFamilies((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(familyKey)) next.delete(familyKey);
-                          else next.add(familyKey);
-                          return next;
-                        })
-                      }
-                      onOpenInFamilyTree={() => {
-                        // Open the pedigree canvas rooted at this family's
-                        // resolved parent, in the descendants direction.
-                        const parent =
-                          parentRecordOf(g[0], 'sire', fowls) ??
-                          parentRecordOf(g[0], 'dam', fowls);
-                        if (parent) setTreeRootName(parent.name);
-                        setTreeDirection('down');
-                        setCollapsedFlowNodes(new Set());
-                        setActiveTab('tree');
-                      }}
                     />
                   );
                 })}
