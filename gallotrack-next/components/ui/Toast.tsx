@@ -16,6 +16,7 @@ import { registerToastHandler, type ToastInput, type ToastVariant } from '@/lib/
 
 type ToastRecord = {
   id: number;
+  dedupeKey?: string;
   title: string;
   description?: string;
   variant: ToastVariant;
@@ -49,6 +50,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const nextId = useRef(0);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+  const activeDedupeKeys = useRef(new Map<string, number>());
 
   const dismiss = useCallback((id: number) => {
     const timer = timers.current.get(id);
@@ -56,17 +58,28 @@ function ToastProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       timers.current.delete(id);
     }
+    if (id != null) {
+      activeDedupeKeys.current.forEach((value, key) => {
+        if (value === id) activeDedupeKeys.current.delete(key);
+      });
+    }
     setToasts((current) => current.filter((item) => item.id !== id));
   }, []);
 
   const toast = useCallback(
     (input: ToastInput) => {
+      if (input.id) {
+        const existingId = activeDedupeKeys.current.get(input.id);
+        if (existingId != null) return existingId;
+      }
       const id = nextId.current++;
       const duration = input.duration ?? 5000;
+      if (input.id) activeDedupeKeys.current.set(input.id, id);
       setToasts((current) => [
         ...current,
         {
           id,
+          dedupeKey: input.id,
           title: input.title,
           description: input.description,
           variant: input.variant ?? 'default',
@@ -78,6 +91,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
           id,
           setTimeout(() => {
             timers.current.delete(id);
+            if (input.id) activeDedupeKeys.current.delete(input.id);
             setToasts((current) => current.filter((item) => item.id !== id));
           }, duration),
         );

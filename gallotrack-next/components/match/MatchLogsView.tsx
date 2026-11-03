@@ -13,17 +13,25 @@ import {
   ChevronRight,
   Trophy,
   Swords,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Link2,
+  Unlink,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import MatchLogsRecordBadge from '@/components/match/MatchLogsRecordBadge';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
+import ChickenEntryName from '@/components/match/ChickenEntryName';
+import LinkChickenModal from '@/components/match/LinkChickenModal';
 import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
+import { updateMatch } from '@/lib/services/match-service';
 import type { MatchRecord, FowlRecord } from '@/lib/types';
 import {
   buildChickenMatchStatsMap,
@@ -40,8 +48,11 @@ export default function MatchLogsView() {
 
   const t = useT();
   const ui = useUI();
-  const { fowls, matchHistory, matchMedia, birdCodes, loading } = useFowl();
+  const { fowls, matchHistory, matchMedia, birdCodes, loading, fetchDatabaseResources } = useFowl();
   const [editingMatch, setEditingMatch] = useState<MatchRecord | null>(null);
+  const [linkingMatch, setLinkingMatch] = useState<MatchRecord | null>(null);
+  const [unlinkingMatch, setUnlinkingMatch] = useState<MatchRecord | null>(null);
+  const [unlinking, setUnlinking] = useState(false);
 
   // Read URL query params
   const urlSearch = searchParams.get('q') || '';
@@ -253,14 +264,18 @@ export default function MatchLogsView() {
       });
     }
 
-    // Sort order
+    // Deterministic order: the selected field first, then id as the stable tie-breaker.
     rows.sort((a, b) => {
-      if (sortOrder === 'oldest') return (a.date || '').localeCompare(b.date || '');
-      if (sortOrder === 'opponent') return (a.opponent || '').localeCompare(b.opponent || '');
-      // newest first default
-      const cmp = (b.date || '').localeCompare(a.date || '');
-      if (cmp !== 0) return cmp;
-      return (b.id || 0) - (a.id || 0);
+      if (sortOrder === 'opponent') {
+        const byOpponent = (a.opponent || '').localeCompare(b.opponent || '');
+        if (byOpponent !== 0) return byOpponent;
+        const byDate = (a.date || '').localeCompare(b.date || '');
+        if (byDate !== 0) return byDate;
+        return (a.id || 0) - (b.id || 0);
+      }
+      const byDate = (a.date || '').localeCompare(b.date || '');
+      if (byDate !== 0) return sortOrder === 'oldest' ? byDate : -byDate;
+      return sortOrder === 'oldest' ? (a.id || 0) - (b.id || 0) : (b.id || 0) - (a.id || 0);
     });
 
     return rows;
@@ -293,6 +308,42 @@ export default function MatchLogsView() {
   }, [filteredMatches]);
 
   // Pagination calculation
+  const handleLinkChicken = async (match: MatchRecord, fowl: FowlRecord): Promise<boolean> => {
+    const result = await updateMatch(match.id, {
+      fowl_id: fowl.id,
+      entry_name: fowl.name,
+      breed: fowl.breed || 'Unknown',
+    });
+    if (result.error) {
+      toastMessage(`Could not link match: ${result.error}`, 'error', {
+        id: `match-link-${match.id}`,
+      });
+      return false;
+    }
+    await fetchDatabaseResources();
+    toastMessage(`Match linked to ${fowl.name}.`, 'success', { id: `match-link-${match.id}` });
+    return true;
+  };
+
+  const handleUnlinkChicken = async (match: MatchRecord) => {
+    if (unlinking) return;
+    setUnlinking(true);
+    const result = await updateMatch(match.id, { fowl_id: null });
+    if (result.error) {
+      toastMessage(`Could not unlink match: ${result.error}`, 'error', {
+        id: `match-unlink-${match.id}`,
+      });
+      setUnlinking(false);
+      return;
+    }
+    await fetchDatabaseResources();
+    toastMessage('Match unlinked from its chicken profile.', 'warning', {
+      id: `match-unlink-${match.id}`,
+    });
+    setUnlinking(false);
+    setUnlinkingMatch(null);
+  };
+
   const totalItems = filteredMatches.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const pageStart = (currentPage - 1) * PAGE_SIZE;
@@ -553,7 +604,36 @@ export default function MatchLogsView() {
             <table className="w-full min-w-[640px] table-fixed border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-muted/50 text-muted-foreground border-border border-b text-xs font-extrabold uppercase">
-                  <th className="w-[9%] p-2.5 pl-3 lg:p-3 lg:pl-4">Match Date</th>
+                  <th
+                    className="w-[9%] p-2.5 pl-3 lg:p-3 lg:pl-4"
+                    aria-sort={
+                      sortOrder === 'newest'
+                        ? 'descending'
+                        : sortOrder === 'oldest'
+                          ? 'ascending'
+                          : 'none'
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleSortChange(sortOrder === 'newest' ? 'oldest' : 'newest')
+                      }
+                      aria-label={`Sort by match date ${
+                        sortOrder === 'newest' ? 'ascending' : 'descending'
+                      }`}
+                      className="hover:text-foreground inline-flex cursor-pointer items-center gap-1 font-extrabold uppercase transition-colors"
+                    >
+                      Match Date
+                      {sortOrder === 'newest' ? (
+                        <ArrowDown className="h-3 w-3" aria-hidden="true" />
+                      ) : sortOrder === 'oldest' ? (
+                        <ArrowUp className="h-3 w-3" aria-hidden="true" />
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 opacity-50" aria-hidden="true" />
+                      )}
+                    </button>
+                  </th>
                   <th className="w-[24%] p-2.5 lg:p-3">Chicken Identifier</th>
                   <th className="w-[17%] p-2.5 lg:p-3">Opponent</th>
                   <th className="w-[13%] p-2.5 lg:p-3">Arena Location</th>
@@ -579,17 +659,6 @@ export default function MatchLogsView() {
                         ui.setSelectedFowlForDetails(fowl);
                       }
                     : undefined;
-                  const handleChickenCellClick = (event: React.MouseEvent) => {
-                    event.stopPropagation();
-                    if (fowl) {
-                      ui.setSelectedFowlForDetails(fowl);
-                    } else {
-                      toastMessage(
-                        'No chicken profile is linked to this historical match.',
-                        'warning',
-                      );
-                    }
-                  };
 
                   return (
                     <tr
@@ -600,11 +669,7 @@ export default function MatchLogsView() {
                         {log.date}
                       </td>
 
-                      <td
-                        className="min-w-0 cursor-pointer p-2.5 lg:p-3"
-                        onClick={handleChickenCellClick}
-                        title={fowl ? `View info for ${log.entry_name}` : undefined}
-                      >
+                      <td className="min-w-0 p-2.5 lg:p-3">
                         {openFowlInfo ? (
                           <button
                             type="button"
@@ -622,9 +687,7 @@ export default function MatchLogsView() {
                                   [{formatBirdCodeForDisplay(code)}]
                                 </span>
                               )}
-                              <span className="text-card-foreground min-w-0 font-bold break-words transition-colors group-hover:text-emerald-600">
-                                {log.entry_name}
-                              </span>
+                              <ChickenEntryName name={log.entry_name} variant="linked" />
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                               <span className="text-muted-foreground text-xs font-semibold">
@@ -649,9 +712,7 @@ export default function MatchLogsView() {
                                   [{formatBirdCodeForDisplay(code)}]
                                 </span>
                               )}
-                              <span className="text-card-foreground min-w-0 font-bold break-words transition-colors group-hover:text-emerald-600">
-                                {log.entry_name}
-                              </span>
+                              <ChickenEntryName name={log.entry_name} variant="historical" />
                               {isOrphan && (
                                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                                   Historical entry (no profile linked)
@@ -743,14 +804,37 @@ export default function MatchLogsView() {
                         className="bg-card sticky right-0 w-[15%] min-w-[160px] p-2.5 text-center lg:min-w-[120px] lg:p-2"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <MatchMediaButtons
-                          match={log}
-                          videos={videosFor(matchMedia, log.id, log)}
-                          photos={photosFor(matchMedia, log.id, log)}
-                          posters={postersFor(matchMedia, log.id, log)}
-                          returnTo={currentReturnPath}
-                          onEdit={() => setEditingMatch(log)}
-                        />
+                        <div className="flex items-center justify-center gap-1">
+                          {isOrphan ? (
+                            <button
+                              type="button"
+                              onClick={() => setLinkingMatch(log)}
+                              aria-label={`Link to profile for ${log.entry_name}`}
+                              title="Link to profile"
+                              className="border-border bg-card text-muted-foreground hover:border-emerald-400 hover:text-emerald-700 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border transition-colors"
+                            >
+                              <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setUnlinkingMatch(log)}
+                              aria-label={`Unlink chicken profile from ${log.entry_name}`}
+                              title="Unlink from profile"
+                              className="border-border bg-card text-muted-foreground hover:border-rose-400 hover:text-rose-700 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border transition-colors"
+                            >
+                              <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
+                            </button>
+                          )}
+                          <MatchMediaButtons
+                            match={log}
+                            videos={videosFor(matchMedia, log.id, log)}
+                            photos={photosFor(matchMedia, log.id, log)}
+                            posters={postersFor(matchMedia, log.id, log)}
+                            returnTo={currentReturnPath}
+                            onEdit={() => setEditingMatch(log)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -814,6 +898,51 @@ export default function MatchLogsView() {
             onSuccess={() => setEditingMatch(null)}
             onCancel={() => setEditingMatch(null)}
           />
+        </Modal>
+      )}
+
+      {linkingMatch && (
+        <LinkChickenModal
+          match={linkingMatch}
+          fowls={fowls}
+          birdCodes={birdCodes}
+          onClose={() => setLinkingMatch(null)}
+          onConfirm={(fowl) => handleLinkChicken(linkingMatch, fowl)}
+        />
+      )}
+
+      {unlinkingMatch && (
+        <Modal
+          open
+          onClose={() => (unlinking ? undefined : setUnlinkingMatch(null))}
+          title="Unlink chicken profile"
+          description={`Remove the profile link from the match vs ${unlinkingMatch.opponent || 'opponent'}?`}
+          className="max-w-md"
+        >
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm font-semibold">
+              The match will become a historical entry and stop counting toward the linked
+              chicken&apos;s Overall record.
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setUnlinkingMatch(null)}
+                disabled={unlinking}
+                className="border-border bg-card text-foreground hover:bg-muted h-11 cursor-pointer rounded-md border px-4 text-sm font-black transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUnlinkChicken(unlinkingMatch)}
+                disabled={unlinking}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-md bg-rose-600 px-5 text-sm font-black text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {unlinking ? 'Unlinking?' : 'Unlink'}
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
