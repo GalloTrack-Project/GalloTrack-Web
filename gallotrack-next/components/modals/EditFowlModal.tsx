@@ -25,6 +25,8 @@ import { mergeOptions } from '@/lib/lifecycle';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
+import ChickenPhotoField from '@/components/ChickenPhotoField';
+import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
@@ -84,6 +86,7 @@ type EditFowlModalProps = {
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
+  canEditPhoto?: boolean;
 };
 
 export default function EditFowlModal({
@@ -141,10 +144,23 @@ export default function EditFowlModal({
   getAgeMetrics,
   generationOf,
   generationPurity,
+  canEditPhoto = true,
 }: EditFowlModalProps) {
   const { t } = useT();
+  const photoForm = useFowlFormStateOptional();
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+  const clearPhotoFile = photoForm?.setEditPhotoFile;
+  const clearPhotoThumbnail = photoForm?.setEditPhotoThumbnail;
+  const clearPhotoRemoved = photoForm?.setEditPhotoRemoved;
+
+  React.useEffect(() => {
+    return () => {
+      clearPhotoFile?.(null);
+      clearPhotoThumbnail?.(null);
+      clearPhotoRemoved?.(false);
+    };
+  }, [clearPhotoFile, clearPhotoThumbnail, clearPhotoRemoved]);
 
   const { rows: registryOptionRows } = useRegistryOptions();
   const baseColorOptions = React.useMemo(
@@ -251,6 +267,30 @@ export default function EditFowlModal({
         }}
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
+        <ChickenPhotoField
+          name={editName || editingFowl.name}
+          code={editBirdCode || editingFowl.bird_code}
+          imageUrl={editingFowl.image_url}
+          photoPath={editingFowl.photo_path}
+          photoThumbPath={editingFowl.photo_thumb_path}
+          pendingFile={photoForm?.editPhotoFile ?? null}
+          pendingThumbnail={photoForm?.editPhotoThumbnail ?? null}
+          removed={photoForm?.editPhotoRemoved ?? false}
+          uploading={photoForm?.uploadingImage ?? loading}
+          uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          canEdit={canEditPhoto}
+          onPendingChange={(files) => {
+            photoForm?.setEditPhotoFile(files?.full ?? null);
+            photoForm?.setEditPhotoThumbnail(files?.thumbnail ?? null);
+            if (files) photoForm?.setEditPhotoRemoved(false);
+          }}
+          onRemove={() => {
+            photoForm?.setEditPhotoFile(null);
+            photoForm?.setEditPhotoThumbnail(null);
+            photoForm?.setEditPhotoRemoved(true);
+          }}
+        />
+
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
           <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <Tag className="h-3.5 w-3.5" /> <span>Core Identity</span>

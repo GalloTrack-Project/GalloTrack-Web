@@ -14,6 +14,7 @@ import { birdCodeOf, compareBirdCodesNatural, formatBirdCodeForDisplay } from '@
 import { useUI } from '@/lib/contexts/ui-context';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import ChickenIcon from '@/components/ChickenIcon';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -201,21 +202,36 @@ function computeGridConnectors(
   return paths;
 }
 
-function AncestorAvatar({ image_url, gender }: { image_url?: string | null; gender?: string }) {
-  if (image_url) {
+function AncestorAvatar({
+  image_url,
+  photo_path,
+  photo_thumb_path,
+  name,
+  code,
+  gender,
+}: {
+  image_url?: string | null;
+  photo_path?: string | null;
+  photo_thumb_path?: string | null;
+  name?: string;
+  code?: string | null;
+  gender?: string;
+}) {
+  const tone = gender && gender.toLowerCase().includes('hen') ? 'text-pink-500' : 'text-info';
+  if (name) {
     return (
-      <img
-        src={image_url}
-        alt=""
-        aria-hidden="true"
-        className="bg-muted border-border h-8 w-8 shrink-0 rounded-full border object-cover"
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).style.display = 'none';
-        }}
+      <ChickenPhoto
+        name={name}
+        code={code}
+        imageUrl={image_url}
+        photoPath={photo_path}
+        photoThumbPath={photo_thumb_path}
+        size={32}
+        className="bg-muted border-border h-8 w-8 border"
+        fallback={<ChickenIcon className={`h-4 w-4 ${tone}`} />}
       />
     );
   }
-  const tone = gender && gender.toLowerCase().includes('hen') ? 'text-pink-500' : 'text-info';
   return (
     <div
       aria-hidden="true"
@@ -407,7 +423,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
       className={`group h-[64px] w-[220px] shrink-0 rounded-md border text-left ${roleBorder} flex cursor-pointer items-center justify-between gap-2 self-center px-2.5 py-1.5 shadow-2xs transition-all hover:border-emerald-400/80 hover:shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <AncestorAvatar image_url={fowl.image_url} gender={fowl.gender} />
+        <AncestorAvatar image_url={fowl.image_url} photo_path={fowl.photo_path} photo_thumb_path={fowl.photo_thumb_path} name={fowl.name} code={code} gender={fowl.gender} />
         <div className="min-w-0 flex-1 space-y-0.5">
           <div className="flex min-w-0 items-center gap-1">
             {code && (

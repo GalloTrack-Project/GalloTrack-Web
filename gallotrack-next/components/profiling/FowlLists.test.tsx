@@ -277,3 +277,49 @@ describe('FowlLists search and filter', () => {
     expect(screen.getByRole('heading', { level: 4, name: /Titan Sweater/i })).toBeInTheDocument();
   });
 });
+describe('FowlLists chicken photos', () => {
+  it('renders a lazy thumbnail with name and code alt text', () => {
+    renderFowlLists({
+      fowls: [
+        {
+          id: 1,
+          name: 'Photo Bird',
+          breed: 'Hatch',
+          gender: 'Rooster',
+          sire: '',
+          dam: '',
+          bird_code: '1',
+          status: 'Active',
+          bloodline_pct: 100,
+          registry_role: 'Breeding Male',
+          image_url: 'https://cdn.test/photo-bird.jpg',
+        } as FowlRecord,
+      ],
+    });
+    const image = screen.getByRole('img', { name: 'Photo Bird (1)' });
+    expect(image).toHaveAttribute('loading', 'lazy');
+    expect(image).toHaveAttribute('width', '96');
+    expect(image).toHaveAttribute('height', '96');
+  });
+
+  it('keeps the existing placeholder when the chicken has no photo', () => {
+    renderFowlLists({
+      fowls: [
+        {
+          id: 2,
+          name: 'Plain Bird',
+          breed: 'Hatch',
+          gender: 'Rooster',
+          sire: '',
+          dam: '',
+          bird_code: '2',
+          status: 'Active',
+          bloodline_pct: 100,
+          registry_role: 'Breeding Male',
+        } as FowlRecord,
+      ],
+    });
+    expect(screen.queryByRole('img', { name: /Plain Bird/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/NO PHOTO/i)).toBeInTheDocument();
+  });
+});

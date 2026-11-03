@@ -25,6 +25,8 @@ import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
 import { Lock, RotateCcw, Edit3 } from 'lucide-react';
 import { useT } from '@/lib/i18n';
+import ChickenPhotoField from '@/components/ChickenPhotoField';
+import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
 
 export function StatusItem({
   icon,
@@ -134,6 +136,7 @@ type Props = {
   handleAddFowl: (e: React.FormEvent) => void;
   autoCalcAge: boolean;
   getAutoCalcAge: () => boolean;
+  canEditPhoto?: boolean;
 };
 
 export default function EncodeForm({
@@ -160,7 +163,7 @@ export default function EncodeForm({
   setNewDeclaredComposition,
   suggestedBirdCode, previewBloodlineStats,
   selectedImage, setSelectedImage,
-  imagePreview, setImagePreview,
+  setImagePreview,
   strainQuery, setStrainQuery,
   strainOpen, setStrainOpen,
   availableStrains,
@@ -175,6 +178,7 @@ export default function EncodeForm({
   handleAddFowl,
   autoCalcAge,
   getAutoCalcAge,
+  canEditPhoto = true,
   newColor = '',
   setNewColor,
   newBehaviorTrait = '',
@@ -182,6 +186,7 @@ export default function EncodeForm({
 }: Props) {
   const { t } = useT();
   const unitPrefs = useUnitPrefs();
+  const photoForm = useFowlFormStateOptional();
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
   const strainInputElRef = useRef<HTMLInputElement>(null);
@@ -886,17 +891,26 @@ export default function EncodeForm({
             </p>
           </div>
         ) : null}
-        <div>
-          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">{t('registry.chickenPhoto')}</span>
-          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative" htmlFor="field">
-            {imagePreview ? (
-              <img src={imagePreview} alt={t('registry.imagePreviewAlt')} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : t('registry.chooseImageFile')}</span>
-            )}
-            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" id="field" />
-          </label>
-        </div>
+        <ChickenPhotoField
+          name={newName || 'New chicken'}
+          code={birdCode || suggestedBirdCode}
+          pendingFile={photoForm?.selectedImage ?? selectedImage}
+          pendingThumbnail={photoForm?.selectedPhotoThumbnail ?? null}
+          uploading={photoForm?.uploadingImage ?? uploadingImage}
+          uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          canEdit={canEditPhoto}
+          onPendingChange={(files) => {
+            const setFull = photoForm?.setSelectedImage ?? setSelectedImage;
+            setFull(files?.full ?? null);
+            photoForm?.setSelectedPhotoThumbnail(files?.thumbnail ?? null);
+            setImagePreview('');
+          }}
+          onRemove={() => {
+            (photoForm?.setSelectedImage ?? setSelectedImage)(null);
+            photoForm?.setSelectedPhotoThumbnail(null);
+            setImagePreview('');
+          }}
+        />
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg border-2 border-slate-900 dark:border-border shadow-sm p-4 sm:p-5">

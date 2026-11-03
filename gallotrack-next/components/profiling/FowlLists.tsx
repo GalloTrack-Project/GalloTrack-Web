@@ -15,6 +15,7 @@ import { birdCodeOf, formatBirdCodeForDisplay, resolveBirdCodes, normalizeBirdCo
 import { inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
 import {
   getBreedingClassification,
@@ -115,9 +116,16 @@ function FowlCard({
       style={{ animationDelay: `${(index % 5) * 0.8}s` }}
     >
       <span className="antigravity-badge absolute top-0 right-0 text-xs font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-md tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
-      <div className="antigravity-avatar w-24 h-24 bg-slate-50 dark:bg-muted/50 border border-slate-200/80 dark:border-border rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center text-muted-foreground text-xs font-mono shadow-inner relative">
-        {fowl.image_url ? <img src={fowl.image_url} alt={fowl.name} className="w-full h-full object-cover" /> : t('registry.cardNoPhoto')}
-      </div>
+      <ChickenPhoto
+        name={fowl.name}
+        code={birdCodeOf(fowl, allFowls)}
+        imageUrl={fowl.image_url}
+        photoPath={fowl.photo_path}
+        photoThumbPath={fowl.photo_thumb_path}
+        size={96}
+        className="antigravity-avatar h-24 w-24 shrink-0 rounded-lg border border-slate-200/80 shadow-inner dark:border-border"
+        fallback={<span className="text-xs font-mono">{t('registry.cardNoPhoto')}</span>}
+      />
       <div className="flex-1 w-full space-y-3">
         <div className="flex items-center flex-wrap gap-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">

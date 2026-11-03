@@ -55,6 +55,10 @@ export interface FowlRecord {
   archive_reason?: string;
   archive_date?: string;
   image_url?: string;
+  /** Private chicken-photos storage path for the full-size image. */
+  photo_path?: string | null;
+  /** Private chicken-photos storage path for the 256px square thumbnail. */
+  photo_thumb_path?: string | null;
   created_at?: string;
   /** Free-text notes for the registry record. */
   notes?: string | null;

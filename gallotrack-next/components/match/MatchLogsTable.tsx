@@ -2,6 +2,7 @@
 import React from 'react';
 import { Unlink } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import MatchLogsRecordBadge from '@/components/match/MatchLogsRecordBadge';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
@@ -167,9 +168,16 @@ export default function MatchLogsTable({
                         className="focus-visible:ring-ring flex w-full min-w-0 cursor-pointer flex-col items-start rounded-md text-left focus-visible:ring-2 focus-visible:outline-none"
                       >
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
-                            <ChickenIcon className="text-success h-3.5 w-3.5" />
-                          </div>
+                          <ChickenPhoto
+                            name={fowl!.name}
+                            code={code}
+                            imageUrl={fowl!.image_url}
+                            photoPath={fowl!.photo_path}
+                            photoThumbPath={fowl!.photo_thumb_path}
+                            size={32}
+                            className="border border-emerald-500/20"
+                            fallback={<ChickenIcon className="text-success h-3.5 w-3.5" />}
+                          />
                           {code && (
                             <span className="text-success rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-sm font-black uppercase">
                               [{formatBirdCodeForDisplay(code)}]

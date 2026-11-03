@@ -20,6 +20,7 @@ import {
 } from '@/lib/win-rate';
 import WinRatePill from '@/components/match/WinRatePill';
 import ChickenIcon from '@/components/ChickenIcon';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import { sexLabel } from '@/lib/helpers';
 import {
@@ -80,7 +81,20 @@ function ParentChip({
         accent
       } ${fowl ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : 'cursor-default opacity-90'}`}
     >
-      <ChickenIcon className="h-4 w-4 shrink-0" />
+      {fowl ? (
+        <ChickenPhoto
+          name={fowl.name}
+          code={code}
+          imageUrl={fowl.image_url}
+          photoPath={fowl.photo_path}
+          photoThumbPath={fowl.photo_thumb_path}
+          size={16}
+          className="h-4 w-4"
+          fallback={<ChickenIcon className="h-4 w-4 shrink-0" />}
+        />
+      ) : (
+        <ChickenIcon className="h-4 w-4 shrink-0" />
+      )}
       <span className="min-w-0 flex-1">
         <span className="block text-xs font-black tracking-widest uppercase">{roleLabel}</span>
         <span className="text-card-foreground block truncate text-xs font-black">{name}</span>
@@ -149,6 +163,16 @@ function OffspringNode({
           onClick={() => onPick?.(fowl)}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
         >
+          <ChickenPhoto
+            name={fowl.name}
+            code={code}
+            imageUrl={fowl.image_url}
+            photoPath={fowl.photo_path}
+            photoThumbPath={fowl.photo_thumb_path}
+            size={28}
+            className="h-7 w-7"
+            fallback={<ChickenIcon className="text-muted-foreground h-3.5 w-3.5" />}
+          />
           <span
             className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT[fowl.status] || 'bg-muted-foreground'}`}
             title={fowl.status}

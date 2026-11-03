@@ -25,6 +25,7 @@ import {
 import WinRatePill from '@/components/match/WinRatePill';
 import CrisscrossBadge from '@/components/CrisscrossBadge';
 import { classifyCrisscross } from '@/lib/lineage';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import {
   buildLineageIndex,
   buildLineageTopology,
@@ -525,25 +526,27 @@ export default function LineageFlow({
           }`}
         >
           <div className="flex items-center gap-1.5">
-            {fowl.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={fowl.image_url}
-                alt=""
-                className="border-border h-6 w-6 shrink-0 rounded-full border object-cover"
-              />
-            ) : (
-              <span
-                className={`border-border flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[9px] font-black ${
-                  sexLabel(fowl) === 'Hen'
-                    ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
-                    : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
-                }`}
-                aria-hidden="true"
-              >
-                {initials(fowl.name)}
-              </span>
-            )}
+            <ChickenPhoto
+              name={fowl.name}
+              code={code}
+              imageUrl={fowl.image_url}
+              photoPath={fowl.photo_path}
+              photoThumbPath={fowl.photo_thumb_path}
+              size={24}
+              className="border-border h-6 w-6"
+              fallback={
+                <span
+                  className={`flex h-full w-full items-center justify-center text-[9px] font-black ${
+                    sexLabel(fowl) === 'Hen'
+                      ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
+                      : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
+                  }`}
+                  aria-hidden="true"
+                >
+                  {initials(fowl.name)}
+                </span>
+              }
+            />
             {code && (
               <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1 py-0.5 font-mono text-[10px] font-black uppercase">
                 {code}
@@ -1011,24 +1014,26 @@ export default function LineageFlow({
               <div className="space-y-3" data-testid="lineage-details">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    {selectedBird.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={selectedBird.image_url}
-                        alt=""
-                        className="border-border h-10 w-10 shrink-0 rounded-full border object-cover"
-                      />
-                    ) : (
-                      <span
-                        className={`border-border flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-black ${
-                          sexLabel(selectedBird) === 'Hen'
-                            ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
-                            : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
-                        }`}
-                      >
-                        {initials(selectedBird.name)}
-                      </span>
-                    )}
+                    <ChickenPhoto
+                      name={selectedBird.name}
+                      code={lineageBirdCode(selectedBird, codes)}
+                      imageUrl={selectedBird.image_url}
+                      photoPath={selectedBird.photo_path}
+                      photoThumbPath={selectedBird.photo_thumb_path}
+                      size={40}
+                      className="border-border h-10 w-10"
+                      fallback={
+                        <span
+                          className={`flex h-full w-full items-center justify-center text-xs font-black ${
+                            sexLabel(selectedBird) === 'Hen'
+                              ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
+                              : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
+                          }`}
+                        >
+                          {initials(selectedBird.name)}
+                        </span>
+                      }
+                    />
                     <div className="min-w-0">
                       <p className="text-card-foreground truncate text-sm font-black">
                         {selectedBird.name}
