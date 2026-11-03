@@ -35,6 +35,8 @@ import {
   validateVideoFile,
 } from '@/lib/media-format';
 import { filterAllowedColumns } from '@/lib/schema-contract';
+import LinkChickenModal from '@/components/match/LinkChickenModal';
+import { buildChickenMatchStatsMap } from '@/lib/win-rate';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 function SelectChevron() {
@@ -84,7 +86,7 @@ export default function MatchRecordForm({
   onCancel,
 }: MatchRecordFormProps) {
   const router = useRouter();
-  const { fowls, birdCodes, fetchDatabaseResources } = useFowl();
+  const { fowls, matchHistory, birdCodes, fetchDatabaseResources } = useFowl();
   const { rows } = useRegistryOptions();
   const settings = useUserSettings();
 
@@ -161,6 +163,11 @@ export default function MatchRecordForm({
   const isHistoricalMatch = mode === 'edit' && (initialRecord?.fowl_id ?? null) === null;
   // Whether the user has chosen to link a chicken to this historical match
   const [linkChickenId, setLinkChickenId] = useState<number | null>(null);
+  const [chickenPickerOpen, setChickenPickerOpen] = useState(false);
+  const matchStats = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory ?? [], fowls),
+    [matchHistory, fowls],
+  );
 
   useEffect(() => {
     setPreselectWarning(initialPreselectWarning);
@@ -786,12 +793,21 @@ export default function MatchRecordForm({
                   </div>
                   {/* Optional: link to a current chicken */}
                   <div className="mt-3">
-                    <label
-                      className="text-muted-foreground mb-1.5 block text-xs font-bold tracking-wider uppercase"
-                      htmlFor="link-chicken-id"
-                    >
-                      Link to a chicken <span className="font-normal normal-case">(optional)</span>
-                    </label>
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <label
+                        className="text-muted-foreground block text-xs font-bold tracking-wider uppercase"
+                        htmlFor="link-chicken-id"
+                      >
+                        Link to a chicken <span className="font-normal normal-case">(optional)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setChickenPickerOpen(true)}
+                        className="text-emerald-700 dark:text-emerald-400 cursor-pointer text-xs font-black hover:underline"
+                      >
+                        Chicken profile picker
+                      </button>
+                    </div>
                     <div className="relative">
                       <select
                         id="link-chicken-id"
@@ -1593,6 +1609,23 @@ export default function MatchRecordForm({
             </div>
           </div>
         </div>
+      )}
+      {chickenPickerOpen && initialRecord && (
+        <LinkChickenModal
+          match={initialRecord}
+          fowls={fowls}
+          birdCodes={birdCodes}
+          statsMap={matchStats}
+          historicalMatches={[]}
+          showCreateTab={false}
+          showBulk={false}
+          onClose={() => setChickenPickerOpen(false)}
+          onLink={async (fowl) => {
+            setLinkChickenId(fowl.id);
+            return true;
+          }}
+          onCreateAndLink={async () => false}
+        />
       )}
     </div>
   );

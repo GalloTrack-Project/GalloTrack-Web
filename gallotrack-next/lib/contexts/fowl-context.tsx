@@ -214,7 +214,10 @@ interface FowlContextValue {
   pendingRetryPatches: LineageRefreshPatch[] | null;
   retryPendingLineagePatches: () => Promise<number>;
 
-  handleAddFowl: (e: React.FormEvent) => Promise<void>;
+  handleAddFowl: (
+    e: React.FormEvent,
+    options?: { onCreated?: (fowlId: number) => void },
+  ) => Promise<void>;
   handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleArchiveFowlOnly: (id: number) => Promise<void>;
@@ -630,7 +633,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   }, []);
 
   // ── Fowl CRUD ──
-  const handleAddFowl = useCallback(async (e: React.FormEvent) => {
+  const handleAddFowl = useCallback(async (
+    e: React.FormEvent,
+    options?: { onCreated?: (fowlId: number) => void },
+  ) => {
     e.preventDefault();
 
     // 1. Upfront Form & Format Validation
@@ -891,6 +897,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         await refreshDescendantCompositions({ ...payload, id: insertResult.id } as FowlRecord, null);
       }
       fetchDatabaseResources();
+      if (insertResult.id != null) options?.onCreated?.(insertResult.id);
       ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
     } catch (err: unknown) {
       if (uploadedImagePath || uploadedImageUrl) {

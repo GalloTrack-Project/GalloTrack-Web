@@ -30,8 +30,10 @@ import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
+import { canFight, sexLabel } from '@/lib/helpers';
 import { photosFor, postersFor, videosFor } from '@/lib/services/media-service';
 import { updateMatch } from '@/lib/services/match-service';
+import { fetchFowls } from '@/lib/services/fowl-service';
 import type { MatchRecord, FowlRecord } from '@/lib/types';
 import {
   buildChickenMatchStatsMap,
@@ -62,6 +64,7 @@ export default function MatchLogsView() {
   const urlStartDate = searchParams.get('startDate') || '';
   const urlEndDate = searchParams.get('endDate') || '';
   const urlSort = searchParams.get('sort') || 'newest';
+  const urlUnlinked = searchParams.get('unlinked') === '1';
   const urlPage = parseInt(searchParams.get('page') || '1', 10);
 
   // Local filter states synced with URL
@@ -72,6 +75,7 @@ export default function MatchLogsView() {
   const [startDate, setStartDate] = useState(urlStartDate);
   const [endDate, setEndDate] = useState(urlEndDate);
   const [sortOrder, setSortOrder] = useState(urlSort);
+  const [unlinkedOnly, setUnlinkedOnly] = useState(urlUnlinked);
   const [currentPage, setCurrentPage] = useState(isNaN(urlPage) || urlPage < 1 ? 1 : urlPage);
 
   // Preserve active tab and filter state when navigating to match record creation/editing
@@ -93,8 +97,9 @@ export default function MatchLogsView() {
     setStartDate(urlStartDate);
     setEndDate(urlEndDate);
     setSortOrder(urlSort);
+    setUnlinkedOnly(urlUnlinked);
     setCurrentPage(isNaN(urlPage) || urlPage < 1 ? 1 : urlPage);
-  }, [urlSearch, urlOutcome, urlChickenId, urlClass, urlStartDate, urlEndDate, urlSort, urlPage]);
+  }, [urlSearch, urlOutcome, urlChickenId, urlClass, urlStartDate, urlEndDate, urlSort, urlUnlinked, urlPage]);
 
   // Update URL helper
   const updateUrlParams = useCallback(
@@ -155,6 +160,12 @@ export default function MatchLogsView() {
     updateUrlParams({ sort: val === 'newest' ? null : val, page: '1' });
   };
 
+  const handleUnlinkedOnlyChange = (value: boolean) => {
+    setUnlinkedOnly(value);
+    setCurrentPage(1);
+    updateUrlParams({ unlinked: value ? '1' : null, page: '1' });
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     updateUrlParams({ page: String(page) });
@@ -168,6 +179,7 @@ export default function MatchLogsView() {
     setStartDate('');
     setEndDate('');
     setSortOrder('newest');
+    setUnlinkedOnly(false);
     setCurrentPage(1);
     if (pathname === '/profiling') {
       router.replace('/profiling?tab=matchForm', { scroll: false });
@@ -183,7 +195,8 @@ export default function MatchLogsView() {
     classFilter !== 'ALL' ||
     startDate ||
     endDate ||
-    sortOrder !== 'newest',
+    sortOrder !== 'newest' ||
+    unlinkedOnly,
   );
 
   // Chicken lookup maps
@@ -208,6 +221,10 @@ export default function MatchLogsView() {
     () => buildChickenMatchStatsMap(matchHistory, fowls),
     [matchHistory, fowls],
   );
+  const unlinkedCount = useMemo(
+    () => matchHistory.filter((m) => m.fowl_id == null).length,
+    [matchHistory],
+  );
 
   // Filter & sort rows
   const filteredMatches = useMemo(() => {
@@ -225,6 +242,10 @@ export default function MatchLogsView() {
         // Authoritative fowl_id only: orphan matches (fowl_id == null) never match by name fallback
         return m.fowl_id === targetId;
       });
+    }
+
+    if (unlinkedOnly) {
+      rows = rows.filter((m) => m.fowl_id == null);
     }
 
     // Class filter
@@ -288,6 +309,7 @@ export default function MatchLogsView() {
     endDate,
     searchQuery,
     sortOrder,
+    unlinkedOnly,
     fowlById,
     fowlByName,
     birdCodes,
@@ -308,21 +330,63 @@ export default function MatchLogsView() {
   }, [filteredMatches]);
 
   // Pagination calculation
-  const handleLinkChicken = async (match: MatchRecord, fowl: FowlRecord): Promise<boolean> => {
-    const result = await updateMatch(match.id, {
-      fowl_id: fowl.id,
-      entry_name: fowl.name,
-      breed: fowl.breed || 'Unknown',
-    });
-    if (result.error) {
-      toastMessage(`Could not link match: ${result.error}`, 'error', {
-        id: `match-link-${match.id}`,
+  const linkMatchesToFowl = async (
+    matches: MatchRecord[],
+    fowlId: number,
+    entryName: string,
+    breed: string,
+  ): Promise<boolean> => {
+    const errors: string[] = [];
+    for (const target of matches) {
+      const result = await updateMatch(target.id, {
+        fowl_id: fowlId,
+        entry_name: entryName,
+        breed: breed || 'Unknown',
+      });
+      if (result.error) errors.push(result.error);
+    }
+    if (errors.length > 0) {
+      toastMessage(`Could not link ${errors.length} match(es): ${errors[0]}`, 'error', {
+        id: `match-link-${matches[0]?.id ?? 'batch'}`,
       });
       return false;
     }
     await fetchDatabaseResources();
-    toastMessage(`Match linked to ${fowl.name}.`, 'success', { id: `match-link-${match.id}` });
+    toastMessage(
+      matches.length === 1
+        ? 'Match linked to its chicken profile.'
+        : `${matches.length} matches linked to the same chicken profile.`,
+      'success',
+      { id: `match-link-${matches[0]?.id ?? 'batch'}` },
+    );
     return true;
+  };
+
+  const handleLinkChicken = async (fowl: FowlRecord, matches: MatchRecord[]): Promise<boolean> => {
+    if (!canFight(fowl) || sexLabel(fowl) !== 'Cock') {
+      toastMessage('Only cocks can be linked to a fight.', 'error', {
+        id: 'match-link-invalid-sex',
+      });
+      return false;
+    }
+    return linkMatchesToFowl(matches, fowl.id, fowl.name, fowl.breed || 'Unknown');
+  };
+
+  const handleCreateAndLink = async (fowlId: number, matches: MatchRecord[]): Promise<boolean> => {
+    const fresh = await fetchFowls();
+    const created = fresh.find((fowl) => fowl.id === fowlId);
+    if (!created) {
+      toastMessage('The new chicken could not be loaded. Refresh and try again.', 'error', {
+        id: 'match-link-new-missing',
+      });
+      return false;
+    }
+    return linkMatchesToFowl(
+      matches,
+      created.id,
+      created.name,
+      created.breed || 'Unknown',
+    );
   };
 
   const handleUnlinkChicken = async (match: MatchRecord) => {
@@ -366,6 +430,20 @@ export default function MatchLogsView() {
           <p className="text-muted-foreground mt-1 text-sm font-semibold">
             Complete record of logged derby, arena, and championship performance encounters
           </p>
+          {unlinkedCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={unlinkedOnly}
+              onClick={() => handleUnlinkedOnlyChange(!unlinkedOnly)}
+              className={`mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black transition-colors ${
+                unlinkedOnly
+                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-300'
+                  : 'border-border bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {unlinkedCount} historical {unlinkedCount === 1 ? 'entry needs' : 'entries need'} a profile
+            </button>
+          )}
         </div>
 
         <div>
@@ -492,6 +570,17 @@ export default function MatchLogsView() {
               className="border-input-border dark:bg-input text-foreground h-8 rounded border bg-white px-2.5 text-xs font-semibold"
             />
           </div>
+
+          <label className="text-muted-foreground inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold">
+            <input
+              type="checkbox"
+              checked={unlinkedOnly}
+              onChange={(event) => handleUnlinkedOnlyChange(event.target.checked)}
+              aria-label="Unlinked only"
+              className="h-3.5 w-3.5 accent-emerald-600"
+            />
+            Unlinked only
+          </label>
 
           {hasActiveFilters && (
             <button
@@ -714,9 +803,14 @@ export default function MatchLogsView() {
                               )}
                               <ChickenEntryName name={log.entry_name} variant="historical" />
                               {isOrphan && (
-                                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                                  Historical entry (no profile linked)
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLinkingMatch(log)}
+                                  aria-label={`Link profile for ${log.entry_name}`}
+                                  className="border-border bg-muted text-muted-foreground hover:border-emerald-400 hover:text-emerald-700 inline-flex cursor-pointer items-center rounded-full border px-2 py-0.5 text-xs font-bold whitespace-nowrap transition-colors"
+                                >
+                                  Historical entry ? Link profile
+                                </button>
                               )}
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
@@ -906,8 +1000,17 @@ export default function MatchLogsView() {
           match={linkingMatch}
           fowls={fowls}
           birdCodes={birdCodes}
+          statsMap={matchStats}
+          historicalMatches={matchHistory.filter(
+            (other) =>
+              other.id !== linkingMatch.id &&
+              other.fowl_id == null &&
+              (other.entry_name || '').trim().toLowerCase() ===
+                (linkingMatch.entry_name || '').trim().toLowerCase(),
+          )}
           onClose={() => setLinkingMatch(null)}
-          onConfirm={(fowl) => handleLinkChicken(linkingMatch, fowl)}
+          onLink={handleLinkChicken}
+          onCreateAndLink={handleCreateAndLink}
         />
       )}
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import MatchLogsView from './MatchLogsView';
+import { validateMatchLinkCandidate } from './LinkChickenModal';
 import type { MatchRecord, FowlRecord, MatchMedia } from '@/lib/types';
 
 const mockPush = vi.fn();
@@ -9,6 +10,8 @@ const mockReplace = vi.fn();
 const mockOpenFowlDetails = vi.fn();
 const mockUpdateMatch = vi.fn();
 const mockFetchDatabaseResources = vi.fn();
+const mockFetchFowls = vi.fn();
+const mockCreateChickenProps = vi.fn();
 let mockSearchParams = new URLSearchParams();
 
 vi.mock('next/navigation', () => ({
@@ -97,6 +100,26 @@ vi.mock('@/lib/services/match-service', () => ({
   updateMatch: (...args: unknown[]) => mockUpdateMatch(...args),
 }));
 
+vi.mock('@/lib/services/fowl-service', () => ({
+  fetchFowls: (...args: unknown[]) => mockFetchFowls(...args),
+}));
+
+vi.mock('@/components/match/CreateChickenForMatch', () => ({
+  default: (props: {
+    initialName: string;
+    initialBreed: string;
+    initialSex: string;
+    onCreated: (id: number) => void;
+  }) => {
+    mockCreateChickenProps(props);
+    return React.createElement(
+      'button',
+      { type: 'button', onClick: () => props.onCreated(123) },
+      'Create chicken stub',
+    );
+  },
+}));
+
 vi.mock('@/lib/contexts/fowl-context', () => ({
   useFowl: () => mockFowlContext,
 }));
@@ -117,6 +140,11 @@ describe('MatchLogsView', () => {
     mockUpdateMatch.mockResolvedValue({ updatedId: 1 });
     mockFetchDatabaseResources.mockReset();
     mockFetchDatabaseResources.mockResolvedValue(undefined);
+    mockFetchFowls.mockReset();
+    mockFetchFowls.mockResolvedValue([
+      { id: 123, name: 'Hatch Silver Jr', breed: 'Hatch', gender: 'Rooster', status: 'Active' },
+    ]);
+    mockCreateChickenProps.mockReset();
   });
 
   it('renders page header and link to "+ Add Match Record"', () => {
@@ -273,6 +301,199 @@ describe('MatchLogsView', () => {
     const filteredBadges = screen.getAllByTestId('match-record-99');
     expect(filteredBadges).toHaveLength(1);
     expect(filteredBadges[0]).toHaveTextContent('92% · 11W-1L');
+  });
+
+  it('opens the link modal from the historical badge without the old toast', () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+
+    expect(screen.getByRole('heading', { name: 'Link historical match' })).toBeInTheDocument();
+    expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
+  });
+
+  it('lists only registered cocks with exact-name suggestions first', () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Storm Rooster',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = {
+      ...mockFowlContext,
+      matchHistory: [historical],
+      fowls: [
+        { id: 30, name: 'Aardvark Cock', breed: 'Kelso', gender: 'Rooster', status: 'Active' },
+        { id: 10, name: 'Storm Rooster', breed: 'Hatch', gender: 'Rooster', status: 'Active' },
+        { id: 31, name: 'Hen Thing', breed: 'Hatch', gender: 'Hen', status: 'Active' },
+      ] as FowlRecord[],
+    };
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Storm Rooster' }));
+    const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
+    const options = within(picker).getAllByRole('option');
+    expect(options[0]).toHaveTextContent('Storm Rooster');
+    expect(within(picker).queryByText('Hen Thing')).not.toBeInTheDocument();
+  });
+
+  it('rejects hens and non-male recorded sex from being linked', () => {
+    expect(
+      validateMatchLinkCandidate({ id: 1, name: 'Hen', gender: 'Hen' } as FowlRecord)
+    ).toBe('Only cocks can be linked to a fight.');
+    expect(
+      validateMatchLinkCandidate(
+        { id: 2, name: 'Cock', gender: 'Rooster' } as FowlRecord,
+        'Hen',
+      )
+    ).toBe('Only cocks can be linked to a fight.');
+  });
+
+  it('does not link until the user confirms', () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
+    fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
+    expect(mockUpdateMatch).not.toHaveBeenCalled();
+  });
+
+  it('bulk-links only the ticked historical matches', async () => {
+    const current = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Current Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    const otherA = { ...current, id: 100, opponent: 'Bulk Rival A' } as MatchRecord;
+    const otherB = { ...current, id: 101, opponent: 'Bulk Rival B' } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [current, otherA, otherB] };
+
+    render(<MatchLogsView />);
+    const currentRow = screen.getByText('Current Rival').closest('tr') as HTMLElement;
+    fireEvent.click(
+      within(currentRow).getByRole('button', { name: 'Link profile for Hatch Silver' })
+    );
+    fireEvent.click(
+      screen.getByLabelText(/Apply to other historical matches with the same entered name/i)
+    );
+    const bulkLabel = screen
+      .getAllByText(/Bulk Rival A/)
+      .map((el) => el.closest('label'))
+      .find((el): el is HTMLLabelElement => Boolean(el)) as HTMLElement;
+    fireEvent.click(within(bulkLabel).getByRole('checkbox'));
+    const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
+    fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Link 2 matches/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateMatch).toHaveBeenCalledWith(99, expect.objectContaining({ fowl_id: 10 }));
+      expect(mockUpdateMatch).toHaveBeenCalledWith(100, expect.objectContaining({ fowl_id: 10 }));
+    });
+    expect(mockUpdateMatch).not.toHaveBeenCalledWith(101, expect.anything());
+  });
+
+  it('prefills the shared registration form and links after save', async () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Create new profile' }));
+
+    expect(mockCreateChickenProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialName: 'Hatch Silver',
+        initialBreed: 'Hatch',
+        initialSex: 'Rooster',
+      })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Create chicken stub' }));
+
+    await waitFor(() =>
+      expect(mockUpdateMatch).toHaveBeenCalledWith(
+        99,
+        expect.objectContaining({ fowl_id: 123, entry_name: 'Hatch Silver Jr' })
+      )
+    );
+    expect(mockFetchFowls).toHaveBeenCalled();
+  });
+
+  it('shows the unlinked count and filters to unlinked rows only', () => {
+    const unlinkedA = {
+      id: 200,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Unlinked A',
+      outcome: 'Win',
+      date: '2025-02-09',
+    } as MatchRecord;
+    const unlinkedB = { ...unlinkedA, id: 201, entry_name: 'Other Historical', opponent: 'Unlinked B' } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [...mockMatches, unlinkedA, unlinkedB] } as typeof mockFowlContext;
+
+    render(<MatchLogsView />);
+    const badge = screen.getByRole('button', { name: /2 historical entries need a profile/i });
+    expect(badge).toBeInTheDocument();
+    fireEvent.click(badge);
+    expect(screen.getByLabelText('Unlinked only')).toBeChecked();
+    expect(screen.queryByText('Tough Opponent A')).not.toBeInTheDocument();
+    expect(screen.getByText('Unlinked A')).toBeInTheDocument();
+    expect(screen.getByText('Unlinked B')).toBeInTheDocument();
   });
 
   it('keeps historical names non-interactive and shows the link action', () => {
