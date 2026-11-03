@@ -14,6 +14,8 @@
 export type ToastVariant = 'default' | 'success' | 'warning' | 'danger' | 'info';
 
 export type ToastInput = {
+  /** Stable dedupe id. Repeating the same id never stacks a second toast. */
+  id?: string;
   title: string;
   description?: string;
   variant?: ToastVariant;
@@ -40,6 +42,12 @@ export function toast(input: ToastInput): void {
 export function toastMessage(
   message: string,
   type: 'success' | 'error' | 'warning' | 'info' = 'success',
+  options: { id?: string; duration?: number } = {},
 ): void {
-  toast({ title: message, variant: type === 'error' ? 'danger' : type });
+  toast({
+    id: options.id,
+    title: message,
+    variant: type === 'error' ? 'danger' : type,
+    duration: options.duration,
+  });
 }
