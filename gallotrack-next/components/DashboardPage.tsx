@@ -199,7 +199,7 @@ export default function DashboardPage() {
         {
           heading: 'Performance Metrics',
           fields: [
-            { label: 'Overall win rate', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
+            { label: 'Overall (all time)', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
             { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
             { label: 'Matches logged', value: String(matchHistory.length) },
             { label: 'Active registry', value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} offspring | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)` },
@@ -519,7 +519,7 @@ export default function DashboardPage() {
         <div
           role="button"
           tabIndex={0}
-          aria-label={`Overall win rate: ${winsCount + lossesCount > 0 ? `${winRatePct}%` : 'No fights'}, ${winsCount}W ${lossesCount}L. Click to view win rate breakdown by chicken`}
+          aria-label={`Overall (all time): ${winsCount + lossesCount > 0 ? `${winRatePct}%` : 'No fights'}, ${winsCount}W ${lossesCount}L. Click to view win rate breakdown by chicken`}
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -531,7 +531,7 @@ export default function DashboardPage() {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall (all time)</span>
             <span className="text-sm font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
           </div>
           <div className="text-3xl font-black text-success tracking-tight leading-none mt-1">

@@ -207,6 +207,20 @@ describe('MatchLogsView', () => {
     expect(screen.getByText('Derby Special')).toBeDefined();
   });
 
+  it('does not let a date range change the Overall (all time) figure', () => {
+    mockSearchParams = new URLSearchParams('startDate=2026-10-11&endDate=2026-10-11');
+    render(<MatchLogsView />);
+
+    const summary = screen.getByTestId('match-logs-filter-summary');
+    const overallRow = within(summary).getByText('Overall (all time)').parentElement as HTMLElement;
+    expect(within(overallRow).getByText('2W-1L-1D')).toBeInTheDocument();
+    expect(within(overallRow).getByText('67%')).toBeInTheDocument();
+
+    const rangeRow = within(summary).getByText('In selected range').parentElement as HTMLElement;
+    expect(within(rangeRow).getByText('0 matches')).toBeInTheDocument();
+    expect(within(rangeRow).getByText('—%')).toBeInTheDocument();
+  });
+
   it('keeps the lifetime record on page 2 and summarizes the active filter', () => {
     const deepFowl = {
       id: 99,
@@ -247,8 +261,8 @@ describe('MatchLogsView', () => {
 
     const summary = screen.getByTestId('match-logs-filter-summary');
     expect(within(summary).getByText('12 matches')).toBeInTheDocument();
-    expect(within(summary).getByText('11W-1L-0D')).toBeInTheDocument();
-    expect(within(summary).getByText('92%')).toBeInTheDocument();
+    expect(within(summary).getAllByText('11W-1L-0D').length).toBeGreaterThanOrEqual(1);
+    expect(within(summary).getAllByText('92%').length).toBeGreaterThanOrEqual(1);
 
     // The summary follows the filter while the chicken record stays lifetime.
     fireEvent.change(screen.getByLabelText(/Filter by outcome/i), { target: { value: 'LOSS' } });

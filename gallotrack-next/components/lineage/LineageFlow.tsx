@@ -19,6 +19,7 @@ import {
   buildChickenMatchStatsMap,
   combineWinRates,
   computeWinRate,
+  getChickenMatchStats,
   type WinRateStats,
 } from '@/lib/win-rate';
 import WinRatePill from '@/components/match/WinRatePill';
@@ -153,7 +154,7 @@ export default function LineageFlow({
   );
   const statsOf = useCallback(
     (fowl: FowlRecord) =>
-      statsMap.get(fowl.name.trim().toLowerCase()) || computeWinRate(0, 0),
+      getChickenMatchStats(statsMap, fowl),
     [statsMap]
   );
 
