@@ -18,7 +18,8 @@ import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import BloodlineProvenance from '@/components/BloodlineProvenance';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf } from '@/lib/lineage';
+import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf, classifyCrisscross } from '@/lib/lineage';
+import CrisscrossBadge from '@/components/CrisscrossBadge';
 import { birdFamilyStats } from '@/lib/family-stats';
 import {
   useUnitPrefs,
@@ -268,6 +269,11 @@ export default function FowlDetailsModal({
   const classification = getBreedingClassification(bird, fowls);
   const parentageRelatedness = getOffspringParentageRelatedness(bird, fowls);
   const isRetired = isRetiredFighter(bird, foughtFowlIds, foughtNames, regCtx);
+  const crisscrossSire = parentRecordOf(bird, 'sire', fowls);
+  const crisscrossDam = parentRecordOf(bird, 'dam', fowls);
+  const birdCrisscross = classifyCrisscross(crisscrossSire, crisscrossDam, fowls);
+  const crisscrossPairName =
+    crisscrossSire && crisscrossDam ? `${crisscrossSire.name} \u00d7 ${crisscrossDam.name}` : null;
   const conditionOptions = mergeOptions(
     optionRows,
     'post_match_condition',
@@ -494,6 +500,13 @@ export default function FowlDetailsModal({
                 : selectedFowlForDetails.breed}
             </span>
             <BreedingTypeBadge classification={classification} />
+            {birdCrisscross.isCrisscross && (
+              <CrisscrossBadge
+                classification={birdCrisscross}
+                pairName={crisscrossPairName}
+                compact
+              />
+            )}
             {parentageRelatedness.type !== 'unknown' ? (
               <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " />
             ) : null}

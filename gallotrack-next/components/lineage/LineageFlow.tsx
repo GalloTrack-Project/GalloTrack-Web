@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   Link2,
@@ -23,6 +23,8 @@ import {
   type WinRateStats,
 } from '@/lib/win-rate';
 import WinRatePill from '@/components/match/WinRatePill';
+import CrisscrossBadge from '@/components/CrisscrossBadge';
+import { classifyCrisscross } from '@/lib/lineage';
 import {
   buildLineageIndex,
   buildLineageTopology,
@@ -157,6 +159,24 @@ export default function LineageFlow({
     [statsMap]
   );
 
+  /**
+   * A chicken is tagged when its own recorded parents form a crisscross pair.
+   * This covers both manually typed parent names and ID-linked/auto-resolved
+   * parents, because the index is built from the shared parent resolver.
+   */
+  const crisscrossForBird = useCallback(
+    (fowl: FowlRecord) => {
+      const parents = index.parentsByChild.get(String(fowl.id));
+      const sire = parents?.sire ?? null;
+      const dam = parents?.dam ?? null;
+      return {
+        classification: classifyCrisscross(sire, dam, index),
+        pairName: sire && dam ? `${sire.name} \u00d7 ${dam.name}` : null,
+      };
+    },
+    [index]
+  );
+
   const pairOptions = useMemo<PairOption[]>(() => {
     const map = new Map<string, PairOption>();
     index.parentsByChild.forEach(({ sire, dam }, childId) => {
@@ -278,6 +298,9 @@ export default function LineageFlow({
       ? pairOptions.find((pair) => pair.key === selected.key) ?? null
       : null;
 
+  const selectedPairCrisscross = selectedPair
+    ? classifyCrisscross(selectedPair.sire, selectedPair.dam, index)
+    : null;
   const selectedBirdStats = selectedBird ? statsOf(selectedBird) : null;
   const selectedBirdChildren = selectedBird
     ? index.childrenByParent.get(String(selectedBird.id)) ?? []
@@ -465,6 +488,7 @@ export default function LineageFlow({
       sexFocus !== 'all' && (sexFocus === 'male') !== isMale(fowl.gender);
     const offspringCount = (index.childrenByParent.get(node.id) ?? []).length;
     const fightsEnabled = canFight(fowl);
+    const birdCrisscross = crisscrossForBird(fowl);
     const rowNumber =
       (layout?.generations.findIndex((row) => row.gen === node.generation) ?? -1) + 1;
     const label = `${fowl.name}, ${sexLabel(fowl)}, ${
@@ -525,6 +549,14 @@ export default function LineageFlow({
                 {code}
               </span>
             )}
+            {birdCrisscross.classification.isCrisscross && (
+              <CrisscrossBadge
+                classification={birdCrisscross.classification}
+                pairName={birdCrisscross.pairName}
+                compact
+                className="px-1"
+              />
+            )}
             <span className={`shrink-0 text-[10px] font-black ${sexTone(fowl)}`}>
               {sexGlyph(fowl)} {sexLabel(fowl)}
             </span>
@@ -567,25 +599,39 @@ export default function LineageFlow({
     const dam = index.byId.get(pair.damId);
     if (!sire || !dam) return null;
     const isSelected = selected?.kind === 'pair' && selected.key === pair.key;
+    const crisscross = classifyCrisscross(sire, dam, index);
     return (
-      <button
-        key={pair.key}
-        type="button"
-        data-testid="lineage-pair-hub"
-        onClick={() => selectPair(pair.key)}
-        aria-label={`Breeding pair ${sire.name} × ${dam.name}, ${pair.childCount} offspring`}
-        aria-pressed={isSelected}
-        title={`Breeding pair: ${sire.name} × ${dam.name}`}
-        className={`bg-card absolute z-10 inline-flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tracking-wider uppercase shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
-          isSelected
-            ? 'border-emerald-500 text-emerald-700 ring-2 ring-emerald-500/30 dark:text-emerald-400'
-            : 'border-border text-muted-foreground hover:border-emerald-400 hover:text-foreground'
-        }`}
-        style={{ left: pair.hubX, top: pair.hubY }}
-      >
-        <Link2 className="h-3 w-3" aria-hidden="true" />
-        {pair.childCount}
-      </button>
+      <Fragment key={pair.key}>
+        <button
+          type="button"
+          data-testid="lineage-pair-hub"
+          onClick={() => selectPair(pair.key)}
+          aria-label={`Breeding pair ${sire.name} × ${dam.name}, ${pair.childCount} offspring${
+            crisscross.isCrisscross ? `. CRISSCROSS: ${crisscross.reason}` : ''
+          }`}
+          aria-pressed={isSelected}
+          title={`Breeding pair: ${sire.name} × ${dam.name}${
+            crisscross.isCrisscross ? ` · CRISSCROSS: ${crisscross.reason}` : ''
+          }`}
+          className={`bg-card absolute z-10 inline-flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tracking-wider uppercase shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
+            isSelected
+              ? 'border-emerald-500 text-emerald-700 ring-2 ring-emerald-500/30 dark:text-emerald-400'
+              : 'border-border text-muted-foreground hover:border-emerald-400 hover:text-foreground'
+          }`}
+          style={{ left: pair.hubX, top: pair.hubY }}
+        >
+          <Link2 className="h-3 w-3" aria-hidden="true" />
+          {pair.childCount}
+        </button>
+        {crisscross.isCrisscross && (
+          <div
+            className="absolute z-10 -translate-x-1/2"
+            style={{ left: pair.hubX, top: pair.hubY + 18 }}
+          >
+            <CrisscrossBadge classification={crisscross} compact />
+          </div>
+        )}
+      </Fragment>
     );
   };
 
@@ -1019,6 +1065,16 @@ export default function LineageFlow({
                       {selectedBird.age}
                     </span>
                   )}
+                  {(() => {
+                    const info = crisscrossForBird(selectedBird);
+                    return info.classification.isCrisscross ? (
+                      <CrisscrossBadge
+                        classification={info.classification}
+                        pairName={info.pairName}
+                        compact
+                      />
+                    ) : null;
+                  })()}
                 </div>
 
                 {canFight(selectedBird) && (
@@ -1184,6 +1240,15 @@ export default function LineageFlow({
                     <X className="h-4 w-4" />
                   </button>
                 </div>
+
+                {selectedPairCrisscross?.isCrisscross && (
+                  <div className="space-y-1">
+                    <CrisscrossBadge classification={selectedPairCrisscross} />
+                    <p className="text-muted-foreground text-xs font-semibold">
+                      {selectedPairCrisscross.reason}
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-2">
                   {(
