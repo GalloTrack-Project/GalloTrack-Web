@@ -370,6 +370,38 @@ describe('MatchLogsView', () => {
     ).toBe('Only cocks can be linked to a fight.');
   });
 
+  it('warns about a recorded sex conflict and requires explicit confirmation', async () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      sex: 'Unknown',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
+    fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
+
+    expect(screen.getByText(/recorded with sex/i)).toBeInTheDocument();
+    const confirmButton = screen.getByRole('button', { name: 'Link chicken' });
+    expect(confirmButton).toBeDisabled();
+
+    fireEvent.click(screen.getByLabelText('Confirm recorded sex conflict'));
+    expect(confirmButton).toBeEnabled();
+    fireEvent.click(confirmButton);
+    await waitFor(() => expect(mockUpdateMatch).toHaveBeenCalled());
+  });
+
   it('does not link until the user confirms', () => {
     const historical = {
       id: 99,

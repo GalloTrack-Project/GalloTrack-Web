@@ -37,7 +37,7 @@ export function validateMatchLinkCandidate(
     return 'Only cocks can be linked to a fight.';
   }
   const sex = (explicitSex || '').trim().toLowerCase();
-  if (sex && !MALE_SEX_VALUES.includes(sex)) {
+  if (sex && !MALE_SEX_VALUES.includes(sex) && sexLabel({ gender: explicitSex }) === 'Hen') {
     return 'Only cocks can be linked to a fight.';
   }
   return null;
@@ -62,11 +62,16 @@ export default function LinkChickenModal({
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmSexConflict, setConfirmSexConflict] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
 
   const enteredKey = (match.entry_name || '').trim().toLowerCase();
   const explicitSex = String((match as MatchRecord & { sex?: string | null }).sex || '').trim();
   const enteredSex = explicitSex || 'Not recorded';
+  const sexConflict =
+    !!explicitSex &&
+    sexLabel({ gender: explicitSex }) !== 'Cock' &&
+    sexLabel({ gender: explicitSex }) !== 'Hen';
 
   useEffect(() => {
     searchRef.current?.focus();
@@ -121,6 +126,10 @@ export default function LinkChickenModal({
     const validation = validateSelection(selected);
     if (validation) {
       setError(validation);
+      return;
+    }
+    if (sexConflict && !confirmSexConflict) {
+      setError('Confirm the recorded sex conflict before linking.');
       return;
     }
     setError(null);
@@ -246,6 +255,7 @@ export default function LinkChickenModal({
                       aria-selected={isSelected}
                       onClick={() => {
                         setSelectedId(fowl.id);
+                        setConfirmSexConflict(false);
                         setError(null);
                       }}
                       className={cn(
@@ -287,6 +297,28 @@ export default function LinkChickenModal({
                 The selected chicken is named ?{selected.name}?, but this match is recorded as ?{match.entry_name}?.
                 Saving will update the recorded name.
               </p>
+            )}
+
+            {sexConflict && selected && (
+              <label
+                role="status"
+                className="flex cursor-pointer items-start gap-2 rounded-md border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+              >
+                <input
+                  type="checkbox"
+                  checked={confirmSexConflict}
+                  onChange={(event) => {
+                    setConfirmSexConflict(event.target.checked);
+                    if (event.target.checked) setError(null);
+                  }}
+                  aria-label="Confirm recorded sex conflict"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-amber-600"
+                />
+                <span>
+                  This match is recorded with sex ?{explicitSex}?, which conflicts with the
+                  selected cock. Confirm that the profile is correct before linking.
+                </span>
+              </label>
             )}
 
             {error && (
@@ -350,7 +382,7 @@ export default function LinkChickenModal({
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  disabled={!selected || saving}
+                  disabled={!selected || saving || (sexConflict && !confirmSexConflict)}
                   className="inline-flex h-11 cursor-pointer items-center justify-center rounded-md bg-emerald-600 px-5 text-sm font-black text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving
