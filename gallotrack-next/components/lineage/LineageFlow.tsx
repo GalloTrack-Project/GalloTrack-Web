@@ -159,6 +159,24 @@ export default function LineageFlow({
     [statsMap]
   );
 
+  /**
+   * A chicken is tagged when its own recorded parents form a crisscross pair.
+   * This covers both manually typed parent names and ID-linked/auto-resolved
+   * parents, because the index is built from the shared parent resolver.
+   */
+  const crisscrossForBird = useCallback(
+    (fowl: FowlRecord) => {
+      const parents = index.parentsByChild.get(String(fowl.id));
+      const sire = parents?.sire ?? null;
+      const dam = parents?.dam ?? null;
+      return {
+        classification: classifyCrisscross(sire, dam, index),
+        pairName: sire && dam ? `${sire.name} \u00d7 ${dam.name}` : null,
+      };
+    },
+    [index]
+  );
+
   const pairOptions = useMemo<PairOption[]>(() => {
     const map = new Map<string, PairOption>();
     index.parentsByChild.forEach(({ sire, dam }, childId) => {
@@ -483,6 +501,7 @@ export default function LineageFlow({
       sexFocus !== 'all' && (sexFocus === 'male') !== isMale(fowl.gender);
     const offspringCount = (index.childrenByParent.get(node.id) ?? []).length;
     const fightsEnabled = canFight(fowl);
+    const birdCrisscross = crisscrossForBird(fowl);
     const rowNumber =
       (layout?.generations.findIndex((row) => row.gen === node.generation) ?? -1) + 1;
     const label = `${fowl.name}, ${sexLabel(fowl)}, ${
@@ -542,6 +561,14 @@ export default function LineageFlow({
               <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1 py-0.5 font-mono text-[10px] font-black uppercase">
                 {code}
               </span>
+            )}
+            {birdCrisscross.classification.isCrisscross && (
+              <CrisscrossBadge
+                classification={birdCrisscross.classification}
+                pairName={birdCrisscross.pairName}
+                compact
+                className="px-1"
+              />
             )}
             <span className={`shrink-0 text-[10px] font-black ${sexTone(fowl)}`}>
               {sexGlyph(fowl)} {sexLabel(fowl)}
@@ -1070,6 +1097,16 @@ export default function LineageFlow({
                       {selectedBird.age}
                     </span>
                   )}
+                  {(() => {
+                    const info = crisscrossForBird(selectedBird);
+                    return info.classification.isCrisscross ? (
+                      <CrisscrossBadge
+                        classification={info.classification}
+                        pairName={info.pairName}
+                        compact
+                      />
+                    ) : null;
+                  })()}
                 </div>
 
                 {canFight(selectedBird) && (

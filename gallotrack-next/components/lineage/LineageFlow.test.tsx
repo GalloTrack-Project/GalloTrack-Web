@@ -287,7 +287,7 @@ describe('LineageFlow pedigree canvas', () => {
     ).toBeInTheDocument();
   });
 
-  it('tags a crisscross pair in the pair hub and details panel', () => {
+  it('tags crisscross offspring in the bird card, details panel and keeps hen records hidden', () => {
     const crisscrossFamily: FowlRecord[] = [
       bird({ id: 1, name: 'Lemon Sire', gender: 'Rooster', breed: 'Lemon' }),
       bird({ id: 2, name: 'Hatch Dam', gender: 'Hen', breed: 'Hatch' }),
@@ -307,14 +307,44 @@ describe('LineageFlow pedigree canvas', () => {
         sire: 'Hatch Sire',
         dam: 'Cross Dam',
       }),
+      bird({
+        id: 6,
+        name: 'Cross Hen',
+        gender: 'Hen',
+        sire: 'Hatch Sire',
+        dam: 'Cross Dam',
+      }),
     ];
 
     render(<Harness fowls={crisscrossFamily} initialRoot="Hatch Sire" />);
 
     const hub = screen.getByRole('button', {
-      name: /Breeding pair Hatch Sire × Cross Dam/,
+      name: /Breeding pair Hatch Sire .* Cross Dam/,
     });
-    expect(screen.getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(screen.getAllByTestId('crisscross-badge').length).toBeGreaterThanOrEqual(2);
+
+    const offspringCard = cardFor('Cross Offspring');
+    const offspringTag = within(offspringCard).getByTestId('crisscross-badge');
+    expect(offspringTag).toHaveAttribute('title', expect.stringContaining('Hatch Sire'));
+    expect(offspringTag).toHaveAttribute('title', expect.stringContaining('Cross Dam'));
+
+    fireEvent.click(offspringCard);
+    const offspringDetails = screen.getByTestId('lineage-details');
+    expect(within(offspringDetails).getByTestId('crisscross-badge')).toHaveAttribute(
+      'title',
+      expect.stringContaining('Hatch Sire')
+    );
+    // The offspring is a cock, so its record/action remain; hens are covered below.
+    expect(within(offspringDetails).getByText('Record')).toBeInTheDocument();
+    expect(within(offspringDetails).getByRole('button', { name: /Fight history/i })).toBeInTheDocument();
+
+    const henCard = cardFor('Cross Hen');
+    expect(within(henCard).getByTestId('crisscross-badge')).toBeInTheDocument();
+    fireEvent.click(henCard);
+    const henDetails = screen.getByTestId('lineage-details');
+    expect(within(henDetails).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(henDetails).queryByText('Record')).not.toBeInTheDocument();
+    expect(within(henDetails).queryByRole('button', { name: /Fight history/i })).not.toBeInTheDocument();
 
     fireEvent.click(hub);
     const details = screen.getByTestId('lineage-details');

@@ -8,6 +8,8 @@ type Props = {
   classification: CrisscrossClassification;
   compact?: boolean;
   className?: string;
+  /** Offspring tags show the breeding pair name in the tooltip. */
+  pairName?: string | null;
 };
 
 /**
@@ -18,15 +20,19 @@ export default function CrisscrossBadge({
   classification,
   compact = false,
   className,
+  pairName,
 }: Props) {
   if (!classification.isCrisscross) return null;
+
+  const pairLabel = (pairName || '').trim();
+  const tooltip = pairLabel ? `${pairLabel}: ${classification.reason}` : classification.reason;
 
   return (
     <span
       data-testid="crisscross-badge"
       role="img"
-      aria-label={`CRISSCROSS: ${classification.reason}`}
-      title={classification.reason}
+      aria-label={`CRISSCROSS${pairLabel ? ` (${pairLabel})` : ''}: ${classification.reason}`}
+      title={tooltip}
       className={cn(
         'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 font-black tracking-tight uppercase',
         compact ? 'text-[10px]' : 'text-xs',
