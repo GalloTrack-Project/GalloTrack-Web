@@ -31,6 +31,9 @@ type Props = {
   /** The edit form already owns persistence, so it only needs the picker tab. */
   showCreateTab?: boolean;
   showBulk?: boolean;
+  /** Review flow links the whole group at once. */
+  forcedMatches?: MatchRecord[];
+  initialTab?: Tab;
   queue?: {
     index: number;
     total: number;
@@ -69,9 +72,11 @@ export default function LinkChickenModal({
   onCreateAndLink,
   showCreateTab = true,
   showBulk = true,
+  forcedMatches,
+  initialTab = 'link',
   queue,
 }: Props) {
-  const [tab, setTab] = useState<Tab>('link');
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [applyBulk, setApplyBulk] = useState(false);
@@ -95,7 +100,7 @@ export default function LinkChickenModal({
   }, []);
 
   useEffect(() => {
-    setTab('link');
+    setTab(initialTab);
     setQuery('');
     setSelectedId(null);
     setApplyBulk(false);
@@ -103,7 +108,7 @@ export default function LinkChickenModal({
     setConfirmSexConflict(false);
     setUpdateRecordedName(false);
     setError(null);
-  }, [match.id]);
+  }, [match.id, initialTab]);
 
   const candidates = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -135,7 +140,7 @@ export default function LinkChickenModal({
 
   const bulkIds = applyBulk ? Array.from(checkedIds) : [];
   const bulkMatches = historicalMatches.filter((m) => bulkIds.includes(m.id));
-  const linkTargets = [match, ...bulkMatches];
+  const linkTargets = forcedMatches && forcedMatches.length > 0 ? forcedMatches : [match, ...bulkMatches];
 
   const toggleChecked = (id: number) => {
     setCheckedIds((current) => {
@@ -302,7 +307,7 @@ export default function LinkChickenModal({
                         </span>
                       </span>
                       <span className="text-muted-foreground shrink-0 text-[10px] font-black whitespace-nowrap">
-                        {stats.winRate === null ? '?%' : `${stats.winRate}%`} ? {stats.wins}W-{stats.losses}L
+                        {stats.winRate === null ? '—%' : `${stats.winRate}%`} {'·'} {stats.wins}W-{stats.losses}L
                       </span>
                       <span
                         className={cn(
@@ -363,7 +368,7 @@ export default function LinkChickenModal({
               </p>
             )}
 
-            {showBulk && historicalMatches.length > 0 && (
+            {!forcedMatches && showBulk && historicalMatches.length > 0 && (
               <div className="border-border bg-muted/20 space-y-2 rounded-md border p-3">
                 <label className="flex cursor-pointer items-center gap-2 text-xs font-bold">
                   <input
@@ -397,6 +402,12 @@ export default function LinkChickenModal({
                   </ul>
                 )}
               </div>
+            )}
+
+            {forcedMatches && forcedMatches.length > 1 && (
+              <p className="text-muted-foreground text-xs font-semibold">
+                This will link all {forcedMatches.length} matches in this historical group.
+              </p>
             )}
 
             {queue && (
@@ -468,6 +479,7 @@ export default function LinkChickenModal({
               initialName={match.entry_name || ''}
               initialBreed={match.breed || ''}
               initialSex="Rooster"
+              historicalEntryName={match.entry_name}
               onCreated={handleCreated}
             />
           </div>

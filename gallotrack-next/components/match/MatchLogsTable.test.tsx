@@ -209,7 +209,7 @@ describe('Match Media Resolution and MatchLogsTable', () => {
     expect(screen.queryByText('No media')).not.toBeInTheDocument();
   });
 
-  it('unlinked historical rows expose only the Link profile badge button', () => {
+  it('unlinked row has no historical badge and its name opens historical analytics', () => {
     const historical = {
       id: 1002,
       fowl_id: null,
@@ -225,13 +225,14 @@ describe('Match Media Resolution and MatchLogsTable', () => {
 
     render(<MatchLogsTable matches={[historical]} />);
 
-    const name = screen.getByText('Hatch Silver');
-    expect(name.closest('button')).toBeNull();
-    fireEvent.click(name);
-    expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
-    expect(screen.getByRole('heading', { name: 'Link historical match' })).toBeInTheDocument();
+    expect(screen.queryByText(/Historical entry.*Link profile/i)).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
+    expect(
+      screen.getByRole('heading', { name: 'Individual Chicken Analytics & Match Logs' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Not registered, no parents recorded/i)).toBeInTheDocument();
   });
 
   it('clicking the chicken identity opens the chicken info card instead of the match editor', () => {

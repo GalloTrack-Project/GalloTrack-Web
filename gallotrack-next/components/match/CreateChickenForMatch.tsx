@@ -8,6 +8,7 @@ type Props = {
   initialName: string;
   initialBreed: string;
   initialSex: string;
+  historicalEntryName?: string;
   onCreated: (fowlId: number) => void;
 };
 
@@ -19,6 +20,7 @@ export default function CreateChickenForMatch({
   initialName,
   initialBreed,
   initialSex,
+  historicalEntryName,
   onCreated,
 }: Props) {
   const {
@@ -176,7 +178,7 @@ export default function CreateChickenForMatch({
       sireGen={sireGen}
       damGen={damGen}
       generationPurity={generationPurity}
-      handleAddFowl={(event) => handleAddFowl(event, { onCreated })}
+      handleAddFowl={(event) => handleAddFowl(event, { onCreated, historicalEntryName })}
       autoCalcAge={autoCalcAge}
       getAutoCalcAge={getAutoCalcAge}
     />

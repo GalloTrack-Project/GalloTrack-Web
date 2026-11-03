@@ -216,7 +216,10 @@ interface FowlContextValue {
 
   handleAddFowl: (
     e: React.FormEvent,
-    options?: { onCreated?: (fowlId: number) => void },
+    options?: {
+      onCreated?: (fowlId: number) => void;
+      historicalEntryName?: string;
+    },
   ) => Promise<void>;
   handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
   handleOpenEditModal: (fowl: FowlRecord) => void;
@@ -635,7 +638,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   // ── Fowl CRUD ──
   const handleAddFowl = useCallback(async (
     e: React.FormEvent,
-    options?: { onCreated?: (fowlId: number) => void },
+    options?: {
+      onCreated?: (fowlId: number) => void;
+      historicalEntryName?: string;
+    },
   ) => {
     e.preventDefault();
 
@@ -822,7 +828,12 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         bloodline_composition: composition,
         bird_code: codeToUse,
         wing_band: bandValue || null,
-        status: 'Active',
+        status: options?.historicalEntryName ? 'Archived' : 'Active',
+        archive_kind: options?.historicalEntryName ? 'retired' : undefined,
+        archive_reason: options?.historicalEntryName ? 'Historical entry profile' : undefined,
+        notes: options?.historicalEntryName
+          ? `Created from historical match entry "${options.historicalEntryName}".`
+          : undefined,
         image_url: uploadedImageUrl,
       };
 

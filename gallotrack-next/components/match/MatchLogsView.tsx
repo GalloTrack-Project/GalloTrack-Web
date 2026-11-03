@@ -24,7 +24,9 @@ import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import MatchRecordForm from '@/components/match/MatchRecordForm';
 import ChickenEntryName from '@/components/match/ChickenEntryName';
 import LinkChickenModal from '@/components/match/LinkChickenModal';
-import LinkProfileButton from '@/components/match/LinkProfileButton';
+import HistoricalGroupModal from '@/components/match/HistoricalGroupModal';
+import ReviewUnlinkedGroupsModal from '@/components/match/ReviewUnlinkedGroupsModal';
+import { groupUnlinkedMatches, historicalGroupKey, type HistoricalMatchGroup } from '@/lib/historical-matches';
 import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useFowl } from '@/lib/contexts/fowl-context';
@@ -55,8 +57,10 @@ export default function MatchLogsView() {
   const [linkingMatch, setLinkingMatch] = useState<MatchRecord | null>(null);
   const [unlinkingMatch, setUnlinkingMatch] = useState<MatchRecord | null>(null);
   const [unlinking, setUnlinking] = useState(false);
-  const [reviewQueue, setReviewQueue] = useState<MatchRecord[] | null>(null);
-  const [reviewIndex, setReviewIndex] = useState(0);
+  const [historicalGroup, setHistoricalGroup] = useState<HistoricalMatchGroup | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [linkGroup, setLinkGroup] = useState<HistoricalMatchGroup | null>(null);
+  const [linkInitialTab, setLinkInitialTab] = useState<'link' | 'create'>('link');
 
   // Read URL query params
   const urlSearch = searchParams.get('q') || '';
@@ -424,40 +428,23 @@ export default function MatchLogsView() {
     setUnlinkingMatch(null);
   };
 
-  const unlinkedMatches = useMemo(
-    () => matchHistory.filter((match) => match.fowl_id == null),
+  const unlinkedGroups = useMemo(
+    () => groupUnlinkedMatches(matchHistory),
     [matchHistory],
   );
 
   const closeLinkModal = () => {
     setLinkingMatch(null);
-    setReviewQueue(null);
-    setReviewIndex(0);
+    setLinkGroup(null);
+    setLinkInitialTab('link');
   };
 
-  const advanceReviewQueue = () => {
-    if (!reviewQueue) return;
-    const next = reviewIndex + 1;
-    if (next >= reviewQueue.length) {
-      closeLinkModal();
-      return;
-    }
-    setReviewIndex(next);
-    setLinkingMatch(reviewQueue[next]);
-  };
-
-  const goToPreviousReview = () => {
-    if (!reviewQueue || reviewIndex <= 0) return;
-    const previous = reviewIndex - 1;
-    setReviewIndex(previous);
-    setLinkingMatch(reviewQueue[previous]);
-  };
-
-  const startReviewQueue = () => {
-    if (unlinkedMatches.length === 0) return;
-    setReviewQueue(unlinkedMatches);
-    setReviewIndex(0);
-    setLinkingMatch(unlinkedMatches[0]);
+  const openGroupLink = (group: HistoricalMatchGroup, tab: 'link' | 'create') => {
+    setHistoricalGroup(null);
+    setReviewOpen(false);
+    setLinkGroup(group);
+    setLinkInitialTab(tab);
+    setLinkingMatch(group.matches[0] ?? null);
   };
 
   const totalItems = filteredMatches.length;
@@ -498,10 +485,10 @@ export default function MatchLogsView() {
               </button>
               <button
                 type="button"
-                onClick={startReviewQueue}
+                onClick={() => setReviewOpen(true)}
                 className="inline-flex cursor-pointer items-center rounded-md bg-emerald-600 px-3 py-1 text-xs font-black text-white transition-colors hover:bg-emerald-700"
               >
-                Review unlinked
+                Review unlinked entries ({unlinkedGroups.length})
               </button>
             </div>
           )}
@@ -852,28 +839,29 @@ export default function MatchLogsView() {
                             </div>
                           </button>
                         ) : (
-                          <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const group = unlinkedGroups.find(
+                                (candidate) =>
+                                  candidate.key ===
+                                  historicalGroupKey(log.entry_name, log.breed || ''),
+                              );
+                              if (group) setHistoricalGroup(group);
+                            }}
+                            aria-label={`View historical analytics for ${log.entry_name}`}
+                            title={`View historical analytics for ${log.entry_name}`}
+                            className="focus-visible:ring-ring flex w-full min-w-0 cursor-pointer flex-col items-start rounded-md text-left focus-visible:ring-2 focus-visible:outline-none"
+                          >
                             <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
-                                <ChickenIcon className="text-success h-3.5 w-3.5" />
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                                <ChickenIcon className="text-muted-foreground h-3.5 w-3.5" />
                               </div>
-                              {code && (
-                                <span className="text-success rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase">
-                                  [{formatBirdCodeForDisplay(code)}]
-                                </span>
-                              )}
                               <ChickenEntryName name={log.entry_name} variant="historical" />
-                              {isOrphan && (
-                                <LinkProfileButton
-                                  entryName={log.entry_name}
-                                  onClick={() => setLinkingMatch(log)}
-                                />
-                              )}
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                               <span className="text-muted-foreground text-xs font-semibold">
                                 {log.breed || '—'}
-                                {hatch ? ` · ${t('registry.hatchedDate', { date: hatch })}` : ''}
                               </span>
                               {log.age_category && (
                                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-bold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
@@ -881,7 +869,7 @@ export default function MatchLogsView() {
                                 </span>
                               )}
                             </div>
-                          </>
+                          </button>
                         )}
                         <MatchLogsRecordBadge
                           fowl={fowl}
@@ -1042,47 +1030,45 @@ export default function MatchLogsView() {
         </Modal>
       )}
 
+      {historicalGroup && (
+        <HistoricalGroupModal
+          group={historicalGroup}
+          onClose={() => setHistoricalGroup(null)}
+          onLinkRequest={(group) => openGroupLink(group, 'link')}
+          onCreateRequest={(group) => openGroupLink(group, 'create')}
+        />
+      )}
+
+      {reviewOpen && (
+        <ReviewUnlinkedGroupsModal
+          groups={unlinkedGroups}
+          onClose={() => setReviewOpen(false)}
+          onLink={(group) => openGroupLink(group, 'link')}
+          onCreate={(group) => openGroupLink(group, 'create')}
+        />
+      )}
+
       {linkingMatch && (
         <LinkChickenModal
           match={linkingMatch}
           fowls={fowls}
           birdCodes={birdCodes}
           statsMap={matchStats}
-          historicalMatches={matchHistory.filter(
-            (other) =>
-              other.id !== linkingMatch.id &&
-              other.fowl_id == null &&
-              (other.entry_name || '').trim().toLowerCase() ===
-                (linkingMatch.entry_name || '').trim().toLowerCase(),
-          )}
+          historicalMatches={[]}
+          forcedMatches={linkGroup?.matches}
+          initialTab={linkInitialTab}
+          showBulk={!linkGroup}
           onClose={closeLinkModal}
           onLink={async (fowl, matches, options) => {
             const ok = await handleLinkChicken(fowl, matches, options);
-            if (ok && reviewQueue) {
-              advanceReviewQueue();
-              return false;
-            }
-            return ok;
+            if (ok) closeLinkModal();
+            return false;
           }}
           onCreateAndLink={async (fowlId, matches, options) => {
             const ok = await handleCreateAndLink(fowlId, matches, options);
-            if (ok && reviewQueue) {
-              advanceReviewQueue();
-              return false;
-            }
-            return ok;
+            if (ok) closeLinkModal();
+            return false;
           }}
-          queue={
-            reviewQueue
-              ? {
-                  index: reviewIndex,
-                  total: reviewQueue.length,
-                  onPrevious: goToPreviousReview,
-                  onNext: advanceReviewQueue,
-                  onSkip: advanceReviewQueue,
-                }
-              : undefined
-          }
         />
       )}
 

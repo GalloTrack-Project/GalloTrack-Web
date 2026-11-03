@@ -303,7 +303,7 @@ describe('MatchLogsView', () => {
     expect(filteredBadges[0]).toHaveTextContent('92% · 11W-1L');
   });
 
-  it('opens the link modal from the historical badge without the old toast', () => {
+  it('opens historical analytics from the name and shows no historical badge or toast', () => {
     const historical = {
       id: 99,
       fowl_id: null,
@@ -320,9 +320,15 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    expect(screen.queryByText(/Historical entry.*Link profile/i)).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
 
-    expect(screen.getByRole('heading', { name: 'Link historical match' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Individual Chicken Analytics & Match Logs' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Not registered, no parents recorded/i)).toBeInTheDocument();
     expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
   });
 
@@ -351,7 +357,10 @@ describe('MatchLogsView', () => {
     };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Storm Rooster' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Storm Rooster' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Link to registered profile' }));
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     const options = within(picker).getAllByRole('option');
     expect(options[0]).toHaveTextContent('Storm Rooster');
@@ -388,7 +397,10 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Link to registered profile' }));
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
 
@@ -419,19 +431,22 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Link to registered profile' }));
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
     expect(mockUpdateMatch).not.toHaveBeenCalled();
   });
 
-  it('bulk-links only the ticked historical matches', async () => {
+  it('review flow links every match in the selected group at once', async () => {
     const current = {
       id: 99,
       fowl_id: null,
       entry_name: 'Hatch Silver',
       breed: 'Hatch',
-      opponent: 'Current Rival',
+      opponent: 'Group Rival A',
       location: 'Arena',
       type: 'Derby',
       outcome: 'Win',
@@ -439,32 +454,26 @@ describe('MatchLogsView', () => {
       date: '2025-02-09',
       age_category: 'Cock',
     } as MatchRecord;
-    const otherA = { ...current, id: 100, opponent: 'Bulk Rival A' } as MatchRecord;
-    const otherB = { ...current, id: 101, opponent: 'Bulk Rival B' } as MatchRecord;
-    mockFowlContext = { ...mockFowlContext, matchHistory: [current, otherA, otherB] };
+    const other = { ...current, id: 100, opponent: 'Group Rival B' } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [current, other] };
 
     render(<MatchLogsView />);
-    const currentRow = screen.getByText('Current Rival').closest('tr') as HTMLElement;
+    fireEvent.click(screen.getByRole('button', { name: /Review unlinked entries \(1\)/ }));
+    const review = screen.getByRole('dialog');
+    expect(within(review).getByText('Hatch Silver')).toBeInTheDocument();
+    expect(within(review).getByText(/2 matches/i)).toBeInTheDocument();
+
     fireEvent.click(
-      within(currentRow).getByRole('button', { name: 'Link profile for Hatch Silver' })
+      within(review).getByRole('button', { name: 'Link to registered chicken' })
     );
-    fireEvent.click(
-      screen.getByLabelText(/Apply to other historical matches with the same entered name/i)
-    );
-    const bulkLabel = screen
-      .getAllByText(/Bulk Rival A/)
-      .map((el) => el.closest('label'))
-      .find((el): el is HTMLLabelElement => Boolean(el)) as HTMLElement;
-    fireEvent.click(within(bulkLabel).getByRole('checkbox'));
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
     fireEvent.click(screen.getByRole('button', { name: /Link 2 matches/i }));
 
     await waitFor(() => {
-      expect(mockUpdateMatch).toHaveBeenCalledWith(99, expect.objectContaining({ fowl_id: 10 }));
-      expect(mockUpdateMatch).toHaveBeenCalledWith(100, expect.objectContaining({ fowl_id: 10 }));
+      expect(mockUpdateMatch).toHaveBeenCalledWith(99, { fowl_id: 10 });
+      expect(mockUpdateMatch).toHaveBeenCalledWith(100, { fowl_id: 10 });
     });
-    expect(mockUpdateMatch).not.toHaveBeenCalledWith(101, expect.anything());
   });
 
   it('prefills the shared registration form and links after save', async () => {
@@ -484,14 +493,17 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Create new profile' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Create profile' }));
 
     expect(mockCreateChickenProps).toHaveBeenCalledWith(
       expect.objectContaining({
         initialName: 'Hatch Silver',
         initialBreed: 'Hatch',
         initialSex: 'Rooster',
+        historicalEntryName: 'Hatch Silver',
       })
     );
     fireEvent.click(screen.getByRole('button', { name: 'Create chicken stub' }));
@@ -505,36 +517,24 @@ describe('MatchLogsView', () => {
     expect(mockFetchFowls).toHaveBeenCalled();
   });
 
-  it('opens the guided review queue and steps through unlinked entries', () => {
-    const a = {
+  it('keeps a review group as historical without linking', () => {
+    const group = {
       id: 300,
       fowl_id: null,
       entry_name: 'Hatch Silver',
       breed: 'Hatch',
-      opponent: 'Queue A',
+      opponent: 'Keep Rival',
       outcome: 'Win',
       date: '2025-02-09',
     } as MatchRecord;
-    const b = {
-      ...a,
-      id: 301,
-      entry_name: 'Hatch Crown',
-      opponent: 'Queue B',
-    } as MatchRecord;
-    mockFowlContext = { ...mockFowlContext, matchHistory: [a, b] } as typeof mockFowlContext;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [group] } as typeof mockFowlContext;
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Review unlinked' }));
-    const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByText('1 of 2')).toBeInTheDocument();
-    expect(within(dialog).getByText('Hatch Silver')).toBeInTheDocument();
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Next' }));
-    expect(within(dialog).getByText('2 of 2')).toBeInTheDocument();
-    expect(within(dialog).getByText('Hatch Crown')).toBeInTheDocument();
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Previous' }));
-    expect(within(dialog).getByText('1 of 2')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Review unlinked entries \(1\)/ }));
+    const review = screen.getByRole('dialog');
+    fireEvent.click(within(review).getByRole('button', { name: 'Keep as historical' }));
+    expect(within(review).getByRole('button', { name: 'Kept as historical' })).toBeDisabled();
+    expect(mockUpdateMatch).not.toHaveBeenCalled();
   });
 
   it('shows the unlinked count and filters to unlinked rows only', () => {
@@ -560,7 +560,7 @@ describe('MatchLogsView', () => {
     expect(screen.getByText('Unlinked B')).toBeInTheDocument();
   });
 
-  it('keeps historical names non-interactive and shows the link action', () => {
+  it('makes historical names interactive and opens the analytics modal', () => {
     const historical = {
       id: 99,
       fowl_id: null,
@@ -578,14 +578,16 @@ describe('MatchLogsView', () => {
 
     render(<MatchLogsView />);
 
-    const name = screen.getByText('Hatch Silver');
-    expect(name.closest('button')).toBeNull();
-    expect(name).toHaveClass('cursor-default');
-    fireEvent.click(name);
+    const nameButton = screen.getByRole('button', {
+      name: 'View historical analytics for Hatch Silver',
+    });
+    expect(nameButton).toBeInTheDocument();
+    fireEvent.click(nameButton);
     expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Link profile for Hatch Silver' })
+      screen.getByRole('button', { name: 'Link to registered profile' })
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create profile' })).toBeInTheDocument();
   });
 
   it('links a historical match and refreshes stats', async () => {
@@ -605,7 +607,10 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Link to registered profile' }));
 
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
@@ -636,7 +641,10 @@ describe('MatchLogsView', () => {
     mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
 
     const { rerender } = render(<MatchLogsView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Link profile for Hatch Silver' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View historical analytics for Hatch Silver' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Link to registered profile' }));
     const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
     fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
 
