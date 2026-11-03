@@ -11,6 +11,21 @@ function Consumer({ variant }: { variant?: ToastVariant }) {
   );
 }
 
+function DedupeConsumer() {
+  const { toast } = useToast();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        toast({ id: 'same-message', title: 'Same message' });
+        toast({ id: 'same-message', title: 'Same message' });
+      }}
+    >
+      fire duplicate
+    </button>
+  );
+}
+
 function renderWithProvider(variant?: ToastVariant) {
   return render(
     <ToastProvider>
@@ -54,6 +69,17 @@ describe('Toast', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('deduplicates repeated toasts with the same stable id', () => {
+    render(
+      <ToastProvider>
+        <DedupeConsumer />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'fire duplicate' }));
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Same message');
   });
 
   it('auto-dismisses after the default duration', () => {

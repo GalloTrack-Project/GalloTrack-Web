@@ -1,12 +1,14 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import MatchLogsView from './MatchLogsView';
 import type { MatchRecord, FowlRecord, MatchMedia } from '@/lib/types';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
 const mockOpenFowlDetails = vi.fn();
+const mockUpdateMatch = vi.fn();
+const mockFetchDatabaseResources = vi.fn();
 let mockSearchParams = new URLSearchParams();
 
 vi.mock('next/navigation', () => ({
@@ -88,7 +90,12 @@ let mockFowlContext = {
   matchMedia: new Map<number, MatchMedia>(),
   birdCodes: new Map<string, string>(),
   loading: false,
+  fetchDatabaseResources: mockFetchDatabaseResources,
 };
+
+vi.mock('@/lib/services/match-service', () => ({
+  updateMatch: (...args: unknown[]) => mockUpdateMatch(...args),
+}));
 
 vi.mock('@/lib/contexts/fowl-context', () => ({
   useFowl: () => mockFowlContext,
@@ -104,7 +111,12 @@ describe('MatchLogsView', () => {
       matchMedia: new Map<number, MatchMedia>(),
       birdCodes: new Map<string, string>(),
       loading: false,
+      fetchDatabaseResources: mockFetchDatabaseResources,
     };
+    mockUpdateMatch.mockReset();
+    mockUpdateMatch.mockResolvedValue({ updatedId: 1 });
+    mockFetchDatabaseResources.mockReset();
+    mockFetchDatabaseResources.mockResolvedValue(undefined);
   });
 
   it('renders page header and link to "+ Add Match Record"', () => {
@@ -276,4 +288,122 @@ describe('MatchLogsView', () => {
     expect(filteredBadges).toHaveLength(1);
     expect(filteredBadges[0]).toHaveTextContent('92% · 11W-1L');
   });
+
+  it('keeps historical names non-interactive and shows the link action', () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    render(<MatchLogsView />);
+
+    const name = screen.getByText('Hatch Silver');
+    expect(name.closest('button')).toBeNull();
+    expect(name).toHaveClass('cursor-default');
+    fireEvent.click(name);
+    expect(screen.queryByText(/No chicken profile is linked/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Link to profile for Hatch Silver' })
+    ).toBeInTheDocument();
+  });
+
+  it('links a historical match and refreshes stats', async () => {
+    const historical = {
+      id: 99,
+      fowl_id: null,
+      entry_name: 'Hatch Silver',
+      breed: 'Hatch',
+      opponent: 'Old Rival',
+      location: 'Arena',
+      type: 'Derby',
+      outcome: 'Win',
+      status: 'Verified',
+      date: '2025-02-09',
+      age_category: 'Cock',
+    } as MatchRecord;
+    mockFowlContext = { ...mockFowlContext, matchHistory: [historical] };
+
+    render(<MatchLogsView />);
+    fireEvent.click(screen.getByRole('button', { name: 'Link to profile for Hatch Silver' }));
+
+    const picker = screen.getByRole('listbox', { name: 'Eligible chickens' });
+    fireEvent.click(within(picker).getByRole('option', { name: /Storm Rooster/ }));
+    expect(screen.getByText(/selected chicken is named/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Link chicken' }));
+
+    await waitFor(() =>
+      expect(mockUpdateMatch).toHaveBeenCalledWith(99, {
+        fowl_id: 10,
+        entry_name: 'Storm Rooster',
+        breed: 'Hatch',
+      })
+    );
+    expect(mockFetchDatabaseResources).toHaveBeenCalled();
+  });
+
+  it('unlinks a linked match and refreshes stats', async () => {
+    render(<MatchLogsView />);
+    const row = screen.getByText('Vintage Rival D').closest('tr') as HTMLElement;
+    fireEvent.click(
+      within(row).getByRole('button', { name: 'Unlink chicken profile from Storm Rooster' })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Unlink' }));
+
+    await waitFor(() => expect(mockUpdateMatch).toHaveBeenCalledWith(4, { fowl_id: null }));
+    expect(mockFetchDatabaseResources).toHaveBeenCalled();
+  });
+
+  it('sorts deterministically by date then id and exposes the header indicator', () => {
+    const dated = [
+      { id: 1, fowl_id: 10, entry_name: 'Storm Rooster', opponent: 'A', outcome: 'Win', date: '2025-02-09' },
+      { id: 2, fowl_id: 10, entry_name: 'Storm Rooster', opponent: 'B', outcome: 'Win', date: '2025-03-10' },
+      { id: 3, fowl_id: 10, entry_name: 'Storm Rooster', opponent: 'C', outcome: 'Win', date: '2025-02-21' },
+      { id: 4, fowl_id: 10, entry_name: 'Storm Rooster', opponent: 'D', outcome: 'Win', date: '2026-02-09' },
+      { id: 5, fowl_id: 10, entry_name: 'Storm Rooster', opponent: 'E', outcome: 'Win', date: '2026-09-08' },
+    ] as MatchRecord[];
+    mockFowlContext = { ...mockFowlContext, matchHistory: dated };
+
+    render(<MatchLogsView />);
+
+    const dateOrder = () =>
+      within(screen.getByRole('table'))
+        .getAllByRole('row')
+        .slice(1)
+        .map((row) => row.querySelector('td')?.textContent?.trim());
+
+    expect(dateOrder()).toEqual([
+      '2026-09-08',
+      '2026-02-09',
+      '2025-03-10',
+      '2025-02-21',
+      '2025-02-09',
+    ]);
+    const dateHeader = screen.getByRole('columnheader', { name: /Match Date/ });
+    expect(dateHeader).toHaveAttribute('aria-sort', 'descending');
+
+    fireEvent.click(screen.getByRole('button', { name: /Sort by match date/i }));
+    expect(dateOrder()).toEqual([
+      '2025-02-09',
+      '2025-02-21',
+      '2025-03-10',
+      '2026-02-09',
+      '2026-09-08',
+    ]);
+    expect(screen.getByRole('columnheader', { name: /Match Date/ })).toHaveAttribute(
+      'aria-sort',
+      'ascending'
+    );
+  });
+
 });
