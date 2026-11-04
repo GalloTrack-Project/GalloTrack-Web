@@ -10,7 +10,8 @@ import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
-import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer, ChevronDown } from 'lucide-react';
+import BreedingPairPerformanceAnalytics from '@/components/BreedingPairPerformanceAnalytics';
+import { LayoutDashboard, Trophy, Zap, Calendar, Dna, TrendingUp, PieChart, Search, Download, Printer, ChevronDown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
@@ -943,105 +944,7 @@ export default function DashboardPage() {
 
       {/* BREEDING PAIR PERFORMANCE ANALYTICS */}
       {pairingAnalytics.ranked.length > 0 && (
-        <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-success" /></span>
-              <div>
-                <h3 className="text-sm font-black text-card-foreground tracking-tight">Breeding Pair Performance Analytics</h3>
-                <p className="text-sm text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
-              </div>
-            </div>
-            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse min-w-[860px]">
-              <thead>
-                <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
-                  <th className="p-4 pl-6">Rank</th>
-                  <th className="p-4">Sire × Dam Cross</th>
-                  <th className="p-4 text-center">Offspring</th>
-                  <th className="p-4 text-center">Fights</th>
-                  <th className="p-4 text-center">Wins</th>
-                  <th className="p-4 text-center">Losses</th>
-                  <th className="p-4 text-center">Win Rate</th>
-                  <th className="p-4 text-center">Survivability</th>
-                  <th className="p-4 text-center pr-6">Breeding Verdict</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-muted-foreground font-semibold">
-                {pairingAnalytics.ranked.map((p, i) => {
-                  const elite = p.decided >= 5 && p.winRate >= 70;
-                  const solid = p.winRate >= 50;
-                  const weak = p.decided >= 5 && p.winRate < 50;
-                  return (
-                    <tr key={p.key} className={`hover:bg-muted/30 transition-colors ${weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''}`}>
-                      <td className="p-4 pl-6 whitespace-nowrap">
-                        {i === 0 ? <Medal className="w-4 h-4 text-warning" /> : i === 1 ? <Medal className="w-4 h-4 text-muted-foreground" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-success" /></div>
-                          <div className="min-w-0">
-                            <p className="font-bold text-card-foreground">{p.sire} <span className="text-muted-foreground font-black">×</span> {p.dam}</p>
-                            <p className="text-sm font-semibold text-muted-foreground truncate">{p.members.map((m) => m.name).join(', ')}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 text-center font-mono font-bold">{p.members.length}</td>
-                      <td className="p-4 text-center font-mono font-bold">{p.totalFights}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-success">{p.wins}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-danger">{p.losses}</td>
-                      <td className="p-4 text-center font-mono">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm ${p.winRate >= 50 ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
-                          {p.winRate}%
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
-                            <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
-                          </span>
-                          {p.casualties > 0 && (
-                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-sm font-black text-danger bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-center pr-6">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border whitespace-nowrap ${
-                            elite ? 'bg-emerald-500/15 text-success border-emerald-500/30'
-                            : solid ? 'bg-sky-500/15 text-info border-sky-500/30'
-                            : weak ? 'bg-rose-500/15 text-danger border-rose-500/30'
-                            : 'bg-muted text-muted-foreground border-border'
-                          }`}>
-                            {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
-                          </span>
-                          <span className={`text-sm font-bold px-1.5 py-0.5 rounded-full ${
-                            p.verdictConfidence === 'High' ? 'bg-emerald-500/10 text-success' :
-                            p.verdictConfidence === 'Medium' ? 'bg-amber-500/10 text-warning' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {p.verdictConfidence} Confidence
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm font-bold text-muted-foreground">
-            <span>Verdict logic:</span>
-            <span className="text-success">Elite = ≥70% win rate with 5+ decided fights</span>
-            <span className="text-info">Solid = ≥50%</span>
-            <span className="text-danger">Avoid = below 50% with 5+ decided fights</span>
-            <span className="text-teal">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
-            <span className="text-warning">Confidence = Low (&lt;5 fights) · Medium (5-9) · High (10+)</span>
-            <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
-          </div>
-        </div>
+        <BreedingPairPerformanceAnalytics ranked={pairingAnalytics.ranked} />
       )}
 
       {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}

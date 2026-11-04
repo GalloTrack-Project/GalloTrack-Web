@@ -188,6 +188,14 @@ export const tl: AppTranslations = {
     dayPlural: 'mga araw',
   },
 
+  breedingPairAnalytics: {
+    title: 'Pagsusuri sa Performance ng Breeding Pair',
+    badge: 'COCK × HEN MATRIX',
+    columnCross: 'COCK × HEN CROSS',
+    subtitle: 'Empirical na ranggo ng win rate kada Cock × Hen cross — tinutukoy ang mga napatunayang pairing na sulit ulitin at ang mga under-performer na dapat tanggalin sa susunod na breeding cycles',
+    pairLabel: '{cock} × {hen}',
+  },
+
   errors: {
     notFoundTitle: 'Hindi Nahanap ang Pahina',
     notFoundDesc: 'Ang pahinang hinahanap mo ay hindi umiiral, nailipat na, o pansamantalang hindi maabot.',
