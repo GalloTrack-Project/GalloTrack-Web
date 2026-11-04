@@ -201,6 +201,21 @@ domain coinages, English loans, or wording changed during this review.
 - `lib/i18n/index.ts` exposes `translateRelatedness()` for that switch; the
   badge migration is Feature 2 work.
 
+### 5.4 Breeding Pair Performance Analytics labels
+
+The Dashboard breeding-pair analytics table now displays sex labels as
+**Cock × Hen** instead of the parent-role wording. Parent-role terms remain
+unchanged in the Lineage Directory.
+
+| Key | English | Tagalog | Hiligaynon (Beta) |
+| :--- | :--- | :--- | :--- |
+| `breedingPairAnalytics.badge` | COCK × HEN MATRIX | COCK × HEN MATRIX | COCK × HEN MATRIX |
+| `breedingPairAnalytics.columnCross` | COCK × HEN CROSS | COCK × HEN CROSS | COCK × HEN CROSS |
+| `breedingPairAnalytics.pairLabel` | {cock} × {hen} | {cock} × {hen} | {cock} × {hen} |
+
+`Cock` and `Hen` are kept in English across all three languages because those
+are the canonical labels already used elsewhere in the app.
+
 ---
 
 ## 6. Review CSV Export
@@ -219,11 +234,11 @@ Run `npm run i18n:export` to generate `docs/i18n-review/translations.csv`
 confirmed. Curated reasons live in `scripts/i18n-review-notes.ts`; every
 remaining unreviewed Hiligaynon row gets the blanket reason automatically.
 
-**Latest export counts** (457 keys, regenerated with `npm run i18n:export`):
+**Latest export counts** (463 keys, regenerated with `npm run i18n:export`):
 | Language | Reviewed | Unreviewed | Needs Change |
 |:---|:---|:---|:---|
-| Tagalog (tl) | 61 | 396 | 0 |
-| Hiligaynon (hil) | 61 | 396 | 0 |
+| Tagalog (tl) | 64 | 399 | 0 |
+| Hiligaynon (hil) | 64 | 399 | 0 |
 
 ---
 

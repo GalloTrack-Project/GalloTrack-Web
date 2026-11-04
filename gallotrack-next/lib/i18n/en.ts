@@ -189,6 +189,14 @@ export const en = {
     dayPlural: 'days',
   },
 
+  breedingPairAnalytics: {
+    title: 'Breeding Pair Performance Analytics',
+    badge: 'COCK × HEN MATRIX',
+    columnCross: 'COCK × HEN CROSS',
+    subtitle: 'Empirical win-rate ranking per Cock × Hen cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles',
+    pairLabel: '{cock} × {hen}',
+  },
+
   errors: {
     notFoundTitle: 'Page Not Found',
     notFoundDesc: 'The page you are looking for does not exist, has been moved, or is temporarily unavailable.',
