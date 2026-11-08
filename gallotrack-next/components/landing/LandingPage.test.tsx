@@ -46,8 +46,9 @@ describe('GalloTrack Public Landing Page', () => {
       expect(screen.getByText(/Start Managing Your Breeding Records with GalloTrack/i)).toBeInTheDocument();
 
       // Brand Logo in navbar and footer
-      const brandLogos = screen.getAllByText(/GALLO/i);
+      const brandLogos = screen.getAllByRole('img', { name: 'GalloTrack' });
       expect(brandLogos.length).toBeGreaterThanOrEqual(2);
+      expect(screen.queryByText(/\bGALLOTRACK\b/)).not.toBeInTheDocument();
 
       // Capstone Credit
       const capstoneCredits = screen.getAllByText(/ISUFST CICI Capstone Project/i);

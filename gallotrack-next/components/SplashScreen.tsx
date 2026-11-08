@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
-import ChickenIcon from '@/components/ChickenIcon';
+import Logo from '@/components/brand/Logo';
 
 type Props = { onFinished: () => void };
 
@@ -20,14 +20,10 @@ export default function SplashScreen({ onFinished }: Props) {
       <div className="h-10"></div>
       
       <div className="flex flex-col items-center space-y-5 text-center relative z-10">
-        <div className="w-24 h-24 bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 rounded-lg border border-emerald-400/20 flex items-center justify-center shadow-2xl shadow-emerald-500/10 animate-pulse">
-          <ChickenIcon className="w-12 h-12 text-emerald-400" />
-        </div>
+        <Logo variant="full" size="lg" onDark />
+
         <div className="space-y-1.5">
           <span className="text-xs font-black tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full uppercase">ISUFST CICI Official Capstone</span>
-        <p className="text-4xl md:text-5xl font-black tracking-wider text-white">
-          GALLO<span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">TRACK</span>
-        </p>
           <p className="text-sm text-muted-foreground font-semibold tracking-wide max-w-xs mx-auto">
             Advanced Chicken Lineage Analytics &amp; Structural Trace Registry Framework
           </p>

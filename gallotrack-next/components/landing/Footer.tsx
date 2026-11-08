@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { BUILD_SHA } from '@/lib/build-info';
+import Logo from '@/components/brand/Logo';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,25 +14,8 @@ export default function Footer() {
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           {/* Logo & Version */}
           <div className="space-y-2">
-            <Link href="/" className="group flex min-w-0 flex-wrap items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
-                </svg>
-              </div>
-              <span className="text-foreground text-lg font-black tracking-tight">
-                GALLO<span className="text-emerald-600 dark:text-emerald-400">TRACK</span>
-              </span>
+            <Link href="/" aria-label="GalloTrack home" className="group flex min-w-0 flex-wrap items-center gap-2.5">
+              <Logo variant="full" size="sm" />
               <span className="text-muted-foreground border-border ml-1 rounded border px-1.5 py-0.5 font-mono text-xs font-bold tracking-widest uppercase">
                 v1.0.0
               </span>

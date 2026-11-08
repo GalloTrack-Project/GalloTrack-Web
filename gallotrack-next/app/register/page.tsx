@@ -7,6 +7,7 @@ import { supabase, fullNameFromMetadata } from '@/lib/registry';
 import { Dna, BarChart3, Building2, ShieldCheck } from 'lucide-react';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useT } from '@/lib/i18n';
+import Logo from '@/components/brand/Logo';
 
 const ICONS = {
   user: (
@@ -228,31 +229,13 @@ export default function RegisterPage() {
         <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-teal-400/20 blur-3xl"></div>
 
         <div className="relative z-10 flex w-full flex-col justify-between p-10 xl:p-14">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/15 shadow-lg backdrop-blur-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xl font-semibold tracking-tight text-white">
-                GALLO<span className="text-emerald-200">TRACK</span>
-              </p>
-              <span className="block font-mono text-xs font-medium tracking-widest text-emerald-200/70 uppercase">
-                v1.0.0
-              </span>
-            </div>
+          <div className="flex flex-col gap-2">
+            <span className="inline-flex w-fit rounded-lg bg-white/95 px-3 py-2 shadow-lg shadow-black/10">
+              <Logo variant="full" size="lg" onLight />
+            </span>
+            <span className="font-mono text-xs font-medium tracking-widest text-emerald-200/70 uppercase">
+              v1.0.0
+            </span>
           </div>
 
           <div className="space-y-8">
@@ -315,26 +298,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
-                  <div className="bg-accent/15 border-accent/30 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-accent"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
-                    </svg>
-                  </div>
-                  <p className="text-card-foreground hidden text-base font-semibold tracking-tight sm:inline">
-                    GALLO<span className="text-accent">TRACK</span>
-                  </p>
+                  <Logo variant="mark" size="md" />
                 </div>
                 <CompactLanguageSwitcher />
               </div>
