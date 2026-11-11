@@ -328,6 +328,14 @@ export default function EncodeForm({
     return rawCode;
   }, [birdCode, suggestedBirdCode, currentRole]);
 
+  const birthdateAgeParts = newBirthdate ? getAgePartsLocal(newBirthdate) : null;
+  const ageDisplayValue =
+    newBirthdate && autoCalcAge
+      ? birthdateAgeParts
+        ? String(birthdateAgeParts.totalMonths)
+        : '-'
+      : age || '-';
+
   useEffect(() => {
     if (!strainOpen) return;
     const update = () => {
@@ -768,7 +776,20 @@ export default function EncodeForm({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">{t('registry.ageMos')} {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">{t('registry.autoBadge')}</span>}</label>
-            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" placeholder="0" required id="age-mos" />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={ageDisplayValue}
+              readOnly
+              aria-readonly="true"
+              aria-describedby="age-mos-help"
+              className="w-full cursor-default rounded-md border border-input-border bg-muted/60 p-3 text-center text-sm font-extrabold text-neutral-900 focus:border-input-border focus:ring-0 focus-visible:outline-none dark:bg-muted/40 dark:text-foreground"
+              required
+              id="age-mos"
+            />
+            <p id="age-mos-help" className="mt-1.5 text-xs font-semibold text-muted-foreground">
+              {t('registry.calculatedFromBirthDate')}
+            </p>
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="growth-stage">{t('registry.growthStage')}</label>
@@ -788,11 +809,11 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="height">{t('registry.height')} ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
+            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="weight">{t('registry.weight')} ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
+            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
