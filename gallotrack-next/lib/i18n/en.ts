@@ -236,6 +236,8 @@ export const en = {
     title: 'Chicken Registry',
     subtitle: 'Register and manage your chicken lineage, traits, and match records',
     breedsBtn: 'Breeds',
+    backToRegistry: 'Back to registry',
+    backToRegistration: 'Back to registration',
     viewRegistryBtn: 'View Registry',
     registerChickenBtn: '+ Register Chicken',
     tabMales: 'Cocks',

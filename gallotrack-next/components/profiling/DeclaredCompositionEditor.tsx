@@ -31,6 +31,8 @@ export interface DeclaredCompositionEditorProps {
   currentValue?: DeclaredBreedShare[] | null;
   calculatedValue?: BloodlineComposition | null;
   source?: CompositionSource;
+  /** Opens the Breed Registry without leaving the current form. */
+  onAddBreeds?: () => void;
 }
 
 export function formatCompositionSummary(comp?: BloodlineComposition | null): string {
@@ -52,6 +54,7 @@ export default function DeclaredCompositionEditor({
   currentValue,
   calculatedValue,
   source,
+  onAddBreeds,
 }: DeclaredCompositionEditorProps) {
   const currentBreed = registeredBreed.trim() || 'Registered Breed';
   const isCustomDeclared = Array.isArray(value) && value.length > 0;
@@ -452,6 +455,11 @@ export default function DeclaredCompositionEditor({
               </div>
               <a
                 href="/breeds"
+                onClick={(event) => {
+                  if (!onAddBreeds) return;
+                  event.preventDefault();
+                  onAddBreeds();
+                }}
                 className="flex min-h-[44px] shrink-0 items-center text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
               >
                 Add Breeds →

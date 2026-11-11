@@ -12,6 +12,12 @@ interface UIContextValue {
   setCurrentPage: (v: PageId) => void;
   profilingSubTab: ProfilingSubTab;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
+  /** True while the Breed Registry is open over the Chicken Registry. */
+  breedsViewOpen: boolean;
+  setBreedsViewOpen: (v: boolean) => void;
+  /** Shared Registry search text so Breeds can return to the same filtered list. */
+  registrySearch: string;
+  setRegistrySearch: (v: string) => void;
   /** Per-tab sort choice in the Registry (Task B). Identifier = natural order. */
   registrySortBy: Partial<Record<ProfilingSubTab, RegistrySortKey>>;
   setRegistrySort: (tab: ProfilingSubTab, key: RegistrySortKey) => void;
@@ -90,6 +96,8 @@ export function UIProvider({
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<ProfilingSubTab>('form');
+  const [breedsViewOpen, setBreedsViewOpen] = useState(false);
+  const [registrySearch, setRegistrySearch] = useState('');
   const [registrySortBy, setRegistrySortBy] = useState<Partial<Record<ProfilingSubTab, RegistrySortKey>>>({});
   const setRegistrySort = React.useCallback((tab: ProfilingSubTab, key: RegistrySortKey) => {
     setRegistrySortBy((prev) => ({ ...prev, [tab]: key }));
@@ -136,6 +144,8 @@ export function UIProvider({
     showSplash, setShowSplash,
     currentPage, setCurrentPage,
     profilingSubTab, setProfilingSubTab,
+    breedsViewOpen, setBreedsViewOpen,
+    registrySearch, setRegistrySearch,
     registrySortBy, setRegistrySort,
     inventoryGenderFilter, setInventoryGenderFilter,
     inventoryStatusFilter, setInventoryStatusFilter,

@@ -58,6 +58,9 @@ type Props = {
   loading?: boolean;
   sortKey?: RegistrySortKey;
   onSortChange?: (key: RegistrySortKey) => void;
+  /** Controlled search text (shared so Breeds can return to the same filtered list). */
+  query?: string;
+  setQuery?: (q: string) => void;
   setProfilingSubTab: (tab: ProfilingSubTab) => void;
   onGoToInventory?: () => void;
   handleOpenEditModal: (fowl: FowlRecord) => void;
@@ -820,7 +823,9 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
 
 export default function FowlLists(props: Props) {
   const { tab, fowls } = props;
-  const [query, setQuery] = useState('');
+  const [internalQuery, setInternalQuery] = useState('');
+  const query = props.query ?? internalQuery;
+  const setQuery = props.setQuery ?? setInternalQuery;
   const debouncedQuery = useDebounce(query, 250);
   const lists = useMemo(() => registryTabLists(fowls), [fowls]);
 

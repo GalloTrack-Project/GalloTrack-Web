@@ -1,14 +1,38 @@
 'use client';
-import React, { useState, useMemo } from 'react';
-import { Dna, Search, Trash2, Lock, Plus, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ArrowLeft, Dna, Search, Trash2, Lock, Plus, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import * as strainService from '@/lib/services/strain-service';
 import { toastMessage } from '@/lib/toast-bus';
+import { useT } from '@/lib/i18n';
 
-export default function BreedsPage() {
+type BreedsPageProps = {
+  onBack?: () => void;
+  backLabel?: string;
+};
+
+export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) {
+  const { t } = useT();
   const { availableStrains, customStrainNames, activeFowls, fetchDatabaseResources } = useFowl();
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname === '/breeds') {
+      router.replace('/profiling?view=breeds', { scroll: false });
+    }
+  }, [pathname, router]);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    router.replace('/profiling?tab=males', { scroll: false });
+  };
+
+  const resolvedBackLabel = backLabel || t('registry.backToRegistry');
 
   const [search, setSearch] = useState('');
   const [newBreedName, setNewBreedName] = useState('');
@@ -83,10 +107,12 @@ export default function BreedsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.back()}
-            className="w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-success hover:border-emerald-500/50 transition-all cursor-pointer"
+            onClick={handleBack}
+            aria-label={resolvedBackLabel}
+            title={resolvedBackLabel}
+            className="w-11 h-11 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-success hover:border-emerald-500/50 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
           >
-            ←
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </button>
           <div>
             <h1 className="text-lg font-black text-card-foreground tracking-tight flex items-center gap-2">
