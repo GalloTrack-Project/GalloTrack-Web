@@ -6,6 +6,7 @@ import {
   CHICKEN_PHOTO_SETUP_MESSAGE,
   CHICKEN_PHOTO_MAX_BYTES,
 } from '@/lib/chicken-photo';
+import { isOwnedChickenPhotoPath } from '@/lib/chicken-photo-path';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -56,9 +57,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'path is required' }, { status: 400 });
   }
 
-  const prefix = `${user.id}/`;
-  const rest = path.startsWith(prefix) ? path.slice(prefix.length) : '';
-  if (!rest || path.includes('..') || rest.startsWith('/')) {
+  if (!isOwnedChickenPhotoPath(user.id, path)) {
     console.warn('[chicken-photo] rejected sign request', {
       userId: user.id,
       path,

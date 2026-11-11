@@ -217,77 +217,230 @@ export async function processChickenPhoto(file: File): Promise<ProcessedChickenP
   }
 }
 
+const SIGNED_STORAGE_PREFIX = 'gallotrack:chicken-photo-url:';
+const BATCH_DELAY_MS = 10;
+type SignedUrlWaiter = (url: string | null) => void;
+
+const batchWaiters = new Map<string, SignedUrlWaiter[]>();
+let batchTimer: ReturnType<typeof setTimeout> | null = null;
+
+function readSessionCache(path: string): { url: string; expiresAt: number } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(SIGNED_STORAGE_PREFIX + path);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { url?: unknown; expiresAt?: unknown };
+    if (typeof parsed.url !== 'string' || typeof parsed.expiresAt !== 'number') {
+      window.sessionStorage.removeItem(SIGNED_STORAGE_PREFIX + path);
+      return null;
+    }
+    return { url: parsed.url, expiresAt: parsed.expiresAt };
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionCache(path: string, cache: { url: string; expiresAt: number }): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(SIGNED_STORAGE_PREFIX + path, JSON.stringify(cache));
+  } catch {
+    /* storage may be full or disabled */
+  }
+}
+
+function getCachedSignedUrl(path: string): string | null {
+  const memory = signedCache.get(path);
+  if (memory) {
+    if (Date.now() < memory.expiresAt - SIGN_REFRESH_MARGIN_MS) return memory.url;
+    signedCache.delete(path);
+  }
+
+  const session = readSessionCache(path);
+  if (!session) return null;
+  if (Date.now() < session.expiresAt - SIGN_REFRESH_MARGIN_MS) {
+    signedCache.set(path, session);
+    return session.url;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage.removeItem(SIGNED_STORAGE_PREFIX + path);
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
+function cacheSignedUrl(path: string, url: string): void {
+  const cache = { url, expiresAt: Date.now() + SIGN_TTL_SECONDS * 1000 };
+  signedCache.set(path, cache);
+  writeSessionCache(path, cache);
+}
+
+async function signDirect(path: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.storage
+      .from(CHICKEN_PHOTO_BUCKET)
+      .createSignedUrl(path, SIGN_TTL_SECONDS);
+    if (error || !data?.signedUrl) {
+      console.error('[chicken-photo] client signing failed', {
+        path,
+        error: error?.message ?? 'No signed URL returned',
+      });
+      return null;
+    }
+    cacheSignedUrl(path, data.signedUrl);
+    return data.signedUrl;
+  } catch (error) {
+    console.error('[chicken-photo] client signing failed', {
+      path,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+function scheduleBatchFlush(): void {
+  if (batchTimer) return;
+  batchTimer = setTimeout(() => {
+    batchTimer = null;
+    void flushBatch();
+  }, BATCH_DELAY_MS);
+}
+
+async function flushBatch(): Promise<void> {
+  if (batchWaiters.size === 0) return;
+
+  const waiters = new Map(batchWaiters);
+  batchWaiters.clear();
+  const finish = (path: string, url: string | null) => {
+    signedPending.delete(path);
+    const pathWaiters = waiters.get(path) ?? [];
+    for (const resolve of pathWaiters) resolve(url);
+  };
+
+  const missing: string[] = [];
+  for (const path of waiters.keys()) {
+    const cached = getCachedSignedUrl(path);
+    if (cached) finish(path, cached);
+    else missing.push(path);
+  }
+  if (missing.length === 0) return;
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      for (const path of missing) finish(path, null);
+      return;
+    }
+
+    const response = await fetch('/api/fowl/photo/sign', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ paths: missing }),
+      cache: 'no-store',
+    });
+    const body = (await response.json().catch(() => null)) as
+      | {
+          signedUrls?: Record<string, string>;
+          errors?: Record<string, string>;
+          error?: string;
+        }
+      | null;
+
+    if (response.ok) {
+      for (const path of missing) {
+        const url = body?.signedUrls?.[path] ?? null;
+        if (url) {
+          cacheSignedUrl(path, url);
+          finish(path, url);
+        } else {
+          console.error('[chicken-photo] batch signing returned no URL', {
+            path,
+            error: body?.errors?.[path] ?? 'No signed URL returned',
+          });
+          finish(path, null);
+        }
+      }
+      return;
+    }
+
+    console.error('[chicken-photo] batch signing failed', {
+      status: response.status,
+      count: missing.length,
+      error: body?.error ?? 'No response',
+    });
+    await Promise.all(
+      missing.map(async (path) => finish(path, await signDirect(path))),
+    );
+  } catch (error) {
+    console.error('[chicken-photo] batch signing request failed', {
+      count: missing.length,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    for (const path of missing) finish(path, null);
+  }
+}
+
 export async function resolveChickenPhotoUrl(path?: string | null): Promise<string | null> {
   if (!path) return null;
   if (/^https?:\/\//i.test(path) || path.startsWith('data:')) return path;
 
-  const cached = signedCache.get(path);
-  if (cached && Date.now() < cached.expiresAt - SIGN_REFRESH_MARGIN_MS) return cached.url;
+  const cached = getCachedSignedUrl(path);
+  if (cached) return cached;
 
   const pending = signedPending.get(path);
   if (pending) return pending;
 
-  const promise = (async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.access_token) {
-        const response = await fetch(
-          `/api/fowl/photo?path=${encodeURIComponent(path)}`,
-          {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-            cache: 'no-store',
-          },
-        );
-        const body = (await response.json().catch(() => null)) as
-          | { signedUrl?: string; error?: string }
-          | null;
-        if (response.ok && body?.signedUrl) {
-          signedCache.set(path, {
-            url: body.signedUrl,
-            expiresAt: Date.now() + SIGN_TTL_SECONDS * 1000,
-          });
-          return body.signedUrl;
-        }
-        console.error('[chicken-photo] server signing failed', {
-          path,
-          status: response.status,
-          error: body?.error ?? 'No signed URL returned',
-        });
-      }
-
-      // Fallback for environments where storage policies allow direct signing.
-      const { data, error } = await supabase.storage
-        .from(CHICKEN_PHOTO_BUCKET)
-        .createSignedUrl(path, SIGN_TTL_SECONDS);
-      if (error || !data?.signedUrl) {
-        console.error('[chicken-photo] client signing failed', {
-          path,
-          error: error?.message ?? 'No signed URL returned',
-        });
-        return null;
-      }
-      signedCache.set(path, {
-        url: data.signedUrl,
-        expiresAt: Date.now() + SIGN_TTL_SECONDS * 1000,
-      });
-      return data.signedUrl;
-    } catch (error) {
-      console.error('[chicken-photo] signed URL resolution failed', {
-        path,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return null;
-    } finally {
-      signedPending.delete(path);
-    }
-  })();
+  const promise = new Promise<string | null>((resolve) => {
+    const waiters = batchWaiters.get(path) ?? [];
+    waiters.push(resolve);
+    batchWaiters.set(path, waiters);
+    scheduleBatchFlush();
+  });
 
   signedPending.set(path, promise);
   return promise;
 }
 
+export async function resolveChickenPhotoUrls(
+  paths: Array<string | null | undefined>,
+): Promise<Map<string, string | null>> {
+  const unique = Array.from(new Set(paths.filter((path): path is string => Boolean(path))));
+  const entries = await Promise.all(
+    unique.map(async (path) => [path, await resolveChickenPhotoUrl(path)] as const),
+  );
+  return new Map(entries);
+}
+
 export function clearChickenPhotoUrlCache(): void {
+  if (batchTimer) {
+    clearTimeout(batchTimer);
+    batchTimer = null;
+  }
+  for (const [path, waiters] of batchWaiters) {
+    signedPending.delete(path);
+    for (const resolve of waiters) resolve(null);
+  }
+  batchWaiters.clear();
   signedCache.clear();
   signedPending.clear();
+
+  if (typeof window !== 'undefined') {
+    try {
+      const keys: string[] = [];
+      for (let index = 0; index < window.sessionStorage.length; index += 1) {
+        const key = window.sessionStorage.key(index);
+        if (key?.startsWith(SIGNED_STORAGE_PREFIX)) keys.push(key);
+      }
+      for (const key of keys) window.sessionStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  }
 }

@@ -484,6 +484,8 @@ export const en = {
     cardNone: 'None',
     cardNotSpecified: 'Not specified',
     cardNoPhoto: 'NO PHOTO',
+    cardPhotoUnavailable: 'Photo unavailable',
+    retryPhoto: 'Retry',
     cardBornAs: '· born as {code}',
     wingBandTooltip: 'Wing Banding (physical band on the chicken)',
     registeredBreederTooltip: 'Registered breeding bird in this farm',
@@ -571,4 +573,5 @@ export const en = {
 } as const;
 
 export type TranslationSchema = typeof en;
+
 

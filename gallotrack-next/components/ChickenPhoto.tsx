@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { Modal } from '@/components/ui';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { resolveChickenPhotoUrl } from '@/lib/chicken-photo';
+import { clearChickenPhotoUrlCache, resolveChickenPhotoUrl } from '@/lib/chicken-photo';
 import { thumbUrl } from '@/lib/media-format';
+import { useT } from '@/lib/i18n';
 import { cn } from '@/components/ui/utils';
 
 type Props = {
@@ -39,45 +41,83 @@ export default function ChickenPhoto({
   eager = false,
   fit = 'cover',
 }: Props) {
-  const [fullSrc, setFullSrc] = useState<string | null>(photoPath ? null : imageUrl || null);
+  const { t } = useT();
+  const hasPhoto = Boolean(imageUrl || photoPath || photoThumbPath);
+  const thumbPath = photoThumbPath || photoPath;
+  const [fullSrc, setFullSrc] = useState<string | null>(null);
   const [thumbSrc, setThumbSrc] = useState<string | null>(
-    photoThumbPath || photoPath ? null : imageUrl ? thumbUrl(imageUrl, size * 2) : null,
+    thumbPath ? null : imageUrl ? thumbUrl(imageUrl, size * 2) : null,
   );
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [thumbResolving, setThumbResolving] = useState(Boolean(thumbPath));
+  const [fullResolving, setFullResolving] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
+  // Lists only need the thumbnail. Resolve the full image lazily for contain
+  // views (details) or when the lightbox opens.
   useEffect(() => {
     let active = true;
     setFailed(false);
+    setThumbSrc(null);
 
-    if (photoPath) {
-      resolveChickenPhotoUrl(photoPath).then((url) => {
-        if (active) setFullSrc(url);
-      });
-    } else {
-      setFullSrc(imageUrl || null);
-    }
-
-    const thumbPath = photoThumbPath || photoPath;
     if (thumbPath) {
-      resolveChickenPhotoUrl(thumbPath).then((url) => {
-        if (active) setThumbSrc(url || imageUrl || null);
+      setThumbResolving(true);
+      void resolveChickenPhotoUrl(thumbPath).then((url) => {
+        if (!active) return;
+        setThumbSrc(url || imageUrl || null);
+        setThumbResolving(false);
       });
     } else {
+      setThumbResolving(false);
       setThumbSrc(imageUrl ? thumbUrl(imageUrl, size * 2) : null);
     }
 
     return () => {
       active = false;
     };
-  }, [photoPath, photoThumbPath, imageUrl, size]);
+  }, [thumbPath, imageUrl, size, retryNonce]);
+
+  useEffect(() => {
+    if (!(fit === 'contain' || lightboxOpen)) return;
+    if (fullSrc) return;
+
+    let active = true;
+    const path = photoPath || thumbPath;
+    if (path) {
+      setFullResolving(true);
+      void resolveChickenPhotoUrl(path).then((url) => {
+        if (!active) return;
+        setFullSrc(url || imageUrl || null);
+        setFullResolving(false);
+      });
+    } else {
+      setFullSrc(imageUrl || null);
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [fit, lightboxOpen, fullSrc, photoPath, thumbPath, imageUrl, retryNonce]);
 
   const alt = code ? `${name} (${formatBirdCodeForDisplay(code)})` : name;
   const displaySrc = fit === 'contain' ? fullSrc || thumbSrc : thumbSrc;
+  const resolving = thumbResolving || ((fit === 'contain' || lightboxOpen) && fullResolving);
+  const unavailable = hasPhoto && (failed || (!displaySrc && !resolving));
+  const loading = hasPhoto && !displaySrc && !unavailable;
   const placeholder = fallback ?? (
     <ChickenIcon className="text-muted-foreground h-1/2 w-1/2" />
   );
-  const canInteract = interactive && showLightbox && Boolean(thumbSrc || fullSrc) && !failed;
+  const canInteract = interactive && showLightbox && Boolean(displaySrc) && !unavailable;
+
+  const retry = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    clearChickenPhotoUrlCache();
+    setFailed(false);
+    setFullSrc(null);
+    setThumbSrc(null);
+    setRetryNonce((value) => value + 1);
+  };
 
   const openLightbox = (event: React.MouseEvent | React.KeyboardEvent) => {
     event.stopPropagation();
@@ -88,15 +128,51 @@ export default function ChickenPhoto({
     setLightboxOpen(true);
   };
 
-  const body = !displaySrc || failed ? (
-    <span
-      className={cn(
-        'flex h-full w-full items-center justify-center overflow-hidden',
-        className,
-      )}
-      style={{ width: size, height: size }}
-    >
+  const frameClass = cn(
+    'flex h-full w-full items-center justify-center overflow-hidden text-center',
+    className,
+  );
+  const frameStyle = { width: size, height: size };
+
+  const body = !hasPhoto ? (
+    <span className={frameClass} style={frameStyle}>
       {placeholder}
+    </span>
+  ) : unavailable ? (
+    size >= 80 ? (
+      <span className={cn(frameClass, 'flex-col gap-1 border border-border bg-muted/40 p-1')} style={frameStyle}>
+        <span className="text-[10px] leading-tight font-bold break-words text-muted-foreground">
+          {t('registry.cardPhotoUnavailable')}
+        </span>
+        <button
+          type="button"
+          onClick={retry}
+          aria-label={t('registry.retryPhoto')}
+          className="inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md border border-border bg-background px-1.5 text-[10px] font-black tracking-wide text-foreground uppercase transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+        >
+          {t('registry.retryPhoto')}
+        </button>
+      </span>
+    ) : (
+      <span className={cn(frameClass, 'border border-border bg-muted/40')} style={frameStyle}>
+        <button
+          type="button"
+          onClick={retry}
+          aria-label={`${t('registry.cardPhotoUnavailable')}. ${t('registry.retryPhoto')}`}
+          title={`${t('registry.cardPhotoUnavailable')}. ${t('registry.retryPhoto')}`}
+          className="flex h-full w-full cursor-pointer items-center justify-center text-warning focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+        >
+          <AlertTriangle className="h-1/2 w-1/2" aria-hidden="true" />
+        </button>
+      </span>
+    )
+  ) : loading ? (
+    <span className={frameClass} style={frameStyle}>
+      <span
+        role="status"
+        aria-label={t('registry.cardPhotoUnavailable')}
+        className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/40 border-t-muted-foreground"
+      />
     </span>
   ) : (
     <span
@@ -119,15 +195,16 @@ export default function ChickenPhoto({
         canInteract && 'cursor-zoom-in',
         className,
       )}
-      style={{ width: size, height: size }}
+      style={frameStyle}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={displaySrc}
+        src={displaySrc ?? undefined}
         alt={alt}
         width={size}
         height={size}
         loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
         className={cn('h-full w-full', fit === 'contain' ? 'object-contain' : 'object-cover', imgClassName)}
         style={fit === 'cover' ? { objectPosition: '50% 30%' } : undefined}
         onError={() => setFailed(true)}
@@ -135,10 +212,12 @@ export default function ChickenPhoto({
     </span>
   );
 
+  const lightboxSrc = fullSrc || thumbSrc;
+
   return (
     <>
       {body}
-      {lightboxOpen && fullSrc && (
+      {lightboxOpen && hasPhoto && (
         <Modal
           open
           onClose={() => setLightboxOpen(false)}
@@ -147,15 +226,22 @@ export default function ChickenPhoto({
           className="max-w-4xl"
         >
           <div className="bg-muted/40 flex max-h-[80vh] items-center justify-center overflow-hidden rounded-lg p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={fullSrc}
-              alt={alt}
-              className="max-h-[76vh] w-auto max-w-full object-contain"
-            />
+            {lightboxSrc ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={lightboxSrc}
+                alt={alt}
+                className="max-h-[76vh] w-auto max-w-full object-contain"
+              />
+            ) : (
+              <span className="flex h-40 items-center justify-center">
+                <span className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/40 border-t-muted-foreground" />
+              </span>
+            )}
           </div>
         </Modal>
       )}
     </>
   );
 }
+

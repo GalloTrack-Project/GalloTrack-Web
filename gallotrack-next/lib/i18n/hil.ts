@@ -478,6 +478,8 @@ export const hil: AppTranslations = {
     cardNone: 'Wala',
     cardNotSpecified: 'Wala ginpat-od',
     cardNoPhoto: 'WALA LITRATO',
+    cardPhotoUnavailable: 'Indi ma-load ang litrato',
+    retryPhoto: 'Uliton',
     cardBornAs: '· natawo bilang {code}',
     wingBandTooltip: 'Wing Banding (pisikal nga banda sa pakpak sang manok)',
     registeredBreederTooltip: 'Rehistrado nga pampalahi sa sini nga farm',
@@ -563,4 +565,5 @@ export const hil: AppTranslations = {
     promotingBtn: 'Ginatrabaho ang Promosyon...',
   },
 };
+
 

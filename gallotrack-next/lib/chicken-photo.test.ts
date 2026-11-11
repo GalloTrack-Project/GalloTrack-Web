@@ -1,13 +1,28 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CHICKEN_PHOTO_SETUP_MESSAGE,
+  clearChickenPhotoUrlCache,
   computeFullImageDimensions,
   computeThumbnailCrop,
   isChickenPhotoSetupError,
   processChickenPhoto,
   resolveChickenPhotoUrl,
+  resolveChickenPhotoUrls,
   validateChickenPhotoFile,
 } from '@/lib/chicken-photo';
+
+const getSession = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/registry', () => ({
+  supabase: {
+    auth: { getSession },
+    storage: {
+      from: () => ({
+        createSignedUrl: vi.fn(),
+      }),
+    },
+  },
+}));
 
 function file(name: string, type: string, size = 100): File {
   const f = new File(['x'], name, { type });
@@ -16,6 +31,15 @@ function file(name: string, type: string, size = 100): File {
 }
 
 describe('chicken photo helpers', () => {
+  beforeEach(() => {
+    clearChickenPhotoUrlCache();
+    sessionStorage.clear();
+    getSession.mockReset();
+    getSession.mockResolvedValue({
+      data: { session: { access_token: 'test-token' } },
+    });
+  });
+
   it('accepts JPG, PNG and WebP', () => {
     expect(validateChickenPhotoFile(file('a.jpg', 'image/jpeg'))).toBeNull();
     expect(validateChickenPhotoFile(file('a.png', 'image/png'))).toBeNull();
@@ -67,5 +91,37 @@ describe('chicken photo helpers', () => {
       'https://cdn.test/photo.jpg',
     );
     await expect(resolveChickenPhotoUrl('')).resolves.toBeNull();
+  });
+
+  it('batches multiple paths into one signing request and caches the results', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          signedUrls: {
+            'user-1/42/a.webp': 'https://signed.test/a.webp',
+            'user-1/42/b.webp': 'https://signed.test/b.webp',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const urls = await resolveChickenPhotoUrls([
+      'user-1/42/a.webp',
+      'user-1/42/b.webp',
+    ]);
+
+    expect(urls.get('user-1/42/a.webp')).toBe('https://signed.test/a.webp');
+    expect(urls.get('user-1/42/b.webp')).toBe('https://signed.test/b.webp');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [requestUrl, requestInit] = fetchMock.mock.calls[0];
+    expect(requestUrl).toBe('/api/fowl/photo/sign');
+    const body = JSON.parse(String(requestInit?.body));
+    expect(body.paths.sort()).toEqual(['user-1/42/a.webp', 'user-1/42/b.webp']);
+
+    await resolveChickenPhotoUrls(['user-1/42/a.webp', 'user-1/42/b.webp']);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fetchMock.mockRestore();
   });
 });

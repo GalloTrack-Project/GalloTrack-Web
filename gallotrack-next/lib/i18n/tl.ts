@@ -478,6 +478,8 @@ export const tl: AppTranslations = {
     cardNone: 'Wala',
     cardNotSpecified: 'Hindi tinukoy',
     cardNoPhoto: 'WALANG LARAWAN',
+    cardPhotoUnavailable: 'Hindi ma-load ang larawan',
+    retryPhoto: 'Subukan muli',
     cardBornAs: '· isinilang bilang {code}',
     wingBandTooltip: 'Wing Banding (pisikal na banda sa pakpak ng manok)',
     registeredBreederTooltip: 'Rehistradong pampalahing ibon sa linyadang ito',
@@ -563,4 +565,5 @@ export const tl: AppTranslations = {
     promotingBtn: 'Ipinopromote...',
   },
 };
+
 
