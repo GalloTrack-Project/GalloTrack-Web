@@ -47,6 +47,49 @@ async function imageKind(file: File): Promise<string | null> {
   }
 }
 
+export async function GET(request: NextRequest) {
+  const user = await authenticate(request);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const path = request.nextUrl.searchParams.get('path');
+  if (!path) {
+    return NextResponse.json({ error: 'path is required' }, { status: 400 });
+  }
+
+  const prefix = `${user.id}/`;
+  const rest = path.startsWith(prefix) ? path.slice(prefix.length) : '';
+  if (!rest || path.includes('..') || rest.startsWith('/')) {
+    console.warn('[chicken-photo] rejected sign request', {
+      userId: user.id,
+      path,
+    });
+    return NextResponse.json(
+      { error: 'Forbidden: You do not own this photo.' },
+      { status: 403 },
+    );
+  }
+
+  const admin = createClient(supabaseUrl, serviceRoleKey);
+  const { data, error } = await admin.storage
+    .from(CHICKEN_PHOTO_BUCKET)
+    .createSignedUrl(path, 60 * 60);
+
+  if (error || !data?.signedUrl) {
+    console.error('[chicken-photo] sign failed', {
+      userId: user.id,
+      path,
+      error: error?.message ?? 'No signed URL returned',
+    });
+    const missing = /bucket|not found|exist/i.test(error?.message ?? '');
+    return NextResponse.json(
+      { error: missing ? CHICKEN_PHOTO_SETUP_MESSAGE : 'Photo could not be loaded.' },
+      { status: missing ? 503 : 500 },
+    );
+  }
+
+  return NextResponse.json({ signedUrl: data.signedUrl });
+}
+
 export async function POST(request: NextRequest) {
   const user = await authenticate(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -68,6 +111,13 @@ export async function POST(request: NextRequest) {
   for (const file of [photo, thumbnail]) {
     const metaError = validateImage(file);
     if (metaError) {
+      console.warn('[chicken-photo] rejected upload metadata', {
+        fowlId,
+        fileName: file.name,
+        size: file.size,
+        mimeType: file.type,
+        error: metaError,
+      });
       return NextResponse.json(
         { error: metaError },
         { status: metaError.includes('too large') || metaError.includes('5 MB') ? 413 : 415 },
@@ -75,6 +125,12 @@ export async function POST(request: NextRequest) {
     }
     const kind = await imageKind(file);
     if (!kind || !CONTENT_TYPES[kind]) {
+      console.warn('[chicken-photo] rejected unrecognized image', {
+        fowlId,
+        fileName: file.name,
+        size: file.size,
+        mimeType: file.type,
+      });
       return NextResponse.json(
         { error: 'The selected photo is not a recognized JPG, PNG or WebP image.' },
         { status: 415 },
@@ -110,6 +166,15 @@ export async function POST(request: NextRequest) {
 
   const fullUpload = await uploadOne(fullPath, photo);
   if (fullUpload.error) {
+    console.error('[chicken-photo] full upload failed', {
+      fowlId,
+      userId: user.id,
+      fileName: photo.name,
+      size: photo.size,
+      mimeType: photo.type,
+      path: fullPath,
+      error: fullUpload.error.message,
+    });
     const missing = /bucket|not found|exist/i.test(fullUpload.error.message);
     return NextResponse.json(
       { error: missing ? CHICKEN_PHOTO_SETUP_MESSAGE : fullUpload.error.message },
@@ -120,6 +185,15 @@ export async function POST(request: NextRequest) {
 
   const thumbUpload = await uploadOne(thumbPath, thumbnail);
   if (thumbUpload.error) {
+    console.error('[chicken-photo] thumbnail upload failed', {
+      fowlId,
+      userId: user.id,
+      fileName: thumbnail.name,
+      size: thumbnail.size,
+      mimeType: thumbnail.type,
+      path: thumbPath,
+      error: thumbUpload.error.message,
+    });
     await admin.storage.from(CHICKEN_PHOTO_BUCKET).remove(uploaded);
     const missing = /bucket|not found|exist/i.test(thumbUpload.error.message);
     return NextResponse.json(

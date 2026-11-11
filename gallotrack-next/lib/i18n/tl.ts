@@ -384,6 +384,8 @@ export const tl: AppTranslations = {
     registerBlockedOne: 'Kumpletuhin ang 1 kailangang field para makapagrehistro.',
     registerBlockedDetails: 'Suriin ang mga naka-highlight na detalye bago magrehistro.',
     registerBlockedUpload: 'Hintayin matapos ang pag-upload ng larawan.',
+    processingPhoto: 'Pinoproseso ang larawan...',
+    registerBlockedProcessing: 'Hintayin matapos ang pagproseso ng larawan.',
     lineageNotRequired: 'Hindi kailangan',
     lineagePartial: 'Bahagya',
     lineageUnresolved: 'Hindi pa natukoy',
@@ -561,3 +563,4 @@ export const tl: AppTranslations = {
     promotingBtn: 'Ipinopromote...',
   },
 };
+

@@ -229,16 +229,54 @@ export async function resolveChickenPhotoUrl(path?: string | null): Promise<stri
 
   const promise = (async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.access_token) {
+        const response = await fetch(
+          `/api/fowl/photo?path=${encodeURIComponent(path)}`,
+          {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+            cache: 'no-store',
+          },
+        );
+        const body = (await response.json().catch(() => null)) as
+          | { signedUrl?: string; error?: string }
+          | null;
+        if (response.ok && body?.signedUrl) {
+          signedCache.set(path, {
+            url: body.signedUrl,
+            expiresAt: Date.now() + SIGN_TTL_SECONDS * 1000,
+          });
+          return body.signedUrl;
+        }
+        console.error('[chicken-photo] server signing failed', {
+          path,
+          status: response.status,
+          error: body?.error ?? 'No signed URL returned',
+        });
+      }
+
+      // Fallback for environments where storage policies allow direct signing.
       const { data, error } = await supabase.storage
         .from(CHICKEN_PHOTO_BUCKET)
         .createSignedUrl(path, SIGN_TTL_SECONDS);
-      if (error || !data?.signedUrl) return null;
+      if (error || !data?.signedUrl) {
+        console.error('[chicken-photo] client signing failed', {
+          path,
+          error: error?.message ?? 'No signed URL returned',
+        });
+        return null;
+      }
       signedCache.set(path, {
         url: data.signedUrl,
         expiresAt: Date.now() + SIGN_TTL_SECONDS * 1000,
       });
       return data.signedUrl;
-    } catch {
+    } catch (error) {
+      console.error('[chicken-photo] signed URL resolution failed', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     } finally {
       signedPending.delete(path);

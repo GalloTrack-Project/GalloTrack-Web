@@ -390,6 +390,8 @@ export const en = {
     registerBlockedOne: 'Complete 1 required field to register.',
     registerBlockedDetails: 'Check the highlighted form details before registering.',
     registerBlockedUpload: 'Wait for the photo upload to finish.',
+    processingPhoto: 'Processing photo...',
+    registerBlockedProcessing: 'Wait for the photo to finish processing.',
     lineageNotRequired: 'Not required',
     lineagePartial: 'Partial',
     lineageUnresolved: 'Unresolved',
@@ -569,3 +571,4 @@ export const en = {
 } as const;
 
 export type TranslationSchema = typeof en;
+

@@ -179,6 +179,7 @@ export default function EncodeForm({
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [photoProcessing, setPhotoProcessing] = useState(false);
   const [draftNotice, setDraftNotice] = useState<{ photoSelected: boolean } | null>(null);
   const draftRestoredRef = useRef(false);
 
@@ -270,6 +271,10 @@ export default function EncodeForm({
   };
 
   const handleFormSubmit = (event: React.FormEvent) => {
+    if (photoProcessing || uploadingImage || loading) {
+      event.preventDefault();
+      return;
+    }
     const breedValue = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
     if (!breedValue) {
       setStrainError(t('registry.strainRequired'));
@@ -395,29 +400,33 @@ export default function EncodeForm({
       : t('registry.lineageUnresolvedHelper');
   }
 
-  const registerBusy = loading || uploadingImage;
+  const registerBusy = loading || uploadingImage || photoProcessing;
   const registerDisabled = registerBusy || !validationOk;
   const registerLabel = uploadingImage
     ? t('registry.uploadingAttachment')
     : loading
       ? t('registry.registering')
-      : t('registry.registerBtn');
+      : photoProcessing
+        ? t('registry.processingPhoto')
+        : t('registry.registerBtn');
 
-  const registerHelper = registerBusy
-    ? uploadingImage
-      ? t('registry.registerBlockedUpload')
-      : t('registry.registering')
-    : missingCount > 0
-      ? missingCount === 1
-        ? t('registry.registerBlockedOne')
-        : t('registry.registerBlockedMissing', { count: String(missingCount) })
-      : birthdateError
-        ? birthdateError
-        : declaredError
-          ? declaredError
-          : !validationPassed
-            ? t('registry.validationPendingHelper')
-            : t('registry.verifyBeforeRegistering');
+  const registerHelper = photoProcessing
+    ? t('registry.registerBlockedProcessing')
+    : registerBusy
+      ? uploadingImage
+        ? t('registry.registerBlockedUpload')
+        : t('registry.registering')
+      : missingCount > 0
+        ? missingCount === 1
+          ? t('registry.registerBlockedOne')
+          : t('registry.registerBlockedMissing', { count: String(missingCount) })
+        : birthdateError
+          ? birthdateError
+          : declaredError
+            ? declaredError
+            : !validationPassed
+              ? t('registry.validationPendingHelper')
+              : t('registry.verifyBeforeRegistering');
 
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
@@ -1175,19 +1184,23 @@ export default function EncodeForm({
           pendingThumbnail={photoForm?.selectedPhotoThumbnail ?? null}
           uploading={photoForm?.uploadingImage ?? uploadingImage}
           uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          uploadError={photoForm?.photoUploadError ?? null}
           canEdit={canEditPhoto}
           onPendingChange={(files) => {
             const setFull = photoForm?.setSelectedImage ?? setSelectedImage;
             setFull(files?.full ?? null);
             photoForm?.setSelectedPhotoThumbnail(files?.thumbnail ?? null);
+            photoForm?.setPhotoUploadError(null);
             setImagePreview('');
           }}
           onRemove={() => {
             (photoForm?.setSelectedImage ?? setSelectedImage)(null);
             photoForm?.setSelectedPhotoThumbnail(null);
+            photoForm?.setPhotoUploadError(null);
             setImagePreview('');
           }}
           onCancelUpload={photoForm?.cancelPhotoUpload}
+          onProcessingChange={setPhotoProcessing}
         />
       </div>
 

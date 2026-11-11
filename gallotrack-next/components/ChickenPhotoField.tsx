@@ -28,6 +28,8 @@ type Props = {
   onPendingChange: (files: { full: File; thumbnail: File } | null) => void;
   onRemove: () => void;
   onCancelUpload?: () => void;
+  /** Reports client-side resize/thumbnail processing so forms can block submit. */
+  onProcessingChange?: (processing: boolean) => void;
 };
 
 type PendingMeta = {
@@ -51,6 +53,7 @@ export default function ChickenPhotoField({
   onPendingChange,
   onRemove,
   onCancelUpload,
+  onProcessingChange,
 }: Props) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const processToken = useRef(0);
@@ -61,6 +64,15 @@ export default function ChickenPhotoField({
   const [resolvedFull, setResolvedFull] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const processingChangeRef = useRef(onProcessingChange);
+
+  useEffect(() => {
+    processingChangeRef.current = onProcessingChange;
+  }, [onProcessingChange]);
+
+  useEffect(() => {
+    return () => processingChangeRef.current?.(false);
+  }, []);
 
   useEffect(() => {
     if (!localPreview) return;
@@ -123,16 +135,19 @@ export default function ChickenPhotoField({
     setPendingMeta({ name: file.name, size: file.size });
     setLocalPreview(URL.createObjectURL(file));
     setProcessing(true);
+    onProcessingChange?.(true);
 
     void processChickenPhoto(file)
       .then((processed) => {
         if (processToken.current !== token) return;
         onPendingChange({ full: processed.full, thumbnail: processed.thumbnail });
         setProcessing(false);
+        onProcessingChange?.(false);
       })
       .catch((err) => {
         if (processToken.current !== token) return;
         setProcessing(false);
+        onProcessingChange?.(false);
         setError(err instanceof Error ? err.message : 'The photo could not be processed.');
         setLocalPreview('');
         setPendingMeta(null);
@@ -142,6 +157,7 @@ export default function ChickenPhotoField({
   const cancelProcessing = () => {
     processToken.current += 1;
     setProcessing(false);
+    onProcessingChange?.(false);
     setError(null);
     setPendingMeta(null);
     setLocalPreview('');
@@ -151,6 +167,7 @@ export default function ChickenPhotoField({
   const handleRemove = () => {
     processToken.current += 1;
     setProcessing(false);
+    onProcessingChange?.(false);
     setError(null);
     setPendingMeta(null);
     setLocalPreview('');

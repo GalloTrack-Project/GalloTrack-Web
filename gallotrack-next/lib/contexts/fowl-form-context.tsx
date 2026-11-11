@@ -46,6 +46,7 @@ interface FowlFormStateContextValue {
   selectedPhotoThumbnail: File | null; setSelectedPhotoThumbnail: (f: File | null) => void;
   uploadingImage: boolean; setUploadingImage: (v: boolean) => void;
   photoUploadProgress: number; setPhotoUploadProgress: (v: number) => void;
+  photoUploadError: string | null; setPhotoUploadError: (v: string | null) => void;
   beginPhotoUpload: () => AbortSignal;
   endPhotoUpload: () => void;
   cancelPhotoUpload: () => void;
@@ -172,6 +173,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [selectedPhotoThumbnail, setSelectedPhotoThumbnail] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [photoUploadProgress, setPhotoUploadProgress] = useState(0);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
   const photoUploadAbortRef = useRef<AbortController | null>(null);
   const [imagePreview, setImagePreview] = useState('');
 
@@ -577,6 +579,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setImagePreview('');
     setUploadingImage(false);
     setPhotoUploadProgress(0);
+    setPhotoUploadError(null);
   }, []);
 
   // Keep the session draft in sync while the user types so a refresh never
@@ -602,6 +605,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     search, setSearch, debouncedSearch,
     selectedImage, setSelectedImage, selectedPhotoThumbnail, setSelectedPhotoThumbnail,
     uploadingImage, setUploadingImage, photoUploadProgress, setPhotoUploadProgress,
+    photoUploadError, setPhotoUploadError,
     beginPhotoUpload, endPhotoUpload, cancelPhotoUpload,
     imagePreview, setImagePreview,
 

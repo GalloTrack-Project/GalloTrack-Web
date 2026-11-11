@@ -1,8 +1,15 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import EncodeForm from './EncodeForm';
 import type { FowlRecord } from '@/lib/types';
+
+const processPhoto = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/chicken-photo', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/chicken-photo')>();
+  return { ...actual, processChickenPhoto: processPhoto };
+});
 
 const mockProps = {
   fowls: [] as FowlRecord[],
@@ -141,6 +148,46 @@ describe('Validation & Summary Panel', () => {
     expect(screen.getByText(/Auto-Assigned \(Sire\)/i)).toBeInTheDocument();
     expect(screen.getByText(/This number will be banded on the chicken’s wing/i)).toBeInTheDocument();
   });
-});
+  it('disables register while the selected photo is still processing', async () => {
+    let resolveProcess!: (value: { full: File; thumbnail: File }) => void;
+    processPhoto.mockReturnValue(
+      new Promise((resolve) => {
+        resolveProcess = resolve;
+      }),
+    );
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => 'blob:mock'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+
+    render(<EncodeForm {...mockProps} />);
+    const register = screen.getByRole('button', { name: /REGISTER/i });
+    expect(register).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText(/Choose a photo for/i), {
+      target: { files: [new File(['photo'], 'bird.png', { type: 'image/png' })] },
+    });
+
+    await waitFor(() => expect(register).toBeDisabled());
+    expect(screen.getByText('Processing photo...')).toBeInTheDocument();
+    expect(
+      screen.getByText('Wait for the photo to finish processing.'),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveProcess({
+        full: new File(['full'], 'chicken-photo.webp', { type: 'image/webp' }),
+        thumbnail: new File(['thumb'], 'chicken-photo-thumb.webp', { type: 'image/webp' }),
+      });
+    });
+
+    await waitFor(() => expect(register).toBeEnabled());
+  });});
 
 

@@ -384,6 +384,8 @@ export const hil: AppTranslations = {
     registerBlockedOne: 'Kompletoha ang 1 kinahanglan nga field agod makaparehistro.',
     registerBlockedDetails: 'Tsek ang mga na-highlight nga detalye antes magparehistro.',
     registerBlockedUpload: 'Hulaton matapos ang pag-upload sang litrato.',
+    processingPhoto: 'Ginaproseso ang litrato...',
+    registerBlockedProcessing: 'Hulaton matapos ang pagproseso sang litrato.',
     lineageNotRequired: 'Indi kinahanglan',
     lineagePartial: 'Bahin-bahin',
     lineageUnresolved: 'Wala pa natino',
@@ -561,3 +563,4 @@ export const hil: AppTranslations = {
     promotingBtn: 'Ginatrabaho ang Promosyon...',
   },
 };
+

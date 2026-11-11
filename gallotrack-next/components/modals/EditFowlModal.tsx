@@ -172,6 +172,7 @@ export default function EditFowlModal({
   const photoForm = useFowlFormStateOptional();
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+  const [photoProcessing, setPhotoProcessing] = React.useState(false);
   const [draftRestored, setDraftRestored] = React.useState(false);
   const [draftPhotoNotice, setDraftPhotoNotice] = React.useState(false);
   const restoredDraftIdRef = React.useRef<number | string | null>(null);
@@ -289,7 +290,7 @@ export default function EditFowlModal({
   if (!editingFowl) return null;
 
   const photoUploading = photoForm?.uploadingImage ?? false;
-  const saveBusy = loading || photoUploading;
+  const saveBusy = loading || photoUploading || photoProcessing;
 
   const isFoundationStock = (name: string): boolean =>
     (name || '').trim().toLowerCase() === 'foundation stock';
@@ -306,6 +307,10 @@ export default function EditFowlModal({
     >
       <form
         onSubmit={(e) => {
+          if (photoProcessing) {
+            e.preventDefault();
+            return;
+          }
           if (!birthdateValidation.valid) {
             e.preventDefault();
             return;
@@ -367,6 +372,7 @@ export default function EditFowlModal({
             photoForm?.setEditPhotoRemoved(true);
           }}
           onCancelUpload={photoForm?.cancelPhotoUpload}
+          onProcessingChange={setPhotoProcessing}
         />
 
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
@@ -1019,7 +1025,13 @@ export default function EditFowlModal({
             {saveBusy && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
             )}
-            <span>{saveBusy ? 'Updating Chicken Node...' : 'Save Changes'}</span>
+            <span>
+              {photoProcessing
+                ? 'Processing photo...'
+                : saveBusy
+                  ? 'Updating Chicken Node...'
+                  : 'Save Changes'}
+            </span>
           </button>
         </div>
       </form>

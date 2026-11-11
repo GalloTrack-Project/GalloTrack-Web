@@ -365,7 +365,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     wingBand,
     newDeclaredComposition, setNewDeclaredComposition,
     selectedImage, selectedPhotoThumbnail,
-    setUploadingImage, setPhotoUploadProgress,
+    setUploadingImage, setPhotoUploadProgress, setPhotoUploadError,
     beginPhotoUpload, endPhotoUpload,
 
     editName, setEditName, editBreed, setEditBreed,
@@ -725,6 +725,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       return;
     }
 
+    if (Boolean(selectedImage) !== Boolean(selectedPhotoThumbnail)) {
+      const message = 'The photo is still processing. Wait a moment and try again.';
+      setPhotoUploadError(message);
+      toastMessage(message, 'error');
+      return;
+    }
+    setPhotoUploadError(null);
+
     setLoading(true);
     let uploadedPhotoPaths: string[] = [];
     let insertedFowlId: number | null = null;
@@ -884,32 +892,89 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       if (selectedImage && selectedPhotoThumbnail && insertResult.id != null) {
         setUploadingImage(true);
         setPhotoUploadProgress(0);
+        setPhotoUploadError(null);
         const photoSignal = beginPhotoUpload();
-        const photoResult = await uploadChickenPhoto(
-          insertResult.id,
-          selectedImage,
-          selectedPhotoThumbnail,
-          setPhotoUploadProgress,
-          photoSignal,
-        );
-        endPhotoUpload();
-        if (photoResult.error === CHICKEN_PHOTO_UPLOAD_CANCELLED) {
-          toastMessage('Photo upload cancelled. The chicken was registered without a photo.', 'success');
-        } else if (photoResult.error) {
-          toastMessage(photoResult.error, 'error');
-        } else if (photoResult.fullPath && photoResult.thumbPath) {
-          uploadedPhotoPaths = [photoResult.fullPath, photoResult.thumbPath];
-          const photoRow = await fowlService.updateFowl(insertResult.id, {
-            photo_path: photoResult.fullPath,
-            photo_thumb_path: photoResult.thumbPath,
-            image_url: '',
-          });
-          if (photoRow.error) {
-            await deleteChickenPhotoPaths(insertResult.id, uploadedPhotoPaths);
-            uploadedPhotoPaths = [];
-            toastMessage(photoRow.error, 'error');
+
+        const rollbackNewFowl = async (baseMessage: string) => {
+          const rollback = await fowlService.deleteFowl(insertResult.id!);
+          if (rollback.error) {
+            console.error('[chicken-photo] failed to roll back chicken after photo failure', {
+              fowlId: insertResult.id,
+              error: rollback.error,
+            });
+            setPhotoUploadError(
+              `${baseMessage} The chicken was saved without a photo; open Edit to retry.`,
+            );
+            return false;
           }
+          insertedFowlId = null;
+          setPhotoUploadError(baseMessage);
+          return true;
+        };
+
+        try {
+          const photoResult = await uploadChickenPhoto(
+            insertResult.id,
+            selectedImage,
+            selectedPhotoThumbnail,
+            setPhotoUploadProgress,
+            photoSignal,
+          );
+          endPhotoUpload();
+
+          if (photoResult.error === CHICKEN_PHOTO_UPLOAD_CANCELLED) {
+            toastMessage('Photo upload cancelled. The chicken was registered without a photo.', 'success');
+          } else if (photoResult.error) {
+            const message = photoResult.error;
+            toastMessage(message, 'error');
+            await rollbackNewFowl(message);
+            setUploadingImage(false);
+            setPhotoUploadProgress(0);
+            return;
+          } else if (photoResult.fullPath && photoResult.thumbPath) {
+            uploadedPhotoPaths = [photoResult.fullPath, photoResult.thumbPath];
+            const photoRow = await fowlService.updateFowl(insertResult.id, {
+              photo_path: photoResult.fullPath,
+              photo_thumb_path: photoResult.thumbPath,
+              image_url: '',
+            });
+            if (photoRow.error) {
+              await deleteChickenPhotoPaths(insertResult.id, uploadedPhotoPaths);
+              uploadedPhotoPaths = [];
+              const message = photoRow.error;
+              toastMessage(message, 'error');
+              await rollbackNewFowl(message);
+              setUploadingImage(false);
+              setPhotoUploadProgress(0);
+              return;
+            }
+            // The DB now references these objects; the catch must not delete them.
+            uploadedPhotoPaths = [];
+          } else {
+            const message = 'Photo upload failed: the server did not return photo paths.';
+            toastMessage(message, 'error');
+            await rollbackNewFowl(message);
+            setUploadingImage(false);
+            setPhotoUploadProgress(0);
+            return;
+          }
+        } catch (photoError) {
+          endPhotoUpload();
+          await deleteChickenPhotoPaths(insertResult.id, uploadedPhotoPaths);
+          uploadedPhotoPaths = [];
+          const message =
+            photoError instanceof Error ? photoError.message : String(photoError);
+          console.error('[chicken-photo] unexpected create upload error', {
+            fowlId: insertResult.id,
+            error: message,
+          });
+          toastMessage(message, 'error');
+          await rollbackNewFowl(message);
+          setUploadingImage(false);
+          setPhotoUploadProgress(0);
+          return;
         }
+
         setUploadingImage(false);
         setPhotoUploadProgress(0);
       }
@@ -946,7 +1011,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, ui, fowls, autoCalcAge, unitPrefs]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, setPhotoUploadError, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 
@@ -1346,6 +1411,15 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         resolvedParents.dam_id ??
         (nameKey(editDamValue) === nameKey(editing.dam) ? editing.dam_id ?? null : null);
 
+      if (Boolean(editPhotoFile) !== Boolean(editPhotoThumbnail)) {
+        const message = 'The photo is still processing. Wait a moment and try again.';
+        setEditPhotoUploadError(message);
+        toastMessage(message, 'error');
+        setUploadingImage(false);
+        setPhotoUploadProgress(0);
+        return;
+      }
+
       let nextPhotoPath = editing.photo_path ?? null;
       let nextPhotoThumbPath = editing.photo_thumb_path ?? null;
       let uploadedPhotoPaths: string[] = [];
@@ -1609,3 +1683,4 @@ export function FowlProviderWrapper({ children }: { children: React.ReactNode })
     </FowlFormStateProvider>
   );
 }
+

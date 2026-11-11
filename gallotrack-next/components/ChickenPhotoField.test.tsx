@@ -19,11 +19,13 @@ function Harness({
   imageUrl = null,
   uploadError = null,
   uploading = false,
+  onProcessingChange,
 }: {
   canEdit?: boolean;
   imageUrl?: string | null;
   uploadError?: string | null;
   uploading?: boolean;
+  onProcessingChange?: (processing: boolean) => void;
 }) {
   const [pending, setPending] = useState<{ full: File; thumbnail: File } | null>(null);
   const [removed, setRemoved] = useState(false);
@@ -52,6 +54,7 @@ function Harness({
           setPending(null);
           setRemoved(true);
         }}
+        onProcessingChange={onProcessingChange}
       />
     </form>
   );
@@ -138,6 +141,34 @@ describe('ChickenPhotoField', () => {
     await waitFor(() => expect(processPhoto).toHaveBeenCalled());
     expect(await screen.findByText('bird.webp')).toBeInTheDocument();
     expect(screen.getByText('5 B')).toBeInTheDocument();
+  });
+
+  it('reports client-side processing so the form can block save', async () => {
+    let resolveProcess!: (value: {
+      full: File;
+      thumbnail: File;
+    }) => void;
+    processPhoto.mockReturnValue(
+      new Promise((resolve) => {
+        resolveProcess = resolve;
+      }),
+    );
+    const onProcessingChange = vi.fn();
+
+    render(<Harness onProcessingChange={onProcessingChange} />);
+    chooseFile(fileInput(), new File(['image'], 'bird.png', { type: 'image/png' }));
+
+    expect(onProcessingChange).toHaveBeenCalledWith(true);
+
+    await act(async () => {
+      resolveProcess({
+        full: new File(['full'], 'chicken-photo.webp', { type: 'image/webp' }),
+        thumbnail: new File(['thumb'], 'chicken-photo-thumb.webp', { type: 'image/webp' }),
+      });
+    });
+
+    await waitFor(() => expect(onProcessingChange).toHaveBeenCalledWith(false));
+    expect(await screen.findByText('Ready to save')).toBeInTheDocument();
   });
 
   it('cancels processing and discards the selection', async () => {
