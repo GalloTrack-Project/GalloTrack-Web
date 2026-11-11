@@ -40,6 +40,7 @@ import WinRatePill from '@/components/match/WinRatePill';
 import { getBreedingClassification, isFoundationStockRecord } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
+import { formatBloodlineDisplayValue } from '@/lib/bloodline-report-ui';
 import RelatednessBadge from '@/components/RelatednessBadge';
 import { printReport } from '@/lib/report-export';
 import { Modal } from '@/components/ui';
@@ -496,11 +497,16 @@ export default function FowlDetailsModal({
               </span>
             ) : null}
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-black text-emerald-700 uppercase dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-              {classification.type === 'Crossbred'
-                ? classification.derivedBreed
-                : selectedFowlForDetails.breed}
+              {formatBloodlineDisplayValue(
+                classification.type === 'Crossbred'
+                  ? classification.derivedBreed
+                  : selectedFowlForDetails.breed,
+              )}
             </span>
-            <BreedingTypeBadge classification={classification} />
+            <BreedingTypeBadge
+              classification={classification}
+              showQualifier={classification.compositionSource !== 'assumed'}
+            />
             {birdCrisscross.isCrisscross && (
               <CrisscrossBadge
                 classification={birdCrisscross}
@@ -512,16 +518,6 @@ export default function FowlDetailsModal({
               <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " />
             ) : null}
             {isRetired && <RetiredFighterBadge />}
-            {isFoundationStockRecord(selectedFowlForDetails) && (
-              <button
-                type="button"
-                onClick={() => handleOpenEditModal(selectedFowlForDetails)}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-black text-amber-800 uppercase transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-900/60"
-                title="Edit breed composition for this foundation chicken"
-              >
-                ✏️ Edit composition
-              </button>
-            )}
             <a
               href={`/lineage?tab=pedigree&chicken=${encodeURIComponent(birdCodeOf(selectedFowlForDetails, fowls) || String(selectedFowlForDetails.id))}`}
               onClick={() => setSelectedFowlForDetails(null)}
