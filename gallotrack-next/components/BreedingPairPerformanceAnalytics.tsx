@@ -3,6 +3,7 @@
 import React from 'react';
 import { Link2, Medal, Skull, Stethoscope } from 'lucide-react';
 import { useT } from '@/lib/i18n';
+import { DASHBOARD_KPI_CAPTION, DASHBOARD_KPI_CARD, DASHBOARD_KPI_LABEL } from '@/lib/dashboard-kpi';
 import type { PairingStats } from '@/lib/types';
 
 export default function BreedingPairPerformanceAnalytics({
@@ -16,24 +17,31 @@ export default function BreedingPairPerformanceAnalytics({
 
   return (
     <div
-      className="bg-card rounded-lg border border-border shadow-sm overflow-hidden"
+      className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm overflow-hidden`}
       data-testid="breeding-pair-analytics"
     >
       <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
-        <div className="flex items-center gap-2.5">
+        <div className="flex min-w-0 items-center gap-2.5">
           <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
             <Link2 className="w-4 h-4 text-success" />
           </span>
-          <div>
-            <h3 className="text-sm font-black text-card-foreground tracking-tight">
+          <div className="min-w-0">
+            <h3
+              className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`}
+              title={t('breedingPairAnalytics.title')}
+            >
               {t('breedingPairAnalytics.title')}
             </h3>
-            <p className="text-sm text-muted-foreground font-semibold mt-0.5">
+            <p
+              className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}
+            >
               {t('breedingPairAnalytics.subtitle')}
             </p>
           </div>
         </div>
-        <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">
+        <span
+          className={`${DASHBOARD_KPI_CAPTION} hidden max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 font-mono font-black text-success sm:inline`}
+        >
           {t('breedingPairAnalytics.badge')}
         </span>
       </div>
@@ -41,15 +49,29 @@ export default function BreedingPairPerformanceAnalytics({
         <table className="w-full text-left text-sm border-collapse min-w-[860px]">
           <thead>
             <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
-              <th className="p-4 pl-6">Rank</th>
-              <th className="p-4">{t('breedingPairAnalytics.columnCross')}</th>
-              <th className="p-4 text-center">Offspring</th>
-              <th className="p-4 text-center">Fights</th>
-              <th className="p-4 text-center">Wins</th>
-              <th className="p-4 text-center">Losses</th>
-              <th className="p-4 text-center">Win Rate</th>
-              <th className="p-4 text-center">Survivability</th>
-              <th className="p-4 text-center pr-6">Breeding Verdict</th>
+              <th className="p-4 pl-6 whitespace-normal break-words leading-tight">Rank</th>
+              <th className="p-4 whitespace-normal break-words leading-tight">
+                {t('breedingPairAnalytics.columnCross')}
+              </th>
+              <th className="p-4 text-center whitespace-normal break-words leading-tight">
+                Offspring
+              </th>
+              <th className="p-4 text-center whitespace-normal break-words leading-tight">
+                Fights
+              </th>
+              <th className="p-4 text-center whitespace-normal break-words leading-tight">Wins</th>
+              <th className="p-4 text-center whitespace-normal break-words leading-tight">
+                Losses
+              </th>
+              <th className="p-4 text-center whitespace-normal break-words leading-tight">
+                Win Rate
+              </th>
+              <th className="p-4 text-center whitespace-normal break-words leading-tight">
+                Survivability
+              </th>
+              <th className="p-4 text-center pr-6 whitespace-normal break-words leading-tight">
+                Breeding Verdict
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-muted-foreground font-semibold">
@@ -64,7 +86,7 @@ export default function BreedingPairPerformanceAnalytics({
                     weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''
                   }`}
                 >
-                  <td className="p-4 pl-6 whitespace-nowrap">
+                  <td className="p-4 pl-6">
                     {index === 0 ? (
                       <Medal className="w-4 h-4 text-warning" />
                     ) : index === 1 ? (
@@ -83,13 +105,16 @@ export default function BreedingPairPerformanceAnalytics({
                         <Link2 className="w-3.5 h-3.5 text-success" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-card-foreground">
+                        <p className="break-words font-bold text-card-foreground">
                           {t('breedingPairAnalytics.pairLabel', {
                             cock: pair.sire,
                             hen: pair.dam,
                           })}
                         </p>
-                        <p className="text-sm font-semibold text-muted-foreground truncate">
+                        <p
+                          className="break-words text-sm font-semibold text-muted-foreground"
+                          title={pair.members.map((member) => member.name).join(', ')}
+                        >
                           {pair.members.map((member) => member.name).join(', ')}
                         </p>
                       </div>
@@ -131,9 +156,9 @@ export default function BreedingPairPerformanceAnalytics({
                       {pair.casualties > 0 && (
                         <span
                           title={`${pair.casualties} deceased + ${pair.critical} critical from injuries`}
-                          className="text-sm font-black text-danger bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"
+                          className="flex max-w-full items-center gap-1 whitespace-normal rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-sm font-black text-danger"
                         >
-                          <Skull className="w-3 h-3" /> {pair.casualties}
+                          <Skull className="w-3 h-3 shrink-0" /> {pair.casualties}
                         </span>
                       )}
                     </div>
@@ -141,7 +166,7 @@ export default function BreedingPairPerformanceAnalytics({
                   <td className="p-4 text-center pr-6">
                     <div className="flex flex-col items-center gap-1">
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border whitespace-nowrap ${
+                        className={`inline-flex max-w-full items-center whitespace-normal rounded-full border px-2.5 py-1 text-center text-sm font-black uppercase tracking-wider ${
                           elite
                             ? 'bg-emerald-500/15 text-success border-emerald-500/30'
                             : solid

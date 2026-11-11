@@ -565,6 +565,19 @@ export const tl: AppTranslations = {
     confirmPromotionBtn: 'Kumpirmahin ang Promosyon at Piliin',
     promotingBtn: 'Ipinopromote...',
   },
+  dashboard: {
+    registryCardLabel: 'Rehistro ng Manok',
+    activeChickens: 'Aktibong manok',
+    cocks: 'Cocks',
+    hens: 'Hens',
+    totalOffspring: 'Kabuuang Offspring',
+    totalOffspringTooltip: 'Ang offspring ay mga manok sa rehistro na hindi pampalahi',
+    bySex: 'Ayon sa kasarian:',
+    totalMatchesLogged: 'Kabuuang Tala ng Laban',
+    overallWinRate: 'Pangkalahatang Win Rate',
+    upcomingMilestones: 'Mga Paparating na Milestone',
+    bloodlineOverview: 'Pangkalahatang Bloodline',
+  },
 };
 
 
