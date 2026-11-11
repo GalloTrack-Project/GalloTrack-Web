@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/registry';
-import { CHICKEN_PHOTO_SETUP_MESSAGE, isChickenPhotoSetupError } from '@/lib/chicken-photo';
+import {
+  CHICKEN_PHOTO_SETUP_MESSAGE,
+  CHICKEN_PHOTO_UPLOAD_CANCELLED,
+  isChickenPhotoSetupError,
+} from '@/lib/chicken-photo';
 
 export type ChickenPhotoUploadResult = {
   fullPath?: string;
@@ -12,6 +16,7 @@ export async function uploadChickenPhoto(
   full: File,
   thumbnail: File,
   onProgress?: (percent: number) => void,
+  signal?: AbortSignal,
 ): Promise<ChickenPhotoUploadResult> {
   if (!Number.isFinite(fowlId) || fowlId <= 0) {
     return { error: 'Save the chicken before adding a photo.' };
@@ -27,6 +32,20 @@ export async function uploadChickenPhoto(
 
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
+    let settled = false;
+    const finish = (result: ChickenPhotoUploadResult) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener('abort', handleAbort);
+      resolve(result);
+    };
+    const handleAbort = () => xhr.abort();
+
+    if (signal?.aborted) {
+      finish({ error: CHICKEN_PHOTO_UPLOAD_CANCELLED });
+      return;
+    }
+
     xhr.open('POST', '/api/fowl/photo');
     xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
     xhr.upload.onprogress = (event) => {
@@ -43,14 +62,15 @@ export async function uploadChickenPhoto(
       }
       if (xhr.status >= 200 && xhr.status < 300 && body.fullPath && body.thumbPath) {
         onProgress?.(100);
-        resolve({ fullPath: body.fullPath, thumbPath: body.thumbPath });
+        finish({ fullPath: body.fullPath, thumbPath: body.thumbPath });
         return;
       }
       const message = body.error || `Photo upload failed (${xhr.status}).`;
-      resolve({ error: isChickenPhotoSetupError(message) ? CHICKEN_PHOTO_SETUP_MESSAGE : message });
+      finish({ error: isChickenPhotoSetupError(message) ? CHICKEN_PHOTO_SETUP_MESSAGE : message });
     };
-    xhr.onerror = () => resolve({ error: 'Network error during photo upload.' });
-    xhr.onabort = () => resolve({ error: 'Photo upload was cancelled.' });
+    xhr.onerror = () => finish({ error: 'Network error during photo upload.' });
+    xhr.onabort = () => finish({ error: CHICKEN_PHOTO_UPLOAD_CANCELLED });
+    signal?.addEventListener('abort', handleAbort, { once: true });
     xhr.send(form);
   });
 }

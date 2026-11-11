@@ -22,19 +22,19 @@ describe('chicken photo helpers', () => {
 
   it('rejects other file types and files over 5 MB', () => {
     expect(validateChickenPhotoFile(file('a.gif', 'image/gif'))).toBe(
-      'Choose a JPG, PNG or WebP image.',
+      'Unsupported file. Please upload a JPG, PNG or WebP image.',
     );
     expect(validateChickenPhotoFile(file('a.pdf', 'application/pdf'))).toBe(
-      'Choose a JPG, PNG or WebP image.',
+      'Unsupported file. Please upload a JPG, PNG or WebP image.',
     );
     expect(
       validateChickenPhotoFile(file('a.jpg', 'image/jpeg', 5 * 1024 * 1024 + 1)),
-    ).toBe('Photo must be 5 MB or smaller.');
+    ).toBe('This file is 5.1 MB. Maximum size is 5 MB.');
   });
 
   it('rejects invalid files before trying to process them', async () => {
     await expect(processChickenPhoto(file('a.txt', 'text/plain'))).rejects.toThrow(
-      'Choose a JPG, PNG or WebP image.',
+      'Unsupported file. Please upload a JPG, PNG or WebP image.',
     );
   });
 

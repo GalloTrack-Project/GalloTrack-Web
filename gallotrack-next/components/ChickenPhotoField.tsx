@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { type Area, type Point } from 'react-easy-crop';
-import { Camera, ImagePlus, Trash2 } from 'lucide-react';
-import ChickenPhoto from '@/components/ChickenPhoto';
+import { Camera, CircleAlert } from 'lucide-react';
+import PhotoUploader from '@/components/PhotoUploader';
+import { Badge, Button } from '@/components/ui';
 import {
   CHICKEN_PHOTO_SETUP_MESSAGE,
   processChickenPhoto,
+  resolveChickenPhotoUrl,
   validateChickenPhotoFile,
   type ChickenPhotoCrop,
 } from '@/lib/chicken-photo';
@@ -27,6 +29,12 @@ type Props = {
   canEdit?: boolean;
   onPendingChange: (files: { full: File; thumbnail: File } | null) => void;
   onRemove: () => void;
+  onCancelUpload?: () => void;
+};
+
+type PendingMeta = {
+  name: string;
+  size: number;
 };
 
 export default function ChickenPhotoField({
@@ -44,11 +52,15 @@ export default function ChickenPhotoField({
   canEdit = true,
   onPendingChange,
   onRemove,
+  onCancelUpload,
 }: Props) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceUrl, setSourceUrl] = useState('');
   const [pendingPreview, setPendingPreview] = useState('');
+  const [pendingMeta, setPendingMeta] = useState<PendingMeta | null>(null);
+  const [resolvedThumb, setResolvedThumb] = useState<string | null>(null);
+  const [resolvedFull, setResolvedFull] = useState<string | null>(null);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<ChickenPhotoCrop | null>(null);
@@ -58,6 +70,7 @@ export default function ChickenPhotoField({
   useEffect(() => {
     if (!pendingFile) {
       setPendingPreview('');
+      setPendingMeta(null);
       return;
     }
     const url = URL.createObjectURL(pendingFile);
@@ -71,6 +84,25 @@ export default function ChickenPhotoField({
     };
   }, [sourceUrl]);
 
+  useEffect(() => {
+    let active = true;
+
+    if (photoThumbPath || photoPath) {
+      void resolveChickenPhotoUrl(photoThumbPath || photoPath).then((url) => {
+        if (active) setResolvedThumb(url);
+      });
+    }
+    if (photoPath) {
+      void resolveChickenPhotoUrl(photoPath).then((url) => {
+        if (active) setResolvedFull(url);
+      });
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [photoPath, photoThumbPath]);
+
   const resetCrop = () => {
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
     setSourceUrl('');
@@ -78,6 +110,12 @@ export default function ChickenPhotoField({
     setArea(null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
+  };
+
+  const cancelCrop = () => {
+    resetCrop();
+    setPendingMeta(null);
+    setError(null);
   };
 
   const pickFile = (file: File | null | undefined) => {
@@ -89,6 +127,7 @@ export default function ChickenPhotoField({
     }
     setError(null);
     resetCrop();
+    setPendingMeta({ name: file.name, size: file.size });
     const url = URL.createObjectURL(file);
     setSourceFile(file);
     setSourceUrl(url);
@@ -112,203 +151,172 @@ export default function ChickenPhotoField({
     }
   };
 
+  const handleRemove = () => {
+    setError(null);
+    setPendingMeta(null);
+    resetCrop();
+    onRemove();
+  };
+
+  const retryUpload = () => {
+    setError(null);
+    const form = sectionRef.current?.closest('form');
+    if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
+  };
+
+  const existingThumb = resolvedThumb || imageUrl || null;
+  const existingFull = resolvedFull || imageUrl || null;
   const hasExisting = Boolean(photoPath || imageUrl) && !removed;
-  const previewSrc = sourceUrl || pendingPreview;
-  const canUpload = canEdit && !uploading;
-  const shownError = error || (uploadError
-    ? (uploadError === CHICKEN_PHOTO_SETUP_MESSAGE ? CHICKEN_PHOTO_SETUP_MESSAGE : uploadError)
-    : null);
+  const uploadFailed = Boolean(uploadError && uploadError !== CHICKEN_PHOTO_SETUP_MESSAGE);
+  const shownError = error
+    || (uploadError
+      ? uploadError === CHICKEN_PHOTO_SETUP_MESSAGE
+        ? CHICKEN_PHOTO_SETUP_MESSAGE
+        : 'Upload failed. Please try again.'
+      : null);
+
+  const alt = useMemo(() => {
+    const label = name.trim() || 'Chicken photo';
+    return code ? `${label} (${formatBirdCodeForDisplay(code)})` : label;
+  }, [name, code]);
+
+  const pending = pendingFile ? {
+    name: pendingMeta?.name || pendingFile.name,
+    size: pendingMeta?.size ?? pendingFile.size,
+  } : null;
+  const showPending = Boolean(pendingFile && pendingThumbnail && pendingPreview);
+  const previewSrc = showPending
+    ? pendingPreview
+    : hasExisting
+      ? existingThumb || existingFull
+      : null;
+  const value = previewSrc ? {
+    previewSrc,
+    fullSrc: showPending ? pendingPreview : existingFull || existingThumb,
+    fileName: showPending
+      ? pending?.name || 'chicken-photo.webp'
+      : `${name.trim() || 'Chicken'} photo`,
+    fileSize: showPending ? pending?.size ?? null : null,
+    statusLabel: showPending ? 'Ready to save' : 'Saved photo',
+  } : null;
+
+  const statusText = !canEdit
+    ? 'You do not have permission to change this photo.'
+    : removed
+      ? 'Photo will be removed when you save.'
+      : null;
 
   return (
     <section
+      ref={sectionRef}
       className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4"
       aria-labelledby="chicken-photo-heading"
       data-testid="chicken-photo-field"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h4
           id="chicken-photo-heading"
-          className="flex items-center gap-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300"
+          className="flex items-center gap-1.5 text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300"
         >
-          <Camera className="h-3.5 w-3.5" /> Photo
+          <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Photo
         </h4>
-        {photoPath || imageUrl ? (
-          <span className="text-muted-foreground text-[10px] font-bold uppercase">
-            Square preview
-          </span>
-        ) : null}
+        <Badge variant="neutral" size="sm" aria-label="Optional field">
+          Optional
+        </Badge>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div
-          className="border-border relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border bg-white shadow-inner dark:bg-card"
-          onDragOver={(event) => {
-            if (canUpload) event.preventDefault();
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            if (!canUpload) return;
-            pickFile(event.dataTransfer.files?.[0]);
-          }}
-          data-testid="chicken-photo-dropzone"
-        >
-          {sourceFile ? (
-            <div className="absolute inset-0">
-              <Cropper
-                image={sourceUrl}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                cropShape="rect"
-                showGrid
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={(_area: Area, pixels: Area) =>
-                  setArea({ x: pixels.x, y: pixels.y, width: pixels.width, height: pixels.height })
-                }
-              />
-            </div>
-          ) : previewSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewSrc} alt={`Preview of ${name}`} className="h-full w-full object-cover" />
-          ) : hasExisting ? (
-            <ChickenPhoto
-              name={name}
-              code={code}
-              imageUrl={imageUrl}
-              photoPath={photoPath}
-              photoThumbPath={photoThumbPath}
-              size={128}
-              className="h-full w-full rounded-none"
-              fallback={<ImagePlus className="text-muted-foreground h-8 w-8" />}
+      {sourceFile ? (
+        <div className="space-y-3" data-testid="chicken-photo-crop">
+          <div className="relative mx-auto h-48 w-full max-w-xs overflow-hidden rounded-md bg-slate-900 sm:h-56">
+            <Cropper
+              image={sourceUrl}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="rect"
+              showGrid
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_area: Area, pixels: Area) =>
+                setArea({ x: pixels.x, y: pixels.y, width: pixels.width, height: pixels.height })
+              }
             />
-          ) : (
-            <div className="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-1.5 text-center text-xs font-bold">
-              <ImagePlus className="h-7 w-7" />
-              <span>No photo</span>
-            </div>
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1 space-y-2">
-          <p className="text-muted-foreground text-xs font-semibold">
-            JPG, PNG or WebP · max 5 MB. Photos are resized to 1600px and saved with a 256px
-            thumbnail.
+          </div>
+          <p className="text-center text-sm font-medium text-muted-foreground">
+            Drag to reposition. Use the slider to zoom.
           </p>
-          {canEdit ? (
-            <div className="flex flex-wrap gap-2">
-              {sourceFile ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => void applyCrop()}
-                    disabled={processing}
-                    className="focus-visible:ring-ring inline-flex h-10 cursor-pointer items-center rounded-md bg-emerald-600 px-3 text-xs font-black text-white transition-colors hover:bg-emerald-700 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {processing ? 'Processing…' : 'Use photo'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetCrop}
-                    disabled={processing}
-                    className="border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring inline-flex h-10 cursor-pointer items-center rounded-md border px-3 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
-                  >
-                    Cancel crop
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => inputRef.current?.click()}
-                    disabled={!canUpload}
-                    aria-label={hasExisting ? `Replace photo for ${name}` : `Upload photo for ${name}`}
-                    className="focus-visible:ring-ring inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-black text-white transition-colors hover:bg-emerald-700 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <Camera className="h-3.5 w-3.5" />
-                    {hasExisting ? 'Replace' : 'Upload photo'}
-                  </button>
-                  {hasExisting ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setError(null);
-                        onRemove();
-                      }}
-                      disabled={!canUpload}
-                      aria-label={`Remove photo for ${name}`}
-                      className="border-border bg-card text-danger hover:bg-muted focus-visible:ring-ring inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Remove
-                    </button>
-                  ) : null}
-                </>
-              )}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-xs font-semibold">
-              You do not have permission to change this photo.
-            </p>
-          )}
-
           <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            aria-label={`Choose a photo for ${name}`}
-            onChange={(event) => {
-              pickFile(event.target.files?.[0]);
-              event.target.value = '';
-            }}
+            type="range"
+            min={1}
+            max={3}
+            step={0.01}
+            value={zoom}
+            onChange={(event) => setZoom(Number(event.target.value))}
+            aria-label="Photo zoom"
+            className="w-full cursor-pointer accent-emerald-600"
           />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => void applyCrop()}
+              loading={processing}
+              disabled={processing}
+              className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            >
+              Use photo
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={cancelCrop}
+              disabled={processing}
+              className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            >
+              Cancel crop
+            </Button>
+          </div>
 
-          {(uploading || processing) && (
-            <div className="space-y-1">
-              <div
-                className="bg-muted h-2 overflow-hidden rounded-full"
-                role="progressbar"
-                aria-label="Photo upload progress"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={uploading ? Math.round(uploadProgress) : 0}
-              >
-                <div
-                  className="h-full rounded-full bg-emerald-600 transition-all"
-                  style={{ width: `${uploading ? Math.max(4, uploadProgress) : 8}%` }}
-                />
-              </div>
-              <p className="text-muted-foreground text-[11px] font-bold">
-                {uploading ? `Uploading photo… ${Math.round(uploadProgress)}%` : 'Processing photo…'}
+          {processing ? (
+            <div className="space-y-1.5">
+              <p aria-live="polite" className="text-sm font-semibold text-muted-foreground">
+                Processing photo…
               </p>
+              <div
+                role="progressbar"
+                aria-label="Photo processing progress"
+                aria-valuetext="Processing photo"
+                className="bg-muted h-2 overflow-hidden rounded-full"
+              >
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-emerald-600" />
+              </div>
             </div>
-          )}
-
-          {pendingFile && pendingThumbnail && !uploading ? (
-            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-              New photo ready. Save the chicken to finish.
-            </p>
           ) : null}
 
-          {removed ? (
-            <p className="text-muted-foreground text-xs font-bold">
-              Photo will be removed when you save.
-            </p>
-          ) : null}
-
-          {shownError ? (
-            <p role="alert" className="text-danger text-xs font-bold">
-              {shownError}
-            </p>
-          ) : null}
-          {code ? (
-            <p className="text-muted-foreground text-[11px] font-semibold">
-              Alt text: {name} ({formatBirdCodeForDisplay(code)})
-            </p>
+          {error ? (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="text-danger flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm font-semibold dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200"
+            >
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p>{error}</p>
+            </div>
           ) : null}
         </div>
-      </div>
+      ) : (
+        <PhotoUploader
+          value={value}
+          onChange={pickFile}
+          onRemove={handleRemove}
+          disabled={!canEdit}
+          error={shownError}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
+          onCancelUpload={onCancelUpload}
+          onRetry={uploadFailed && !uploading ? retryUpload : undefined}
+          alt={alt}
+          statusText={statusText}
+          testId="chicken-photo-dropzone"
+        />
+      )}
     </section>
   );
 }

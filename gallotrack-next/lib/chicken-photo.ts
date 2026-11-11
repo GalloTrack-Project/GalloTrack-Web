@@ -8,6 +8,7 @@ export const CHICKEN_PHOTO_QUALITY = 0.8;
 export const CHICKEN_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 export const CHICKEN_PHOTO_SETUP_MESSAGE =
   'Photos are not set up yet. Ask the admin to apply the database update.';
+export const CHICKEN_PHOTO_UPLOAD_CANCELLED = 'Photo upload was cancelled.';
 
 export type ChickenPhotoCrop = {
   x: number;
@@ -22,6 +23,12 @@ export type ProcessedChickenPhoto = {
   previewUrl: string;
 };
 
+function formatMegabytes(bytes: number): string {
+  const megabytes = bytes / (1024 * 1024);
+  const rounded = megabytes >= 10 ? Math.round(megabytes) : Math.ceil(megabytes * 10) / 10;
+  return `${rounded} MB`;
+}
+
 const SIGN_TTL_SECONDS = 60 * 60;
 const SIGN_REFRESH_MARGIN_MS = 60 * 1000;
 const signedCache = new Map<string, { url: string; expiresAt: number }>();
@@ -34,10 +41,10 @@ export function validateChickenPhotoFile(file: Pick<File, 'name' | 'size' | 'typ
   const allowedType = (CHICKEN_PHOTO_TYPES as readonly string[]).includes(type);
 
   if (!allowedType && !allowedExtension) {
-    return 'Choose a JPG, PNG or WebP image.';
+    return 'Unsupported file. Please upload a JPG, PNG or WebP image.';
   }
   if (file.size > CHICKEN_PHOTO_MAX_BYTES) {
-    return 'Photo must be 5 MB or smaller.';
+    return `This file is ${formatMegabytes(file.size)}. Maximum size is 5 MB.`;
   }
   if (file.size <= 0) {
     return 'The selected photo is empty. Choose another image.';

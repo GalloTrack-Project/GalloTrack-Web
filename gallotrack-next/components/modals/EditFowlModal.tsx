@@ -244,6 +244,9 @@ export default function EditFowlModal({
 
   if (!editingFowl) return null;
 
+  const photoUploading = photoForm?.uploadingImage ?? false;
+  const saveBusy = loading || photoUploading;
+
   const isFoundationStock = (name: string): boolean =>
     (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
@@ -278,17 +281,21 @@ export default function EditFowlModal({
           removed={photoForm?.editPhotoRemoved ?? false}
           uploading={photoForm?.uploadingImage ?? loading}
           uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          uploadError={photoForm?.editPhotoUploadError ?? null}
           canEdit={canEditPhoto}
           onPendingChange={(files) => {
             photoForm?.setEditPhotoFile(files?.full ?? null);
             photoForm?.setEditPhotoThumbnail(files?.thumbnail ?? null);
+            photoForm?.setEditPhotoUploadError(null);
             if (files) photoForm?.setEditPhotoRemoved(false);
           }}
           onRemove={() => {
             photoForm?.setEditPhotoFile(null);
             photoForm?.setEditPhotoThumbnail(null);
+            photoForm?.setEditPhotoUploadError(null);
             photoForm?.setEditPhotoRemoved(true);
           }}
+          onCancelUpload={photoForm?.cancelPhotoUpload}
         />
 
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
@@ -917,13 +924,13 @@ export default function EditFowlModal({
         <div className="pt-2">
           <button
             type="submit"
-            disabled={loading || !birthdateValidation.valid || !declaredValidation.valid}
+            disabled={saveBusy || !birthdateValidation.valid || !declaredValidation.valid}
             className="flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading && (
+            {saveBusy && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
             )}
-            <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>
+            <span>{saveBusy ? 'Updating Chicken Node...' : 'Save Changes'}</span>
           </button>
         </div>
       </form>

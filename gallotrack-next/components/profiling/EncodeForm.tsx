@@ -910,6 +910,7 @@ export default function EncodeForm({
             photoForm?.setSelectedPhotoThumbnail(null);
             setImagePreview('');
           }}
+          onCancelUpload={photoForm?.cancelPhotoUpload}
         />
       </div>
 
