@@ -58,6 +58,7 @@ import {
   matchesBreedingTypeFilter,
   type BreedingClassification,
 } from '@/lib/breeding-classification';
+import { DASHBOARD_KPI_CARD, DASHBOARD_SUMMARY_GRID } from '@/lib/dashboard-kpi';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
@@ -228,7 +229,7 @@ function FowlCard({
           onClick();
         }
       }}
-      className="group bg-card border-border relative w-full cursor-pointer overflow-hidden rounded-lg border p-5 text-left shadow-sm transition-all duration-200 hover:border-emerald-500/40 hover:shadow-md focus:ring-2 focus:ring-emerald-400/60"
+      className={`${DASHBOARD_KPI_CARD} group bg-card border-border relative w-full cursor-pointer overflow-hidden rounded-lg border p-5 text-left shadow-sm transition-all duration-200 hover:border-emerald-500/40 hover:shadow-md focus:ring-2 focus:ring-emerald-400/60`}
     >
       {/* Top accent */}
       <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-r ${accent}`}></div>
@@ -330,22 +331,22 @@ function FowlCard({
       </div>
 
       {/* Data grid */}
-      <div className="mb-3 grid grid-cols-3 gap-2 text-center">
-        <div className="bg-muted/50 rounded-md px-1 py-2">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Age</p>
-          <p className="text-card-foreground text-sm font-black">{getAgeDisplay(fowl.birthdate)}</p>
+      <div className={`${DASHBOARD_SUMMARY_GRID} mb-3 text-center`}>
+        <div className="min-w-0 rounded-md bg-muted/50 px-1 py-2">
+          <p className="break-words text-xs font-bold uppercase text-muted-foreground">Age</p>
+          <p className="break-words text-sm font-black text-card-foreground">{getAgeDisplay(fowl.birthdate)}</p>
         </div>
-        <div className="bg-muted/50 rounded-md px-1 py-2">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Weight</p>
-          <p className="text-card-foreground text-sm font-black">
+        <div className="min-w-0 rounded-md bg-muted/50 px-1 py-2">
+          <p className="break-words text-xs font-bold uppercase text-muted-foreground">Weight</p>
+          <p className="break-words text-sm font-black text-card-foreground">
             {regWeight
               ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}`
               : '\u2014'}
           </p>
         </div>
-        <div className="bg-muted/50 rounded-md px-1 py-2">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Stage</p>
-          <p className="text-card-foreground truncate text-sm font-black">
+        <div className="min-w-0 rounded-md bg-muted/50 px-1 py-2">
+          <p className="break-words text-xs font-bold uppercase text-muted-foreground">Stage</p>
+          <p className="break-words text-sm font-black text-card-foreground">
             {fowl.growth_stage || '\u2014'}
           </p>
         </div>
@@ -637,29 +638,29 @@ function FowlDetailModal({
             <h4 className="text-muted-foreground text-xs font-black tracking-widest uppercase">
               Match Performance
             </h4>
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="bg-card border-border rounded-md border py-2.5">
-                <p className="text-card-foreground text-xl font-black">{stats.total}</p>
-                <p className="text-muted-foreground text-xs font-bold uppercase">Total</p>
+            <div className={`${DASHBOARD_SUMMARY_GRID} text-center`}>
+              <div className="min-w-0 rounded-md border border-border bg-card py-2.5">
+                <p className="break-words text-xl font-black text-card-foreground">{stats.total}</p>
+                <p className="break-words text-xs font-bold uppercase text-muted-foreground">Total</p>
               </div>
-              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2.5">
-                <p className="text-success text-xl font-black">{stats.wins}</p>
-                <p className="text-success text-xs font-bold uppercase">Wins</p>
+              <div className="min-w-0 rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2.5">
+                <p className="break-words text-xl font-black text-success">{stats.wins}</p>
+                <p className="break-words text-xs font-bold uppercase text-success">Wins</p>
               </div>
-              <div className="rounded-md border border-rose-500/30 bg-rose-500/10 py-2.5">
-                <p className="text-danger text-xl font-black">{stats.losses}</p>
-                <p className="text-danger text-xs font-bold uppercase">Losses</p>
+              <div className="min-w-0 rounded-md border border-rose-500/30 bg-rose-500/10 py-2.5">
+                <p className="break-words text-xl font-black text-danger">{stats.losses}</p>
+                <p className="break-words text-xs font-bold uppercase text-danger">Losses</p>
               </div>
               <div
-                className={`rounded-md border py-2.5 ${stats.winRate >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
+                className={`min-w-0 rounded-md border py-2.5 ${stats.winRate >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
               >
                 <p
-                  className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                  className={`break-words text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
                 >
                   {stats.winRate}%
                 </p>
                 <p
-                  className={`text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                  className={`break-words text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
                 >
                   Win Rate
                 </p>
@@ -1072,14 +1073,14 @@ export default function MarketplacePage({
               }}
               onKeyDown={(e) => handleTabKeyDown(e, idx)}
               className={cn(
-                'flex min-h-[44px] cursor-pointer items-center justify-between gap-2 rounded-md px-3.5 py-2 text-xs font-bold transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:justify-center',
+                'flex min-h-[44px] min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md px-3.5 py-2 text-xs font-bold transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:justify-center',
                 isFifth ? 'col-span-2 md:col-span-1 md:w-auto' : 'col-span-1 md:w-auto',
                 isSelected
                   ? 'bg-emerald-600 font-black text-white shadow-sm'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
-              <span className="text-left leading-snug whitespace-normal sm:text-center">
+              <span className="min-w-0 break-words text-left leading-snug whitespace-normal sm:text-center">
                 {tab.label}
               </span>
               <span
@@ -1103,7 +1104,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
           <label
             htmlFor="inventory-role"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             Role
           </label>
@@ -1130,7 +1131,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
           <label
             htmlFor="inventory-sex"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             Sex
           </label>
@@ -1155,7 +1156,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
           <label
             htmlFor="inventory-breeding-type"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             {t('registry.breedingTypeLabel')}
           </label>
@@ -1182,7 +1183,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:ml-auto md:w-auto">
           <label
             htmlFor="inventory-sort"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             Sort
           </label>

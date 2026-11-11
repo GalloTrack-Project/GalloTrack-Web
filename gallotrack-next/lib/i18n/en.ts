@@ -512,6 +512,19 @@ export const en = {
     confirmPromotionBtn: 'Confirm Promotion & Select',
     promotingBtn: 'Promoting...',
   },
+  dashboard: {
+    registryCardLabel: 'Chicken Registry',
+    activeChickens: 'Active chickens',
+    cocks: 'Cocks',
+    hens: 'Hens',
+    totalOffspring: 'Total Offspring',
+    totalOffspringTooltip: 'Offspring are non-breeding chickens in the registry',
+    bySex: 'By sex:',
+    totalMatchesLogged: 'Total Matches Logged',
+    overallWinRate: 'Overall Win Rate',
+    upcomingMilestones: 'Upcoming Milestones',
+    bloodlineOverview: 'Bloodline Overview',
+  },
 } as const;
 
 export type TranslationSchema = typeof en;
