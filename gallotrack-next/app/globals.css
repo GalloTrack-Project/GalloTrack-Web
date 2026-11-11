@@ -471,6 +471,37 @@ html {
   gap: 0.5rem;
 }
 
+/* BLOODLINE REPORT — responsive summary cards for analytics modals */
+.bloodline-report {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.bloodline-report :where(button, a, div, span, p, h3, h4) {
+  min-width: 0;
+}
+
+.bloodline-report-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(min(100%, 6rem), 1fr));
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.bloodline-report-summary > * {
+  min-width: 0;
+}
+
+.bloodline-report-parentage {
+  grid-column: 1 / -1;
+}
+
+@container (min-width: 26rem) {
+  .bloodline-report-summary {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  }
+}
+
 /* PRINT STYLES — pedigree / certificate / profile printable views */
 @media print {
   @page {

@@ -1,5 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { chromium, type Browser } from 'playwright';
 import { en } from '../lib/i18n/en';
 import { tl } from '../lib/i18n/tl';
@@ -14,6 +16,12 @@ import {
   DASHBOARD_KPI_VALUE,
   DASHBOARD_SUMMARY_GRID,
 } from '../lib/dashboard-kpi';
+import {
+  BLOODLINE_REPORT_CARD,
+  BLOODLINE_REPORT_PARENTAGE,
+  BLOODLINE_REPORT_SUMMARY,
+} from '../lib/bloodline-report-ui';
+import { StatCard } from '../components/ui/StatCard';
 
 const WIDTHS = [320, 375, 640, 768, 1024, 1280, 1920];
 const DEVICE_SCALE_FACTORS = [1, 1.5, 2];
@@ -255,6 +263,64 @@ function breedingTableCard(): string {
   );
 }
 
+function reportStat(
+  label: string,
+  value: string,
+  options: { hint?: string; valueClassName?: string; className?: string } = {},
+): string {
+  return renderToStaticMarkup(
+    React.createElement(StatCard, {
+      density: 'compact',
+      label,
+      value,
+      ...options,
+    }),
+  );
+}
+
+function bloodlineReportCard(): string {
+  return `
+    <div data-kpi-card="bloodline-report" class="${BLOODLINE_REPORT_CARD} space-y-3 rounded-lg border border-teal-200 bg-gradient-to-br from-teal-50 to-emerald-50 p-4 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/40">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
+          <span data-fit class="text-teal min-w-0 text-xs font-black tracking-widest uppercase">Bloodline Report</span>
+          <span class="rounded bg-amber-400 px-1.5 py-0.5 text-xs font-black text-amber-900">S</span>
+        </div>
+        <button class="text-teal inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-sm px-1 text-xs font-bold">Details</button>
+      </div>
+      <div data-bloodline-summary class="${BLOODLINE_REPORT_SUMMARY}">
+        ${reportStat('Type', 'Foundation', { valueClassName: 'text-slate-700 dark:text-slate-200' })}
+        ${reportStat('Strain', 'Whitehackle / Lemon 84 Cross')}
+        ${reportStat('Generation', 'Base Stock', { valueClassName: 'text-teal' })}
+        ${reportStat('Purity', '100%', { valueClassName: 'text-teal' })}
+        <div data-bloodline-parentage class="${BLOODLINE_REPORT_PARENTAGE}">
+          ${reportStat('Parentage', 'Unknown', {
+            hint: 'Foundation stock, no recorded parents',
+            className: 'h-full',
+          })}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bloodlineAssumedNotice(): string {
+  return `
+    <div data-assumed-notice class="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-amber-950 dark:text-amber-100">
+      <div class="flex items-start gap-2">
+        <span aria-hidden="true" class="mt-0.5 h-4 w-4 shrink-0 rounded-full bg-amber-600"></span>
+        <div class="min-w-0 space-y-1">
+          <p class="text-sm font-black tracking-wide uppercase">Assumed, not verified</p>
+          <p class="text-sm leading-relaxed font-semibold">No parents are recorded, so the system assumes 100% Hatch from the registered breed. Declare the real composition if you know it.</p>
+        </div>
+      </div>
+      <div class="mt-3 flex sm:justify-end">
+        <button data-edit-composition class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-sm border border-amber-600/40 bg-amber-50 px-4 text-sm font-black text-amber-900 sm:w-auto">Edit composition</button>
+      </div>
+    </div>
+  `;
+}
+
 function inventorySummaryCard(): string {
   return card(
     `
@@ -303,6 +369,12 @@ function variant(labels: Labels, theme: 'light' | 'dark'): string {
       <div class="mt-4 grid grid-cols-1 gap-4">
         ${breedingTableCard()}
       </div>
+      <div class="mt-4">
+        <div data-bloodline-modal class="border-border bg-card mx-auto w-full max-w-2xl rounded-md border p-6">
+          ${bloodlineReportCard()}
+          ${bloodlineAssumedNotice()}
+        </div>
+      </div>
     </section>
   `;
 }
@@ -344,7 +416,9 @@ async function main(): Promise<void> {
               `page horizontal overflow: ${document.documentElement.scrollWidth}px > ${window.innerWidth}px`,
             );
           }
-          for (const cardEl of Array.from(document.querySelectorAll<HTMLElement>('[data-kpi-card]'))) {
+          for (const cardEl of Array.from(
+            document.querySelectorAll<HTMLElement>('[data-kpi-card]'),
+          )) {
             const cardRect = cardEl.getBoundingClientRect();
             const name = cardEl.dataset.kpiCard || 'unnamed-card';
             for (const el of Array.from(cardEl.querySelectorAll<HTMLElement>('[data-fit]'))) {
@@ -355,16 +429,107 @@ async function main(): Promise<void> {
                 rect.top < cardRect.top - 1 ||
                 rect.bottom > cardRect.bottom + 1
               ) {
-                problems.push(`${name}: text box escapes card (${el.textContent?.trim().slice(0, 60)})`);
+                problems.push(
+                  `${name}: text box escapes card (${el.textContent?.trim().slice(0, 60)})`,
+                );
               }
               if (!el.hasAttribute('data-clamp') && el.scrollWidth > el.clientWidth + 1) {
-                problems.push(`${name}: horizontal text overflow (${el.textContent?.trim().slice(0, 60)})`);
+                problems.push(
+                  `${name}: horizontal text overflow (${el.textContent?.trim().slice(0, 60)})`,
+                );
               }
               if (el.hasAttribute('data-clamp') && !el.getAttribute('title')) {
                 problems.push(`${name}: clamped text is missing a title tooltip`);
               }
             }
           }
+
+          const modal = document.querySelector<HTMLElement>('[data-bloodline-modal]');
+          if (modal && modal.scrollWidth > modal.clientWidth + 1) {
+            problems.push(
+              `bloodline modal: horizontal scroll (${modal.scrollWidth}px > ${modal.clientWidth}px)`,
+            );
+          }
+
+          const summary = document.querySelector<HTMLElement>('[data-bloodline-summary]');
+          if (!summary) {
+            problems.push('bloodline report summary is missing');
+          } else {
+            const expectedColumns = window.innerWidth <= 375 ? 2 : 3;
+            const columns = getComputedStyle(summary)
+              .gridTemplateColumns.split(' ')
+              .filter(Boolean).length;
+            if (columns !== expectedColumns) {
+              problems.push(
+                `bloodline report summary: expected ${expectedColumns} column(s), got ${columns}`,
+              );
+            }
+
+            const summaryRect = summary.getBoundingClientRect();
+            const parentage = summary.querySelector<HTMLElement>('[data-bloodline-parentage]');
+            if (!parentage) {
+              problems.push('bloodline report parentage tile is missing');
+            } else {
+              const rect = parentage.getBoundingClientRect();
+              if (
+                rect.left < summaryRect.left - 1 ||
+                rect.right > summaryRect.right + 1 ||
+                rect.width < summaryRect.width - 2
+              ) {
+                problems.push('bloodline report parentage tile does not span the full row');
+              }
+            }
+
+            for (const tileEl of Array.from(summary.children) as HTMLElement[]) {
+              const tileRect = tileEl.getBoundingClientRect();
+              if (tileRect.left < summaryRect.left - 1 || tileRect.right > summaryRect.right + 1) {
+                problems.push('bloodline report tile escapes the summary grid');
+              }
+              if (tileEl.scrollWidth > tileEl.clientWidth + 1) {
+                problems.push(
+                  `bloodline report tile overflows (${tileEl.textContent?.trim().slice(0, 60)})`,
+                );
+              }
+              for (const textEl of Array.from(tileEl.querySelectorAll<HTMLElement>('p, span'))) {
+                if (textEl.scrollWidth > textEl.clientWidth + 1) {
+                  problems.push(
+                    `bloodline report text overflows (${textEl.textContent?.trim().slice(0, 60)})`,
+                  );
+                }
+              }
+            }
+          }
+
+          const notice = document.querySelector<HTMLElement>('[data-assumed-notice]');
+          if (!notice) {
+            problems.push('assumed notice is missing');
+          } else {
+            if (notice.scrollWidth > notice.clientWidth + 1) {
+              problems.push('assumed notice overflows horizontally');
+            }
+            const edit = notice.querySelector<HTMLElement>('[data-edit-composition]');
+            if (!edit) {
+              problems.push('assumed notice edit action is missing');
+            } else {
+              const noticeRect = notice.getBoundingClientRect();
+              const editRect = edit.getBoundingClientRect();
+              if (editRect.height < 43.5) {
+                problems.push(`assumed notice edit action is only ${editRect.height}px tall`);
+              }
+              if (editRect.right > noticeRect.right + 1 || editRect.left < noticeRect.left - 1) {
+                problems.push('assumed notice edit action escapes the notice');
+              }
+              const paragraphs = notice.querySelectorAll<HTMLElement>('p');
+              const lastParagraph = paragraphs[paragraphs.length - 1];
+              if (
+                lastParagraph &&
+                lastParagraph.getBoundingClientRect().bottom > editRect.top + 1
+              ) {
+                problems.push('assumed notice edit action crowds the message');
+              }
+            }
+          }
+
           return problems;
         });
 
@@ -380,15 +545,17 @@ async function main(): Promise<void> {
   }
 
   if (failures.length > 0) {
-    console.error(`Dashboard KPI layout check failed with ${failures.length} issue(s):`);
+    console.error(
+      `Dashboard KPI and Bloodline Report layout check failed with ${failures.length} issue(s):`,
+    );
     for (const failure of failures) console.error(`- ${failure}`);
     process.exitCode = 1;
     return;
   }
 
   console.log(
-    `Dashboard KPI layout check passed: ${LANGUAGES.length} languages, 2 themes, ` +
-      `${WIDTHS.length} widths, ${DEVICE_SCALE_FACTORS.length} device scale factors.`,
+    `Dashboard KPI and Bloodline Report layout check passed: ${LANGUAGES.length} languages, ` +
+      `2 themes, ${WIDTHS.length} widths, ${DEVICE_SCALE_FACTORS.length} device scale factors.`,
   );
 }
 
