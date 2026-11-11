@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ArrowLeft, Dna, Search, Trash2, Lock, Plus, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useFowl } from '@/lib/contexts/fowl-context';
@@ -10,13 +10,23 @@ import { useT } from '@/lib/i18n';
 type BreedsPageProps = {
   onBack?: () => void;
   backLabel?: string;
+  autoOpenAddForm?: boolean;
+  canCreate?: boolean;
+  onBreedCreated?: (name: string) => void | Promise<void>;
 };
 
-export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) {
+export default function BreedsPage({
+  onBack,
+  backLabel,
+  autoOpenAddForm = false,
+  canCreate = true,
+  onBreedCreated,
+}: BreedsPageProps = {}) {
   const { t } = useT();
-  const { availableStrains, customStrainNames, activeFowls, fetchDatabaseResources } = useFowl();
+  const { availableStrains, customStrainNames, activeFowls, fetchDatabaseResources, loading } = useFowl();
   const router = useRouter();
   const pathname = usePathname();
+  const autoOpenedRef = useRef(false);
 
   useEffect(() => {
     if (pathname === '/breeds') {
@@ -39,6 +49,12 @@ export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) 
   const [showAddForm, setShowAddForm] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!autoOpenAddForm || !canCreate || autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    setShowAddForm(true);
+  }, [autoOpenAddForm, canCreate]);
 
   const breedFowlCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -65,20 +81,26 @@ export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) 
   const builtInCount = availableStrains.length - customCount;
 
   const handleAdd = async () => {
+    if (!canCreate) return;
     const trimmed = newBreedName.trim();
     if (!trimmed) return;
     if (availableStrains.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
-      toastMessage(`"${trimmed}" already exists.`, 'error');
+      toastMessage(t('registry.breedExistsError', { name: trimmed }), 'error');
       return;
     }
     const ok = await strainService.saveCustomStrain(trimmed);
     if (ok) {
-      toastMessage(`Breed "${trimmed}" created.`, 'success');
       setNewBreedName('');
+      if (onBreedCreated) {
+        await onBreedCreated(trimmed);
+        fetchDatabaseResources();
+        return;
+      }
+      toastMessage(t('registry.breedCreated', { name: trimmed }), 'success');
       setShowAddForm(false);
       fetchDatabaseResources();
     } else {
-      toastMessage('Failed to create breed.', 'error');
+      toastMessage(t('registry.breedCreateFailed'), 'error');
     }
   };
 
@@ -119,16 +141,23 @@ export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) 
               <Dna className="w-5 h-5" /> Breed Registry
             </h1>
             <p className="text-xs text-muted-foreground font-semibold mt-0.5">Create and manage genetic strains for your chicken registry</p>
+            {!canCreate && (
+              <p className="mt-1.5 max-w-md text-xs font-semibold text-amber-700 dark:text-amber-300">
+                {t('registry.breedReadOnlyNote')}
+              </p>
+            )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-md shadow-sm transition-all cursor-pointer"
-        >
-          <span className="text-base">{showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}</span>
-          {showAddForm ? 'Cancel' : 'Add New Breed'}
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-md shadow-sm transition-all cursor-pointer"
+          >
+            <span className="text-base">{showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}</span>
+            {showAddForm ? 'Cancel' : 'Add New Breed'}
+          </button>
+        )}
       </div>
 
       {/* STATS */}
@@ -148,7 +177,7 @@ export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) 
       </div>
 
       {/* ADD FORM */}
-      {showAddForm && (
+      {canCreate && showAddForm && (
         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-5 space-y-3">
           <p className="text-xs font-black text-success uppercase tracking-widest">Create New Breed</p>
           <div className="flex gap-2">
@@ -189,7 +218,12 @@ export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) 
 
       {/* BREED LIST */}
       <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6">
-        {breeds.length === 0 ? (
+        {loading && availableStrains.length === 0 ? (
+          <div role="status" className="text-center py-12">
+            <Dna className="w-10 h-10 mx-auto mb-3 text-muted-foreground animate-pulse" />
+            <p className="text-sm font-bold text-muted-foreground">{t('registry.breedsLoading')}</p>
+          </div>
+        ) : breeds.length === 0 ? (
           <div className="text-center py-12">
             <Dna className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm font-bold text-muted-foreground">{search ? 'No breeds match your search.' : 'No breeds registered yet.'}</p>
@@ -218,6 +252,10 @@ export default function BreedsPage({ onBack, backLabel }: BreedsPageProps = {}) 
                   {count > 0 ? (
                     <div className="mt-auto pt-2 border-t border-border">
                       <span className="text-xs font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Used by {count} chicken{count !== 1 ? 's' : ''}</span>
+                    </div>
+                  ) : !canCreate ? (
+                    <div className="mt-auto pt-2 border-t border-border">
+                      <span className="text-xs font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> {t('registry.breedsReadOnlyLock')}</span>
                     </div>
                   ) : !isCustom ? (
                     <div className="mt-auto pt-2 border-t border-border">

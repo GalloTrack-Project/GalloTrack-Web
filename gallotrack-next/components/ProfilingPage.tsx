@@ -4,6 +4,7 @@ import { Archive, Skull, Dna, Shield, Egg, Plus } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useAuthOptional } from '@/lib/contexts/auth-context';
 import type { ProfilingSubTab } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
@@ -104,11 +105,20 @@ export default function ProfilingPage() {
     generationPurity,
     autoCalcAge,
     getAutoCalcAge,
+    saveCreateDraft,
+    restoreCreateDraft,
+    clearCreateDraft,
+    resetCreateForm,
+    saveEditDraft,
+    selectCreatedBreed,
   } = fowl;
 
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
   const { breedsViewOpen, openBreeds, closeBreeds } = useBreedsView();
+  const auth = useAuthOptional();
+  const canCreateBreeds = !auth || !auth.authChecked
+    || (Boolean(auth.currentUserId) && auth.userActive);
 
   // Handle redirect from legacy ?tab=sire-material or ?tab=sireMaterial
   useEffect(() => {
@@ -137,15 +147,25 @@ export default function ProfilingPage() {
     },
   });
   const prevUrlSyncTabRef = useRef(profilingSubTab);
+  const mountUrlAppliedRef = useRef(false);
   useEffect(() => {
     // Apply URL → state only for shareable links at mount and for back/forward.
     // User-driven changes (change === 'user') write the URL via the effect below;
     // re-applying them here ping-pongs the two setters into an infinite
     // update loop ("Maximum update depth exceeded") that unmounts the page.
+    if (urlTabMeta.change === 'popstate') {
+      if (urlTab !== profilingSubTab) setProfilingSubTab(urlTab);
+      return;
+    }
     if (
-      urlTabMeta.change === 'popstate' ||
-      (urlTabMeta.change === 'mount' && urlTabMeta.paramPresent)
+      urlTabMeta.change === 'mount'
+      && urlTabMeta.paramPresent
+      && !mountUrlAppliedRef.current
     ) {
+      // The mount read stays 'mount' until the user changes the tab, so guard
+      // it: otherwise a programmatic switch (save, cancel, return from Breeds)
+      // snaps back to whatever ?tab= the user landed on.
+      mountUrlAppliedRef.current = true;
       if (urlTab !== profilingSubTab) setProfilingSubTab(urlTab);
     }
   }, [urlTab, urlTabMeta, profilingSubTab, setProfilingSubTab]);
@@ -166,13 +186,70 @@ export default function ProfilingPage() {
       : null;
 
   const formViewActive = profilingSubTab === 'form' && !breedsViewOpen;
-  const breedsFromForm = Boolean(ui.editingFowl) || profilingSubTab === 'form';
+  const breedsFromForm = Boolean(ui.breedFlow)
+    || Boolean(ui.editingFowl)
+    || profilingSubTab === 'form';
   const breedsBackLabel = breedsFromForm
     ? t('registry.backToRegistration')
     : t('registry.backToRegistry');
 
+  const handleBackFromBreeds = () => {
+    ui.setBreedFlow(null);
+    closeBreeds();
+  };
+
+  const handleAddBreedsFromForm = () => {
+    saveCreateDraft();
+    ui.setBreedFlow({ target: { kind: 'create' }, autoOpenAddForm: true });
+    openBreeds();
+  };
+
+  const handleOpenBreedsHeader = () => {
+    if (breedsViewOpen) {
+      handleBackFromBreeds();
+      return;
+    }
+    if (ui.editingFowl) saveEditDraft(ui.editingFowl.id);
+    else if (profilingSubTab === 'form') saveCreateDraft();
+    ui.setBreedFlow(null);
+    openBreeds();
+  };
+
+  const handleBreedCreated = (name: string) => {
+    const flow = ui.breedFlow;
+    if (!flow) return;
+
+    let selected = false;
+    if (flow.target.kind === 'create') {
+      selectCreatedBreed(flow.target, name);
+      selected = true;
+    } else if (
+      ui.editingFowl
+      && String(ui.editingFowl.id) === String(flow.target.fowlId)
+    ) {
+      selectCreatedBreed(flow.target, name);
+      selected = true;
+    }
+
+    toastMessage(
+      selected
+        ? t('registry.breedAddedSelected')
+        : t('registry.breedCreated', { name }),
+      'success',
+    );
+    ui.setBreedFlow(null);
+    closeBreeds();
+  };
+
+  const handleCancelRegistration = () => {
+    clearCreateDraft();
+    resetCreateForm();
+    ui.setBreedFlow(null);
+    setProfilingSubTab('males');
+  };
+
   const selectProfilingTab = (tab: ProfilingSubTab) => {
-    if (breedsViewOpen) closeBreeds();
+    if (breedsViewOpen) handleBackFromBreeds();
     setProfilingSubTab(tab);
   };
 
@@ -212,7 +289,7 @@ export default function ProfilingPage() {
           <div className="flex w-full min-w-0 items-stretch gap-2.5 sm:w-auto sm:shrink-0 sm:items-center sm:self-start">
             <button
               type="button"
-              onClick={() => (breedsViewOpen ? closeBreeds() : openBreeds())}
+              onClick={handleOpenBreedsHeader}
               className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2.5 text-center text-xs leading-tight font-bold transition-colors duration-200 sm:flex-initial sm:text-sm ${
                 breedsViewOpen
                   ? 'bg-emerald-600 text-white shadow-sm'
@@ -256,7 +333,9 @@ export default function ProfilingPage() {
       {!breedsViewOpen && profilingSubTab === 'form' && (
         <EncodeForm
           fowls={fowls}
-          onAddBreeds={openBreeds}
+          onAddBreeds={handleAddBreedsFromForm}
+          restoreDraft={restoreCreateDraft}
+          onCancel={handleCancelRegistration}
           newName={newName}
           setNewName={setNewName}
           newBreed={newBreed}
@@ -352,7 +431,13 @@ export default function ProfilingPage() {
       {!breedsViewOpen && profilingSubTab === 'matchForm' && <MatchLogsView />}
 
       {breedsViewOpen && (
-        <BreedsPage onBack={closeBreeds} backLabel={breedsBackLabel} />
+        <BreedsPage
+          onBack={handleBackFromBreeds}
+          backLabel={breedsBackLabel}
+          autoOpenAddForm={Boolean(ui.breedFlow?.autoOpenAddForm)}
+          canCreate={canCreateBreeds}
+          onBreedCreated={ui.breedFlow ? handleBreedCreated : undefined}
+        />
       )}
     </div>
   );

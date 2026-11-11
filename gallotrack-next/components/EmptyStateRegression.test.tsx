@@ -36,6 +36,11 @@ vi.mock('@/lib/contexts/auth-context', () => ({
     isAdmin: false,
     loading: false,
   }),
+  useAuthOptional: () => ({
+    currentUserId: 'test-owner-id',
+    userActive: true,
+    authChecked: true,
+  }),
 }));
 
 vi.mock('@/lib/registry', () => ({

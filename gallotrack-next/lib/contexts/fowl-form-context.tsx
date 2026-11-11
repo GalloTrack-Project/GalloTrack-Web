@@ -7,6 +7,14 @@ import {
 import { STRAIN_LIST, LEG_COLOR_LIST } from '@/lib/helpers';
 import { useDebounce } from '@/lib/use-debounce';
 import type { DeclaredBreedShare } from '@/lib/types';
+import {
+  clearFowlDraft,
+  loadFowlDraft,
+  saveFowlDraft,
+  type CreateDraftFields,
+  type DraftRestoreResult,
+  type EditDraftFields,
+} from '@/lib/fowl-draft';
 
 interface FowlFormStateContextValue {
   newName: string; setNewName: (v: string) => void;
@@ -87,6 +95,18 @@ interface FowlFormStateContextValue {
   handleEditAgeChange: (val: string, genderVal?: string) => void;
   handleNewBirthdateChange: (val: string) => void;
   handleEditBirthdateChange: (val: string) => void;
+
+  saveCreateDraft: () => boolean;
+  restoreCreateDraft: () => DraftRestoreResult;
+  clearCreateDraft: () => void;
+  saveEditDraft: (fowlId: number | string) => boolean;
+  restoreEditDraft: (fowlId: number | string) => DraftRestoreResult;
+  clearEditDraft: (fowlId: number | string) => void;
+  selectCreatedBreed: (
+    target: { kind: 'create' } | { kind: 'edit'; fowlId: number | string },
+    name: string,
+  ) => void;
+  resetCreateForm: () => void;
 }
 
 const FowlFormStateContext = createContext<FowlFormStateContextValue | null>(null);
@@ -240,6 +260,303 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setSelectedStrains((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  // ── Form drafts (survive the Breed Registry round trip and refreshes) ──
+  const getDraftUserId = useCallback((): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem('gallotrack_user_id');
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const buildCreateDraftFields = useCallback((): CreateDraftFields => ({
+    newName,
+    newBreed,
+    newGender,
+    newColor,
+    newColorCategory,
+    newGrowthStage,
+    newBehaviorTrait,
+    newEyeVariant,
+    newBirthdate,
+    sireName,
+    damName,
+    sirePct,
+    damPct,
+    weight,
+    height,
+    newLegColor,
+    age,
+    birdCode,
+    wingBand,
+    newDeclaredComposition,
+    strainQuery,
+    selectedStrains,
+    legColorQuery,
+  }), [
+    newName, newBreed, newGender, newColor, newColorCategory, newGrowthStage,
+    newBehaviorTrait, newEyeVariant, newBirthdate, sireName, damName, sirePct,
+    damPct, weight, height, newLegColor, age, birdCode, wingBand,
+    newDeclaredComposition, strainQuery, selectedStrains, legColorQuery,
+  ]);
+
+  const buildEditDraftFields = useCallback((): EditDraftFields => ({
+    editName,
+    editBreed,
+    editGender,
+    editColorCategory,
+    editColor,
+    editBehaviorTrait,
+    editEyeVariant,
+    editAge,
+    editBirthdate,
+    editGrowthStage,
+    editWeight,
+    editHeight,
+    editLegColor,
+    editSire,
+    editDam,
+    editSirePct,
+    editDamPct,
+    editBirdCode,
+    editWingBand,
+    editDeclaredComposition,
+  }), [
+    editName, editBreed, editGender, editColorCategory, editColor,
+    editBehaviorTrait, editEyeVariant, editAge, editBirthdate, editGrowthStage,
+    editWeight, editHeight, editLegColor, editSire, editDam, editSirePct,
+    editDamPct, editBirdCode, editWingBand, editDeclaredComposition,
+  ]);
+
+  const persistCreateDraft = useCallback(
+    (overrides?: Partial<CreateDraftFields>) => {
+      const userId = getDraftUserId();
+      if (!userId) return false;
+      return saveFowlDraft({
+        kind: 'create',
+        userId,
+        photoSelected: Boolean(selectedImage),
+        fields: { ...buildCreateDraftFields(), ...overrides },
+      });
+    },
+    [getDraftUserId, buildCreateDraftFields, selectedImage],
+  );
+
+  const persistEditDraft = useCallback(
+    (fowlId: number | string, overrides?: Partial<EditDraftFields>) => {
+      const userId = getDraftUserId();
+      if (!userId) return false;
+      return saveFowlDraft({
+        kind: 'edit',
+        userId,
+        fowlId: String(fowlId),
+        photoSelected: false,
+        fields: { ...buildEditDraftFields(), ...overrides },
+      });
+    },
+    [getDraftUserId, buildEditDraftFields],
+  );
+
+  const saveCreateDraft = useCallback(() => {
+    const hasContent = Boolean(
+      newName.trim()
+      || newBreed.trim()
+      || selectedStrains.length > 0
+      || selectedImage
+      || newBirthdate
+      || sireName.trim()
+      || damName.trim()
+      || birdCode.trim()
+      || wingBand.trim()
+      || weight.trim()
+      || height.trim()
+      || age.trim()
+      || newLegColor.trim()
+      || newColor.trim()
+      || newBehaviorTrait.trim()
+      || (newDeclaredComposition && newDeclaredComposition.length > 0),
+    );
+    if (!hasContent) return false;
+    return persistCreateDraft();
+  }, [
+    newName, newBreed, selectedStrains, selectedImage, newBirthdate, sireName,
+    damName, birdCode, wingBand, weight, height, age, newLegColor, newColor,
+    newBehaviorTrait, newDeclaredComposition, persistCreateDraft,
+  ]);
+
+  const restoreCreateDraft = useCallback((): DraftRestoreResult => {
+    const userId = getDraftUserId();
+    if (!userId) return { restored: false, photoSelected: false };
+    const draft = loadFowlDraft(userId, 'create');
+    if (!draft || draft.kind !== 'create') {
+      return { restored: false, photoSelected: false };
+    }
+
+    const f = draft.fields;
+    setNewName(f.newName ?? '');
+    setNewBreed(f.newBreed ?? '');
+    setNewGender(f.newGender ?? '');
+    setNewColor(f.newColor ?? '');
+    setNewColorCategory(f.newColorCategory ?? '');
+    setNewGrowthStage(f.newGrowthStage ?? '');
+    setNewBehaviorTrait(f.newBehaviorTrait ?? '');
+    setNewEyeVariant(f.newEyeVariant || 'Standard Eye');
+    setNewBirthdate(f.newBirthdate ?? '');
+    setSireName(f.sireName ?? '');
+    setDamName(f.damName ?? '');
+    setSirePct(f.sirePct ?? '');
+    setDamPct(f.damPct ?? '');
+    setWeight(f.weight ?? '');
+    setHeight(f.height ?? '');
+    setNewLegColor(f.newLegColor ?? '');
+    setAge(f.age ?? '');
+    setBirdCode(f.birdCode ?? '');
+    setWingBand(f.wingBand ?? '');
+    setNewDeclaredComposition(f.newDeclaredComposition ?? null);
+    setStrainQuery(f.strainQuery ?? '');
+    setSelectedStrains(Array.isArray(f.selectedStrains) ? f.selectedStrains : []);
+    setLegColorQuery(f.legColorQuery ?? '');
+
+    return { restored: true, photoSelected: draft.photoSelected };
+  }, [getDraftUserId]);
+
+  const clearCreateDraft = useCallback(() => {
+    clearFowlDraft(getDraftUserId(), 'create');
+  }, [getDraftUserId]);
+
+  const saveEditDraft = useCallback(
+    (fowlId: number | string) => persistEditDraft(fowlId),
+    [persistEditDraft],
+  );
+
+  const restoreEditDraft = useCallback((fowlId: number | string): DraftRestoreResult => {
+    const userId = getDraftUserId();
+    if (!userId) return { restored: false, photoSelected: false };
+    const draft = loadFowlDraft(userId, 'edit', fowlId);
+    if (!draft || draft.kind !== 'edit') {
+      return { restored: false, photoSelected: false };
+    }
+
+    const f = draft.fields;
+    setEditName(f.editName ?? '');
+    setEditBreed(f.editBreed ?? '');
+    setEditGender(f.editGender ?? '');
+    setEditColorCategory(f.editColorCategory ?? '');
+    setEditColor(f.editColor ?? '');
+    setEditBehaviorTrait(f.editBehaviorTrait ?? '');
+    setEditEyeVariant(f.editEyeVariant ?? '');
+    setEditAge(f.editAge ?? '');
+    setEditBirthdate(f.editBirthdate ?? '');
+    setEditGrowthStage(f.editGrowthStage ?? '');
+    setEditWeight(f.editWeight ?? '');
+    setEditHeight(f.editHeight ?? '');
+    setEditLegColor(f.editLegColor ?? '');
+    setEditSire(f.editSire ?? '');
+    setEditDam(f.editDam ?? '');
+    setEditSirePct(f.editSirePct ?? '');
+    setEditDamPct(f.editDamPct ?? '');
+    setEditBirdCode(f.editBirdCode ?? '');
+    setEditWingBand(f.editWingBand ?? '');
+    setEditDeclaredComposition(f.editDeclaredComposition ?? null);
+
+    return { restored: true, photoSelected: draft.photoSelected };
+  }, [getDraftUserId]);
+
+  const clearEditDraft = useCallback((fowlId: number | string) => {
+    clearFowlDraft(getDraftUserId(), 'edit', fowlId);
+  }, [getDraftUserId]);
+
+  const selectCreatedBreed = useCallback((
+    target: { kind: 'create' } | { kind: 'edit'; fowlId: number | string },
+    name: string,
+  ) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    if (target.kind === 'create') {
+      const nextSelected = selectedStrains.includes(trimmed)
+        ? selectedStrains
+        : [...selectedStrains, trimmed];
+      setSelectedStrains(nextSelected);
+      setStrainQuery('');
+      setNewBreed('');
+      if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+        setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
+        setCustomStrainNames((prev) => new Set([...prev, trimmed]));
+      }
+      persistCreateDraft({
+        selectedStrains: nextSelected,
+        strainQuery: '',
+        newBreed: '',
+      });
+      return;
+    }
+
+    setEditBreed(trimmed);
+    persistEditDraft(target.fowlId, { editBreed: trimmed });
+  }, [selectedStrains, availableStrains, persistCreateDraft, persistEditDraft]);
+
+  const resetCreateForm = useCallback(() => {
+    setNewName('');
+    setNewBreed('');
+    setNewGender('');
+    setNewColor('');
+    setNewColorCategory('');
+    setNewGrowthStage('');
+    setNewBehaviorTrait('');
+    setNewEyeVariant('Standard Eye');
+    setNewBirthdate('');
+    setSireName('');
+    setDamName('');
+    setSirePct('');
+    setDamPct('');
+    setWeight('');
+    setHeight('');
+    setNewLegColor('');
+    setAge('');
+    setBirdCode('');
+    setWingBand('');
+    setNewDeclaredComposition(null);
+    setStrainQuery('');
+    setStrainOpen(false);
+    setSelectedStrains([]);
+    setLegColorQuery('');
+    setLegColorOpen(false);
+    setSelectedImage(null);
+    setImagePreview('');
+    setUploadingImage(false);
+  }, []);
+
+  // Keep the session draft in sync while the user types so a refresh never
+  // loses the registration form.
+  useEffect(() => {
+    if (!getDraftUserId()) return;
+    const hasContent = Boolean(
+      newName.trim()
+      || newBreed.trim()
+      || selectedStrains.length > 0
+      || selectedImage
+      || newBirthdate
+      || sireName.trim()
+      || damName.trim()
+      || birdCode.trim()
+      || wingBand.trim()
+      || weight.trim()
+      || height.trim()
+      || age.trim()
+      || newLegColor.trim()
+      || newColor.trim()
+      || newBehaviorTrait.trim()
+      || (newDeclaredComposition && newDeclaredComposition.length > 0),
+    );
+    if (hasContent) persistCreateDraft();
+  }, [
+    getDraftUserId, persistCreateDraft, newName, newBreed, selectedStrains,
+    selectedImage, newBirthdate, sireName, damName, birdCode, wingBand, weight,
+    height, age, newLegColor, newColor, newBehaviorTrait, newDeclaredComposition,
+  ]);
+
   const value: FowlFormStateContextValue = {
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newColor, setNewColor, newFeatherColor: newColor, setNewFeatherColor: setNewColor,
@@ -275,6 +592,9 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
     autoCalcAge, getAutoCalcAge,
+    saveCreateDraft, restoreCreateDraft, clearCreateDraft,
+    saveEditDraft, restoreEditDraft, clearEditDraft,
+    selectCreatedBreed, resetCreateForm,
   };
 
   return <FowlFormStateContext.Provider value={value}>{children}</FowlFormStateContext.Provider>;

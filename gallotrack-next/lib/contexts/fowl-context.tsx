@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/registry';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import { useUI } from './ui-context';
 import { FowlFormStateProvider, useFowlFormState, useFowlFormStateOptional } from './fowl-form-context';
 import {
@@ -239,6 +240,18 @@ interface FowlContextValue {
   handleNewBirthdateChange: (val: string) => void;
   handleEditBirthdateChange: (val: string) => void;
 
+  saveCreateDraft: () => boolean;
+  restoreCreateDraft: () => DraftRestoreResult;
+  clearCreateDraft: () => void;
+  saveEditDraft: (fowlId: number | string) => boolean;
+  restoreEditDraft: (fowlId: number | string) => DraftRestoreResult;
+  clearEditDraft: (fowlId: number | string) => void;
+  selectCreatedBreed: (
+    target: { kind: 'create' } | { kind: 'edit'; fowlId: number | string },
+    name: string,
+  ) => void;
+  resetCreateForm: () => void;
+
   generationOf: (f: FowlRecord) => number;
   parentBloodlinePct: (f: FowlRecord) => number;
   getSiblingRelations: (f: FowlRecord) => SiblingRelation[];
@@ -351,6 +364,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
+    saveEditDraft, clearCreateDraft, clearEditDraft, resetCreateForm,
   } = formState;
 
   // Load system defaults for age on mount
@@ -881,11 +895,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         await strainService.saveCustomStrain(s);
       }
       const createdGender = newGender || 'Rooster';
-      setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName('');
-      setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor('');
-      setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage('');
-      setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]);
-      setImagePreview(''); setBirdCode(''); setWingBand(''); setNewDeclaredComposition(null);
+      resetCreateForm();
+      clearCreateDraft();
 
       if (insertResult.id != null) {
         await refreshDescendantCompositions({ ...payload, id: insertResult.id } as FowlRecord, null);
@@ -901,7 +912,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, fowls, autoCalcAge, unitPrefs]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 
@@ -1171,6 +1182,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditDeclaredComposition(parseDeclaredComposition(fowl.declared_composition));
   }, [ui, birdCodeOf, setEditDeclaredComposition, unitPrefs]);
 
+  // Mirror edit values into sessionStorage while the modal is open so a
+  // refresh or the Breed Registry round trip can restore them exactly.
+  useEffect(() => {
+    if (!ui.editingFowl) return;
+    saveEditDraft(ui.editingFowl.id);
+  }, [ui.editingFowl, saveEditDraft]);
+
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ui.editingFowl) return;
@@ -1357,6 +1375,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           : null,
       } as FowlRecord;
       await refreshDescendantCompositions(editedRoot, ui.editingFowl.name);
+      clearEditDraft(ui.editingFowl.id);
       ui.setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: unknown) {
@@ -1364,7 +1383,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, editDeclaredComposition, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, autoCalcAge, unitPrefs]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, editDeclaredComposition, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearEditDraft, ui, autoCalcAge, unitPrefs]);
 
   // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);

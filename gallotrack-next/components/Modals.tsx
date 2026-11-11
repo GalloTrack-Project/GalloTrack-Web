@@ -12,6 +12,7 @@ import type {
 } from '@/lib/types';
 import type { ArchiveDraft } from '@/lib/lifecycle';
 import type { DateRangePreset } from '@/lib/helpers';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import FowlDetailsModal from './modals/FowlDetailsModal';
 import DeceasedModal from './modals/DeceasedModal';
 import ArchiveModal from './modals/ArchiveModal';
@@ -53,6 +54,8 @@ type ModalsProps = {
   setEditingFowl: (f: FowlRecord | null) => void;
   handleUpdateFowl: (e: React.FormEvent) => void;
   onAddBreeds?: () => void;
+  restoreEditDraft?: (fowlId: number | string) => DraftRestoreResult;
+  clearEditDraft?: (fowlId: number | string) => void;
 
   showLogoutModal: boolean;
   setShowLogoutModal: (v: boolean) => void;
@@ -197,6 +200,8 @@ export default function Modals(props: ModalsProps) {
         setEditingFowl={props.setEditingFowl}
         handleUpdateFowl={props.handleUpdateFowl}
         onAddBreeds={props.onAddBreeds}
+        restoreDraft={props.restoreEditDraft}
+        clearDraft={props.clearEditDraft}
         loading={props.loading}
         fowls={props.fowls}
         availableStrains={props.availableStrains}

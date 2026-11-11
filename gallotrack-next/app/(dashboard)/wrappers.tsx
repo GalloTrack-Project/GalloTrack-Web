@@ -84,6 +84,17 @@ export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
   const { breedsViewOpen, openBreeds } = useBreedsView();
+
+  const handleAddBreedsFromEdit = () => {
+    if (!ui.editingFowl) return;
+    store.saveEditDraft(ui.editingFowl.id);
+    ui.setBreedFlow({
+      target: { kind: 'edit', fowlId: ui.editingFowl.id },
+      autoOpenAddForm: true,
+    });
+    openBreeds();
+  };
+
   const {
     handleLogout,
     handleSendResetLink,
@@ -119,7 +130,9 @@ export function ModalsWrapper() {
       editingFowl={breedsViewOpen ? null : ui.editingFowl}
       setEditingFowl={ui.setEditingFowl}
       handleUpdateFowl={store.handleUpdateFowl}
-      onAddBreeds={openBreeds}
+      onAddBreeds={handleAddBreedsFromEdit}
+      restoreEditDraft={store.restoreEditDraft}
+      clearEditDraft={store.clearEditDraft}
       showLogoutModal={ui.showLogoutModal}
       setShowLogoutModal={ui.setShowLogoutModal}
       handleLogout={handleLogout}
