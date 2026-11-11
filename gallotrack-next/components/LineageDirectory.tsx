@@ -235,6 +235,10 @@ interface LineageDirectoryProps {
 }
 
 type LineageTab = 'tree' | 'families' | 'sire' | 'dam' | 'pedigree';
+const LINEAGE_TAB_IDS: readonly LineageTab[] = ['tree', 'families', 'sire', 'dam', 'pedigree'];
+const DEFAULT_LINEAGE_TAB: LineageTab = 'tree';
+const isLineageTab = (value: string | null): value is LineageTab =>
+  value !== null && (LINEAGE_TAB_IDS as readonly string[]).includes(value);
 type SortOption = 'most' | 'name' | 'newest';
 type FamilySortOption = 'winrate' | 'offspring' | 'fights' | 'name';
 type FamilyPairFilter = 'all' | 'crisscross' | 'outcross' | 'others';
@@ -553,7 +557,7 @@ export default function LineageDirectory({
   const internalDebouncedSearch = useDebounce(search || '', 250);
   const debouncedSearch = (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedSearch) || '';
 
-  const [activeTab, setActiveTab] = useState<LineageTab>('families');
+  const [activeTab, setActiveTab] = useState<LineageTab>(DEFAULT_LINEAGE_TAB);
   const [sortBy, setSortBy] = useState<SortOption>('most');
 
   const router = useRouter();
@@ -764,8 +768,8 @@ export default function LineageDirectory({
     const syncFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab');
-      if (tabParam === 'sire' || tabParam === 'dam' || tabParam === 'families' || tabParam === 'tree' || tabParam === 'pedigree') {
-        setActiveTab(tabParam as LineageTab);
+      if (isLineageTab(tabParam)) {
+        setActiveTab(tabParam);
       }
       const pairParam = params.get('pair');
       if (
@@ -1303,7 +1307,7 @@ export default function LineageDirectory({
   };
 
   // Keyboard navigation for accessible tabs
-  const tabIds: LineageTab[] = ['tree', 'families', 'sire', 'dam', 'pedigree'];
+  const tabIds = LINEAGE_TAB_IDS;
   const tabButtonRefs = useRef<Map<LineageTab, HTMLButtonElement>>(new Map());
 
   const handleTabKeyDown = (e: React.KeyboardEvent, index: number) => {

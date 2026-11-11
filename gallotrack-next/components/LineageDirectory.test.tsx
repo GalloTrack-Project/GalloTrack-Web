@@ -105,6 +105,19 @@ function renderDirectory(onPick: (f: FowlRecord) => void = vi.fn(), overrides = 
   );
 }
 
+function familiesTab() {
+  return screen.getByRole('tab', { name: /Full Siblings & Families/i });
+}
+
+function renderFamiliesDirectory(
+  onPick: (f: FowlRecord) => void = vi.fn(),
+  overrides = {},
+) {
+  const result = renderDirectory(onPick, overrides);
+  fireEvent.click(familiesTab());
+  return result;
+}
+
 describe('LineageDirectory redesigned top section', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -123,7 +136,7 @@ describe('LineageDirectory redesigned top section', () => {
   it('renders compact header with title, subtitle, and search input', () => {
     renderDirectory();
     expect(screen.getByRole('heading', { level: 1, name: /Family Lineage Directory/i })).toBeInTheDocument();
-    expect(screen.getByText(/Win rate sits at the end of each cock's row\. Hens are listed separately\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Track sibling groups, sire & dam offspring trees to compare performance per bloodline/i)).toBeInTheDocument();
     const searchInput = screen.getByLabelText(/Search family, sire, dam or chicken name/i);
     expect(searchInput).toBeInTheDocument();
     expect(searchInput).toHaveAttribute('placeholder', 'Search name, ID, or wing band…');
@@ -175,13 +188,59 @@ describe('LineageDirectory redesigned top section', () => {
     expect(topContainerClasses.includes('md:sticky')).toBe(false);
   });
 
-  it('shows dynamic summary text in context bar for Full Siblings & Families by default', () => {
+  it('defaults to Family Tree and shows its context summary', () => {
     renderDirectory();
+    expect(screen.getByRole('tab', { name: /Family Tree/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+
     const contextBar = screen.getByTestId('lineage-context-bar');
-    // Main's crisscross-family summary remains: cocks fought, record and rate.
+    expect(contextBar).toHaveTextContent(/2 breeding pairs/i);
+    expect(contextBar).toHaveTextContent(/4 offspring/i);
+    expect(contextBar).toHaveTextContent(/7 chickens tracked/i);
+
+    fireEvent.click(familiesTab());
     expect(contextBar).toHaveTextContent(/0 of 2 cocks fought/i);
     expect(contextBar).toHaveTextContent(/0W-0L/);
     expect(contextBar).toHaveTextContent(/\u2014%/);
+  });
+
+  it('opens a valid ?tab= deep link on the requested tab', () => {
+    window.history.replaceState({}, '', '/lineage?tab=families');
+    renderDirectory();
+
+    expect(familiesTab()).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /Family Tree/i })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+  });
+
+  it('falls back to Family Tree for an invalid ?tab= value', () => {
+    window.history.replaceState({}, '', '/lineage?tab=not-a-real-tab');
+    renderDirectory();
+
+    expect(screen.getByRole('tab', { name: /Family Tree/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(familiesTab()).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('returns to Family Tree on a fresh mount after another tab was selected', () => {
+    const first = renderDirectory();
+    fireEvent.click(familiesTab());
+    expect(familiesTab()).toHaveAttribute('aria-selected', 'true');
+
+    first.unmount();
+    window.history.replaceState({}, '', '/lineage');
+    renderDirectory();
+
+    expect(screen.getByRole('tab', { name: /Family Tree/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 
   it('excludes hens from the family fighting total', () => {
@@ -204,7 +263,7 @@ describe('LineageDirectory redesigned top section', () => {
       status: 'Verified',
     });
 
-    renderDirectory(vi.fn(), {
+    renderFamiliesDirectory(vi.fn(), {
       fowls: familyWithFights,
       matchHistory: [match(1, 3, 'Male Fighter'), match(2, 4, 'Hen With Record')],
     });
@@ -337,7 +396,7 @@ describe('LineageDirectory redesigned top section', () => {
       ),
     ];
 
-    renderDirectory(vi.fn(), { fowls: manyOffspring });
+    renderFamiliesDirectory(vi.fn(), { fowls: manyOffspring });
 
     const table = screen.getByRole('table');
     for (let i = 1; i <= 5; i += 1) {
@@ -410,7 +469,7 @@ describe('LineageDirectory redesigned top section', () => {
     const rowFor = (name: string) => within(card()).getByText(name).closest('tr') as HTMLElement;
 
     it('renders a table with cocks only and a separate hens section', () => {
-      renderDirectory(vi.fn(), { fowls, matchHistory: records });
+      renderFamiliesDirectory(vi.fn(), { fowls, matchHistory: records });
 
       const table = within(card()).getByRole('table');
       for (const header of ['ID', 'Name', 'Record', 'Win rate', 'Sample']) {
@@ -439,7 +498,7 @@ describe('LineageDirectory redesigned top section', () => {
     });
 
     it('tints decided rows and leaves no-decision rows untinted', () => {
-      renderDirectory(vi.fn(), { fowls, matchHistory: records });
+      renderFamiliesDirectory(vi.fn(), { fowls, matchHistory: records });
 
       expect(rowFor('Male A').className).toContain('bg-emerald-50/70');
       expect(rowFor('Male B').className).toContain('bg-rose-50/70');
@@ -459,7 +518,7 @@ describe('LineageDirectory redesigned top section', () => {
         matchRecord(2, 12, 'Half Cock', 'Loss'),
         matchRecord(3, 13, 'Draw Cock', 'Draw'),
       ];
-      renderDirectory(vi.fn(), { fowls: mixed, matchHistory: mixedRecords });
+      renderFamiliesDirectory(vi.fn(), { fowls: mixed, matchHistory: mixedRecords });
 
       expect(within(rowFor('Half Cock')).getByText('1W-1L')).toBeInTheDocument();
       expect(within(rowFor('Half Cock')).getByText('50%')).toBeInTheDocument();
@@ -474,7 +533,7 @@ describe('LineageDirectory redesigned top section', () => {
     });
 
     it('computes the total from cocks only and ignores hen matches', () => {
-      renderDirectory(vi.fn(), {
+      renderFamiliesDirectory(vi.fn(), {
         fowls,
         matchHistory: [...records, matchRecord(9, 6, 'Female A', 'Win')],
       });
@@ -488,7 +547,7 @@ describe('LineageDirectory redesigned top section', () => {
     });
 
     it('does not render collapse controls and always shows the table', () => {
-      renderDirectory(vi.fn(), { fowls, matchHistory: records });
+      renderFamiliesDirectory(vi.fn(), { fowls, matchHistory: records });
 
       expect(screen.queryByRole('button', { name: /Expand family/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Collapse family/i })).not.toBeInTheDocument();
@@ -506,7 +565,7 @@ describe('LineageDirectory redesigned top section', () => {
         bird({ id: 12, name: 'Twin One', gender: 'Rooster', sire: 'Sire T', dam: 'Dam T', bird_code: 'T1' }),
         bird({ id: 13, name: 'Twin Two', gender: 'Hen', sire: 'Sire T', dam: 'Dam T', bird_code: 'T2' }),
       ];
-      renderDirectory(vi.fn(), { fowls: mixedFamilies });
+      renderFamiliesDirectory(vi.fn(), { fowls: mixedFamilies });
 
       expect(screen.getAllByRole('article')).toHaveLength(2);
       fireEvent.click(screen.getByRole('button', { name: 'Full Siblings' }));
@@ -522,7 +581,7 @@ describe('LineageDirectory redesigned top section', () => {
         bird({ id: 3, name: 'Hen One', gender: 'Hen', sire: 'Sire H', dam: 'Dam H', bird_code: 'H1' }),
         bird({ id: 4, name: 'Hen Two', gender: 'Hen', sire: 'Sire H', dam: 'Dam H', bird_code: 'H2' }),
       ];
-      renderDirectory(vi.fn(), { fowls: noCocks });
+      renderFamiliesDirectory(vi.fn(), { fowls: noCocks });
       expect(screen.getByText('No cocks yet')).toBeInTheDocument();
       expect(screen.getByText('Hen One')).toBeInTheDocument();
       expect(screen.getByText('Hen Two')).toBeInTheDocument();
@@ -535,7 +594,7 @@ describe('LineageDirectory redesigned top section', () => {
         bird({ id: 3, name: 'Cock One', gender: 'Rooster', sire: 'Sire C', dam: 'Dam C', bird_code: 'C1' }),
         bird({ id: 4, name: 'Cock Two', gender: 'Rooster', sire: 'Sire C', dam: 'Dam C', bird_code: 'C2' }),
       ];
-      renderDirectory(vi.fn(), { fowls: noHens });
+      renderFamiliesDirectory(vi.fn(), { fowls: noHens });
       expect(screen.queryByText(/Hens \u00b7 No matches/i)).not.toBeInTheDocument();
     });
 
@@ -586,7 +645,7 @@ describe('LineageDirectory redesigned top section', () => {
         matchRecord(5, 12, 'B Male 3', 'Loss'),
       ];
 
-      renderDirectory(vi.fn(), { fowls: multiFamily, matchHistory: matches });
+      renderFamiliesDirectory(vi.fn(), { fowls: multiFamily, matchHistory: matches });
 
       const order = () => screen.getAllByRole('article').map((c) => c.textContent || '');
 
@@ -641,19 +700,19 @@ describe('LineageDirectory redesigned top section', () => {
     expect(contextBar).toHaveTextContent(/7 chickens tracked/i);
   });
 
-  it('shows the sort dropdown on families and expand/collapse on the other tree tabs', () => {
+  it('shows the sort dropdown on Family Tree and families, and expand/collapse only on Family Tree', () => {
     renderDirectory();
 
-    // Default families tab has sort but no expand/collapse controls.
+    // Default Family Tree tab has sort and expand/collapse controls.
+    expect(screen.getByLabelText(/Sort options/i)).toBeInTheDocument();
+    const treeTools = screen.getByTestId('lineage-context-bar');
+    expect(within(treeTools).getByRole('button', { name: /Expand all/i })).toBeInTheDocument();
+    expect(within(treeTools).getByRole('button', { name: /Collapse all/i })).toBeInTheDocument();
+
+    fireEvent.click(familiesTab());
     expect(screen.getByLabelText(/Sort options/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Expand all/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Collapse all/i })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('tab', { name: /Family Tree/i }));
-    expect(screen.getByLabelText(/Sort options/i)).toBeInTheDocument();
-    const tools = screen.getByTestId('lineage-context-bar');
-    expect(within(tools).getByRole('button', { name: /Expand all/i })).toBeInTheDocument();
-    expect(within(tools).getByRole('button', { name: /Collapse all/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: /Pedigree \/ Ancestors/i }));
     expect(screen.queryByLabelText(/Sort options/i)).not.toBeInTheDocument();
@@ -670,7 +729,7 @@ describe('LineageDirectory redesigned top section', () => {
   });
 
   it('filters content and reflects search count in context bar when typing', async () => {
-    renderDirectory();
+    renderFamiliesDirectory();
     const searchInput = screen.getByLabelText(/Search family, sire, dam or chicken name/i);
     fireEvent.change(searchInput, { target: { value: '1A2' } });
 
@@ -703,14 +762,14 @@ describe('LineageDirectory redesigned top section', () => {
   });
 
   it('opens standalone fight history from a cock row', () => {
-    renderDirectory();
+    renderFamiliesDirectory();
     fireEvent.click(screen.getByRole('button', { name: 'View all fights for Offspring 1A1' }));
     expect(screen.getByTestId('fight-probe')).toHaveTextContent('Offspring 1A1');
   });
 
   it('opens chicken profile when a cock row is clicked', () => {
     const onPick = vi.fn();
-    renderDirectory(onPick);
+    renderFamiliesDirectory(onPick);
     fireEvent.click(screen.getByRole('button', { name: 'Full Siblings' }));
     const familyCard = screen.getByRole('article');
     fireEvent.click(within(familyCard).getByText('Offspring 1A1'));
@@ -1217,7 +1276,7 @@ describe('crisscross integration in the redesigned family cards', () => {
   ];
 
   it('keeps the crisscross summary, pair filter and card tag', () => {
-    renderDirectory(vi.fn(), { fowls: crisscrossFamily });
+    renderFamiliesDirectory(vi.fn(), { fowls: crisscrossFamily });
 
     const summary = screen.getByTestId('family-type-summary');
     expect(within(summary).getByText('Crisscross')).toBeInTheDocument();
