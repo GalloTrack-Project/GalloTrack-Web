@@ -97,11 +97,12 @@ function renderModal(onAddBreeds: () => void) {
 }
 
 describe('EditFowlModal Add Breeds', () => {
-  it('opens the inline Breed Registry without discarding the edit draft', async () => {
+  it('opens the inline Breed Registry from the single Add breed button', async () => {
     const onAddBreeds = vi.fn();
     renderModal(onAddBreeds);
 
-    fireEvent.click(await screen.findByRole('link', { name: /Add Breeds/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Add breed/i }));
     expect(onAddBreeds).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
   });
 });

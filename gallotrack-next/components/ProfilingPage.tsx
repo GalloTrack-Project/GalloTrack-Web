@@ -117,7 +117,8 @@ export default function ProfilingPage() {
   const setProfilingSubTab = ui.setProfilingSubTab;
   const { breedsViewOpen, openBreeds, closeBreeds } = useBreedsView();
   const auth = useAuthOptional();
-  const canCreateBreeds = !auth || !auth.authChecked
+  const canCreateBreeds = !auth
+    || !auth.authChecked
     || (Boolean(auth.currentUserId) && auth.userActive);
 
   // Handle redirect from legacy ?tab=sire-material or ?tab=sireMaterial
@@ -149,7 +150,7 @@ export default function ProfilingPage() {
   const prevUrlSyncTabRef = useRef(profilingSubTab);
   const mountUrlAppliedRef = useRef(false);
   useEffect(() => {
-    // Apply URL → state only for shareable links at mount and for back/forward.
+    // Apply URL -> state only for shareable links at mount and for back/forward.
     // User-driven changes (change === 'user') write the URL via the effect below;
     // re-applying them here ping-pongs the two setters into an infinite
     // update loop ("Maximum update depth exceeded") that unmounts the page.
@@ -192,6 +193,10 @@ export default function ProfilingPage() {
   const breedsBackLabel = breedsFromForm
     ? t('registry.backToRegistration')
     : t('registry.backToRegistry');
+
+  useEffect(() => {
+    if (!breedsViewOpen && ui.breedFlow) ui.setBreedFlow(null);
+  }, [breedsViewOpen, ui.breedFlow, ui.setBreedFlow]);
 
   const handleBackFromBreeds = () => {
     ui.setBreedFlow(null);

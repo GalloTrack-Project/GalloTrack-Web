@@ -113,7 +113,14 @@ export function saveFowlDraft(input: FowlDraftInput): boolean {
   } as FowlDraft;
 
   try {
-    storage.setItem(fowlDraftKey(draft.userId, draft.kind, draft.kind === 'edit' ? draft.fowlId : undefined), JSON.stringify(draft));
+    storage.setItem(
+      fowlDraftKey(
+        draft.userId,
+        draft.kind,
+        draft.kind === 'edit' ? draft.fowlId : undefined,
+      ),
+      JSON.stringify(draft),
+    );
     return true;
   } catch {
     return false;

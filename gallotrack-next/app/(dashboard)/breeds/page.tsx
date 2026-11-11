@@ -23,7 +23,13 @@ export default function BreedsPage({
   onBreedCreated,
 }: BreedsPageProps = {}) {
   const { t } = useT();
-  const { availableStrains, customStrainNames, activeFowls, fetchDatabaseResources, loading } = useFowl();
+  const {
+    availableStrains,
+    customStrainNames,
+    activeFowls,
+    fetchDatabaseResources,
+    loading,
+  } = useFowl();
   const router = useRouter();
   const pathname = usePathname();
   const autoOpenedRef = useRef(false);
@@ -91,13 +97,13 @@ export default function BreedsPage({
     const ok = await strainService.saveCustomStrain(trimmed);
     if (ok) {
       setNewBreedName('');
+      setShowAddForm(false);
       if (onBreedCreated) {
         await onBreedCreated(trimmed);
         fetchDatabaseResources();
         return;
       }
       toastMessage(t('registry.breedCreated', { name: trimmed }), 'success');
-      setShowAddForm(false);
       fetchDatabaseResources();
     } else {
       toastMessage(t('registry.breedCreateFailed'), 'error');
@@ -131,7 +137,6 @@ export default function BreedsPage({
             type="button"
             onClick={handleBack}
             aria-label={resolvedBackLabel}
-            title={resolvedBackLabel}
             className="w-11 h-11 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-success hover:border-emerald-500/50 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
           >
             <ArrowLeft className="w-5 h-5" aria-hidden="true" />
@@ -211,6 +216,7 @@ export default function BreedsPage({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search breeds..."
+          aria-label="Search breeds"
           className="w-full p-3 pl-10 border border-border rounded-md text-sm bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all font-semibold"
         />
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><Search className="w-4 h-4" /></span>
@@ -259,7 +265,7 @@ export default function BreedsPage({
                     </div>
                   ) : !isCustom ? (
                     <div className="mt-auto pt-2 border-t border-border">
-                      <span className="text-xs font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Built-in breed — can&apos;t be deleted</span>
+                      <span className="text-xs font-bold text-muted-foreground/50"><Lock className="w-3 h-3 inline mr-1" /> Built-in breed - can&apos;t be deleted</span>
                     </div>
                   ) : (
                     <div className="mt-auto pt-2 border-t border-border">

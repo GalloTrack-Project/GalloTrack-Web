@@ -353,22 +353,20 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const formState = useFowlFormState();
   const unitPrefs = useUnitPrefs();
   const {
-    newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
+    newName, newBreed, newGender,
     newColor, newColorCategory,
-    newGrowthStage, setNewGrowthStage, newBehaviorTrait, newEyeVariant,
-    newBirthdate, setNewBirthdate,
-    sireName, setSireName, damName, setDamName,
-    sirePct, setSirePct, damPct, setDamPct,
-    weight, setWeight, height, setHeight,
-    newLegColor, setNewLegColor, age, setAge,
-    birdCode, setBirdCode,
-    wingBand, setWingBand,
+    newGrowthStage, newBehaviorTrait, newEyeVariant,
+    newBirthdate,
+    sireName, damName,
+    sirePct, damPct,
+    weight, height,
+    newLegColor, age,
+    birdCode,
+    wingBand,
     newDeclaredComposition, setNewDeclaredComposition,
-    search, setSearch, debouncedSearch,
-    selectedImage, setSelectedImage, selectedPhotoThumbnail, setSelectedPhotoThumbnail,
+    selectedImage, selectedPhotoThumbnail,
     setUploadingImage, setPhotoUploadProgress,
     beginPhotoUpload, endPhotoUpload,
-    setImagePreview,
 
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
@@ -383,13 +381,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     editDeclaredComposition, setEditDeclaredComposition,
     editPhotoFile, setEditPhotoFile, editPhotoThumbnail, setEditPhotoThumbnail,
     editPhotoRemoved, setEditPhotoRemoved, setEditPhotoUploadError,
-    availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
-    strainQuery, setStrainQuery, strainOpen, setStrainOpen,
+    availableStrains, setAvailableStrains, setCustomStrainNames,
+    setStrainQuery,
     selectedStrains, setSelectedStrains,
-    availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
-    legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
-    handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,
-    saveEditDraft, clearCreateDraft, clearEditDraft, resetCreateForm,
+    setAvailableLegColors, setCustomLegColorNames,
+    saveCreateDraft, restoreCreateDraft, clearCreateDraft,
+    saveEditDraft, restoreEditDraft, clearEditDraft,
+    selectCreatedBreed, resetCreateForm,
   } = formState;
 
   // Load system defaults for age on mount
@@ -647,29 +645,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       toastMessage(`Leg color "${name}" deleted.`, 'success');
     }
   }, [ui]);
-
-  const addStrain = useCallback((strain: string) => {
-    const trimmed = strain.trim();
-    if (!trimmed) return;
-    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
-    const canonical = registered ?? trimmed;
-    setSelectedStrains((prev) =>
-      prev.some((s) => s.toLowerCase() === canonical.toLowerCase()) ? prev : [...prev, canonical],
-    );
-    if (!registered) {
-      setAvailableStrains((prev) => [...prev, canonical].sort((a, b) => a.localeCompare(b)));
-      setCustomStrainNames((prev) => new Set([...prev, canonical]));
-      strainService.saveCustomStrain(canonical).then((saved) => {
-        if (!saved) toastMessage(`Strain "${canonical}" saved locally only.`, 'warning');
-      }).catch(() => {});
-    }
-    setStrainQuery('');
-    setNewBreed('');
-  }, [availableStrains, setNewBreed]);
-
-  const removeStrain = useCallback((index: number) => {
-    setSelectedStrains((prev) => prev.filter((_, i) => i !== index));
-  }, []);
 
   // ── Fowl CRUD ──
   const handleAddFowl = useCallback(async (
@@ -971,7 +946,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, ui, fowls, autoCalcAge, unitPrefs]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 
@@ -1566,6 +1541,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleSetSireMaterial, handleSetActiveStatus,
     handleSetConditionStatus, handleSetBreedingRole, handlePromoteToBreeder, handleSaveFowlNotes,
     fetchDatabaseResources,
+    saveCreateDraft, restoreCreateDraft, clearCreateDraft,
+    saveEditDraft, restoreEditDraft, clearEditDraft,
+    selectCreatedBreed, resetCreateForm,
     generationOf: generationOfLocal,
     parentBloodlinePct: parentBloodlinePctLocal,
     getSiblingRelations: getSiblingRelationsLocal,
@@ -1631,4 +1609,3 @@ export function FowlProviderWrapper({ children }: { children: React.ReactNode })
     </FowlFormStateProvider>
   );
 }
-

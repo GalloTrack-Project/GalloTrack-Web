@@ -291,7 +291,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setSelectedStrains((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  // ── Form drafts (survive the Breed Registry round trip and refreshes) ──
+  // -- Form drafts (survive the Breed Registry round trip and refreshes) --
   const getDraftUserId = useCallback((): string | null => {
     if (typeof window === 'undefined') return null;
     try {
@@ -389,33 +389,34 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     [getDraftUserId, buildEditDraftFields, editPhotoFile, editPhotoThumbnail],
   );
 
-  const saveCreateDraft = useCallback(() => {
-    const hasContent = Boolean(
-      newName.trim()
-      || newBreed.trim()
-      || selectedStrains.length > 0
-      || selectedImage
-      || selectedPhotoThumbnail
-      || newBirthdate
-      || sireName.trim()
-      || damName.trim()
-      || birdCode.trim()
-      || wingBand.trim()
-      || weight.trim()
-      || height.trim()
-      || age.trim()
-      || newLegColor.trim()
-      || newColor.trim()
-      || newBehaviorTrait.trim()
-      || (newDeclaredComposition && newDeclaredComposition.length > 0),
-    );
-    if (!hasContent) return false;
-    return persistCreateDraft();
-  }, [
-    newName, newBreed, selectedStrains, selectedImage, selectedPhotoThumbnail, newBirthdate, sireName,
-    damName, birdCode, wingBand, weight, height, age, newLegColor, newColor,
-    newBehaviorTrait, newDeclaredComposition, persistCreateDraft,
+  const hasCreateContent = useCallback(() => Boolean(
+    newName.trim()
+    || newBreed.trim()
+    || selectedStrains.length > 0
+    || selectedImage
+    || selectedPhotoThumbnail
+    || newBirthdate
+    || sireName.trim()
+    || damName.trim()
+    || birdCode.trim()
+    || wingBand.trim()
+    || weight.trim()
+    || height.trim()
+    || age.trim()
+    || newLegColor.trim()
+    || newColor.trim()
+    || newBehaviorTrait.trim()
+    || (newDeclaredComposition && newDeclaredComposition.length > 0),
+  ), [
+    newName, newBreed, selectedStrains, selectedImage, selectedPhotoThumbnail,
+    newBirthdate, sireName, damName, birdCode, wingBand, weight, height, age,
+    newLegColor, newColor, newBehaviorTrait, newDeclaredComposition,
   ]);
+
+  const saveCreateDraft = useCallback(() => {
+    if (!hasCreateContent()) return false;
+    return persistCreateDraft();
+  }, [hasCreateContent, persistCreateDraft]);
 
   const restoreCreateDraft = useCallback((): DraftRestoreResult => {
     const userId = getDraftUserId();
@@ -447,8 +448,19 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setWingBand(f.wingBand ?? '');
     setNewDeclaredComposition(f.newDeclaredComposition ?? null);
     setStrainQuery(f.strainQuery ?? '');
-    setSelectedStrains(Array.isArray(f.selectedStrains) ? f.selectedStrains : []);
+    const restoredStrains = Array.isArray(f.selectedStrains) ? f.selectedStrains : [];
+    setSelectedStrains(restoredStrains);
     setLegColorQuery(f.legColorQuery ?? '');
+
+    if (restoredStrains.length > 0) {
+      setAvailableStrains((prev) => {
+        const known = new Set(prev.map((s) => s.toLowerCase()));
+        const missing = restoredStrains.filter((s) => !known.has(s.toLowerCase()));
+        return missing.length > 0
+          ? [...prev, ...missing].sort((a, b) => a.localeCompare(b))
+          : prev;
+      });
+    }
 
     return { restored: true, photoSelected: draft.photoSelected };
   }, [getDraftUserId]);
@@ -505,17 +517,22 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   ) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    const canonical = availableStrains.find(
+      (s) => s.toLowerCase() === trimmed.toLowerCase(),
+    ) ?? trimmed;
 
     if (target.kind === 'create') {
-      const nextSelected = selectedStrains.includes(trimmed)
+      const nextSelected = selectedStrains.some(
+        (s) => s.toLowerCase() === canonical.toLowerCase(),
+      )
         ? selectedStrains
-        : [...selectedStrains, trimmed];
+        : [...selectedStrains, canonical];
       setSelectedStrains(nextSelected);
       setStrainQuery('');
       setNewBreed('');
-      if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-        setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
-        setCustomStrainNames((prev) => new Set([...prev, trimmed]));
+      if (!availableStrains.some((s) => s.toLowerCase() === canonical.toLowerCase())) {
+        setAvailableStrains((prev) => [...prev, canonical].sort((a, b) => a.localeCompare(b)));
+        setCustomStrainNames((prev) => new Set([...prev, canonical]));
       }
       persistCreateDraft({
         selectedStrains: nextSelected,
@@ -525,8 +542,8 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
       return;
     }
 
-    setEditBreed(trimmed);
-    persistEditDraft(target.fowlId, { editBreed: trimmed });
+    setEditBreed(canonical);
+    persistEditDraft(target.fowlId, { editBreed: canonical });
   }, [selectedStrains, availableStrains, persistCreateDraft, persistEditDraft]);
 
   const resetCreateForm = useCallback(() => {
@@ -557,41 +574,17 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setLegColorOpen(false);
     setSelectedImage(null);
     setSelectedPhotoThumbnail(null);
-    setPhotoUploadProgress(0);
-    cancelPhotoUpload();
     setImagePreview('');
     setUploadingImage(false);
-  }, [cancelPhotoUpload]);
+    setPhotoUploadProgress(0);
+  }, []);
 
   // Keep the session draft in sync while the user types so a refresh never
   // loses the registration form.
   useEffect(() => {
-    if (!getDraftUserId()) return;
-    const hasContent = Boolean(
-      newName.trim()
-      || newBreed.trim()
-      || selectedStrains.length > 0
-      || selectedImage
-      || selectedPhotoThumbnail
-      || newBirthdate
-      || sireName.trim()
-      || damName.trim()
-      || birdCode.trim()
-      || wingBand.trim()
-      || weight.trim()
-      || height.trim()
-      || age.trim()
-      || newLegColor.trim()
-      || newColor.trim()
-      || newBehaviorTrait.trim()
-      || (newDeclaredComposition && newDeclaredComposition.length > 0),
-    );
-    if (hasContent) persistCreateDraft();
-  }, [
-    getDraftUserId, persistCreateDraft, newName, newBreed, selectedStrains,
-    selectedImage, selectedPhotoThumbnail, newBirthdate, sireName, damName, birdCode, wingBand, weight,
-    height, age, newLegColor, newColor, newBehaviorTrait, newDeclaredComposition,
-  ]);
+    if (!getDraftUserId() || !hasCreateContent()) return;
+    persistCreateDraft();
+  }, [getDraftUserId, hasCreateContent, persistCreateDraft]);
 
   const value: FowlFormStateContextValue = {
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
@@ -639,4 +632,3 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
 
   return <FowlFormStateContext.Provider value={value}>{children}</FowlFormStateContext.Provider>;
 }
-

@@ -88,7 +88,7 @@ describe('Breed Registry states', () => {
   it('shows a loading state instead of the empty state while breeds load', async () => {
     renderBreeds(true);
 
-    expect(await screen.findByText('Loading breeds…')).toBeInTheDocument();
+    expect(await screen.findByText('Loading breeds...')).toBeInTheDocument();
     expect(screen.queryByText('No breeds registered yet.')).not.toBeInTheDocument();
   });
 

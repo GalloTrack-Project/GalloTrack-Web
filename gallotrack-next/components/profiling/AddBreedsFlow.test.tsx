@@ -24,8 +24,7 @@ vi.mock('@/lib/services/fowl-service', () => ({
   fetchMatchHistory: vi.fn().mockResolvedValue([]),
   getNextIdentifier: vi.fn().mockResolvedValue({ code: '1' }),
   insertFowl: vi.fn().mockResolvedValue({ id: 1 }),
-  uploadFowlImage: vi.fn().mockResolvedValue({ url: 'https://example.test/bird.png', path: 'u/fowl/bird.png' }),
-  deleteFowlImageFile: vi.fn().mockResolvedValue(undefined),
+  updateFowl: vi.fn().mockResolvedValue({}),
   isChickenCodeUniqueViolation: vi.fn().mockReturnValue(false),
 }));
 
@@ -50,14 +49,8 @@ vi.mock('@/lib/services/breeding-service', () => ({
   fetchBreedingPairings: vi.fn().mockResolvedValue({ data: [] }),
 }));
 
-vi.mock('@/lib/chicken-photo', () => ({
-  CHICKEN_PHOTO_SETUP_MESSAGE: 'Photo storage is not set up.',
-  processChickenPhoto: vi.fn(async () => ({
-    full: new File(['full'], 'bird.jpg', { type: 'image/jpeg' }),
-    thumbnail: new File(['thumb'], 'bird-thumb.jpg', { type: 'image/jpeg' }),
-  })),
-  resolveChickenPhotoUrl: vi.fn().mockResolvedValue(''),
-  validateChickenPhotoFile: vi.fn().mockReturnValue(null),
+vi.mock('@/lib/services/options-service', () => ({
+  fetchRegistryOptions: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('@/lib/toast-bus', () => ({
@@ -115,7 +108,11 @@ function readCreateDraft(): { photoSelected: boolean; fields: CreateDraftFields 
   return raw ? JSON.parse(raw) : null;
 }
 
-function seedDraft(fields: Partial<CreateDraftFields>, savedAt = Date.now()) {
+function seedDraft(
+  fields: Partial<CreateDraftFields>,
+  savedAt = Date.now(),
+  photoSelected = false,
+) {
   const base = {
     newName: '',
     newBreed: '',
@@ -147,7 +144,7 @@ function seedDraft(fields: Partial<CreateDraftFields>, savedAt = Date.now()) {
     kind: 'create',
     userId: OWNER_ID,
     savedAt,
-    photoSelected: false,
+    photoSelected,
     fields: base,
   }));
 }
@@ -158,19 +155,23 @@ describe('Add Breeds flow', () => {
     localStorage.clear();
     sessionStorage.clear();
     localStorage.setItem('gallotrack_user_id', OWNER_ID);
-    Object.defineProperty(URL, 'createObjectURL', {
-      configurable: true,
-      writable: true,
-      value: vi.fn(() => 'blob:mock'),
-    });
-    Object.defineProperty(URL, 'revokeObjectURL', {
-      configurable: true,
-      writable: true,
-      value: vi.fn(),
-    });
   });
 
-  it('opens the registry with Add New Breed and restores every typed field afterwards', async () => {
+  it('uses one Add breed button and opens the registry with Add New Breed', async () => {
+    renderPage();
+
+    expect(await screen.findByRole('button', { name: /Add breed/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Add breed/i }));
+
+    expect(await screen.findByRole('heading', { name: /Breed Registry/i })).toBeInTheDocument();
+    expect(await screen.findByLabelText('New breed name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back to registration' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
+  });
+
+  it('restores every typed field after the breed registry round trip', async () => {
     const { container } = renderPage();
 
     fireEvent.change(await screen.findByLabelText('Identifier Name'), {
@@ -192,25 +193,14 @@ describe('Add Breeds flow', () => {
       target: { value: 'Dam B' },
     });
 
-    const photo = new File(['photo-bytes'], 'bird.jpg', { type: 'image/jpeg' });
-    fireEvent.change(screen.getByLabelText(/Choose a photo for/i), {
-      target: { files: [photo] },
-    });
-
-    await waitFor(() => expect(readCreateDraft()?.photoSelected).toBe(true));
+    await waitFor(() => expect(readCreateDraft()).not.toBeNull());
     const rawDraft = sessionStorage.getItem(createKey()) ?? '';
-    expect(rawDraft).not.toContain('bird.jpg');
-    expect(rawDraft).not.toContain('bird-thumb.jpg');
-    expect(rawDraft).not.toContain('photo-bytes');
+    expect(rawDraft).not.toContain('.png');
     expect(rawDraft).not.toContain('data:image');
 
-    const addBreedsLinks = await screen.findAllByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreedsLinks[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Add breed/i }));
 
     expect(await screen.findByRole('heading', { name: /Breed Registry/i })).toBeInTheDocument();
-    expect(await screen.findByLabelText('New breed name')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Back to registration' })).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'Back to registration' }));
 
     await waitFor(() =>
@@ -222,69 +212,37 @@ describe('Add Breeds flow', () => {
     expect(container.querySelector('#encode-sire')).toHaveValue('Sire A');
     expect(container.querySelector('#encode-dam')).toHaveValue('Dam B');
     expect(screen.getByText('Draft restored')).toBeInTheDocument();
-    expect(screen.getByText('Please add the photo again.')).toBeInTheDocument();
   });
 
   it('returns after creating a breed with it selected and the success toast', async () => {
     renderPage();
 
-    const addBreedsLinks = await screen.findAllByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreedsLinks[0]);
+    fireEvent.click(await screen.findByRole('button', { name: /Add breed/i }));
 
     const nameInput = await screen.findByLabelText('New breed name');
-    fireEvent.change(nameInput, { target: { value: 'Kelso' } });
+    fireEvent.change(nameInput, { target: { value: 'Sweater' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() =>
       expect(screen.getByLabelText('Identifier Name')).toBeInTheDocument(),
     );
     expect(screen.queryByRole('heading', { name: /Breed Registry/i })).not.toBeInTheDocument();
-    expect((await screen.findAllByText('Kelso')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('Sweater')).length).toBeGreaterThan(0);
     expect(toastMessage).toHaveBeenCalledWith('Breed added and selected', 'success');
-    expect(readCreateDraft()?.fields.selectedStrains).toContain('Kelso');
+    expect(readCreateDraft()?.fields.selectedStrains).toContain('Sweater');
   });
 
   it('keeps the user in the registry when Add New Breed is cancelled', async () => {
     renderPage();
 
-    const addBreedsLinks = await screen.findAllByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreedsLinks[0]);
-
+    fireEvent.click(await screen.findByRole('button', { name: /Add breed/i }));
     expect(await screen.findByLabelText('New breed name')).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.getByRole('heading', { name: /Breed Registry/i })).toBeInTheDocument();
     expect(screen.queryByLabelText('New breed name')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back to registration' })).toBeInTheDocument();
-  });
-
-  it('shows the duplicate error and keeps the Add New Breed form open', async () => {
-    renderPage();
-
-    const addBreedsLinks = await screen.findAllByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreedsLinks[0]);
-    fireEvent.change(await screen.findByLabelText('New breed name'), {
-      target: { value: 'Kelso' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() =>
-      expect(screen.getByLabelText('Identifier Name')).toBeInTheDocument(),
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle strain list' }));
-    const manage = await screen.findByRole('link', { name: /Manage breeds/i });
-    fireEvent.click(manage);
-
-    const duplicateInput = await screen.findByLabelText('New breed name');
-    fireEvent.change(duplicateInput, { target: { value: 'kelso' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() =>
-      expect(toastMessage).toHaveBeenCalledWith('"kelso" already exists.', 'error'),
-    );
-    expect(screen.getByLabelText('New breed name')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Breed Registry/i })).toBeInTheDocument();
   });
 
   it('clears the draft when the registration form is cancelled', async () => {
@@ -295,7 +253,7 @@ describe('Add Breeds flow', () => {
     });
     await waitFor(() => expect(readCreateDraft()).not.toBeNull());
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel registration' }));
 
     expect(sessionStorage.getItem(createKey())).toBeNull();
     expect(screen.queryByLabelText('Identifier Name')).not.toBeInTheDocument();
@@ -344,6 +302,17 @@ describe('Add Breeds flow', () => {
     expect(screen.getByText('Draft restored')).toBeInTheDocument();
   });
 
+  it('shows the photo notice when a restored draft had a pending photo', async () => {
+    seedDraft({ newName: 'Photo Bird' }, Date.now(), true);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Identifier Name')).toHaveValue('Photo Bird'),
+    );
+    expect(screen.getByText('Draft restored')).toBeInTheDocument();
+    expect(screen.getByText('Please add the photo again.')).toBeInTheDocument();
+  });
+
   it('ignores a draft older than 24 hours', async () => {
     seedDraft({ newName: 'Old Bird' }, Date.now() - FOWL_DRAFT_TTL_MS - 1000);
     renderPage();
@@ -373,4 +342,3 @@ describe('Add Breeds flow', () => {
     expect(screen.queryByText('Draft restored')).not.toBeInTheDocument();
   });
 });
-

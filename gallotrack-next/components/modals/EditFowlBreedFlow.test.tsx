@@ -21,6 +21,8 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/contexts/auth-context', () => ({
   useAuth: () => ({
+    currentUserId: 'test-owner-id',
+    isAdmin: false,
     handleLogout: vi.fn(),
     handleSendResetLink: vi.fn(),
     forgotEmail: '',
@@ -47,6 +49,7 @@ vi.mock('@/lib/services/fowl-service', () => ({
   fetchMatchHistory: vi.fn().mockResolvedValue([]),
   getNextIdentifier: vi.fn().mockResolvedValue({ code: '1' }),
   insertFowl: vi.fn().mockResolvedValue({ id: 1 }),
+  updateFowl: vi.fn().mockResolvedValue({}),
   isChickenCodeUniqueViolation: vi.fn().mockReturnValue(false),
 }));
 
@@ -181,8 +184,7 @@ describe('Edit modal breed registry round trip', () => {
       expect(savedDraft.fields.editBreed).toBe('Kelso Draft');
     }
 
-    const addBreeds = await within(dialog).findAllByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreeds[0]);
+    fireEvent.click(within(dialog).getByRole('button', { name: /Add breed/i }));
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
@@ -196,24 +198,42 @@ describe('Edit modal breed registry round trip', () => {
     expect((await within(restoredDialog).findByText('Draft restored'))).toBeInTheDocument();
   });
 
+  it('clears the edit draft when the modal is cancelled', async () => {
+    renderEditFlow();
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByPlaceholderText('Select or type strain'), {
+      target: { value: 'Cancel Draft' },
+    });
+    await waitFor(() =>
+      expect(loadFowlDraft('test-owner-id', 'edit', fowl.id)).not.toBeNull(),
+    );
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() =>
+      expect(loadFowlDraft('test-owner-id', 'edit', fowl.id)).toBeNull(),
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('selects the newly created breed in the same edit modal', async () => {
     renderEditFlow();
 
     const dialog = await screen.findByRole('dialog');
-    const addBreeds = await within(dialog).findAllByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreeds[0]);
+    fireEvent.click(within(dialog).getByRole('button', { name: /Add breed/i }));
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
 
     const nameInput = await screen.findByLabelText('New breed name');
-    fireEvent.change(nameInput, { target: { value: 'Kelso' } });
+    fireEvent.change(nameInput, { target: { value: 'Sweater' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     const restoredDialog = await screen.findByRole('dialog');
     expect(loadFowlDraft('test-owner-id', 'edit', fowl.id)).not.toBeNull();
-    expect(within(restoredDialog).getByPlaceholderText('Select or type strain')).toHaveValue('Kelso');
+    expect(within(restoredDialog).getByPlaceholderText('Select or type strain')).toHaveValue('Sweater');
     expect((await within(restoredDialog).findByText('Draft restored'))).toBeInTheDocument();
     expect(toastMessage).toHaveBeenCalledWith('Breed added and selected', 'success');
   });
