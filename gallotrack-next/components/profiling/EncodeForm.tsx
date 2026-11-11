@@ -28,43 +28,8 @@ import { useT } from '@/lib/i18n';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
 import type { DraftRestoreResult } from '@/lib/fowl-draft';
-
-export function StatusItem({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon?: string;
-  label: string;
-  value: string;
-  tone: 'green' | 'amber' | 'rose';
-}) {
-  const toneCls =
-    tone === 'green'
-      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-      : tone === 'amber'
-        ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-        : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800';
-
-  return (
-    <div className="bg-slate-50 dark:bg-muted/50 rounded-lg border border-slate-200/80 dark:border-border p-3 min-w-0 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
-      <div className="flex items-start gap-1.5 min-w-0">
-        {icon && <span className="text-xs shrink-0 select-none mt-0.5">{icon}</span>}
-        <span className="text-xs font-bold uppercase tracking-tight sm:tracking-wider text-muted-foreground leading-snug break-words">
-          {label}
-        </span>
-      </div>
-      <div className="self-start sm:self-auto shrink-0 min-w-0 max-w-full">
-        <span
-          className={`inline-flex items-center justify-center text-xs font-black px-2.5 py-0.5 rounded-full border min-w-0 max-w-full break-words whitespace-normal text-center ${toneCls}`}
-        >
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
+import { ValidationSummaryPanel } from './validation/ValidationSummaryPanel';
+import type { StatusTone, ValidationFieldItem } from './validation/types';
 
 type Props = {
   fowls: FowlRecord[];
@@ -328,19 +293,117 @@ export default function EncodeForm({
     });
   }, [isOffspring, newDeclaredComposition, effectiveBreed, availableStrains, pedigreeComposition]);
 
-  const missingRequiredFields: string[] = [];
-  if (!newName.trim()) missingRequiredFields.push(t('registry.identifierName'));
-  if (!effectiveBreed) missingRequiredFields.push(t('registry.geneticStrain'));
-  if (!newGender) missingRequiredFields.push(t('registry.genderClass'));
-  if (!newBirthdate.trim()) missingRequiredFields.push(t('registry.birthDate'));
+  const requiredFields: ValidationFieldItem[] = [
+    {
+      key: 'name',
+      label: t('registry.identifierName'),
+      complete: newName.trim().length > 0,
+      targetId: 'identifier-name',
+    },
+    {
+      key: 'strain',
+      label: t('registry.geneticStrain'),
+      complete: effectiveBreed.length > 0,
+      targetId: 'genetic-strain',
+    },
+    {
+      key: 'gender',
+      label: t('registry.genderClass'),
+      complete: newGender.trim().length > 0,
+      targetId: 'gender-class',
+    },
+    {
+      key: 'birthdate',
+      label: t('registry.birthDate'),
+      complete: newBirthdate.trim().length > 0,
+      targetId: 'birth-date',
+    },
+  ];
 
-  const validationSummaryValue = missingRequiredFields.length > 0
-    ? t('registry.validationMissingFields', { fields: missingRequiredFields.join(', ') })
-    : validationPassed && birthdateValidation.valid
-      ? t('registry.validationPassed')
-      : t('registry.validationPending');
+  const missingCount = requiredFields.filter((field) => !field.complete).length;
+  const requiredComplete = missingCount === 0;
+  const birthdateError = birthdateValidation.errors[0];
+  const declaredError = !declaredValidation.valid
+    ? ('error' in declaredValidation && declaredValidation.error) || t('registry.registerBlockedDetails')
+    : undefined;
+
   const validationOk =
-    missingRequiredFields.length === 0 && birthdateValidation.valid && declaredValidation.valid;
+    requiredComplete
+    && validationPassed
+    && birthdateValidation.valid
+    && declaredValidation.valid;
+
+  const validationTone: StatusTone = validationOk
+    ? 'success'
+    : birthdateError || declaredError
+      ? 'error'
+      : requiredComplete
+        ? 'pending'
+        : 'warning';
+
+  const validationLabel = validationOk
+    ? t('registry.validationReady')
+    : validationTone === 'error'
+      ? t('registry.validationNeedsAttention')
+      : validationTone === 'pending'
+        ? t('registry.validationPending')
+        : t('registry.requiredFieldsIncomplete');
+
+  const validationHelper = validationOk
+    ? t('registry.validationReadyHelper')
+    : missingCount > 0
+      ? missingCount === 1
+        ? t('registry.registerBlockedOne')
+        : t('registry.registerBlockedMissing', { count: String(missingCount) })
+      : birthdateError || declaredError || t('registry.validationPendingHelper');
+
+  const hasSireParent = sireName.trim().length > 0 && !isFoundationStock(sireName);
+  const hasDamParent = damName.trim().length > 0 && !isFoundationStock(damName);
+  const parentCount = Number(hasSireParent) + Number(hasDamParent);
+
+  let lineageTone: StatusTone = 'neutral';
+  let lineageLabel = t('registry.lineageNotRequired');
+  let lineageHelper = t('registry.lineageFoundationHelper');
+
+  if (parentCount === 1) {
+    lineageTone = 'pending';
+    lineageLabel = t('registry.lineagePartial');
+    lineageHelper = t('registry.lineageWaitingFor', {
+      parents: hasSireParent ? t('registry.damMother') : t('registry.sireFather'),
+    });
+  } else if (parentCount === 2) {
+    lineageTone = bloodlineVerified ? 'success' : 'warning';
+    lineageLabel = bloodlineVerified
+      ? t('registry.lineageResolvedStatus')
+      : t('registry.lineageUnresolved');
+    lineageHelper = bloodlineVerified
+      ? t('registry.lineageResolvedHelper')
+      : t('registry.lineageUnresolvedHelper');
+  }
+
+  const registerBusy = loading || uploadingImage;
+  const registerDisabled = registerBusy || !validationOk;
+  const registerLabel = uploadingImage
+    ? t('registry.uploadingAttachment')
+    : loading
+      ? t('registry.registering')
+      : t('registry.registerBtn');
+
+  const registerHelper = registerBusy
+    ? uploadingImage
+      ? t('registry.registerBlockedUpload')
+      : t('registry.registering')
+    : missingCount > 0
+      ? missingCount === 1
+        ? t('registry.registerBlockedOne')
+        : t('registry.registerBlockedMissing', { count: String(missingCount) })
+      : birthdateError
+        ? birthdateError
+        : declaredError
+          ? declaredError
+          : !validationPassed
+            ? t('registry.validationPendingHelper')
+            : t('registry.verifyBeforeRegistering');
 
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
@@ -1099,37 +1162,32 @@ export default function EncodeForm({
         />
       </div>
 
-      <div className="bg-white dark:bg-card rounded-lg border-2 border-slate-900 dark:border-border shadow-sm p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t('registry.validationSummaryPanel')}</span>
-          </div>
-          <span className="self-start sm:self-auto text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-1 rounded-full max-w-full break-words">
-            {t('registry.nextIdLabel', { id: nextIdLabel })}
-          </span>
-        </div>
-        <div data-testid="validation-summary-grid" className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
-          <StatusItem icon="🛡️" label={t('registry.dataIntegrity')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-          <StatusItem icon="✅" label={t('registry.validationStatus')} value={validationSummaryValue} tone={validationOk ? 'green' : 'amber'} />
-          <StatusItem icon="🔗" label={t('registry.lineageResolved')} value={bloodlineVerified ? t('registry.lineageResolvedStatus') : t('registry.lineageAwaitingStatus')} tone={bloodlineVerified ? 'green' : 'amber'} />
-          <StatusItem icon="📊" label={t('registry.dataCompleteness')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-        </div>
-        <button type="submit" disabled={loading || uploadingImage || !birthdateValidation.valid || !declaredValidation.valid} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
-          {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-          <span>{uploadingImage ? t('registry.uploadingAttachment') : loading ? t('registry.registering') : t('registry.registerBtn')}</span>
-        </button>
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="mt-2 w-full cursor-pointer rounded-lg border border-border bg-muted py-3 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
-          >
-            {t('registry.cancelButton')}
-          </button>
-        )}
-        <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">{t('registry.verifyBeforeRegistering')}</p>
-      </div>
+      <ValidationSummaryPanel
+        nextIdLabel={nextIdLabel}
+        requiredFields={requiredFields}
+        dataCompleteness={dataCompleteness}
+        validationTone={validationTone}
+        validationLabel={validationLabel}
+        validationHelper={validationHelper}
+        lineageTone={lineageTone}
+        lineageLabel={lineageLabel}
+        lineageHelper={lineageHelper}
+        registerDisabled={registerDisabled}
+        registerBusy={registerBusy}
+        registerLabel={registerLabel}
+        registerHelper={registerHelper}
+        footer={
+          onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="min-h-[44px] w-full cursor-pointer rounded-lg border border-border bg-muted px-4 py-3 text-xs font-black tracking-widest uppercase text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+            >
+              {t('registry.cancelButton')}
+            </button>
+          ) : undefined
+        }
+      />
     </form>
   );
 }

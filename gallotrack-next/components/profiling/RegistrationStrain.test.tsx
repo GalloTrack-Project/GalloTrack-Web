@@ -112,7 +112,7 @@ async function fillRequiredFields(strain?: string) {
     fireEvent.change(screen.getByLabelText('Genetic Strain'), { target: { value: strain } });
   }
   fireEvent.change(screen.getByLabelText('Gender Class'), { target: { value: 'Rooster' } });
-  fireEvent.change(screen.getByLabelText(/Birth Date/i), { target: { value: '2025-01-01' } });
+  fireEvent.change(screen.getByLabelText(/^Birth Date/i), { target: { value: '2025-01-01' } });
 }
 
 async function clickRegister() {
@@ -213,24 +213,22 @@ describe('Registration genetic strain', () => {
     expect(document.activeElement).toBe(strainInput());
   });
 
-  it('keeps typed values and toasts after a failed submit', async () => {
+  it('disables register and keeps typed values when a required field is blank', async () => {
     await renderPageAndWait();
     await fillRequiredFields('   ');
 
-    await clickRegister();
+    const register = screen.getByRole('button', { name: /^REGISTER$/i });
+    expect(register).toBeDisabled();
+    expect(screen.getAllByText('Complete 1 required field to register.').length).toBeGreaterThanOrEqual(1);
 
-    await waitFor(() =>
-      expect(toastMessage).toHaveBeenCalledWith(
-        expect.stringContaining('Breed/strain is required'),
-        'error',
-      ),
-    );
     expect(insertFowl).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Identifier Name')).toHaveValue('Strain Test Bird');
     expect(screen.getByLabelText('Gender Class')).toHaveValue('Rooster');
-    expect(screen.getByLabelText(/Birth Date/i)).toHaveValue('2025-01-01');
-    expect(screen.getByRole('alert')).toHaveTextContent('Breed/strain is required.');
-    expect(screen.getByText(/Missing:.*Genetic Strain/i)).toBeInTheDocument();
-    expect(document.activeElement).toBe(strainInput());
+    expect(screen.getByLabelText(/^Birth Date/i)).toHaveValue('2025-01-01');
+    expect(screen.getByRole('button', { name: /Go to Genetic Strain/i })).toHaveTextContent(
+      'Missing',
+    );
   });
 });
+
+

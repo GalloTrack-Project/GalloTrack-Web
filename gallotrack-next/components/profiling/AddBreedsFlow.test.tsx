@@ -182,7 +182,7 @@ describe('Add Breeds flow', () => {
     fireEvent.change(screen.getByLabelText('Gender Class'), {
       target: { value: 'Rooster' },
     });
-    fireEvent.change(screen.getByLabelText(/Birth Date/i), {
+    fireEvent.change(screen.getByLabelText(/^Birth Date/i), {
       target: { value: '2024-01-01' },
     });
     fireEvent.change(container.querySelector('#encode-sire') as HTMLInputElement, {
@@ -218,7 +218,7 @@ describe('Add Breeds flow', () => {
     );
     expect(screen.getByLabelText('Genetic Strain')).toHaveValue('Kel');
     expect(screen.getByLabelText('Gender Class')).toHaveValue('Rooster');
-    expect(screen.getByLabelText(/Birth Date/i)).toHaveValue('2024-01-01');
+    expect(screen.getByLabelText(/^Birth Date/i)).toHaveValue('2024-01-01');
     expect(container.querySelector('#encode-sire')).toHaveValue('Sire A');
     expect(container.querySelector('#encode-dam')).toHaveValue('Dam B');
     expect(screen.getByText('Draft restored')).toBeInTheDocument();
@@ -314,7 +314,7 @@ describe('Add Breeds flow', () => {
     fireEvent.change(screen.getByLabelText('Gender Class'), {
       target: { value: 'Rooster' },
     });
-    fireEvent.change(screen.getByLabelText(/Birth Date/i), {
+    fireEvent.change(screen.getByLabelText(/^Birth Date/i), {
       target: { value: '2024-01-01' },
     });
 
@@ -340,7 +340,7 @@ describe('Add Breeds flow', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('Identifier Name')).toHaveValue('Reloaded Bird'),
     );
-    expect(screen.getByLabelText(/Birth Date/i)).toHaveValue('2024-01-01');
+    expect(screen.getByLabelText(/^Birth Date/i)).toHaveValue('2024-01-01');
     expect(screen.getByText('Draft restored')).toBeInTheDocument();
   });
 
@@ -373,3 +373,4 @@ describe('Add Breeds flow', () => {
     expect(screen.queryByText('Draft restored')).not.toBeInTheDocument();
   });
 });
+
