@@ -87,6 +87,8 @@ type EditFowlModalProps = {
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
   canEditPhoto?: boolean;
+  /** Opens the Breed Registry without discarding the edit draft. */
+  onAddBreeds?: () => void;
 };
 
 export default function EditFowlModal({
@@ -145,6 +147,7 @@ export default function EditFowlModal({
   generationOf,
   generationPurity,
   canEditPhoto = true,
+  onAddBreeds,
 }: EditFowlModalProps) {
   const { t } = useT();
   const photoForm = useFowlFormStateOptional();
@@ -410,6 +413,7 @@ export default function EditFowlModal({
                 hasParents={false}
                 currentValue={editingFowl.declared_composition as any}
                 source={compositionSource}
+                onAddBreeds={onAddBreeds}
               />
             </div>
           )}
@@ -890,6 +894,7 @@ export default function EditFowlModal({
                 pedigreeComposition={pedigreeComposition}
                 currentValue={editingFowl.declared_composition as any}
                 calculatedValue={pedigreeComposition}
+                onAddBreeds={onAddBreeds}
                 source={compositionSource}
               />
             </div>

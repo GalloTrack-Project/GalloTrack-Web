@@ -238,6 +238,8 @@ export const hil: AppTranslations = {
     title: 'Listahan sang Manok',
     subtitle: 'Magrehistro kag magdumala sang kaliwat, kinaiya, kag rekord sang inaway sang imo mga manok',
     breedsBtn: 'Mga Lahi',
+    backToRegistry: 'Magbalik sa rehistro',
+    backToRegistration: 'Magbalik sa pagparehistro',
     viewRegistryBtn: 'Tan-awon ang Listahan',
     registerChickenBtn: '+ Magrehistro sang Manok',
     tabMales: 'Cocks',

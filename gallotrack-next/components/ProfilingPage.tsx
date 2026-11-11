@@ -13,6 +13,7 @@ import RegistryNav from '@/components/profiling/RegistryNav';
 
 import BreedsPage from '@/app/(dashboard)/breeds/page';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { useBreedsView } from '@/lib/hooks/use-breeds-view';
 import { REGISTRY_TABS } from '@/lib/nav-manifest';
 import { toastMessage } from '@/lib/toast-bus';
 import { SIRE_MATERIAL_MOVED_MESSAGE } from '@/lib/registry-labels';
@@ -107,6 +108,7 @@ export default function ProfilingPage() {
 
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
+  const { breedsViewOpen, openBreeds, closeBreeds } = useBreedsView();
 
   // Handle redirect from legacy ?tab=sire-material or ?tab=sireMaterial
   useEffect(() => {
@@ -163,6 +165,17 @@ export default function ProfilingPage() {
       ? profilingSubTab
       : null;
 
+  const formViewActive = profilingSubTab === 'form' && !breedsViewOpen;
+  const breedsFromForm = Boolean(ui.editingFowl) || profilingSubTab === 'form';
+  const breedsBackLabel = breedsFromForm
+    ? t('registry.backToRegistration')
+    : t('registry.backToRegistry');
+
+  const selectProfilingTab = (tab: ProfilingSubTab) => {
+    if (breedsViewOpen) closeBreeds();
+    setProfilingSubTab(tab);
+  };
+
   return (
     <div className="animate-fadeIn space-y-5 pb-24 md:pb-6">
       <div className="border-border bg-card/70 flex flex-col gap-5 rounded-lg border p-6 sm:p-7">
@@ -199,9 +212,9 @@ export default function ProfilingPage() {
           <div className="flex w-full min-w-0 items-stretch gap-2.5 sm:w-auto sm:shrink-0 sm:items-center sm:self-start">
             <button
               type="button"
-              onClick={() => setProfilingSubTab(profilingSubTab === 'breeds' ? 'males' : 'breeds')}
+              onClick={() => (breedsViewOpen ? closeBreeds() : openBreeds())}
               className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2.5 text-center text-xs leading-tight font-bold transition-colors duration-200 sm:flex-initial sm:text-sm ${
-                profilingSubTab === 'breeds'
+                breedsViewOpen
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-muted border-border text-muted-foreground hover:text-success border hover:border-emerald-500/50'
               }`}
@@ -211,16 +224,16 @@ export default function ProfilingPage() {
             </button>
             <button
               type="button"
-              onClick={() => setProfilingSubTab(profilingSubTab === 'form' ? 'males' : 'form')}
+              onClick={() => selectProfilingTab(formViewActive ? 'males' : 'form')}
               className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2.5 text-center text-xs leading-tight font-bold shadow-sm transition-all duration-200 sm:flex-initial sm:text-sm ${
-                profilingSubTab === 'form'
+                formViewActive
                   ? 'bg-slate-700 text-white ring-1 ring-slate-600 hover:bg-slate-800'
                   : 'bg-emerald-600 text-white hover:bg-emerald-700'
               }`}
             >
               <Plus className="h-4 w-4" />
               <span>
-                {profilingSubTab === 'form'
+                {formViewActive
                   ? t('registry.viewRegistryBtn')
                   : t('registry.registerChickenBtn')}
               </span>
@@ -230,7 +243,7 @@ export default function ProfilingPage() {
 
         <RegistryNav
           currentTab={profilingSubTab}
-          onSelectTab={setProfilingSubTab}
+          onSelectTab={selectProfilingTab}
           counts={{
             males: registryCounts.breedingMales,
             females: registryCounts.breedingFemales,
@@ -240,9 +253,10 @@ export default function ProfilingPage() {
         />
       </div>
 
-      {profilingSubTab === 'form' && (
+      {!breedsViewOpen && profilingSubTab === 'form' && (
         <EncodeForm
           fowls={fowls}
+          onAddBreeds={openBreeds}
           newName={newName}
           setNewName={setNewName}
           newBreed={newBreed}
@@ -315,12 +329,14 @@ export default function ProfilingPage() {
         />
       )}
 
-      {listTab && (
+      {!breedsViewOpen && listTab && (
         <FowlLists
           tab={listTab}
           fowls={fowls}
           matchHistory={matchHistory}
           loading={loading}
+          query={ui.registrySearch}
+          setQuery={ui.setRegistrySearch}
           sortKey={ui.registrySortBy[listTab] ?? 'identifier'}
           onSortChange={(k) => ui.setRegistrySort(listTab, k)}
           setProfilingSubTab={setProfilingSubTab}
@@ -333,9 +349,11 @@ export default function ProfilingPage() {
         />
       )}
 
-      {profilingSubTab === 'matchForm' && <MatchLogsView />}
+      {!breedsViewOpen && profilingSubTab === 'matchForm' && <MatchLogsView />}
 
-      {profilingSubTab === 'breeds' && <BreedsPage />}
+      {breedsViewOpen && (
+        <BreedsPage onBack={closeBreeds} backLabel={breedsBackLabel} />
+      )}
     </div>
   );
 }

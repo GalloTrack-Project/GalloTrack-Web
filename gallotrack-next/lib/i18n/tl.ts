@@ -238,6 +238,8 @@ export const tl: AppTranslations = {
     title: 'Rehistro ng Manok',
     subtitle: 'Magrehistro at mamahala ng lahi, katangian, at tala ng laban ng iyong mga manok',
     breedsBtn: 'Mga Lahi',
+    backToRegistry: 'Bumalik sa rehistro',
+    backToRegistration: 'Bumalik sa pagpaparehistro',
     viewRegistryBtn: 'Tingnan ang Rehistro',
     registerChickenBtn: '+ Magrehistro ng Manok',
     tabMales: 'Cocks',

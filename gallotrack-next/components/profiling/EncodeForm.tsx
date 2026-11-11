@@ -137,6 +137,8 @@ type Props = {
   autoCalcAge: boolean;
   getAutoCalcAge: () => boolean;
   canEditPhoto?: boolean;
+  /** Opens the Breed Registry without leaving the registration form. */
+  onAddBreeds?: () => void;
 };
 
 export default function EncodeForm({
@@ -179,6 +181,7 @@ export default function EncodeForm({
   autoCalcAge,
   getAutoCalcAge,
   canEditPhoto = true,
+  onAddBreeds,
   newColor = '',
   setNewColor,
   newBehaviorTrait = '',
@@ -518,6 +521,11 @@ export default function EncodeForm({
                       <span>No breeds yet. Add your breeds first.</span>
                       <a
                         href="/breeds"
+                        onClick={(event) => {
+                          if (!onAddBreeds) return;
+                          event.preventDefault();
+                          onAddBreeds();
+                        }}
                         className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0"
                       >
                         Add Breeds →
@@ -553,6 +561,7 @@ export default function EncodeForm({
                 value={newDeclaredComposition ?? null}
                 onChange={(val) => setNewDeclaredComposition?.(val)}
                 hasParents={false}
+                onAddBreeds={onAddBreeds}
               />
             </div>
           )}
@@ -841,6 +850,7 @@ export default function EncodeForm({
               onChange={(val) => setNewDeclaredComposition?.(val)}
               hasParents={true}
               pedigreeComposition={pedigreeComposition}
+              onAddBreeds={onAddBreeds}
             />
           </div>
         )}

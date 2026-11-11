@@ -10,6 +10,7 @@ import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useRouter } from 'next/navigation';
+import { useBreedsView } from '@/lib/hooks/use-breeds-view';
 
 export function DashboardPageWrapper() {
   return <DashboardPage />;
@@ -82,6 +83,7 @@ export function BreedingHubWrapper() {
 export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
+  const { breedsViewOpen, openBreeds } = useBreedsView();
   const {
     currentUserId,
     handleLogout,
@@ -115,9 +117,10 @@ export function ModalsWrapper() {
       setPendingPermanentDelete={ui.setPendingPermanentDelete}
       handlePermanentDelete={store.handlePermanentDelete}
       permanentDeleting={ui.permanentDeleting}
-      editingFowl={ui.editingFowl}
+      editingFowl={breedsViewOpen ? null : ui.editingFowl}
       setEditingFowl={ui.setEditingFowl}
       handleUpdateFowl={store.handleUpdateFowl}
+      onAddBreeds={openBreeds}
       showLogoutModal={ui.showLogoutModal}
       setShowLogoutModal={ui.setShowLogoutModal}
       handleLogout={handleLogout}

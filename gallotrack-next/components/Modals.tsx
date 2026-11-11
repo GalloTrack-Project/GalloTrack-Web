@@ -52,6 +52,7 @@ type ModalsProps = {
   editingFowl: FowlRecord | null;
   setEditingFowl: (f: FowlRecord | null) => void;
   handleUpdateFowl: (e: React.FormEvent) => void;
+  onAddBreeds?: () => void;
 
   showLogoutModal: boolean;
   setShowLogoutModal: (v: boolean) => void;
@@ -196,6 +197,7 @@ export default function Modals(props: ModalsProps) {
         editingFowl={props.editingFowl}
         setEditingFowl={props.setEditingFowl}
         handleUpdateFowl={props.handleUpdateFowl}
+        onAddBreeds={props.onAddBreeds}
         loading={props.loading}
         fowls={props.fowls}
         availableStrains={props.availableStrains}
