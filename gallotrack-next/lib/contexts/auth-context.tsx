@@ -49,6 +49,10 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
+export function useAuthOptional(): AuthContextValue | null {
+  return useContext(AuthContext);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const ui = useUI();
   // Raised around every sign-out we asked for (logout button, unconfirmed

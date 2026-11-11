@@ -134,8 +134,8 @@ describe('Breed Registry back navigation', () => {
     const nameInput = await screen.findByLabelText('Identifier Name');
     fireEvent.change(nameInput, { target: { value: 'Draft Bird' } });
 
-    const addBreeds = await screen.findByRole('link', { name: /Add Breeds/i });
-    fireEvent.click(addBreeds);
+    const addBreed = await screen.findByRole('button', { name: /Add breed/i });
+    fireEvent.click(addBreed);
 
     expect(await screen.findByRole('heading', { name: /Breed Registry/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back to registration' })).toBeInTheDocument();

@@ -1,7 +1,20 @@
 'use client';
 import React from 'react';
-import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw } from 'lucide-react';
+import {
+  Pencil,
+  Tag,
+  Ruler,
+  Calendar,
+  TreePine,
+  Lock,
+  Edit3,
+  RotateCcw,
+  CheckCircle2,
+  Plus,
+  X,
+} from 'lucide-react';
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import {
@@ -89,6 +102,10 @@ type EditFowlModalProps = {
   canEditPhoto?: boolean;
   /** Opens the Breed Registry without discarding the edit draft. */
   onAddBreeds?: () => void;
+  /** Restores a saved edit draft for this chicken. */
+  restoreDraft?: (fowlId: number | string) => DraftRestoreResult;
+  /** Clears the saved edit draft when the user cancels. */
+  clearDraft?: (fowlId: number | string) => void;
 };
 
 export default function EditFowlModal({
@@ -148,11 +165,16 @@ export default function EditFowlModal({
   generationPurity,
   canEditPhoto = true,
   onAddBreeds,
+  restoreDraft,
+  clearDraft,
 }: EditFowlModalProps) {
   const { t } = useT();
   const photoForm = useFowlFormStateOptional();
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+  const [draftRestored, setDraftRestored] = React.useState(false);
+  const [draftPhotoNotice, setDraftPhotoNotice] = React.useState(false);
+  const restoredDraftIdRef = React.useRef<number | string | null>(null);
   const clearPhotoFile = photoForm?.setEditPhotoFile;
   const clearPhotoThumbnail = photoForm?.setEditPhotoThumbnail;
   const clearPhotoRemoved = photoForm?.setEditPhotoRemoved;
@@ -164,6 +186,25 @@ export default function EditFowlModal({
       clearPhotoRemoved?.(false);
     };
   }, [clearPhotoFile, clearPhotoThumbnail, clearPhotoRemoved]);
+
+  React.useEffect(() => {
+    if (!editingFowl) {
+      restoredDraftIdRef.current = null;
+      setDraftRestored(false);
+      setDraftPhotoNotice(false);
+      return;
+    }
+    if (restoredDraftIdRef.current === editingFowl.id) return;
+    restoredDraftIdRef.current = editingFowl.id;
+    const result = restoreDraft?.(editingFowl.id);
+    setDraftRestored(Boolean(result?.restored));
+    setDraftPhotoNotice(Boolean(result?.restored && result?.photoSelected));
+  }, [editingFowl, restoreDraft]);
+
+  const handleClose = () => {
+    if (editingFowl) clearDraft?.(editingFowl.id);
+    setEditingFowl(null);
+  };
 
   const { rows: registryOptionRows } = useRegistryOptions();
   const baseColorOptions = React.useMemo(
@@ -257,7 +298,7 @@ export default function EditFowlModal({
   return (
     <Modal
       open
-      onClose={() => setEditingFowl(null)}
+      onClose={handleClose}
       title="Edit Node Registry"
       description={`Update parameters for ${editingFowl.name}`}
       icon={<Pencil className="h-5 w-5" />}
@@ -273,6 +314,33 @@ export default function EditFowlModal({
         }}
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
+        {draftRestored && (
+          <div
+            role="status"
+            className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+          >
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-wider">
+                {t('registry.draftRestored')}
+              </p>
+              {draftPhotoNotice && (
+                <p className="mt-0.5 text-xs font-semibold">{t('registry.photoReaddNotice')}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setDraftRestored(false);
+                setDraftPhotoNotice(false);
+              }}
+              aria-label={t('registry.dismissDraftNotice')}
+              className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
         <ChickenPhotoField
           name={editName || editingFowl.name}
           code={editBirdCode || editingFowl.bird_code}
@@ -323,12 +391,25 @@ export default function EditFowlModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative z-30">
-              <label
-                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
-                htmlFor="genetic-strain"
-              >
-                Genetic Strain
-              </label>
+              <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                <label
+                  className="text-muted-foreground block text-xs font-bold uppercase"
+                  htmlFor="genetic-strain"
+                >
+                  Genetic Strain
+                </label>
+                {onAddBreeds && (
+                  <button
+                    type="button"
+                    onClick={onAddBreeds}
+                    aria-label={t('registry.addBreed')}
+                    className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:text-emerald-300"
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{t('registry.addBreed')}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 value={editBreed}
@@ -363,9 +444,8 @@ export default function EditFowlModal({
                             onClick={() => deleteCustomStrain(s)}
                             aria-label={`Delete ${s}`}
                             className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
-                            title={`Delete "${s}"`}
                           >
-                            ✕
+                            <X className="h-3 w-3" aria-hidden="true" />
                           </button>
                         )}
                       </div>
@@ -413,7 +493,6 @@ export default function EditFowlModal({
                 hasParents={false}
                 currentValue={editingFowl.declared_composition as any}
                 source={compositionSource}
-                onAddBreeds={onAddBreeds}
               />
             </div>
           )}
@@ -686,9 +765,8 @@ export default function EditFowlModal({
                         onClick={() => deleteCustomLegColor(s)}
                         aria-label={`Delete ${s}`}
                         className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
-                        title={`Delete "${s}"`}
                       >
-                        ✕
+                        <X className="h-3 w-3" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -894,7 +972,6 @@ export default function EditFowlModal({
                 pedigreeComposition={pedigreeComposition}
                 currentValue={editingFowl.declared_composition as any}
                 calculatedValue={pedigreeComposition}
-                onAddBreeds={onAddBreeds}
                 source={compositionSource}
               />
             </div>
@@ -926,11 +1003,18 @@ export default function EditFowlModal({
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="cursor-pointer rounded-md border border-border bg-muted px-4 py-3.5 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground sm:w-36"
+          >
+            {t('common.cancel')}
+          </button>
           <button
             type="submit"
             disabled={saveBusy || !birthdateValidation.valid || !declaredValidation.valid}
-            className="flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saveBusy && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>

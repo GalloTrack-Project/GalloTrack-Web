@@ -23,10 +23,20 @@ import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
-import { CircleAlert, Lock, RotateCcw, Edit3 } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronDown,
+  CircleAlert,
+  Edit3,
+  Lock,
+  Plus,
+  RotateCcw,
+  X,
+} from 'lucide-react';
 import { useT } from '@/lib/i18n';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 
 export function StatusItem({
   icon,
@@ -139,6 +149,10 @@ type Props = {
   canEditPhoto?: boolean;
   /** Opens the Breed Registry without leaving the registration form. */
   onAddBreeds?: () => void;
+  /** Restores a saved registration draft on mount. */
+  restoreDraft?: () => DraftRestoreResult;
+  /** Clears the draft and leaves the registration form. */
+  onCancel?: () => void;
 };
 
 export default function EncodeForm({
@@ -182,6 +196,8 @@ export default function EncodeForm({
   getAutoCalcAge,
   canEditPhoto = true,
   onAddBreeds,
+  restoreDraft,
+  onCancel,
   newColor = '',
   setNewColor,
   newBehaviorTrait = '',
@@ -198,6 +214,17 @@ export default function EncodeForm({
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [draftNotice, setDraftNotice] = useState<{ photoSelected: boolean } | null>(null);
+  const draftRestoredRef = useRef(false);
+
+  useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    const result = restoreDraft?.();
+    if (result?.restored) {
+      setDraftNotice({ photoSelected: result.photoSelected });
+    }
+  }, [restoreDraft]);
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -227,6 +254,11 @@ export default function EncodeForm({
     if (!input) return;
     input.focus();
     input.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleAddBreed = () => {
+    setStrainOpen(false);
+    onAddBreeds?.();
   };
 
   const handleStrainChange = (value: string) => {
@@ -392,6 +424,28 @@ export default function EncodeForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-5 animate-fadeIn">
+      {draftNotice && (
+        <div
+          role="status"
+          className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+        >
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black uppercase tracking-wider">{t('registry.draftRestored')}</p>
+            {draftNotice.photoSelected && (
+              <p className="mt-0.5 text-xs font-semibold">{t('registry.photoReaddNotice')}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setDraftNotice(null)}
+            aria-label={t('registry.dismissDraftNotice')}
+            className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
@@ -536,14 +590,31 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="genetic-strain">{t('registry.geneticStrain')}</label>
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider" htmlFor="genetic-strain">
+              {t('registry.geneticStrain')}
+            </label>
+            {onAddBreeds && (
+              <button
+                type="button"
+                onClick={handleAddBreed}
+                aria-label={t('registry.addBreed')}
+                className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:text-emerald-300"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t('registry.addBreed')}</span>
+              </button>
+            )}
+          </div>
           {selectedStrains.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2.5">
               {selectedStrains.map((s, i) => (
                 <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-xs font-semibold px-3 py-1.5 rounded-sm group hover:border-emerald-300 transition-all">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                   {s}
-                    <button type="button" onClick={() => removeStrain(i)} aria-label={t('registry.removeStrainAria')} className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
+                    <button type="button" onClick={() => removeStrain(i)} aria-label={t('registry.removeStrainAria')} className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">
+                      <X className="h-3 w-3" aria-hidden="true" />
+                    </button>
                 </span>
               ))}
             </div>
@@ -553,6 +624,11 @@ export default function EncodeForm({
               <input
                 ref={strainInputElRef}
                 type="text"
+                role="combobox"
+                aria-expanded={strainOpen}
+                aria-controls={strainOpen ? 'genetic-strain-listbox' : undefined}
+                aria-autocomplete="list"
+                aria-haspopup="listbox"
                 value={strainQuery}
                 onChange={(e) => handleStrainChange(e.target.value)}
                 onFocus={() => setStrainOpen(true)}
@@ -581,56 +657,82 @@ export default function EncodeForm({
                 type="button"
                 onClick={() => setStrainOpen((o) => !o)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
-                aria-label="Toggle strain list"
+                aria-label={t('registry.toggleStrainList')}
+                aria-expanded={strainOpen}
+                aria-controls={strainOpen ? 'genetic-strain-listbox' : undefined}
               >
-                ▾
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${strainOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
             </div>
             {strainOpen && strainDropdownPos && createPortal(
-              <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}>
-                <div className="overflow-y-auto">
+              <div
+                className="fixed z-[10000] flex max-h-72 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}
+              >
+                <div
+                  id="genetic-strain-listbox"
+                  role="listbox"
+                  aria-label={t('registry.registeredBreeds')}
+                  className="max-h-56 overflow-y-auto"
+                >
                   {(() => {
+                    if (loading && availableStrains.length === 0) {
+                      return (
+                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                          {t('registry.breedsLoading')}
+                        </div>
+                      );
+                    }
+                    if (availableStrains.length === 0) {
+                      return (
+                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                          {t('registry.noRegisteredBreeds')}
+                        </div>
+                      );
+                    }
                     const q = strainQuery.trim().toLowerCase();
                     const matching = q
                       ? availableStrains.filter((s) => s.toLowerCase().includes(q))
                       : availableStrains;
-                    if (q && !availableStrains.some((s) => s.toLowerCase() === q)) {
+                    if (matching.length === 0) {
                       return (
-                        <>
-                          {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Matching strains</div>}
-                          {matching.map((s) => (
-                            <div key={s} className="flex items-center w-full group">
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
-                                {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
-                              </button>
-                            </div>
-                          ))}
-                        </>
+                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                          {t('registry.noMatchingBreeds')}
+                        </div>
                       );
                     }
-                    return matching.map((s) => (
-                        <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }} className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
-                          {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
+                    return matching.map((s) => {
+                      const selected = selectedStrains.some(
+                        (value) => value.toLowerCase() === s.toLowerCase(),
+                      );
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }}
+                          className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${s.toLowerCase() === q ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selected ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                        >
+                          {s} {selected && <span className="ml-1 text-xs text-success">Added</span>}
                         </button>
-                    ));
+                      );
+                    });
                   })()}
-                  {strainQuery.trim() === '' && availableStrains.length === 0 && (
-                    <div className="px-4 py-3 text-xs text-muted-foreground font-semibold flex items-center justify-between gap-2">
-                      <span>No breeds yet. Add your breeds first.</span>
-                      <a
-                        href="/breeds"
-                        onClick={(event) => {
-                          if (!onAddBreeds) return;
-                          event.preventDefault();
-                          onAddBreeds();
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0"
-                      >
-                        Add Breeds →
-                      </a>
-                    </div>
-                  )}
                 </div>
+                {availableStrains.length > 0 && (
+                  <div className="border-t border-slate-200 bg-slate-50/80 p-1.5 dark:border-border dark:bg-muted/40">
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={handleAddBreed}
+                      className="flex min-h-[44px] w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('registry.manageBreeds')}
+                    </button>
+                  </div>
+                )}
               </div>,
               document.body
             )}
@@ -665,7 +767,6 @@ export default function EncodeForm({
                 value={newDeclaredComposition ?? null}
                 onChange={(val) => setNewDeclaredComposition?.(val)}
                 hasParents={false}
-                onAddBreeds={onAddBreeds}
               />
             </div>
           )}
@@ -954,7 +1055,6 @@ export default function EncodeForm({
               onChange={(val) => setNewDeclaredComposition?.(val)}
               hasParents={true}
               pedigreeComposition={pedigreeComposition}
-              onAddBreeds={onAddBreeds}
             />
           </div>
         )}
@@ -1048,6 +1148,15 @@ export default function EncodeForm({
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
           <span>{uploadingImage ? t('registry.uploadingAttachment') : loading ? t('registry.registering') : t('registry.registerBtn')}</span>
         </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="mt-2 w-full cursor-pointer rounded-lg border border-border bg-muted py-3 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+          >
+            {t('registry.cancelRegistration')}
+          </button>
+        )}
         <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">{t('registry.verifyBeforeRegistering')}</p>
       </div>
     </form>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ProfilingPage from '@/components/ProfilingPage';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';
@@ -135,7 +135,9 @@ describe('Registration genetic strain', () => {
   it('registers a typed custom strain when no breeds are registered', async () => {
     await renderPageAndWait();
     fireEvent.focus(strainInput());
-    expect(await screen.findByText('No breeds yet. Add your breeds first.')).toBeInTheDocument();
+    expect(await screen.findByText('No breeds registered yet.')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Add breed/i })).toHaveLength(1);
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
     fireEvent.keyDown(strainInput(), { key: 'Escape' });
 
     await fillRequiredFields('Hatch');
@@ -159,7 +161,7 @@ describe('Registration genetic strain', () => {
 
     const input = strainInput();
     fireEvent.focus(input);
-    await screen.findByRole('button', { name: /CustomBreed/ });
+    await screen.findByRole('option', { name: /CustomBreed/ });
 
     await fillRequiredFields('custombreed');
     fireEvent.keyDown(strainInput(), { key: 'Tab' });
@@ -174,6 +176,22 @@ describe('Registration genetic strain', () => {
       expect.objectContaining({ breed: 'CustomBreed' }),
     );
     expect(saveCustomStrain).not.toHaveBeenCalledWith('custombreed');
+  });
+
+  it('shows only registered breeds in the listbox and keeps Manage breeds in its footer', async () => {
+    fetchStrains.mockResolvedValue(['Hatch', 'Kelso']);
+    await renderPageAndWait();
+
+    fireEvent.focus(strainInput());
+
+    const listbox = await screen.findByRole('listbox', { name: 'Registered breeds' });
+    const options = within(listbox).getAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([
+      expect.stringContaining('Hatch'),
+      expect.stringContaining('Kelso'),
+    ]);
+    expect(screen.getByRole('button', { name: /Manage breeds/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
   });
 
   it('commits typed text on blur, Enter and Tab', async () => {

@@ -27,7 +27,7 @@ describe('DeclaredCompositionEditor Component UI', () => {
     expect(screen.getByText('+ Add another breed')).toBeDefined();
   });
 
-  it('renders "No breeds yet. Add your breeds first" with a link when availableBreeds is empty and no parents', () => {
+  it('shows a short registration message and no second add link when breeds are empty', () => {
     const onChange = vi.fn();
     render(
       <DeclaredCompositionEditor
@@ -40,28 +40,9 @@ describe('DeclaredCompositionEditor Component UI', () => {
     );
 
     expect(
-      screen.getByText('No breeds yet. Add your breeds first to declare custom composition.')
+      screen.getByText('Register a breed first to set a custom composition.')
     ).toBeDefined();
-    const link = screen.getByRole('link', { name: /Add Breeds/i });
-    expect(link.getAttribute('href')).toBe('/breeds');
-  });
-
-  it('opens the inline Breed Registry instead of navigating when a handler is provided', () => {
-    const onChange = vi.fn();
-    const onAddBreeds = vi.fn();
-    render(
-      <DeclaredCompositionEditor
-        registeredBreed=""
-        availableBreeds={[]}
-        value={null}
-        onChange={onChange}
-        hasParents={false}
-        onAddBreeds={onAddBreeds}
-      />
-    );
-
-    fireEvent.click(screen.getByRole('link', { name: /Add Breeds/i }));
-    expect(onAddBreeds).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
   });
 
   it('one-tap 100% shortcut triggers onChange with 100% registered breed', () => {
