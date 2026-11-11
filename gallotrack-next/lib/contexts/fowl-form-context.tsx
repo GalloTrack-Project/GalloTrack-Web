@@ -278,16 +278,18 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const addStrain = useCallback((strain: string) => {
     const trimmed = strain.trim();
     if (!trimmed) return;
-    if (!selectedStrains.includes(trimmed)) {
-      setSelectedStrains((prev) => [...prev, trimmed]);
-    }
+    setSelectedStrains((prev) =>
+      prev.some((value) => value.toLowerCase() === trimmed.toLowerCase())
+        ? prev
+        : [...prev, trimmed],
+    );
     if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
       setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
       setCustomStrainNames((prev) => new Set([...prev, trimmed]));
     }
     setStrainQuery('');
     setNewBreed('');
-  }, [selectedStrains, availableStrains, setNewBreed]);
+  }, [availableStrains, setNewBreed]);
 
   const removeStrain = useCallback((index: number) => {
     setSelectedStrains((prev) => prev.filter((_, i) => i !== index));

@@ -173,12 +173,15 @@ export default function EncodeForm({
   const photoForm = useFowlFormStateOptional();
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
+  const strainDropdownRef = useRef<HTMLDivElement>(null);
   const strainInputElRef = useRef<HTMLInputElement>(null);
   const legColorInputRef = useRef<HTMLDivElement>(null);
-  const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [activeStrainIndex, setActiveStrainIndex] = useState(-1);
+  const [strainAnnouncement, setStrainAnnouncement] = useState('');
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [draftNotice, setDraftNotice] = useState<{ photoSelected: boolean } | null>(null);
   const draftRestoredRef = useRef(false);
@@ -207,6 +210,14 @@ export default function EncodeForm({
       : 'sire';
 
   const effectiveBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
+  const typedStrain = strainQuery.trim();
+  const normalizedStrainQuery = typedStrain.toLowerCase();
+  const matchingStrains = normalizedStrainQuery
+    ? availableStrains.filter((strain) => strain.toLowerCase().includes(normalizedStrainQuery))
+    : availableStrains;
+  const hasExactStrainMatch =
+    normalizedStrainQuery.length > 0
+    && availableStrains.some((strain) => strain.toLowerCase() === normalizedStrainQuery);
 
   useEffect(() => {
     const trimmed = newBreed.trim();
@@ -224,11 +235,52 @@ export default function EncodeForm({
 
   const handleStrainChange = (value: string) => {
     setStrainQuery(value);
+    setActiveStrainIndex(-1);
     const trimmed = value.trim();
     const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
     setNewBreed(registered ?? value);
     setStrainOpen(true);
     if (trimmed) setStrainError(null);
+  };
+
+  const addSelectedStrain = (strain: string) => {
+    const trimmed = strain.trim();
+    if (!trimmed) return;
+    const alreadySelected = selectedStrains.some(
+      (value) => value.toLowerCase() === trimmed.toLowerCase(),
+    );
+    addStrain(trimmed);
+    if (!alreadySelected) {
+      setStrainAnnouncement(
+        t('registry.strainAddedAnnouncement', { strain: trimmed }),
+      );
+    }
+  };
+
+  const removeSelectedStrain = (index: number) => {
+    const strain = selectedStrains[index];
+    if (!strain) return;
+    removeStrain(index);
+    setNewBreed('');
+    setStrainQuery('');
+    setStrainAnnouncement(
+      t('registry.strainRemovedAnnouncement', { strain }),
+    );
+  };
+
+  const toggleStrainOption = (strain: string) => {
+    const selectedIndex = selectedStrains.findIndex(
+      (value) => value.toLowerCase() === strain.toLowerCase(),
+    );
+    if (selectedIndex >= 0) {
+      removeSelectedStrain(selectedIndex);
+    } else {
+      addSelectedStrain(strain);
+    }
+    setStrainQuery('');
+    setStrainError(null);
+    setStrainOpen(false);
+    setActiveStrainIndex(-1);
   };
 
   const commitStrain = (options: { focusOnError?: boolean } = {}) => {
@@ -249,20 +301,76 @@ export default function EncodeForm({
       return;
     }
     const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
-    addStrain(registered ?? trimmed);
+    addSelectedStrain(registered ?? trimmed);
     setStrainError(null);
     setStrainOpen(false);
+    setActiveStrainIndex(-1);
   };
 
-  const selectStrainOption = (strain: string) => {
-    addStrain(strain);
-    setStrainError(null);
+  const handleStrainBlur = () => {
+    setStrainQuery('');
     setStrainOpen(false);
+    setActiveStrainIndex(-1);
   };
 
-  const handleStrainBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const next = event.relatedTarget as HTMLElement | null;
-    commitStrain({ focusOnError: next?.tagName !== 'A' });
+  const handleStrainKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!strainOpen) {
+        setStrainOpen(true);
+        setActiveStrainIndex(matchingStrains.length > 0 ? 0 : -1);
+        return;
+      }
+      if (matchingStrains.length > 0) {
+        setActiveStrainIndex((prev) => (prev + 1) % matchingStrains.length);
+      }
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!strainOpen) {
+        setStrainOpen(true);
+        setActiveStrainIndex(matchingStrains.length > 0 ? matchingStrains.length - 1 : -1);
+        return;
+      }
+      if (matchingStrains.length > 0) {
+        setActiveStrainIndex(
+          (prev) => (prev <= 0 ? matchingStrains.length - 1 : prev - 1),
+        );
+      }
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (
+        strainOpen
+        && activeStrainIndex >= 0
+        && matchingStrains[activeStrainIndex]
+      ) {
+        toggleStrainOption(matchingStrains[activeStrainIndex]);
+      } else {
+        commitStrain({ focusOnError: true });
+      }
+      return;
+    }
+    if (event.key === 'Backspace' && !strainQuery && selectedStrains.length > 0) {
+      event.preventDefault();
+      removeSelectedStrain(selectedStrains.length - 1);
+      return;
+    }
+    if (event.key === 'Tab') {
+      if (!strainQuery.trim() && selectedStrains.length === 0) {
+        event.preventDefault();
+        commitStrain({ focusOnError: true });
+      } else {
+        commitStrain();
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
+      setStrainOpen(false);
+      setActiveStrainIndex(-1);
+    }
   };
 
   const handleAddBreed = () => {
@@ -453,14 +561,30 @@ export default function EncodeForm({
     const update = () => {
       if (strainInputRef.current) {
         const r = strainInputRef.current.getBoundingClientRect();
-        setStrainDropdownPos({ top: r.bottom + 6, left: r.left, width: r.width });
+        const gap = 6;
+        const margin = 12;
+        const spaceBelow = window.innerHeight - r.bottom - gap - margin;
+        const spaceAbove = r.top - gap - margin;
+        const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+        const maxHeight = Math.max(72, Math.min(288, openAbove ? spaceAbove : spaceBelow));
+        setStrainDropdownPos({
+          top: openAbove
+            ? Math.max(margin, r.top - gap - maxHeight)
+            : r.bottom + gap,
+          left: r.left,
+          width: r.width,
+          maxHeight,
+        });
       }
     };
     update();
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
     const handleClickOutside = (e: MouseEvent) => {
-      if (strainInputRef.current && !strainInputRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideInput = strainInputRef.current?.contains(target);
+      const insideDropdown = strainDropdownRef.current?.contains(target);
+      if (!insideInput && !insideDropdown) {
         setStrainOpen(false);
       }
     };
@@ -686,21 +810,30 @@ export default function EncodeForm({
               </button>
             )}
           </div>
-          {selectedStrains.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2.5">
+          <div className="relative" ref={strainInputRef}>
+            <div
+              className={`flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-md border bg-white p-1.5 transition-all focus-within:ring-4 dark:bg-input ${strainError ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-100 dark:border-rose-700 dark:focus-within:ring-rose-950/50' : 'border-input-border focus-within:border-emerald-500 focus-within:ring-emerald-100'}`}
+            >
               {selectedStrains.map((s, i) => (
-                <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-xs font-semibold px-3 py-1.5 rounded-sm group hover:border-emerald-300 transition-all">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                  {s}
-                    <button type="button" onClick={() => removeStrain(i)} aria-label={t('registry.removeStrainAria')} className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">
-                      <X className="h-3 w-3" aria-hidden="true" />
-                    </button>
+                <span
+                  key={s}
+                  className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 pl-3 text-xs font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+                >
+                  <span className="min-w-0 break-words">{s}</span>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSelectedStrain(i);
+                    }}
+                    aria-label={t('registry.removeStrainAria', { strain: s })}
+                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-rose-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-emerald-300"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </span>
               ))}
-            </div>
-          )}
-          <div className="relative" ref={strainInputRef}>
-            <div className="relative">
               <input
                 ref={strainInputElRef}
                 type="text"
@@ -709,104 +842,122 @@ export default function EncodeForm({
                 aria-controls={strainOpen ? 'genetic-strain-listbox' : undefined}
                 aria-autocomplete="list"
                 aria-haspopup="listbox"
+                aria-activedescendant={
+                  strainOpen && activeStrainIndex >= 0
+                    ? `genetic-strain-option-${activeStrainIndex}`
+                    : undefined
+                }
                 value={strainQuery}
                 onChange={(e) => handleStrainChange(e.target.value)}
-                onFocus={() => setStrainOpen(true)}
-                onBlur={handleStrainBlur}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    commitStrain({ focusOnError: true });
-                  }
-                  if (e.key === 'Tab') {
-                    if (!strainQuery.trim() && selectedStrains.length === 0) {
-                      e.preventDefault();
-                      commitStrain({ focusOnError: true });
-                    } else {
-                      commitStrain();
-                    }
-                  }
-                  if (e.key === 'Escape') setStrainOpen(false);
+                onFocus={() => {
+                  setStrainOpen(true);
+                  setActiveStrainIndex(-1);
                 }}
+                onClick={() => setStrainOpen(true)}
+                onBlur={handleStrainBlur}
+                onKeyDown={handleStrainKeyDown}
                 aria-invalid={Boolean(strainError)}
                 aria-describedby={strainError ? 'genetic-strain-error' : undefined}
-                placeholder="Select or type a strain..."
-                className={`w-full pl-3 pr-9 p-3 border rounded-md text-sm bg-white dark:bg-input placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-semibold transition-all focus:ring-4 ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'} ${strainError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:border-rose-700 dark:focus:ring-rose-950/50' : 'border-input-border focus:border-emerald-500 focus:ring-emerald-100'}`}
-              id="genetic-strain" />
+                placeholder={
+                  selectedStrains.length > 0
+                    ? t('registry.addAnotherStrain')
+                    : t('registry.strainPlaceholder')
+                }
+                className="min-h-11 min-w-[8rem] flex-1 border-0 bg-transparent px-1.5 py-2 text-sm font-semibold text-neutral-900 placeholder:text-muted-foreground focus:outline-none dark:text-foreground dark:placeholder:text-muted-foreground"
+                id="genetic-strain"
+              />
               <button
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setStrainOpen((o) => !o)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
+                className="ml-auto flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-muted-foreground transition-colors hover:text-success focus:border-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-border dark:bg-input"
                 aria-label={t('registry.toggleStrainList')}
                 aria-expanded={strainOpen}
                 aria-controls={strainOpen ? 'genetic-strain-listbox' : undefined}
               >
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${strainOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                <ChevronDown className={`h-4 w-4 transition-transform ${strainOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
+            </div>
+            <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+              {strainAnnouncement}
             </div>
             {strainOpen && strainDropdownPos && createPortal(
               <div
-                className="fixed z-[10000] flex max-h-72 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
-                style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}
+                ref={strainDropdownRef}
+                className="fixed z-[10000] flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                style={{
+                  top: strainDropdownPos.top,
+                  left: strainDropdownPos.left,
+                  width: strainDropdownPos.width,
+                  maxHeight: strainDropdownPos.maxHeight,
+                }}
               >
                 <div
                   id="genetic-strain-listbox"
                   role="listbox"
                   aria-label={t('registry.registeredBreeds')}
-                  className="max-h-56 overflow-y-auto"
+                  className="min-h-0 flex-1 overflow-y-auto"
                 >
-                  {(() => {
-                    if (loading && availableStrains.length === 0) {
-                      return (
-                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-                          {t('registry.breedsLoading')}
-                        </div>
-                      );
-                    }
-                    if (availableStrains.length === 0) {
-                      return (
-                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-                          {t('registry.noRegisteredBreeds')}
-                        </div>
-                      );
-                    }
-                    const q = strainQuery.trim().toLowerCase();
-                    const matching = q
-                      ? availableStrains.filter((s) => s.toLowerCase().includes(q))
-                      : availableStrains;
-                    if (matching.length === 0) {
-                      return (
-                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-                          {t('registry.noMatchingBreeds')}
-                        </div>
-                      );
-                    }
-                    return matching.map((s) => {
+                  {loading && availableStrains.length === 0 ? (
+                    <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                      {t('registry.breedsLoading')}
+                    </div>
+                  ) : matchingStrains.length === 0 ? (
+                    <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                      {typedStrain
+                        ? t('registry.noMatchingBreedAdd', { strain: typedStrain })
+                        : t('registry.noRegisteredBreeds')}
+                    </div>
+                  ) : (
+                    matchingStrains.map((s, index) => {
                       const selected = selectedStrains.some(
                         (value) => value.toLowerCase() === s.toLowerCase(),
                       );
                       return (
                         <button
                           key={s}
+                          id={`genetic-strain-option-${index}`}
                           type="button"
                           role="option"
                           aria-selected={selected}
-                          onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }}
-                          className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${s.toLowerCase() === q ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selected ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                          tabIndex={-1}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onMouseEnter={() => setActiveStrainIndex(index)}
+                          onClick={() => toggleStrainOption(s)}
+                          className={`flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${index === activeStrainIndex ? 'bg-emerald-500/10' : ''} ${selected ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
                         >
-                          {s} {selected && <span className="ml-1 text-xs text-success">Added</span>}
+                          <span className="min-w-0 break-words">{s}</span>
+                          {selected && (
+                            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-success dark:text-emerald-300">
+                              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              {t('registry.selected')}
+                            </span>
+                          )}
                         </button>
                       );
-                    });
-                  })()}
+                    })
+                  )}
                 </div>
-                {availableStrains.length > 0 && (
+                {typedStrain && !hasExactStrainMatch && !loading && (
+                  <div className="border-t border-slate-200 bg-emerald-50/60 p-1.5 dark:border-border dark:bg-emerald-500/10">
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => commitStrain({ focusOnError: true })}
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-300"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('registry.addAsNewBreed', { strain: typedStrain })}
+                    </button>
+                  </div>
+                )}
+                {onAddBreeds && (
                   <div className="border-t border-slate-200 bg-slate-50/80 p-1.5 dark:border-border dark:bg-muted/40">
                     <button
                       type="button"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={handleAddBreed}
-                      className="flex min-h-[44px] w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                       {t('registry.manageBreeds')}
