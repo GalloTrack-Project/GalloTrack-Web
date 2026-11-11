@@ -23,10 +23,11 @@ import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
-import { CircleAlert, Lock, RotateCcw, Edit3 } from 'lucide-react';
+import { CircleAlert, Lock, RotateCcw, Edit3, CheckCircle2, Plus, X } from 'lucide-react';
 import { useT } from '@/lib/i18n';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 
 export function StatusItem({
   icon,
@@ -139,6 +140,10 @@ type Props = {
   canEditPhoto?: boolean;
   /** Opens the Breed Registry without leaving the registration form. */
   onAddBreeds?: () => void;
+  /** Restores a saved registration draft on mount. */
+  restoreDraft?: () => DraftRestoreResult;
+  /** Clears the draft and leaves the registration form. */
+  onCancel?: () => void;
 };
 
 export default function EncodeForm({
@@ -182,6 +187,8 @@ export default function EncodeForm({
   getAutoCalcAge,
   canEditPhoto = true,
   onAddBreeds,
+  restoreDraft,
+  onCancel,
   newColor = '',
   setNewColor,
   newBehaviorTrait = '',
@@ -198,6 +205,17 @@ export default function EncodeForm({
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [draftNotice, setDraftNotice] = useState<{ photoSelected: boolean } | null>(null);
+  const draftRestoredRef = useRef(false);
+
+  useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    const result = restoreDraft?.();
+    if (result?.restored) {
+      setDraftNotice({ photoSelected: result.photoSelected });
+    }
+  }, [restoreDraft]);
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -392,6 +410,28 @@ export default function EncodeForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-5 animate-fadeIn">
+      {draftNotice && (
+        <div
+          role="status"
+          className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+        >
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black uppercase tracking-wider">{t('registry.draftRestored')}</p>
+            {draftNotice.photoSelected && (
+              <p className="mt-0.5 text-xs font-semibold">{t('registry.photoReaddNotice')}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setDraftNotice(null)}
+            aria-label={t('registry.dismissDraftNotice')}
+            className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
@@ -614,25 +654,56 @@ export default function EncodeForm({
                         </button>
                     ));
                   })()}
-                  {strainQuery.trim() === '' && availableStrains.length === 0 && (
-                    <div className="px-4 py-3 text-xs text-muted-foreground font-semibold flex items-center justify-between gap-2">
-                      <span>No breeds yet. Add your breeds first.</span>
-                      <a
-                        href="/breeds"
-                        onClick={(event) => {
-                          if (!onAddBreeds) return;
-                          event.preventDefault();
-                          onAddBreeds();
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0"
-                      >
-                        Add Breeds →
-                      </a>
+                  {availableStrains.length === 0 && loading && (
+                    <div role="status" className="px-4 py-3 text-xs text-muted-foreground font-semibold">
+                      {t('registry.breedsLoading')}
                     </div>
                   )}
                 </div>
+                {availableStrains.length > 0 && (
+                  <div className="border-t border-slate-200 bg-slate-50/80 p-1.5 dark:border-border dark:bg-muted/40">
+                    <a
+                      href="/breeds"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={(event) => {
+                        if (!onAddBreeds) return;
+                        event.preventDefault();
+                        setStrainOpen(false);
+                        onAddBreeds();
+                      }}
+                      className="flex min-h-[44px] items-center gap-2 rounded-sm px-3 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('registry.manageBreeds')}
+                    </a>
+                  </div>
+                )}
               </div>,
               document.body
+            )}
+            {availableStrains.length === 0 && (
+              loading ? (
+                <p role="status" className="mt-2 text-xs font-semibold text-muted-foreground">
+                  {t('registry.breedsLoading')}
+                </p>
+              ) : (
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/70 px-3 py-2 dark:border-border dark:bg-muted/30">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {t('registry.noBreedsYet')}
+                  </span>
+                  <a
+                    href="/breeds"
+                    onClick={(event) => {
+                      if (!onAddBreeds) return;
+                      event.preventDefault();
+                      onAddBreeds();
+                    }}
+                    className="inline-flex min-h-[44px] items-center gap-1 text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400 shrink-0"
+                  >
+                    {t('registry.addBreedsLink')}
+                  </a>
+                </div>
+              )
             )}
           </div>
           {strainError ? (
@@ -1048,6 +1119,15 @@ export default function EncodeForm({
           {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
           <span>{uploadingImage ? t('registry.uploadingAttachment') : loading ? t('registry.registering') : t('registry.registerBtn')}</span>
         </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="mt-2 w-full cursor-pointer rounded-lg border border-border bg-muted py-3 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+          >
+            {t('registry.cancelButton')}
+          </button>
+        )}
         <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">{t('registry.verifyBeforeRegistering')}</p>
       </div>
     </form>
@@ -1090,3 +1170,4 @@ function getAgeLabelLocal(p: AgePartsLocal): string {
 function getAgeExactLocal(p: AgePartsLocal): string {
   return `${p.years}y ${p.months}m ${p.days}d`;
 }
+

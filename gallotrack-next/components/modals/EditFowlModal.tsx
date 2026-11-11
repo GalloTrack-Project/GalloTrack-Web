@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
-import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw } from 'lucide-react';
+import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw, CheckCircle2, X } from 'lucide-react';
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import {
@@ -89,6 +90,10 @@ type EditFowlModalProps = {
   canEditPhoto?: boolean;
   /** Opens the Breed Registry without discarding the edit draft. */
   onAddBreeds?: () => void;
+  /** Restores a saved edit draft for this chicken. */
+  restoreDraft?: (fowlId: number | string) => DraftRestoreResult;
+  /** Clears the saved edit draft when the user cancels. */
+  clearDraft?: (fowlId: number | string) => void;
 };
 
 export default function EditFowlModal({
@@ -148,6 +153,8 @@ export default function EditFowlModal({
   generationPurity,
   canEditPhoto = true,
   onAddBreeds,
+  restoreDraft,
+  clearDraft,
 }: EditFowlModalProps) {
   const { t } = useT();
   const photoForm = useFowlFormStateOptional();
@@ -164,6 +171,26 @@ export default function EditFowlModal({
       clearPhotoRemoved?.(false);
     };
   }, [clearPhotoFile, clearPhotoThumbnail, clearPhotoRemoved]);
+
+  const [draftRestored, setDraftRestored] = React.useState<{ photoSelected: boolean } | null>(null);
+  const restoredDraftIdRef = React.useRef<number | string | null>(null);
+
+  React.useEffect(() => {
+    if (!editingFowl) {
+      restoredDraftIdRef.current = null;
+      setDraftRestored(null);
+      return;
+    }
+    if (restoredDraftIdRef.current === editingFowl.id) return;
+    restoredDraftIdRef.current = editingFowl.id;
+    const result = restoreDraft?.(editingFowl.id);
+    setDraftRestored(result?.restored ? { photoSelected: result.photoSelected } : null);
+  }, [editingFowl, restoreDraft]);
+
+  const handleClose = () => {
+    if (editingFowl) clearDraft?.(editingFowl.id);
+    setEditingFowl(null);
+  };
 
   const { rows: registryOptionRows } = useRegistryOptions();
   const baseColorOptions = React.useMemo(
@@ -257,7 +284,7 @@ export default function EditFowlModal({
   return (
     <Modal
       open
-      onClose={() => setEditingFowl(null)}
+      onClose={handleClose}
       title="Edit Node Registry"
       description={`Update parameters for ${editingFowl.name}`}
       icon={<Pencil className="h-5 w-5" />}
@@ -273,6 +300,28 @@ export default function EditFowlModal({
         }}
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
+        {draftRestored && (
+          <div
+            role="status"
+            className="flex items-center gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-wider">{t('registry.draftRestored')}</p>
+              {draftRestored.photoSelected && (
+                <p className="mt-0.5 text-xs font-semibold">{t('registry.photoReaddNotice')}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setDraftRestored(null)}
+              aria-label={t('registry.dismissDraftNotice')}
+              className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
         <ChickenPhotoField
           name={editName || editingFowl.name}
           code={editBirdCode || editingFowl.bird_code}
@@ -300,7 +349,6 @@ export default function EditFowlModal({
           }}
           onCancelUpload={photoForm?.cancelPhotoUpload}
         />
-
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
           <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <Tag className="h-3.5 w-3.5" /> <span>Core Identity</span>
@@ -926,11 +974,18 @@ export default function EditFowlModal({
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="cursor-pointer rounded-md border border-border bg-muted px-4 py-3.5 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground sm:w-36"
+          >
+            {t('registry.cancelButton')}
+          </button>
           <button
             type="submit"
             disabled={saveBusy || !birthdateValidation.valid || !declaredValidation.valid}
-            className="flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saveBusy && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -942,3 +997,4 @@ export default function EditFowlModal({
     </Modal>
   );
 }
+
