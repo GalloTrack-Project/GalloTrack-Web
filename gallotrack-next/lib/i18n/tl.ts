@@ -336,6 +336,8 @@ export const tl: AppTranslations = {
     validationStatus: 'Pagpapatunay',
     validationPassed: 'Pumasa',
     validationPending: 'Nakabinbin',
+    validationMissingFields: 'Kulang: {fields}',
+    strainRequired: 'Kailangan ang lahi/strain.',
     lineageResolvedStatus: 'Nalutas',
     lineageAwaitingStatus: 'Naghihintay',
     dataCompleteness: 'Kabuuang Datos',

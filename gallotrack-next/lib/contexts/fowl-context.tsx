@@ -407,9 +407,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
   // ── Generation helpers for new fowl form ──
   const nextNodeId = `GT-${String(Math.max(0, ...fowls.map(f => f.id)) + 1).padStart(4, '0')}`;
-  const completenessFields = [newName, newBreed, newGender, age, height, weight, sireName, damName];
+  const effectiveBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
+  const completenessFields = [newName, effectiveBreed, newGender, age, height, weight, sireName, damName];
   const dataCompleteness = Math.round((completenessFields.filter(v => v && String(v).trim() !== '').length / completenessFields.length) * 100);
-  const validationPassed = newName.trim() !== '' && (selectedStrains.length > 0 || newBreed.trim() !== '') && newGender !== '' && age.trim() !== '';
+  const validationPassed = newName.trim() !== '' && effectiveBreed !== '' && newGender !== '' && age.trim() !== '';
   const sireGen = generationOfNameHelper(sireName, fowls, new Map<string, number>(), new Set<string>());
   const damGen = generationOfNameHelper(damName, fowls, new Map<string, number>(), new Set<string>());
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
@@ -433,14 +434,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     const draft = {
       id: -1,
       name: newName.trim() || '__preview__',
-      breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
+      breed: effectiveBreed,
       gender: newGender,
       sire: sireName,
       dam: damName,
       declared_composition: newDeclaredComposition,
     } as FowlRecord;
     return computeBloodlineComposition(draft, fowls);
-  }, [newName, newBreed, selectedStrains, newGender, sireName, damName, newDeclaredComposition, fowls]);
+  }, [newName, effectiveBreed, newGender, sireName, damName, newDeclaredComposition, fowls]);
   const previewBloodlineStats = useMemo(() => getBloodlineStats(previewComposition), [previewComposition]);
   const computedBloodlinePct = previewBloodlineStats ? previewBloodlineStats.specificPct : 100;
   /**
@@ -611,19 +612,21 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const addStrain = useCallback((strain: string) => {
     const trimmed = strain.trim();
     if (!trimmed) return;
-    if (!selectedStrains.includes(trimmed)) {
-      setSelectedStrains((prev) => [...prev, trimmed]);
-    }
-    if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-      setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
-      setCustomStrainNames((prev) => new Set([...prev, trimmed]));
-      strainService.saveCustomStrain(trimmed).then((saved) => {
-        if (!saved) toastMessage(`Strain "${trimmed}" saved locally only.`, 'warning');
+    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    const canonical = registered ?? trimmed;
+    setSelectedStrains((prev) =>
+      prev.some((s) => s.toLowerCase() === canonical.toLowerCase()) ? prev : [...prev, canonical],
+    );
+    if (!registered) {
+      setAvailableStrains((prev) => [...prev, canonical].sort((a, b) => a.localeCompare(b)));
+      setCustomStrainNames((prev) => new Set([...prev, canonical]));
+      strainService.saveCustomStrain(canonical).then((saved) => {
+        if (!saved) toastMessage(`Strain "${canonical}" saved locally only.`, 'warning');
       }).catch(() => {});
     }
     setStrainQuery('');
     setNewBreed('');
-  }, [selectedStrains, availableStrains, setNewBreed, ui]);
+  }, [availableStrains, setNewBreed]);
 
   const removeStrain = useCallback((index: number) => {
     setSelectedStrains((prev) => prev.filter((_, i) => i !== index));
@@ -636,7 +639,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     // 1. Upfront Form & Format Validation
     const validation = validateFowlForm({
       name: newName,
-      breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
+      breed: effectiveBreed,
       gender: newGender,
       weight,
       height,
@@ -770,7 +773,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       // 5. Construct payload & INSERT with up to 2 retries on unique violation
       const autoParts = autoCalcAge ? getAgePartsHelper(newBirthdate) : null;
-      const breedValue = selectedStrains.length > 0 ? selectedStrains.join(', ') : sanitizeInput(newBreed) || 'Unspecified Strain';
+      const breedValue = sanitizeInput(effectiveBreed) || 'Unspecified Strain';
       const composition = computeBloodlineComposition(
         {
           id: -1,

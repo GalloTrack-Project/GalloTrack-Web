@@ -23,7 +23,7 @@ import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
-import { Lock, RotateCcw, Edit3 } from 'lucide-react';
+import { CircleAlert, Lock, RotateCcw, Edit3 } from 'lucide-react';
 import { useT } from '@/lib/i18n';
 
 export function StatusItem({
@@ -189,6 +189,7 @@ export default function EncodeForm({
   const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
+  const [strainError, setStrainError] = useState<string | null>(null);
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -204,29 +205,116 @@ export default function EncodeForm({
       ? 'dam'
       : 'sire';
 
+  const effectiveBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
+
+  useEffect(() => {
+    const trimmed = newBreed.trim();
+    if (!trimmed) return;
+    const match = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    if (match && match !== newBreed) setNewBreed(match);
+  }, [availableStrains, newBreed, setNewBreed]);
+
+  const focusStrainField = () => {
+    const input = strainInputElRef.current;
+    if (!input) return;
+    input.focus();
+    input.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleStrainChange = (value: string) => {
+    setStrainQuery(value);
+    const trimmed = value.trim();
+    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    setNewBreed(registered ?? value);
+    setStrainOpen(true);
+    if (trimmed) setStrainError(null);
+  };
+
+  const commitStrain = (options: { focusOnError?: boolean } = {}) => {
+    const trimmed = strainQuery.trim();
+    if (!trimmed) {
+      if (selectedStrains.length === 0) {
+        setStrainError(t('registry.strainRequired'));
+        if (options.focusOnError) focusStrainField();
+      }
+      setNewBreed('');
+      setStrainQuery('');
+      setStrainOpen(false);
+      return;
+    }
+    if (loading) {
+      setNewBreed(trimmed);
+      setStrainOpen(false);
+      return;
+    }
+    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    addStrain(registered ?? trimmed);
+    setStrainError(null);
+    setStrainOpen(false);
+  };
+
+  const selectStrainOption = (strain: string) => {
+    addStrain(strain);
+    setStrainError(null);
+    setStrainOpen(false);
+  };
+
+  const handleStrainBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const next = event.relatedTarget as HTMLElement | null;
+    commitStrain({ focusOnError: next?.tagName !== 'A' });
+  };
+
+  const handleFormSubmit = (event: React.FormEvent) => {
+    const breedValue = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
+    if (!breedValue) {
+      setStrainError(t('registry.strainRequired'));
+      focusStrainField();
+    } else {
+      setStrainError(null);
+    }
+    if (!birthdateValidation.valid) {
+      event.preventDefault();
+      return;
+    }
+    handleAddFowl(event);
+  };
+
   const pedigreeComposition = useMemo<BloodlineComposition | null>(() => {
     if (!hasAnyParent) return null;
     const draft = {
       id: -1,
       name: newName.trim() || '__preview__',
-      breed: selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed,
+      breed: effectiveBreed,
       gender: newGender,
       sire: sireName,
       dam: damName,
     } as FowlRecord;
     return computePedigreeComposition(draft, fowls);
-  }, [hasAnyParent, newName, selectedStrains, newBreed, newGender, sireName, damName, fowls]);
+  }, [hasAnyParent, newName, effectiveBreed, newGender, sireName, damName, fowls]);
 
   const declaredValidation = useMemo(() => {
     if (!newDeclaredComposition || newDeclaredComposition.length === 0) {
       return { valid: true };
     }
-    const currentBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed;
-    return validateDeclaredComposition(newDeclaredComposition, currentBreed, availableStrains, {
+    return validateDeclaredComposition(newDeclaredComposition, effectiveBreed, availableStrains, {
       isOffspring,
       pedigreeComposition,
     });
-  }, [isOffspring, newDeclaredComposition, selectedStrains, newBreed, availableStrains, pedigreeComposition]);
+  }, [isOffspring, newDeclaredComposition, effectiveBreed, availableStrains, pedigreeComposition]);
+
+  const missingRequiredFields: string[] = [];
+  if (!newName.trim()) missingRequiredFields.push(t('registry.identifierName'));
+  if (!effectiveBreed) missingRequiredFields.push(t('registry.geneticStrain'));
+  if (!newGender) missingRequiredFields.push(t('registry.genderClass'));
+  if (!newBirthdate.trim()) missingRequiredFields.push(t('registry.birthDate'));
+
+  const validationSummaryValue = missingRequiredFields.length > 0
+    ? t('registry.validationMissingFields', { fields: missingRequiredFields.join(', ') })
+    : validationPassed && birthdateValidation.valid
+      ? t('registry.validationPassed')
+      : t('registry.validationPending');
+  const validationOk =
+    missingRequiredFields.length === 0 && birthdateValidation.valid && declaredValidation.valid;
 
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
@@ -295,7 +383,7 @@ export default function EncodeForm({
   const isCustomTrait = isCustomOption(newBehaviorTrait, baseTraitOptions.map((o) => o.value));
 
   return (
-    <form onSubmit={(e) => { if (!birthdateValidation.valid) { e.preventDefault(); return; } handleAddFowl(e); }} className="space-y-5 animate-fadeIn">
+    <form onSubmit={handleFormSubmit} className="space-y-5 animate-fadeIn">
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
@@ -458,18 +546,28 @@ export default function EncodeForm({
                 ref={strainInputElRef}
                 type="text"
                 value={strainQuery}
-                onChange={(e) => { setStrainQuery(e.target.value); setNewBreed(e.target.value); setStrainOpen(true); }}
+                onChange={(e) => handleStrainChange(e.target.value)}
                 onFocus={() => setStrainOpen(true)}
+                onBlur={handleStrainBlur}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    const trimmed = strainQuery.trim();
-                    if (trimmed) { addStrain(trimmed); setStrainOpen(false); }
+                    commitStrain({ focusOnError: true });
+                  }
+                  if (e.key === 'Tab') {
+                    if (!strainQuery.trim() && selectedStrains.length === 0) {
+                      e.preventDefault();
+                      commitStrain({ focusOnError: true });
+                    } else {
+                      commitStrain();
+                    }
                   }
                   if (e.key === 'Escape') setStrainOpen(false);
                 }}
+                aria-invalid={Boolean(strainError)}
+                aria-describedby={strainError ? 'genetic-strain-error' : undefined}
                 placeholder="Select or type a strain..."
-                className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
+                className={`w-full pl-3 pr-9 p-3 border rounded-md text-sm bg-white dark:bg-input placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-semibold transition-all focus:ring-4 ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'} ${strainError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:border-rose-700 dark:focus:ring-rose-950/50' : 'border-input-border focus:border-emerald-500 focus:ring-emerald-100'}`}
               id="genetic-strain" />
               <button
                 type="button"
@@ -494,7 +592,7 @@ export default function EncodeForm({
                           {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Matching strains</div>}
                           {matching.map((s) => (
                             <div key={s} className="flex items-center w-full group">
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainQuery(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                              <button type="button" onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
                                 {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
                               </button>
                             </div>
@@ -503,7 +601,7 @@ export default function EncodeForm({
                       );
                     }
                     return matching.map((s) => (
-                        <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); addStrain(s); setStrainQuery(s); setStrainOpen(false); strainInputElRef.current?.blur(); }} className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                        <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }} className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
                           {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
                         </button>
                     ));
@@ -524,6 +622,12 @@ export default function EncodeForm({
               document.body
             )}
           </div>
+          {strainError ? (
+            <p id="genetic-strain-error" role="alert" className="mt-1.5 flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300">
+              <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{strainError}</span>
+            </p>
+          ) : null}
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
@@ -543,7 +647,7 @@ export default function EncodeForm({
           {!hasAnyParent && (
             <div className="sm:col-span-2 pt-1">
               <DeclaredCompositionEditor
-                registeredBreed={selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed}
+                registeredBreed={effectiveBreed}
                 availableBreeds={availableStrains}
                 value={newDeclaredComposition ?? null}
                 onChange={(val) => setNewDeclaredComposition?.(val)}
@@ -830,7 +934,7 @@ export default function EncodeForm({
         {hasAnyParent && (
           <div className="pt-1">
             <DeclaredCompositionEditor
-              registeredBreed={selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed}
+              registeredBreed={effectiveBreed}
               availableBreeds={availableStrains}
               value={newDeclaredComposition ?? null}
               onChange={(val) => setNewDeclaredComposition?.(val)}
@@ -911,7 +1015,7 @@ export default function EncodeForm({
         </div>
         <div data-testid="validation-summary-grid" className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
           <StatusItem icon="🛡️" label={t('registry.dataIntegrity')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-          <StatusItem icon="✅" label={t('registry.validationStatus')} value={validationPassed && birthdateValidation.valid ? t('registry.validationPassed') : t('registry.validationPending')} tone={validationPassed && birthdateValidation.valid ? 'green' : 'amber'} />
+          <StatusItem icon="✅" label={t('registry.validationStatus')} value={validationSummaryValue} tone={validationOk ? 'green' : 'amber'} />
           <StatusItem icon="🔗" label={t('registry.lineageResolved')} value={bloodlineVerified ? t('registry.lineageResolvedStatus') : t('registry.lineageAwaitingStatus')} tone={bloodlineVerified ? 'green' : 'amber'} />
           <StatusItem icon="📊" label={t('registry.dataCompleteness')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
         </div>

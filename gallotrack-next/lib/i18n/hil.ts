@@ -336,6 +336,8 @@ export const hil: AppTranslations = {
     validationStatus: 'Pagpamatuod',
     validationPassed: 'Napasar',
     validationPending: 'Nabilin',
+    validationMissingFields: 'Kulang: {fields}',
+    strainRequired: 'Kinahanglan ang lahi/strain.',
     lineageResolvedStatus: 'Nahusay',
     lineageAwaitingStatus: 'Nagahulat',
     dataCompleteness: 'Kabilugan sang Datos',

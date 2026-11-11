@@ -342,6 +342,8 @@ export const en = {
     validationStatus: 'Validation',
     validationPassed: 'Passed',
     validationPending: 'Pending',
+    validationMissingFields: 'Missing: {fields}',
+    strainRequired: 'Breed/strain is required.',
     lineageResolvedStatus: 'Resolved',
     lineageAwaitingStatus: 'Awaiting',
     dataCompleteness: 'Data Completeness',
