@@ -26,6 +26,7 @@ type Props = {
   disabled?: boolean;
   error?: string | null;
   uploading?: boolean;
+  processing?: boolean;
   uploadProgress?: number;
   onCancelUpload?: () => void;
   onRetry?: () => void;
@@ -64,6 +65,7 @@ export default function PhotoUploader({
   disabled = false,
   error,
   uploading = false,
+  processing = false,
   uploadProgress = 0,
   onCancelUpload,
   onRetry,
@@ -80,7 +82,8 @@ export default function PhotoUploader({
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   const progress = Math.max(0, Math.min(100, Math.round(uploadProgress)));
-  const canInteract = !disabled && !uploading;
+  const busy = uploading || processing;
+  const canInteract = !disabled && !busy;
   const hasValue = Boolean(value?.previewSrc);
 
   const openPicker = () => {
@@ -155,42 +158,52 @@ export default function PhotoUploader({
         data-drag-active={dragActive ? 'true' : undefined}
       >
         {hasValue && value ? (
-          <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
+          <div className="space-y-3 p-3">
             <button
               type="button"
               onClick={() => setLightboxOpen(true)}
               aria-label={`View larger photo of ${alt}`}
-              className="group relative h-24 w-24 shrink-0 cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="group relative block w-full cursor-zoom-in overflow-hidden rounded-md border border-border bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:outline-none dark:bg-muted"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={value.previewSrc} alt={alt} className="h-full w-full object-cover" />
+              <span className="flex h-56 w-full items-center justify-center sm:h-64">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={value.previewSrc}
+                  alt={alt}
+                  className="h-full w-full object-contain"
+                />
+              </span>
               <span
                 aria-hidden="true"
-                className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/25 group-hover:opacity-100"
+                className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white opacity-80 transition group-hover:bg-black/55 group-hover:opacity-100"
               >
-                <Maximize2 className="h-5 w-5 drop-shadow" />
+                <Maximize2 className="h-4 w-4 drop-shadow" />
               </span>
-              {uploading ? (
-                <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/55 text-white">
-                  <Spinner className="h-5 w-5" />
-                  <span className="text-xs font-bold tabular-nums">{progress}%</span>
+              {busy ? (
+                <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/45 text-white">
+                  <Spinner className="h-6 w-6" />
+                  <span className="text-xs font-bold tabular-nums">
+                    {processing ? 'Processing…' : `${progress}%`}
+                  </span>
                 </span>
               ) : null}
             </button>
 
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="truncate text-sm font-bold text-foreground">
-                {value.fileName || 'Photo'}
-              </p>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-medium text-muted-foreground">
-                {typeof value.fileSize === 'number' ? (
-                  <span>{formatFileSize(value.fileSize)}</span>
-                ) : null}
-                {value.statusLabel ? <span>{value.statusLabel}</span> : null}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="truncate text-sm font-bold text-foreground">
+                  {value.fileName || 'Photo'}
+                </p>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-medium text-muted-foreground">
+                  {typeof value.fileSize === 'number' ? (
+                    <span>{formatFileSize(value.fileSize)}</span>
+                  ) : null}
+                  {value.statusLabel ? <span>{value.statusLabel}</span> : null}
+                </div>
               </div>
 
               {canInteract ? (
-                <div className="flex flex-wrap gap-2 pt-1.5">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
                     className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
@@ -209,38 +222,38 @@ export default function PhotoUploader({
                   </Button>
                 </div>
               ) : null}
-
-              {confirmRemove ? (
-                <div
-                  role="group"
-                  aria-label="Confirm photo removal"
-                  className="mt-1 flex flex-col gap-2 rounded-md border border-rose-200 bg-rose-50 p-2.5 sm:flex-row sm:items-center sm:justify-between dark:border-rose-900/60 dark:bg-rose-950/40"
-                >
-                  <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">
-                    Remove this photo?
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="danger"
-                      className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                      onClick={() => {
-                        setConfirmRemove(false);
-                        onRemove();
-                      }}
-                    >
-                      Remove
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                      onClick={() => setConfirmRemove(false)}
-                    >
-                      Keep
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
             </div>
+
+            {confirmRemove ? (
+              <div
+                role="group"
+                aria-label="Confirm photo removal"
+                className="flex flex-col gap-2 rounded-md border border-rose-200 bg-rose-50 p-2.5 sm:flex-row sm:items-center sm:justify-between dark:border-rose-900/60 dark:bg-rose-950/40"
+              >
+                <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">
+                  Remove this photo?
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="danger"
+                    className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    onClick={() => {
+                      setConfirmRemove(false);
+                      onRemove();
+                    }}
+                  >
+                    Remove
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    onClick={() => setConfirmRemove(false)}
+                  >
+                    Keep
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <button
@@ -290,10 +303,12 @@ export default function PhotoUploader({
         }}
       />
 
-      {uploading ? (
+      {busy ? (
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-foreground">
-            <span aria-live="polite">Uploading photo… {progress}%</span>
+            <span aria-live="polite">
+              {processing ? 'Processing photo…' : `Uploading photo… ${progress}%`}
+            </span>
             {onCancelUpload ? (
               <button
                 type="button"
@@ -304,19 +319,30 @@ export default function PhotoUploader({
               </button>
             ) : null}
           </div>
-          <div
-            role="progressbar"
-            aria-label="Photo upload progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress}
-            className="h-2 overflow-hidden rounded-full bg-muted"
-          >
+          {processing ? (
             <div
-              className="h-full rounded-full bg-emerald-600 transition-all"
-              style={{ width: `${Math.max(4, progress)}%` }}
-            />
-          </div>
+              role="progressbar"
+              aria-label="Photo processing progress"
+              aria-valuetext="Processing photo"
+              className="h-2 overflow-hidden rounded-full bg-muted"
+            >
+              <div className="h-full w-1/3 animate-pulse rounded-full bg-emerald-600" />
+            </div>
+          ) : (
+            <div
+              role="progressbar"
+              aria-label="Photo upload progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+              className="h-2 overflow-hidden rounded-full bg-muted"
+            >
+              <div
+                className="h-full rounded-full bg-emerald-600 transition-all"
+                style={{ width: `${Math.max(4, progress)}%` }}
+              />
+            </div>
+          )}
         </div>
       ) : null}
 

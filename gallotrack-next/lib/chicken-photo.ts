@@ -10,18 +10,50 @@ export const CHICKEN_PHOTO_SETUP_MESSAGE =
   'Photos are not set up yet. Ask the admin to apply the database update.';
 export const CHICKEN_PHOTO_UPLOAD_CANCELLED = 'Photo upload was cancelled.';
 
-export type ChickenPhotoCrop = {
-  x: number;
-  y: number;
+export type ProcessedChickenPhoto = {
+  full: File;
+  thumbnail: File;
+};
+
+export type ChickenPhotoDimensions = {
   width: number;
   height: number;
 };
 
-export type ProcessedChickenPhoto = {
-  full: File;
-  thumbnail: File;
-  previewUrl: string;
+export type ChickenPhotoThumbnailCrop = {
+  x: number;
+  y: number;
+  size: number;
 };
+
+export function computeFullImageDimensions(
+  width: number,
+  height: number,
+): ChickenPhotoDimensions {
+  const safeWidth = Math.max(1, Math.round(width));
+  const safeHeight = Math.max(1, Math.round(height));
+  const longestSide = Math.max(safeWidth, safeHeight);
+  const scale =
+    longestSide > CHICKEN_PHOTO_MAX_FULL_SIDE
+      ? CHICKEN_PHOTO_MAX_FULL_SIDE / longestSide
+      : 1;
+  return {
+    width: Math.max(1, Math.round(safeWidth * scale)),
+    height: Math.max(1, Math.round(safeHeight * scale)),
+  };
+}
+
+export function computeThumbnailCrop(
+  width: number,
+  height: number,
+): ChickenPhotoThumbnailCrop {
+  const size = Math.max(1, Math.min(width, height));
+  return {
+    x: Math.max(0, (width - size) / 2),
+    y: Math.max(0, (height - size) * 0.3),
+    size,
+  };
+}
 
 function formatMegabytes(bytes: number): string {
   const megabytes = bytes / (1024 * 1024);
@@ -127,62 +159,50 @@ async function encodeCanvas(canvas: HTMLCanvasElement): Promise<{ blob: Blob; ex
   return { blob, extension: blob.type === 'image/png' ? 'png' : 'jpg' };
 }
 
-function drawSquareCrop(
-  image: LoadedImage,
-  crop: ChickenPhotoCrop,
-  outputSide: number,
-): HTMLCanvasElement {
-  const sourceX = Math.max(0, Math.min(crop.x, image.width - 1));
-  const sourceY = Math.max(0, Math.min(crop.y, image.height - 1));
-  const cropSide = Math.max(1, Math.min(crop.width, crop.height, image.width, image.height));
+function drawFullImage(image: LoadedImage): HTMLCanvasElement {
+  const { width, height } = computeFullImageDimensions(image.width, image.height);
   const canvas = document.createElement('canvas');
-  canvas.width = outputSide;
-  canvas.height = outputSide;
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The photo could not be processed. Try another image.');
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(image.source, 0, 0, width, height);
+  return canvas;
+}
+
+function drawThumbnail(image: LoadedImage): HTMLCanvasElement {
+  const crop = computeThumbnailCrop(image.width, image.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = CHICKEN_PHOTO_THUMB_SIDE;
+  canvas.height = CHICKEN_PHOTO_THUMB_SIDE;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('The photo could not be processed. Try another image.');
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
   context.drawImage(
     image.source,
-    sourceX,
-    sourceY,
-    cropSide,
-    cropSide,
+    crop.x,
+    crop.y,
+    crop.size,
+    crop.size,
     0,
     0,
-    outputSide,
-    outputSide,
+    CHICKEN_PHOTO_THUMB_SIDE,
+    CHICKEN_PHOTO_THUMB_SIDE,
   );
   return canvas;
 }
 
-export async function processChickenPhoto(
-  file: File,
-  crop?: ChickenPhotoCrop | null,
-): Promise<ProcessedChickenPhoto> {
+export async function processChickenPhoto(file: File): Promise<ProcessedChickenPhoto> {
   const validation = validateChickenPhotoFile(file);
   if (validation) throw new Error(validation);
 
   const image = await loadOrientedImage(file);
   try {
-    const fallbackSide = Math.min(image.width, image.height);
-    const area: ChickenPhotoCrop = crop && crop.width > 0 && crop.height > 0
-      ? crop
-      : {
-          x: Math.max(0, (image.width - fallbackSide) / 2),
-          y: Math.max(0, (image.height - fallbackSide) / 2),
-          width: fallbackSide,
-          height: fallbackSide,
-        };
-    const sourceSide = Math.min(area.width, area.height, image.width, image.height);
-    const fullSide = Math.max(1, Math.min(CHICKEN_PHOTO_MAX_FULL_SIDE, Math.round(sourceSide)));
-
-    const fullEncoded = await encodeCanvas(
-      drawSquareCrop(image, area, fullSide),
-    );
-    const thumbEncoded = await encodeCanvas(
-      drawSquareCrop(image, area, CHICKEN_PHOTO_THUMB_SIDE),
-    );
+    const fullEncoded = await encodeCanvas(drawFullImage(image));
+    const thumbEncoded = await encodeCanvas(drawThumbnail(image));
 
     const full = new File([fullEncoded.blob], `chicken-photo.${fullEncoded.extension}`, {
       type: fullEncoded.blob.type || 'image/webp',
@@ -191,11 +211,7 @@ export async function processChickenPhoto(
       type: thumbEncoded.blob.type || 'image/webp',
     });
 
-    return {
-      full,
-      thumbnail,
-      previewUrl: URL.createObjectURL(full),
-    };
+    return { full, thumbnail };
   } finally {
     image.close?.();
   }

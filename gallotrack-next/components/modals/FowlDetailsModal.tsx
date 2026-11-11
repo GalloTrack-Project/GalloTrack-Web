@@ -467,6 +467,7 @@ export default function FowlDetailsModal({
           photoPath={selectedFowlForDetails.photo_path}
           photoThumbPath={selectedFowlForDetails.photo_thumb_path}
           size={96}
+          fit="contain"
           className="h-24 w-24 rounded-md border border-slate-200 bg-white shadow-inner dark:border-border dark:bg-card"
           fallback={
             <span className="text-muted-foreground font-mono text-xs font-bold">NO PHOTO</span>

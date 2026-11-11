@@ -51,6 +51,11 @@ describe('PhotoUploader', () => {
     expect(screen.getByRole('heading', { name: 'Hatch Silver (1A1)' })).toBeInTheDocument();
   });
 
+  it('shows the whole photo with object-contain in the form preview', () => {
+    renderUploader({ value });
+    expect(screen.getByRole('img', { name: 'Hatch Silver (1A1)' })).toHaveClass('object-contain');
+  });
+
   it('shows progress and a cancel action while uploading', () => {
     const onCancelUpload = vi.fn();
     renderUploader({ value, uploading: true, uploadProgress: 62, onCancelUpload });
@@ -58,6 +63,17 @@ describe('PhotoUploader', () => {
       'aria-valuenow',
       '62',
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onCancelUpload).toHaveBeenCalled();
+  });
+
+  it('shows processing progress and a cancel action', () => {
+    const onCancelUpload = vi.fn();
+    renderUploader({ value, processing: true, onCancelUpload });
+    expect(
+      screen.getByRole('progressbar', { name: 'Photo processing progress' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Processing photo/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onCancelUpload).toHaveBeenCalled();
   });

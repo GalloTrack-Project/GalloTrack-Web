@@ -64,5 +64,21 @@ describe('ChickenPhoto', () => {
     );
     const img = screen.getByRole('img', { name: 'Legacy Bird (L1)' });
     expect(img).toHaveAttribute('src', 'https://cdn.test/legacy.jpg');
+    expect(img).toHaveClass('object-cover');
+    expect(img).toHaveStyle({ objectPosition: '50% 30%' });
+  });
+
+  it('can render the whole photo for the profile view', () => {
+    render(
+      <ChickenPhoto
+        name="Profile Bird"
+        code="P1"
+        imageUrl="https://cdn.test/profile.jpg"
+        size={96}
+        fit="contain"
+      />,
+    );
+    const img = screen.getByRole('img', { name: 'Profile Bird (P1)' });
+    expect(img).toHaveClass('object-contain');
   });
 });

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHICKEN_PHOTO_SETUP_MESSAGE,
+  computeFullImageDimensions,
+  computeThumbnailCrop,
   isChickenPhotoSetupError,
   processChickenPhoto,
   resolveChickenPhotoUrl,
@@ -36,6 +38,18 @@ describe('chicken photo helpers', () => {
     await expect(processChickenPhoto(file('a.txt', 'text/plain'))).rejects.toThrow(
       'Unsupported file. Please upload a JPG, PNG or WebP image.',
     );
+  });
+
+  it('scales tall and wide photos without distorting them and caps the long side at 1600', () => {
+    expect(computeFullImageDimensions(1000, 2000)).toEqual({ width: 800, height: 1600 });
+    expect(computeFullImageDimensions(3000, 1000)).toEqual({ width: 1600, height: 533 });
+    expect(computeFullImageDimensions(800, 600)).toEqual({ width: 800, height: 600 });
+  });
+
+  it('builds a square thumbnail crop centered horizontally and biased toward the top', () => {
+    expect(computeThumbnailCrop(400, 1000)).toEqual({ x: 0, y: 180, size: 400 });
+    expect(computeThumbnailCrop(1000, 400)).toEqual({ x: 300, y: 0, size: 400 });
+    expect(computeThumbnailCrop(500, 500)).toEqual({ x: 0, y: 0, size: 500 });
   });
 
   it('maps missing bucket/schema errors to the setup message', () => {

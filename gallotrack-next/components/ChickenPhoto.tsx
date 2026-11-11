@@ -21,6 +21,7 @@ type Props = {
   interactive?: boolean;
   showLightbox?: boolean;
   eager?: boolean;
+  fit?: 'cover' | 'contain';
 };
 
 export default function ChickenPhoto({
@@ -36,6 +37,7 @@ export default function ChickenPhoto({
   interactive = true,
   showLightbox = true,
   eager = false,
+  fit = 'cover',
 }: Props) {
   const [fullSrc, setFullSrc] = useState<string | null>(photoPath ? null : imageUrl || null);
   const [thumbSrc, setThumbSrc] = useState<string | null>(
@@ -71,6 +73,7 @@ export default function ChickenPhoto({
   }, [photoPath, photoThumbPath, imageUrl, size]);
 
   const alt = code ? `${name} (${formatBirdCodeForDisplay(code)})` : name;
+  const displaySrc = fit === 'contain' ? fullSrc || thumbSrc : thumbSrc;
   const placeholder = fallback ?? (
     <ChickenIcon className="text-muted-foreground h-1/2 w-1/2" />
   );
@@ -85,7 +88,7 @@ export default function ChickenPhoto({
     setLightboxOpen(true);
   };
 
-  const body = !thumbSrc || failed ? (
+  const body = !displaySrc || failed ? (
     <span
       className={cn(
         'flex h-full w-full items-center justify-center overflow-hidden',
@@ -120,12 +123,13 @@ export default function ChickenPhoto({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={thumbSrc}
+        src={displaySrc}
         alt={alt}
         width={size}
         height={size}
         loading={eager ? 'eager' : 'lazy'}
-        className={cn('h-full w-full object-cover', imgClassName)}
+        className={cn('h-full w-full', fit === 'contain' ? 'object-contain' : 'object-cover', imgClassName)}
+        style={fit === 'cover' ? { objectPosition: '50% 30%' } : undefined}
         onError={() => setFailed(true)}
       />
     </span>

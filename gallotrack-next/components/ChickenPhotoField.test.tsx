@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { CHICKEN_PHOTO_SETUP_MESSAGE } from '@/lib/chicken-photo';
 
 const processPhoto = vi.hoisted(() => vi.fn());
-
-vi.mock('react-easy-crop', () => ({
-  default: () => <div data-testid="photo-cropper" />,
-}));
 
 vi.mock('@/lib/chicken-photo', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/chicken-photo')>();
@@ -86,7 +82,6 @@ describe('ChickenPhotoField', () => {
     processPhoto.mockResolvedValue({
       full: new File(['full'], 'chicken-photo.webp', { type: 'image/webp' }),
       thumbnail: new File(['thumb'], 'chicken-photo-thumb.webp', { type: 'image/webp' }),
-      previewUrl: '',
     });
   });
 
@@ -121,47 +116,78 @@ describe('ChickenPhotoField', () => {
     ['image/jpeg', 'bird.jpg'],
     ['image/png', 'bird.png'],
     ['image/webp', 'bird.webp'],
-  ])('accepts %s and shows the crop step', (type, name) => {
+  ])('previews %s immediately and processes it without a crop step', async (type, name) => {
     render(<Harness />);
     chooseFile(fileInput(), new File(['image'], name, { type }));
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByTestId('photo-cropper')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Use photo' })).toBeInTheDocument();
+
+    expect(screen.queryByTestId('photo-cropper')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Use photo' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel crop' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: 'Hatch Silver (1A1)' })).toHaveClass(
+      'object-contain',
+    );
+
+    await waitFor(() => expect(processPhoto).toHaveBeenCalledTimes(1));
+    expect(processPhoto).toHaveBeenCalledWith(expect.any(File));
+    expect(await screen.findByText('Ready to save')).toBeInTheDocument();
   });
 
-  it('processes the cropped photo and shows its file name and size', async () => {
+  it('shows the selected file name and size', async () => {
     render(<Harness />);
     chooseFile(fileInput(), new File(['image'], 'bird.webp', { type: 'image/webp' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Use photo' }));
     await waitFor(() => expect(processPhoto).toHaveBeenCalled());
     expect(await screen.findByText('bird.webp')).toBeInTheDocument();
     expect(screen.getByText('5 B')).toBeInTheDocument();
-    expect(screen.getByText('Ready to save')).toBeInTheDocument();
   });
 
-  it('discards a pending crop when cancelled', () => {
+  it('cancels processing and discards the selection', async () => {
+    let resolveProcess!: (value: {
+      full: File;
+      thumbnail: File;
+    }) => void;
+    processPhoto.mockReturnValue(
+      new Promise((resolve) => {
+        resolveProcess = resolve;
+      }),
+    );
+
     render(<Harness />);
     chooseFile(fileInput(), new File(['image'], 'bird.png', { type: 'image/png' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel crop' }));
-    expect(screen.queryByTestId('photo-cropper')).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole('progressbar', { name: 'Photo processing progress' }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(
+      screen.queryByRole('progressbar', { name: 'Photo processing progress' }),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveProcess({
+        full: new File(['full'], 'chicken-photo.webp', { type: 'image/webp' }),
+        thumbnail: new File(['thumb'], 'chicken-photo-thumb.webp', { type: 'image/webp' }),
+      });
+    });
     expect(screen.queryByText('Ready to save')).not.toBeInTheDocument();
-    expect(processPhoto).not.toHaveBeenCalled();
   });
 
-  it('accepts a dropped photo', () => {
+  it('accepts a dropped photo and processes it automatically', async () => {
     render(<Harness />);
     fireEvent.drop(dropzone(), {
       dataTransfer: { files: [new File(['image'], 'dropped.jpg', { type: 'image/jpeg' })] },
     });
-    expect(screen.getByTestId('photo-cropper')).toBeInTheDocument();
+    await waitFor(() => expect(processPhoto).toHaveBeenCalled());
+    expect(await screen.findByText('dropped.jpg')).toBeInTheDocument();
   });
 
-  it('accepts a pasted photo from the clipboard', () => {
+  it('accepts a pasted photo and processes it automatically', async () => {
     render(<Harness />);
     fireEvent.paste(dropzone(), {
       clipboardData: { files: [new File(['image'], 'pasted.png', { type: 'image/png' })] },
     });
-    expect(screen.getByTestId('photo-cropper')).toBeInTheDocument();
+    await waitFor(() => expect(processPhoto).toHaveBeenCalled());
+    expect(await screen.findByText('pasted.png')).toBeInTheDocument();
   });
 
   it('changes the dropzone copy while dragging a photo over it', () => {
@@ -172,8 +198,18 @@ describe('ChickenPhotoField', () => {
     expect(screen.queryAllByText('Drop photo to upload')).toHaveLength(0);
   });
 
-  it('asks for confirmation before removing an existing photo', () => {
+  it('renders an existing photo whole and opens the lightbox', async () => {
     render(<Harness imageUrl="https://cdn.test/old.jpg" />);
+    const img = await screen.findByRole('img', { name: 'Hatch Silver (1A1)' });
+    expect(img).toHaveClass('object-contain');
+
+    fireEvent.click(screen.getByRole('button', { name: 'View larger photo of Hatch Silver (1A1)' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('asks for confirmation before removing an existing photo', async () => {
+    render(<Harness imageUrl="https://cdn.test/old.jpg" />);
+    await screen.findByRole('img', { name: 'Hatch Silver (1A1)' });
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
     const confirm = screen.getByRole('group', { name: 'Confirm photo removal' });
     expect(confirm).toHaveTextContent('Remove this photo?');
@@ -202,8 +238,9 @@ describe('ChickenPhotoField', () => {
     expect(screen.getByText(/Uploading photo/i)).toBeInTheDocument();
   });
 
-  it('hides upload and remove controls without edit permission', () => {
+  it('hides upload and remove controls without edit permission', async () => {
     render(<Harness canEdit={false} imageUrl="https://cdn.test/old.jpg" />);
+    await screen.findByRole('img', { name: 'Hatch Silver (1A1)' });
     expect(screen.queryByRole('button', { name: /Replace/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Remove/i })).not.toBeInTheDocument();
     expect(screen.getByText(/do not have permission/i)).toBeInTheDocument();
