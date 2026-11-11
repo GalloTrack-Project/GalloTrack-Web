@@ -314,6 +314,7 @@ export const tl: AppTranslations = {
     autoAgeLabel: '📅 Awtomatikong Edad: {label} · Eksakto {exact}',
     birthDateDerivedHelp: 'Ang edad, yugto ng paglaki, at mga petsa ay awtomatikong kinakalkula mula rito.',
     ageMos: 'Edad (Buwan)',
+    calculatedFromBirthDate: 'Kinakalkula mula sa petsa ng kapanganakan',
     autoBadge: '· awto',
     growthStage: 'Yugto ng Paglaki',
     selectStage: 'Pumili ng yugto...',

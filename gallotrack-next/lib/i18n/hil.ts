@@ -314,6 +314,7 @@ export const hil: AppTranslations = {
     autoAgeLabel: '📅 Awtomatiko nga Edad: {label} · Eksakto {exact}',
     birthDateDerivedHelp: 'Ang edad, lebel sang pagdako, kag mga petsa awtomatiko nga ginakuwenta halin diri.',
     ageMos: 'Edad (Bulan)',
+    calculatedFromBirthDate: 'Ginakalkulo halin sa petsa sang pagkatawo',
     autoBadge: '· awto',
     growthStage: 'Lebel sang Pagdako',
     selectStage: 'Pilia ang lebel...',

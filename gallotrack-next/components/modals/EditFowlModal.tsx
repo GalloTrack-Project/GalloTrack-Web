@@ -292,6 +292,13 @@ export default function EditFowlModal({
   const photoUploading = photoForm?.uploadingImage ?? false;
   const saveBusy = loading || photoUploading || photoProcessing;
 
+  const editAgeParts = editBirthdate ? getAgeParts(editBirthdate) : null;
+  const editAgeDisplay = editBirthdate
+    ? editAgeParts
+      ? String(editAgeParts.totalMonths)
+      : '-'
+    : editAge || '-';
+
   const isFoundationStock = (name: string): boolean =>
     (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
@@ -657,16 +664,22 @@ export default function EditFowlModal({
                 )}
               </label>
               <input
-                type="number"
-                value={
-                  editBirthdate ? String(getAgeParts(editBirthdate)?.totalMonths ?? 0) : editAge
-                }
-                onChange={(e) => handleEditAgeChange(e.target.value)}
-                readOnly={!!editBirthdate}
-                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-center text-sm font-bold text-neutral-900"
+                type="text"
+                inputMode="numeric"
+                value={editAgeDisplay}
+                readOnly
+                aria-readonly="true"
+                aria-describedby="edit-age-mos-help"
+                className="border-input-border dark:bg-muted/40 w-full cursor-default rounded-md border bg-muted/60 p-2.5 text-center text-sm font-bold text-neutral-900 focus:border-input-border focus:ring-0 focus-visible:outline-none dark:text-foreground"
                 required
                 id="age-mos"
               />
+              <p
+                id="edit-age-mos-help"
+                className="text-muted-foreground mt-1 text-xs font-semibold"
+              >
+                {t('registry.calculatedFromBirthDate')}
+              </p>
             </div>
             <div>
               <label
@@ -699,6 +712,8 @@ export default function EditFowlModal({
                 type="number"
                 step="0.1"
                 min="0"
+                inputMode="decimal"
+                onWheel={(e) => e.currentTarget.blur()}
                 value={editHeight}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -720,6 +735,8 @@ export default function EditFowlModal({
                 type="number"
                 step="0.1"
                 min="0"
+                inputMode="decimal"
+                onWheel={(e) => e.currentTarget.blur()}
                 value={editWeight}
                 onChange={(e) => {
                   const v = e.target.value;

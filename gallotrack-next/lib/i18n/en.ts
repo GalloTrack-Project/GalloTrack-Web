@@ -320,6 +320,7 @@ export const en = {
     autoAgeLabel: '📅 Auto Age: {label} · Exact {exact}',
     birthDateDerivedHelp: 'Age, growth stage, and calendar milestones are derived automatically from this date.',
     ageMos: 'Age (Mos)',
+    calculatedFromBirthDate: 'Calculated from the birth date',
     autoBadge: '· auto',
     growthStage: 'Growth Stage',
     selectStage: 'Select stage...',
