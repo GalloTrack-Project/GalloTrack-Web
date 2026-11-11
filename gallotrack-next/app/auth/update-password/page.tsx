@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/registry';
+import Logo from '@/components/brand/Logo';
 
 type Status = 'loading' | 'ready' | 'success' | 'error';
 
@@ -112,7 +113,7 @@ function UpdateCard() {
         <div className="p-8 sm:p-10 space-y-6">
           <div className="text-center space-y-2">
             <span className="text-xs font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICI Capstone Project</span>
-            <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
+            <Logo variant="full" size="md" className="mx-auto" />
             <p className="text-xs text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 

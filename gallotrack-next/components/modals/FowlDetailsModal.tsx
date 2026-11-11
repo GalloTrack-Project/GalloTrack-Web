@@ -18,7 +18,8 @@ import BloodlineReportCard from '@/components/BloodlineReportCard';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import BloodlineProvenance from '@/components/BloodlineProvenance';
 import { birdCodeOf, formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf } from '@/lib/lineage';
+import { activePartnerOf, childrenOf, originPairingOf, parentRecordOf, classifyCrisscross } from '@/lib/lineage';
+import CrisscrossBadge from '@/components/CrisscrossBadge';
 import { birdFamilyStats } from '@/lib/family-stats';
 import {
   useUnitPrefs,
@@ -29,7 +30,13 @@ import {
 } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { isMale, isFemale, sexLabel, parentBloodlineOf, winRateOf, formatColorDisplay } from '@/lib/helpers';
+import { isMale, isFemale, canFight, sexLabel, parentBloodlineOf, formatColorDisplay } from '@/lib/helpers';
+import {
+  buildChickenMatchStatsMap,
+  getChickenMatchStats,
+  type ChickenMatchStats,
+} from '@/lib/win-rate';
+import WinRatePill from '@/components/match/WinRatePill';
 import { getBreedingClassification, isFoundationStockRecord } from '@/lib/breeding-classification';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
@@ -55,6 +62,7 @@ import {
 } from '@/lib/services/media-service';
 import { toastMessage } from '@/lib/toast-bus';
 import MatchMediaButtons from '@/components/match/MatchMediaButtons';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import {
   buildRegistryContext,
@@ -247,6 +255,13 @@ export default function FowlDetailsModal({
     () => extractFoughtLookups(matchHistory ?? []),
     [matchHistory],
   );
+  // One lifetime record map for the whole profile (header, siblings, combat log,
+  // opponents and reports) using the same fowl_id resolution as Match Logs and
+  // the Lineage Directory.
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory ?? [], fowls ?? []),
+    [matchHistory, fowls],
+  );
 
   if (!selectedFowlForDetails) return null;
 
@@ -255,6 +270,11 @@ export default function FowlDetailsModal({
   const classification = getBreedingClassification(bird, fowls);
   const parentageRelatedness = getOffspringParentageRelatedness(bird, fowls);
   const isRetired = isRetiredFighter(bird, foughtFowlIds, foughtNames, regCtx);
+  const crisscrossSire = parentRecordOf(bird, 'sire', fowls);
+  const crisscrossDam = parentRecordOf(bird, 'dam', fowls);
+  const birdCrisscross = classifyCrisscross(crisscrossSire, crisscrossDam, fowls);
+  const crisscrossPairName =
+    crisscrossSire && crisscrossDam ? `${crisscrossSire.name} \u00d7 ${crisscrossDam.name}` : null;
   const conditionOptions = mergeOptions(
     optionRows,
     'post_match_condition',
@@ -263,15 +283,11 @@ export default function FowlDetailsModal({
   const notesClean = notesDraft === (bird.notes ?? '');
 
   const printProfileReport = () => {
-    const fights = matchHistory
-      .filter(
-        (m) => (m.entry_name || '').trim().toLowerCase() === (bird.name || '').trim().toLowerCase(),
-      )
+    const record = getChickenMatchStats(matchStatsMap, bird);
+    const fights = record.matches
       .slice()
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    const wins = fights.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
-    const losses = fights.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
-    const draws = fights.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
+    const { wins, losses, draws } = record;
     const ageParts = bird.birthdate ? getAgeParts(bird.birthdate) : null;
     const bloodlineStats = bloodlineStatsOf(bird);
 
@@ -372,7 +388,10 @@ export default function FowlDetailsModal({
             { label: 'Wins', value: String(wins) },
             { label: 'Losses', value: String(losses) },
             { label: 'Draws', value: String(draws) },
-            { label: 'Win rate', value: wins + losses > 0 ? `${winRateOf(wins, losses)}%` : '—' },
+            {
+              label: 'Overall win rate (all time)',
+              value: canFight(bird) ? (record.winRate === null ? '—%' : `${record.winRate}%`) : '—',
+            },
           ],
         },
         {
@@ -441,19 +460,18 @@ export default function FowlDetailsModal({
       />
 
       <div className="dark:bg-muted/50 dark:border-border flex flex-col items-center gap-4 rounded-lg border border-slate-200/70 bg-slate-50 p-4 sm:flex-row">
-        <div className="dark:bg-card dark:border-border relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white shadow-inner">
-          {selectedFowlForDetails.image_url ? (
-            <img
-              src={selectedFowlForDetails.image_url}
-              alt={selectedFowlForDetails.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="text-muted-foreground flex h-full w-full items-center justify-center font-mono text-xs font-bold">
-              NO PHOTO
-            </div>
-          )}
-        </div>
+        <ChickenPhoto
+          name={selectedFowlForDetails.name}
+          code={birdCodeOf(selectedFowlForDetails, fowls)}
+          imageUrl={selectedFowlForDetails.image_url}
+          photoPath={selectedFowlForDetails.photo_path}
+          photoThumbPath={selectedFowlForDetails.photo_thumb_path}
+          size={96}
+          className="h-24 w-24 rounded-md border border-slate-200 bg-white shadow-inner dark:border-border dark:bg-card"
+          fallback={
+            <span className="text-muted-foreground font-mono text-xs font-bold">NO PHOTO</span>
+          }
+        />
         <div className="flex-1 space-y-1.5 text-center sm:text-left">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             <h4 className="dark:text-card-foreground text-lg font-black text-slate-900">
@@ -482,6 +500,13 @@ export default function FowlDetailsModal({
                 : selectedFowlForDetails.breed}
             </span>
             <BreedingTypeBadge classification={classification} />
+            {birdCrisscross.isCrisscross && (
+              <CrisscrossBadge
+                classification={birdCrisscross}
+                pairName={crisscrossPairName}
+                compact
+              />
+            )}
             {parentageRelatedness.type !== 'unknown' ? (
               <RelatednessBadge classification={parentageRelatedness} prefix="Bred from: " />
             ) : null}
@@ -542,6 +567,16 @@ export default function FowlDetailsModal({
                 </span>
               );
             })()}
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:justify-start">
+            <span className="text-muted-foreground font-black uppercase tracking-widest">
+              Overall (all time)
+            </span>
+            {canFight(selectedFowlForDetails) ? (
+              <WinRatePill stats={getChickenMatchStats(matchStatsMap, selectedFowlForDetails)} />
+            ) : (
+              <span className="text-muted-foreground font-black">—</span>
+            )}
           </div>
           <p className="text-muted-foreground text-xs font-medium">
             Growth Stage:{' '}
@@ -699,22 +734,23 @@ export default function FowlDetailsModal({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {selectedFowlForDetails.image_url && (
-            <button
-              type="button"
-              onClick={() => ui.setImageViewerUrl(selectedFowlForDetails.image_url || '')}
-              className="group relative cursor-pointer"
-              title="View main photo"
-            >
-              <img
-                src={selectedFowlForDetails.image_url}
-                alt={`${selectedFowlForDetails.name} main`}
-                className="border-border h-16 w-16 rounded border object-cover"
+          {(selectedFowlForDetails.image_url ||
+            selectedFowlForDetails.photo_path ||
+            selectedFowlForDetails.photo_thumb_path) && (
+            <div className="group relative">
+              <ChickenPhoto
+                name={selectedFowlForDetails.name}
+                code={birdCodeOf(selectedFowlForDetails, fowls)}
+                imageUrl={selectedFowlForDetails.image_url}
+                photoPath={selectedFowlForDetails.photo_path}
+                photoThumbPath={selectedFowlForDetails.photo_thumb_path}
+                size={64}
+                className="border-border h-16 w-16 rounded"
               />
-              <span className="absolute right-0 bottom-0 left-0 rounded-b bg-black/50 text-center text-xs font-black text-white uppercase">
+              <span className="pointer-events-none absolute right-0 bottom-0 left-0 rounded-b bg-black/50 text-center text-xs font-black text-white uppercase">
                 Main
               </span>
-            </button>
+            </div>
           )}
           {galleryPhotos.map((photo) => (
             <div key={photo.id} className="group relative">
@@ -739,7 +775,10 @@ export default function FowlDetailsModal({
               </button>
             </div>
           ))}
-          {!selectedFowlForDetails.image_url && galleryPhotos.length === 0 && (
+          {!selectedFowlForDetails.image_url &&
+            !selectedFowlForDetails.photo_path &&
+            !selectedFowlForDetails.photo_thumb_path &&
+            galleryPhotos.length === 0 && (
             <p className="text-muted-foreground text-xs font-semibold">
               No photos yet — add the first one.
             </p>
@@ -1319,50 +1358,33 @@ export default function FowlDetailsModal({
         const relations = getSiblingRelations(selectedFowlForDetails);
         if (relations.length === 0) return null;
 
-        const getMatchStats = (name: string) => {
-          const fMatches = matchHistory.filter(
-            (x) => x.entry_name?.trim().toLowerCase() === name.trim().toLowerCase(),
+        const statsForName = (name: string) => {
+          const target = fowls.find(
+            (f) => (f.name || '').trim().toLowerCase() === name.trim().toLowerCase(),
           );
-          const total = fMatches.length;
-          const wins = fMatches.filter((x) => x.outcome?.toLowerCase() === 'win').length;
-          const losses = fMatches.filter((x) => x.outcome?.toLowerCase() === 'loss').length;
-          const draws = fMatches.filter((x) => x.outcome?.toLowerCase() === 'draw').length;
-          const decided = wins + losses;
-          const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
-          return { total, wins, losses, draws, decided, winRate };
+          return getChickenMatchStats(matchStatsMap, target ?? name);
         };
 
-        const thisBirdStats = getMatchStats(selectedFowlForDetails.name);
+        const thisBirdStats = getChickenMatchStats(matchStatsMap, selectedFowlForDetails);
         const siblingData = relations.map((r) => ({
           ...r,
-          stats: getMatchStats(r.name),
+          stats: statsForName(r.name),
         }));
 
         const bestSibling = siblingData
           .filter((s) => s.stats.decided > 0)
-          .sort((a, b) => b.stats.winRate - a.stats.winRate || b.stats.wins - a.stats.wins)[0];
+          .sort(
+            (a, b) =>
+              (b.stats.winRate ?? -1) - (a.stats.winRate ?? -1) || b.stats.wins - a.stats.wins,
+          )[0];
 
         const worseSibling = siblingData
           .filter((s) => s.stats.decided > 0)
-          .sort((a, b) => a.stats.winRate - b.stats.winRate)[0];
+          .sort((a, b) => (a.stats.winRate ?? -1) - (b.stats.winRate ?? -1))[0];
 
-        const formatStats = (s: {
-          wins: number;
-          losses: number;
-          winRate: number;
-          total: number;
-          decided: number;
-        }) => {
-          if (s.total === 0)
-            return <span className="text-muted-foreground text-xs font-bold">No fights</span>;
-          return (
-            <span
-              className={`rounded-full border px-2 py-0.5 text-xs font-black ${s.winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300'}`}
-            >
-              {s.winRate}% · {s.wins}W-{s.losses}L
-            </span>
-          );
-        };
+        const formatStats = (s: ChickenMatchStats) => (
+          <WinRatePill stats={s} showNoFights />
+        );
 
         const toneBadge = (relation: string) => {
           if (relation === 'Full Sibling')
@@ -1484,7 +1506,7 @@ export default function FowlDetailsModal({
               <p className="dark:text-muted-foreground text-xs font-black tracking-widest text-slate-600 uppercase">
                 🧬 Breeding Insight
               </p>
-              {bestSibling && bestSibling.stats.winRate > thisBirdStats.winRate ? (
+              {bestSibling && (bestSibling.stats.winRate ?? -1) > (thisBirdStats.winRate ?? -1) ? (
                 <p className="dark:text-card-foreground text-xs font-medium text-slate-700">
                   <strong className="text-emerald-700 dark:text-emerald-300">
                     {bestSibling.name}
@@ -1497,7 +1519,7 @@ export default function FowlDetailsModal({
                   its parent combination for future breeding.
                 </p>
               ) : worseSibling &&
-                worseSibling.stats.winRate < thisBirdStats.winRate &&
+                (worseSibling.stats.winRate ?? -1) < (thisBirdStats.winRate ?? -1) &&
                 thisBirdStats.total > 0 ? (
                 <p className="dark:text-card-foreground text-xs font-medium text-slate-700">
                   <strong className="text-emerald-700 dark:text-emerald-300">
@@ -1611,22 +1633,13 @@ export default function FowlDetailsModal({
         ) {
           return null;
         }
-        const fowlMatches = matchHistory.filter(
-          (m) =>
-            m.entry_name?.trim().toLowerCase() ===
-            selectedFowlForDetails.name?.trim().toLowerCase(),
-        );
-        const totalFights = fowlMatches.length;
-        const wins = fowlMatches.filter(
-          (m) => m.outcome && m.outcome.toLowerCase() === 'win',
-        ).length;
-        const losses = fowlMatches.filter(
-          (m) => m.outcome && m.outcome.toLowerCase() === 'loss',
-        ).length;
-        const draws = fowlMatches.filter(
-          (m) => m.outcome && m.outcome.toLowerCase() === 'draw',
-        ).length;
-        const winRate = winRateOf(wins, losses);
+        const record = getChickenMatchStats(matchStatsMap, selectedFowlForDetails);
+        const fowlMatches = record.matches
+          .slice()
+          .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        const totalFights = record.total;
+        const { wins, losses, draws } = record;
+        const winRate = record.winRate;
 
         return (
           <div className="space-y-4">
@@ -1658,11 +1671,14 @@ export default function FowlDetailsModal({
                 </div>
                 <div className="col-span-2 rounded-md border border-teal-700/40 bg-teal-950/40 p-2.5 sm:col-span-1">
                   <span className="text-teal block text-xs font-bold uppercase">
-                    Per-Chicken Win Rate
+                    Overall (all time)
                   </span>
-                  <strong className="text-teal text-base font-black">{winRate}%</strong>
+                  <strong className="text-teal text-base font-black">
+                    {winRate === null ? '—%' : `${winRate}%`}
+                  </strong>
                   <span className="text-muted-foreground block font-mono text-xs font-semibold">
                     {wins}W - {losses}L
+                    {record.isLowSample ? ` · ${record.sampleNote?.toUpperCase()}` : ''}
                   </span>
                 </div>
               </div>
@@ -2008,13 +2024,12 @@ export default function FowlDetailsModal({
             title: string;
             detail?: string;
           };
-          const birdName = (selectedFowlForDetails.name || '').trim().toLowerCase();
           const isDamRecord =
             isFemale(selectedFowlForDetails.gender) ||
             selectedFowlForDetails.registry_role === 'Breeding Female';
           const timelineMatches = isDamRecord
             ? []
-            : matchHistory.filter((m) => (m.entry_name || '').trim().toLowerCase() === birdName);
+            : getChickenMatchStats(matchStatsMap, selectedFowlForDetails).matches;
           const items: TimelineItem[] = timelineMatches.map((m) => ({
             key: `m-${m.id}`,
             date: m.date || '',

@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, User, Settings, Shield, LogOut, AlertTriangle, RefreshCw } from 'lucide-react';
-import ChickenIcon from '@/components/ChickenIcon';
+import { Sun, Moon, User, Settings, LogOut, AlertTriangle, RefreshCw } from 'lucide-react';
+import Logo from '@/components/brand/Logo';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
@@ -90,22 +90,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* SIDEBAR */}
       <aside className="bg-card text-card-foreground border-border z-50 hidden h-full w-64 flex-col justify-between border-r shadow-2xl md:fixed md:inset-y-0 md:left-0 md:flex">
         <div>
-          <div className="border-border bg-muted/40 flex h-16 shrink-0 items-center gap-3 border-b px-5">
-            <div className="bg-accent/15 border-accent/40 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border shadow-inner">
-              {isAdmin ? (
-                <Shield className="text-accent h-4 w-4" aria-hidden="true" />
-              ) : (
-                <ChickenIcon className="text-accent h-4 w-4" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1 leading-none">
-              <p className="text-card-foreground text-base font-semibold tracking-tight">
-                GALLO<span className="text-accent">TRACK</span>
-              </p>
-              <span className="text-accent mt-1.5 block font-mono text-sm font-medium tracking-widest uppercase">
-                {isAdmin ? 'Admin Panel' : 'v1.0.0'}
-              </span>
-            </div>
+          <div className="border-border bg-muted/40 flex h-16 shrink-0 items-center border-b px-5">
+            <Logo variant="full" size="md" className="min-w-0" />
           </div>
           <nav aria-label="Primary" className="mt-2 space-y-4 p-4">
             {groupNavItems(navItems).map(({ group, items }) => (
@@ -227,18 +213,12 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         <header className="bg-card/85 border-border sticky top-0 z-40 flex h-16 shrink-0 items-center border-b shadow-xs backdrop-blur-md">
           <div className="flex w-full items-center justify-between px-3 sm:px-6 md:px-8">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex min-w-0 flex-col justify-center md:hidden">
-                <span className="text-card-foreground from-foreground to-accent truncate bg-gradient-to-r bg-clip-text text-sm leading-tight font-extrabold tracking-tight text-transparent">
-                  {isAdmin ? 'ADMIN PANEL' : 'GALLOTRACK'}{' '}
-                  <span className="text-muted-foreground font-mono text-xs font-normal">
-                    v1.0.0
-                  </span>
-                </span>
-                <span className="text-muted-foreground truncate text-xs leading-tight font-medium tracking-wide">
-                  {isAdmin ? 'Administrator console' : 'Farm management console'}
+              <div className="flex min-w-0 items-center gap-2 md:hidden">
+                <Logo variant="mark" size="sm" />
+                <span className="text-muted-foreground truncate font-mono text-xs font-normal">
+                  {isAdmin ? 'ADMIN PANEL' : 'v1.0.0'}
                 </span>
               </div>
-
               <div className="hidden items-center gap-2.5 md:flex">
                 <span className="bg-accent/10 border-accent/30 text-accent rounded-sm border px-2 py-0.5 text-sm font-medium tracking-wider uppercase">
                   {isAdmin ? 'Admin' : 'Portal'}
@@ -260,7 +240,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                   {t('header.connected')}
                 </span>
                 <span className="text-muted-foreground border-border/60 border-l pl-2.5 text-xs">
-                  GALLOTRACK v1.0.0 · {isAdmin ? t('nav.adminConsole') : t('nav.farmConsole')}
+                  v1.0.0 · {isAdmin ? t('nav.adminConsole') : t('nav.farmConsole')}
                 </span>
               </div>
             </div>

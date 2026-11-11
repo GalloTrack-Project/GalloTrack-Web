@@ -25,11 +25,11 @@ const mockFowls: FowlRecord[] = [
 ];
 
 const mockMatches: MatchRecord[] = [
-  { id: 101, entry_name: 'Sweater Red Storm', outcome: 'Win', date: '2026-05-01', status: 'Completed' } as MatchRecord,
-  { id: 102, entry_name: 'Iron Lemon', outcome: 'Win', date: '2026-05-02', status: 'Completed' } as MatchRecord,
-  { id: 103, entry_name: 'Hatch Crown', outcome: 'Win', date: '2026-05-03', status: 'Completed' } as MatchRecord,
-  { id: 104, entry_name: 'Hatch Mountain', outcome: 'Win', date: '2026-05-04', status: 'Completed' } as MatchRecord,
-  { id: 105, entry_name: 'Hatch Silver', outcome: 'Loss', date: '2026-05-05', status: 'Completed' } as MatchRecord,
+  { id: 101, fowl_id: 1, entry_name: 'Sweater Red Storm', outcome: 'Win', date: '2026-05-01', status: 'Completed' } as MatchRecord,
+  { id: 102, fowl_id: 2, entry_name: 'Iron Lemon', outcome: 'Win', date: '2026-05-02', status: 'Completed' } as MatchRecord,
+  { id: 103, fowl_id: 3, entry_name: 'Hatch Crown', outcome: 'Win', date: '2026-05-03', status: 'Completed' } as MatchRecord,
+  { id: 104, fowl_id: 4, entry_name: 'Hatch Mountain', outcome: 'Win', date: '2026-05-04', status: 'Completed' } as MatchRecord,
+  { id: 105, fowl_id: 5, entry_name: 'Hatch Silver', outcome: 'Loss', date: '2026-05-05', status: 'Completed' } as MatchRecord,
 ];
 
 describe('PerFowlBreakdownModal', () => {
@@ -73,6 +73,45 @@ describe('PerFowlBreakdownModal', () => {
     expect(within(totalRow).getAllByText(/80%/i).length).toBeGreaterThanOrEqual(1);
   });
 
+  it('shows a cock whose match links by fowl_id even when entry_name is stale', () => {
+    const renamed: FowlRecord = {
+      id: 42,
+      name: 'Renamed Cock',
+      gender: 'Rooster',
+      breed: 'Hatch',
+      registry_role: 'Breeding Male',
+      status: 'Active',
+    } as FowlRecord;
+    const matches = [
+      { id: 900, fowl_id: 42, entry_name: 'Old Name', outcome: 'Win', date: '2026-05-01' },
+      { id: 901, fowl_id: 42, entry_name: 'Old Name', outcome: 'Loss', date: '2026-05-02' },
+    ] as MatchRecord[];
+
+    render(
+      <PerFowlBreakdownModal show={true} onClose={vi.fn()} fowls={[renamed]} matchHistory={matches} />,
+    );
+
+    expect(screen.getAllByText('Renamed Cock').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId('breakdown-overall-total')).toHaveTextContent('1W-1L');
+    expect(screen.getByTestId('breakdown-overall-total')).toHaveTextContent('50%');
+  });
+
+  it('keeps the overall all-time total unchanged when a date range is applied', () => {
+    render(
+      <PerFowlBreakdownModal
+        show={true}
+        onClose={vi.fn()}
+        fowls={mockFowls}
+        matchHistory={mockMatches}
+        initialDatePreset="today"
+      />,
+    );
+
+    const overall = screen.getByTestId('breakdown-overall-total');
+    expect(overall).toHaveTextContent('4W-1L');
+    expect(overall).toHaveTextContent('80%');
+  });
+
   it('filters by chicken role (Breeding Male vs Non-Breeding)', () => {
     render(
       <PerFowlBreakdownModal
@@ -110,8 +149,8 @@ describe('PerFowlBreakdownModal', () => {
       vi.setSystemTime(new Date('2026-06-01T14:00:00Z'));
 
       const testMatches: MatchRecord[] = [
-        { id: 201, entry_name: 'Sweater Red Storm', outcome: 'Win', date: '2026-06-01', status: 'Completed' } as MatchRecord,
-        { id: 202, entry_name: 'Iron Lemon', outcome: 'Win', date: '2026-06-02', status: 'Completed' } as MatchRecord,
+        { id: 201, fowl_id: 1, entry_name: 'Sweater Red Storm', outcome: 'Win', date: '2026-06-01', status: 'Completed' } as MatchRecord,
+        { id: 202, fowl_id: 2, entry_name: 'Iron Lemon', outcome: 'Win', date: '2026-06-02', status: 'Completed' } as MatchRecord,
       ];
 
       // 1. Open modal on Day 1 with "today" preset

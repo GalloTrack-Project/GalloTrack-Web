@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   autoComputeGrowthStage,
   getAgeParts as getAgePartsHelper,
@@ -35,7 +35,12 @@ interface FowlFormStateContextValue {
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
+  selectedPhotoThumbnail: File | null; setSelectedPhotoThumbnail: (f: File | null) => void;
   uploadingImage: boolean; setUploadingImage: (v: boolean) => void;
+  photoUploadProgress: number; setPhotoUploadProgress: (v: number) => void;
+  beginPhotoUpload: () => AbortSignal;
+  endPhotoUpload: () => void;
+  cancelPhotoUpload: () => void;
   imagePreview: string; setImagePreview: (v: string) => void;
 
 
@@ -62,6 +67,10 @@ interface FowlFormStateContextValue {
   editWingBand: string; setEditWingBand: (v: string) => void;
   editDeclaredComposition: DeclaredBreedShare[] | null;
   setEditDeclaredComposition: (v: DeclaredBreedShare[] | null) => void;
+  editPhotoFile: File | null; setEditPhotoFile: (f: File | null) => void;
+  editPhotoThumbnail: File | null; setEditPhotoThumbnail: (f: File | null) => void;
+  editPhotoRemoved: boolean; setEditPhotoRemoved: (v: boolean) => void;
+  editPhotoUploadError: string | null; setEditPhotoUploadError: (v: string | null) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -140,8 +149,26 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedPhotoThumbnail, setSelectedPhotoThumbnail] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] = useState(0);
+  const photoUploadAbortRef = useRef<AbortController | null>(null);
   const [imagePreview, setImagePreview] = useState('');
+
+  const beginPhotoUpload = useCallback(() => {
+    photoUploadAbortRef.current?.abort();
+    const controller = new AbortController();
+    photoUploadAbortRef.current = controller;
+    return controller.signal;
+  }, []);
+
+  const endPhotoUpload = useCallback(() => {
+    photoUploadAbortRef.current = null;
+  }, []);
+
+  const cancelPhotoUpload = useCallback(() => {
+    photoUploadAbortRef.current?.abort();
+  }, []);
 
 
   const [editName, setEditName] = useState('');
@@ -164,6 +191,10 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [editBirdCode, setEditBirdCode] = useState('');
   const [editWingBand, setEditWingBand] = useState('');
   const [editDeclaredComposition, setEditDeclaredComposition] = useState<DeclaredBreedShare[] | null>(null);
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoThumbnail, setEditPhotoThumbnail] = useState<File | null>(null);
+  const [editPhotoRemoved, setEditPhotoRemoved] = useState(false);
+  const [editPhotoUploadError, setEditPhotoUploadError] = useState<string | null>(null);
 
   const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
   const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
@@ -254,7 +285,9 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     birdCode, setBirdCode, wingBand, setWingBand,
     newDeclaredComposition, setNewDeclaredComposition,
     search, setSearch, debouncedSearch,
-    selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
+    selectedImage, setSelectedImage, selectedPhotoThumbnail, setSelectedPhotoThumbnail,
+    uploadingImage, setUploadingImage, photoUploadProgress, setPhotoUploadProgress,
+    beginPhotoUpload, endPhotoUpload, cancelPhotoUpload,
     imagePreview, setImagePreview,
 
     editName, setEditName, editBreed, setEditBreed,
@@ -268,6 +301,8 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     editDam, setEditDam, editSirePct, setEditSirePct, editDamPct, setEditDamPct,
     editBirdCode, setEditBirdCode, editWingBand, setEditWingBand,
     editDeclaredComposition, setEditDeclaredComposition,
+    editPhotoFile, setEditPhotoFile, editPhotoThumbnail, setEditPhotoThumbnail,
+    editPhotoRemoved, setEditPhotoRemoved, editPhotoUploadError, setEditPhotoUploadError,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains, addStrain, removeStrain,

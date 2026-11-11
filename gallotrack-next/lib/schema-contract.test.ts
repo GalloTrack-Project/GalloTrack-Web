@@ -8,12 +8,14 @@ import {
 } from './schema-contract';
 
 describe('Schema Contract — Column Allowlist and Payload Verification', () => {
-  it('defines the exact 40 allowed columns for the fowl table', () => {
-    expect(FOWL_COLUMNS.length).toBe(40);
+  it('defines the exact 42 allowed columns for the fowl table', () => {
+    expect(FOWL_COLUMNS.length).toBe(42);
     expect(FOWL_COLUMNS).toContain('bird_code');
     expect(FOWL_COLUMNS).toContain('wing_band');
     expect(FOWL_COLUMNS).toContain('sire_id');
     expect(FOWL_COLUMNS).toContain('dam_id');
+    expect(FOWL_COLUMNS).toContain('photo_path');
+    expect(FOWL_COLUMNS).toContain('photo_thumb_path');
 
     // Assert phantom columns are absent
     expect(FOWL_COLUMNS).not.toContain('chicken_code');

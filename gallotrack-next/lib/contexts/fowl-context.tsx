@@ -59,6 +59,12 @@ import { generateBreedCompliance } from '@/lib/breed-standards';
 import { useFowlAnalytics, type CrossbreedChartData } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
+import { deleteChickenPhotoPaths, uploadChickenPhoto } from '@/lib/services/chicken-photo-service';
+import {
+  CHICKEN_PHOTO_SETUP_MESSAGE,
+  CHICKEN_PHOTO_UPLOAD_CANCELLED,
+  isChickenPhotoSetupError,
+} from '@/lib/chicken-photo';
 import { archiveDraftIssue, archiveKindLabel, type ArchiveDraft } from '@/lib/lifecycle';
 import * as matchService from '@/lib/services/match-service';
 import * as mediaService from '@/lib/services/media-service';
@@ -133,7 +139,12 @@ interface FowlContextValue {
   search: string; setSearch: (v: string) => void;
   debouncedSearch: string;
   selectedImage: File | null; setSelectedImage: (f: File | null) => void;
+  selectedPhotoThumbnail: File | null; setSelectedPhotoThumbnail: (f: File | null) => void;
   uploadingImage: boolean; setUploadingImage: (v: boolean) => void;
+  photoUploadProgress: number; setPhotoUploadProgress: (v: number) => void;
+  beginPhotoUpload: () => AbortSignal;
+  endPhotoUpload: () => void;
+  cancelPhotoUpload: () => void;
   imagePreview: string; setImagePreview: (v: string) => void;
 
 
@@ -158,6 +169,10 @@ interface FowlContextValue {
   editWingBand: string; setEditWingBand: (v: string) => void;
   editDeclaredComposition: DeclaredBreedShare[] | null;
   setEditDeclaredComposition: (v: DeclaredBreedShare[] | null) => void;
+  editPhotoFile: File | null; setEditPhotoFile: (f: File | null) => void;
+  editPhotoThumbnail: File | null; setEditPhotoThumbnail: (f: File | null) => void;
+  editPhotoRemoved: boolean; setEditPhotoRemoved: (v: boolean) => void;
+  editPhotoUploadError: string | null; setEditPhotoUploadError: (v: string | null) => void;
 
   autoCalcAge: boolean; getAutoCalcAge: () => boolean;
 
@@ -214,7 +229,13 @@ interface FowlContextValue {
   pendingRetryPatches: LineageRefreshPatch[] | null;
   retryPendingLineagePatches: () => Promise<number>;
 
-  handleAddFowl: (e: React.FormEvent) => Promise<void>;
+  handleAddFowl: (
+    e: React.FormEvent,
+    options?: {
+      onCreated?: (fowlId: number) => void;
+      historicalEntryName?: string;
+    },
+  ) => Promise<void>;
   handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleArchiveFowlOnly: (id: number) => Promise<void>;
@@ -331,8 +352,10 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     wingBand, setWingBand,
     newDeclaredComposition, setNewDeclaredComposition,
     search, setSearch, debouncedSearch,
-    selectedImage, setSelectedImage, uploadingImage, setUploadingImage,
-    imagePreview, setImagePreview,
+    selectedImage, setSelectedImage, selectedPhotoThumbnail, setSelectedPhotoThumbnail,
+    setUploadingImage, setPhotoUploadProgress,
+    beginPhotoUpload, endPhotoUpload,
+    setImagePreview,
 
     editName, setEditName, editBreed, setEditBreed,
     editGender, setEditGender, editColorCategory, setEditColorCategory,
@@ -345,6 +368,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     editBirdCode, setEditBirdCode,
     editWingBand, setEditWingBand,
     editDeclaredComposition, setEditDeclaredComposition,
+    editPhotoFile, setEditPhotoFile, editPhotoThumbnail, setEditPhotoThumbnail,
+    editPhotoRemoved, setEditPhotoRemoved, setEditPhotoUploadError,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
     selectedStrains, setSelectedStrains,
@@ -633,7 +658,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   }, []);
 
   // ── Fowl CRUD ──
-  const handleAddFowl = useCallback(async (e: React.FormEvent) => {
+  const handleAddFowl = useCallback(async (
+    e: React.FormEvent,
+    options?: {
+      onCreated?: (fowlId: number) => void;
+      historicalEntryName?: string;
+    },
+  ) => {
     e.preventDefault();
 
     // 1. Upfront Form & Format Validation
@@ -706,8 +737,8 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     }
 
     setLoading(true);
-    let uploadedImageUrl = '';
-    let uploadedImagePath: string | undefined = undefined;
+    let uploadedPhotoPaths: string[] = [];
+    let insertedFowlId: number | null = null;
 
     try {
       // 2. Fetch freshest list of codes
@@ -759,18 +790,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       let codeToUse = await deriveCode(pool);
 
-      // 4. Upload image (if present)
-      if (selectedImage) {
-        setUploadingImage(true);
-        const uploadResult = await fowlService.uploadFowlImage(selectedImage);
-        setUploadingImage(false);
-        if (uploadResult.error) {
-          throw new Error(`Image upload failed: ${uploadResult.error}`);
-        }
-        uploadedImageUrl = uploadResult.url || '';
-        uploadedImagePath = uploadResult.path;
-      }
-
       // 5. Construct payload & INSERT with up to 2 retries on unique violation
       const autoParts = autoCalcAge ? getAgePartsHelper(newBirthdate) : null;
       const breedValue = sanitizeInput(effectiveBreed) || 'Unspecified Strain';
@@ -819,8 +838,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         bloodline_composition: composition,
         bird_code: codeToUse,
         wing_band: bandValue || null,
-        status: 'Active',
-        image_url: uploadedImageUrl,
+        status: options?.historicalEntryName ? 'Archived' : 'Active',
+        archive_kind: options?.historicalEntryName ? 'retired' : undefined,
+        archive_reason: options?.historicalEntryName ? 'Historical entry profile' : undefined,
+        notes: options?.historicalEntryName
+          ? `Created from historical match entry "${options.historicalEntryName}".`
+          : undefined,
+        image_url: '',
       };
 
       if (!isOffspring && newDeclaredComposition && newDeclaredComposition.length > 0) {
@@ -856,9 +880,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       }
 
       if (insertResult.error) {
-        if (uploadedImagePath || uploadedImageUrl) {
-          await fowlService.deleteFowlImageFile(uploadedImagePath || uploadedImageUrl);
-        }
         if (fowlService.isChickenCodeUniqueViolation(insertResult.error)) {
           toastMessage(
             'Could not register chicken: identifier was taken by another concurrent registration. Please try again.',
@@ -868,6 +889,40 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           toastMessage(`Database Error: ${insertResult.error}`, 'error');
         }
         return;
+      }
+
+      insertedFowlId = insertResult.id ?? null;
+      if (selectedImage && selectedPhotoThumbnail && insertResult.id != null) {
+        setUploadingImage(true);
+        setPhotoUploadProgress(0);
+        const photoSignal = beginPhotoUpload();
+        const photoResult = await uploadChickenPhoto(
+          insertResult.id,
+          selectedImage,
+          selectedPhotoThumbnail,
+          setPhotoUploadProgress,
+          photoSignal,
+        );
+        endPhotoUpload();
+        if (photoResult.error === CHICKEN_PHOTO_UPLOAD_CANCELLED) {
+          toastMessage('Photo upload cancelled. The chicken was registered without a photo.', 'success');
+        } else if (photoResult.error) {
+          toastMessage(photoResult.error, 'error');
+        } else if (photoResult.fullPath && photoResult.thumbPath) {
+          uploadedPhotoPaths = [photoResult.fullPath, photoResult.thumbPath];
+          const photoRow = await fowlService.updateFowl(insertResult.id, {
+            photo_path: photoResult.fullPath,
+            photo_thumb_path: photoResult.thumbPath,
+            image_url: '',
+          });
+          if (photoRow.error) {
+            await deleteChickenPhotoPaths(insertResult.id, uploadedPhotoPaths);
+            uploadedPhotoPaths = [];
+            toastMessage(photoRow.error, 'error');
+          }
+        }
+        setUploadingImage(false);
+        setPhotoUploadProgress(0);
       }
 
       // ── Success: show final ID, clean up form & trigger sync ──
@@ -887,24 +942,26 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setNewName(''); setNewBreed(''); setNewGender(''); setSireName(''); setDamName('');
       setSirePct(''); setDamPct(''); setWeight(''); setHeight(''); setNewLegColor('');
       setLegColorQuery(''); setAge(''); setNewBirthdate(''); setNewGrowthStage('');
-      setSelectedImage(null); setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]);
+      setSelectedImage(null); setSelectedPhotoThumbnail(null);
+      setStrainQuery(''); setStrainOpen(false); setSelectedStrains([]);
       setImagePreview(''); setBirdCode(''); setWingBand(''); setNewDeclaredComposition(null);
 
       if (insertResult.id != null) {
         await refreshDescendantCompositions({ ...payload, id: insertResult.id } as FowlRecord, null);
       }
       fetchDatabaseResources();
+      if (insertResult.id != null) options?.onCreated?.(insertResult.id);
       ui.setProfilingSubTab(isMaleHelper(createdGender) ? 'males' : 'females');
     } catch (err: unknown) {
-      if (uploadedImagePath || uploadedImageUrl) {
-        await fowlService.deleteFowlImageFile(uploadedImagePath || uploadedImageUrl);
+      if (uploadedPhotoPaths.length > 0 && insertedFowlId != null) {
+        await deleteChickenPhotoPaths(insertedFowlId, uploadedPhotoPaths);
       }
       toastMessage(`Registration Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
     } finally {
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, fowls, autoCalcAge, unitPrefs]);
+  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 
@@ -1109,6 +1166,12 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     const deleted = ui.pendingPermanentDelete;
     if (!deleted) return;
     ui.setPermanentDeleting(true);
+    const photoPaths = [deleted.photo_path, deleted.photo_thumb_path].filter(
+      (path): path is string => Boolean(path),
+    );
+    if (photoPaths.length > 0) {
+      await deleteChickenPhotoPaths(deleted.id, photoPaths);
+    }
     const result = await fowlService.deleteFowl(deleted.id);
     if (result.error) {
       toastMessage(result.error, 'error');
@@ -1172,7 +1235,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     setEditBirdCode(birdCodeOf(fowl));
     setEditWingBand(fowl.wing_band || '');
     setEditDeclaredComposition(parseDeclaredComposition(fowl.declared_composition));
-  }, [ui, birdCodeOf, setEditDeclaredComposition, unitPrefs]);
+    setEditPhotoFile(null);
+    setEditPhotoThumbnail(null);
+    setEditPhotoRemoved(false);
+    setEditPhotoUploadError(null);
+  }, [ui, birdCodeOf, setEditDeclaredComposition, unitPrefs, setEditPhotoUploadError]);
 
   const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1287,6 +1354,47 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         resolvedParents.dam_id ??
         (nameKey(editDamValue) === nameKey(editing.dam) ? editing.dam_id ?? null : null);
 
+      let nextPhotoPath = editing.photo_path ?? null;
+      let nextPhotoThumbPath = editing.photo_thumb_path ?? null;
+      let uploadedPhotoPaths: string[] = [];
+      const photoChanged = Boolean(editPhotoFile || editPhotoRemoved);
+      const previousPhotoPaths = [editing.photo_path, editing.photo_thumb_path];
+
+      if (editPhotoFile && editPhotoThumbnail) {
+        setUploadingImage(true);
+        setPhotoUploadProgress(0);
+        setEditPhotoUploadError(null);
+        const photoSignal = beginPhotoUpload();
+        const photoResult = await uploadChickenPhoto(
+          editing.id,
+          editPhotoFile,
+          editPhotoThumbnail,
+          setPhotoUploadProgress,
+          photoSignal,
+        );
+        endPhotoUpload();
+        if (photoResult.error === CHICKEN_PHOTO_UPLOAD_CANCELLED) {
+          setUploadingImage(false);
+          setPhotoUploadProgress(0);
+          return;
+        }
+        if (photoResult.error) {
+          setUploadingImage(false);
+          setPhotoUploadProgress(0);
+          setEditPhotoUploadError(photoResult.error);
+          toastMessage(photoResult.error, 'error');
+          return;
+        }
+        nextPhotoPath = photoResult.fullPath ?? null;
+        nextPhotoThumbPath = photoResult.thumbPath ?? null;
+        uploadedPhotoPaths = [nextPhotoPath, nextPhotoThumbPath].filter(
+          (path): path is string => Boolean(path),
+        );
+      } else if (editPhotoRemoved) {
+        nextPhotoPath = null;
+        nextPhotoThumbPath = null;
+      }
+
       const payload: Record<string, unknown> = {
         name: sanitizeInput(editName),
         breed: sanitizeInput(editBreed),
@@ -1328,8 +1436,36 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         payload.declared_composition = targetDeclared;
       }
 
+      if (photoChanged) {
+        payload.photo_path = nextPhotoPath;
+        payload.photo_thumb_path = nextPhotoThumbPath;
+        payload.image_url = '';
+      }
+
       const result = await fowlService.updateFowl(ui.editingFowl.id, payload);
-      if (result.error) throw new Error(result.error);
+      if (result.error) {
+        if (uploadedPhotoPaths.length > 0) {
+          await deleteChickenPhotoPaths(ui.editingFowl.id, uploadedPhotoPaths);
+        }
+        if (isChickenPhotoSetupError(result.error)) {
+          throw new Error(CHICKEN_PHOTO_SETUP_MESSAGE);
+        }
+        throw new Error(result.error);
+      }
+
+      if (photoChanged) {
+        const keep = new Set(uploadedPhotoPaths);
+        const stale = previousPhotoPaths.filter(
+          (path): path is string => Boolean(path) && !keep.has(path as string),
+        );
+        if (stale.length > 0) {
+          await deleteChickenPhotoPaths(ui.editingFowl.id, stale);
+        }
+        setEditPhotoFile(null);
+        setEditPhotoThumbnail(null);
+        setEditPhotoRemoved(false);
+        setEditPhotoUploadError(null);
+      }
 
       if (codeToUse.toLowerCase() !== originalCode.toLowerCase()) {
         const { data: { user } } = await supabase.auth.getUser();
@@ -1363,11 +1499,20 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       ui.setEditingFowl(null);
       fetchDatabaseResources();
     } catch (err: unknown) {
-      toastMessage(`Update Cluster Failure: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      const message = err instanceof Error ? err.message : String(err);
+      const photoSetupFailure =
+        message === CHICKEN_PHOTO_SETUP_MESSAGE ||
+        /photo_|chicken-photos|bucket\s+not\s+found/i.test(message);
+      toastMessage(
+        photoSetupFailure ? CHICKEN_PHOTO_SETUP_MESSAGE : `Update Cluster Failure: ${message}`,
+        'error',
+      );
     } finally {
       setLoading(false);
+      setUploadingImage(false);
+      setPhotoUploadProgress(0);
     }
-  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, editDeclaredComposition, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, autoCalcAge, unitPrefs]);
+  }, [editName, editBreed, editGender, editColor, editColorCategory, editGrowthStage, editBehaviorTrait, editEyeVariant, editBirthdate, editAge, editWeight, editHeight, editLegColor, editSire, editDam, editSirePct, editDamPct, editBirdCode, editWingBand, editDeclaredComposition, editPhotoFile, editPhotoThumbnail, editPhotoRemoved, setEditPhotoUploadError, beginPhotoUpload, endPhotoUpload, birdCodes, fowls, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, ui, autoCalcAge, unitPrefs]);
 
   // ── Local helper wrappers ──
   const generationOfLocal = useCallback((f: FowlRecord) => generationOfHelper(f, fowls), [fowls]);

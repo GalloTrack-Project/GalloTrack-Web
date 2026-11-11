@@ -52,6 +52,7 @@ type ModalsProps = {
   editingFowl: FowlRecord | null;
   setEditingFowl: (f: FowlRecord | null) => void;
   handleUpdateFowl: (e: React.FormEvent) => void;
+  onAddBreeds?: () => void;
 
   showLogoutModal: boolean;
   setShowLogoutModal: (v: boolean) => void;
@@ -75,6 +76,7 @@ type ModalsProps = {
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
+  canEditPhoto?: boolean;
   generationInfo: (gen: number) => { short: string; label: string; desc: string; tone: string };
   bloodlineOf: (f: FowlRecord) => number;
   getSiblingRelations: (f: FowlRecord) => SiblingRelation[];
@@ -195,6 +197,7 @@ export default function Modals(props: ModalsProps) {
         editingFowl={props.editingFowl}
         setEditingFowl={props.setEditingFowl}
         handleUpdateFowl={props.handleUpdateFowl}
+        onAddBreeds={props.onAddBreeds}
         loading={props.loading}
         fowls={props.fowls}
         availableStrains={props.availableStrains}
@@ -249,6 +252,7 @@ export default function Modals(props: ModalsProps) {
         getAgeMetrics={props.getAgeMetrics}
         generationOf={props.generationOf}
         generationPurity={props.generationPurity}
+        canEditPhoto={props.canEditPhoto}
       />
 
       <LogoutModal

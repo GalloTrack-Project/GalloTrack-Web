@@ -21,6 +21,11 @@ export interface WinRateStats {
   sampleNote?: string; // '1 match' or 'low sample'
 }
 
+export interface ChickenMatchStats extends WinRateStats {
+  matches: MatchRecord[];
+  lastMatchDate: string | null;
+}
+
 export function computeWinRate(wins: number, losses: number, draws = 0): WinRateStats {
   const safeWins = Math.max(0, Number(wins) || 0);
   const safeLosses = Math.max(0, Number(losses) || 0);
@@ -76,11 +81,8 @@ export function combineWinRates(
   };
 }
 
-class CaseInsensitiveMatchStatsMap extends Map<
-  string,
-  WinRateStats & { matches: MatchRecord[]; lastMatchDate: string | null }
-> {
-  override set(key: string, value: WinRateStats & { matches: MatchRecord[]; lastMatchDate: string | null }) {
+class CaseInsensitiveMatchStatsMap extends Map<string, ChickenMatchStats> {
+  override set(key: string, value: ChickenMatchStats) {
     const norm = (key || '').trim().toLowerCase();
     return super.set(norm, value);
   }
@@ -105,10 +107,7 @@ class CaseInsensitiveMatchStatsMap extends Map<
 export function buildChickenMatchStatsMap(
   matches: MatchRecord[],
   fowls: Array<{ id: number; name?: string; bird_code?: string | null }>,
-): Map<
-  string,
-  WinRateStats & { matches: MatchRecord[]; lastMatchDate: string | null }
-> {
+): Map<string, ChickenMatchStats> {
   const result = new CaseInsensitiveMatchStatsMap();
 
   const temp = new Map<
@@ -155,6 +154,50 @@ export function buildChickenMatchStatsMap(
   }
 
   return result;
+}
+
+export function emptyChickenMatchStats(): ChickenMatchStats {
+  return {
+    ...computeWinRate(0, 0),
+    matches: [],
+    lastMatchDate: null,
+  };
+}
+
+type FowlKey = { id: number; name?: string | null; bird_code?: string | null } | string | number | null | undefined;
+
+/**
+ * Resolve one chicken's lifetime record from the shared map. The fowl ID is the
+ * authoritative key; name and bird code are only fallback labels for callers
+ * that only have a name. Never recompute a record outside this helper.
+ */
+export function getChickenMatchStats(
+  statsMap: ReadonlyMap<string, WinRateStats & { matches: MatchRecord[]; lastMatchDate?: string | null }>,
+  fowl: FowlKey,
+): ChickenMatchStats {
+  const resolve = (key: string | null | undefined): ChickenMatchStats | undefined => {
+    if (!key) return undefined;
+    const stats = statsMap.get(key.trim().toLowerCase());
+    if (!stats) return undefined;
+    return 'lastMatchDate' in stats
+      ? (stats as ChickenMatchStats)
+      : { ...stats, lastMatchDate: null };
+  };
+  if (fowl == null) return emptyChickenMatchStats();
+  if (typeof fowl === 'object') {
+    return (
+      resolve(String(fowl.id)) ??
+      resolve(fowl.name) ??
+      resolve(fowl.bird_code) ??
+      emptyChickenMatchStats()
+    );
+  }
+  return resolve(String(fowl)) ?? emptyChickenMatchStats();
+}
+
+/** Format a shared record's percentage: "—%" when no fight has been decided. */
+export function formatWinRatePct(stats: Pick<WinRateStats, 'winRate'>): string {
+  return stats.winRate === null ? '—%' : `${stats.winRate}%`;
 }
 
 /**

@@ -188,6 +188,14 @@ export const hil: AppTranslations = {
     dayPlural: 'ka mga adlaw',
   },
 
+  breedingPairAnalytics: {
+    title: 'Pagsusuri sang Performance sang Breeding Pair',
+    badge: 'COCK × HEN MATRIX',
+    columnCross: 'COCK × HEN CROSS',
+    subtitle: 'Empirical nga ranggo sang win rate kada Cock × Hen cross — ginapakita ang mga napamatud-an nga pairing nga dapat liwaton kag ang mga under-performer nga dapat tanggalon sa masunod nga breeding cycles',
+    pairLabel: '{cock} × {hen}',
+  },
+
   errors: {
     notFoundTitle: 'Wala Makita ang Pahina',
     notFoundDesc: 'Ang pahina nga imo ginapangita wala diri, nasaylo na, ukon temporaryo nga indi masudlan.',
@@ -230,6 +238,8 @@ export const hil: AppTranslations = {
     title: 'Listahan sang Manok',
     subtitle: 'Magrehistro kag magdumala sang kaliwat, kinaiya, kag rekord sang inaway sang imo mga manok',
     breedsBtn: 'Mga Lahi',
+    backToRegistry: 'Magbalik sa rehistro',
+    backToRegistration: 'Magbalik sa pagparehistro',
     viewRegistryBtn: 'Tan-awon ang Listahan',
     registerChickenBtn: '+ Magrehistro sang Manok',
     tabMales: 'Cocks',

@@ -18,6 +18,7 @@ This document establishes the canonical terminology and translation standards ac
 | **Stag** | `'Stag'` | Stag | Stag | Young male gamefowl (6–11 months) |
 | **Pullet** | `'Pullet'` | Pullet | Pullet | Young female gamefowl (6–11 months) |
 | **Hen** | `'Hen'` | Hen | Hen | Mature female bird (12+ months) |
+| **Cock × Hen analytics pair** | — | Cock × Hen | Cock × Hen | Dashboard Breeding Pair Performance Analytics only; Lineage Directory parent roles remain Sire/Dam |
 | **Chick** | `'Chick'` | Chick (Sisiw) | Chick | Tagalog keeps a gloss after the canonical term; Hiligaynon keeps the canonical term only until a native reviewer confirms a gloss |
 | **Active** | `'Active'` | Aktibo | Aktibo | Status: In active yard |
 | **Archived** | `'Archived'` | Naka-archive | Naka-archive | Status: Retained in records |

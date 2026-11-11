@@ -6,7 +6,8 @@ import MatchMediaButtons from '@/components/match/MatchMediaButtons';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { resolveBirdCodes, formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { sexLabel } from '@/lib/helpers';
+import { canFight, sexLabel } from '@/lib/helpers';
+import { buildChickenMatchStatsMap, getChickenMatchStats } from '@/lib/win-rate';
 import { videosFor, photosFor, postersFor } from '@/lib/services/media-service';
 import { downloadCsv, printReport } from '@/lib/report-export';
 
@@ -24,28 +25,30 @@ const outcomeClass = (outcome: string) => {
 export default function FightHistoryModal() {
   const ui = useUI();
   const { matchHistory, fowls, matchMedia } = useFowl();
+  const matchStatsMap = React.useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   const bird = ui.fightHistoryFowl;
   if (!bird) return null;
 
-  const birdKey = (bird.name || '').trim().toLowerCase();
-  const fights = matchHistory
-    .filter((m) => (m.entry_name || '').trim().toLowerCase() === birdKey)
+  const record = getChickenMatchStats(matchStatsMap, bird);
+  const fightsEnabled = canFight(bird);
+  const fights = record.matches
     .slice()
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  const wins = fights.filter((m) => (m.outcome || '').toLowerCase() === 'win').length;
-  const losses = fights.filter((m) => (m.outcome || '').toLowerCase() === 'loss').length;
-  const draws = fights.filter((m) => (m.outcome || '').toLowerCase() === 'draw').length;
-  const decided = wins + losses;
-  const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+  const { wins, losses, draws } = record;
+  const decided = record.decided;
+  const winRate = record.winRate;
   const code = formatBirdCodeForDisplay(resolveBirdCodes(fowls).get(String(bird.id)) || '');
 
   const summary = [
-    { label: 'Total Fights', value: String(fights.length), tone: 'text-slate-800 dark:text-card-foreground' },
-    { label: 'Wins', value: String(wins), tone: 'text-success dark:text-emerald-400' },
-    { label: 'Losses', value: String(losses), tone: 'text-danger dark:text-rose-400' },
-    { label: 'Draws', value: String(draws), tone: 'text-warning dark:text-amber-400' },
-    { label: 'Win Rate', value: decided > 0 ? `${winRate}%` : '—', tone: 'text-teal dark:text-teal-400' },
+    { label: 'Total Fights', value: String(record.total), tone: 'text-slate-800 dark:text-card-foreground' },
+    { label: 'Wins', value: fightsEnabled ? String(wins) : '—', tone: 'text-success dark:text-emerald-400' },
+    { label: 'Losses', value: fightsEnabled ? String(losses) : '—', tone: 'text-danger dark:text-rose-400' },
+    { label: 'Draws', value: fightsEnabled ? String(draws) : '—', tone: 'text-warning dark:text-amber-400' },
+    { label: 'Win Rate', value: fightsEnabled ? (winRate === null ? '—%' : `${winRate}%`) : '—', tone: 'text-teal dark:text-teal-400' },
   ];
 
   const reportColumns = ['Date', 'Our Chicken', 'Opponent', 'Our Breed', 'Opponent Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition', 'Notes'];

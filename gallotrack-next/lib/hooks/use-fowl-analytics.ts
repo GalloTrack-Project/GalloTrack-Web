@@ -5,11 +5,17 @@ import {
   dateKeyToMs,
   formatShortDate,
   getMilestoneInfo as getMilestoneInfoHelper,
+  canFight,
   winRateOf,
   type DateRangeCustom,
   type DateRangePreset,
 } from '@/lib/helpers';
 import type { FowlRecord, MatchRecord, PairingAnalytics } from '@/lib/types';
+import {
+  buildChickenMatchStatsMap,
+  combineWinRates,
+  getChickenMatchStats,
+} from '@/lib/win-rate';
 
 export interface CrossbreedChartData {
   labels: string[];
@@ -97,9 +103,15 @@ export function useFowlAnalytics(
       };
     })();
 
-    const winsCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'win').length;
-    const lossesCount = matchHistory.filter(m => m.outcome && m.outcome.toLowerCase() === 'loss').length;
-    const winRatePct = winRateOf(winsCount, lossesCount);
+    const overallStatsMap = buildChickenMatchStatsMap(matchHistory, fowls);
+    const overallStats = combineWinRates(
+      fowls
+        .filter((f) => canFight(f))
+        .map((f) => getChickenMatchStats(overallStatsMap, f)),
+    );
+    const winsCount = overallStats.wins;
+    const lossesCount = overallStats.losses;
+    const winRatePct = overallStats.winRate ?? 0;
 
     const monthLabels = (() => {
       const now = new Date();

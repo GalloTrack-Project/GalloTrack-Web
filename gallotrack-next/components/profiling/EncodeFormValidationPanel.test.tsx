@@ -114,6 +114,8 @@ describe('Validation & Summary Panel and StatusItem', () => {
 
     const { container } = render(<EncodeForm {...mockProps} />);
 
+    expect(screen.getByTestId('chicken-photo-field')).toBeInTheDocument();
+
     // Header badge check: Next ID: Sire 4
     expect(screen.getByText(/Next ID: Sire 4/i)).toBeInTheDocument();
 

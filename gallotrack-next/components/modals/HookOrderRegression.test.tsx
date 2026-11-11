@@ -53,6 +53,7 @@ const mockBird1: FowlRecord = {
   wing_band: 'WB-101',
   bloodline_pct: 100,
   breeding_role: 'none',
+  image_url: 'https://cdn.test/champion.jpg',
 } as FowlRecord;
 
 const mockBird2: FowlRecord = {
@@ -133,6 +134,9 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
       screen.getByTestId('select-bird1').click();
     });
     expect(screen.getByText(/Champion Stag/i)).toBeInTheDocument();
+    const profilePhotos = screen.getAllByRole('img', { name: /Champion Stag \(1A\)/ });
+    expect(profilePhotos.length).toBeGreaterThan(0);
+    expect(profilePhotos[0]).toHaveAttribute('loading', 'lazy');
 
     // Transition 2: bird1 -> null
     act(() => {
@@ -233,6 +237,7 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
       screen.getByTestId('open-edit').click();
     });
     expect(screen.getByText(/Edit Node Registry/i)).toBeInTheDocument();
+    expect(screen.getByTestId('chicken-photo-field')).toBeInTheDocument();
 
     // Transition 2: bird1 -> null (closed)
     act(() => {

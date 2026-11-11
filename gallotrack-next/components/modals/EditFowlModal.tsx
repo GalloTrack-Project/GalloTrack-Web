@@ -25,6 +25,8 @@ import { mergeOptions } from '@/lib/lifecycle';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
+import ChickenPhotoField from '@/components/ChickenPhotoField';
+import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
@@ -84,6 +86,9 @@ type EditFowlModalProps = {
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
+  canEditPhoto?: boolean;
+  /** Opens the Breed Registry without discarding the edit draft. */
+  onAddBreeds?: () => void;
 };
 
 export default function EditFowlModal({
@@ -141,10 +146,24 @@ export default function EditFowlModal({
   getAgeMetrics,
   generationOf,
   generationPurity,
+  canEditPhoto = true,
+  onAddBreeds,
 }: EditFowlModalProps) {
   const { t } = useT();
+  const photoForm = useFowlFormStateOptional();
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+  const clearPhotoFile = photoForm?.setEditPhotoFile;
+  const clearPhotoThumbnail = photoForm?.setEditPhotoThumbnail;
+  const clearPhotoRemoved = photoForm?.setEditPhotoRemoved;
+
+  React.useEffect(() => {
+    return () => {
+      clearPhotoFile?.(null);
+      clearPhotoThumbnail?.(null);
+      clearPhotoRemoved?.(false);
+    };
+  }, [clearPhotoFile, clearPhotoThumbnail, clearPhotoRemoved]);
 
   const { rows: registryOptionRows } = useRegistryOptions();
   const baseColorOptions = React.useMemo(
@@ -228,6 +247,9 @@ export default function EditFowlModal({
 
   if (!editingFowl) return null;
 
+  const photoUploading = photoForm?.uploadingImage ?? false;
+  const saveBusy = loading || photoUploading;
+
   const isFoundationStock = (name: string): boolean =>
     (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
@@ -251,6 +273,34 @@ export default function EditFowlModal({
         }}
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
+        <ChickenPhotoField
+          name={editName || editingFowl.name}
+          code={editBirdCode || editingFowl.bird_code}
+          imageUrl={editingFowl.image_url}
+          photoPath={editingFowl.photo_path}
+          photoThumbPath={editingFowl.photo_thumb_path}
+          pendingFile={photoForm?.editPhotoFile ?? null}
+          pendingThumbnail={photoForm?.editPhotoThumbnail ?? null}
+          removed={photoForm?.editPhotoRemoved ?? false}
+          uploading={photoForm?.uploadingImage ?? loading}
+          uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          uploadError={photoForm?.editPhotoUploadError ?? null}
+          canEdit={canEditPhoto}
+          onPendingChange={(files) => {
+            photoForm?.setEditPhotoFile(files?.full ?? null);
+            photoForm?.setEditPhotoThumbnail(files?.thumbnail ?? null);
+            photoForm?.setEditPhotoUploadError(null);
+            if (files) photoForm?.setEditPhotoRemoved(false);
+          }}
+          onRemove={() => {
+            photoForm?.setEditPhotoFile(null);
+            photoForm?.setEditPhotoThumbnail(null);
+            photoForm?.setEditPhotoUploadError(null);
+            photoForm?.setEditPhotoRemoved(true);
+          }}
+          onCancelUpload={photoForm?.cancelPhotoUpload}
+        />
+
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
           <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <Tag className="h-3.5 w-3.5" /> <span>Core Identity</span>
@@ -363,6 +413,7 @@ export default function EditFowlModal({
                 hasParents={false}
                 currentValue={editingFowl.declared_composition as any}
                 source={compositionSource}
+                onAddBreeds={onAddBreeds}
               />
             </div>
           )}
@@ -843,6 +894,7 @@ export default function EditFowlModal({
                 pedigreeComposition={pedigreeComposition}
                 currentValue={editingFowl.declared_composition as any}
                 calculatedValue={pedigreeComposition}
+                onAddBreeds={onAddBreeds}
                 source={compositionSource}
               />
             </div>
@@ -877,13 +929,13 @@ export default function EditFowlModal({
         <div className="pt-2">
           <button
             type="submit"
-            disabled={loading || !birthdateValidation.valid || !declaredValidation.valid}
+            disabled={saveBusy || !birthdateValidation.valid || !declaredValidation.valid}
             className="flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading && (
+            {saveBusy && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
             )}
-            <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>
+            <span>{saveBusy ? 'Updating Chicken Node...' : 'Save Changes'}</span>
           </button>
         </div>
       </form>

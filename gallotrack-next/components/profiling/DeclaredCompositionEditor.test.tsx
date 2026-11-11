@@ -46,6 +46,24 @@ describe('DeclaredCompositionEditor Component UI', () => {
     expect(link.getAttribute('href')).toBe('/breeds');
   });
 
+  it('opens the inline Breed Registry instead of navigating when a handler is provided', () => {
+    const onChange = vi.fn();
+    const onAddBreeds = vi.fn();
+    render(
+      <DeclaredCompositionEditor
+        registeredBreed=""
+        availableBreeds={[]}
+        value={null}
+        onChange={onChange}
+        hasParents={false}
+        onAddBreeds={onAddBreeds}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('link', { name: /Add Breeds/i }));
+    expect(onAddBreeds).toHaveBeenCalledTimes(1);
+  });
+
   it('one-tap 100% shortcut triggers onChange with 100% registered breed', () => {
     const onChange = vi.fn();
     render(
