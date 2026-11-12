@@ -230,6 +230,10 @@ describe('Add Breeds flow', () => {
     expect((await screen.findAllByText('Sweater')).length).toBeGreaterThan(0);
     expect(toastMessage).toHaveBeenCalledWith('Breed added and selected', 'success');
     expect(readCreateDraft()?.fields.selectedStrains).toContain('Sweater');
+
+    expect(await screen.findByRole('button', { name: 'Remove Sweater' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Gender Class'), { target: { value: 'Rooster' } });
+    expect(screen.getByRole('button', { name: 'Remove Sweater' })).toBeInTheDocument();
   });
 
   it('keeps the user in the registry when Add New Breed is cancelled', async () => {

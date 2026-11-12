@@ -1,9 +1,12 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import BreedsPage from '@/app/(dashboard)/breeds/page';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';
 import { FowlProviderWrapper } from '@/lib/contexts/fowl-context';
+import { fetchFowls } from '@/lib/services/fowl-service';
+import { fetchStrains } from '@/lib/services/strain-service';
+import type { FowlRecord } from '@/lib/types';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -83,6 +86,8 @@ describe('Breed Registry states', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    vi.mocked(fetchFowls).mockResolvedValue([]);
+    vi.mocked(fetchStrains).mockReturnValue(new Promise<string[]>(() => {}));
   });
 
   it('shows a loading state instead of the empty state while breeds load', async () => {
@@ -100,5 +105,45 @@ describe('Breed Registry states', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Add New Breed/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+  });
+
+  it('shows one chicken under a custom breed after save', async () => {
+    const lemonFowl = {
+      id: 1,
+      name: 'Lemon Bird',
+      breed: 'Lemon',
+      gender: 'Rooster',
+      color: '',
+      color_category: '',
+      growth_stage: 'Cock',
+      behavior_trait: '',
+      eye_variant: 'Standard Eye',
+      birthdate: '2025-01-01',
+      age: '10',
+      weight: '2',
+      height: '40',
+      leg_color: '',
+      sire: '',
+      dam: '',
+      sire_pct: 0,
+      dam_pct: 0,
+      bloodline_pct: 100,
+      bloodline_composition: { Lemon: 100 },
+      declared_composition: null,
+      status: 'Active',
+      registry_role: 'Breeding Male',
+      bird_code: '1',
+      created_at: new Date().toISOString(),
+    } as FowlRecord;
+
+    vi.mocked(fetchStrains).mockResolvedValue(['Lemon']);
+    vi.mocked(fetchFowls).mockResolvedValue([lemonFowl]);
+    renderBreeds(true);
+
+    const breedName = await screen.findByText('Lemon');
+    const card = breedName.closest('div.relative');
+    expect(card).not.toBeNull();
+    expect(within(card as HTMLElement).getByText('1')).toBeInTheDocument();
+    expect(within(card as HTMLElement).getByText('chicken')).toBeInTheDocument();
   });
 });

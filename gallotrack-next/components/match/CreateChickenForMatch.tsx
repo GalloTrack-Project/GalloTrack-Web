@@ -79,6 +79,7 @@ export default function CreateChickenForMatch({
     availableStrains,
     addStrain,
     removeStrain,
+    refreshStrains,
     loading,
     uploadingImage,
     nextNodeId,
@@ -165,6 +166,7 @@ export default function CreateChickenForMatch({
       selectedStrains={selectedStrains}
       addStrain={addStrain}
       removeStrain={removeStrain}
+      refreshStrains={refreshStrains}
       loading={loading}
       uploadingImage={uploadingImage}
       nextNodeId={nextNodeId}

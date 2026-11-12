@@ -30,6 +30,7 @@ import {
   type DateRangePreset,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
+import { mergeStrainNames } from '@/lib/strain-options';
 import {
   computeBloodlineComposition,
   getBloodlineStats,
@@ -188,6 +189,7 @@ interface FowlContextValue {
   setSelectedStrains: React.Dispatch<React.SetStateAction<string[]>>;
   addStrain: (strain: string) => void;
   removeStrain: (index: number) => void;
+  refreshStrains: () => Promise<void>;
 
   availableLegColors: string[];
   setAvailableLegColors: React.Dispatch<React.SetStateAction<string[]>>;
@@ -364,6 +366,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     birdCode,
     wingBand,
     newDeclaredComposition, setNewDeclaredComposition,
+    selectedStrains, refreshStrains,
     selectedImage, selectedPhotoThumbnail,
     setUploadingImage, setPhotoUploadProgress, setPhotoUploadError,
     beginPhotoUpload, endPhotoUpload,
@@ -383,7 +386,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     editPhotoRemoved, setEditPhotoRemoved, setEditPhotoUploadError,
     availableStrains, setAvailableStrains, setCustomStrainNames,
     setStrainQuery,
-    selectedStrains, setSelectedStrains,
+    setSelectedStrains,
     setAvailableLegColors, setCustomLegColorNames,
     saveCreateDraft, restoreCreateDraft, clearCreateDraft,
     saveEditDraft, restoreEditDraft, clearEditDraft,
@@ -522,8 +525,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setMatchHistory(matchData);
       setMatchMedia(await mediaService.fetchMatchMedia(matchData));
       setBreedingPairs(pairings.data);
-      setAvailableStrains(strainNames);
-      setCustomStrainNames(new Set(strainNames.filter(s => !STRAIN_LIST.includes(s))));
+      const mergedStrains = mergeStrainNames(strainNames, selectedStrains);
+      setAvailableStrains(mergedStrains);
+      setCustomStrainNames(new Set(mergedStrains.filter(s => !STRAIN_LIST.includes(s))));
       setAvailableLegColors(legColorNames);
       setCustomLegColorNames(new Set(legColorNames.filter(s => !LEG_COLOR_LIST.includes(s))));
       setLoadError(null);
@@ -541,7 +545,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedStrains]);
 
   const [pendingRetryPatches, setPendingRetryPatches] = useState<LineageRefreshPatch[] | null>(null);
 
@@ -1614,7 +1618,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     handleRestoreFowlOnly, handlePermanentDelete, handleMarkFowlDeceased,
     handleSetSireMaterial, handleSetActiveStatus,
     handleSetConditionStatus, handleSetBreedingRole, handlePromoteToBreeder, handleSaveFowlNotes,
-    fetchDatabaseResources,
+    fetchDatabaseResources, refreshStrains,
     saveCreateDraft, restoreCreateDraft, clearCreateDraft,
     saveEditDraft, restoreEditDraft, clearEditDraft,
     selectCreatedBreed, resetCreateForm,

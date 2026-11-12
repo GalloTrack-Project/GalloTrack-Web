@@ -60,6 +60,7 @@ const mockProps = {
   selectedStrains: [],
   addStrain: vi.fn(),
   removeStrain: vi.fn(),
+  refreshStrains: vi.fn().mockResolvedValue(undefined),
   loading: false,
   uploadingImage: false,
   nextNodeId: '4',

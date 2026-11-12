@@ -6,6 +6,8 @@ import {
 } from '@/lib/helpers';
 import { STRAIN_LIST, LEG_COLOR_LIST } from '@/lib/helpers';
 import { useDebounce } from '@/lib/use-debounce';
+import { fetchStrains } from '@/lib/services/strain-service';
+import { mergeStrainNames } from '@/lib/strain-options';
 import type { DeclaredBreedShare } from '@/lib/types';
 import {
   clearFowlDraft,
@@ -93,6 +95,7 @@ interface FowlFormStateContextValue {
   setSelectedStrains: React.Dispatch<React.SetStateAction<string[]>>;
   addStrain: (strain: string) => void;
   removeStrain: (index: number) => void;
+  refreshStrains: () => Promise<void>;
 
   availableLegColors: string[];
   setAvailableLegColors: React.Dispatch<React.SetStateAction<string[]>>;
@@ -295,6 +298,19 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setSelectedStrains((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  const refreshStrains = useCallback(async () => {
+    const names = await fetchStrains();
+    setAvailableStrains((prev) => mergeStrainNames(prev, names, selectedStrains));
+    setCustomStrainNames((prev) => {
+      const next = new Set(prev);
+      const builtIn = new Set(STRAIN_LIST.map((name) => name.toLowerCase()));
+      for (const name of names) {
+        if (!builtIn.has(name.toLowerCase())) next.add(name);
+      }
+      return next;
+    });
+  }, [selectedStrains]);
+
   // -- Form drafts (survive the Breed Registry round trip and refreshes) --
   const getDraftUserId = useCallback((): string | null => {
     if (typeof window === 'undefined') return null;
@@ -452,8 +468,12 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     setWingBand(f.wingBand ?? '');
     setNewDeclaredComposition(f.newDeclaredComposition ?? null);
     setStrainQuery(f.strainQuery ?? '');
-    const restoredStrains = Array.isArray(f.selectedStrains) ? f.selectedStrains : [];
-    setSelectedStrains(restoredStrains);
+    const restoredStrains = Array.isArray(f.selectedStrains)
+      ? mergeStrainNames(f.selectedStrains)
+      : [];
+    setSelectedStrains((prev) =>
+      restoredStrains.length > 0 ? restoredStrains : prev,
+    );
     setLegColorQuery(f.legColorQuery ?? '');
 
     if (restoredStrains.length > 0) {
@@ -626,7 +646,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     editPhotoRemoved, setEditPhotoRemoved, editPhotoUploadError, setEditPhotoUploadError,
     availableStrains, setAvailableStrains, customStrainNames, setCustomStrainNames,
     strainQuery, setStrainQuery, strainOpen, setStrainOpen,
-    selectedStrains, setSelectedStrains, addStrain, removeStrain,
+    selectedStrains, setSelectedStrains, addStrain, removeStrain, refreshStrains,
     availableLegColors, setAvailableLegColors, customLegColorNames, setCustomLegColorNames,
     legColorQuery, setLegColorQuery, legColorOpen, setLegColorOpen,
     handleAgeChange, handleEditAgeChange, handleNewBirthdateChange, handleEditBirthdateChange,

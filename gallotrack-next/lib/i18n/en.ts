@@ -253,6 +253,7 @@ export const en = {
     noMatchingBreeds: 'No registered breeds match your search.',
     noMatchingBreedAdd: 'No match. Add "{strain}" as a new breed.',
     addAsNewBreed: 'Add "{strain}" as new breed',
+    strainBlurNoMatch: 'No match. Reopen the list to add "{strain}" as a new breed.',
     strainPlaceholder: 'Select or type a strain...',
     addAnotherStrain: 'Add another strain...',
     selected: 'Selected',

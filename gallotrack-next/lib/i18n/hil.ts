@@ -247,6 +247,7 @@ export const hil: AppTranslations = {
     noMatchingBreeds: 'Wala sang nagasanto nga narehistro nga lahi.',
     noMatchingBreedAdd: 'Wala sang nagasibu. Idugang ang "{strain}" bilang bag-o nga lahi.',
     addAsNewBreed: 'Idugang ang "{strain}" bilang bag-o nga lahi',
+    strainBlurNoMatch: 'Wala sang nagasibu. Buksan liwat ang listahan agod idugang ang "{strain}" bilang bag-o nga lahi.',
     strainPlaceholder: 'Pili ukon i-type ang strain...',
     addAnotherStrain: 'Magdugang sang isa pa ka strain...',
     selected: 'Napili',

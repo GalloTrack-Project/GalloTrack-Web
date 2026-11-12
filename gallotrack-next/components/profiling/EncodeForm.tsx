@@ -36,6 +36,7 @@ import {
 import { useT } from '@/lib/i18n';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
+import { findStrainName, mergeStrainNames } from '@/lib/strain-options';
 import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import { ValidationSummaryPanel } from './validation/ValidationSummaryPanel';
 import type { StatusTone, ValidationFieldItem } from './validation/types';
@@ -95,6 +96,7 @@ type Props = {
   selectedStrains: string[];
   addStrain: (strain: string) => void;
   removeStrain: (index: number) => void;
+  refreshStrains: () => Promise<void>;
   loading: boolean;
   uploadingImage: boolean;
   nextNodeId: string;
@@ -148,7 +150,7 @@ export default function EncodeForm({
   strainQuery, setStrainQuery,
   strainOpen, setStrainOpen,
   availableStrains,
-  selectedStrains, addStrain, removeStrain,
+  selectedStrains, addStrain, removeStrain, refreshStrains,
   loading, uploadingImage,
   nextNodeId, dataCompleteness,
   validationPassed, bloodlineVerified,
@@ -180,6 +182,7 @@ export default function EncodeForm({
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [strainHint, setStrainHint] = useState<string | null>(null);
   const [activeStrainIndex, setActiveStrainIndex] = useState(-1);
   const [strainAnnouncement, setStrainAnnouncement] = useState('');
   const [photoProcessing, setPhotoProcessing] = useState(false);
@@ -209,22 +212,24 @@ export default function EncodeForm({
       ? 'dam'
       : 'sire';
 
+  const breedOptions = useMemo(
+    () => mergeStrainNames(availableStrains, selectedStrains),
+    [availableStrains, selectedStrains],
+  );
   const effectiveBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
   const typedStrain = strainQuery.trim();
   const normalizedStrainQuery = typedStrain.toLowerCase();
   const matchingStrains = normalizedStrainQuery
-    ? availableStrains.filter((strain) => strain.toLowerCase().includes(normalizedStrainQuery))
-    : availableStrains;
-  const hasExactStrainMatch =
-    normalizedStrainQuery.length > 0
-    && availableStrains.some((strain) => strain.toLowerCase() === normalizedStrainQuery);
+    ? breedOptions.filter((strain) => strain.toLowerCase().includes(normalizedStrainQuery))
+    : breedOptions;
+  const hasExactStrainMatch = findStrainName(breedOptions, typedStrain) !== null;
 
   useEffect(() => {
     const trimmed = newBreed.trim();
     if (!trimmed) return;
-    const match = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    const match = findStrainName(breedOptions, trimmed);
     if (match && match !== newBreed) setNewBreed(match);
-  }, [availableStrains, newBreed, setNewBreed]);
+  }, [breedOptions, newBreed, setNewBreed]);
 
   const focusStrainField = () => {
     const input = strainInputElRef.current;
@@ -236,8 +241,9 @@ export default function EncodeForm({
   const handleStrainChange = (value: string) => {
     setStrainQuery(value);
     setActiveStrainIndex(-1);
+    setStrainHint(null);
     const trimmed = value.trim();
-    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    const registered = findStrainName(breedOptions, trimmed);
     setNewBreed(registered ?? value);
     setStrainOpen(true);
     if (trimmed) setStrainError(null);
@@ -279,6 +285,7 @@ export default function EncodeForm({
     }
     setStrainQuery('');
     setStrainError(null);
+    setStrainHint(null);
     setStrainOpen(false);
     setActiveStrainIndex(-1);
   };
@@ -300,15 +307,34 @@ export default function EncodeForm({
       setStrainOpen(false);
       return;
     }
-    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    const registered = findStrainName(breedOptions, trimmed);
     addSelectedStrain(registered ?? trimmed);
     setStrainError(null);
+    setStrainHint(null);
     setStrainOpen(false);
     setActiveStrainIndex(-1);
   };
 
+  const handleStrainFocus = () => {
+    setStrainOpen(true);
+    setActiveStrainIndex(-1);
+    void refreshStrains();
+  };
+
   const handleStrainBlur = () => {
-    setStrainQuery('');
+    const trimmed = strainQuery.trim();
+    const registered = findStrainName(breedOptions, trimmed);
+    if (registered) {
+      addSelectedStrain(registered);
+      setStrainError(null);
+      setStrainHint(null);
+    } else if (trimmed) {
+      setStrainHint(
+        t('registry.strainBlurNoMatch', { strain: trimmed }),
+      );
+    } else {
+      setStrainHint(null);
+    }
     setStrainOpen(false);
     setActiveStrainIndex(-1);
   };
@@ -849,15 +875,18 @@ export default function EncodeForm({
                 }
                 value={strainQuery}
                 onChange={(e) => handleStrainChange(e.target.value)}
-                onFocus={() => {
-                  setStrainOpen(true);
-                  setActiveStrainIndex(-1);
-                }}
+                onFocus={handleStrainFocus}
                 onClick={() => setStrainOpen(true)}
                 onBlur={handleStrainBlur}
                 onKeyDown={handleStrainKeyDown}
                 aria-invalid={Boolean(strainError)}
-                aria-describedby={strainError ? 'genetic-strain-error' : undefined}
+                aria-describedby={
+                  strainError
+                    ? 'genetic-strain-error'
+                    : strainHint
+                      ? 'genetic-strain-hint'
+                      : undefined
+                }
                 placeholder={
                   selectedStrains.length > 0
                     ? t('registry.addAnotherStrain')
@@ -974,6 +1003,15 @@ export default function EncodeForm({
               <span>{strainError}</span>
             </p>
           ) : null}
+          {!strainError && strainHint ? (
+            <p
+              id="genetic-strain-hint"
+              role="status"
+              className="mt-1.5 rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-300"
+            >
+              {strainHint}
+            </p>
+          ) : null}
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
@@ -994,7 +1032,7 @@ export default function EncodeForm({
             <div className="sm:col-span-2 pt-1">
               <DeclaredCompositionEditor
                 registeredBreed={effectiveBreed}
-                availableBreeds={availableStrains}
+                availableBreeds={breedOptions}
                 value={newDeclaredComposition ?? null}
                 onChange={(val) => setNewDeclaredComposition?.(val)}
                 hasParents={false}
@@ -1294,7 +1332,7 @@ export default function EncodeForm({
           <div className="pt-1">
             <DeclaredCompositionEditor
               registeredBreed={effectiveBreed}
-              availableBreeds={availableStrains}
+              availableBreeds={breedOptions}
               value={newDeclaredComposition ?? null}
               onChange={(val) => setNewDeclaredComposition?.(val)}
               hasParents={true}

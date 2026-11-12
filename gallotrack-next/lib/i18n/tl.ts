@@ -247,6 +247,7 @@ export const tl: AppTranslations = {
     noMatchingBreeds: 'Walang tugmang nakarehistrong lahi.',
     noMatchingBreedAdd: 'Walang tugma. Idagdag ang "{strain}" bilang bagong lahi.',
     addAsNewBreed: 'Idagdag ang "{strain}" bilang bagong lahi',
+    strainBlurNoMatch: 'Walang tugma. Buksan muli ang listahan para idagdag ang "{strain}" bilang bagong lahi.',
     strainPlaceholder: 'Pumili o mag-type ng strain...',
     addAnotherStrain: 'Magdagdag ng isa pang strain...',
     selected: 'Napili',

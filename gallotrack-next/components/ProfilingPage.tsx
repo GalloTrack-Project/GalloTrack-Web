@@ -86,6 +86,7 @@ export default function ProfilingPage() {
     selectedStrains,
     addStrain,
     removeStrain,
+    refreshStrains,
     loading,
     uploadingImage,
     nextNodeId,
@@ -394,6 +395,7 @@ export default function ProfilingPage() {
           selectedStrains={selectedStrains}
           addStrain={addStrain}
           removeStrain={removeStrain}
+          refreshStrains={refreshStrains}
           loading={loading}
           uploadingImage={uploadingImage}
           nextNodeId={nextNodeId}
