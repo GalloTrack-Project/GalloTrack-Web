@@ -26,6 +26,8 @@ import WinRatePill from '@/components/match/WinRatePill';
 import CrisscrossBadge from '@/components/CrisscrossBadge';
 import { classifyCrisscross } from '@/lib/lineage';
 import ChickenPhoto from '@/components/ChickenPhoto';
+import LineageBirdCard from './LineageBirdCard';
+import LineagePairBadge from './LineagePairBadge';
 import {
   buildLineageIndex,
   buildLineageTopology,
@@ -63,12 +65,6 @@ type Selection = { kind: 'bird'; id: string } | { kind: 'pair'; key: string } | 
 
 /** Never shrink below ~70%; wide generations wrap instead. */
 const MIN_SCALE = 0.7;
-
-const STATUS_DOT: Record<string, string> = {
-  Active: 'bg-emerald-500',
-  Archived: 'bg-amber-400',
-  Deceased: 'bg-rose-400',
-};
 
 function initials(name: string): string {
   return name
@@ -504,94 +500,23 @@ export default function LineageFlow({
         className="absolute"
         style={{ left: node.x, top: node.y, width: node.width, height: node.height }}
       >
-        <button
-          type="button"
-          data-testid="lineage-bird-card"
-          data-node-id={node.id}
+        <LineageBirdCard
+          fowl={fowl}
+          code={code}
+          stats={stats}
+          offspringCount={offspringCount}
+          isRoot={node.isRoot}
+          isSelected={isSelected}
+          isHighlighted={isHighlighted}
+          isDimmed={isDimmed}
+          crisscross={
+            birdCrisscross.classification.isCrisscross ? birdCrisscross : null
+          }
+          label={label}
+          dataNodeId={node.id}
           onClick={() => selectBird(fowl)}
           onDoubleClick={() => focusBird(fowl)}
-          aria-label={label}
-          aria-pressed={isSelected}
-          title={`${fowl.name} · ${code || 'no code'} · ${sexLabel(fowl)} · ${
-            offspringCount > 0 ? `${offspringCount} offspring` : 'no registered offspring'
-          }`}
-          className={`bg-card group flex h-full w-full cursor-pointer flex-col rounded-lg border px-2.5 py-2 text-left shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
-            isSelected
-              ? 'border-emerald-500 ring-2 ring-emerald-500/40'
-              : isHighlighted
-              ? 'border-amber-400 ring-2 ring-amber-400/40'
-              : 'border-border hover:border-emerald-400'
-          } ${node.isRoot ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : ''} ${
-            isDimmed ? 'opacity-40 saturate-50' : ''
-          }`}
-        >
-          <div className="flex items-center gap-1.5">
-            <ChickenPhoto
-              name={fowl.name}
-              code={code}
-              imageUrl={fowl.image_url}
-              photoPath={fowl.photo_path}
-              photoThumbPath={fowl.photo_thumb_path}
-              size={24}
-              className="border-border h-6 w-6"
-              fallback={
-                <span
-                  className={`flex h-full w-full items-center justify-center text-[9px] font-black ${
-                    sexLabel(fowl) === 'Hen'
-                      ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
-                      : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
-                  }`}
-                  aria-hidden="true"
-                >
-                  {initials(fowl.name)}
-                </span>
-              }
-            />
-            {code && (
-              <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1 py-0.5 font-mono text-[10px] font-black uppercase">
-                {code}
-              </span>
-            )}
-            {birdCrisscross.classification.isCrisscross && (
-              <CrisscrossBadge
-                classification={birdCrisscross.classification}
-                pairName={birdCrisscross.pairName}
-                compact
-                className="px-1"
-              />
-            )}
-            <span className={`shrink-0 text-[10px] font-black ${sexTone(fowl)}`}>
-              {sexGlyph(fowl)} {sexLabel(fowl)}
-            </span>
-            <span
-              className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${
-                STATUS_DOT[fowl.status] || 'bg-muted-foreground'
-              }`}
-              title={fowl.status}
-            />
-            {node.isRoot && (
-              <span className="text-[9px] font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
-                Root
-              </span>
-            )}
-          </div>
-          <p
-            className="text-card-foreground mt-1 line-clamp-2 text-xs leading-tight font-black"
-            title={fowl.name}
-          >
-            {fowl.name}
-          </p>
-          <div className="text-muted-foreground mt-auto flex items-center justify-between gap-1 pt-1 text-[10px] font-semibold">
-            <span className="truncate">
-              {offspringCount > 0
-                ? `${offspringCount} offspring`
-                : (fowl.breed || 'No offspring')}
-            </span>
-            <span className="shrink-0">
-              {fightsEnabled ? recordLabel(stats) : ''}
-            </span>
-          </div>
-        </button>
+        />
         {branchControl(node)}
       </div>
     );
@@ -605,27 +530,16 @@ export default function LineageFlow({
     const crisscross = classifyCrisscross(sire, dam, index);
     return (
       <Fragment key={pair.key}>
-        <button
-          type="button"
-          data-testid="lineage-pair-hub"
+        <LineagePairBadge
+          sireName={sire.name}
+          damName={dam.name}
+          childCount={pair.childCount}
+          isSelected={isSelected}
+          crisscross={crisscross}
           onClick={() => selectPair(pair.key)}
-          aria-label={`Breeding pair ${sire.name} × ${dam.name}, ${pair.childCount} offspring${
-            crisscross.isCrisscross ? `. CRISSCROSS: ${crisscross.reason}` : ''
-          }`}
-          aria-pressed={isSelected}
-          title={`Breeding pair: ${sire.name} × ${dam.name}${
-            crisscross.isCrisscross ? ` · CRISSCROSS: ${crisscross.reason}` : ''
-          }`}
-          className={`bg-card absolute z-10 inline-flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tracking-wider uppercase shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
-            isSelected
-              ? 'border-emerald-500 text-emerald-700 ring-2 ring-emerald-500/30 dark:text-emerald-400'
-              : 'border-border text-muted-foreground hover:border-emerald-400 hover:text-foreground'
-          }`}
+          className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
           style={{ left: pair.hubX, top: pair.hubY }}
-        >
-          <Link2 className="h-3 w-3" aria-hidden="true" />
-          {pair.childCount}
-        </button>
+        />
         {crisscross.isCrisscross && (
           <div
             className="absolute z-10 -translate-x-1/2"

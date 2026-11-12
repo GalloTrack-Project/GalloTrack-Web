@@ -25,6 +25,9 @@ import {
 import ChickenIcon from '@/components/ChickenIcon';
 import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
+import ParentOffspringTree, {
+  type ParentTreePair,
+} from '@/components/lineage/ParentOffspringTree';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
 import { sexLabel, isMale, isFemale, canFight, fightersOf, parentBreedOf } from '@/lib/helpers';
@@ -262,6 +265,8 @@ interface FamilyCardProps {
 }
 
 type FamilyViewMode = 'full-family' | 'full-siblings';
+type ParentViewMode = 'tree' | 'table';
+const PARENT_VIEW_SESSION_KEY = 'gallotrack:lineage-parent-view';
 
 /**
  * ONE place for the pair-list rule. Full Family shows every breeding pair with
@@ -567,6 +572,8 @@ export default function LineageDirectory({
 
   const [treeSexFilter, setTreeSexFilter] = useState<'all' | 'males' | 'females'>('all');
   const [expandedPairs, setExpandedPairs] = useState<Map<string, boolean>>(new Map());
+  const [parentViewMode, setParentViewMode] = useState<ParentViewMode>('tree');
+  const [treeShowAllOffspring, setTreeShowAllOffspring] = useState(false);
 
   const [treeRootName, setTreeRootName] = useState<string | null>(null);
   const [treeDirection, setTreeDirection] = useState<LineageDirection>('down');
@@ -583,6 +590,24 @@ export default function LineageDirectory({
   const [selectedSireName, setSelectedSireName] = useState<string | null>(null);
   const [selectedDamName, setSelectedDamName] = useState<string | null>(null);
   const [selectedPedigreeId, setSelectedPedigreeId] = useState<number | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(PARENT_VIEW_SESSION_KEY);
+      if (stored === 'tree' || stored === 'table') setParentViewMode(stored);
+    } catch {
+      /* session storage may be unavailable */
+    }
+  }, []);
+
+  const changeParentView = (mode: ParentViewMode) => {
+    setParentViewMode(mode);
+    try {
+      sessionStorage.setItem(PARENT_VIEW_SESSION_KEY, mode);
+    } catch {
+      /* session storage may be unavailable */
+    }
+  };
 
   // Parent strip filter
   const [sirePaneFilter, setSirePaneFilter] = useState('');
@@ -1256,6 +1281,7 @@ export default function LineageDirectory({
   // Tab tools handlers
   const handleExpandAll = () => {
     if (activeTab === 'sire') {
+      setTreeShowAllOffspring(true);
       setExpandedPairs((prev) => {
         const next = new Map(prev);
         filteredSireEntries.forEach(([sire, children]) => {
@@ -1267,6 +1293,7 @@ export default function LineageDirectory({
         return next;
       });
     } else if (activeTab === 'dam') {
+      setTreeShowAllOffspring(true);
       const activeDam =
         filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
       if (activeDam) {
@@ -1287,7 +1314,22 @@ export default function LineageDirectory({
 
   const handleCollapseAll = () => {
     if (activeTab === 'sire') {
+      setTreeShowAllOffspring(false);
+      const activeSire =
+        filteredSireEntries.find(([name]) => name === selectedSireName) ?? filteredSireEntries[0];
+      if (activeSire) {
+        const [sire, children] = activeSire;
+        setExpandedPairs((prev) => {
+          const next = new Map(prev);
+          children.forEach((c) => {
+            const mate = isKnownParent(c.dam) ? normalizeParentName(c.dam) : 'Unknown dam';
+            next.set(`sire|||${sire}|||${mate}`, false);
+          });
+          return next;
+        });
+      }
     } else if (activeTab === 'dam') {
+      setTreeShowAllOffspring(false);
       const activeDam =
         filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
       if (activeDam) {
@@ -1561,6 +1603,36 @@ export default function LineageDirectory({
       });
     };
 
+    const treePairs: ParentTreePair[] = pairGroups.map((pg, pairIndex) => {
+      const isPairExplicit = expandedPairs.has(pg.key);
+      const isPairOpen = isPairExplicit
+        ? Boolean(expandedPairs.get(pg.key))
+        : hasMoreThan12
+          ? pairIndex < 2
+          : true;
+      const pairVisibleOffspring =
+        treeSexFilter === 'males'
+          ? pg.offspring.filter(isMaleChild)
+          : treeSexFilter === 'females'
+            ? pg.offspring.filter((child) => !isMaleChild(child))
+            : pg.offspring;
+
+      return {
+        key: pg.key,
+        otherName: pg.otherName,
+        otherCode: pg.otherCode,
+        isUnknownOther: pg.isUnknownOther,
+        pairCode: pg.pairCode,
+        offspring: sortPairChildren(pairVisibleOffspring, pairSortBy),
+        totalOffspring: pg.offspring.length,
+        maleCount: pg.maleCount,
+        femaleCount: pg.femaleCount,
+        stats: pg.stats,
+        crisscross: pg.crisscross,
+        isOpen: isPairOpen,
+      };
+    });
+
     const moveParent = (delta: number) => {
       if (visibleEntries.length === 0) return;
       const current = visibleEntries.findIndex(([name]) => name === activeParentName);
@@ -1784,6 +1856,27 @@ export default function LineageDirectory({
               </div>
 
               <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                <div
+                  role="group"
+                  aria-label={`${kind === 'sire' ? 'Sire' : 'Dam'} offspring view`}
+                  className="border-border bg-muted/40 flex items-center gap-0.5 rounded-lg border p-0.5"
+                >
+                  {(['tree', 'table'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      aria-pressed={parentViewMode === mode}
+                      onClick={() => changeParentView(mode)}
+                      className={`min-h-8 cursor-pointer rounded-md px-2.5 text-xs font-black capitalize transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
+                        parentViewMode === mode
+                          ? 'bg-card text-foreground shadow-2xs'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
                 {hasMoreThan12 && (
                   <button
                     type="button"
@@ -1806,7 +1899,28 @@ export default function LineageDirectory({
             </div>
           </div>
 
-          {/* Pair Groups (One after another, expanded by default) */}
+          {parentViewMode === 'tree' ? (
+            <ParentOffspringTree
+              kind={kind}
+              rootName={activeParentName ?? ''}
+              rootCode={activeParentCode}
+              rootFowl={activeParentFowl ?? null}
+              pairs={treePairs}
+              codes={birdCodes}
+              fowls={fowls}
+              matchHistory={matchHistory}
+              sexFilter={treeSexFilter}
+              onSexFilterChange={setTreeSexFilter}
+              sortBy={pairSortBy}
+              onSortChange={setPairSortBy}
+              showAllOffspring={treeShowAllOffspring}
+              onTogglePair={(key) => {
+                const pair = treePairs.find((candidate) => candidate.key === key);
+                togglePair(key, pair?.isOpen ?? true);
+              }}
+              onPick={setSelectedFowlForDetails}
+            />
+          ) : (
           <div className="space-y-3.5">
             {pairGroups.map((pg, pairIndex) => {
               const isPairExplicit = expandedPairs.has(pg.key);
@@ -2373,6 +2487,7 @@ export default function LineageDirectory({
               <WinRatePill stats={activeParentStats} />
             </div>
           </div>
+          )}
         </main>
       );
     };
@@ -3052,8 +3167,8 @@ export default function LineageDirectory({
           <section className="space-y-4">
             {sireEntries.length === 0 ? (
               <EmptyState
-                title="No Sire Offspring Yet"
-                hint="Encode chickens with a Sire name to build the parent-to-offspring tree."
+                title="No offspring recorded for this sire yet"
+                hint="Register a chicken with this sire selected to add the first offspring branch."
               />
             ) : filteredSireEntries.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
@@ -3068,8 +3183,8 @@ export default function LineageDirectory({
           <section className="space-y-4">
             {damEntries.length === 0 ? (
               <EmptyState
-                title="No Dam Offspring Yet"
-                hint="Encode chickens with a Dam name to build the parent-to-offspring tree."
+                title="No offspring recorded for this dam yet"
+                hint="Register a chicken with this dam selected to add the first offspring branch."
               />
             ) : filteredDamEntries.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />

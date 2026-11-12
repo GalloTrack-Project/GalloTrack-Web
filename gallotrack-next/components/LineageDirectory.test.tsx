@@ -90,7 +90,14 @@ function FightProbe() {
   return <div data-testid="fight-probe">{ui.fightHistoryFowl?.name ?? 'none'}</div>;
 }
 
-function renderDirectory(onPick: (f: FowlRecord) => void = vi.fn(), overrides = {}) {
+function renderDirectory(
+  onPick: (f: FowlRecord) => void = vi.fn(),
+  overrides = {},
+  parentView: 'tree' | 'table' | null = 'table',
+) {
+  if (parentView) {
+    sessionStorage.setItem('gallotrack:lineage-parent-view', parentView);
+  }
   return render(
     <UIProvider theme="light" setTheme={() => {}}>
       <LineageDirectory
@@ -121,6 +128,7 @@ function renderFamiliesDirectory(
 describe('LineageDirectory redesigned top section', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     document.body.style.overflow = '';
     window.history.replaceState({}, '', '/lineage');
   });
@@ -1191,6 +1199,7 @@ describe('LineageDirectory redesigned top section', () => {
         bird({ id: 25, name: 'Child 1A10', gender: 'Rooster', sire: 'Sire M', dam: 'Dam F', bird_code: '1A10' }),
       ];
 
+      sessionStorage.setItem('gallotrack:lineage-parent-view', 'table');
       render(
         <UIProvider theme="light" setTheme={() => {}}>
           <LineageDirectory
@@ -1239,6 +1248,158 @@ describe('LineageDirectory redesigned top section', () => {
 
       // In 'code' sort: natural birth code order 1A1, 1A2, 1A3, 1A4, 1A10
       expect(getCodeOrder()).toEqual(['[1A1]', '[1A2]', '[1A3]', '[1A4]', '[1A10]']);
+    });
+
+    it('defaults the parent tabs to Tree and persists Table for the session', () => {
+      renderDirectory(vi.fn(), {}, null);
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      const group = screen.getByRole('group', { name: /Sire offspring view/i });
+      expect(within(group).getByRole('button', { name: 'tree' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(screen.getByTestId('parent-tree-pair-badge')).toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+
+      fireEvent.click(within(group).getByRole('button', { name: 'table' }));
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(sessionStorage.getItem('gallotrack:lineage-parent-view')).toBe('table');
+
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      const damGroup = screen.getByRole('group', { name: /Dam offspring view/i });
+      expect(within(damGroup).getByRole('button', { name: 'table' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    });
+
+    it('shows the parent-specific empty state when no offspring exist', () => {
+      renderDirectory(
+        vi.fn(),
+        { fowls: [bird({ id: 1, name: 'Solo Sire', gender: 'Rooster', bird_code: '1' })] },
+        'tree',
+      );
+
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+      expect(
+        screen.getByText('No offspring recorded for this sire yet'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Register a chicken with this sire selected/i),
+      ).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      expect(
+        screen.getByText('No offspring recorded for this dam yet'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Register a chicken with this dam selected/i),
+      ).toBeInTheDocument();
+    });
+
+    it('renders one mate as a sibling branch with root, pair badge, and offspring', () => {
+      const onPick = vi.fn();
+      renderDirectory(onPick, {}, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      expect(
+        screen.getByRole('region', { name: /Pair 1: Sire 1 and Dam A/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', {
+          name: /Breeding pair Sire 1 × Dam A, 3 offspring/i,
+        }),
+      ).toBeInTheDocument();
+      expect(screen.getAllByTestId('parent-tree-bird-card')).toHaveLength(5);
+      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Offspring 1A3').length).toBeGreaterThanOrEqual(1);
+
+      fireEvent.click(
+        screen.getByRole('button', { name: /Offspring 1A1, Cock/i }),
+      );
+      expect(onPick).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Offspring 1A1' }),
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cocks (1)' }));
+      expect(screen.queryByText('Offspring 1A2')).not.toBeInTheDocument();
+      expect(screen.queryByText('Offspring 1A3')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'All (3)' }));
+      expect(screen.getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('renders the dam as root with each sire as the mate branch', () => {
+      renderDirectory(vi.fn(), {}, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      expect(
+        screen.getByRole('region', { name: /Pair 1: Dam A and Sire 1/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', {
+          name: /Breeding pair Sire 1 × Dam A, 3 offspring/i,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Dam A, Hen/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Sire 1, Cock/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('lays out multiple mates as clearly labeled sibling branches', () => {
+      const fowls = [
+        bird({ id: 1, name: 'Sire One', gender: 'Rooster', bird_code: '1' }),
+        bird({ id: 2, name: 'Dam A', gender: 'Hen', bird_code: 'A' }),
+        bird({ id: 3, name: 'Dam B', gender: 'Hen', bird_code: 'B' }),
+        bird({ id: 4, name: 'Child A1', gender: 'Rooster', sire: 'Sire One', dam: 'Dam A', bird_code: '1A1' }),
+        bird({ id: 5, name: 'Child A2', gender: 'Hen', sire: 'Sire One', dam: 'Dam A', bird_code: '1A2' }),
+        bird({ id: 6, name: 'Child B1', gender: 'Rooster', sire: 'Sire One', dam: 'Dam B', bird_code: '1B1' }),
+      ];
+
+      renderDirectory(vi.fn(), { fowls }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      expect(
+        screen.getByRole('region', { name: /Pair 1: Sire One and Dam A/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('region', { name: /Pair 2: Sire One and Dam B/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Breeding pair Sire One × Dam A, 2 offspring/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Breeding pair Sire One × Dam B, 1 offspring/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('collapses large offspring groups behind a +N more control', () => {
+      const fowls = [
+        bird({ id: 1, name: 'Sire Big', gender: 'Rooster', bird_code: '1' }),
+        bird({ id: 2, name: 'Dam Big', gender: 'Hen', bird_code: 'A' }),
+        ...Array.from({ length: 8 }, (_, index) =>
+          bird({
+            id: 10 + index,
+            name: `Big Child ${index + 1}`,
+            gender: index % 2 === 0 ? 'Rooster' : 'Hen',
+            sire: 'Sire Big',
+            dam: 'Dam Big',
+            bird_code: `1A${index + 1}`,
+          }),
+        ),
+      ];
+
+      renderDirectory(vi.fn(), { fowls }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+
+      expect(screen.getByRole('button', { name: '+2 more' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: '+2 more' }));
+      expect(screen.queryByRole('button', { name: '+2 more' })).not.toBeInTheDocument();
+      expect(screen.getAllByText('Big Child 8').length).toBeGreaterThanOrEqual(1);
     });
   });
 });
