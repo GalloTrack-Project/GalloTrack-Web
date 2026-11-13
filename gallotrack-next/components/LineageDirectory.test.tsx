@@ -348,9 +348,10 @@ describe('LineageDirectory redesigned top section', () => {
     const sireZeroMobile = document.getElementById('fowl-row-3')!;
     expect(sireZeroMobile).toHaveTextContent('No fights');
 
-    expect(
-      within(sireRegion).getByText(/Sire total · 1 of 2 males have fought/)
-    ).toBeInTheDocument();
+    const sireSummary = within(sireRegion).getByTestId('parent-summary');
+    expect(sireSummary).toHaveTextContent(/3 offspring/);
+    expect(sireSummary).toHaveTextContent(/2M 1F/);
+    expect(sireSummary).not.toHaveTextContent(/males have fought/);
     expect(
       within(sireRegion).getByText(/Sire overall total · 1 of 2 males have fought/)
     ).toBeInTheDocument();
@@ -373,6 +374,7 @@ describe('LineageDirectory redesigned top section', () => {
       within(damRegion).getAllByText(/1 of 2 males have fought/).length
     ).toBeGreaterThanOrEqual(1);
 
+    fireEvent.click(within(damRegion).getByRole('combobox', { name: /Select dam/i }));
     const damOption = screen.getByRole('option', { name: /Dam Z/i });
     expect(damOption).toHaveTextContent(/1W-0L/);
     expect(damOption).not.toHaveTextContent(/2W/);
@@ -785,51 +787,44 @@ describe('LineageDirectory redesigned top section', () => {
   });
 
   describe('Sire Offspring Tree & Dam Offspring Tree (horizontal parent strip, grouped by pair)', () => {
-    it('renders the horizontal sire strip and automatically selects the first sire with the full family visible in 0 clicks', () => {
+    it('renders a searchable sire combobox and automatically selects the sire with the most offspring', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
-      // Horizontal parent strip (no left sidebar).
-      expect(screen.queryByRole('complementary', { name: /Sires selection/i })).not.toBeInTheDocument();
-      const strip = screen.getByRole('listbox', { name: /Sires list/i });
-      expect(screen.getByLabelText('Filter sires')).toBeInTheDocument();
+      const combobox = screen.getByRole('combobox', { name: /Select sire/i });
+      expect(combobox).toHaveAttribute('aria-expanded', 'false');
+      expect(combobox).toHaveAccessibleName(/Sire 1/);
+      expect(combobox).toHaveAccessibleName(/3 offspring/);
       expect(screen.getByRole('button', { name: 'Previous sire' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Next sire' })).toBeInTheDocument();
 
-      // Selected parent card.
-      const sireOption = within(strip).getByRole('option', { name: /\[1\]\s*Sire 1/i });
-      expect(sireOption).toBeInTheDocument();
+      fireEvent.click(combobox);
+      expect(combobox).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('combobox', { name: 'Search sires' })).toBeInTheDocument();
+      const strip = screen.getByRole('listbox', { name: /Sires list/i });
+      expect(within(strip).getAllByRole('option')).toHaveLength(2);
+      const sireOption = within(strip).getAllByRole('option')[0];
       expect(sireOption).toHaveAttribute('aria-selected', 'true');
-      expect(sireOption).toHaveClass('h-[88px]', 'w-[200px]');
-      expect(sireOption).toHaveTextContent('[1]');
+      expect(sireOption).toHaveTextContent('1');
       expect(sireOption).toHaveTextContent('Sire 1');
       expect(sireOption).toHaveTextContent('3');
+      expect(screen.getByLabelText('Sort sires')).toHaveValue('most');
+      expect(screen.getByTestId('parent-picker-count')).toHaveTextContent('Showing 2 of 2 sires');
 
-      // Right pane details: Sire 1 is selected automatically (0 clicks)
       const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
-      expect(detailsRegion).toBeInTheDocument();
-      expect(within(detailsRegion).getByText('Sire 1')).toBeInTheDocument();
-      expect(within(detailsRegion).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
-      expect(within(detailsRegion).getAllByText(/1M 2F/i).length).toBeGreaterThanOrEqual(1);
-      expect(within(detailsRegion).getByText(/1 dam/i)).toBeInTheDocument();
+      expect(within(detailsRegion).getByTestId('parent-summary')).toHaveTextContent(/3 offspring/);
+      expect(within(detailsRegion).getByTestId('parent-summary')).toHaveTextContent(/1M 2F/);
+      expect(within(detailsRegion).getByRole('heading', { name: 'Sire 1' })).toBeInTheDocument();
 
-      // Pair header is expanded by default with 0 clicks
+      // Pair header is expanded by default with 0 clicks.
       expect(within(detailsRegion).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
       expect(within(detailsRegion).getByText(/Dam A \(A\)/i)).toBeInTheDocument();
       expect(within(detailsRegion).getByText('1A')).toBeInTheDocument();
-      expect(within(detailsRegion).getAllByText(/1M 2F/i).length).toBeGreaterThanOrEqual(1);
-
-      // Offspring rows are visible under the pair with 0 clicks
       expect(within(detailsRegion).getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getAllByText('Offspring 1A2').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getAllByText('Offspring 1A3').length).toBeGreaterThanOrEqual(1);
 
-      // Birth code badges
-      expect(within(detailsRegion).getAllByText('[1A1]').length).toBeGreaterThanOrEqual(1);
-      expect(within(detailsRegion).getAllByText('[1A2]').length).toBeGreaterThanOrEqual(1);
-      expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
-
-      // Table headers
+      // Table headers remain unchanged for the table view.
       expect(within(detailsRegion).getByRole('columnheader', { name: 'Code' })).toBeInTheDocument();
       expect(within(detailsRegion).getByRole('columnheader', { name: 'Chicken' })).toBeInTheDocument();
       expect(within(detailsRegion).getByRole('columnheader', { name: 'Sex' })).toBeInTheDocument();
@@ -838,20 +833,18 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).getByRole('columnheader', { name: 'Record' })).toBeInTheDocument();
       expect(within(detailsRegion).getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
 
-      // Filter chips inside pair
       expect(within(detailsRegion).getByRole('button', { name: /^All \(3\)$/i })).toBeInTheDocument();
       expect(within(detailsRegion).getByRole('button', { name: /^M Cocks \(1\)$/i })).toBeInTheDocument();
       expect(within(detailsRegion).getByRole('button', { name: /^F Hens \(2\)$/i })).toBeInTheDocument();
-
-      // Verify NO duplicate listing sections exist
       expect(screen.queryByText(/Sibling Subgroups by Dam/i)).not.toBeInTheDocument();
     });
 
-    it('switches selected sire in one click from the horizontal strip', () => {
+    it('switches selected sire in one click from the combobox', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: /Select sire/i }));
 
-      // Click second sire in list (Offspring 1A1)
+      // Click second sire in the open list (Offspring 1A1).
       const secondSire = screen.getByRole('option', { name: /Offspring 1A1/i });
       fireEvent.click(secondSire);
 
@@ -922,37 +915,33 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
     });
 
-    it('renders the dam view with the horizontal parent strip and profile card', () => {
+    it('renders the compact dam toolbar and selector', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      // Horizontal parent strip — no left sidebar and no mobile detail switch.
       expect(screen.queryByRole('complementary', { name: /Dams selection/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Back to all dams/i })).not.toBeInTheDocument();
-      const strip = screen.getByRole('listbox', { name: /Dams list/i });
-      expect(screen.getByLabelText('Filter dams')).toBeInTheDocument();
+      const combobox = screen.getByRole('combobox', { name: /Select dam/i });
+      expect(combobox).toHaveAccessibleName(/Dam A/);
+      expect(combobox).toHaveAccessibleName(/3 offspring/);
       expect(screen.getByRole('button', { name: 'Previous dam' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Next dam' })).toBeInTheDocument();
 
-      const damA = within(strip).getByRole('option', { name: /\[A\]\s*Dam A/i });
+      fireEvent.click(combobox);
+      const strip = screen.getByRole('listbox', { name: /Dams list/i });
+      const damA = within(strip).getAllByRole('option')[0];
       expect(damA).toHaveAttribute('aria-selected', 'true');
-      expect(damA).toHaveClass('h-[88px]', 'w-[200px]');
-      expect(within(strip).getByRole('option', { name: /\[C\]\s*Dam C/i })).toBeInTheDocument();
-      expect(screen.queryByRole('combobox', { name: 'Select dam' })).not.toBeInTheDocument();
+      expect(within(strip).getByRole('option', { name: /Dam C/i })).toBeInTheDocument();
+      expect(screen.getByLabelText('Search dams')).toBeInTheDocument();
 
-      // Same profile header structure as the sire view, with a Hen identity.
       const details = screen.getByRole('region', { name: /Dam A details/i });
       expect(details.className).not.toMatch(/max-h|overflow-y-auto/);
-      const heading = within(details).getByRole('heading', { name: 'Dam A' });
-      const headerCard = heading.closest('div.bg-card');
-      expect(headerCard).not.toHaveClass('sticky');
-      expect(within(details).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
-      expect(within(details).getByText(/1 sire/i)).toBeInTheDocument();
-      expect(within(headerCard as HTMLElement).getByText('1M 2F')).toBeInTheDocument();
+      const summary = within(details).getByTestId('parent-summary');
+      expect(summary).toHaveTextContent(/3 offspring/);
+      expect(summary).toHaveTextContent(/1M 2F/);
+      expect(summary).toHaveTextContent(/1 sire/);
       expect(within(details).getByRole('button', { name: 'View profile' })).toBeInTheDocument();
-      expect(within(headerCard as HTMLElement).getByText('F Hen')).toBeInTheDocument();
 
-      // Same pair section + fixed table.
       expect(within(details).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
       expect(within(details).getByText(/Dam A \(A\)/i)).toBeInTheDocument();
       const table = within(details).getByRole('table');
@@ -960,21 +949,19 @@ describe('LineageDirectory redesigned top section', () => {
       for (const name of ['Offspring 1A1', 'Offspring 1A2', 'Offspring 1A3']) {
         expect(within(details).getAllByText(name).length).toBeGreaterThanOrEqual(1);
       }
-
-      // Offspring keep their own sex labels in the dam view.
       expect(within(table).getAllByText(/Cock/).length).toBeGreaterThan(0);
       expect(within(table).getAllByText(/Hen/).length).toBeGreaterThan(0);
     });
-
-    it('switches dams from the horizontal strip and persists the selection in the URL', () => {
+    it('switches dams from the combobox and persists the selection in the URL', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: /Select dam/i }));
 
-      fireEvent.click(screen.getByRole('option', { name: /\[C\]\s*Dam C/i }));
+      fireEvent.click(screen.getByRole('option', { name: /Dam C/i }));
 
       const details = screen.getByRole('region', { name: /Dam C details/i });
       expect(details).toBeInTheDocument();
-      expect(within(details).getByText('F Hen')).toBeInTheDocument();
+      expect(within(details).getByTestId('parent-summary')).toHaveTextContent(/1M 0F/);
       expect(window.location.search).toContain('dam=C');
     });
 
@@ -987,7 +974,7 @@ describe('LineageDirectory redesigned top section', () => {
       ).toBeInTheDocument();
     });
 
-    it('moves between dams with the previous/next strip controls', () => {
+    it('moves between dams with the previous/next controls', () => {
       renderDirectory();
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
@@ -995,11 +982,7 @@ describe('LineageDirectory redesigned top section', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'Next dam' }));
       expect(screen.getByRole('region', { name: /Dam C details/i })).toBeInTheDocument();
-      expect(
-        screen
-          .getByRole('listbox', { name: /Dams list/i })
-          .querySelector('[role="option"][aria-selected="true"]')
-      ).toHaveTextContent('Dam C');
+      expect(screen.getByRole('combobox', { name: /Select dam/i })).toHaveAccessibleName(/Dam C/);
 
       fireEvent.click(screen.getByRole('button', { name: 'Previous dam' }));
       expect(screen.getByRole('region', { name: /Dam A details/i })).toBeInTheDocument();
@@ -1040,40 +1023,37 @@ describe('LineageDirectory redesigned top section', () => {
 
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
       const sireRegion = screen.getByRole('region', { name: /Sire 1 details/i });
-      const sireHeading = within(sireRegion).getByRole('heading', { name: 'Sire 1' });
-      const sireHeader = sireHeading.closest<HTMLElement>('div.bg-card')!;
-      expect(within(sireHeader).getByText('M Cock')).toBeInTheDocument();
+      expect(within(sireRegion).getByRole('heading', { name: 'Sire 1' })).toBeInTheDocument();
       const sireTable = within(sireRegion).getByRole('table');
       expect(within(sireTable).getAllByText(/Cock/).length).toBeGreaterThan(0);
       expect(within(sireTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
 
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
       const damRegion = screen.getByRole('region', { name: /Dam A details/i });
-      const damHeading = within(damRegion).getByRole('heading', { name: 'Dam A' });
-      const damHeader = damHeading.closest<HTMLElement>('div.bg-card')!;
-      expect(within(damHeader).getByText('F Hen')).toBeInTheDocument();
+      expect(within(damRegion).getByRole('heading', { name: 'Dam A' })).toBeInTheDocument();
       const damTable = within(damRegion).getByRole('table');
       expect(within(damTable).getAllByText(/Cock/).length).toBeGreaterThan(0);
       expect(within(damTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
     });
 
-    it('filters the horizontal dam strip and applies the toolbar sort order', () => {
+    it('filters the dam combobox and applies the selector sort order', () => {
       renderDirectory(vi.fn(), { fowls: makeDamFamily(12) });
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
       expect(screen.getByTestId('lineage-context-bar')).toHaveTextContent('12 dams');
 
-      const filter = screen.getByLabelText('Filter dams');
+      fireEvent.click(screen.getByRole('combobox', { name: /Select dam/i }));
+      const filter = screen.getByRole('combobox', { name: 'Search dams' });
       fireEvent.change(filter, { target: { value: 'Dam L' } });
       const filteredStrip = screen.getByRole('listbox', { name: /Dams list/i });
       expect(within(filteredStrip).getAllByRole('option')).toHaveLength(1);
-      expect(screen.getByTestId('lineage-context-bar')).toHaveTextContent('1 of 12');
+      expect(screen.getByTestId('parent-picker-count')).toHaveTextContent('Showing 1 of 12 dams');
 
       fireEvent.click(within(filteredStrip).getByRole('option', { name: /Dam L/ }));
       expect(screen.getByRole('region', { name: /Dam L details/i })).toBeInTheDocument();
 
-      fireEvent.change(filter, { target: { value: '' } });
-      const sort = screen.getByLabelText('Sort options');
+      fireEvent.click(screen.getByRole('combobox', { name: /Select dam/i }));
+      const sort = screen.getByLabelText('Sort dams');
       fireEvent.change(sort, { target: { value: 'name' } });
       expect(sort).toHaveValue('name');
       const damList = screen.getByRole('listbox', { name: /Dams list/i });
@@ -1109,6 +1089,7 @@ describe('LineageDirectory redesigned top section', () => {
       expect(screen.getByRole('tab', { name: /Dam Offspring Tree\s*1/i })).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: /Select sire/i }));
       const sireList = screen.getByRole('listbox', { name: /Sires list/i });
       expect(within(sireList).getAllByRole('option')).toHaveLength(1);
       expect(within(sireList).getByRole('option', { name: /Real Sire/ })).toBeInTheDocument();
@@ -1116,6 +1097,7 @@ describe('LineageDirectory redesigned top section', () => {
       expect(screen.queryByText('Bad Role Child')).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: /Select dam/i }));
       const damList = screen.getByRole('listbox', { name: /Dams list/i });
       expect(within(damList).getAllByRole('option')).toHaveLength(1);
       expect(within(damList).getByRole('option', { name: /Real Dam/ })).toBeInTheDocument();
@@ -1123,17 +1105,41 @@ describe('LineageDirectory redesigned top section', () => {
       expect(screen.queryByText('Bad Role Child')).not.toBeInTheDocument();
     });
 
-    it('collapses and expands only the selected dam pairing accordions', () => {
-      renderDirectory();
+    it('renders a dam with three mates as collapsible branches with expand/collapse all', () => {
+      const fowls = [
+        bird({ id: 1, name: 'Sire One', gender: 'Rooster', bird_code: '1' }),
+        bird({ id: 2, name: 'Sire Two', gender: 'Rooster', bird_code: '2' }),
+        bird({ id: 3, name: 'Sire Three', gender: 'Rooster', bird_code: '3' }),
+        bird({ id: 4, name: 'Dam Multi', gender: 'Hen', bird_code: 'M' }),
+        bird({ id: 5, name: 'Child One', gender: 'Rooster', sire: 'Sire One', dam: 'Dam Multi', bird_code: '1M1' }),
+        bird({ id: 6, name: 'Child Two', gender: 'Hen', sire: 'Sire Two', dam: 'Dam Multi', bird_code: '2M1' }),
+        bird({ id: 7, name: 'Child Three', gender: 'Rooster', sire: 'Sire Three', dam: 'Dam Multi', bird_code: '3M1' }),
+      ];
+      renderDirectory(vi.fn(), { fowls }, 'tree');
       fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
 
-      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThan(0);
+      const pairRegions = screen.getAllByRole('region', {
+        name: /Pair \d+: Dam Multi and Sire (One|Two|Three)/i,
+      });
+      expect(pairRegions).toHaveLength(3);
+      expect(pairRegions.map((region) => region.getAttribute('aria-label'))).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Sire One'),
+          expect.stringContaining('Sire Two'),
+          expect.stringContaining('Sire Three'),
+        ]),
+      );
 
+      expect(screen.getAllByText('Child One').length).toBeGreaterThan(0);
       fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
-      expect(screen.queryAllByText('Offspring 1A1')).toHaveLength(0);
+      expect(screen.queryAllByText('Child One')).toHaveLength(0);
+      expect(screen.queryAllByText('Child Two')).toHaveLength(0);
+      expect(screen.queryAllByText('Child Three')).toHaveLength(0);
 
       fireEvent.click(screen.getByRole('button', { name: 'Expand all' }));
-      expect(screen.getAllByText('Offspring 1A1').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Child One').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Child Two').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Child Three').length).toBeGreaterThan(0);
     });
     it('opens actions menu on ⋯ click and triggers View profile', () => {
       const onPick = vi.fn();
@@ -1381,7 +1387,7 @@ describe('LineageDirectory redesigned top section', () => {
       const fowls = [
         bird({ id: 1, name: 'Sire Big', gender: 'Rooster', bird_code: '1' }),
         bird({ id: 2, name: 'Dam Big', gender: 'Hen', bird_code: 'A' }),
-        ...Array.from({ length: 8 }, (_, index) =>
+        ...Array.from({ length: 12 }, (_, index) =>
           bird({
             id: 10 + index,
             name: `Big Child ${index + 1}`,
@@ -1396,10 +1402,74 @@ describe('LineageDirectory redesigned top section', () => {
       renderDirectory(vi.fn(), { fowls }, 'tree');
       fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
 
-      expect(screen.getByRole('button', { name: '+2 more' })).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: '+2 more' }));
-      expect(screen.queryByRole('button', { name: '+2 more' })).not.toBeInTheDocument();
-      expect(screen.getAllByText('Big Child 8').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByTestId('parent-offspring-grid')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '+4 more' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: '+4 more' }));
+      expect(screen.queryByRole('button', { name: '+4 more' })).not.toBeInTheDocument();
+      expect(screen.getAllByText('Big Child 12').length).toBeGreaterThanOrEqual(1);
+    });
+    it.each([1, 10, 50])('scales the dam combobox for %i dams', (count) => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(count) }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      const combobox = screen.getByRole('combobox', { name: /Select dam/i });
+      expect(combobox).toHaveAccessibleName(/Dam A/);
+      if (count === 1) {
+        expect(screen.getByRole('button', { name: 'Next dam' })).toBeDisabled();
+      } else {
+        expect(screen.getByRole('button', { name: 'Next dam' })).toBeEnabled();
+      }
+      fireEvent.click(combobox);
+      expect(screen.getByTestId('parent-picker-count')).toHaveTextContent(
+        `Showing ${count} of ${count} dams`,
+      );
+      const list = screen.getByRole('listbox', { name: /Dams list/i });
+      expect(within(list).getAllByRole('option')).toHaveLength(count);
+
+      fireEvent.keyDown(screen.getByRole('combobox', { name: 'Search dams' }), {
+        key: 'Escape',
+      });
+    });
+
+    it('remembers the last selected dam for the session', () => {
+      const first = renderDirectory(vi.fn(), { fowls: makeDamFamily(10) }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: /Select dam/i }));
+      const list = screen.getByRole('listbox', { name: /Dams list/i });
+      fireEvent.click(within(list).getAllByRole('option')[1]);
+      expect(screen.getByRole('region', { name: /Dam B details/i })).toBeInTheDocument();
+      first.unmount();
+
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(10) }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      expect(screen.getByRole('combobox', { name: /Select dam/i })).toHaveAccessibleName(/Dam B/);
+    });
+    it('shows a no-results state in the dam combobox', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(10) }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+      fireEvent.click(screen.getByRole('combobox', { name: /Select dam/i }));
+
+      fireEvent.change(screen.getByRole('combobox', { name: 'Search dams' }), {
+        target: { value: 'not-a-real-dam' },
+      });
+      expect(screen.getByText('No dams found')).toBeInTheDocument();
+      expect(screen.getByTestId('parent-picker-count')).toHaveTextContent('Showing 0 of 10 dams');
+    });
+
+    it('supports keyboard selection in the dam combobox', () => {
+      renderDirectory(vi.fn(), { fowls: makeDamFamily(10) }, 'tree');
+      fireEvent.click(screen.getByRole('tab', { name: /Dam Offspring Tree/i }));
+
+      const combobox = screen.getByRole('combobox', { name: /Select dam/i });
+      combobox.focus();
+      fireEvent.keyDown(combobox, { key: 'ArrowDown' });
+      expect(combobox).toHaveAttribute('aria-expanded', 'true');
+      const search = screen.getByRole('combobox', { name: 'Search dams' });
+      fireEvent.change(search, { target: { value: 'Dam C' } });
+      fireEvent.keyDown(search, { key: 'Enter' });
+
+      expect(screen.getByRole('region', { name: /Dam C details/i })).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /Select dam/i })).toHaveAccessibleName(/Dam C/);
     });
   });
 });
@@ -1461,6 +1531,7 @@ describe('crisscross integration in the redesigned family cards', () => {
     renderDirectory(vi.fn(), { fowls: crisscrossFamily });
 
     fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
+    fireEvent.click(screen.getByRole('combobox', { name: /Select sire/i }));
     const sireList = screen.getByRole('listbox', { name: /Sires list/i });
     fireEvent.click(within(sireList).getByRole('option', { name: /Hatch Sire/ }));
     const sireRegion = screen.getByRole('region', { name: /Hatch Sire details/i });

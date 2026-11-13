@@ -5,7 +5,6 @@ import type { FowlRecord, MatchRecord, PairingStats } from '@/lib/types';
 import {
   Dna,
   Users,
-  Link2,
   Trophy,
   CheckCircle,
   AlertTriangle,
@@ -14,12 +13,8 @@ import {
   Swords,
   Search,
   X,
-  MoreHorizontal,
-  User,
-  Plus,
   ChevronDown,
   ChevronUp,
-  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
@@ -28,6 +23,11 @@ import LineageFlow from '@/components/lineage/LineageFlow';
 import ParentOffspringTree, {
   type ParentTreePair,
 } from '@/components/lineage/ParentOffspringTree';
+import ParentCombobox from '@/components/lineage/ParentCombobox';
+import {
+  type ParentPickerEntry,
+  type ParentPickerSort,
+} from '@/lib/lineage-parent-picker';
 import { buildBreedingPairs, nameKey, isKnownParent, normalizeParentName } from '@/lib/family-tree';
 import { familyCounts } from '@/lib/family-stats';
 import { sexLabel, isMale, isFemale, canFight, fightersOf, parentBreedOf } from '@/lib/helpers';
@@ -70,6 +70,15 @@ import {
 export type PairSortOption = 'males-first' | 'code' | 'age' | 'wins' | 'winrate';
 
 const isMaleChild = (c: FowlRecord) => isMale(c.gender);
+
+const mostOffspringEntry = (entries: [string, FowlRecord[]][]) =>
+  entries.reduce<[string, FowlRecord[]] | null>((best, entry) => {
+    if (!best) return entry;
+    if (entry[1].length !== best[1].length) {
+      return entry[1].length > best[1].length ? entry : best;
+    }
+    return entry[0].localeCompare(best[0]) < 0 ? entry : best;
+  }, null);
 
 /**
  * Sex chip shared by every offspring view: Cock/Hen wording with the app's
@@ -573,7 +582,7 @@ export default function LineageDirectory({
   const [treeSexFilter, setTreeSexFilter] = useState<'all' | 'males' | 'females'>('all');
   const [expandedPairs, setExpandedPairs] = useState<Map<string, boolean>>(new Map());
   const [parentViewMode, setParentViewMode] = useState<ParentViewMode>('tree');
-  const [treeShowAllOffspring, setTreeShowAllOffspring] = useState(false);
+  const [parentPickerSort, setParentPickerSort] = useState<ParentPickerSort>('most');
 
   const [treeRootName, setTreeRootName] = useState<string | null>(null);
   const [treeDirection, setTreeDirection] = useState<LineageDirection>('down');
@@ -608,13 +617,6 @@ export default function LineageDirectory({
       /* session storage may be unavailable */
     }
   };
-
-  // Parent strip filter
-  const [sirePaneFilter, setSirePaneFilter] = useState('');
-  const [damPaneFilter, setDamPaneFilter] = useState('');
-
-  // Horizontal parent strip + selected parent
-  const parentStripRef = useRef<HTMLDivElement | null>(null);
 
   // Highlighted chicken ID (for smooth scroll & flash)
   const [highlightedFowlId, setHighlightedFowlId] = useState<number | null>(null);
@@ -653,22 +655,6 @@ export default function LineageDirectory({
     setExpandedPairs((prev) => {
       const next = new Map(prev);
       next.set(key, !currentOpen);
-      return next;
-    });
-  };
-
-  const expandAllPairsForParent = (keys: string[]) => {
-    setExpandedPairs((prev) => {
-      const next = new Map(prev);
-      keys.forEach((k) => next.set(k, true));
-      return next;
-    });
-  };
-
-  const collapseAllPairsForParent = (keys: string[]) => {
-    setExpandedPairs((prev) => {
-      const next = new Map(prev);
-      keys.forEach((k) => next.set(k, false));
       return next;
     });
   };
@@ -871,22 +857,23 @@ export default function LineageDirectory({
     return () => window.removeEventListener('popstate', syncFromUrl);
   }, [sireEntries, damEntries, fowls, birdCodes]);
 
-  // Default selection for sire
+  // Default selection for sire: session memory first, then the sire with most offspring.
   useEffect(() => {
     if (sireEntries.length > 0) {
       if (!selectedSireName || !sireEntries.some(([name]) => name === selectedSireName)) {
-        const saved = typeof window !== 'undefined' ? localStorage.getItem('gt_last_selected_sire') : null;
+        const saved =
+          typeof window !== 'undefined' ? sessionStorage.getItem('gt_last_selected_sire') : null;
         const found = saved && sireEntries.find(([name]) => name === saved);
-        setSelectedSireName(found ? found[0] : sireEntries[0][0]);
+        const fallback = mostOffspringEntry(sireEntries);
+        setSelectedSireName(found ? found[0] : fallback ? fallback[0] : null);
       }
     }
   }, [sireEntries, selectedSireName]);
 
-  // Default selection for dam
+  // Default selection for dam: URL wins, then session memory, then most offspring.
   useEffect(() => {
     if (damEntries.length > 0) {
       if (!selectedDamName || !damEntries.some(([name]) => name === selectedDamName)) {
-        // A shared ?dam=... link wins over the last-used dam in localStorage.
         const urlParam =
           typeof window !== 'undefined'
             ? new URLSearchParams(window.location.search).get('dam')?.trim().toLowerCase()
@@ -903,9 +890,11 @@ export default function LineageDirectory({
           setSelectedDamName(fromUrl[0]);
           return;
         }
-        const saved = typeof window !== 'undefined' ? localStorage.getItem('gt_last_selected_dam') : null;
+        const saved =
+          typeof window !== 'undefined' ? sessionStorage.getItem('gt_last_selected_dam') : null;
         const found = saved && damEntries.find(([name]) => name === saved);
-        setSelectedDamName(found ? found[0] : damEntries[0][0]);
+        const fallback = mostOffspringEntry(damEntries);
+        setSelectedDamName(found ? found[0] : fallback ? fallback[0] : null);
       }
     }
   }, [damEntries, selectedDamName]);
@@ -928,7 +917,7 @@ export default function LineageDirectory({
     }
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(`gt_last_selected_${kind}`, name);
+        sessionStorage.setItem(`gt_last_selected_${kind}`, name);
         const url = new URL(window.location.href);
         url.searchParams.set('tab', kind);
         url.searchParams.set(kind, code || name);
@@ -1198,35 +1187,8 @@ export default function LineageDirectory({
     return [...list].sort((a, b) => b[1].length - a[1].length);
   }, [damEntries, q, sortBy, birdCodes]);
 
-  const visibleSireEntries = useMemo(() => {
-    const query = sirePaneFilter.trim().toLowerCase();
-    if (!query) return filteredSireEntries;
-    return filteredSireEntries.filter(([name, children]) => {
-      const code = getParentCode(name, 'sire', children[0]).toLowerCase();
-      const variety = (parentBreedOf(name, fowls) || children[0]?.breed || '').toLowerCase();
-      return name.toLowerCase().includes(query) || code.includes(query) || variety.includes(query);
-    });
-  }, [filteredSireEntries, sirePaneFilter, fowls, getParentCode]);
-
-  const visibleDamEntries = useMemo(() => {
-    const query = damPaneFilter.trim().toLowerCase();
-    if (!query) return filteredDamEntries;
-    return filteredDamEntries.filter(([name, children]) => {
-      const code = getParentCode(name, 'dam', children[0]).toLowerCase();
-      const variety = (parentBreedOf(name, fowls) || children[0]?.breed || '').toLowerCase();
-      return name.toLowerCase().includes(query) || code.includes(query) || variety.includes(query);
-    });
-  }, [filteredDamEntries, damPaneFilter, fowls, getParentCode]);
-
-  // Keep the selected parent visible in the horizontal strip.
-  useEffect(() => {
-    if (activeTab !== 'sire' && activeTab !== 'dam') return;
-    const strip = parentStripRef.current;
-    const selected = strip?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
-    if (selected && typeof selected.scrollIntoView === 'function') {
-      selected.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    }
-  }, [activeTab, selectedSireName, selectedDamName, sortBy, sirePaneFilter, damPaneFilter]);
+  const visibleSireEntries = filteredSireEntries;
+  const visibleDamEntries = filteredDamEntries;
 
   const filteredBreedingPairs = useMemo(() => {
     let list = breedingPairs;
@@ -1281,19 +1243,20 @@ export default function LineageDirectory({
   // Tab tools handlers
   const handleExpandAll = () => {
     if (activeTab === 'sire') {
-      setTreeShowAllOffspring(true);
-      setExpandedPairs((prev) => {
-        const next = new Map(prev);
-        filteredSireEntries.forEach(([sire, children]) => {
+      const activeSire =
+        filteredSireEntries.find(([name]) => name === selectedSireName) ?? filteredSireEntries[0];
+      if (activeSire) {
+        const [sire, children] = activeSire;
+        setExpandedPairs((prev) => {
+          const next = new Map(prev);
           children.forEach((c) => {
             const mate = isKnownParent(c.dam) ? normalizeParentName(c.dam) : 'Unknown dam';
             next.set(`sire|||${sire}|||${mate}`, true);
           });
+          return next;
         });
-        return next;
-      });
+      }
     } else if (activeTab === 'dam') {
-      setTreeShowAllOffspring(true);
       const activeDam =
         filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
       if (activeDam) {
@@ -1314,7 +1277,6 @@ export default function LineageDirectory({
 
   const handleCollapseAll = () => {
     if (activeTab === 'sire') {
-      setTreeShowAllOffspring(false);
       const activeSire =
         filteredSireEntries.find(([name]) => name === selectedSireName) ?? filteredSireEntries[0];
       if (activeSire) {
@@ -1329,7 +1291,6 @@ export default function LineageDirectory({
         });
       }
     } else if (activeTab === 'dam') {
-      setTreeShowAllOffspring(false);
       const activeDam =
         filteredDamEntries.find(([name]) => name === selectedDamName) ?? filteredDamEntries[0];
       if (activeDam) {
@@ -1464,32 +1425,10 @@ export default function LineageDirectory({
   const renderParentTree = (
     entries: [string, FowlRecord[]][],
     kind: 'sire' | 'dam',
-    color: 'sky' | 'pink',
   ) => {
-    const colorMap = {
-      sky: {
-        bg: 'bg-sky-100 dark:bg-sky-950/50',
-        border: 'border-sky-200 dark:border-sky-800',
-        hoverBg: 'hover:bg-sky-50/50 dark:hover:bg-sky-950/20',
-        icon: 'sire',
-        text: 'text-sky-700 dark:text-sky-400',
-        activeRing: 'ring-2 ring-sky-500 bg-sky-50 dark:bg-sky-950/40 border-sky-400 dark:border-sky-700',
-      },
-      pink: {
-        bg: 'pink-100 dark:bg-pink-950/50',
-        border: 'border-pink-200 dark:border-pink-800',
-        hoverBg: 'hover:bg-pink-50/50 dark:hover:bg-pink-950/20',
-        icon: 'dam',
-        text: 'text-pink-700 dark:text-pink-400',
-        activeRing: 'ring-2 ring-pink-500 bg-pink-50 dark:bg-pink-950/40 border-pink-400 dark:border-pink-700',
-      },
-    };
-    const c = colorMap[color];
     const otherRole = kind === 'sire' ? 'dam' : 'sire';
     const otherLabel = kind === 'sire' ? 'dam' : 'sire';
 
-    const paneFilter = kind === 'sire' ? sirePaneFilter : damPaneFilter;
-    const setPaneFilter = kind === 'sire' ? setSirePaneFilter : setDamPaneFilter;
     const selectedName = kind === 'sire' ? selectedSireName : selectedDamName;
 
     // The tab already supplies the globally searched/sorted list; the strip
@@ -1514,10 +1453,20 @@ export default function LineageDirectory({
     const activeParentStats = groupStats(activeChildren);
     const activeMales = activeChildren.filter(isMaleChild).length;
     const activeFemales = activeChildren.length - activeMales;
-    const parentFighters = fightersOf(activeChildren);
-    const parentMalesFought = parentFighters.filter(
-      (ch) => cachedStats(ch).total > 0
-    ).length;
+    const toPickerEntry = ([name, kids]: [string, FowlRecord[]]): ParentPickerEntry => {
+      const wingBand =
+        fowls.find((fowl) => fowl.name.trim().toLowerCase() === name.trim().toLowerCase())
+          ?.wing_band || '';
+      return {
+        name,
+        children: kids,
+        code: getParentCode(name, kind, kids[0]),
+        stats: groupStats(kids),
+        wingBand,
+      };
+    };
+    const pickerEntries = visibleEntries.map(toPickerEntry);
+    const selectedPickerEntry = activeEntry ? toPickerEntry(activeEntry) : null;
 
     // Build pair groups for active parent
     const pairMap = new Map<string, FowlRecord[]>();
@@ -1633,151 +1582,6 @@ export default function LineageDirectory({
       };
     });
 
-    const moveParent = (delta: number) => {
-      if (visibleEntries.length === 0) return;
-      const current = visibleEntries.findIndex(([name]) => name === activeParentName);
-      const base = current >= 0 ? current : delta > 0 ? -1 : 0;
-      const next = (base + delta + visibleEntries.length) % visibleEntries.length;
-      const [name, kids] = visibleEntries[next];
-      handleSelectParent(name, kind, getParentCode(name, kind, kids[0]));
-    };
-
-    const renderParentCard = ([name, kids]: [string, FowlRecord[]]) => {
-      const code = getParentCode(name, kind, kids[0]);
-      const stats = groupStats(kids);
-      const isSelected = name === activeParentName;
-      return (
-        <button
-          key={name}
-          type="button"
-          role="option"
-          aria-selected={isSelected}
-          title={name}
-          aria-label={`[${formatBirdCodeForDisplay(code)}] ${name} · ${kids.length} offspring${
-            stats.decided > 0
-              ? ` · ${stats.winRate === null ? '—' : `${stats.winRate}%`} · ${stats.wins}W-${stats.losses}L${
-                  stats.draws > 0 ? `-${stats.draws}D` : ''
-                }`
-              : ' · No fights'
-          }`}
-          onClick={() => handleSelectParent(name, kind, code)}
-          className={`snap-start flex h-[88px] w-[200px] shrink-0 flex-col rounded-lg border p-2 text-left transition-all cursor-pointer ${
-            isSelected
-              ? `${c.activeRing} ring-inset shadow-2xs`
-              : 'border-border bg-card hover:bg-muted/50'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span
-              className={`font-mono text-xs px-1.5 py-0.5 rounded font-black border uppercase shrink-0 ${
-                isSelected
-                  ? `${c.bg} ${c.text} ${c.border}`
-                  : 'bg-muted text-muted-foreground border-border'
-              }`}
-            >
-              [{formatBirdCodeForDisplay(code)}]
-            </span>
-            <span className="text-xs font-bold text-muted-foreground shrink-0">
-              {kids.length} offspring
-            </span>
-          </div>
-          <p className="mt-1 text-sm font-black text-card-foreground truncate" title={name}>
-            {name}
-          </p>
-          <div className="mt-auto flex h-6 items-center">
-            <WinRatePill stats={stats} showNoFights />
-          </div>
-        </button>
-      );
-    };
-
-    const parentNoun = kind === 'sire' ? 'sire' : 'dam';
-    const parentNounPlural = kind === 'sire' ? 'sires' : 'dams';
-
-    const renderParentStrip = () => (
-      <div className="bg-card border-border rounded-lg border p-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative w-full shrink-0 sm:w-48">
-            <span
-              aria-hidden="true"
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
-            >
-              <Search className="h-3.5 w-3.5" />
-            </span>
-            <input
-              type="text"
-              aria-label={`Filter ${parentNounPlural}`}
-              placeholder={`Filter ${parentNounPlural}...`}
-              value={paneFilter}
-              onChange={(e) => setPaneFilter(e.target.value)}
-              className="border-input-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500 w-full rounded-md border py-2 pr-7 pl-8 text-xs font-semibold focus:ring-1"
-            />
-            {paneFilter.length > 0 && (
-              <button
-                type="button"
-                aria-label={`Clear ${parentNounPlural} filter`}
-                onClick={() => setPaneFilter('')}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center">
-            {visibleEntries.length === 0 ? (
-              <div className="text-muted-foreground flex h-[88px] flex-1 flex-col items-center justify-center gap-1 text-center text-xs">
-                <p>No {parentNounPlural} match</p>
-                {paneFilter && (
-                  <button
-                    type="button"
-                    onClick={() => setPaneFilter('')}
-                    className="text-emerald-600 dark:text-emerald-400 cursor-pointer text-xs font-bold hover:underline"
-                  >
-                    Clear filter
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div
-                ref={parentStripRef}
-                role="listbox"
-                aria-label={`${kind === 'sire' ? 'Sires' : 'Dams'} list`}
-                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {visibleEntries.map(renderParentCard)}
-              </div>
-            )}
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              onClick={() => moveParent(-1)}
-              disabled={visibleEntries.length <= 1}
-              aria-label={`Previous ${parentNoun}`}
-              title={`Previous ${parentNoun}`}
-              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => moveParent(1)}
-              disabled={visibleEntries.length <= 1}
-              aria-label={`Next ${parentNoun}`}
-              title={`Next ${parentNoun}`}
-              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          </div>
-        </div>
-      </div>
-    );
-
     const renderRightPane = () => {
       if (!activeEntry) {
         return (
@@ -1793,69 +1597,21 @@ export default function LineageDirectory({
           aria-label={`${activeParentName} details`}
           className="min-w-0 space-y-4"
         >
-          {/* Selected parent profile header */}
-          <div className="bg-card rounded-lg border border-border shadow-xs p-4 sm:p-5 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3.5 min-w-0">
-                {activeParentFowl?.image_url ? (
-                  <img
-                    src={activeParentFowl.image_url}
-                    alt={activeParentName || ''}
-                    className="rounded-full object-cover shrink-0 border-2 border-border shadow-xs w-12 h-12"
-                  />
-                ) : (
-                  <div
-                    className={`rounded-full ${c.bg} ${c.border} border-2 flex items-center justify-center font-black ${c.text} shrink-0 select-none shadow-xs w-12 h-12 text-sm`}
-                  >
-                    {getInitials(activeParentName || '')}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {activeParentCode && (
-                      <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted text-foreground border border-border font-black uppercase shrink-0">
-                        [{formatBirdCodeForDisplay(activeParentCode)}]
-                      </span>
-                    )}
-                    <h2 className="min-w-0 font-black text-card-foreground truncate text-base sm:text-lg">
-                      {activeParentName}
-                    </h2>
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full border shrink-0 ${
-                        kind === 'sire'
-                          ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800'
-                          : 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-400 dark:border-pink-800'
-                      }`}
-                    >
-                      {kind === 'sire' ? 'M Cock' : 'F Hen'}
-                    </span>
-                    {(activeParentFowl?.breed || activeChildren[0]?.breed) && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                        {activeParentFowl?.breed || activeChildren[0]?.breed}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span>{activeChildren.length} offspring</span>
-                    <span className="text-muted-foreground/50 select-none">·</span>
-                    <span>{activeMales}M {activeFemales}F</span>
-                    <span className="text-muted-foreground/50 select-none">·</span>
-                    <span className={c.text}>
-                      {pairGroups.length} {otherLabel}{pairGroups.length !== 1 ? 's' : ''}
-                    </span>
-                    <span className="text-muted-foreground/50 select-none">·</span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-muted-foreground font-semibold">
-                        {kind === 'sire' ? 'Sire' : 'Dam'} total · {parentMalesFought} of {parentFighters.length} males have fought
-                        {activeParentStats.decided > 0 ? ` · ${activeParentStats.wins}W-${activeParentStats.losses}L · ${activeParentStats.winRate}%` : ''}
-                      </span>
-                      <WinRatePill stats={activeParentStats} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+          <h2 className="sr-only">{activeParentName}</h2>
+          <div className="bg-card border-border space-y-2 rounded-lg border p-2.5 shadow-xs sm:p-3">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+              <ParentCombobox
+                kind={kind}
+                entries={pickerEntries}
+                selected={selectedPickerEntry}
+                sort={parentPickerSort}
+                onSortChange={setParentPickerSort}
+                onSelect={(name) => {
+                  const entry = allEntries.find(([entryName]) => entryName === name);
+                  if (entry) handleSelectParent(name, kind, getParentCode(name, kind, entry[1][0]));
+                }}
+              />
+              <div className="flex flex-wrap items-center gap-2">
                 <div
                   role="group"
                   aria-label={`${kind === 'sire' ? 'Sire' : 'Dam'} offspring view`}
@@ -1867,7 +1623,7 @@ export default function LineageDirectory({
                       type="button"
                       aria-pressed={parentViewMode === mode}
                       onClick={() => changeParentView(mode)}
-                      className={`min-h-8 cursor-pointer rounded-md px-2.5 text-xs font-black capitalize transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
+                      className={`min-h-11 cursor-pointer rounded-md px-3 text-xs font-black capitalize transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none sm:min-h-8 sm:px-2.5 ${
                         parentViewMode === mode
                           ? 'bg-card text-foreground shadow-2xs'
                           : 'text-muted-foreground hover:text-foreground'
@@ -1877,25 +1633,99 @@ export default function LineageDirectory({
                     </button>
                   ))}
                 </div>
-                {hasMoreThan12 && (
+                {parentViewMode === 'tree' && pairGroups.length > 1 && (
                   <button
                     type="button"
                     onClick={toggleAllPairs}
-                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline px-2.5 py-1.5 rounded-md hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                    className="text-muted-foreground hover:text-foreground min-h-11 cursor-pointer rounded-md border border-transparent px-3 text-xs font-bold transition-colors hover:border-emerald-300 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none dark:hover:bg-emerald-950/30 sm:min-h-8"
                   >
-                    {allPairsExpanded ? 'Collapse all pairs' : 'Expand all pairs'}
+                    {allPairsExpanded ? 'Collapse all' : 'Expand all'}
                   </button>
                 )}
                 {activeParentFowl && (
                   <button
                     type="button"
                     onClick={() => setSelectedFowlForDetails(activeParentFowl)}
-                    className="text-xs font-bold bg-muted hover:bg-muted/80 text-foreground px-3 py-1.5 rounded-md border border-border transition-colors cursor-pointer"
+                    className="bg-muted hover:bg-muted/80 text-foreground border-border min-h-11 cursor-pointer rounded-md border px-3 text-xs font-bold transition-colors sm:min-h-8"
                   >
                     View profile
                   </button>
                 )}
               </div>
+            </div>
+
+            <div className="border-border/60 flex flex-col gap-2 border-t pt-2 xl:flex-row xl:items-center xl:justify-between">
+              <p data-testid="parent-summary" className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold">
+                <span>
+                  <strong className="text-foreground">{activeChildren.length}</strong> offspring
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>
+                  {activeMales}M {activeFemales}F
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>
+                  {pairGroups.length} {otherLabel}
+                  {pairGroups.length !== 1 ? 's' : ''}
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>
+                  {activeParentStats.total} {activeParentStats.total === 1 ? 'fight' : 'fights'}
+                </span>
+              </p>
+
+              {parentViewMode === 'tree' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <div
+                    role="group"
+                    aria-label={`Filter ${otherLabel} offspring by sex`}
+                    className="flex flex-wrap items-center gap-1.5"
+                  >
+                    {(
+                      [
+                        ['all', `All (${activeChildren.length})`],
+                        ['males', `Cocks (${activeMales})`],
+                        ['females', `Hens (${activeFemales})`],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={treeSexFilter === value}
+                        onClick={() => setTreeSexFilter(value)}
+                        className={`min-h-11 cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none sm:min-h-8 ${
+                          treeSexFilter === value
+                            ? value === 'males'
+                              ? 'bg-sky-600 text-white shadow-2xs'
+                              : value === 'females'
+                                ? 'bg-pink-600 text-white shadow-2xs'
+                                : 'bg-emerald-600 text-white shadow-2xs'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="text-muted-foreground flex items-center gap-1.5 text-xs font-bold">
+                    Sort
+                    <select
+                      aria-label="Sort pair offspring"
+                      value={pairSortBy}
+                      onChange={(event) =>
+                        setPairSortBy(event.target.value as PairSortOption)
+                      }
+                      className="border-border bg-card text-foreground focus:border-emerald-500 min-h-11 cursor-pointer rounded border px-2 text-xs font-bold focus:outline-none sm:min-h-8"
+                    >
+                      <option value="males-first">Cocks first, then code</option>
+                      <option value="winrate">Win rate</option>
+                      <option value="code">Code only</option>
+                      <option value="age">Age</option>
+                      <option value="wins">Wins</option>
+                    </select>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1910,10 +1740,6 @@ export default function LineageDirectory({
               fowls={fowls}
               matchHistory={matchHistory}
               sexFilter={treeSexFilter}
-              onSexFilterChange={setTreeSexFilter}
-              sortBy={pairSortBy}
-              onSortChange={setPairSortBy}
-              showAllOffspring={treeShowAllOffspring}
               onTogglePair={(key) => {
                 const pair = treePairs.find((candidate) => candidate.key === key);
                 togglePair(key, pair?.isOpen ?? true);
@@ -2493,8 +2319,7 @@ export default function LineageDirectory({
     };
 
     return (
-      <div className="space-y-4 min-w-0">
-        {renderParentStrip()}
+      <div className="min-w-0">
         {renderRightPane()}
       </div>
     );
@@ -2580,7 +2405,7 @@ export default function LineageDirectory({
         const sireFiltered = visibleSireEntries.length;
         const totalOff = sireEntries.reduce((s, [, c]) => s + c.length, 0);
         const filteredOff = visibleSireEntries.reduce((s, [, c]) => s + c.length, 0);
-        const isFiltered = Boolean(q || sirePaneFilter.trim());
+        const isFiltered = Boolean(q);
 
         return (
           <>
@@ -2600,7 +2425,7 @@ export default function LineageDirectory({
         const damFiltered = visibleDamEntries.length;
         const totalOff = damEntries.reduce((s, [, c]) => s + c.length, 0);
         const filteredOff = visibleDamEntries.reduce((s, [, c]) => s + c.length, 0);
-        const isFiltered = Boolean(q || damPaneFilter.trim());
+        const isFiltered = Boolean(q);
 
         return (
           <>
@@ -2879,7 +2704,7 @@ export default function LineageDirectory({
           </div>
 
           {/* Right: Tab tools */}
-          {activeTab !== 'pedigree' && (
+          {activeTab !== 'pedigree' && activeTab !== 'sire' && activeTab !== 'dam' && (
             <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
               <div className="flex items-center gap-1.5">
                 <label htmlFor="lineage-sort" className="text-xs font-bold text-muted-foreground whitespace-nowrap">
@@ -3173,7 +2998,7 @@ export default function LineageDirectory({
             ) : filteredSireEntries.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
             ) : (
-              renderParentTree(visibleSireEntries, 'sire', 'sky')
+              renderParentTree(visibleSireEntries, 'sire')
             )}
           </section>
         )}
@@ -3189,7 +3014,7 @@ export default function LineageDirectory({
             ) : filteredDamEntries.length === 0 && q ? (
               <SearchEmptyState query={search} onClear={() => setSearch('')} />
             ) : (
-              renderParentTree(visibleDamEntries, 'dam', 'pink')
+              renderParentTree(visibleDamEntries, 'dam')
             )}
           </section>
         )}
