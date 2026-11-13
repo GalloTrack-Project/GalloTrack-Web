@@ -3,8 +3,16 @@ import React, { useState } from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { useGaloTrack } from '@/lib/context';
 import { isFemale } from '@/lib/helpers';
+import {
+  BLOODLINE_REPORT_CARD,
+  BLOODLINE_REPORT_PARENTAGE,
+  BLOODLINE_REPORT_SUMMARY,
+  formatBloodlineDisplayValue,
+  getBloodlineParentageDisplay,
+} from '@/lib/bloodline-report-ui';
 import { Dna, BarChart3, Zap, Lightbulb } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import { StatCard } from '@/components/ui';
 
 type Props = { fowl: FowlRecord; compact?: boolean };
 
@@ -25,6 +33,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
   const [expanded, setExpanded] = useState(false);
   const report = generateBloodlineReport(fowl);
   const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
+  const parentageDisplay = getBloodlineParentageDisplay(report.relatedness);
 
   if (compact) {
     return (
@@ -38,15 +47,15 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             <span
               className={`rounded-full px-2 py-0.5 text-xs font-black ${report.strainType === 'purebred' ? 'bg-sky-100 text-sky-700 dark:text-sky-300' : report.strainType === 'crossbred' ? 'text-violet bg-violet-100' : report.strainType === 'linebred' ? 'bg-amber-100 text-amber-700 dark:text-amber-300' : 'dark:bg-muted dark:text-card-foreground bg-slate-100 text-slate-600'}`}
             >
-              {report.strainType.toUpperCase()}
+              {formatBloodlineDisplayValue(report.strainType)}
             </span>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
             <p className="text-muted-foreground text-xs font-bold uppercase">Strain</p>
-            <p className="dark:text-card-foreground text-xs font-black text-slate-800">
-              {report.primaryStrain}
+            <p className="dark:text-card-foreground text-xs font-black break-words text-slate-800">
+              {formatBloodlineDisplayValue(report.primaryStrain)}
             </p>
           </div>
           <div>
@@ -85,7 +94,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
         </div>
         {report.crossPattern && (
           <p className="text-teal text-center text-xs font-semibold">
-            {report.crossPattern.label}
+            {formatBloodlineDisplayValue(report.crossPattern.label)}
             {!isDamRecord && report.crossPattern.fightingStyle
               ? ` — ${report.crossPattern.fightingStyle}`
               : ''}
@@ -96,214 +105,223 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-teal-200 bg-gradient-to-br from-teal-50 to-emerald-50 p-4 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/40">
+    <div
+      className={`${BLOODLINE_REPORT_CARD} space-y-3 rounded-lg border border-teal-200 bg-gradient-to-br from-teal-50 to-emerald-50 p-4 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/40`}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-teal text-xs font-black tracking-widest uppercase">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="text-teal min-w-0 text-xs font-black tracking-widest uppercase">
             <Dna className="h-3 w-3" /> Bloodline Report
           </span>
           {report.crossPattern && <TierBadge tier={report.crossPattern.tier} />}
         </div>
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="text-teal hover:text-teal dark:hover:text-teal cursor-pointer text-xs font-bold"
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Hide bloodline report details' : 'Show bloodline report details'}
+          className="text-teal hover:text-teal focus-visible:ring-teal dark:hover:text-teal inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-sm px-1 text-xs font-bold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-slate-950"
         >
           {expanded ? '▲ Less' : '▼ Details'}
         </button>
       </div>
 
       {/* Summary Grid */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <div className="dark:bg-card/70 rounded-md border border-teal-100 bg-white/70 p-2 text-center dark:border-teal-900/50">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Type</p>
-          <p
-            className={`text-xs font-black ${report.strainType === 'purebred' ? 'text-sky-700 dark:text-sky-300' : report.strainType === 'crossbred' ? 'text-violet' : report.strainType === 'linebred' ? 'text-amber-700 dark:text-amber-300' : 'dark:text-card-foreground text-slate-600'}`}
-          >
-            {report.strainType.toUpperCase()}
-          </p>
-        </div>
-        <div className="dark:bg-card/70 rounded-md border border-teal-100 bg-white/70 p-2 text-center dark:border-teal-900/50">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Strain</p>
-          <p className="dark:text-card-foreground text-xs font-black text-slate-800">
-            {report.primaryStrain}
-          </p>
-        </div>
-        <div className="dark:bg-card/70 rounded-md border border-teal-100 bg-white/70 p-2 text-center dark:border-teal-900/50">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Generation</p>
-          <p className="text-teal text-xs font-black">{report.generationLabel}</p>
-        </div>
-        <div className="dark:bg-card/70 rounded-md border border-teal-100 bg-white/70 p-2 text-center dark:border-teal-900/50">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Purity</p>
-          <p className="text-teal text-xs font-black">{report.purityPct}%</p>
-        </div>
-        <div className="dark:bg-card/70 rounded-md border border-teal-100 bg-white/70 p-2 text-center dark:border-teal-900/50">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Parentage</p>
-          <p
-            className={`text-xs font-black ${
-              report.relatedness?.type === 'close'
-                ? 'text-amber-600 dark:text-amber-400'
-                : report.relatedness?.type === 'line'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : report.relatedness?.type === 'outcross'
-                    ? 'text-success dark:text-emerald-300'
-                    : 'text-muted-foreground'
-            }`}
-            title={report.relatedness?.tooltip}
-          >
-            {report.relatedness?.type === 'unknown'
-              ? 'Unknown (foundation stock, no recorded parents)'
-              : report.relatedness?.label || 'Unknown (foundation stock, no recorded parents)'}
-          </p>
-          <p
-            className="text-muted-foreground truncate text-xs"
-            title={report.relatedness?.relationship}
-          >
-            {report.relatedness?.relationship || 'Foundation stock (no recorded parents)'}
-          </p>
+      <div className={BLOODLINE_REPORT_SUMMARY}>
+        <StatCard
+          density="compact"
+          label="Type"
+          value={formatBloodlineDisplayValue(report.strainType)}
+          valueClassName={
+            report.strainType === 'purebred'
+              ? 'text-sky-700 dark:text-sky-300'
+              : report.strainType === 'crossbred'
+                ? 'text-violet'
+                : report.strainType === 'linebred'
+                  ? 'text-amber-700 dark:text-amber-300'
+                  : 'text-slate-700 dark:text-slate-200'
+          }
+        />
+        <StatCard
+          density="compact"
+          label="Strain"
+          value={formatBloodlineDisplayValue(report.primaryStrain)}
+        />
+        <StatCard
+          density="compact"
+          label="Generation"
+          value={formatBloodlineDisplayValue(report.generationLabel)}
+          valueClassName="text-teal"
+        />
+        <StatCard
+          density="compact"
+          label="Purity"
+          value={`${report.purityPct}%`}
+          valueClassName="text-teal"
+        />
+        <div
+          className={BLOODLINE_REPORT_PARENTAGE}
+          data-bloodline-parentage
+          data-testid="bloodline-parentage"
+        >
+          <StatCard
+            density="compact"
+            label="Parentage"
+            value={parentageDisplay.primary}
+            hint={parentageDisplay.secondary}
+            title={parentageDisplay.title}
+            className="h-full"
+          />
         </div>
       </div>
 
-      {/* Cross Pattern */}
-      {report.crossPattern && (
-        <div className="dark:bg-card/70 space-y-1 rounded-md border border-violet-200 bg-white/70 p-3 dark:border-violet-900/50">
-          <div className="flex items-center justify-between">
-            <span className="text-violet text-xs font-black uppercase">
-              {report.crossPattern.label}
-            </span>
-            <div className="flex items-center gap-2">
-              <TierBadge tier={report.crossPattern.tier} />
-              <span className="text-success text-xs font-bold dark:text-emerald-300">
-                +{report.crossPattern.winRateBonus}% win rate
-              </span>
-            </div>
-          </div>
-          <p className="text-muted-foreground text-xs">{report.crossPattern.description}</p>
-          {!isDamRecord && report.crossPattern.fightingStyle && (
-            <p className="text-violet text-xs font-semibold">
-              Fighting style: {report.crossPattern.fightingStyle}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Performance Benchmark */}
-      {report.performanceBenchmark &&
-        (report.performanceBenchmark.totalFights > 0 ||
-          report.performanceBenchmark.avgWinRate !== null) && (
-          <div className="dark:bg-card/70 space-y-2 rounded-md border border-sky-200 bg-white/70 p-3 dark:border-sky-900/50">
-            <p className="text-xs font-black text-sky-700 uppercase dark:text-sky-300">
-              <BarChart3 className="h-3 w-3" /> Strain Performance Benchmark
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-              <div>
-                <p className="text-muted-foreground text-xs font-bold">Structural Weight</p>
-                <p className="dark:text-card-foreground text-xs font-black text-slate-800">
-                  {(() => {
-                    const regWeight =
-                      fowl.structural_weight !== undefined &&
-                      fowl.structural_weight !== null &&
-                      fowl.structural_weight !== ''
-                        ? fowl.structural_weight
-                        : fowl.weight;
-                    if (!regWeight) return 'N/A';
-                    const clean = String(regWeight)
-                      .replace(/\s*kg$/i, '')
-                      .trim();
-                    return clean ? `${clean}kg` : 'N/A';
-                  })()}
-                </p>
+      {expanded && (
+        <>
+          {/* Cross Pattern */}
+          {report.crossPattern && (
+            <div className="dark:bg-card/70 space-y-1 rounded-md border border-violet-200 bg-white/70 p-3 dark:border-violet-900/50">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-violet min-w-0 text-xs font-black break-words uppercase">
+                  {formatBloodlineDisplayValue(report.crossPattern.label)}
+                </span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <TierBadge tier={report.crossPattern.tier} />
+                  <span className="text-success text-xs font-bold break-words dark:text-emerald-300">
+                    +{report.crossPattern.winRateBonus}% win rate
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-muted-foreground text-xs font-bold">Win Rate</p>
-                <p className="text-xs font-black text-sky-700 dark:text-sky-300">
-                  {report.performanceBenchmark.avgWinRate !== null
-                    ? `${report.performanceBenchmark.avgWinRate}%`
-                    : 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs font-bold">Fights Tracked</p>
-                <p className="text-xs font-black text-sky-700 dark:text-sky-300">
-                  {report.performanceBenchmark.totalFights}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs font-bold">Avg Weight</p>
-                <p className="text-xs font-black text-sky-700 dark:text-sky-300">
-                  {report.performanceBenchmark.avgWeight}kg
-                </p>
-              </div>
-            </div>
-            {report.performanceBenchmark.topPerformers.length > 0 && (
-              <p className="text-info text-xs dark:text-sky-300">
-                Top performers: {report.performanceBenchmark.topPerformers.join(', ')}
+              <p className="text-muted-foreground text-xs break-words">
+                {report.crossPattern.description}
               </p>
-            )}
-          </div>
-        )}
+              {!isDamRecord && report.crossPattern.fightingStyle && (
+                <p className="text-violet text-xs font-semibold break-words">
+                  Fighting style: {report.crossPattern.fightingStyle}
+                </p>
+              )}
+            </div>
+          )}
 
-      {/* Hybrid Vigor Bar */}
-      {report.hybridVigor?.label !== '—' && (
-        <div className="dark:bg-card/70 space-y-2 rounded-md border border-emerald-200 bg-white/70 p-3 dark:border-emerald-900/50">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black text-emerald-700 uppercase dark:text-emerald-300">
-              <Zap className="h-3 w-3" /> Hybrid Vigor
-            </span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-black ${
-                report.hybridVigor.score >= 90
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
-                  : report.hybridVigor.score >= 80
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
-                    : report.hybridVigor.score >= 70
-                      ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300'
-                      : report.hybridVigor.score >= 50
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
-                        : 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'
-              }`}
-            >
-              {report.hybridVigor.label} ({report.hybridVigor.score}/100)
-            </span>
-          </div>
-          <div className="dark:bg-muted h-2 w-full overflow-hidden rounded-full bg-slate-100">
-            <div
-              className={`h-full rounded-full transition-all ${
-                report.hybridVigor.score >= 90
-                  ? 'bg-gradient-to-r from-amber-400 to-amber-500'
-                  : report.hybridVigor.score >= 80
-                    ? 'bg-emerald-500'
-                    : report.hybridVigor.score >= 70
-                      ? 'bg-sky-500'
-                      : report.hybridVigor.score >= 50
-                        ? 'bg-amber-500'
-                        : 'bg-rose-500'
-              }`}
-              style={{ width: `${report.hybridVigor.score}%` }}
-            />
-          </div>
-        </div>
+          {/* Performance Benchmark */}
+          {report.performanceBenchmark &&
+            (report.performanceBenchmark.totalFights > 0 ||
+              report.performanceBenchmark.avgWinRate !== null) && (
+              <div className="dark:bg-card/70 space-y-2 rounded-md border border-sky-200 bg-white/70 p-3 dark:border-sky-900/50">
+                <p className="text-xs font-black text-sky-700 uppercase dark:text-sky-300">
+                  <BarChart3 className="h-3 w-3" /> Strain Performance Benchmark
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+                  <div>
+                    <p className="text-muted-foreground text-xs font-bold">Structural Weight</p>
+                    <p className="dark:text-card-foreground text-xs font-black text-slate-800">
+                      {(() => {
+                        const regWeight =
+                          fowl.structural_weight !== undefined &&
+                          fowl.structural_weight !== null &&
+                          fowl.structural_weight !== ''
+                            ? fowl.structural_weight
+                            : fowl.weight;
+                        if (!regWeight) return 'N/A';
+                        const clean = String(regWeight)
+                          .replace(/\s*kg$/i, '')
+                          .trim();
+                        return clean ? `${clean}kg` : 'N/A';
+                      })()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs font-bold">Win Rate</p>
+                    <p className="text-xs font-black text-sky-700 dark:text-sky-300">
+                      {report.performanceBenchmark.avgWinRate !== null
+                        ? `${report.performanceBenchmark.avgWinRate}%`
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs font-bold">Fights Tracked</p>
+                    <p className="text-xs font-black text-sky-700 dark:text-sky-300">
+                      {report.performanceBenchmark.totalFights}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs font-bold">Avg Weight</p>
+                    <p className="text-xs font-black text-sky-700 dark:text-sky-300">
+                      {report.performanceBenchmark.avgWeight}kg
+                    </p>
+                  </div>
+                </div>
+                {report.performanceBenchmark.topPerformers.length > 0 && (
+                  <p className="text-info text-xs dark:text-sky-300">
+                    Top performers: {report.performanceBenchmark.topPerformers.join(', ')}
+                  </p>
+                )}
+              </div>
+            )}
+
+          {/* Hybrid Vigor Bar */}
+          {report.hybridVigor?.label !== '—' && (
+            <div className="dark:bg-card/70 space-y-2 rounded-md border border-emerald-200 bg-white/70 p-3 dark:border-emerald-900/50">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="min-w-0 text-xs font-black text-emerald-700 uppercase dark:text-emerald-300">
+                  <Zap className="h-3 w-3" /> Hybrid Vigor
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-black ${
+                    report.hybridVigor.score >= 90
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                      : report.hybridVigor.score >= 80
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
+                        : report.hybridVigor.score >= 70
+                          ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300'
+                          : report.hybridVigor.score >= 50
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                            : 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'
+                  }`}
+                >
+                  {report.hybridVigor.label} ({report.hybridVigor.score}/100)
+                </span>
+              </div>
+              <div className="dark:bg-muted h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    report.hybridVigor.score >= 90
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                      : report.hybridVigor.score >= 80
+                        ? 'bg-emerald-500'
+                        : report.hybridVigor.score >= 70
+                          ? 'bg-sky-500'
+                          : report.hybridVigor.score >= 50
+                            ? 'bg-amber-500'
+                            : 'bg-rose-500'
+                  }`}
+                  style={{ width: `${report.hybridVigor.score}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="animate-fadeIn space-y-3">
+        <div className="animate-fadeIn min-w-0 space-y-3">
           {/* Sire / Dam Strains */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md border border-sky-200 bg-sky-50 p-2 dark:border-sky-900/50 dark:bg-sky-950/40">
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="min-w-0 rounded-md border border-sky-200 bg-sky-50 p-2 dark:border-sky-900/50 dark:bg-sky-950/40">
               <p className="text-info text-xs font-black uppercase dark:text-sky-300">
                 <ChickenIcon className="h-3 w-3" /> Sire Strain
               </p>
-              <p className="dark:text-card-foreground text-xs font-bold text-slate-800">
-                {report.sireStrain}
+              <p className="dark:text-card-foreground text-xs font-bold break-words text-slate-800">
+                {formatBloodlineDisplayValue(report.sireStrain)}
               </p>
             </div>
-            <div className="rounded-md border border-pink-200 bg-pink-50 p-2 dark:border-pink-900/50 dark:bg-pink-950/40">
+            <div className="min-w-0 rounded-md border border-pink-200 bg-pink-50 p-2 dark:border-pink-900/50 dark:bg-pink-950/40">
               <p className="text-pink text-xs font-black uppercase">
                 <ChickenIcon className="h-3 w-3" /> Dam Strain
               </p>
-              <p className="dark:text-card-foreground text-xs font-bold text-slate-800">
-                {report.damStrain}
+              <p className="dark:text-card-foreground text-xs font-bold break-words text-slate-800">
+                {formatBloodlineDisplayValue(report.damStrain)}
               </p>
             </div>
           </div>
@@ -313,7 +331,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             <div className="dark:bg-card/70 dark:border-border space-y-1 rounded-md border border-slate-200 bg-white/70 p-3">
               <p className="text-muted-foreground text-xs font-black uppercase">Vigor Factors</p>
               {report.hybridVigor.factors.map((f, i) => (
-                <p key={i} className="dark:text-card-foreground text-xs text-slate-600">
+                <p key={i} className="dark:text-card-foreground text-xs break-words text-slate-600">
                   • {f}
                 </p>
               ))}
@@ -322,9 +340,9 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
 
           {/* Heritability */}
           <div className="dark:bg-card/70 space-y-2 rounded-md border border-indigo-200 bg-white/70 p-3 dark:border-indigo-900/50">
-            <div className="flex items-center justify-between">
-              <span className="text-indigo text-xs font-black uppercase">Heritability</span>
-              <span className="text-indigo text-xs font-black">
+            <div className="flex flex-wrap items-center justify-between gap-1">
+              <span className="text-indigo min-w-0 text-xs font-black uppercase">Heritability</span>
+              <span className="text-indigo min-w-0 text-xs font-black break-words">
                 {report.heritability.overall}/100 — {report.heritability.label}
               </span>
             </div>
@@ -337,7 +355,7 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
             {report.heritability.factors.length > 0 && (
               <div className="space-y-0.5">
                 {report.heritability.factors.map((f, i) => (
-                  <p key={i} className="text-muted-foreground text-xs">
+                  <p key={i} className="text-muted-foreground text-xs break-words">
                     • {f}
                   </p>
                 ))}
@@ -351,26 +369,30 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
               <p className="text-xs font-black text-amber-700 uppercase dark:text-amber-300">
                 Color Genetics
               </p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div>
-                  <p className="text-muted-foreground font-bold">Leg Color</p>
-                  <p className="dark:text-card-foreground font-semibold text-slate-700">
+              <div className="grid min-w-0 grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Leg Color</p>
+                  <p className="dark:text-card-foreground font-semibold break-words text-slate-700">
                     {report.colorReport.legColor?.name || 'Unknown'}
                   </p>
                   {report.colorReport.legColor && (
-                    <p className="text-muted-foreground">{report.colorReport.legColor.dominance}</p>
+                    <p className="text-muted-foreground break-words">
+                      {report.colorReport.legColor.dominance}
+                    </p>
                   )}
                 </div>
-                <div>
-                  <p className="text-muted-foreground font-bold">Plumage</p>
-                  <p className="dark:text-card-foreground font-semibold text-slate-700">
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Plumage</p>
+                  <p className="dark:text-card-foreground font-semibold break-words text-slate-700">
                     {report.colorReport.plumageColor}
                   </p>
-                  <p className="text-muted-foreground">{report.colorReport.plumagePattern}</p>
+                  <p className="text-muted-foreground break-words">
+                    {report.colorReport.plumagePattern}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground font-bold">Complement</p>
-                  <p className="dark:text-card-foreground text-xs font-semibold text-slate-700">
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Complement</p>
+                  <p className="dark:text-card-foreground text-xs font-semibold break-words text-slate-700">
                     {report.colorReport.colorComplement}
                   </p>
                 </div>
@@ -405,11 +427,11 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
           {/* Breed Compliance */}
           {report.breedCompliance && report.breedCompliance.matchedStandard && (
             <div className="dark:bg-card/70 space-y-2 rounded-md border border-sky-200 bg-white/70 p-3 dark:border-sky-900/50">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-black text-sky-700 uppercase dark:text-sky-300">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="min-w-0 text-xs font-black text-sky-700 uppercase dark:text-sky-300">
                   Breed Compliance
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <span
                     className={`rounded px-2 py-0.5 text-xs font-black ${
                       report.breedCompliance.complianceGrade.startsWith('A')
@@ -430,14 +452,14 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
                 Standard: {report.breedCompliance.matchedStandard.name} (
                 {report.breedCompliance.matchedStandard.origin})
               </p>
-              <div className="grid grid-cols-4 gap-1 text-xs">
-                <div>
-                  <p className="text-muted-foreground font-bold">Weight</p>
+              <div className="grid min-w-0 grid-cols-2 gap-1 text-xs sm:grid-cols-4">
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Weight</p>
                   <p
                     className={
                       report.breedCompliance.weightCompliance.status === 'within'
-                        ? 'text-success font-semibold dark:text-emerald-300'
-                        : 'text-warning font-semibold dark:text-amber-300'
+                        ? 'text-success font-semibold break-words dark:text-emerald-300'
+                        : 'text-warning font-semibold break-words dark:text-amber-300'
                     }
                   >
                     {report.breedCompliance.weightCompliance.actual}kg
@@ -447,13 +469,13 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
                     </span>
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground font-bold">Height</p>
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Height</p>
                   <p
                     className={
                       report.breedCompliance.heightCompliance.status === 'within'
-                        ? 'text-success font-semibold dark:text-emerald-300'
-                        : 'text-warning font-semibold dark:text-amber-300'
+                        ? 'text-success font-semibold break-words dark:text-emerald-300'
+                        : 'text-warning font-semibold break-words dark:text-amber-300'
                     }
                   >
                     {report.breedCompliance.heightCompliance.actual}cm
@@ -463,25 +485,25 @@ export default function BloodlineReportCard({ fowl, compact = false }: Props) {
                     </span>
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground font-bold">Legs</p>
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Legs</p>
                   <p
                     className={
                       report.breedCompliance.legColorCompliance.status === 'matches'
-                        ? 'text-success font-semibold dark:text-emerald-300'
-                        : 'text-warning font-semibold dark:text-amber-300'
+                        ? 'text-success font-semibold break-words dark:text-emerald-300'
+                        : 'text-warning font-semibold break-words dark:text-amber-300'
                     }
                   >
                     {report.breedCompliance.legColorCompliance.actual}
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground font-bold">Plumage</p>
+                <div className="min-w-0">
+                  <p className="text-muted-foreground font-bold break-words">Plumage</p>
                   <p
                     className={
                       report.breedCompliance.plumageCompliance.status === 'matches'
-                        ? 'text-success font-semibold dark:text-emerald-300'
-                        : 'text-warning font-semibold dark:text-amber-300'
+                        ? 'text-success font-semibold break-words dark:text-emerald-300'
+                        : 'text-warning font-semibold break-words dark:text-amber-300'
                     }
                   >
                     {report.breedCompliance.plumageCompliance.actual}

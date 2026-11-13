@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useT } from '@/lib/i18n';
+import Logo from '@/components/brand/Logo';
 
 function getErrorId(error: Error & { digest?: string }): string {
   if (error.digest) return error.digest;
@@ -34,9 +35,7 @@ export default function Error({
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-6">
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-20 h-20 bg-rose-500/20 border border-rose-500/40 rounded-lg flex items-center justify-center text-4xl mx-auto">
-          ⚠️
-        </div>
+        <Logo variant="mark" size="lg" className="mx-auto" />
         <div className="space-y-2">
           <h1 className="text-2xl font-black tracking-tight text-danger">{t('errors.serverErrorTitle')}</h1>
           <p className="text-sm text-muted-foreground/70">

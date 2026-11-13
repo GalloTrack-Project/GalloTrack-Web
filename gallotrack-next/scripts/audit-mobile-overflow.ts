@@ -524,7 +524,7 @@ async function runScenarioChecks(
     });
     await page.waitForTimeout(900);
     const formVisible = await page
-      .locator('#encode-sire, #growth-stage')
+      .locator('#gt-encode-sire, #growth-stage')
       .first()
       .isVisible()
       .catch(() => false);
@@ -542,7 +542,7 @@ async function runScenarioChecks(
 
   // ── Parent selector dropdown open ────────────────────────────────────────
   try {
-    const sireInput = page.locator('#encode-sire');
+    const sireInput = page.locator('#gt-encode-sire');
     if (await sireInput.isVisible().catch(() => false)) {
       await sireInput.click().catch(() => {});
       await page.waitForTimeout(400);

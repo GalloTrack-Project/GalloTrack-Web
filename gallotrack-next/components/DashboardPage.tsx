@@ -10,12 +10,23 @@ import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
-import { LayoutDashboard, Trophy, Zap, Calendar, Dna, Link2, TrendingUp, PieChart, Search, Stethoscope, Skull, Medal, Download, Printer, ChevronDown } from 'lucide-react';
+import BreedingPairPerformanceAnalytics from '@/components/BreedingPairPerformanceAnalytics';
+import { LayoutDashboard, Trophy, Zap, Calendar, Dna, TrendingUp, PieChart, Search, Download, Printer, ChevronDown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 import { classifyFlock, getBreedingClassification } from '@/lib/breeding-classification';
+import { useT } from '@/lib/i18n';
+import {
+  DASHBOARD_KPI_CAPTION,
+  DASHBOARD_KPI_CARD,
+  DASHBOARD_KPI_LABEL,
+  DASHBOARD_KPI_SEX_ROW,
+  DASHBOARD_KPI_STAT_GRID,
+  DASHBOARD_KPI_STAT_VALUE,
+  DASHBOARD_KPI_VALUE,
+} from '@/lib/dashboard-kpi';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
 
@@ -34,6 +45,7 @@ function TrendChip({ up, label }: { up: boolean; label: string }) {
 }
 
 export default function DashboardPage() {
+  const { t } = useT();
   const fowl = useFowl();
   const ui = useUI();
   const router = useRouter();
@@ -199,7 +211,7 @@ export default function DashboardPage() {
         {
           heading: 'Performance Metrics',
           fields: [
-            { label: 'Overall win rate', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
+            { label: 'Overall (all time)', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
             { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
             { label: 'Matches logged', value: String(matchHistory.length) },
             { label: 'Active registry', value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} offspring | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)` },
@@ -332,19 +344,19 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* ACTIVE FOWL REGISTRY */}
-        <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden`}>
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-lg"></div>
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Chicken Registry</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title={t('dashboard.registryCardLabel')}>{t('dashboard.registryCardLabel')}</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
           </div>
           {/* Main Total: 29 Active chickens (tooltip: Cocks + Hens + Total Offspring) */}
-          <div className="flex flex-col gap-1 mt-1">
-            <div className="flex items-baseline gap-2">
+          <div className="flex min-w-0 flex-col gap-1 mt-1">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
               <button
                 type="button"
                 onClick={() => navigate('profiling', 'males')}
-                className="text-left text-3xl font-black text-card-foreground tracking-tight leading-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                className={`${DASHBOARD_KPI_VALUE} text-left font-black text-card-foreground tracking-tight hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer`}
                 title="Cocks + Hens + Total Offspring"
                 aria-label={`${registryCounts.total} Active chickens. Cocks + Hens + Total Offspring. Click to view Chicken Registry`}
               >
@@ -353,16 +365,16 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => navigate('profiling', 'males')}
-                className="text-left text-sm font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                title="Cocks + Hens + Total Offspring"
-                aria-label="Active chickens: Cocks + Hens + Total Offspring"
+                className={`${DASHBOARD_KPI_LABEL} text-left font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer`}
+                title={t('dashboard.activeChickens')}
+                aria-label={`${t('dashboard.activeChickens')}: ${t('dashboard.cocks')} + ${t('dashboard.hens')} + ${t('dashboard.totalOffspring')}`}
               >
-                Active chickens
+                {t('dashboard.activeChickens')}
               </button>
             </div>
 
             {/* Whole Flock secondary line: 31 total · 1 archived · 1 deceased (links to Inventory status filters) */}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
+            <div className={`${DASHBOARD_KPI_CAPTION} flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-muted-foreground font-semibold`}>
               <button
                 type="button"
                 onClick={() => navigateToInventoryWithStatus('all')}
@@ -396,64 +408,63 @@ export default function DashboardPage() {
           </div>
 
           {/* Role Breakdown (Matches Chicken Registry tabs) */}
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className={DASHBOARD_KPI_STAT_GRID}>
             <button
               type="button"
               onClick={() => navigate('profiling', 'males')}
-              className="flex flex-col items-center justify-center text-center gap-1 p-2 rounded-md bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 dark:border-sky-500/30 hover:bg-sky-500/20 dark:hover:bg-sky-500/25 hover:border-sky-500/40 transition-all cursor-pointer group/m"
-              title="View Cocks in Chicken Registry"
-              aria-label={`Cocks: ${registryCounts.breedingMales}`}
+              className="flex min-w-0 flex-col items-center justify-center gap-1 p-2 text-center rounded-md bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 dark:border-sky-500/30 hover:bg-sky-500/20 dark:hover:bg-sky-500/25 hover:border-sky-500/40 transition-all cursor-pointer group/m"
+              title={`${t('dashboard.cocks')}: ${registryCounts.breedingMales}`}
+              aria-label={`${t('dashboard.cocks')}: ${registryCounts.breedingMales}`}
             >
-              <p className="text-base font-black text-sky-700 dark:text-sky-300 leading-none">{registryCounts.breedingMales}</p>
-              <p className="text-xs font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 leading-tight group-hover/m:underline">Cocks</p>
+              <p className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-sky-700 dark:text-sky-300`}>{registryCounts.breedingMales}</p>
+              <p className={`${DASHBOARD_KPI_LABEL} font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 group-hover/m:underline`} title={t('dashboard.cocks')}>{t('dashboard.cocks')}</p>
             </button>
             <button
               type="button"
               onClick={() => navigate('profiling', 'females')}
-              className="flex flex-col items-center justify-center text-center gap-1 p-2 rounded-md bg-pink-500/10 dark:bg-pink-500/15 border border-pink-500/20 dark:border-pink-500/30 hover:bg-pink-500/20 dark:hover:bg-pink-500/25 hover:border-pink-500/40 transition-all cursor-pointer group/f"
-              title="View Hens in Chicken Registry"
-              aria-label={`Hens: ${registryCounts.breedingFemales}`}
+              className="flex min-w-0 flex-col items-center justify-center gap-1 p-2 text-center rounded-md bg-pink-500/10 dark:bg-pink-500/15 border border-pink-500/20 dark:border-pink-500/30 hover:bg-pink-500/20 dark:hover:bg-pink-500/25 hover:border-pink-500/40 transition-all cursor-pointer group/f"
+              title={`${t('dashboard.hens')}: ${registryCounts.breedingFemales}`}
+              aria-label={`${t('dashboard.hens')}: ${registryCounts.breedingFemales}`}
             >
-              <p className="text-base font-black text-pink-700 dark:text-pink-300 leading-none">{registryCounts.breedingFemales}</p>
-              <p className="text-xs font-black uppercase tracking-wider text-pink-700 dark:text-pink-300 leading-tight group-hover/f:underline">Hens</p>
+              <p className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-pink-700 dark:text-pink-300`}>{registryCounts.breedingFemales}</p>
+              <p className={`${DASHBOARD_KPI_LABEL} font-black uppercase tracking-wider text-pink-700 dark:text-pink-300 group-hover/f:underline`} title={t('dashboard.hens')}>{t('dashboard.hens')}</p>
             </button>
             <button
               type="button"
               onClick={() => navigate('profiling', 'offspring')}
-              className="flex flex-col items-center justify-center text-center p-2 rounded-md bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 dark:border-amber-500/30 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/40 transition-all cursor-pointer group/nb"
-              title="View Total Offspring in Chicken Registry"
-              aria-label={`Total Offspring: ${registryCounts.nonBreeding} offspring`}
+              className="flex min-w-0 flex-col items-center justify-center p-2 text-center rounded-md bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 dark:border-amber-500/30 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/40 transition-all cursor-pointer group/nb"
+              title={`${t('dashboard.totalOffspring')}: ${registryCounts.nonBreeding}. ${t('dashboard.totalOffspringTooltip')}`}
+              aria-label={`${t('dashboard.totalOffspring')}: ${registryCounts.nonBreeding}`}
             >
-              <p className="text-base font-black text-amber-700 dark:text-amber-300 leading-none">{registryCounts.nonBreeding}</p>
-              <p className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 mt-1 leading-tight group-hover/nb:underline">Total Offspring</p>
-              <p className="text-xs font-semibold text-amber-700/80 dark:text-amber-300/80 leading-tight">(offspring)</p>
+              <p className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-amber-700 dark:text-amber-300`}>{registryCounts.nonBreeding}</p>
+              <p className={`${DASHBOARD_KPI_LABEL} mt-1 font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 group-hover/nb:underline`} title={`${t('dashboard.totalOffspring')}. ${t('dashboard.totalOffspringTooltip')}`}>{t('dashboard.totalOffspring')}</p>
             </button>
           </div>
 
           {/* Sex Split (Clearly labeled as sex, links to Inventory with sex filter applied) */}
-          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-2.5 py-1.5">
-            <span className="uppercase tracking-wider font-extrabold text-xs text-muted-foreground/90">By sex:</span>
-            <div className="flex items-center gap-1.5">
+          <div className={`${DASHBOARD_KPI_SEX_ROW} text-xs font-bold text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-2.5 py-1.5`}>
+            <span className={`${DASHBOARD_KPI_LABEL} uppercase tracking-wider font-extrabold text-muted-foreground/90`} title={t('dashboard.bySex')}>{t('dashboard.bySex')}</span>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
               <button
                 type="button"
                 onClick={() => navigateToInventoryWithSex('male')}
-                className="hover:text-info hover:underline transition-colors cursor-pointer font-bold inline-flex items-center gap-1"
+                className="inline-flex min-w-0 cursor-pointer items-center gap-1 font-bold transition-colors hover:text-info hover:underline"
                 title="View male chickens in Inventory"
                 aria-label={`Filter inventory by ${registryCounts.maleSex} male chickens`}
               >
-                <ChickenIcon className="w-3 h-3 text-info inline" />
-                <span>{registryCounts.maleSex} male</span>
+                <ChickenIcon className="w-3 h-3 shrink-0 text-info" />
+                <span className="break-words">{registryCounts.maleSex} male</span>
               </button>
-              <span className="text-muted-foreground/40 font-normal">·</span>
+              <span className="font-normal text-muted-foreground/40">·</span>
               <button
                 type="button"
                 onClick={() => navigateToInventoryWithSex('female')}
-                className="hover:text-pink hover:underline transition-colors cursor-pointer font-bold inline-flex items-center gap-1"
+                className="inline-flex min-w-0 cursor-pointer items-center gap-1 font-bold transition-colors hover:text-pink hover:underline"
                 title="View female chickens in Inventory"
                 aria-label={`Filter inventory by ${registryCounts.femaleSex} female chickens`}
               >
-                <ChickenIcon className="w-3 h-3 text-pink inline" />
-                <span>{registryCounts.femaleSex} female</span>
+                <ChickenIcon className="w-3 h-3 shrink-0 text-pink" />
+                <span className="break-words">{registryCounts.femaleSex} female</span>
               </button>
             </div>
           </div>
@@ -471,13 +482,13 @@ export default function DashboardPage() {
               <div className="text-sm font-bold text-muted-foreground pt-2">No active chickens yet</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip
               up={activeNewThisMonth > 0}
               label={`${activeNewThisMonth} added this month`}
             />
             <span
-              className={`text-sm font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 ${
+              className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full px-2 py-0.5 font-bold uppercase tracking-widest ${
                 activeNewThisMonth > 0
                   ? 'text-success bg-emerald-500/10'
                   : 'text-muted-foreground bg-muted/60 border border-border/50'
@@ -489,13 +500,13 @@ export default function DashboardPage() {
         </div>
 
         {/* TOTAL MATCHES LOGGED */}
-        <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden`}>
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-lg"></div>
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Total Matches Logged</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title={t('dashboard.totalMatchesLogged')}>{t('dashboard.totalMatchesLogged')}</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
           </div>
-          <div className="text-3xl font-black text-card-foreground tracking-tight leading-none mt-1">{matchHistory.length}</div>
+          <div className={`${DASHBOARD_KPI_VALUE} mt-1 font-black text-card-foreground tracking-tight`}>{matchHistory.length}</div>
           <div className="h-12 -mx-1">
             {matchHistory.length > 0 ? (
               <Bar
@@ -509,9 +520,9 @@ export default function DashboardPage() {
               <div className="text-sm font-bold text-muted-foreground pt-2">No matches logged yet</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
             <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className="text-sm font-bold uppercase tracking-widest text-indigo bg-indigo-500/10 px-2 py-0.5 rounded-full shrink-0">Logged</span>
+            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full bg-indigo-500/10 px-2 py-0.5 font-bold uppercase tracking-widest text-indigo`}>Logged</span>
           </div>
         </div>
 
@@ -519,7 +530,7 @@ export default function DashboardPage() {
         <div
           role="button"
           tabIndex={0}
-          aria-label={`Overall win rate: ${winsCount + lossesCount > 0 ? `${winRatePct}%` : 'No fights'}, ${winsCount}W ${lossesCount}L. Click to view win rate breakdown by chicken`}
+          aria-label={`Overall (all time): ${winsCount + lossesCount > 0 ? `${winRatePct}%` : 'No fights'}, ${winsCount}W ${lossesCount}L. Click to view win rate breakdown by chicken`}
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -527,17 +538,17 @@ export default function DashboardPage() {
               ui.setShowPerFowlBreakdownModal(true);
             }
           }}
-          className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500"
+          className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500`}
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Overall Win Rate</span>
-            <span className="text-sm font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">{winsCount}W · {lossesCount}L</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title={t('dashboard.overallWinRate')}>{t('dashboard.overallWinRate')}</span>
+            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-center font-black text-success`}>{winsCount}W · {lossesCount}L</span>
           </div>
-          <div className="text-3xl font-black text-success tracking-tight leading-none mt-1">
+          <div className={`${DASHBOARD_KPI_VALUE} mt-1 font-black text-success tracking-tight`}>
             {winsCount + lossesCount > 0 ? `${winRatePct}%` : '—'}
           </div>
-          <p className="text-xs font-semibold text-muted-foreground -mt-1.5">
+          <p className={`${DASHBOARD_KPI_CAPTION} -mt-1.5 font-semibold text-muted-foreground`}>
             Wins ÷ (wins + losses) — draws are excluded
           </p>
           <div className="h-12 -mx-1">
@@ -553,8 +564,8 @@ export default function DashboardPage() {
               <div className="text-sm font-bold text-muted-foreground pt-2">No matches logged yet</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className="text-sm font-extrabold text-success">Win trend</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
+            <span className={`${DASHBOARD_KPI_CAPTION} font-extrabold text-success`}>Win trend</span>
             <button
               type="button"
               onClick={(e) => {
@@ -570,31 +581,31 @@ export default function DashboardPage() {
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden`}>
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-lg"></div>
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider leading-tight">Quick Actions</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title="Quick Actions">Quick Actions</span>
             <div className="w-9 h-9 rounded-md bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
           </div>
           <div className="space-y-2 mt-1">
             <button
               onClick={() => navigate('profiling', 'form')}
-              className="w-full text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="w-full min-w-0 text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-sm font-extrabold text-success group-hover/btn:text-success">+ Register New Chicken</p>
-              <p className="text-sm text-success/70 font-semibold mt-0.5">Add to your roster</p>
+              <p className="break-words text-sm font-extrabold text-success group-hover/btn:text-success">+ Register New Chicken</p>
+              <p className="break-words text-sm text-success/70 font-semibold mt-0.5">Add to your roster</p>
             </button>
             <button
               onClick={() => navigate('profiling', 'matchForm')}
-              className="w-full text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="w-full min-w-0 text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
             >
-              <p className="text-sm font-extrabold text-indigo group-hover/btn:text-indigo">+ Log Match Result</p>
-              <p className="text-sm text-indigo/70 font-semibold mt-0.5">Record fight outcome</p>
+              <p className="break-words text-sm font-extrabold text-indigo group-hover/btn:text-indigo">+ Log Match Result</p>
+              <p className="break-words text-sm text-indigo/70 font-semibold mt-0.5">Record fight outcome</p>
             </button>
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className="text-sm font-extrabold text-muted-foreground">Start here</span>
-            <span className="text-sm font-bold uppercase tracking-widest text-violet bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">Actions</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
+            <span className={`${DASHBOARD_KPI_CAPTION} font-extrabold text-muted-foreground`}>Start here</span>
+            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full bg-violet-500/10 px-2 py-0.5 font-bold uppercase tracking-widest text-violet`}>Actions</span>
           </div>
         </div>
       </div>
@@ -604,52 +615,52 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
-          <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+          <div className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col`}>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
-              <div className="flex items-center gap-2.5">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-success" /></span>
-                <div>
-                  <h2 className="text-sm font-black text-card-foreground tracking-tight">Upcoming Milestones</h2>
-                  <p className="text-sm text-muted-foreground font-semibold mt-0.5">{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
+                <div className="min-w-0">
+                  <h2 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title={t('dashboard.upcomingMilestones')}>{t('dashboard.upcomingMilestones')}</h2>
+                  <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
               </div>
-              <span className="text-sm font-mono font-black text-success bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">AUTO</span>
+              <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-mono font-black text-success`}>AUTO</span>
             </div>
             <div className="space-y-2 flex-1">
               {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {
                 const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
                 const overdue = info.next !== null && info.next!.daysUntil < 0;
                 return (
-                  <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
+                  <div key={fowl.id} className={`flex flex-wrap items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
                     <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-card-foreground truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-black text-card-foreground" title={fowl.name}>
                         {fowl.name}
                         {(() => {
                           const code = formatBirdCodeForDisplay(birdCodes.get(String(fowl.id)) || fowl.bird_code || fowl.chicken_code || '');
                           return code ? (
-                            <span className="ml-1.5 inline-flex items-center text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-sm uppercase">
+                            <span className="ml-1.5 inline-flex max-w-full items-center break-words rounded-sm border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase text-emerald-700 dark:text-emerald-300">
                               {code}
                             </span>
                           ) : null;
                         })()}
                       </p>
-                      <p className="text-sm text-muted-foreground font-semibold truncate">
+                      <p className="break-words text-sm font-semibold text-muted-foreground">
                         {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
                       </p>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="min-w-0 text-right">
                       {info.next ? (
                         <>
-                          <p className={`text-sm font-black uppercase tracking-wide ${soon ? 'text-success' : overdue ? 'text-danger' : 'text-warning'}`}>
+                          <p className={`break-words text-sm font-black uppercase tracking-wide ${soon ? 'text-success' : overdue ? 'text-danger' : 'text-warning'}`}>
                             {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
                           </p>
-                          <p className="text-sm font-mono text-muted-foreground font-bold">
+                          <p className="break-words font-mono text-sm font-bold text-muted-foreground">
                             {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm font-black text-success uppercase">Fully mature</p>
+                        <p className="break-words text-sm font-black uppercase text-success">Fully mature</p>
                       )}
                     </div>
                   </div>
@@ -666,33 +677,33 @@ export default function DashboardPage() {
           </div>
 
           {/* BLOODLINE OVERVIEW */}
-          <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
+          <div className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col`}>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
-              <div className="flex items-center gap-2.5">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal" /></span>
-                <div>
-                  <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Overview</h3>
-                  <p className="text-sm text-muted-foreground font-semibold mt-0.5">{activeFowls.length} active chickens across all strains</p>
+                <div className="min-w-0">
+                  <h3 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title={t('dashboard.bloodlineOverview')}>{t('dashboard.bloodlineOverview')}</h3>
+                  <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>{activeFowls.length} active chickens across all strains</p>
                 </div>
               </div>
-              <span className="text-sm font-mono font-black text-teal bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">LIVE</span>
+              <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-teal-500/20 bg-teal-500/10 px-2.5 py-1 font-mono font-black text-teal`}>LIVE</span>
             </div>
             <div className="space-y-2 flex-1">
               {(() => {
                 if (topStrains.length === 0) return <p className="text-sm text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
                 const maxCount = topStrains[0][1].count;
                 return topStrains.map(([strain, data]) => (
-                  <div key={strain} className="bg-muted/50 border border-border rounded-md px-3 py-2.5">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-black text-card-foreground">{strain}</span>
-                      <span className="text-sm font-bold text-teal">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
+                  <div key={strain} className="min-w-0 rounded-md border border-border bg-muted/50 px-3 py-2.5">
+                    <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                      <span className="break-words text-sm font-black text-card-foreground">{strain}</span>
+                      <span className="break-words text-sm font-bold text-teal">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
                     </div>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-xs font-bold text-info flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.males} male</span>
-                      <span className="text-xs font-bold text-pink flex items-center gap-1"><ChickenIcon className="w-3 h-3" /> {data.females} female</span>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="flex min-w-0 items-center gap-1 text-xs font-bold text-info"><ChickenIcon className="w-3 h-3 shrink-0" /> <span className="break-words">{data.males} male</span></span>
+                      <span className="flex min-w-0 items-center gap-1 text-xs font-bold text-pink"><ChickenIcon className="w-3 h-3 shrink-0" /> <span className="break-words">{data.females} female</span></span>
                     </div>
                   </div>
                 ));
@@ -806,13 +817,13 @@ export default function DashboardPage() {
         </div>
 
         {/* BLOODLINE WIN RATIOS */}
-        <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
-          <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
-            <div>
-              <h3 className="text-sm font-black text-card-foreground tracking-tight">Bloodline Win Ratios</h3>
-              <p className="text-sm text-muted-foreground font-semibold mt-0.5">Win share by primary genetic strain</p>
+        <div className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col`}>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+            <div className="min-w-0">
+              <h3 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title="Bloodline Win Ratios">Bloodline Win Ratios</h3>
+              <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>Win share by primary genetic strain</p>
             </div>
-            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 px-2 py-0.5 rounded-full font-black shrink-0">GENETIC</span>
+            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono font-black text-success`}>GENETIC</span>
           </div>
           {crossbreedChartData.hasData ? (
             <>
@@ -865,14 +876,14 @@ export default function DashboardPage() {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-success">
+                  <span className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-success`}>
                     {winsCount + lossesCount > 0 ? `${winRatePct}%` : '—'}
                   </span>
-                  <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Win Rate</span>
+                  <span className={`${DASHBOARD_KPI_CAPTION} font-semibold uppercase tracking-wider text-muted-foreground`}>Win Rate</span>
                 </div>
               </div>
               <div className="mx-auto w-full max-w-sm">
-                <div className="mb-1 flex items-center justify-between px-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2 text-[0.625rem] font-black uppercase tracking-wider text-muted-foreground">
                   <span>Strain</span>
                   <span>Share · Win rate</span>
                 </div>
@@ -887,7 +898,7 @@ export default function DashboardPage() {
                           aria-pressed={isSelected}
                           aria-label={`${item.label}: ${item.wins} wins, ${item.losses} losses, ${item.total} matches, ${item.winRate}% win rate, ${item.share}% of total wins`}
                           title={`${item.wins}W · ${item.losses}L · ${item.total} matches · ${item.winRate}% win rate · ${item.share}% of total wins`}
-                          className={`flex w-full cursor-pointer items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm font-medium transition-colors ${
+                          className={`flex w-full min-w-0 flex-wrap cursor-pointer items-center gap-x-2 gap-y-1 rounded-md border px-2.5 py-1.5 text-left text-sm font-medium transition-colors ${
                             isSelected
                               ? 'border-emerald-500/40 bg-emerald-500/10 text-foreground'
                               : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted/60'
@@ -898,9 +909,9 @@ export default function DashboardPage() {
                             className="h-2.5 w-2.5 shrink-0 rounded-sm"
                             style={{ backgroundColor: item.color }}
                           />
-                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          <span className="min-w-0 flex-1 break-words" title={item.label}>{item.label}</span>
                           <span className="shrink-0 font-black text-foreground">{item.share}%</span>
-                          <span className="shrink-0 text-[11px] font-bold text-muted-foreground">{item.winRate}% WR</span>
+                          <span className="shrink-0 text-[0.6875rem] font-bold text-muted-foreground">{item.winRate}% WR</span>
                         </button>
                       </li>
                     );
@@ -908,20 +919,20 @@ export default function DashboardPage() {
                 </ul>
                 {selectedCrossbreed && (
                   <div className="mt-3 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-black text-card-foreground">{selectedCrossbreed.label}</p>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="min-w-0 break-words text-sm font-black text-card-foreground">{selectedCrossbreed.label}</p>
                       <button
                         type="button"
                         onClick={() => setSelectedCrossbreedIndex(null)}
-                        className="cursor-pointer text-[11px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                        className="cursor-pointer text-[0.6875rem] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
                       >
                         Clear
                       </button>
                     </div>
-                    <p className="mt-0.5 text-xs font-bold text-foreground">
+                    <p className="mt-0.5 break-words text-xs font-bold text-foreground">
                       {selectedCrossbreed.wins}W · {selectedCrossbreed.losses}L · {selectedCrossbreed.total} matches
                     </p>
-                    <p className="text-[11px] font-semibold text-muted-foreground">
+                    <p className="break-words text-[0.6875rem] font-semibold text-muted-foreground">
                       {selectedCrossbreed.winRate}% win rate · {selectedCrossbreed.share}% of total wins
                     </p>
                   </div>
@@ -943,105 +954,7 @@ export default function DashboardPage() {
 
       {/* BREEDING PAIR PERFORMANCE ANALYTICS */}
       {pairingAnalytics.ranked.length > 0 && (
-        <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-4 h-4 text-success" /></span>
-              <div>
-                <h3 className="text-sm font-black text-card-foreground tracking-tight">Breeding Pair Performance Analytics</h3>
-                <p className="text-sm text-muted-foreground font-semibold mt-0.5">Empirical win-rate ranking per Sire × Dam cross — pinpoints proven pairings worth repeating and under-performers to drop from future breeding cycles</p>
-              </div>
-            </div>
-            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">SIRE × DAM MATRIX</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse min-w-[860px]">
-              <thead>
-                <tr className="bg-muted/50 text-muted-foreground font-extrabold uppercase border-b border-border">
-                  <th className="p-4 pl-6">Rank</th>
-                  <th className="p-4">Sire × Dam Cross</th>
-                  <th className="p-4 text-center">Offspring</th>
-                  <th className="p-4 text-center">Fights</th>
-                  <th className="p-4 text-center">Wins</th>
-                  <th className="p-4 text-center">Losses</th>
-                  <th className="p-4 text-center">Win Rate</th>
-                  <th className="p-4 text-center">Survivability</th>
-                  <th className="p-4 text-center pr-6">Breeding Verdict</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-muted-foreground font-semibold">
-                {pairingAnalytics.ranked.map((p, i) => {
-                  const elite = p.decided >= 5 && p.winRate >= 70;
-                  const solid = p.winRate >= 50;
-                  const weak = p.decided >= 5 && p.winRate < 50;
-                  return (
-                    <tr key={p.key} className={`hover:bg-muted/30 transition-colors ${weak ? 'bg-rose-500/5' : elite ? 'bg-emerald-500/5' : ''}`}>
-                      <td className="p-4 pl-6 whitespace-nowrap">
-                        {i === 0 ? <Medal className="w-4 h-4 text-warning" /> : i === 1 ? <Medal className="w-4 h-4 text-muted-foreground" /> : i === 2 ? <Medal className="w-4 h-4 text-amber-700" /> : <span className="font-mono font-black text-muted-foreground">#{i + 1}</span>}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Link2 className="w-3.5 h-3.5 text-success" /></div>
-                          <div className="min-w-0">
-                            <p className="font-bold text-card-foreground">{p.sire} <span className="text-muted-foreground font-black">×</span> {p.dam}</p>
-                            <p className="text-sm font-semibold text-muted-foreground truncate">{p.members.map((m) => m.name).join(', ')}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 text-center font-mono font-bold">{p.members.length}</td>
-                      <td className="p-4 text-center font-mono font-bold">{p.totalFights}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-success">{p.wins}</td>
-                      <td className="p-4 text-center font-mono font-extrabold text-danger">{p.losses}</td>
-                      <td className="p-4 text-center font-mono">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm ${p.winRate >= 50 ? 'bg-emerald-500/15 text-success' : 'bg-rose-500/15 text-danger'}`}>
-                          {p.winRate}%
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm ${p.resilienceScore >= 80 ? 'bg-teal-500/15 text-teal' : p.resilienceScore >= 60 ? 'bg-amber-500/15 text-warning' : 'bg-rose-500/15 text-danger'}`}>
-                            <Stethoscope className="w-3 h-3 inline mr-1" />{p.resilienceScore > 0 ? `${p.resilienceScore}%` : 'N/A'}
-                          </span>
-                          {p.casualties > 0 && (
-                            <span title={`${p.casualties} deceased + ${p.critical} critical from injuries`} className="text-sm font-black text-danger bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5 whitespace-nowrap flex items-center gap-1"><Skull className="w-3 h-3" /> {p.casualties}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-center pr-6">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-black text-sm uppercase tracking-wider border whitespace-nowrap ${
-                            elite ? 'bg-emerald-500/15 text-success border-emerald-500/30'
-                            : solid ? 'bg-sky-500/15 text-info border-sky-500/30'
-                            : weak ? 'bg-rose-500/15 text-danger border-rose-500/30'
-                            : 'bg-muted text-muted-foreground border-border'
-                          }`}>
-                            {elite ? 'Elite — Repeat Cross' : solid ? 'Solid Pairing' : weak ? 'Under-Performing' : 'Inconclusive'}
-                          </span>
-                          <span className={`text-sm font-bold px-1.5 py-0.5 rounded-full ${
-                            p.verdictConfidence === 'High' ? 'bg-emerald-500/10 text-success' :
-                            p.verdictConfidence === 'Medium' ? 'bg-amber-500/10 text-warning' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {p.verdictConfidence} Confidence
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-6 py-3.5 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm font-bold text-muted-foreground">
-            <span>Verdict logic:</span>
-            <span className="text-success">Elite = ≥70% win rate with 5+ decided fights</span>
-            <span className="text-info">Solid = ≥50%</span>
-            <span className="text-danger">Avoid = below 50% with 5+ decided fights</span>
-            <span className="text-teal">Survivability = post-fight condition resilience (Fit=100 · Critical=30 · Deceased=0)</span>
-            <span className="text-warning">Confidence = Low (&lt;5 fights) · Medium (5-9) · High (10+)</span>
-            <span className="ml-auto">Focus future breeding cycles strictly on high-performing, resilient bloodlines.</span>
-          </div>
-        </div>
+        <BreedingPairPerformanceAnalytics ranked={pairingAnalytics.ranked} />
       )}
 
       {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}

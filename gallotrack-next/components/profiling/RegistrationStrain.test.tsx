@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ProfilingPage from '@/components/ProfilingPage';
 import { UIProvider, useUI } from '@/lib/contexts/ui-context';
@@ -112,7 +112,7 @@ async function fillRequiredFields(strain?: string) {
     fireEvent.change(screen.getByLabelText('Genetic Strain'), { target: { value: strain } });
   }
   fireEvent.change(screen.getByLabelText('Gender Class'), { target: { value: 'Rooster' } });
-  fireEvent.change(screen.getByLabelText(/Birth Date/i), { target: { value: '2025-01-01' } });
+  fireEvent.change(screen.getByLabelText(/^Birth Date/i), { target: { value: '2025-01-01' } });
 }
 
 async function clickRegister() {
@@ -122,6 +122,8 @@ async function clickRegister() {
 }
 
 const strainInput = () => screen.getByLabelText('Genetic Strain');
+const removeStrainButtons = () =>
+  screen.queryAllByRole('button', { name: /^Remove / });
 
 describe('Registration genetic strain', () => {
   beforeEach(() => {
@@ -135,11 +137,15 @@ describe('Registration genetic strain', () => {
   it('registers a typed custom strain when no breeds are registered', async () => {
     await renderPageAndWait();
     fireEvent.focus(strainInput());
-    expect(await screen.findByText('No breeds yet. Add your breeds first.')).toBeInTheDocument();
+    expect(await screen.findByText('No breeds registered yet.')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Add breed/i })).toHaveLength(1);
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
     fireEvent.keyDown(strainInput(), { key: 'Escape' });
 
     await fillRequiredFields('Hatch');
+    fireEvent.keyDown(strainInput(), { key: 'Enter' });
 
+    expect(screen.getByRole('button', { name: 'Remove Hatch' })).toBeInTheDocument();
     expect(screen.getAllByText(/100% Hatch/i).length).toBeGreaterThan(0);
     await clickRegister();
 
@@ -151,6 +157,46 @@ describe('Registration genetic strain', () => {
       expect.stringContaining('Validation Error'),
       'error',
     );
+  });
+
+  it('persists a dropdown-selected strain after focus moves away', async () => {
+    fetchStrains.mockResolvedValue(['Lemon']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    await fillRequiredFields();
+    screen.getByLabelText('Gender Class').focus();
+    expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument();
+
+    await clickRegister();
+
+    await waitFor(() => expect(insertFowl).toHaveBeenCalled());
+    expect(insertFowl.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ breed: 'Lemon' }),
+    );
+  });
+
+  it('keeps a selected registered strain after a Breed Registry round trip and gender change', async () => {
+    fetchStrains.mockResolvedValue(['Lemon']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Add breed/i }));
+    expect(await screen.findByRole('heading', { name: /Breed Registry/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to registration' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument(),
+    );
+    expect(screen.getAllByText(/100% Lemon/i).length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getByLabelText('Gender Class'), { target: { value: 'Rooster' } });
+    expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument();
   });
 
   it('selects a registered breed case-insensitively instead of saving a free-text duplicate', async () => {
@@ -165,7 +211,7 @@ describe('Registration genetic strain', () => {
     fireEvent.keyDown(strainInput(), { key: 'Tab' });
 
     await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: 'Remove strain' }).length).toBe(1),
+      expect(screen.getByRole('button', { name: 'Remove CustomBreed' })).toBeInTheDocument(),
     );
     await clickRegister();
 
@@ -176,27 +222,215 @@ describe('Registration genetic strain', () => {
     expect(saveCustomStrain).not.toHaveBeenCalledWith('custombreed');
   });
 
-  it('commits typed text on blur, Enter and Tab', async () => {
+  it('shows only registered breeds in the listbox and keeps Manage breeds in its footer', async () => {
+    fetchStrains.mockResolvedValue(['Hatch', 'Kelso']);
+    await renderPageAndWait();
+
+    fireEvent.focus(strainInput());
+
+    const listbox = await screen.findByRole('listbox', { name: 'Registered breeds' });
+    const options = within(listbox).getAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([
+      expect.stringContaining('Hatch'),
+      expect.stringContaining('Kelso'),
+    ]);
+    expect(screen.getByRole('button', { name: /Manage breeds/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Add Breeds/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the selected strain when gender, sire, dam and identifier change', async () => {
+    fetchStrains.mockResolvedValue(['Lemon']);
+    const { container } = renderPage();
+    await waitFor(() => expect(fetchStrains).toHaveBeenCalled());
+    const input = await screen.findByLabelText('Genetic Strain');
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    fireEvent.change(screen.getByLabelText('Gender Class'), { target: { value: 'Hen' } });
+    fireEvent.change(screen.getByLabelText('Identifier Name'), { target: { value: 'Lemon Bird' } });
+    fireEvent.change(container.querySelector('#gt-encode-sire') as HTMLInputElement, {
+      target: { value: 'Sire A' },
+    });
+    fireEvent.change(container.querySelector('#gt-encode-dam') as HTMLInputElement, {
+      target: { value: 'Dam B' },
+    });
+
+    expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument();
+    expect(screen.getByTestId('purity-composition-editor')).toBeInTheDocument();
+    expect(screen.queryByText(/Register a breed first/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps selected strain visible after focus moves to Gender Class and marks it selected on reopen', async () => {
+    fetchStrains.mockResolvedValue(['Lemon']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    const removeButton = screen.getByRole('button', { name: 'Remove Lemon' });
+    expect(removeButton).toBeInTheDocument();
+    expect(removeButton).toHaveClass('h-11', 'w-11');
+    expect(input.parentElement).toContainElement(removeButton);
+    expect(input.parentElement).toHaveClass('flex-wrap');
+    expect(input).toHaveValue('');
+    expect(input).toHaveAttribute('placeholder', 'Add another strain...');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+
+    screen.getByLabelText('Gender Class').focus();
+    expect(input).not.toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument();
+    expect(input).toHaveAttribute('placeholder', 'Add another strain...');
+
+    fireEvent.focus(input);
+    const selectedOption = await screen.findByRole('option', {
+      name: /Lemon.*Selected/i,
+    });
+    expect(selectedOption).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('toggles a selected option off without duplicating it', async () => {
+    fetchStrains.mockResolvedValue(['Lemon']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    expect(removeStrainButtons()).toHaveLength(1);
+    fireEvent.click(input);
+    const selectedOption = await screen.findByRole('option', {
+      name: /Lemon.*Selected/i,
+    });
+    fireEvent.click(selectedOption);
+
+    await waitFor(() => expect(removeStrainButtons()).toHaveLength(0));
+    expect(screen.getByText('Strain "Lemon" removed.')).toBeInTheDocument();
+    expect(screen.queryByText(/100% Lemon/i)).not.toBeInTheDocument();
+  });
+
+  it('removes the last selected strain with Backspace', async () => {
+    fetchStrains.mockResolvedValue(['Lemon']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    fireEvent.keyDown(input, { key: 'Backspace' });
+    await waitFor(() => expect(removeStrainButtons()).toHaveLength(0));
+    expect(screen.getByText('Strain "Lemon" removed.')).toBeInTheDocument();
+  });
+
+  it('offers to add an unmatched typed breed and adds it as a chip', async () => {
+    fetchStrains.mockResolvedValue(['Hatch']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Lemon' } });
+
+    expect(
+      await screen.findByText('No match. Add "Lemon" as a new breed.'),
+    ).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+
+    fireEvent.click(input);
+    fireEvent.click(screen.getByRole('button', { name: 'Add "Lemon" as new breed' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument(),
+    );
+    expect(input).toHaveValue('');
+    expect(input).toHaveAttribute('placeholder', 'Add another strain...');
+  });
+
+  it('supports ArrowDown and Enter selection from the listbox', async () => {
+    fetchStrains.mockResolvedValue(['Hatch']);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    await screen.findByRole('option', { name: /Hatch/ });
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input).toHaveAttribute('aria-activedescendant', 'gt-genetic-strain-option-0');
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Remove Hatch' })).toBeInTheDocument(),
+    );
+    expect(screen.getByText('Strain "Hatch" added.')).toBeInTheDocument();
+    expect(input).toHaveValue('');
+  });
+
+  it('keeps unmatched typed text on blur with a hint, and commits on Enter and Tab', async () => {
     await renderPageAndWait();
     await fillRequiredFields();
 
     fireEvent.change(strainInput(), { target: { value: 'Hatch' } });
     fireEvent.blur(strainInput());
-    await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: 'Remove strain' }).length).toBe(1),
-    );
+    expect(removeStrainButtons()).toHaveLength(0);
+    expect(strainInput()).toHaveValue('Hatch');
+    expect(screen.getByText(/No match\. Reopen the list/i)).toBeInTheDocument();
 
     fireEvent.change(strainInput(), { target: { value: 'Sweater' } });
+    expect(screen.queryByText(/No match\. Reopen the list/i)).not.toBeInTheDocument();
     fireEvent.keyDown(strainInput(), { key: 'Enter' });
     await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: 'Remove strain' }).length).toBe(2),
+      expect(screen.getByRole('button', { name: 'Remove Sweater' })).toBeInTheDocument(),
     );
 
     fireEvent.change(strainInput(), { target: { value: 'Kelso' } });
     fireEvent.keyDown(strainInput(), { key: 'Tab' });
     await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: 'Remove strain' }).length).toBe(3),
+      expect(screen.getByRole('button', { name: 'Remove Kelso' })).toBeInTheDocument(),
     );
+    expect(removeStrainButtons()).toHaveLength(2);
+  });
+
+  it('commits a typed registered strain on blur instead of discarding it', async () => {
+    fetchStrains.mockResolvedValue(['  Lemon  ']);
+    await renderPageAndWait();
+    await fillRequiredFields();
+
+    fireEvent.change(strainInput(), { target: { value: '  LEMON  ' } });
+    fireEvent.blur(strainInput());
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument(),
+    );
+    expect(strainInput()).toHaveValue('');
+    expect(strainInput()).toHaveAttribute('placeholder', 'Add another strain...');
+    expect(screen.getAllByText(/100% Lemon/i).length).toBeGreaterThan(0);
+  });
+
+  it('refreshes breed options when the strain field gains focus', async () => {
+    fetchStrains
+      .mockResolvedValueOnce([])
+      .mockResolvedValue(['Lemon']);
+    await renderPageAndWait();
+
+    fireEvent.focus(strainInput());
+
+    expect(await screen.findByRole('option', { name: /Lemon/ })).toBeInTheDocument();
+  });
+
+  it('keeps the selected strain and Purity row when a later strain refresh returns empty', async () => {
+    fetchStrains
+      .mockResolvedValueOnce(['Lemon'])
+      .mockResolvedValue([]);
+    await renderPageAndWait();
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.click(await screen.findByRole('option', { name: /Lemon/ }));
+
+    const callsBeforeRefresh = fetchStrains.mock.calls.length;
+    screen.getByLabelText('Gender Class').focus();
+    fireEvent.focus(input);
+    await waitFor(() =>
+      expect(fetchStrains.mock.calls.length).toBeGreaterThan(callsBeforeRefresh),
+    );
+
+    expect(screen.getByRole('button', { name: 'Remove Lemon' })).toBeInTheDocument();
+    expect(screen.queryByText(/Register a breed first/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/100% Lemon/i).length).toBeGreaterThan(0);
   });
 
   it('shows the inline error and focuses the field for an empty or whitespace strain', async () => {
@@ -213,25 +447,21 @@ describe('Registration genetic strain', () => {
     expect(document.activeElement).toBe(strainInput());
   });
 
-  it('keeps typed values and toasts after a failed submit', async () => {
+  it('disables register and keeps typed values when a required field is blank', async () => {
     await renderPageAndWait();
     await fillRequiredFields('   ');
 
-    await clickRegister();
+    const register = screen.getByRole('button', { name: /^REGISTER$/i });
+    expect(register).toBeDisabled();
+    expect(screen.getAllByText('Complete 1 required field to register.').length).toBeGreaterThanOrEqual(1);
 
-    await waitFor(() =>
-      expect(toastMessage).toHaveBeenCalledWith(
-        expect.stringContaining('Breed/strain is required'),
-        'error',
-      ),
-    );
     expect(insertFowl).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Identifier Name')).toHaveValue('Strain Test Bird');
     expect(screen.getByLabelText('Gender Class')).toHaveValue('Rooster');
-    expect(screen.getByLabelText(/Birth Date/i)).toHaveValue('2025-01-01');
-    expect(screen.getByRole('alert')).toHaveTextContent('Breed/strain is required.');
-    expect(screen.getByText(/Missing:.*Genetic Strain/i)).toBeInTheDocument();
-    expect(document.activeElement).toBe(strainInput());
+    expect(screen.getByLabelText(/^Birth Date/i)).toHaveValue('2025-01-01');
+    expect(screen.getByRole('button', { name: /Go to Genetic Strain/i })).toHaveTextContent(
+      'Missing',
+    );
   });
 
   it('selects a registered strain with ArrowDown and Enter', async () => {
@@ -251,7 +481,7 @@ describe('Registration genetic strain', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: 'Remove strain' })).toHaveLength(1),
+      expect(screen.getAllByRole('button', { name: /Remove Honey Lemon/ })).toHaveLength(1),
     );
     expect(screen.getAllByText('Honey Lemon').length).toBeGreaterThan(0);
   });

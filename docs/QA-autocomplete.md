@@ -52,10 +52,9 @@ behavior only; they cannot reproduce the browser's native saved-value popup.
    (no corrupted `?` characters).
 8. Check the Genetic Strain area for duplicate actions. The only breed actions should
    be one `+ Add breed` button beside the label and the `Manage breeds` footer row
-   inside the dropdown; `+ Add another breed` belongs only to the purity composition
-   editor. On this branch, the Add breed / Manage breeds actions are not present in
-   `develop` because that UI exists only on newer branches; report the branch gap
-   instead of adding a duplicate.
+   inside the dropdown. `+ Add another breed` belongs only to the purity composition
+   editor. Confirm the shared combobox still suppresses native suggestions when the
+   genetic-strain dropdown is opened through this new breed UI.
 
 ## Fallback
 

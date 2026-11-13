@@ -6,6 +6,7 @@ import {
   buildChickenMatchStatsMap,
   getWinRatePillClasses,
   computeClassMatchStats,
+  getChickenMatchStats,
 } from './win-rate';
 
 const makeMatch = (
@@ -169,6 +170,41 @@ describe('lib/win-rate', () => {
       expect(newChickenStatsById?.decided).toBe(0);
       expect(newChickenStatsById?.winRate).toBeNull();
       expect(newChickenStatsById?.matches).toHaveLength(0);
+    });
+  });
+
+  describe('getChickenMatchStats', () => {
+    it('resolves by fowl id even when the match entry_name is a stale/old name', () => {
+      const fowls = [
+        { id: 10, name: 'Renamed Cock', bird_code: 'REN-10' },
+        { id: 20, name: 'Other Cock', bird_code: 'OTH-20' },
+      ];
+      const matches: MatchRecord[] = [
+        makeMatch('Old Name Before Rename', 'Win', 10),
+        makeMatch('Old Name Before Rename', 'Loss', 10),
+        makeMatch('Old Name Before Rename', 'Draw', 10),
+      ];
+      const map = buildChickenMatchStatsMap(matches, fowls);
+      const viaId = getChickenMatchStats(map, fowls[0]);
+      expect(viaId.wins).toBe(1);
+      expect(viaId.losses).toBe(1);
+      expect(viaId.draws).toBe(1);
+      expect(viaId.winRate).toBe(50);
+      expect(viaId.matches).toHaveLength(3);
+      expect(getChickenMatchStats(map, 'Renamed Cock')).toBe(viaId);
+      expect(getChickenMatchStats(map, 'REN-10')).toBe(viaId);
+      expect(getChickenMatchStats(map, fowls[1]).total).toBe(0);
+    });
+
+    it('returns "no decided fights" for draws-only birds', () => {
+      const map = buildChickenMatchStatsMap(
+        [makeMatch('Draw Only', 'Draw', 1), makeMatch('Draw Only', 'Draw', 1)],
+        [{ id: 1, name: 'Draw Only' }],
+      );
+      const stats = getChickenMatchStats(map, 1);
+      expect(stats.total).toBe(2);
+      expect(stats.decided).toBe(0);
+      expect(stats.winRate).toBeNull();
     });
   });
 

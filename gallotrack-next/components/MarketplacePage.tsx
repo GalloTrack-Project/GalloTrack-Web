@@ -18,6 +18,7 @@ import {
 import { getFowlBloodlineStats } from '@/lib/bloodline-composition';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import { Modal } from '@/components/ui';
+import ChickenPhoto from '@/components/ChickenPhoto';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
@@ -58,10 +59,16 @@ import {
   matchesBreedingTypeFilter,
   type BreedingClassification,
 } from '@/lib/breeding-classification';
+import { DASHBOARD_KPI_CARD, DASHBOARD_SUMMARY_GRID } from '@/lib/dashboard-kpi';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
 import { useT } from '@/lib/i18n';
+import {
+  buildChickenMatchStatsMap,
+  getChickenMatchStats,
+  type ChickenMatchStats,
+} from '@/lib/win-rate';
 
 const INVENTORY_BREEDING_TYPES = ['all', 'purebred', 'crossbred', 'unverified'] as const;
 type BreedingTypeFilter = (typeof INVENTORY_BREEDING_TYPES)[number];
@@ -91,16 +98,8 @@ type Props = {
   setSelectedFowlForDetails?: (fowl: FowlRecord) => void;
 };
 
-function getWinRate(fowlName: string, matches: MatchRecord[]) {
-  const m = matches.filter(
-    (x) => x.entry_name?.trim().toLowerCase() === fowlName.trim().toLowerCase(),
-  );
-  const wins = m.filter((x) => x.outcome?.toLowerCase() === 'win').length;
-  const losses = m.filter((x) => x.outcome?.toLowerCase() === 'loss').length;
-  const total = m.length;
-  const decided = wins + losses;
-  const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
-  return { total, wins, losses, winRate };
+function getWinRate(fowl: FowlRecord, statsMap: Map<string, ChickenMatchStats>) {
+  return getChickenMatchStats(statsMap, fowl);
 }
 
 function getAgeDisplay(birthdate: string) {
@@ -147,6 +146,7 @@ function FowlCard({
   fowl,
   fowls,
   matches,
+  statsMap,
   onClick,
   code,
   query,
@@ -158,6 +158,7 @@ function FowlCard({
   fowl: FowlRecord;
   fowls: FowlRecord[];
   matches: MatchRecord[];
+  statsMap: Map<string, ChickenMatchStats>;
   onClick: () => void;
   code?: string;
   query?: string;
@@ -167,7 +168,7 @@ function FowlCard({
   classification?: BreedingClassification;
 }) {
   const unitPrefs = useUnitPrefs();
-  const stats = useMemo(() => getWinRate(fowl.name, matches), [fowl.name, matches]);
+  const stats = useMemo(() => getWinRate(fowl, statsMap), [fowl, statsMap]);
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
   const parentage = getOffspringParentageRelatedness(fowl, fowls);
@@ -228,7 +229,7 @@ function FowlCard({
           onClick();
         }
       }}
-      className="group bg-card border-border relative w-full cursor-pointer overflow-hidden rounded-lg border p-5 text-left shadow-sm transition-all duration-200 hover:border-emerald-500/40 hover:shadow-md focus:ring-2 focus:ring-emerald-400/60"
+      className={`${DASHBOARD_KPI_CARD} group bg-card border-border relative w-full cursor-pointer overflow-hidden rounded-lg border p-5 text-left shadow-sm transition-all duration-200 hover:border-emerald-500/40 hover:shadow-md focus:ring-2 focus:ring-emerald-400/60`}
     >
       {/* Top accent */}
       <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-r ${accent}`}></div>
@@ -243,10 +244,15 @@ function FowlCard({
 
       {/* Photo + Identifier + Name + Breed */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="bg-muted border-border flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border shadow-inner">
-          {fowl.image_url ? (
-            <img src={fowl.image_url} alt={fowl.name} className="h-full w-full object-cover" />
-          ) : (
+        <ChickenPhoto
+          name={fowl.name}
+          code={code}
+          imageUrl={fowl.image_url}
+          photoPath={fowl.photo_path}
+          photoThumbPath={fowl.photo_thumb_path}
+          size={64}
+          className="h-16 w-16 rounded-md border-border shadow-inner"
+          fallback={
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -260,8 +266,8 @@ function FowlCard({
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-          )}
-        </div>
+          }
+        />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             {code && (
@@ -330,22 +336,22 @@ function FowlCard({
       </div>
 
       {/* Data grid */}
-      <div className="mb-3 grid grid-cols-3 gap-2 text-center">
-        <div className="bg-muted/50 rounded-md px-1 py-2">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Age</p>
-          <p className="text-card-foreground text-sm font-black">{getAgeDisplay(fowl.birthdate)}</p>
+      <div className={`${DASHBOARD_SUMMARY_GRID} mb-3 text-center`}>
+        <div className="min-w-0 rounded-md bg-muted/50 px-1 py-2">
+          <p className="break-words text-xs font-bold uppercase text-muted-foreground">Age</p>
+          <p className="break-words text-sm font-black text-card-foreground">{getAgeDisplay(fowl.birthdate)}</p>
         </div>
-        <div className="bg-muted/50 rounded-md px-1 py-2">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Weight</p>
-          <p className="text-card-foreground text-sm font-black">
+        <div className="min-w-0 rounded-md bg-muted/50 px-1 py-2">
+          <p className="break-words text-xs font-bold uppercase text-muted-foreground">Weight</p>
+          <p className="break-words text-sm font-black text-card-foreground">
             {regWeight
               ? `${weightFromStorage(regWeight, unitPrefs.weightUnit)} ${weightUnitLabel(unitPrefs.weightUnit)}`
               : '\u2014'}
           </p>
         </div>
-        <div className="bg-muted/50 rounded-md px-1 py-2">
-          <p className="text-muted-foreground text-xs font-bold uppercase">Stage</p>
-          <p className="text-card-foreground truncate text-sm font-black">
+        <div className="min-w-0 rounded-md bg-muted/50 px-1 py-2">
+          <p className="break-words text-xs font-bold uppercase text-muted-foreground">Stage</p>
+          <p className="break-words text-sm font-black text-card-foreground">
             {fowl.growth_stage || '\u2014'}
           </p>
         </div>
@@ -357,19 +363,21 @@ function FowlCard({
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-muted-foreground text-xs font-bold uppercase">Performance</span>
             <span
-              className={`text-sm font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+              className={`text-sm font-black ${(stats.winRate ?? 0) >= 50 ? 'text-success' : 'text-danger'}`}
             >
-              {stats.winRate}%
+              {isMale(fowl.gender) ? (stats.winRate === null ? '—%' : `${stats.winRate}%`) : '—'}
             </span>
           </div>
+          {isMale(fowl.gender) && (
           <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
             <div
-              className={`h-full rounded-full transition-all ${stats.winRate >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`}
-              style={{ width: `${stats.winRate}%` }}
+              className={`h-full rounded-full transition-all ${(stats.winRate ?? 0) >= 50 ? 'bg-emerald-500' : 'bg-rose-400'}`}
+              style={{ width: `${stats.winRate ?? 0}%` }}
             ></div>
           </div>
+          )}
           <p className="text-muted-foreground mt-1.5 text-xs font-semibold">
-            {stats.wins}W {'\u00B7'} {stats.losses}L {'\u00B7'} {stats.total} total
+            {isMale(fowl.gender) ? `${stats.wins}W · ${stats.losses}L · ${stats.total} total` : '—'}
           </p>
         </div>
       )}
@@ -437,19 +445,19 @@ function FowlCard({
 
 function FowlDetailModal({
   fowl,
-  matches,
+  statsMap,
   onClose,
   fowls,
   code,
 }: {
   fowl: FowlRecord;
-  matches: MatchRecord[];
+  statsMap: Map<string, ChickenMatchStats>;
   onClose: () => void;
   fowls: FowlRecord[];
   code?: string;
 }) {
   const unitPrefs = useUnitPrefs();
-  const stats = getWinRate(fowl.name, matches);
+  const stats = getWinRate(fowl, statsMap);
   const isDamRecord = isFemale(fowl.gender) || fowl.registry_role === 'Breeding Female';
   const modalWeight =
     fowl.structural_weight !== undefined &&
@@ -497,10 +505,15 @@ function FowlDetailModal({
       <div className="space-y-5">
         {/* Identity */}
         <div className="flex items-center gap-4">
-          <div className="bg-muted border-border flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border shadow-inner">
-            {fowl.image_url ? (
-              <img src={fowl.image_url} alt={fowl.name} className="h-full w-full object-cover" />
-            ) : (
+          <ChickenPhoto
+            name={fowl.name}
+            code={code}
+            imageUrl={fowl.image_url}
+            photoPath={fowl.photo_path}
+            photoThumbPath={fowl.photo_thumb_path}
+            size={80}
+            className="h-20 w-20 rounded-lg border-border shadow-inner"
+            fallback={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="28"
@@ -514,8 +527,8 @@ function FowlDetailModal({
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-            )}
-          </div>
+            }
+          />
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <StatusBadge status={fowl.status} />
@@ -632,34 +645,34 @@ function FowlDetailModal({
         </div>
 
         {/* Performance */}
-        {!isDamRecord && stats.total > 0 && (
+        {stats.total > 0 && (
           <div className="bg-muted/50 border-border space-y-3 rounded-lg border p-4">
             <h4 className="text-muted-foreground text-xs font-black tracking-widest uppercase">
               Match Performance
             </h4>
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="bg-card border-border rounded-md border py-2.5">
-                <p className="text-card-foreground text-xl font-black">{stats.total}</p>
-                <p className="text-muted-foreground text-xs font-bold uppercase">Total</p>
+            <div className={`${DASHBOARD_SUMMARY_GRID} text-center`}>
+              <div className="min-w-0 rounded-md border border-border bg-card py-2.5">
+                <p className="break-words text-xl font-black text-card-foreground">{isDamRecord ? '—' : stats.total}</p>
+                <p className="break-words text-xs font-bold uppercase text-muted-foreground">Total</p>
               </div>
-              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2.5">
-                <p className="text-success text-xl font-black">{stats.wins}</p>
-                <p className="text-success text-xs font-bold uppercase">Wins</p>
+              <div className="min-w-0 rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2.5">
+                <p className="break-words text-xl font-black text-success">{isDamRecord ? '—' : stats.wins}</p>
+                <p className="break-words text-xs font-bold uppercase text-success">Wins</p>
               </div>
-              <div className="rounded-md border border-rose-500/30 bg-rose-500/10 py-2.5">
-                <p className="text-danger text-xl font-black">{stats.losses}</p>
-                <p className="text-danger text-xs font-bold uppercase">Losses</p>
+              <div className="min-w-0 rounded-md border border-rose-500/30 bg-rose-500/10 py-2.5">
+                <p className="break-words text-xl font-black text-danger">{isDamRecord ? '—' : stats.losses}</p>
+                <p className="break-words text-xs font-bold uppercase text-danger">Losses</p>
               </div>
               <div
-                className={`rounded-md border py-2.5 ${stats.winRate >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
+                className={`min-w-0 rounded-md border py-2.5 ${(stats.winRate ?? 0) >= 50 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}
               >
                 <p
-                  className={`text-xl font-black ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                  className={`break-words text-xl font-black ${(stats.winRate ?? 0) >= 50 ? 'text-success' : 'text-danger'}`}
                 >
-                  {stats.winRate}%
+                  {isDamRecord ? '—' : stats.winRate === null ? '—%' : `${stats.winRate}%`}
                 </p>
                 <p
-                  className={`text-xs font-bold uppercase ${stats.winRate >= 50 ? 'text-success' : 'text-danger'}`}
+                  className={`break-words text-xs font-bold uppercase ${(stats.winRate ?? 0) >= 50 ? 'text-success' : 'text-danger'}`}
                 >
                   Win Rate
                 </p>
@@ -891,6 +904,10 @@ export default function MarketplacePage({
   };
 
   const birdCodes = useMemo(() => resolveBirdCodes(fowls), [fowls]);
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   const { filteredFowls, matchMap } = useMemo(() => {
     let pool = fowls;
@@ -947,9 +964,9 @@ export default function MarketplacePage({
       if (sortKey === 'strain') return a.breed.localeCompare(b.breed);
       if (sortKey === 'weight') return (Number(a.weight) || 0) - (Number(b.weight) || 0);
       if (sortKey === 'winrate') {
-        const ra = getWinRate(a.name, matchHistory);
-        const rb = getWinRate(b.name, matchHistory);
-        return rb.winRate - ra.winRate;
+        const ra = getWinRate(a, matchStatsMap);
+        const rb = getWinRate(b, matchStatsMap);
+        return (rb.winRate ?? -1) - (ra.winRate ?? -1);
       }
       return 0;
     });
@@ -967,6 +984,7 @@ export default function MarketplacePage({
     registryCtx,
     sortKey,
     matchHistory,
+    matchStatsMap,
     birdCodes,
   ]);
 
@@ -1072,14 +1090,14 @@ export default function MarketplacePage({
               }}
               onKeyDown={(e) => handleTabKeyDown(e, idx)}
               className={cn(
-                'flex min-h-[44px] cursor-pointer items-center justify-between gap-2 rounded-md px-3.5 py-2 text-xs font-bold transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:justify-center',
+                'flex min-h-[44px] min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md px-3.5 py-2 text-xs font-bold transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:justify-center',
                 isFifth ? 'col-span-2 md:col-span-1 md:w-auto' : 'col-span-1 md:w-auto',
                 isSelected
                   ? 'bg-emerald-600 font-black text-white shadow-sm'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
-              <span className="text-left leading-snug whitespace-normal sm:text-center">
+              <span className="min-w-0 break-words text-left leading-snug whitespace-normal sm:text-center">
                 {tab.label}
               </span>
               <span
@@ -1103,7 +1121,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
           <label
             htmlFor="inventory-role"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             Role
           </label>
@@ -1130,7 +1148,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
           <label
             htmlFor="inventory-sex"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             Sex
           </label>
@@ -1155,7 +1173,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:w-auto">
           <label
             htmlFor="inventory-breeding-type"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             {t('registry.breedingTypeLabel')}
           </label>
@@ -1182,7 +1200,7 @@ export default function MarketplacePage({
         <div className="flex w-full min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center md:ml-auto md:w-auto">
           <label
             htmlFor="inventory-sort"
-            className="text-muted-foreground text-xs font-bold whitespace-nowrap"
+            className="text-muted-foreground text-xs font-bold break-words"
           >
             Sort
           </label>
@@ -1274,6 +1292,7 @@ export default function MarketplacePage({
                   fowl={fowl}
                   fowls={fowls}
                   matches={matchHistory}
+                  statsMap={matchStatsMap}
                   code={birdCodes.get(String(fowl.id))}
                   onClick={() => setSelectedFowl(fowl)}
                   query={debouncedQuery}
@@ -1294,7 +1313,7 @@ export default function MarketplacePage({
       {selectedFowl && (
         <FowlDetailModal
           fowl={selectedFowl}
-          matches={matchHistory}
+          statsMap={matchStatsMap}
           fowls={fowls}
           code={birdCodes.get(String(selectedFowl.id))}
           onClose={() => setSelectedFowl(null)}

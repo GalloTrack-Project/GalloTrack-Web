@@ -4,6 +4,7 @@ import { Archive, Skull, Dna, Shield, Egg, Plus } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useAuthOptional } from '@/lib/contexts/auth-context';
 import type { ProfilingSubTab } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import EncodeForm from '@/components/profiling/EncodeForm';
@@ -13,6 +14,7 @@ import RegistryNav from '@/components/profiling/RegistryNav';
 
 import BreedsPage from '@/app/(dashboard)/breeds/page';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
+import { useBreedsView } from '@/lib/hooks/use-breeds-view';
 import { REGISTRY_TABS } from '@/lib/nav-manifest';
 import { toastMessage } from '@/lib/toast-bus';
 import { SIRE_MATERIAL_MOVED_MESSAGE } from '@/lib/registry-labels';
@@ -84,6 +86,7 @@ export default function ProfilingPage() {
     selectedStrains,
     addStrain,
     removeStrain,
+    refreshStrains,
     loading,
     uploadingImage,
     nextNodeId,
@@ -103,10 +106,21 @@ export default function ProfilingPage() {
     generationPurity,
     autoCalcAge,
     getAutoCalcAge,
+    saveCreateDraft,
+    restoreCreateDraft,
+    clearCreateDraft,
+    resetCreateForm,
+    saveEditDraft,
+    selectCreatedBreed,
   } = fowl;
 
   const profilingSubTab = ui.profilingSubTab;
   const setProfilingSubTab = ui.setProfilingSubTab;
+  const { breedsViewOpen, openBreeds, closeBreeds } = useBreedsView();
+  const auth = useAuthOptional();
+  const canCreateBreeds = !auth
+    || !auth.authChecked
+    || (Boolean(auth.currentUserId) && auth.userActive);
 
   // Handle redirect from legacy ?tab=sire-material or ?tab=sireMaterial
   useEffect(() => {
@@ -135,15 +149,25 @@ export default function ProfilingPage() {
     },
   });
   const prevUrlSyncTabRef = useRef(profilingSubTab);
+  const mountUrlAppliedRef = useRef(false);
   useEffect(() => {
-    // Apply URL → state only for shareable links at mount and for back/forward.
+    // Apply URL -> state only for shareable links at mount and for back/forward.
     // User-driven changes (change === 'user') write the URL via the effect below;
     // re-applying them here ping-pongs the two setters into an infinite
     // update loop ("Maximum update depth exceeded") that unmounts the page.
+    if (urlTabMeta.change === 'popstate') {
+      if (urlTab !== profilingSubTab) setProfilingSubTab(urlTab);
+      return;
+    }
     if (
-      urlTabMeta.change === 'popstate' ||
-      (urlTabMeta.change === 'mount' && urlTabMeta.paramPresent)
+      urlTabMeta.change === 'mount'
+      && urlTabMeta.paramPresent
+      && !mountUrlAppliedRef.current
     ) {
+      // The mount read stays 'mount' until the user changes the tab, so guard
+      // it: otherwise a programmatic switch (save, cancel, return from Breeds)
+      // snaps back to whatever ?tab= the user landed on.
+      mountUrlAppliedRef.current = true;
       if (urlTab !== profilingSubTab) setProfilingSubTab(urlTab);
     }
   }, [urlTab, urlTabMeta, profilingSubTab, setProfilingSubTab]);
@@ -162,6 +186,78 @@ export default function ProfilingPage() {
     profilingSubTab === 'offspring'
       ? profilingSubTab
       : null;
+
+  const formViewActive = profilingSubTab === 'form' && !breedsViewOpen;
+  const breedsFromForm = Boolean(ui.breedFlow)
+    || Boolean(ui.editingFowl)
+    || profilingSubTab === 'form';
+  const breedsBackLabel = breedsFromForm
+    ? t('registry.backToRegistration')
+    : t('registry.backToRegistry');
+
+  useEffect(() => {
+    if (!breedsViewOpen && ui.breedFlow) ui.setBreedFlow(null);
+  }, [breedsViewOpen, ui.breedFlow, ui.setBreedFlow]);
+
+  const handleBackFromBreeds = () => {
+    ui.setBreedFlow(null);
+    closeBreeds();
+  };
+
+  const handleAddBreedsFromForm = () => {
+    saveCreateDraft();
+    ui.setBreedFlow({ target: { kind: 'create' }, autoOpenAddForm: true });
+    openBreeds();
+  };
+
+  const handleOpenBreedsHeader = () => {
+    if (breedsViewOpen) {
+      handleBackFromBreeds();
+      return;
+    }
+    if (ui.editingFowl) saveEditDraft(ui.editingFowl.id);
+    else if (profilingSubTab === 'form') saveCreateDraft();
+    ui.setBreedFlow(null);
+    openBreeds();
+  };
+
+  const handleBreedCreated = (name: string) => {
+    const flow = ui.breedFlow;
+    if (!flow) return;
+
+    let selected = false;
+    if (flow.target.kind === 'create') {
+      selectCreatedBreed(flow.target, name);
+      selected = true;
+    } else if (
+      ui.editingFowl
+      && String(ui.editingFowl.id) === String(flow.target.fowlId)
+    ) {
+      selectCreatedBreed(flow.target, name);
+      selected = true;
+    }
+
+    toastMessage(
+      selected
+        ? t('registry.breedAddedSelected')
+        : t('registry.breedCreated', { name }),
+      'success',
+    );
+    ui.setBreedFlow(null);
+    closeBreeds();
+  };
+
+  const handleCancelRegistration = () => {
+    clearCreateDraft();
+    resetCreateForm();
+    ui.setBreedFlow(null);
+    setProfilingSubTab('males');
+  };
+
+  const selectProfilingTab = (tab: ProfilingSubTab) => {
+    if (breedsViewOpen) handleBackFromBreeds();
+    setProfilingSubTab(tab);
+  };
 
   return (
     <div className="animate-fadeIn space-y-5 pb-24 md:pb-6">
@@ -199,9 +295,9 @@ export default function ProfilingPage() {
           <div className="flex w-full min-w-0 items-stretch gap-2.5 sm:w-auto sm:shrink-0 sm:items-center sm:self-start">
             <button
               type="button"
-              onClick={() => setProfilingSubTab(profilingSubTab === 'breeds' ? 'males' : 'breeds')}
+              onClick={handleOpenBreedsHeader}
               className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2.5 text-center text-xs leading-tight font-bold transition-colors duration-200 sm:flex-initial sm:text-sm ${
-                profilingSubTab === 'breeds'
+                breedsViewOpen
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-muted border-border text-muted-foreground hover:text-success border hover:border-emerald-500/50'
               }`}
@@ -211,16 +307,16 @@ export default function ProfilingPage() {
             </button>
             <button
               type="button"
-              onClick={() => setProfilingSubTab(profilingSubTab === 'form' ? 'males' : 'form')}
+              onClick={() => selectProfilingTab(formViewActive ? 'males' : 'form')}
               className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2.5 text-center text-xs leading-tight font-bold shadow-sm transition-all duration-200 sm:flex-initial sm:text-sm ${
-                profilingSubTab === 'form'
+                formViewActive
                   ? 'bg-slate-700 text-white ring-1 ring-slate-600 hover:bg-slate-800'
                   : 'bg-emerald-600 text-white hover:bg-emerald-700'
               }`}
             >
               <Plus className="h-4 w-4" />
               <span>
-                {profilingSubTab === 'form'
+                {formViewActive
                   ? t('registry.viewRegistryBtn')
                   : t('registry.registerChickenBtn')}
               </span>
@@ -230,7 +326,7 @@ export default function ProfilingPage() {
 
         <RegistryNav
           currentTab={profilingSubTab}
-          onSelectTab={setProfilingSubTab}
+          onSelectTab={selectProfilingTab}
           counts={{
             males: registryCounts.breedingMales,
             females: registryCounts.breedingFemales,
@@ -240,9 +336,12 @@ export default function ProfilingPage() {
         />
       </div>
 
-      {profilingSubTab === 'form' && (
+      {!breedsViewOpen && profilingSubTab === 'form' && (
         <EncodeForm
           fowls={fowls}
+          onAddBreeds={handleAddBreedsFromForm}
+          restoreDraft={restoreCreateDraft}
+          onCancel={handleCancelRegistration}
           newName={newName}
           setNewName={setNewName}
           newBreed={newBreed}
@@ -296,6 +395,7 @@ export default function ProfilingPage() {
           selectedStrains={selectedStrains}
           addStrain={addStrain}
           removeStrain={removeStrain}
+          refreshStrains={refreshStrains}
           loading={loading}
           uploadingImage={uploadingImage}
           nextNodeId={nextNodeId}
@@ -315,12 +415,14 @@ export default function ProfilingPage() {
         />
       )}
 
-      {listTab && (
+      {!breedsViewOpen && listTab && (
         <FowlLists
           tab={listTab}
           fowls={fowls}
           matchHistory={matchHistory}
           loading={loading}
+          query={ui.registrySearch}
+          setQuery={ui.setRegistrySearch}
           sortKey={ui.registrySortBy[listTab] ?? 'identifier'}
           onSortChange={(k) => ui.setRegistrySort(listTab, k)}
           setProfilingSubTab={setProfilingSubTab}
@@ -333,9 +435,17 @@ export default function ProfilingPage() {
         />
       )}
 
-      {profilingSubTab === 'matchForm' && <MatchLogsView />}
+      {!breedsViewOpen && profilingSubTab === 'matchForm' && <MatchLogsView />}
 
-      {profilingSubTab === 'breeds' && <BreedsPage />}
+      {breedsViewOpen && (
+        <BreedsPage
+          onBack={handleBackFromBreeds}
+          backLabel={breedsBackLabel}
+          autoOpenAddForm={Boolean(ui.breedFlow?.autoOpenAddForm)}
+          canCreate={canCreateBreeds}
+          onBreedCreated={ui.breedFlow ? handleBreedCreated : undefined}
+        />
+      )}
     </div>
   );
 }

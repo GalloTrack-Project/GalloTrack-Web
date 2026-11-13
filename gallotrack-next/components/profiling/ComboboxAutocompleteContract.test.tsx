@@ -15,6 +15,20 @@ vi.mock('@/lib/units', () => ({
   heightFromStorage: (v: string) => v,
 }));
 
+function StatefulEncodeForm() {
+  const [strainOpen, setStrainOpen] = React.useState(false);
+  const [strainQuery, setStrainQuery] = React.useState('');
+  return (
+    <EncodeForm
+      {...encodeFormProps()}
+      strainOpen={strainOpen}
+      setStrainOpen={setStrainOpen}
+      strainQuery={strainQuery}
+      setStrainQuery={setStrainQuery}
+    />
+  );
+}
+
 function encodeFormProps() {
   return {
     fowls: [],
@@ -69,6 +83,8 @@ function encodeFormProps() {
     selectedStrains: [],
     addStrain: vi.fn(),
     removeStrain: vi.fn(),
+    refreshStrains: vi.fn().mockResolvedValue(undefined),
+    onAddBreeds: vi.fn(),
     loading: false,
     uploadingImage: false,
     nextNodeId: '1',
@@ -230,5 +246,22 @@ describe('registration and edit combobox autocomplete contract', () => {
     fireEvent.focus(legColorInput);
     fireEvent.click(screen.getByRole('button', { name: 'Delete Yellow' }));
     expect(props.deleteCustomLegColor).toHaveBeenCalledWith('Yellow');
+  });
+
+  it('covers the Genetic strain dropdown with Add breed and Manage breeds', async () => {
+    render(<StatefulEncodeForm />);
+
+    const strainInput = screen.getByLabelText('Genetic Strain');
+    expect(strainInput).toHaveAttribute('id', 'gt-genetic-strain');
+    expect(strainInput).toHaveAttribute('name', 'gt-genetic-strain');
+    expect(strainInput).toHaveAttribute('autocomplete', 'off');
+    expect(strainInput).toHaveAttribute('aria-autocomplete', 'list');
+
+    expect(screen.getByRole('button', { name: /Add breed/i })).toBeInTheDocument();
+    fireEvent.focus(strainInput);
+    expect(
+      await screen.findByRole('listbox', { name: /Registered breeds/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Manage breeds/i })).toBeInTheDocument();
   });
 });

@@ -25,45 +25,23 @@ import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
 import { validateOffspringBirthdate } from '@/lib/registry-roles';
-import { CircleAlert, Lock, RotateCcw, Edit3 } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronDown,
+  CircleAlert,
+  Edit3,
+  Lock,
+  Plus,
+  RotateCcw,
+  X,
+} from 'lucide-react';
 import { useT } from '@/lib/i18n';
-
-export function StatusItem({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon?: string;
-  label: string;
-  value: string;
-  tone: 'green' | 'amber' | 'rose';
-}) {
-  const toneCls =
-    tone === 'green'
-      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-      : tone === 'amber'
-        ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-        : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800';
-
-  return (
-    <div className="bg-slate-50 dark:bg-muted/50 rounded-lg border border-slate-200/80 dark:border-border p-3 min-w-0 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
-      <div className="flex items-start gap-1.5 min-w-0">
-        {icon && <span className="text-xs shrink-0 select-none mt-0.5">{icon}</span>}
-        <span className="text-xs font-bold uppercase tracking-tight sm:tracking-wider text-muted-foreground leading-snug break-words">
-          {label}
-        </span>
-      </div>
-      <div className="self-start sm:self-auto shrink-0 min-w-0 max-w-full">
-        <span
-          className={`inline-flex items-center justify-center text-xs font-black px-2.5 py-0.5 rounded-full border min-w-0 max-w-full break-words whitespace-normal text-center ${toneCls}`}
-        >
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
+import ChickenPhotoField from '@/components/ChickenPhotoField';
+import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
+import { findStrainName, mergeStrainNames } from '@/lib/strain-options';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
+import { ValidationSummaryPanel } from './validation/ValidationSummaryPanel';
+import type { StatusTone, ValidationFieldItem } from './validation/types';
 
 type Props = {
   fowls: FowlRecord[];
@@ -120,6 +98,7 @@ type Props = {
   selectedStrains: string[];
   addStrain: (strain: string) => void;
   removeStrain: (index: number) => void;
+  refreshStrains: () => Promise<void>;
   loading: boolean;
   uploadingImage: boolean;
   nextNodeId: string;
@@ -136,6 +115,13 @@ type Props = {
   handleAddFowl: (e: React.FormEvent) => void;
   autoCalcAge: boolean;
   getAutoCalcAge: () => boolean;
+  canEditPhoto?: boolean;
+  /** Opens the Breed Registry without leaving the registration form. */
+  onAddBreeds?: () => void;
+  /** Restores a saved registration draft on mount. */
+  restoreDraft?: () => DraftRestoreResult;
+  /** Clears the draft and leaves the registration form. */
+  onCancel?: () => void;
 };
 
 export default function EncodeForm({
@@ -162,11 +148,11 @@ export default function EncodeForm({
   setNewDeclaredComposition,
   suggestedBirdCode, previewBloodlineStats,
   selectedImage, setSelectedImage,
-  imagePreview, setImagePreview,
+  setImagePreview,
   strainQuery, setStrainQuery,
   strainOpen, setStrainOpen,
   availableStrains,
-  selectedStrains, addStrain, removeStrain,
+  selectedStrains, addStrain, removeStrain, refreshStrains,
   loading, uploadingImage,
   nextNodeId, dataCompleteness,
   validationPassed, bloodlineVerified,
@@ -177,6 +163,10 @@ export default function EncodeForm({
   handleAddFowl,
   autoCalcAge,
   getAutoCalcAge,
+  canEditPhoto = true,
+  onAddBreeds,
+  restoreDraft,
+  onCancel,
   newColor = '',
   setNewColor,
   newBehaviorTrait = '',
@@ -184,23 +174,23 @@ export default function EncodeForm({
 }: Props) {
   const { t } = useT();
   const unitPrefs = useUnitPrefs();
+  const photoForm = useFowlFormStateOptional();
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
+  const strainDropdownRef = useRef<HTMLDivElement>(null);
   const strainInputElRef = useRef<HTMLInputElement>(null);
   const legColorInputRef = useRef<HTMLDivElement>(null);
-  const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [strainDropdownPos, setStrainDropdownPos] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [strainHint, setStrainHint] = useState<string | null>(null);
   const [activeStrainIndex, setActiveStrainIndex] = useState(-1);
   const [activeLegColorIndex, setActiveLegColorIndex] = useState(-1);
-
-  const strainMatchingOptions = useMemo(() => {
-    const query = strainQuery.trim().toLowerCase();
-    return query
-      ? availableStrains.filter((strain) => strain.toLowerCase().includes(query))
-      : availableStrains;
-  }, [availableStrains, strainQuery]);
+  const [strainAnnouncement, setStrainAnnouncement] = useState('');
+  const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [draftNotice, setDraftNotice] = useState<{ photoSelected: boolean } | null>(null);
+  const draftRestoredRef = useRef(false);
 
   const legColorMatchingOptions = useMemo(() => {
     const query = legColorQuery.trim().toLowerCase();
@@ -209,6 +199,15 @@ export default function EncodeForm({
       : availableLegColors;
     return matches.slice(0, 8);
   }, [availableLegColors, legColorQuery]);
+
+  useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    const result = restoreDraft?.();
+    if (result?.restored) {
+      setDraftNotice({ photoSelected: result.photoSelected });
+    }
+  }, [restoreDraft]);
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -224,14 +223,24 @@ export default function EncodeForm({
       ? 'dam'
       : 'sire';
 
+  const breedOptions = useMemo(
+    () => mergeStrainNames(availableStrains, selectedStrains),
+    [availableStrains, selectedStrains],
+  );
   const effectiveBreed = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
+  const typedStrain = strainQuery.trim();
+  const normalizedStrainQuery = typedStrain.toLowerCase();
+  const matchingStrains = normalizedStrainQuery
+    ? breedOptions.filter((strain) => strain.toLowerCase().includes(normalizedStrainQuery))
+    : breedOptions;
+  const hasExactStrainMatch = findStrainName(breedOptions, typedStrain) !== null;
 
   useEffect(() => {
     const trimmed = newBreed.trim();
     if (!trimmed) return;
-    const match = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    const match = findStrainName(breedOptions, trimmed);
     if (match && match !== newBreed) setNewBreed(match);
-  }, [availableStrains, newBreed, setNewBreed]);
+  }, [breedOptions, newBreed, setNewBreed]);
 
   const focusStrainField = () => {
     const input = strainInputElRef.current;
@@ -243,11 +252,53 @@ export default function EncodeForm({
   const handleStrainChange = (value: string) => {
     setStrainQuery(value);
     setActiveStrainIndex(-1);
+    setStrainHint(null);
     const trimmed = value.trim();
-    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
+    const registered = findStrainName(breedOptions, trimmed);
     setNewBreed(registered ?? value);
     setStrainOpen(true);
     if (trimmed) setStrainError(null);
+  };
+
+  const addSelectedStrain = (strain: string) => {
+    const trimmed = strain.trim();
+    if (!trimmed) return;
+    const alreadySelected = selectedStrains.some(
+      (value) => value.toLowerCase() === trimmed.toLowerCase(),
+    );
+    addStrain(trimmed);
+    if (!alreadySelected) {
+      setStrainAnnouncement(
+        t('registry.strainAddedAnnouncement', { strain: trimmed }),
+      );
+    }
+  };
+
+  const removeSelectedStrain = (index: number) => {
+    const strain = selectedStrains[index];
+    if (!strain) return;
+    removeStrain(index);
+    setNewBreed('');
+    setStrainQuery('');
+    setStrainAnnouncement(
+      t('registry.strainRemovedAnnouncement', { strain }),
+    );
+  };
+
+  const toggleStrainOption = (strain: string) => {
+    const selectedIndex = selectedStrains.findIndex(
+      (value) => value.toLowerCase() === strain.toLowerCase(),
+    );
+    if (selectedIndex >= 0) {
+      removeSelectedStrain(selectedIndex);
+    } else {
+      addSelectedStrain(strain);
+    }
+    setStrainQuery('');
+    setStrainError(null);
+    setStrainHint(null);
+    setStrainOpen(false);
+    setActiveStrainIndex(-1);
   };
 
   const commitStrain = (options: { focusOnError?: boolean } = {}) => {
@@ -260,35 +311,115 @@ export default function EncodeForm({
       setNewBreed('');
       setStrainQuery('');
       setStrainOpen(false);
-      setActiveStrainIndex(-1);
       return;
     }
     if (loading) {
       setNewBreed(trimmed);
       setStrainOpen(false);
-      setActiveStrainIndex(-1);
       return;
     }
-    const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
-    addStrain(registered ?? trimmed);
+    const registered = findStrainName(breedOptions, trimmed);
+    addSelectedStrain(registered ?? trimmed);
     setStrainError(null);
+    setStrainHint(null);
     setStrainOpen(false);
     setActiveStrainIndex(-1);
   };
 
-  const selectStrainOption = (strain: string) => {
-    addStrain(strain);
-    setStrainError(null);
+  const handleStrainFocus = () => {
+    setStrainOpen(true);
+    setActiveStrainIndex(-1);
+    void refreshStrains();
+  };
+
+  const handleStrainBlur = () => {
+    const trimmed = strainQuery.trim();
+    const registered = findStrainName(breedOptions, trimmed);
+    if (registered) {
+      addSelectedStrain(registered);
+      setStrainError(null);
+      setStrainHint(null);
+    } else if (trimmed) {
+      setStrainHint(
+        t('registry.strainBlurNoMatch', { strain: trimmed }),
+      );
+    } else {
+      setStrainHint(null);
+    }
     setStrainOpen(false);
     setActiveStrainIndex(-1);
   };
 
-  const handleStrainBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const next = event.relatedTarget as HTMLElement | null;
-    commitStrain({ focusOnError: next?.tagName !== 'A' });
+  const handleStrainKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!strainOpen) {
+        setStrainOpen(true);
+        setActiveStrainIndex(matchingStrains.length > 0 ? 0 : -1);
+        return;
+      }
+      if (matchingStrains.length > 0) {
+        setActiveStrainIndex((prev) => (prev + 1) % matchingStrains.length);
+      }
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!strainOpen) {
+        setStrainOpen(true);
+        setActiveStrainIndex(matchingStrains.length > 0 ? matchingStrains.length - 1 : -1);
+        return;
+      }
+      if (matchingStrains.length > 0) {
+        setActiveStrainIndex(
+          (prev) => (prev <= 0 ? matchingStrains.length - 1 : prev - 1),
+        );
+      }
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (
+        strainOpen
+        && activeStrainIndex >= 0
+        && matchingStrains[activeStrainIndex]
+      ) {
+        toggleStrainOption(matchingStrains[activeStrainIndex]);
+      } else {
+        commitStrain({ focusOnError: true });
+      }
+      return;
+    }
+    if (event.key === 'Backspace' && !strainQuery && selectedStrains.length > 0) {
+      event.preventDefault();
+      removeSelectedStrain(selectedStrains.length - 1);
+      return;
+    }
+    if (event.key === 'Tab') {
+      if (!strainQuery.trim() && selectedStrains.length === 0) {
+        event.preventDefault();
+        commitStrain({ focusOnError: true });
+      } else {
+        commitStrain();
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
+      setStrainOpen(false);
+      setActiveStrainIndex(-1);
+    }
+  };
+
+  const handleAddBreed = () => {
+    setStrainOpen(false);
+    onAddBreeds?.();
   };
 
   const handleFormSubmit = (event: React.FormEvent) => {
+    if (photoProcessing || uploadingImage || loading) {
+      event.preventDefault();
+      return;
+    }
     const breedValue = selectedStrains.length > 0 ? selectedStrains.join(', ') : newBreed.trim();
     if (!breedValue) {
       setStrainError(t('registry.strainRequired'));
@@ -326,19 +457,121 @@ export default function EncodeForm({
     });
   }, [isOffspring, newDeclaredComposition, effectiveBreed, availableStrains, pedigreeComposition]);
 
-  const missingRequiredFields: string[] = [];
-  if (!newName.trim()) missingRequiredFields.push(t('registry.identifierName'));
-  if (!effectiveBreed) missingRequiredFields.push(t('registry.geneticStrain'));
-  if (!newGender) missingRequiredFields.push(t('registry.genderClass'));
-  if (!newBirthdate.trim()) missingRequiredFields.push(t('registry.birthDate'));
+  const requiredFields: ValidationFieldItem[] = [
+    {
+      key: 'name',
+      label: t('registry.identifierName'),
+      complete: newName.trim().length > 0,
+      targetId: 'identifier-name',
+    },
+    {
+      key: 'strain',
+      label: t('registry.geneticStrain'),
+      complete: effectiveBreed.length > 0,
+      targetId: 'gt-genetic-strain',
+    },
+    {
+      key: 'gender',
+      label: t('registry.genderClass'),
+      complete: newGender.trim().length > 0,
+      targetId: 'gender-class',
+    },
+    {
+      key: 'birthdate',
+      label: t('registry.birthDate'),
+      complete: newBirthdate.trim().length > 0,
+      targetId: 'birth-date',
+    },
+  ];
 
-  const validationSummaryValue = missingRequiredFields.length > 0
-    ? t('registry.validationMissingFields', { fields: missingRequiredFields.join(', ') })
-    : validationPassed && birthdateValidation.valid
-      ? t('registry.validationPassed')
-      : t('registry.validationPending');
+  const missingCount = requiredFields.filter((field) => !field.complete).length;
+  const requiredComplete = missingCount === 0;
+  const birthdateError = birthdateValidation.errors[0];
+  const declaredError = !declaredValidation.valid
+    ? ('error' in declaredValidation && declaredValidation.error) || t('registry.registerBlockedDetails')
+    : undefined;
+
   const validationOk =
-    missingRequiredFields.length === 0 && birthdateValidation.valid && declaredValidation.valid;
+    requiredComplete
+    && validationPassed
+    && birthdateValidation.valid
+    && declaredValidation.valid;
+
+  const validationTone: StatusTone = validationOk
+    ? 'success'
+    : birthdateError || declaredError
+      ? 'error'
+      : requiredComplete
+        ? 'pending'
+        : 'warning';
+
+  const validationLabel = validationOk
+    ? t('registry.validationReady')
+    : validationTone === 'error'
+      ? t('registry.validationNeedsAttention')
+      : validationTone === 'pending'
+        ? t('registry.validationPending')
+        : t('registry.requiredFieldsIncomplete');
+
+  const validationHelper = validationOk
+    ? t('registry.validationReadyHelper')
+    : missingCount > 0
+      ? missingCount === 1
+        ? t('registry.registerBlockedOne')
+        : t('registry.registerBlockedMissing', { count: String(missingCount) })
+      : birthdateError || declaredError || t('registry.validationPendingHelper');
+
+  const hasSireParent = sireName.trim().length > 0 && !isFoundationStock(sireName);
+  const hasDamParent = damName.trim().length > 0 && !isFoundationStock(damName);
+  const parentCount = Number(hasSireParent) + Number(hasDamParent);
+
+  let lineageTone: StatusTone = 'neutral';
+  let lineageLabel = t('registry.lineageNotRequired');
+  let lineageHelper = t('registry.lineageFoundationHelper');
+
+  if (parentCount === 1) {
+    lineageTone = 'pending';
+    lineageLabel = t('registry.lineagePartial');
+    lineageHelper = t('registry.lineageWaitingFor', {
+      parents: hasSireParent ? t('registry.damMother') : t('registry.sireFather'),
+    });
+  } else if (parentCount === 2) {
+    lineageTone = bloodlineVerified ? 'success' : 'warning';
+    lineageLabel = bloodlineVerified
+      ? t('registry.lineageResolvedStatus')
+      : t('registry.lineageUnresolved');
+    lineageHelper = bloodlineVerified
+      ? t('registry.lineageResolvedHelper')
+      : t('registry.lineageUnresolvedHelper');
+  }
+
+  const registerBusy = loading || uploadingImage || photoProcessing;
+  const registerDisabled = registerBusy || !validationOk;
+  const registerLabel = uploadingImage
+    ? t('registry.uploadingAttachment')
+    : loading
+      ? t('registry.registering')
+      : photoProcessing
+        ? t('registry.processingPhoto')
+        : t('registry.registerBtn');
+
+  const registerHelper = photoProcessing
+    ? t('registry.registerBlockedProcessing')
+    : registerBusy
+      ? uploadingImage
+        ? t('registry.registerBlockedUpload')
+        : t('registry.registering')
+      : missingCount > 0
+        ? missingCount === 1
+          ? t('registry.registerBlockedOne')
+          : t('registry.registerBlockedMissing', { count: String(missingCount) })
+        : birthdateError
+          ? birthdateError
+          : declaredError
+            ? declaredError
+            : !validationPassed
+              ? t('registry.validationPendingHelper')
+              : t('registry.verifyBeforeRegistering');
 
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
@@ -352,19 +585,43 @@ export default function EncodeForm({
     return rawCode;
   }, [birdCode, suggestedBirdCode, currentRole]);
 
+  const birthdateAgeParts = newBirthdate ? getAgePartsLocal(newBirthdate) : null;
+  const ageDisplayValue =
+    newBirthdate && autoCalcAge
+      ? birthdateAgeParts
+        ? String(birthdateAgeParts.totalMonths)
+        : '-'
+      : age || '-';
+
   useEffect(() => {
     if (!strainOpen) return;
     const update = () => {
       if (strainInputRef.current) {
         const r = strainInputRef.current.getBoundingClientRect();
-        setStrainDropdownPos({ top: r.bottom + 6, left: r.left, width: r.width });
+        const gap = 6;
+        const margin = 12;
+        const spaceBelow = window.innerHeight - r.bottom - gap - margin;
+        const spaceAbove = r.top - gap - margin;
+        const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+        const maxHeight = Math.max(72, Math.min(288, openAbove ? spaceAbove : spaceBelow));
+        setStrainDropdownPos({
+          top: openAbove
+            ? Math.max(margin, r.top - gap - maxHeight)
+            : r.bottom + gap,
+          left: r.left,
+          width: r.width,
+          maxHeight,
+        });
       }
     };
     update();
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
     const handleClickOutside = (e: MouseEvent) => {
-      if (strainInputRef.current && !strainInputRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideInput = strainInputRef.current?.contains(target);
+      const insideDropdown = strainDropdownRef.current?.contains(target);
+      if (!insideInput && !insideDropdown) {
         setStrainOpen(false);
       }
     };
@@ -408,6 +665,28 @@ export default function EncodeForm({
 
   return (
     <form onSubmit={handleFormSubmit} autoComplete="off" className="space-y-5 animate-fadeIn">
+      {draftNotice && (
+        <div
+          role="status"
+          className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+        >
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black uppercase tracking-wider">{t('registry.draftRestored')}</p>
+            {draftNotice.photoSelected && (
+              <p className="mt-0.5 text-xs font-semibold">{t('registry.photoReaddNotice')}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setDraftNotice(null)}
+            aria-label={t('registry.dismissDraftNotice')}
+            className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
@@ -552,79 +831,63 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gt-genetic-strain">{t('registry.geneticStrain')}</label>
-          {selectedStrains.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2.5">
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider" htmlFor="gt-genetic-strain">
+              {t('registry.geneticStrain')}
+            </label>
+            {onAddBreeds && (
+              <button
+                type="button"
+                onClick={handleAddBreed}
+                aria-label={t('registry.addBreed')}
+                className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:text-emerald-300"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t('registry.addBreed')}</span>
+              </button>
+            )}
+          </div>
+          <div className="relative" ref={strainInputRef}>
+            <div
+              className={`flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-md border bg-white p-1.5 transition-all focus-within:ring-4 dark:bg-input ${strainError ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-100 dark:border-rose-700 dark:focus-within:ring-rose-950/50' : 'border-input-border focus-within:border-emerald-500 focus-within:ring-emerald-100'}`}
+            >
               {selectedStrains.map((s, i) => (
-                <span key={`${s}-${i}`} className="inline-flex items-center gap-1.5 bg-white dark:bg-card border border-slate-200 dark:border-border shadow-sm text-slate-700 dark:text-card-foreground text-xs font-semibold px-3 py-1.5 rounded-sm group hover:border-emerald-300 transition-all">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                  {s}
-                    <button type="button" onClick={() => removeStrain(i)} aria-label={t('registry.removeStrainAria')} className="ml-0.5 w-6 h-6 rounded-sm bg-slate-100 dark:bg-muted hover:bg-rose-500 hover:text-white text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-pointer opacity-60 group-hover:opacity-100">✕</button>
+                <span
+                  key={s}
+                  className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 pl-3 text-xs font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+                >
+                  <span className="min-w-0 break-words">{s}</span>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSelectedStrain(i);
+                    }}
+                    aria-label={t('registry.removeStrainAria', { strain: s })}
+                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-rose-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-emerald-300"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </span>
               ))}
-            </div>
-          )}
-          <div className="relative" ref={strainInputRef}>
-            <div className="relative">
               <ComboboxInput
                 ref={strainInputElRef}
                 id="gt-genetic-strain"
                 value={strainQuery}
                 onChange={(e) => handleStrainChange(e.target.value)}
-                onFocus={() => {
-                  setStrainOpen(true);
-                  setActiveStrainIndex(-1);
-                }}
+                onFocus={handleStrainFocus}
+                onClick={() => setStrainOpen(true)}
                 onBlur={handleStrainBlur}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (!strainOpen) setStrainOpen(true);
-                    if (strainMatchingOptions.length > 0) {
-                      setActiveStrainIndex((current) =>
-                        (current + 1) % strainMatchingOptions.length,
-                      );
-                    }
-                  }
-                  if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    if (!strainOpen) setStrainOpen(true);
-                    if (strainMatchingOptions.length > 0) {
-                      setActiveStrainIndex((current) =>
-                        current <= 0
-                          ? strainMatchingOptions.length - 1
-                          : current - 1,
-                      );
-                    }
-                  }
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (
-                      strainOpen &&
-                      activeStrainIndex >= 0 &&
-                      strainMatchingOptions[activeStrainIndex]
-                    ) {
-                      selectStrainOption(strainMatchingOptions[activeStrainIndex]);
-                    } else {
-                      commitStrain({ focusOnError: true });
-                    }
-                  }
-                  if (e.key === 'Tab') {
-                    if (!strainQuery.trim() && selectedStrains.length === 0) {
-                      e.preventDefault();
-                      commitStrain({ focusOnError: true });
-                    } else {
-                      commitStrain();
-                    }
-                    setActiveStrainIndex(-1);
-                  }
-                  if (e.key === 'Escape') {
-                    setStrainOpen(false);
-                    setActiveStrainIndex(-1);
-                  }
-                }}
+                onKeyDown={handleStrainKeyDown}
                 aria-invalid={Boolean(strainError)}
-                aria-describedby={strainError ? 'genetic-strain-error' : undefined}
+                aria-describedby={
+                  strainError
+                    ? 'genetic-strain-error'
+                    : strainHint
+                      ? 'genetic-strain-hint'
+                      : undefined
+                }
                 expanded={strainOpen}
                 controls={strainOpen ? 'gt-genetic-strain-listbox' : undefined}
                 activeOptionId={
@@ -632,82 +895,111 @@ export default function EncodeForm({
                     ? `gt-genetic-strain-option-${activeStrainIndex}`
                     : undefined
                 }
-                placeholder="Select or type a strain..."
-                className={`w-full pl-3 pr-9 p-3 border rounded-md text-sm bg-white dark:bg-input placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-semibold transition-all focus:ring-4 ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'} ${strainError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:border-rose-700 dark:focus:ring-rose-950/50' : 'border-input-border focus:border-emerald-500 focus:ring-emerald-100'}`}
+                placeholder={
+                  selectedStrains.length > 0
+                    ? t('registry.addAnotherStrain')
+                    : t('registry.strainPlaceholder')
+                }
+                className="min-h-11 min-w-[8rem] flex-1 border-0 bg-transparent px-1.5 py-2 text-sm font-semibold text-neutral-900 placeholder:text-muted-foreground focus:outline-none dark:text-foreground dark:placeholder:text-muted-foreground"
               />
               <button
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setStrainOpen((o) => !o)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
-                aria-label="Toggle strain list"
+                className="ml-auto flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-muted-foreground transition-colors hover:text-success focus:border-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-border dark:bg-input"
+                aria-label={t('registry.toggleStrainList')}
                 aria-expanded={strainOpen}
                 aria-controls={strainOpen ? 'gt-genetic-strain-listbox' : undefined}
               >
-                ▾
+                <ChevronDown className={`h-4 w-4 transition-transform ${strainOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
             </div>
+            <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+              {strainAnnouncement}
+            </div>
             {strainOpen && strainDropdownPos && createPortal(
-              <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}>
+              <div
+                ref={strainDropdownRef}
+                className="fixed z-[10000] flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                style={{
+                  top: strainDropdownPos.top,
+                  left: strainDropdownPos.left,
+                  width: strainDropdownPos.width,
+                  maxHeight: strainDropdownPos.maxHeight,
+                }}
+              >
                 <div
                   id="gt-genetic-strain-listbox"
                   role="listbox"
-                  aria-label={t('registry.breedsBtn')}
-                  className="overflow-y-auto"
+                  aria-label={t('registry.registeredBreeds')}
+                  className="min-h-0 flex-1 overflow-y-auto"
                 >
-                  {(() => {
-                    const q = strainQuery.trim().toLowerCase();
-                    const matching = strainMatchingOptions;
-                    if (q && !availableStrains.some((s) => s.toLowerCase() === q)) {
-                      return (
-                        <>
-                          {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Matching strains</div>}
-                          {matching.map((s, index) => (
-                            <div key={s} className="flex items-center w-full group">
-                              <button
-                                id={`gt-genetic-strain-option-${index}`}
-                                type="button"
-                                role="option"
-                                aria-selected={selectedStrains.includes(s)}
-                                tabIndex={-1}
-                                onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }}
-                                onMouseEnter={() => setActiveStrainIndex(index)}
-                                className={`flex-1 text-left px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${index === activeStrainIndex ? 'bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-muted/50'} ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
-                              >
-                                {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
-                              </button>
-                            </div>
-                          ))}
-                        </>
+                  {loading && availableStrains.length === 0 ? (
+                    <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                      {t('registry.breedsLoading')}
+                    </div>
+                  ) : matchingStrains.length === 0 ? (
+                    <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                      {typedStrain
+                        ? t('registry.noMatchingBreedAdd', { strain: typedStrain })
+                        : t('registry.noRegisteredBreeds')}
+                    </div>
+                  ) : (
+                    matchingStrains.map((s, index) => {
+                      const selected = selectedStrains.some(
+                        (value) => value.toLowerCase() === s.toLowerCase(),
                       );
-                    }
-                    return matching.map((s, index) => (
+                      return (
                         <button
                           key={s}
                           id={`gt-genetic-strain-option-${index}`}
                           type="button"
                           role="option"
-                          aria-selected={selectedStrains.includes(s)}
+                          aria-selected={selected}
                           tabIndex={-1}
-                          onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }}
+                          onMouseDown={(e) => e.preventDefault()}
                           onMouseEnter={() => setActiveStrainIndex(index)}
-                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${index === activeStrainIndex ? 'bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-muted/50'} ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                          onClick={() => toggleStrainOption(s)}
+                          className={`flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${index === activeStrainIndex ? 'bg-emerald-500/10' : ''} ${selected ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
                         >
-                          {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
+                          <span className="min-w-0 break-words">{s}</span>
+                          {selected && (
+                            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-success dark:text-emerald-300">
+                              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              {t('registry.selected')}
+                            </span>
+                          )}
                         </button>
-                    ));
-                  })()}
-                  {strainQuery.trim() === '' && availableStrains.length === 0 && (
-                    <div className="px-4 py-3 text-xs text-muted-foreground font-semibold flex items-center justify-between gap-2">
-                      <span>No breeds yet. Add your breeds first.</span>
-                      <a
-                        href="/breeds"
-                        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0"
-                      >
-                        Add Breeds →
-                      </a>
-                    </div>
+                      );
+                    })
                   )}
                 </div>
+                {typedStrain && !hasExactStrainMatch && !loading && (
+                  <div className="border-t border-slate-200 bg-emerald-50/60 p-1.5 dark:border-border dark:bg-emerald-500/10">
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => commitStrain({ focusOnError: true })}
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-300"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('registry.addAsNewBreed', { strain: typedStrain })}
+                    </button>
+                  </div>
+                )}
+                {onAddBreeds && (
+                  <div className="border-t border-slate-200 bg-slate-50/80 p-1.5 dark:border-border dark:bg-muted/40">
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={handleAddBreed}
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('registry.manageBreeds')}
+                    </button>
+                  </div>
+                )}
               </div>,
               document.body
             )}
@@ -716,6 +1008,15 @@ export default function EncodeForm({
             <p id="genetic-strain-error" role="alert" className="mt-1.5 flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300">
               <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{strainError}</span>
+            </p>
+          ) : null}
+          {!strainError && strainHint ? (
+            <p
+              id="genetic-strain-hint"
+              role="status"
+              className="mt-1.5 rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-300"
+            >
+              {strainHint}
             </p>
           ) : null}
           </div>
@@ -738,7 +1039,7 @@ export default function EncodeForm({
             <div className="sm:col-span-2 pt-1">
               <DeclaredCompositionEditor
                 registeredBreed={effectiveBreed}
-                availableBreeds={availableStrains}
+                availableBreeds={breedOptions}
                 value={newDeclaredComposition ?? null}
                 onChange={(val) => setNewDeclaredComposition?.(val)}
                 hasParents={false}
@@ -850,7 +1151,20 @@ export default function EncodeForm({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">{t('registry.ageMos')} {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">{t('registry.autoBadge')}</span>}</label>
-            <input type="number" value={newBirthdate && autoCalcAge ? String((getAgePartsLocal(newBirthdate)?.totalMonths ?? 0)) : age} onChange={(e) => handleAgeChange(e.target.value)} readOnly={!!newBirthdate && autoCalcAge} className="w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" placeholder="0" required id="age-mos" />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={ageDisplayValue}
+              readOnly
+              aria-readonly="true"
+              aria-describedby="age-mos-help"
+              className="w-full cursor-default rounded-md border border-input-border bg-muted/60 p-3 text-center text-sm font-extrabold text-neutral-900 focus:border-input-border focus:ring-0 focus-visible:outline-none dark:bg-muted/40 dark:text-foreground"
+              required
+              id="age-mos"
+            />
+            <p id="age-mos-help" className="mt-1.5 text-xs font-semibold text-muted-foreground">
+              {t('registry.calculatedFromBirthDate')}
+            </p>
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="growth-stage">{t('registry.growthStage')}</label>
@@ -870,15 +1184,15 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="height">{t('registry.height')} ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
+            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="weight">{t('registry.weight')} ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-            <input type="number" step="0.1" min="0" value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
+            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">{t('registry.legColor')}</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gt-leg-color">{t('registry.legColor')}</label>
           <div className="relative">
             <ComboboxInput
               id="gt-leg-color"
@@ -1093,7 +1407,7 @@ export default function EncodeForm({
           <div className="pt-1">
             <DeclaredCompositionEditor
               registeredBreed={effectiveBreed}
-              availableBreeds={availableStrains}
+              availableBreeds={breedOptions}
               value={newDeclaredComposition ?? null}
               onChange={(val) => setNewDeclaredComposition?.(val)}
               hasParents={true}
@@ -1148,41 +1462,59 @@ export default function EncodeForm({
             </p>
           </div>
         ) : null}
-        <div>
-          <span className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">{t('registry.chickenPhoto')}</span>
-          <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-slate-200 dark:border-border border-dashed rounded-lg cursor-pointer bg-slate-50/80 dark:bg-muted/50 hover:bg-slate-100/70 transition-all overflow-hidden relative" htmlFor="field">
-            {imagePreview ? (
-              <img src={imagePreview} alt={t('registry.imagePreviewAlt')} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-sm text-slate-600 dark:text-muted-foreground font-bold">📷 {selectedImage ? selectedImage.name : t('registry.chooseImageFile')}</span>
-            )}
-            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setSelectedImage(f); setImagePreview(URL.createObjectURL(f)); } }} className="hidden" id="field" />
-          </label>
-        </div>
+        <ChickenPhotoField
+          name={newName || 'New chicken'}
+          code={birdCode || suggestedBirdCode}
+          pendingFile={photoForm?.selectedImage ?? selectedImage}
+          pendingThumbnail={photoForm?.selectedPhotoThumbnail ?? null}
+          uploading={photoForm?.uploadingImage ?? uploadingImage}
+          uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          uploadError={photoForm?.photoUploadError ?? null}
+          canEdit={canEditPhoto}
+          onPendingChange={(files) => {
+            const setFull = photoForm?.setSelectedImage ?? setSelectedImage;
+            setFull(files?.full ?? null);
+            photoForm?.setSelectedPhotoThumbnail(files?.thumbnail ?? null);
+            photoForm?.setPhotoUploadError(null);
+            setImagePreview('');
+          }}
+          onRemove={() => {
+            (photoForm?.setSelectedImage ?? setSelectedImage)(null);
+            photoForm?.setSelectedPhotoThumbnail(null);
+            photoForm?.setPhotoUploadError(null);
+            setImagePreview('');
+          }}
+          onCancelUpload={photoForm?.cancelPhotoUpload}
+          onProcessingChange={setPhotoProcessing}
+        />
       </div>
 
-      <div className="bg-white dark:bg-card rounded-lg border-2 border-slate-900 dark:border-border shadow-sm p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t('registry.validationSummaryPanel')}</span>
-          </div>
-          <span className="self-start sm:self-auto text-xs font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-1 rounded-full max-w-full break-words">
-            {t('registry.nextIdLabel', { id: nextIdLabel })}
-          </span>
-        </div>
-        <div data-testid="validation-summary-grid" className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
-          <StatusItem icon="🛡️" label={t('registry.dataIntegrity')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-          <StatusItem icon="✅" label={t('registry.validationStatus')} value={validationSummaryValue} tone={validationOk ? 'green' : 'amber'} />
-          <StatusItem icon="🔗" label={t('registry.lineageResolved')} value={bloodlineVerified ? t('registry.lineageResolvedStatus') : t('registry.lineageAwaitingStatus')} tone={bloodlineVerified ? 'green' : 'amber'} />
-          <StatusItem icon="📊" label={t('registry.dataCompleteness')} value={`${dataCompleteness}%`} tone={dataCompleteness === 100 ? 'green' : 'amber'} />
-        </div>
-        <button type="submit" disabled={loading || uploadingImage || !birthdateValidation.valid || !declaredValidation.valid} className="w-full bg-slate-900 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-4 rounded-lg text-sm shadow-md uppercase tracking-widest cursor-pointer transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
-          {(loading || uploadingImage) && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-          <span>{uploadingImage ? t('registry.uploadingAttachment') : loading ? t('registry.registering') : t('registry.registerBtn')}</span>
-        </button>
-        <p className="text-center text-xs text-muted-foreground font-semibold mt-2.5 tracking-wide">{t('registry.verifyBeforeRegistering')}</p>
-      </div>
+      <ValidationSummaryPanel
+        nextIdLabel={nextIdLabel}
+        requiredFields={requiredFields}
+        dataCompleteness={dataCompleteness}
+        validationTone={validationTone}
+        validationLabel={validationLabel}
+        validationHelper={validationHelper}
+        lineageTone={lineageTone}
+        lineageLabel={lineageLabel}
+        lineageHelper={lineageHelper}
+        registerDisabled={registerDisabled}
+        registerBusy={registerBusy}
+        registerLabel={registerLabel}
+        registerHelper={registerHelper}
+        footer={
+          onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="min-h-[44px] w-full cursor-pointer rounded-lg border border-border bg-muted px-4 py-3 text-xs font-black tracking-widest uppercase text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+            >
+              {t('registry.cancelRegistration')}
+            </button>
+          ) : undefined
+        }
+      />
     </form>
   );
 }

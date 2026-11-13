@@ -3,6 +3,7 @@ import React from 'react';
 import type { FowlRecord } from '@/lib/types';
 import { traceComposition, type TraceSource } from '@/lib/bloodline-composition';
 import { getCompositionSourceInfo, hasBothParentsRecorded } from '@/lib/breeding-classification';
+import { formatBloodlineDisplayValue } from '@/lib/bloodline-report-ui';
 
 const DOT = [
   'bg-emerald-500',
@@ -19,7 +20,8 @@ const SIDE: Record<TraceSource['side'], { label: string; icon: string; badge: st
   sire: {
     label: 'Sire',
     icon: '♂',
-    badge: 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+    badge:
+      'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
   },
   dam: {
     label: 'Dam',
@@ -69,12 +71,23 @@ type Props = {
  * which ancestor, through which parent, and how many generations back.
  * Percentages here are the exact same numbers BloodlineBreakdown publishes.
  */
-export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title, subtitle }: Props) {
+export default function BloodlineProvenance({
+  fowl,
+  fowls,
+  onOpenAncestor,
+  title,
+  subtitle,
+}: Props) {
   const trace = React.useMemo(() => (fowl ? traceComposition(fowl, fowls) : []), [fowl, fowls]);
-  const sourceInfo = React.useMemo(() => (fowl ? getCompositionSourceInfo(fowl, fowls) : null), [fowl, fowls]);
+  const sourceInfo = React.useMemo(
+    () => (fowl ? getCompositionSourceInfo(fowl, fowls) : null),
+    [fowl, fowls],
+  );
   const show5050 = React.useMemo(() => hasBothParentsRecorded(fowl ?? null, fowls), [fowl, fowls]);
 
-  const meaningful = trace.some((entry) => entry.sources.some((s) => s.depth > 0 || s.ancestor.id === null));
+  const meaningful = trace.some((entry) =>
+    entry.sources.some((s) => s.depth > 0 || s.ancestor.id === null),
+  );
   if (!fowl || !meaningful) return null;
 
   const findAncestor = (source: TraceSource): FowlRecord | null => {
@@ -88,17 +101,17 @@ export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title
   };
 
   return (
-    <div className="bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-950/40 border border-sky-100 dark:border-sky-900/50 rounded-lg p-4 space-y-3">
+    <div className="min-w-0 space-y-3 rounded-lg border border-sky-100 bg-gradient-to-r from-sky-50 to-indigo-50 p-4 dark:border-sky-900/50 dark:from-sky-950/40 dark:to-indigo-950/40">
       <div className="min-w-0">
-        <p className="text-xs font-black text-sky-700 dark:text-sky-300 uppercase tracking-widest">
+        <p className="text-xs font-black tracking-widest text-sky-700 uppercase dark:text-sky-300">
           🔎 {title || 'Where Each Percentage Comes From'}
         </p>
-        {sourceInfo?.sourceLabel && (
-          <p className="text-xs font-bold text-sky-800 dark:text-sky-300 mt-0.5">
+        {sourceInfo?.sourceLabel && sourceInfo.source !== 'assumed' && (
+          <p className="mt-0.5 text-xs font-bold text-sky-800 dark:text-sky-300">
             Source: <span className="font-semibold">{sourceInfo.sourceLabel}</span>
           </p>
         )}
-        <p className="text-xs text-muted-foreground font-semibold mt-0.5 leading-relaxed">
+        <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed font-semibold">
           {subtitle ||
             (show5050
               ? 'Bawat linya ay isang ninunong nag-ambag — 50% mula sa Sire, 50% mula sa Dam, hinahati kada henerasyon.'
@@ -112,19 +125,19 @@ export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title
           return (
             <div
               key={entry.strain}
-              className="bg-white/80 dark:bg-card/70 border border-white/70 dark:border-border rounded-md p-3 space-y-2"
+              className="dark:bg-card/70 dark:border-border space-y-2 rounded-md border border-white/70 bg-white/80 p-3"
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 min-w-0">
-                  <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${dot}`} aria-hidden="true" />
-                  <span className="text-xs font-black truncate text-slate-800 dark:text-card-foreground">
-                    {entry.strain}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} aria-hidden="true" />
+                  <span className="dark:text-card-foreground min-w-0 text-xs font-black break-words text-slate-800">
+                    {formatBloodlineDisplayValue(entry.strain)}
                   </span>
-                  <span className="text-xs font-black uppercase tracking-wide text-muted-foreground shrink-0">
+                  <span className="text-muted-foreground shrink-0 text-xs font-black tracking-wide uppercase">
                     {entry.sources.length} source{entry.sources.length === 1 ? '' : 's'}
                   </span>
                 </span>
-                <span className="text-xs font-black tabular-nums shrink-0 text-slate-900 dark:text-card-foreground">
+                <span className="dark:text-card-foreground shrink-0 text-xs font-black text-slate-900 tabular-nums">
                   {entry.pct}%
                 </span>
               </div>
@@ -135,11 +148,14 @@ export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title
                   const side = SIDE[source.side];
                   const shareOfStrain = entry.pct > 0 ? (source.pct / entry.pct) * 100 : 0;
                   return (
-                    <div key={`${source.side}-${source.depth}-${source.ancestor.name}-${i}`} className="space-y-1">
-                      <div className="flex items-center justify-between gap-2 text-xs">
-                        <span className="flex items-center gap-1.5 min-w-0">
+                    <div
+                      key={`${source.side}-${source.depth}-${source.ancestor.name}-${i}`}
+                      className="space-y-1"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
                           <span
-                            className={`font-black shrink-0 ${source.side === 'sire' ? 'text-sky-600 dark:text-sky-300' : source.side === 'dam' ? 'text-pink' : 'text-muted-foreground'}`}
+                            className={`shrink-0 font-black ${source.side === 'sire' ? 'text-sky-600 dark:text-sky-300' : source.side === 'dam' ? 'text-pink' : 'text-muted-foreground'}`}
                             aria-hidden="true"
                           >
                             {side.icon}
@@ -148,60 +164,65 @@ export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title
                             <button
                               type="button"
                               onClick={() => onOpenAncestor(record)}
-                              className="font-bold text-slate-800 dark:text-card-foreground hover:underline underline-offset-2 truncate cursor-pointer max-w-[12rem]"
+                              className="dark:text-card-foreground min-w-0 cursor-pointer font-bold break-words text-slate-800 underline-offset-2 hover:underline"
                               title={`Open ${source.ancestor.name} profile`}
                             >
                               {source.ancestor.name}
                             </button>
                           ) : (
                             <span
-                              className={`font-bold truncate ${source.ancestor.name ? 'text-slate-700 dark:text-card-foreground' : 'text-amber-700 dark:text-amber-300'}`}
+                              className={`min-w-0 font-bold break-words ${source.ancestor.name ? 'dark:text-card-foreground text-slate-700' : 'text-amber-700 dark:text-amber-300'}`}
                             >
                               {source.ancestor.name || 'Unregistered parent'}
                             </span>
                           )}
                           <span
-                            className={`text-xs font-black uppercase px-1.5 py-0.5 rounded-full border shrink-0 ${side.badge}`}
+                            className={`shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-black uppercase ${side.badge}`}
                           >
                             {side.label}
                           </span>
                           <span
-                            className="text-xs font-black uppercase px-1.5 py-0.5 rounded-full border bg-white dark:bg-muted text-muted-foreground border-slate-200 dark:border-border shrink-0"
+                            className="dark:bg-muted text-muted-foreground dark:border-border shrink-0 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-black uppercase"
                             title={depthHint(source.depth)}
                           >
                             {depthBadge(source.depth)}
                           </span>
                           {source.circular && (
                             <span
-                              className="text-xs font-black uppercase px-1.5 py-0.5 rounded-full border bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 shrink-0"
+                              className="shrink-0 rounded-full border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-xs font-black text-amber-700 uppercase dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
                               title="Circular pedigree — the walk stopped here instead of looping forever."
                             >
                               Loop
                             </span>
                           )}
                         </span>
-                        <span className="shrink-0 font-black tabular-nums text-slate-800 dark:text-card-foreground">
+                        <span className="dark:text-card-foreground shrink-0 font-black text-slate-800 tabular-nums">
                           {source.pct}%
                         </span>
                       </div>
 
-                      <div className="h-1.5 w-full rounded-full bg-slate-200/70 dark:bg-muted overflow-hidden">
+                      <div className="dark:bg-muted h-1.5 w-full overflow-hidden rounded-full bg-slate-200/70">
                         <div
                           className={`h-full rounded-full ${dot}`}
                           style={{ width: `${Math.max(2, Math.min(100, shareOfStrain))}%` }}
                         />
                       </div>
 
-                      <p className="text-xs text-muted-foreground font-semibold">
+                      <p className="text-muted-foreground text-xs font-semibold">
                         {entry.pct}% ng strain na ito ay galing kay{' '}
-                        <span className="font-bold">{source.ancestor.name || 'unregistered parent'}</span>
+                        <span className="font-bold">
+                          {source.ancestor.name || 'unregistered parent'}
+                        </span>
                         {source.depth > 0 && (
                           <>
                             {' '}
-                            (ninuno ay may {source.share}% sa sariling komposisyon → {source.pct}% dito)
+                            (ninuno ay may {source.share}% sa sariling komposisyon → {source.pct}%
+                            dito)
                           </>
                         )}
-                        {source.ancestor.id === null && source.ancestor.name && <> · hindi rehistrado</>}
+                        {source.ancestor.id === null && source.ancestor.name && (
+                          <> · hindi rehistrado</>
+                        )}
                       </p>
                     </div>
                   );
@@ -212,9 +233,9 @@ export default function BloodlineProvenance({ fowl, fowls, onOpenAncestor, title
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground font-semibold leading-relaxed border-t border-sky-100 dark:border-sky-900/50 pt-2">
-        Ang kabuuan ay eksaktong pareho ng pinapakita sa “Bloodline Percentage” sa itaas — ang trace na ito ay
-        nagpapakita lang kung saan galing ang bawat porsyento.
+      <p className="text-muted-foreground border-t border-sky-100 pt-2 text-xs leading-relaxed font-semibold dark:border-sky-900/50">
+        Ang kabuuan ay eksaktong pareho ng pinapakita sa “Bloodline Percentage” sa itaas — ang trace
+        na ito ay nagpapakita lang kung saan galing ang bawat porsyento.
       </p>
     </div>
   );

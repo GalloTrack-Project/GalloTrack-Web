@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/registry';
 import { STRAIN_LIST, LEG_COLOR_LIST } from '@/lib/helpers';
+import { mergeStrainNames } from '@/lib/strain-options';
 
 const CUSTOM_STRAINS_KEY = 'gallotrack_custom_strains';
 const CUSTOM_LEG_COLORS_KEY = 'gallotrack_custom_leg_colors';
@@ -40,7 +41,7 @@ export async function fetchStrains(): Promise<string[]> {
   }
 
   const localCustom = getLocalItems(CUSTOM_STRAINS_KEY);
-  return Array.from(new Set([...names, ...localCustom])).sort((a, b) => a.localeCompare(b));
+  return mergeStrainNames(names, localCustom);
 }
 
 export async function saveCustomStrain(name: string): Promise<boolean> {

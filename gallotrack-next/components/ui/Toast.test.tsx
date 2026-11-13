@@ -11,6 +11,35 @@ function Consumer({ variant }: { variant?: ToastVariant }) {
   );
 }
 
+function DedupeConsumer() {
+  const { toast } = useToast();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        toast({ id: 'same-message', title: 'Same message' });
+        toast({ id: 'same-message', title: 'Same message' });
+      }}
+    >
+      fire duplicate
+    </button>
+  );
+}
+
+function ManyConsumer() {
+  const { toast } = useToast();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        for (let i = 0; i < 5; i += 1) toast({ title: `Message ${i}` });
+      }}
+    >
+      fire many
+    </button>
+  );
+}
+
 function renderWithProvider(variant?: ToastVariant) {
   return render(
     <ToastProvider>
@@ -54,6 +83,30 @@ describe('Toast', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('deduplicates repeated toasts with the same stable id', () => {
+    render(
+      <ToastProvider>
+        <DedupeConsumer />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'fire duplicate' }));
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Same message');
+  });
+
+  it('caps visible toasts at three', () => {
+    render(
+      <ToastProvider>
+        <ManyConsumer />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'fire many' }));
+    expect(screen.getAllByRole('status')).toHaveLength(3);
+    expect(screen.queryByText('Message 0')).not.toBeInTheDocument();
+    expect(screen.queryByText('Message 1')).not.toBeInTheDocument();
+    expect(screen.getByText('Message 4')).toBeInTheDocument();
   });
 
   it('auto-dismisses after the default duration', () => {

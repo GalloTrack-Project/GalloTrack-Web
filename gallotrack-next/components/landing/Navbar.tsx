@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import Logo from '@/components/brand/Logo';
 
 export default function LandingNavbar() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -47,30 +48,20 @@ export default function LandingNavbar() {
     <header className="border-border/80 bg-background/85 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-colors">
       <div className="mx-auto flex h-16 max-w-7xl flex-wrap items-center justify-between gap-x-2 px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="group flex min-w-0 cursor-pointer items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md shadow-emerald-600/20 transition-colors group-hover:bg-emerald-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
-            </svg>
-          </div>
-          <div className="flex hidden items-baseline gap-2 sm:flex">
-            <span className="text-foreground text-xl font-black tracking-tight">
-              GALLO<span className="text-emerald-600 dark:text-emerald-400">TRACK</span>
-            </span>
-            <span className="text-muted-foreground hidden font-mono text-xs font-bold tracking-widest uppercase sm:inline">
-              v1.0.0
-            </span>
-          </div>
+        <Link
+          href="/"
+          aria-label="GalloTrack home"
+          className="group flex min-w-0 items-center gap-2.5"
+        >
+          <span className="hidden sm:inline-flex">
+            <Logo variant="full" size="md" />
+          </span>
+          <span className="inline-flex sm:hidden">
+            <Logo variant="mark" size="md" />
+          </span>
+          <span className="text-muted-foreground hidden font-mono text-xs font-bold tracking-widest uppercase sm:inline">
+            v1.0.0
+          </span>
         </Link>
 
         {/* Desktop Navigation Links with Active Scroll Indicator */}

@@ -448,17 +448,11 @@ export default function DeclaredCompositionEditor({
       {!hasParents && (
         <div className="space-y-3">
           {availableBreeds.length === 0 ? (
-            <div className="border-border/60 bg-muted/20 flex flex-col justify-between gap-2.5 rounded-lg border p-3 sm:flex-row sm:items-center">
-              <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                <Info className="text-muted-foreground h-4 w-4 shrink-0" />
-                <span>No breeds yet. Add your breeds first to declare custom composition.</span>
-              </div>
-              <a
-                href="/breeds"
-                className="flex min-h-[44px] shrink-0 items-center text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
-              >
-                Add Breeds →
-              </a>
+            <div className="border-border/60 bg-muted/20 flex items-center gap-2 rounded-lg border p-3">
+              <Info className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
+              <p className="text-muted-foreground text-xs font-semibold">
+                Register a breed first to set a custom composition.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">

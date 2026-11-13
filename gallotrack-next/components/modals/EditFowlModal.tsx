@@ -1,7 +1,20 @@
 'use client';
 import React from 'react';
-import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw } from 'lucide-react';
+import {
+  Pencil,
+  Tag,
+  Ruler,
+  Calendar,
+  TreePine,
+  Lock,
+  Edit3,
+  RotateCcw,
+  CheckCircle2,
+  Plus,
+  X,
+} from 'lucide-react';
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
+import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import AutocompleteCombobox from '@/components/ui/AutocompleteCombobox';
@@ -26,6 +39,8 @@ import { mergeOptions } from '@/lib/lifecycle';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
+import ChickenPhotoField from '@/components/ChickenPhotoField';
+import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
@@ -85,6 +100,13 @@ type EditFowlModalProps = {
   getAgeMetrics: (parts: AgeParts) => string;
   generationOf: (f: FowlRecord) => number;
   generationPurity: (gen: number) => number;
+  canEditPhoto?: boolean;
+  /** Opens the Breed Registry without discarding the edit draft. */
+  onAddBreeds?: () => void;
+  /** Restores a saved edit draft for this chicken. */
+  restoreDraft?: (fowlId: number | string) => DraftRestoreResult;
+  /** Clears the saved edit draft when the user cancels. */
+  clearDraft?: (fowlId: number | string) => void;
 };
 
 export default function EditFowlModal({
@@ -143,10 +165,49 @@ export default function EditFowlModal({
   getAgeMetrics,
   generationOf,
   generationPurity,
+  canEditPhoto = true,
+  onAddBreeds,
+  restoreDraft,
+  clearDraft,
 }: EditFowlModalProps) {
   const { t } = useT();
+  const photoForm = useFowlFormStateOptional();
   const unitPrefs = useUnitPrefs();
   const [manualCodeOpen, setManualCodeOpen] = React.useState(false);
+  const [photoProcessing, setPhotoProcessing] = React.useState(false);
+  const [draftRestored, setDraftRestored] = React.useState(false);
+  const [draftPhotoNotice, setDraftPhotoNotice] = React.useState(false);
+  const restoredDraftIdRef = React.useRef<number | string | null>(null);
+  const clearPhotoFile = photoForm?.setEditPhotoFile;
+  const clearPhotoThumbnail = photoForm?.setEditPhotoThumbnail;
+  const clearPhotoRemoved = photoForm?.setEditPhotoRemoved;
+
+  React.useEffect(() => {
+    return () => {
+      clearPhotoFile?.(null);
+      clearPhotoThumbnail?.(null);
+      clearPhotoRemoved?.(false);
+    };
+  }, [clearPhotoFile, clearPhotoThumbnail, clearPhotoRemoved]);
+
+  React.useEffect(() => {
+    if (!editingFowl) {
+      restoredDraftIdRef.current = null;
+      setDraftRestored(false);
+      setDraftPhotoNotice(false);
+      return;
+    }
+    if (restoredDraftIdRef.current === editingFowl.id) return;
+    restoredDraftIdRef.current = editingFowl.id;
+    const result = restoreDraft?.(editingFowl.id);
+    setDraftRestored(Boolean(result?.restored));
+    setDraftPhotoNotice(Boolean(result?.restored && result?.photoSelected));
+  }, [editingFowl, restoreDraft]);
+
+  const handleClose = () => {
+    if (editingFowl) clearDraft?.(editingFowl.id);
+    setEditingFowl(null);
+  };
 
   const { rows: registryOptionRows } = useRegistryOptions();
   const baseColorOptions = React.useMemo(
@@ -230,6 +291,16 @@ export default function EditFowlModal({
 
   if (!editingFowl) return null;
 
+  const photoUploading = photoForm?.uploadingImage ?? false;
+  const saveBusy = loading || photoUploading || photoProcessing;
+
+  const editAgeParts = editBirthdate ? getAgeParts(editBirthdate) : null;
+  const editAgeDisplay = editBirthdate
+    ? editAgeParts
+      ? String(editAgeParts.totalMonths)
+      : '-'
+    : editAge || '-';
+
   const isFoundationStock = (name: string): boolean =>
     (name || '').trim().toLowerCase() === 'foundation stock';
   const parentBloodlinePct = (f: FowlRecord) => bloodlineOf(f, fowls);
@@ -237,7 +308,7 @@ export default function EditFowlModal({
   return (
     <Modal
       open
-      onClose={() => setEditingFowl(null)}
+      onClose={handleClose}
       title="Edit Node Registry"
       description={`Update parameters for ${editingFowl.name}`}
       icon={<Pencil className="h-5 w-5" />}
@@ -245,6 +316,10 @@ export default function EditFowlModal({
     >
       <form
         onSubmit={(e) => {
+          if (photoProcessing) {
+            e.preventDefault();
+            return;
+          }
           if (!birthdateValidation.valid) {
             e.preventDefault();
             return;
@@ -254,6 +329,62 @@ export default function EditFowlModal({
         autoComplete="off"
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
+        {draftRestored && (
+          <div
+            role="status"
+            className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+          >
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-wider">
+                {t('registry.draftRestored')}
+              </p>
+              {draftPhotoNotice && (
+                <p className="mt-0.5 text-xs font-semibold">{t('registry.photoReaddNotice')}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setDraftRestored(false);
+                setDraftPhotoNotice(false);
+              }}
+              aria-label={t('registry.dismissDraftNotice')}
+              className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        <ChickenPhotoField
+          name={editName || editingFowl.name}
+          code={editBirdCode || editingFowl.bird_code}
+          imageUrl={editingFowl.image_url}
+          photoPath={editingFowl.photo_path}
+          photoThumbPath={editingFowl.photo_thumb_path}
+          pendingFile={photoForm?.editPhotoFile ?? null}
+          pendingThumbnail={photoForm?.editPhotoThumbnail ?? null}
+          removed={photoForm?.editPhotoRemoved ?? false}
+          uploading={photoForm?.uploadingImage ?? loading}
+          uploadProgress={photoForm?.photoUploadProgress ?? 0}
+          uploadError={photoForm?.editPhotoUploadError ?? null}
+          canEdit={canEditPhoto}
+          onPendingChange={(files) => {
+            photoForm?.setEditPhotoFile(files?.full ?? null);
+            photoForm?.setEditPhotoThumbnail(files?.thumbnail ?? null);
+            photoForm?.setEditPhotoUploadError(null);
+            if (files) photoForm?.setEditPhotoRemoved(false);
+          }}
+          onRemove={() => {
+            photoForm?.setEditPhotoFile(null);
+            photoForm?.setEditPhotoThumbnail(null);
+            photoForm?.setEditPhotoUploadError(null);
+            photoForm?.setEditPhotoRemoved(true);
+          }}
+          onCancelUpload={photoForm?.cancelPhotoUpload}
+          onProcessingChange={setPhotoProcessing}
+        />
+
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
           <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <Tag className="h-3.5 w-3.5" /> <span>Core Identity</span>
@@ -276,12 +407,25 @@ export default function EditFowlModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative z-30">
-              <label
-                className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
-                htmlFor="gt-edit-genetic-strain"
-              >
-                Genetic Strain
-              </label>
+              <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                <label
+                  className="text-muted-foreground block text-xs font-bold uppercase"
+                  htmlFor="gt-edit-genetic-strain"
+                >
+                  Genetic Strain
+                </label>
+                {onAddBreeds && (
+                  <button
+                    type="button"
+                    onClick={onAddBreeds}
+                    aria-label={t('registry.addBreed')}
+                    className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:text-emerald-300"
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{t('registry.addBreed')}</span>
+                  </button>
+                )}
+              </div>
               <AutocompleteCombobox
                 id="gt-edit-genetic-strain"
                 value={editBreed}
@@ -484,16 +628,22 @@ export default function EditFowlModal({
                 )}
               </label>
               <input
-                type="number"
-                value={
-                  editBirthdate ? String(getAgeParts(editBirthdate)?.totalMonths ?? 0) : editAge
-                }
-                onChange={(e) => handleEditAgeChange(e.target.value)}
-                readOnly={!!editBirthdate}
-                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-center text-sm font-bold text-neutral-900"
+                type="text"
+                inputMode="numeric"
+                value={editAgeDisplay}
+                readOnly
+                aria-readonly="true"
+                aria-describedby="edit-age-mos-help"
+                className="border-input-border dark:bg-muted/40 w-full cursor-default rounded-md border bg-muted/60 p-2.5 text-center text-sm font-bold text-neutral-900 focus:border-input-border focus:ring-0 focus-visible:outline-none dark:text-foreground"
                 required
                 id="age-mos"
               />
+              <p
+                id="edit-age-mos-help"
+                className="text-muted-foreground mt-1 text-xs font-semibold"
+              >
+                {t('registry.calculatedFromBirthDate')}
+              </p>
             </div>
             <div>
               <label
@@ -526,6 +676,8 @@ export default function EditFowlModal({
                 type="number"
                 step="0.1"
                 min="0"
+                inputMode="decimal"
+                onWheel={(e) => e.currentTarget.blur()}
                 value={editHeight}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -547,6 +699,8 @@ export default function EditFowlModal({
                 type="number"
                 step="0.1"
                 min="0"
+                inputMode="decimal"
+                onWheel={(e) => e.currentTarget.blur()}
                 value={editWeight}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -807,16 +961,29 @@ export default function EditFowlModal({
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="cursor-pointer rounded-md border border-border bg-muted px-4 py-3.5 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground sm:w-36"
+          >
+            {t('common.cancel')}
+          </button>
           <button
             type="submit"
-            disabled={loading || !birthdateValidation.valid || !declaredValidation.valid}
-            className="flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={saveBusy || !birthdateValidation.valid || !declaredValidation.valid}
+            className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading && (
+            {saveBusy && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
             )}
-            <span>{loading ? 'Updating Chicken Node...' : 'Save Changes'}</span>
+            <span>
+              {photoProcessing
+                ? 'Processing photo...'
+                : saveBusy
+                  ? 'Updating Chicken Node...'
+                  : 'Save Changes'}
+            </span>
           </button>
         </div>
       </form>

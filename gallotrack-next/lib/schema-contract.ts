@@ -45,6 +45,8 @@ export const FOWL_COLUMNS = [
   'death_reason',
   'death_date',
   'image_url',
+  'photo_path',
+  'photo_thumb_path',
   'notes',
   'created_at',
 ] as const;
