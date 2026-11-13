@@ -91,8 +91,8 @@ function sexTone(fowl: FowlRecord): string {
 
 function sexGlyph(fowl: FowlRecord): string {
   const label = sexLabel(fowl);
-  if (label === 'Cock') return '♂';
-  if (label === 'Hen') return '♀';
+  if (label === 'Cock') return 'M';
+  if (label === 'Hen') return 'F';
   return '?';
 }
 
@@ -1289,10 +1289,10 @@ export default function LineageFlow({
                   </p>
                   <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
                     <span className="inline-flex items-center gap-1">
-                      <span className="font-black text-sky-600 dark:text-sky-400">♂</span> Cock
+                      <span className="font-black text-sky-600 dark:text-sky-400">M</span> Cock
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <span className="font-black text-pink-600 dark:text-pink-400">♀</span> Hen
+                      <span className="font-black text-pink-600 dark:text-pink-400">F</span> Hen
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Link2 className="h-3 w-3" /> Breeding pair

@@ -189,7 +189,7 @@ function UpdateCard() {
               <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight text-center">Password Updated Successfully! 🎉</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight text-center">Password Updated Successfully! </h2>
               <p className="text-sm text-muted-foreground font-semibold leading-relaxed text-center">
                 Your GalloTrack password has been changed. You can now sign in with your new password.
               </p>

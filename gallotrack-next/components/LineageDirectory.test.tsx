@@ -810,14 +810,14 @@ describe('LineageDirectory redesigned top section', () => {
       expect(detailsRegion).toBeInTheDocument();
       expect(within(detailsRegion).getByText('Sire 1')).toBeInTheDocument();
       expect(within(detailsRegion).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
-      expect(within(detailsRegion).getAllByText(/1♂ 2♀/i).length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText(/1M 2F/i).length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getByText(/1 dam/i)).toBeInTheDocument();
 
       // Pair header is expanded by default with 0 clicks
       expect(within(detailsRegion).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
       expect(within(detailsRegion).getByText(/Dam A \(A\)/i)).toBeInTheDocument();
       expect(within(detailsRegion).getByText('1A')).toBeInTheDocument();
-      expect(within(detailsRegion).getAllByText(/1♂ 2♀/i).length).toBeGreaterThanOrEqual(1);
+      expect(within(detailsRegion).getAllByText(/1M 2F/i).length).toBeGreaterThanOrEqual(1);
 
       // Offspring rows are visible under the pair with 0 clicks
       expect(within(detailsRegion).getAllByText('Offspring 1A1').length).toBeGreaterThanOrEqual(1);
@@ -840,8 +840,8 @@ describe('LineageDirectory redesigned top section', () => {
 
       // Filter chips inside pair
       expect(within(detailsRegion).getByRole('button', { name: /^All \(3\)$/i })).toBeInTheDocument();
-      expect(within(detailsRegion).getByRole('button', { name: /^♂ Cocks \(1\)$/i })).toBeInTheDocument();
-      expect(within(detailsRegion).getByRole('button', { name: /^♀ Hens \(2\)$/i })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('button', { name: /^M Cocks \(1\)$/i })).toBeInTheDocument();
+      expect(within(detailsRegion).getByRole('button', { name: /^F Hens \(2\)$/i })).toBeInTheDocument();
 
       // Verify NO duplicate listing sections exist
       expect(screen.queryByText(/Sibling Subgroups by Dam/i)).not.toBeInTheDocument();
@@ -900,7 +900,7 @@ describe('LineageDirectory redesigned top section', () => {
       const detailsRegion = screen.getByRole('region', { name: /Sire 1 details/i });
 
       // Filter to Cocks
-      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♂ Cocks \(1\)$/i }));
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^M Cocks \(1\)$/i }));
       expect(within(detailsRegion).getAllByText('[1A1]').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).queryByText('[1A2]')).not.toBeInTheDocument();
       expect(within(detailsRegion).queryByText('[1A3]')).not.toBeInTheDocument();
@@ -908,7 +908,7 @@ describe('LineageDirectory redesigned top section', () => {
       expect(within(detailsRegion).queryByText('Offspring 1A3')).not.toBeInTheDocument();
 
       // Filter to Hens
-      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^♀ Hens \(2\)$/i }));
+      fireEvent.click(within(detailsRegion).getByRole('button', { name: /^F Hens \(2\)$/i }));
       expect(within(detailsRegion).queryByText('[1A1]')).not.toBeInTheDocument();
       expect(within(detailsRegion).getAllByText('[1A2]').length).toBeGreaterThanOrEqual(1);
       expect(within(detailsRegion).getAllByText('[1A3]').length).toBeGreaterThanOrEqual(1);
@@ -948,9 +948,9 @@ describe('LineageDirectory redesigned top section', () => {
       expect(headerCard).not.toHaveClass('sticky');
       expect(within(details).getAllByText(/3 offspring/i).length).toBeGreaterThanOrEqual(1);
       expect(within(details).getByText(/1 sire/i)).toBeInTheDocument();
-      expect(within(headerCard as HTMLElement).getByText('1♂ 2♀')).toBeInTheDocument();
+      expect(within(headerCard as HTMLElement).getByText('1M 2F')).toBeInTheDocument();
       expect(within(details).getByRole('button', { name: 'View profile' })).toBeInTheDocument();
-      expect(within(headerCard as HTMLElement).getByText('♀ Hen')).toBeInTheDocument();
+      expect(within(headerCard as HTMLElement).getByText('F Hen')).toBeInTheDocument();
 
       // Same pair section + fixed table.
       expect(within(details).getByText(/Sire 1 \(1\)/i)).toBeInTheDocument();
@@ -974,7 +974,7 @@ describe('LineageDirectory redesigned top section', () => {
 
       const details = screen.getByRole('region', { name: /Dam C details/i });
       expect(details).toBeInTheDocument();
-      expect(within(details).getByText('♀ Hen')).toBeInTheDocument();
+      expect(within(details).getByText('F Hen')).toBeInTheDocument();
       expect(window.location.search).toContain('dam=C');
     });
 
@@ -1042,7 +1042,7 @@ describe('LineageDirectory redesigned top section', () => {
       const sireRegion = screen.getByRole('region', { name: /Sire 1 details/i });
       const sireHeading = within(sireRegion).getByRole('heading', { name: 'Sire 1' });
       const sireHeader = sireHeading.closest<HTMLElement>('div.bg-card')!;
-      expect(within(sireHeader).getByText('♂ Cock')).toBeInTheDocument();
+      expect(within(sireHeader).getByText('M Cock')).toBeInTheDocument();
       const sireTable = within(sireRegion).getByRole('table');
       expect(within(sireTable).getAllByText(/Cock/).length).toBeGreaterThan(0);
       expect(within(sireTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
@@ -1051,7 +1051,7 @@ describe('LineageDirectory redesigned top section', () => {
       const damRegion = screen.getByRole('region', { name: /Dam A details/i });
       const damHeading = within(damRegion).getByRole('heading', { name: 'Dam A' });
       const damHeader = damHeading.closest<HTMLElement>('div.bg-card')!;
-      expect(within(damHeader).getByText('♀ Hen')).toBeInTheDocument();
+      expect(within(damHeader).getByText('F Hen')).toBeInTheDocument();
       const damTable = within(damRegion).getByRole('table');
       expect(within(damTable).getAllByText(/Cock/).length).toBeGreaterThan(0);
       expect(within(damTable).getAllByText(/Hen/).length).toBeGreaterThan(0);
@@ -1223,8 +1223,8 @@ describe('LineageDirectory redesigned top section', () => {
       const table = within(detailsRegion).getByRole('table');
 
       // Verify subheaders exist in the table
-      expect(within(table).getByText('♂ Cocks (3)')).toBeInTheDocument();
-      expect(within(table).getByText('♀ Hens (2)')).toBeInTheDocument();
+      expect(within(table).getByText('M Cocks (3)')).toBeInTheDocument();
+      expect(within(table).getByText('F Hens (2)')).toBeInTheDocument();
 
       // In default 'males-first' sort:
       // Males: 1A2, 1A3, 1A10 (natural order where 1A2 < 1A10)
@@ -1243,8 +1243,8 @@ describe('LineageDirectory redesigned top section', () => {
       expect(sortSelect).toHaveValue('code');
 
       // Sub-headers must be removed
-      expect(within(table).queryByText('♂ Cocks (3)')).not.toBeInTheDocument();
-      expect(within(table).queryByText('♀ Hens (2)')).not.toBeInTheDocument();
+      expect(within(table).queryByText('M Cocks (3)')).not.toBeInTheDocument();
+      expect(within(table).queryByText('F Hens (2)')).not.toBeInTheDocument();
 
       // In 'code' sort: natural birth code order 1A1, 1A2, 1A3, 1A4, 1A10
       expect(getCodeOrder()).toEqual(['[1A1]', '[1A2]', '[1A3]', '[1A4]', '[1A10]']);

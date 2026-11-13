@@ -941,7 +941,7 @@ export default function SettingsPage() {
               </Field>
               {isBeta(language) && (
                 <p className="py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                  ⚠️ {t('preferences.betaNotice')}
+                   {t('preferences.betaNotice')}
                 </p>
               )}
             </SectionCard>
@@ -1728,7 +1728,7 @@ export default function SettingsPage() {
 
       {systemConfig.system_status === 'Maintenance' && (
         <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm font-bold text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <span className="text-lg">🔧</span>
+          <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
           <div>
             <p className="font-black">System Under Maintenance</p>
             {systemConfig.maintenance_message && (

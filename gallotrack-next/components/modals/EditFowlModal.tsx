@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   Plus,
   X,
+  AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
 import type { DraftRestoreResult } from '@/lib/fowl-draft';
@@ -882,7 +884,7 @@ export default function EditFowlModal({
                 key={`edit-bd-err-${i}`}
                 className="mt-1 flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300"
               >
-                <span>⚠️</span>
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span>{err}</span>
               </p>
             ))}
@@ -891,7 +893,7 @@ export default function EditFowlModal({
                 key={`edit-bd-warn-${i}`}
                 className="mt-1 flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/50 dark:text-amber-300"
               >
-                <span>⚠️</span>
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span>{warn}</span>
               </p>
             ))}
@@ -1123,11 +1125,11 @@ export default function EditFowlModal({
                       {editBirdCode.trim() ? (
                         formatCheck && !formatCheck.valid ? (
                           <span className="font-bold text-rose-600 dark:text-rose-400">
-                            ⚠️ {formatCheck.error}
+                             {formatCheck.error}
                           </span>
                         ) : isDuplicate ? (
                           <span className="font-bold text-rose-600 dark:text-rose-400">
-                            ❌ Already taken by another chicken
+                             Already taken by another chicken
                           </span>
                         ) : (
                           <span className="font-bold text-emerald-600 dark:text-emerald-400">
@@ -1139,7 +1141,7 @@ export default function EditFowlModal({
                       )}
                     </div>
                     <p className="rounded border border-amber-200 bg-amber-50 p-1.5 text-xs font-medium text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-                      ⚠️ Changing this will update the official registry code and will be logged in
+                       Changing this will update the official registry code and will be logged in
                       the history audit.
                     </p>
                   </div>
@@ -1181,7 +1183,7 @@ export default function EditFowlModal({
                 />
                 {isBandDuplicate && (
                   <p className="mt-1 text-xs font-bold text-rose-600 dark:text-rose-400">
-                    ❌ Wing Banding &quot;{trimmedBand}&quot; is already assigned to another
+                     Wing Banding &quot;{trimmedBand}&quot; is already assigned to another
                     chicken.
                   </p>
                 )}
@@ -1260,7 +1262,7 @@ export default function EditFowlModal({
 
         {declaredChanged && descendants.length > 0 && (
           <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-            <span className="shrink-0 text-base">⚠️</span>
+            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
             <div className="w-full">
               <p className="font-bold">
                 Descendant Bloodline Recomputation ({descendants.length} chicken

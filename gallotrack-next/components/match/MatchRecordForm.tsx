@@ -732,7 +732,7 @@ export default function MatchRecordForm({
       <div className="border-border flex flex-col justify-between gap-3 border-b pb-5 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-foreground flex items-center gap-2.5 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
-            <span>⚔️</span>
+            <Swords className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             <span>{mode === 'add' ? 'Add Match Record' : 'Edit Match Record'}</span>
           </h1>
           <p className="text-muted-foreground mt-1.5 text-sm font-medium sm:text-base">

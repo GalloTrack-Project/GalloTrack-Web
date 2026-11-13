@@ -398,7 +398,7 @@ export default function RegisterPage() {
                   <div className="bg-muted/25 border-border space-y-4 rounded-lg border p-4 sm:p-5">
                     <h2 className="text-card-foreground border-border flex items-center gap-2.5 border-b pb-2.5 text-xs font-black tracking-widest uppercase">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-emerald-500/30 bg-emerald-500/15 text-xs">
-                        👤
+
                       </span>
                       Personal Information
                     </h2>
@@ -462,7 +462,7 @@ export default function RegisterPage() {
                   <div className="bg-muted/25 border-border space-y-4 rounded-lg border p-4 sm:p-5">
                     <h2 className="text-card-foreground border-border flex items-center gap-2.5 border-b pb-2.5 text-xs font-black tracking-widest uppercase">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-emerald-500/30 bg-emerald-500/15 text-xs">
-                        🏡
+
                       </span>
                       Farm / Business Information
                     </h2>
@@ -509,7 +509,7 @@ export default function RegisterPage() {
                   <div className="bg-muted/25 border-border space-y-4 rounded-lg border p-4 sm:p-5">
                     <h2 className="text-card-foreground border-border flex items-center gap-2.5 border-b pb-2.5 text-xs font-black tracking-widest uppercase">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-emerald-500/30 bg-emerald-500/15 text-xs">
-                        🔒
+
                       </span>
                       Account Security
                     </h2>

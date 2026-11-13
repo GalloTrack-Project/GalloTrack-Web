@@ -204,7 +204,7 @@ export default function BloodlineBreakdown({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300">
-              🧬 {title || 'Bloodline Breakdown'}
+               {title || 'Bloodline Breakdown'}
             </p>
             <span className="inline-flex items-center rounded-full bg-slate-700 px-2 py-0.5 text-xs font-black tracking-wide text-white uppercase">
               {strainCount} strain{strainCount === 1 ? '' : 's'}
@@ -307,7 +307,7 @@ export default function BloodlineBreakdown({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300">
-            🧬 {title || 'Bloodline Percentage Breakdown'}
+             {title || 'Bloodline Percentage Breakdown'}
           </p>
           {sourceLine && !isAssumed && (
             <div className="mt-0.5 space-y-0.5">
@@ -464,7 +464,7 @@ export default function BloodlineBreakdown({
       {isDiluted && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/60 dark:bg-amber-950/40">
           <p className="text-xs font-black tracking-wider text-amber-700 uppercase dark:text-amber-300">
-            ⚠️ Banta ng “Galapsaw”
+             Banta ng “Galapsaw”
           </p>
           <p className="mt-0.5 text-xs leading-relaxed font-semibold text-amber-700/90 dark:text-amber-300/90">
             Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang{' '}

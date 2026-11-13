@@ -39,7 +39,7 @@ export function sexTone(fowl: FowlRecord): string {
 }
 
 export function sexGlyph(fowl: FowlRecord): string {
-  return sexLabel(fowl) === 'Hen' ? '♀' : sexLabel(fowl) === 'Cock' ? '♂' : '';
+  return sexLabel(fowl) === 'Hen' ? 'F' : sexLabel(fowl) === 'Cock' ? 'M' : '';
 }
 
 export interface LineageBirdCardProps {

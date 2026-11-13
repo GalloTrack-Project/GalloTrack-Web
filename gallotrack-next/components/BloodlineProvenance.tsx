@@ -19,18 +19,18 @@ const DOT = [
 const SIDE: Record<TraceSource['side'], { label: string; icon: string; badge: string }> = {
   sire: {
     label: 'Sire',
-    icon: '♂',
+    icon: 'M',
     badge:
       'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
   },
   dam: {
     label: 'Dam',
-    icon: '♀',
+    icon: 'F',
     badge: 'bg-pink-100 dark:bg-pink-950/60 text-pink border-pink-200 dark:border-pink-800',
   },
   self: {
     label: 'Self',
-    icon: '🧬',
+    icon: '',
     badge: 'bg-slate-100 dark:bg-muted text-muted-foreground border-slate-200 dark:border-border',
   },
 };
@@ -104,7 +104,7 @@ export default function BloodlineProvenance({
     <div className="min-w-0 space-y-3 rounded-lg border border-sky-100 bg-gradient-to-r from-sky-50 to-indigo-50 p-4 dark:border-sky-900/50 dark:from-sky-950/40 dark:to-indigo-950/40">
       <div className="min-w-0">
         <p className="text-xs font-black tracking-widest text-sky-700 uppercase dark:text-sky-300">
-          🔎 {title || 'Where Each Percentage Comes From'}
+           {title || 'Where Each Percentage Comes From'}
         </p>
         {sourceInfo?.sourceLabel && sourceInfo.source !== 'assumed' && (
           <p className="mt-0.5 text-xs font-bold text-sky-800 dark:text-sky-300">

@@ -196,7 +196,7 @@ function OffspringNode({
                     : 'text-muted-foreground'
                 }
               >
-                {sex === 'Cock' ? '♂' : sex === 'Hen' ? '♀' : ''} {sex}
+                {sex === 'Cock' ? 'M' : sex === 'Hen' ? 'F' : ''} {sex}
               </span>{' '}
               · {displayBreed || '—'}
               {(classification.compositionSource === 'assumed' ||
@@ -399,7 +399,7 @@ function PairTree({
           {roosters.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs font-black tracking-widest text-sky-700 uppercase dark:text-sky-400">
-                ♂ Cocks ({roosters.length})
+                M Cocks ({roosters.length})
               </p>
               <div className="gt-kids">
                 {roosters.map((member) => (
@@ -424,7 +424,7 @@ function PairTree({
           {hens.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs font-black tracking-widest text-pink-700 uppercase dark:text-pink-400">
-                ♀ Hens ({hens.length})
+                F Hens ({hens.length})
               </p>
               <div className="gt-kids">
                 {hens.map((member) => (
@@ -657,7 +657,7 @@ export default function FamilyTree({
       <div className="bg-card border-border flex flex-col gap-4 rounded-3xl border p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-400">
-            🌳 Family Tree — Sire + Dam → Offspring
+             Family Tree — Sire + Dam → Offspring
           </p>
           <p className="text-muted-foreground text-xs font-semibold">
             Each pair shows the sire, dam, and their offspring down to the selected generation.

@@ -296,7 +296,7 @@ function FowlCard({
             {isRetired && <RetiredFighterBadge />}
             {fowl.wing_band ? (
               <span className="text-muted-foreground font-mono text-xs font-bold">
-                🏷 <HighlightText text={fowl.wing_band} query={query} />
+                 <HighlightText text={fowl.wing_band} query={query} />
               </span>
             ) : null}
           </div>
@@ -319,7 +319,7 @@ function FowlCard({
             <div className="text-muted-foreground mt-1 flex items-center gap-1.5 truncate text-xs font-semibold">
               {(fowl.feather_color || fowl.color) && (
                 <span>
-                  🎨 {formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}
+                   {formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}
                 </span>
               )}
               {(fowl.feather_color || fowl.color) && (fowl.trait || fowl.behavior_trait) && (
@@ -327,7 +327,7 @@ function FowlCard({
               )}
               {(fowl.trait || fowl.behavior_trait) && (
                 <span className="font-bold text-emerald-700 dark:text-emerald-300">
-                  ⚡ {fowl.trait || fowl.behavior_trait}
+                   {fowl.trait || fowl.behavior_trait}
                 </span>
               )}
             </div>
@@ -1250,7 +1250,7 @@ export default function MarketplacePage({
         {filteredFowls.length === 0 ? (
           <div className="bg-card border-border mx-auto my-6 max-w-md space-y-3.5 rounded-lg border p-12 text-center shadow-sm">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-2xl text-emerald-600 dark:text-emerald-400">
-              🔍
+
             </div>
             <div className="space-y-1">
               <h2 className="text-card-foreground text-base font-extrabold">

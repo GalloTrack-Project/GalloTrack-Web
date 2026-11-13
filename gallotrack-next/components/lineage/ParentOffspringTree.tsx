@@ -227,7 +227,7 @@ export default function ParentOffspringTree({
                   )}
                   <CrisscrossBadge classification={pair.crisscross} compact />
                   <span className="text-muted-foreground text-[10px] font-semibold">
-                    {pair.totalOffspring} offspring · {pair.maleCount}♂ {pair.femaleCount}♀
+                    {pair.totalOffspring} offspring · {pair.maleCount}M {pair.femaleCount}F
                   </span>
                   <WinRatePill stats={pair.stats} className="ml-auto" />
                   <button

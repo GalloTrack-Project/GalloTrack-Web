@@ -85,7 +85,7 @@ function SexBadge({ chicken }: { chicken: Pick<FowlRecord, 'gender'> }) {
       : 'text-muted-foreground';
   return (
     <span className={`inline-flex items-center gap-1 font-bold ${tone}`}>
-      {label === 'Cock' ? '♂' : label === 'Hen' ? '♀' : ''} {label}
+      {label === 'Cock' ? 'M' : label === 'Hen' ? 'F' : ''} {label}
     </span>
   );
 }
@@ -206,7 +206,7 @@ function SearchEmptyState({ query, onClear }: { query: string; onClear: () => vo
   return (
     <div className="bg-card p-12 text-center rounded-lg border border-border shadow-xs space-y-3.5 max-w-md mx-auto my-6 animate-fadeIn">
       <div className="w-14 h-14 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/20">
-        🔍
+        <Search className="h-6 w-6" aria-hidden="true" />
       </div>
       <div className="space-y-1">
         <h3 className="text-base font-extrabold text-card-foreground">
@@ -1827,7 +1827,7 @@ export default function LineageDirectory({
                           : 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-400 dark:border-pink-800'
                       }`}
                     >
-                      {kind === 'sire' ? '♂ Cock' : '♀ Hen'}
+                      {kind === 'sire' ? 'M Cock' : 'F Hen'}
                     </span>
                     {(activeParentFowl?.breed || activeChildren[0]?.breed) && (
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
@@ -1838,7 +1838,7 @@ export default function LineageDirectory({
                   <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5 flex-wrap mt-0.5">
                     <span>{activeChildren.length} offspring</span>
                     <span className="text-muted-foreground/50 select-none">·</span>
-                    <span>{activeMales}♂ {activeFemales}♀</span>
+                    <span>{activeMales}M {activeFemales}F</span>
                     <span className="text-muted-foreground/50 select-none">·</span>
                     <span className={c.text}>
                       {pairGroups.length} {otherLabel}{pairGroups.length !== 1 ? 's' : ''}
@@ -1974,7 +1974,7 @@ export default function LineageDirectory({
                       </span>
                       <span className="text-muted-foreground/60 select-none">·</span>
                       <span className="text-xs text-muted-foreground font-semibold shrink-0">
-                        {pg.maleCount}♂ {pg.femaleCount}♀
+                        {pg.maleCount}M {pg.femaleCount}F
                       </span>
                       {pg.archivedCount > 0 && (
                         <>
@@ -2030,7 +2030,7 @@ export default function LineageDirectory({
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
-                            ♂ Cocks ({pg.maleCount})
+                            M Cocks ({pg.maleCount})
                           </button>
                           <button
                             type="button"
@@ -2041,7 +2041,7 @@ export default function LineageDirectory({
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
-                            ♀ Hens ({pg.femaleCount})
+                            F Hens ({pg.femaleCount})
                           </button>
                         </div>
 
@@ -2247,7 +2247,7 @@ export default function LineageDirectory({
                                           colSpan={7}
                                           className="py-1 px-2.5 text-xs font-bold text-sky-700 dark:text-sky-400 tracking-wide"
                                         >
-                                          ♂ Cocks ({males.length})
+                                          M Cocks ({males.length})
                                         </td>
                                       </tr>
                                     )}
@@ -2258,7 +2258,7 @@ export default function LineageDirectory({
                                           colSpan={7}
                                           className="py-1 px-2.5 text-xs font-bold text-pink-700 dark:text-pink-400 tracking-wide"
                                         >
-                                          ♀ Hens ({females.length})
+                                          F Hens ({females.length})
                                         </td>
                                       </tr>
                                     )}
@@ -2438,13 +2438,13 @@ export default function LineageDirectory({
                                     <>
                                       {males.length > 0 && (
                                         <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-xs font-bold text-sky-700 dark:text-sky-400">
-                                          ♂ Cocks ({males.length})
+                                          M Cocks ({males.length})
                                         </div>
                                       )}
                                       {males.map(renderCard)}
                                       {females.length > 0 && (
                                         <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-xs font-bold text-pink-700 dark:text-pink-400 mt-2">
-                                          ♀ Hens ({females.length})
+                                          F Hens ({females.length})
                                         </div>
                                       )}
                                       {females.map(renderCard)}
@@ -2783,7 +2783,7 @@ export default function LineageDirectory({
                               {mc.name}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {mc.gender === 'Female' ? '♀' : '♂'}
+                              {mc.gender === 'Female' ? 'F' : 'M'}
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground truncate">

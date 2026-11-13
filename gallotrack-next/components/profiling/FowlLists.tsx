@@ -16,6 +16,7 @@ import { inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
 import ChickenPhoto from '@/components/ChickenPhoto';
+import { Search, Egg, Archive, Skull, Dna, Ban, Mars, Venus } from 'lucide-react';
 import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
 import {
   getBreedingClassification,
@@ -138,7 +139,7 @@ function FowlCard({
             <HighlightText text={fowl.name} query={highlightQuery} />
           </h4>
           {fowl.wing_band && fowl.wing_band.trim().toLowerCase() !== normalizeBirdCode(fowl.bird_code).toLowerCase() ? (
-            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title={t('registry.wingBandTooltip')}>🏷 <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
+            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title={t('registry.wingBandTooltip')}> <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
           <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{displayBreed}</span>
           <BreedingTypeBadge classification={classification} />
@@ -273,7 +274,7 @@ function InventoryMovedPanel({
   return (
     <div className="bg-white dark:bg-card p-8 sm:p-12 text-center rounded-xl border border-slate-200/80 dark:border-border shadow-sm space-y-4 max-w-xl mx-auto my-6 animate-fadeIn">
       <div className={`w-14 h-14 rounded-2xl ${isArchived ? 'bg-amber-50 dark:bg-amber-500/10 text-warning border border-amber-100 dark:border-amber-900/40' : 'bg-rose-50 dark:bg-rose-500/10 text-danger border border-rose-100 dark:border-rose-900/40'} flex items-center justify-center text-2xl mx-auto shadow-xs`}>
-        {isArchived ? '📦' : '💀'}
+        {isArchived ? <Archive className="h-6 w-6" aria-hidden="true" /> : <Skull className="h-6 w-6" aria-hidden="true" />}
       </div>
       <div className="space-y-1.5">
         <h2 className="text-base font-black text-slate-900 dark:text-foreground">
@@ -605,7 +606,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
   const filteredEmpty = (
     <div className="bg-white dark:bg-card p-8 sm:p-12 text-center rounded-xl border border-slate-200/80 dark:border-border shadow-sm space-y-4 max-w-lg mx-auto my-6 animate-fadeIn">
       <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto shadow-xs border border-emerald-100 dark:border-emerald-900/40">
-        🔍
+        <Search className="h-6 w-6" aria-hidden="true" />
       </div>
       <div className="space-y-1.5">
         <h3 className="text-base font-bold text-slate-900 dark:text-foreground">
@@ -664,7 +665,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     const birds = paginatedBirds.list;
     const pagedList = paginatedBirds.pagedList;
     const totalPages = paginatedBirds.totalPages;
-    const tabIcon = isMaleTab ? '🐓' : '🐔';
+    const tabIcon = isMaleTab ? <Mars className="h-5 w-5" aria-hidden="true" /> : <Venus className="h-5 w-5" aria-hidden="true" />;
     const tabLabel = isMaleTab ? t('registry.maleRegistryTitle') : t('registry.femaleRegistryTitle');
     const tabSub = isMaleTab ? t('registry.maleRegistryDesc') : t('registry.femaleRegistryDesc');
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';
@@ -730,7 +731,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       <div className="space-y-4 animate-fadeIn">
         <div className="bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-teal-500">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal">🥚</div>
+            <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal"></div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">{t('registry.offspringRegistryTitle')}</h2>
               <p className="text-xs text-muted-foreground font-semibold">{t('registry.offspringRegistryDesc')}</p>
@@ -791,7 +792,13 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
         ) : paginatedBirds.list.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className="w-16 h-16 bg-teal-50 dark:bg-teal-500/10 text-teal rounded-full flex items-center justify-center text-3xl mx-auto">
-              {category === 'breeding-stock' ? '🧬' : category === 'non-breeding' ? '🚫' : '🥚'}
+              {category === 'breeding-stock' ? (
+                <Dna className="h-7 w-7" aria-hidden="true" />
+              ) : category === 'non-breeding' ? (
+                <Ban className="h-7 w-7" aria-hidden="true" />
+              ) : (
+                <Egg className="h-7 w-7" aria-hidden="true" />
+              )}
             </div>
             <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">
               {category === 'breeding-stock'

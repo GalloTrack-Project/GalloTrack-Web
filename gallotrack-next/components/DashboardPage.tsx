@@ -248,7 +248,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      
+
       {/* HEADER CARDS */}
       <div className="rounded-lg border border-border bg-card/70 p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
@@ -632,7 +632,7 @@ export default function DashboardPage() {
                 const overdue = info.next !== null && info.next!.daysUntil < 0;
                 return (
                   <div key={fowl.id} className={`flex flex-wrap items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
-                    <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center text-base shrink-0">{info.current?.icon || '🐤'}</span>
+                    <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center shrink-0"><ChickenIcon className="h-5 w-5" aria-hidden="true" /></span>
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-black text-card-foreground" title={fowl.name}>
                         {fowl.name}

@@ -26,6 +26,10 @@ import {
   Eye,
   Loader2,
   RefreshCw,
+  Mars,
+  Venus,
+  Egg,
+  Link2,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
 import { sexLabel, parentBreedOf, isFemale, canFight } from '@/lib/helpers';
@@ -365,7 +369,7 @@ function CodingSystemExplainer({
           </div>
         </div>
         <p className="text-muted-foreground mt-3 text-xs font-semibold">
-          💡 You may also add a descriptive name:{' '}
+           You may also add a descriptive name:{' '}
           <strong className="text-card-foreground">Lemon Ground Red · 1A₁</strong>
         </p>
       </div>
@@ -526,7 +530,7 @@ function BreedingPairCard({
             className="cursor-pointer rounded-xl border border-sky-200 bg-sky-50 p-2.5 text-left transition-colors hover:bg-sky-100 disabled:cursor-default dark:border-sky-800 dark:bg-sky-950/30 dark:hover:bg-sky-950/50"
           >
             <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
-              🐓 Sire
+               Sire
             </p>
             <p className="text-card-foreground truncate text-xs font-black">{pair.sire_name}</p>
             <p className="text-muted-foreground text-xs font-semibold">
@@ -541,7 +545,7 @@ function BreedingPairCard({
             className="cursor-pointer rounded-xl border border-pink-200 bg-pink-50 p-2.5 text-left transition-colors hover:bg-pink-100 disabled:cursor-default dark:border-pink-800 dark:bg-pink-950/30 dark:hover:bg-pink-950/50"
           >
             <p className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">
-              🐔 Dam
+               Dam
             </p>
             <p className="text-card-foreground truncate text-xs font-black">{pair.dam_name}</p>
             <p className="text-muted-foreground text-xs font-semibold">
@@ -553,7 +557,7 @@ function BreedingPairCard({
 
         {pair.notes && (
           <p className="text-muted-foreground bg-muted/30 mb-3 rounded-lg px-3 py-2 text-xs font-semibold">
-            📝 {pair.notes}
+             {pair.notes}
           </p>
         )}
 
@@ -769,7 +773,7 @@ function AddPairingForm({
             htmlFor="pair-sire"
             className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400"
           >
-            🐓 Sire
+             Sire
           </label>
           <select
             id="pair-sire"
@@ -791,7 +795,7 @@ function AddPairingForm({
             htmlFor="pair-dam"
             className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400"
           >
-            🐔 Dam
+             Dam
           </label>
           <select
             id="pair-dam"
@@ -812,8 +816,8 @@ function AddPairingForm({
 
       {conflict?.kind === 'occupied' && (
         <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-800 dark:bg-rose-950/40">
-          <span className="mt-0.5 shrink-0 text-sm leading-none text-rose-600 dark:text-rose-400">
-            ⛔
+          <span className="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
             <p className="text-xs font-black tracking-widest text-rose-600 uppercase dark:text-rose-400">
@@ -831,8 +835,8 @@ function AddPairingForm({
 
       {conflict?.kind === 'couple' && (
         <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-950/40">
-          <span className="mt-0.5 shrink-0 text-sm leading-none text-sky-600 dark:text-sky-400">
-            ℹ️
+          <span className="mt-0.5 shrink-0 text-sky-600 dark:text-sky-400">
+            <Info className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
             <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
@@ -1444,13 +1448,13 @@ function BirdIdentityCard({
         <div className="border-border text-muted-foreground mt-2 flex items-center gap-3 border-t pt-2 text-xs font-semibold">
           {fowl.sire && (
             <span>
-              🐓 Sire: <strong className="text-card-foreground">{fowl.sire}</strong>
+               Sire: <strong className="text-card-foreground">{fowl.sire}</strong>
               {sireBreed ? ` · ${sireBreed}` : ''}
             </span>
           )}
           {fowl.dam && (
             <span>
-              🐔 Dam: <strong className="text-card-foreground">{fowl.dam}</strong>
+               Dam: <strong className="text-card-foreground">{fowl.dam}</strong>
               {damBreed ? ` · ${damBreed}` : ''}
             </span>
           )}
@@ -1738,33 +1742,41 @@ export default function BreedingHub({
               label: 'Breeding Males',
               value: totalMales,
               color: 'text-sky-600 dark:text-sky-400',
-              icon: '🐓',
+              icon: Mars,
+              iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400',
               sub: 'Coded: 1, 2, 3...',
             },
             {
               label: 'Breeding Females',
               value: totalFemales,
               color: 'text-pink-600 dark:text-pink-400',
-              icon: '🐔',
+              icon: Venus,
+              iconBg: 'bg-pink-100 text-pink-600 dark:bg-pink-950/50 dark:text-pink-400',
               sub: 'Coded: A, B, C...',
             },
             {
               label: ROLE_LABEL['Non-Breeding'],
               value: totalOffspring,
-              color: 'text-emerald-600 dark:text-emerald-400',
-              icon: '🐥',
+              color: 'text-amber-600 dark:text-amber-400',
+              icon: Egg,
+              iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400',
               sub: 'Coded: 1A₁, 1A₂...',
             },
             {
               label: 'Active Pairs',
               value: activePairs,
-              color: 'text-rose-600 dark:text-rose-400',
-              icon: '❤️',
+              color: 'text-emerald-600 dark:text-emerald-400',
+              icon: Link2,
+              iconBg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400',
               sub: 'Breeding pairs',
             },
           ].map((s) => (
             <div key={s.label} className="bg-muted/40 flex items-center gap-3 rounded-2xl p-4">
-              <span className="shrink-0 text-2xl">{s.icon}</span>
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.iconBg}`}
+              >
+                <s.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
               <div className="min-w-0">
                 <p className={`text-2xl font-black ${s.color} leading-none`}>{s.value}</p>
                 <p className="text-muted-foreground mt-0.5 text-xs font-bold tracking-wide uppercase">

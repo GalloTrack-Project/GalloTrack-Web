@@ -1020,7 +1020,7 @@ export default function PedigreeTree({
               <div className="block md:hidden">
                 <details className="border-border bg-card/60 rounded-md border">
                   <summary className="text-muted-foreground cursor-pointer px-3 py-2 text-xs font-bold select-none">
-                    📜 Mobile Pedigree Lineage List (tap to view)
+                     Mobile Pedigree Lineage List (tap to view)
                   </summary>
                   <ul className="border-border divide-border space-y-1 divide-y border-t px-3 pt-1 pb-3">
                     {nodes.map((node) => (

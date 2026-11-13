@@ -33,6 +33,7 @@ import {
   Plus,
   RotateCcw,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 import { useT } from '@/lib/i18n';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
@@ -859,14 +860,14 @@ export default function EncodeForm({
                     {birdCode.trim() ? (
                       <>
                         {formatCheck && !formatCheck.valid ? (
-                          <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {formatCheck.error}</span>
+                          <span className="text-rose-600 dark:text-rose-400 font-bold"> {formatCheck.error}</span>
                         ) : isDuplicate ? (
                           <span className="text-rose-600 dark:text-rose-400 font-bold">{t('registry.idAlreadyInUse', { code: birdCode.trim() })}</span>
                         ) : (
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold">{t('registry.validFormatForRole', { role: currentRole })}</span>
                         )}
                         {!parentCheck.matches && parentCheck.warning && (
-                          <span className="text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded p-1">⚠️ {parentCheck.warning}</span>
+                          <span className="text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded p-1"> {parentCheck.warning}</span>
                         )}
                       </>
                     ) : (
@@ -1238,13 +1239,13 @@ export default function EncodeForm({
           />
           {birthdateValidation.errors.map((err, i) => (
             <p key={`bd-err-${i}`} className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
-              <span>⚠️</span>
+              <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{err}</span>
             </p>
           ))}
           {birthdateValidation.warnings.map((warn, i) => (
             <p key={`bd-warn-${i}`} className="mt-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
-              <span>⚠️</span>
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{warn}</span>
             </p>
           ))}

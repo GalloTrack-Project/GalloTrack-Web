@@ -143,7 +143,7 @@ key-by-key enumeration with status and reason is the CSV.
 | `registry.fullSiblingsNotice` | ✓ {count} full sibling(s) with current dam | ✓ {count} bilog nga utod kaupod ang subong nga dam | "bilog" (whole) and "utod" (sibling) both need confirmation. |
 | `registry.lineageResolved` | Lineage resolved | Nahusay ang Kaliwat | "nahusay" (clean/neat) as "resolved" needs confirmation. |
 | `registry.matchingColors` | Matching colors | Nagasanto nga mga kolor | "nagasanto" (matched) needs confirmation. |
-| `registry.existingOffspringSiblings` | 👤 Existing Offspring & Siblings | 👤 Mga Yara nga Bata kag Utod | "Yara" (relatives) is uncertain; "Utod" (sibling) needs confirmation. |
+| `registry.existingOffspringSiblings` | Existing Offspring & Siblings | Mga Yara nga Bata kag Utod | "Yara" (relatives) is uncertain; "Utod" (sibling) needs confirmation. |
 | `registry.awaitingParents` | Awaiting Parents | Nagahulat sang Sire kag Dam | Changed in this review (glossary + consultant wording); confirm the verb "nagahulat". |
 | `registry.viewChildrenTitle` | View {count} children of {name} | Tan-awa ang {count} ka bata sang {name} | Changed in this review from "pisu" to "bata"; confirm "tan-awa". |
 | `registry.offspringOf` | Offspring of {name} | Mga Bata sang {name} | Changed in this review (plural noun rule). |
@@ -172,7 +172,7 @@ domain coinages, English loans, or wording changed during this review.
 | `registry.trait` | Trait | Katangian / Trait | "Katangian" is generic; confirm the term breeders use for gamefowl traits. |
 | `registry.genderClass` | Sex & Class | Kasarian at Klase | "Klase" is a direct English loan; "Uri" may be clearer. |
 | `registry.awaitingParents` | Awaiting Parents | Naghihintay ng Sire at Dam | Changed in this review (glossary: Parents = "Sire at Dam"). |
-| `registry.existingOffspringSiblings` | 👤 Existing Offspring & Siblings | 👤 Mga Kasalukuyang Anak at Kapatid | Changed in this review (plural noun rule). |
+| `registry.existingOffspringSiblings` | Existing Offspring & Siblings | Mga Kasalukuyang Anak at Kapatid | Changed in this review (plural noun rule). |
 | `registry.viewChildrenTitle` | View {count} children of {name} | Tingnan ang {count} na anak ng {name} | Changed in this review (was "inakay"). |
 | `registry.offspringOf` | Offspring of {name} | Mga Anak ng {name} | Changed in this review (plural noun rule). |
 | `registry.noOffspringDesc` | No offspring chickens found in the registry. | Walang nakitang mga anak sa rehistro. | Changed in this review (plural noun rule). |
