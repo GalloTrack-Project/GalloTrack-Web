@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { Eye, Award } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import { sexLabel, isMale, isFemale } from '@/lib/helpers';
 import { parentHasRequiredSex, parentSexMismatchMessage } from '@/lib/parent-sex';
 import type { FowlRecord } from '@/lib/types';
@@ -71,7 +72,11 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
 
 export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
   const { t } = useT();
+  const generatedId = useId().replace(/:/g, '');
+  const inputId = id ?? `gt-parent-${generatedId}`;
+  const listboxId = `${inputId}-listbox`;
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [text, setText] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
   const [expandedSire, setExpandedSire] = useState<string | null>(null);
@@ -88,7 +93,10 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setActiveIndex(-1);
+      }
     };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
@@ -156,6 +164,70 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
   );
   const suggestedCode = nextFoundationCode(preferredGender, takenCodes);
 
+  const selectParent = (fowl: FowlRecord) => {
+    setText(fowl.name);
+    onChange(fowl.name);
+    if (onPick) onPick(fowl);
+    setOpen(false);
+    setActiveIndex(-1);
+  };
+
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!open) {
+        setOpen(true);
+        setActiveIndex(breederCandidates.length > 0 ? 0 : -1);
+        return;
+      }
+      setActiveIndex((current) =>
+        breederCandidates.length === 0
+          ? -1
+          : (current + 1) % breederCandidates.length,
+      );
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!open) {
+        setOpen(true);
+        setActiveIndex(
+          breederCandidates.length > 0 ? breederCandidates.length - 1 : -1,
+        );
+        return;
+      }
+      setActiveIndex((current) =>
+        breederCandidates.length === 0
+          ? -1
+          : current <= 0
+            ? breederCandidates.length - 1
+            : current - 1,
+      );
+      return;
+    }
+
+    if (event.key === 'Enter' && open && activeIndex >= 0) {
+      const activeParent = breederCandidates[activeIndex];
+      if (activeParent) {
+        event.preventDefault();
+        selectParent(activeParent);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      setOpen(false);
+      setActiveIndex(-1);
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      setOpen(false);
+      setActiveIndex(-1);
+    }
+  };
+
   const handleConfirmPromotion = async (assignedCode: string) => {
     if (!promotingFowl || !fowlContext) return;
     const res = await fowlContext.handlePromoteToBreeder(promotingFowl, targetRole, assignedCode);
@@ -171,12 +243,28 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
 
   return (
     <div ref={boxRef} className="relative">
-      <input
-        id={id}
+      <ComboboxInput
+        id={inputId}
         type="text"
         value={text}
-        onChange={(e) => { setText(e.target.value); onChange(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
+        onChange={(e) => {
+          setText(e.target.value);
+          onChange(e.target.value);
+          setOpen(true);
+          setActiveIndex(-1);
+        }}
+        onFocus={() => {
+          setOpen(true);
+          setActiveIndex(-1);
+        }}
+        onKeyDown={handleInputKeyDown}
+        expanded={open}
+        controls={open ? listboxId : undefined}
+        activeOptionId={
+          open && activeIndex >= 0
+            ? `${listboxId}-option-${activeIndex}`
+            : undefined
+        }
         className={`w-full ${pad} border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />
@@ -186,7 +274,16 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
         </p>
       )}
       {open && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label={
+            preferredGender === 'Male'
+              ? 'Breeding sires and offspring cocks'
+              : 'Breeding dams and offspring hens'
+          }
+          className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto"
+        >
           {/* SECTION 1: Breeding Stock (Exclusive role) */}
           <div className="px-3 py-2 bg-slate-50 dark:bg-muted/50 border-b border-slate-100 dark:border-border text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center justify-between">
             <span>{preferredGender === 'Male' ? 'Breeding Males (Sires)' : 'Breeding Females (Dams)'}</span>
@@ -194,7 +291,7 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
           </div>
 
           {breederCandidates.length > 0 ? (
-            breederCandidates.map((f) => {
+            breederCandidates.map((f, index) => {
               const children = getChildrenOf(f.name, fowls, parentGender);
               const isExpanded = expandedItem === f.name;
               const displayCode = f.chicken_code || f.bird_code;
@@ -202,15 +299,23 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
 
               return (
                 <div key={f.id} className="border-b border-slate-50 dark:border-border last:border-b-0">
-                  <div className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 dark:hover:bg-muted/50 text-left cursor-pointer group">
+                  <div
+                    className={`flex items-center gap-2.5 px-3 py-2.5 text-left cursor-pointer group ${
+                      index === activeIndex
+                        ? 'bg-emerald-50 dark:bg-muted/50'
+                        : 'hover:bg-emerald-50 dark:hover:bg-muted/50'
+                    }`}
+                    onMouseEnter={() => setActiveIndex(index)}
+                  >
                     <button
                       type="button"
+                      id={`${listboxId}-option-${index}`}
+                      role="option"
+                      aria-selected={text.trim().toLowerCase() === f.name.trim().toLowerCase()}
+                      tabIndex={-1}
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        setText(f.name);
-                        onChange(f.name);
-                        if (onPick) onPick(f);
-                        setOpen(false);
+                        selectParent(f);
                       }}
                       className="flex-1 flex items-center gap-2.5 min-w-0"
                     >

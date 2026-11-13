@@ -1,6 +1,8 @@
 export { cn } from './utils';
+export { default as AutocompleteCombobox } from './AutocompleteCombobox';
 export { Badge, badgeVariants } from './Badge';
 export { Breadcrumbs } from './Breadcrumbs';
+export { default as ComboboxInput } from './ComboboxInput';
 export { Button, buttonVariants } from './Button';
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card';
 export { EmptyState } from './EmptyState';
@@ -19,8 +21,10 @@ export { Tabs } from './Tabs';
 export { ToastProvider, useToast } from './Toast';
 export { Tooltip } from './Tooltip';
 
+export type { AutocompleteComboboxProps, AutocompleteOption } from './AutocompleteCombobox';
 export type { BadgeProps } from './Badge';
 export type { BreadcrumbItem, BreadcrumbsProps } from './Breadcrumbs';
+export type { ComboboxInputProps } from './ComboboxInput';
 export type { ButtonProps } from './Button';
 export type { EmptyStateProps } from './EmptyState';
 export type { FieldControlProps, FormFieldProps } from './FormField';

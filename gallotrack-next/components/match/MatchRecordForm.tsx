@@ -35,6 +35,7 @@ import {
   validateVideoFile,
 } from '@/lib/media-format';
 import { filterAllowedColumns } from '@/lib/schema-contract';
+import AutocompleteCombobox from '@/components/ui/AutocompleteCombobox';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
 
 function SelectChevron() {
@@ -754,6 +755,7 @@ export default function MatchRecordForm({
       <form
         onSubmit={handleSubmit}
         noValidate
+        autoComplete="off"
         className="match-form-scroll bg-card border-border space-y-8 rounded-xl border p-6 shadow-sm sm:space-y-10 sm:p-8 lg:p-10"
       >
         {/* Section 1: Match Details */}
@@ -916,34 +918,33 @@ export default function MatchRecordForm({
             <div>
               <label
                 className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase sm:text-sm"
-                htmlFor="arena-location-hub"
+                htmlFor="gt-arena-location"
               >
                 Arena Location Hub{' '}
                 {settings.match_location_required && <span className="text-danger">*</span>}
               </label>
-              <input
-                list="arena-locations"
-                id="arena-location-hub"
+              <AutocompleteCombobox
+                id="gt-arena-location"
                 value={form.matchLocation}
-                onChange={(e) => {
-                  setForm((prev) => ({ ...prev, matchLocation: e.target.value }));
+                onChange={(value) => {
+                  setForm((prev) => ({ ...prev, matchLocation: value }));
                   if (errors.matchLocation) setErrors((prev) => ({ ...prev, matchLocation: '' }));
                 }}
-                className={inputClass(!!errors.matchLocation)}
+                options={locationOptions.map((option) => ({
+                  value: option.value,
+                  label: option.label || option.value,
+                }))}
+                inputClassName={inputClass(!!errors.matchLocation)}
                 placeholder={
                   settings.match_location_required
                     ? 'Select or type arena...'
                     : 'Select or type arena (optional)...'
                 }
                 required={settings.match_location_required}
-                aria-invalid={!!errors.matchLocation}
-                aria-describedby={errors.matchLocation ? 'err-location' : undefined}
+                ariaInvalid={!!errors.matchLocation}
+                ariaDescribedBy={errors.matchLocation ? 'err-location' : undefined}
+                listboxLabel="Arena locations"
               />
-              <datalist id="arena-locations">
-                {locationOptions.map((o) => (
-                  <option key={o.value} value={o.value} />
-                ))}
-              </datalist>
               {errors.matchLocation && (
                 <p
                   id="err-location"

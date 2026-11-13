@@ -28,7 +28,7 @@ const fowls: FowlRecord[] = [
 describe('ParentSelector sex enforcement', () => {
   it('sire picker lists cocks only and excludes hens', () => {
     render(<ParentSelector value="" onChange={vi.fn()} fowls={fowls} preferredGender="Male" />);
-    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.focus(screen.getByRole('combobox'));
 
     expect(screen.getByText('Good Sire')).toBeInTheDocument();
     expect(screen.getByText('Offspring Cock')).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('ParentSelector sex enforcement', () => {
     render(
       <ParentSelector value="" onChange={vi.fn()} fowls={fowls} preferredGender="Female" accent="amber" />
     );
-    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.focus(screen.getByRole('combobox'));
 
     expect(screen.getByText('Good Dam')).toBeInTheDocument();
     expect(screen.getByText('Offspring Hen')).toBeInTheDocument();
@@ -72,5 +72,56 @@ describe('ParentSelector sex enforcement', () => {
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Dam must be female (hen)');
     expect(alert).toHaveTextContent('"Mislabeled Cock" is recorded as Cock');
+  });
+});
+
+describe('ParentSelector autocomplete safety', () => {
+  it('uses the shared combobox attributes and selects with the keyboard', () => {
+    const onChange = vi.fn();
+    render(
+      <ParentSelector
+        id="gt-edit-sire"
+        value=""
+        onChange={onChange}
+        fowls={fowls}
+        preferredGender="Male"
+      />,
+    );
+
+    const input = screen.getByRole('combobox');
+    expect(input).toHaveAttribute('autocomplete', 'off');
+    expect(input).toHaveAttribute('id', 'gt-edit-sire');
+    expect(input).toHaveAttribute('name', 'gt-edit-sire');
+    expect(input).toHaveAttribute('aria-autocomplete', 'list');
+    expect(input).toHaveAttribute('aria-haspopup', 'listbox');
+
+    fireEvent.focus(input);
+    expect(input).toHaveAttribute('aria-expanded', 'true');
+    expect(input).toHaveAttribute('aria-controls', 'gt-edit-sire-listbox');
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input).toHaveAttribute(
+      'aria-activedescendant',
+      'gt-edit-sire-listbox-option-0',
+    );
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('Good Sire');
+  });
+
+  it('selects a parent with the mouse', () => {
+    const onChange = vi.fn();
+    render(
+      <ParentSelector
+        id="gt-edit-sire"
+        value=""
+        onChange={onChange}
+        fowls={fowls}
+        preferredGender="Male"
+      />,
+    );
+
+    fireEvent.focus(screen.getByRole('combobox'));
+    fireEvent.mouseDown(screen.getAllByRole('option')[0]);
+    expect(onChange).toHaveBeenCalledWith('Good Sire');
   });
 });

@@ -4,6 +4,7 @@ import { Pencil, Tag, Ruler, Calendar, TreePine, Lock, Edit3, RotateCcw } from '
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
 import ParentSelector from './ParentSelector';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
+import AutocompleteCombobox from '@/components/ui/AutocompleteCombobox';
 import {
   getDescendantFowls,
   validateDeclaredComposition,
@@ -120,6 +121,7 @@ export default function EditFowlModal({
   editLegColor,
   setEditLegColor,
   availableLegColors,
+  customLegColorNames,
   deleteCustomLegColor,
   editSire,
   setEditSire,
@@ -249,6 +251,7 @@ export default function EditFowlModal({
           }
           handleUpdateFowl(e);
         }}
+        autoComplete="off"
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
         <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
@@ -275,53 +278,22 @@ export default function EditFowlModal({
             <div className="relative z-30">
               <label
                 className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
-                htmlFor="genetic-strain"
+                htmlFor="gt-edit-genetic-strain"
               >
                 Genetic Strain
               </label>
-              <input
-                type="text"
+              <AutocompleteCombobox
+                id="gt-edit-genetic-strain"
                 value={editBreed}
-                onChange={(e) => setEditBreed(e.target.value)}
-                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+                onChange={setEditBreed}
+                options={availableStrains}
                 placeholder="Select or type strain"
                 required
-                id="genetic-strain"
+                listboxLabel={t('registry.geneticStrain')}
+                inputClassName="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+                onDeleteOption={deleteCustomStrain}
+                canDeleteOption={(strain) => customStrainNames.has(strain)}
               />
-              {availableStrains.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {availableStrains
-                    .filter(
-                      (s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed,
-                    )
-                    .slice(0, 5)
-                    .map((s) => (
-                      <div
-                        key={s}
-                        className="dark:bg-muted group flex items-center rounded-full bg-slate-100"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setEditBreed(s)}
-                          className="dark:text-muted-foreground cursor-pointer px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700 dark:hover:text-emerald-300"
-                        >
-                          {s}
-                        </button>
-                        {customStrainNames.has(s) && (
-                          <button
-                            type="button"
-                            onClick={() => deleteCustomStrain(s)}
-                            aria-label={`Delete ${s}`}
-                            className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
-                            title={`Delete "${s}"`}
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
             </div>
             <div>
               <label
@@ -371,7 +343,7 @@ export default function EditFowlModal({
             <div>
               <label
                 className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
-                htmlFor="edit-feather-color"
+                htmlFor="gt-edit-feather-color"
               >
                 Feather Color
                 {isCustomColor && (
@@ -380,14 +352,12 @@ export default function EditFowlModal({
                   </span>
                 )}
               </label>
-              <input
-                type="text"
-                list="edit-feather-color-options"
+              <AutocompleteCombobox
+                id="gt-edit-feather-color"
                 value={editColor}
-                onChange={(e) => {
-                  const c = e.target.value;
-                  setEditColor(c);
-                  setEditColorCategory(c.toLowerCase().includes('red') ? 'Red' : 'Light Color');
+                onChange={(value) => {
+                  setEditColor(value);
+                  setEditColorCategory(value.toLowerCase().includes('red') ? 'Red' : 'Light Color');
                 }}
                 onBlur={() => {
                   if (editColor) {
@@ -399,22 +369,19 @@ export default function EditFowlModal({
                     );
                   }
                 }}
+                options={featherColorOptions.map((option) => ({
+                  value: option.value,
+                  label: option.label || option.value,
+                }))}
                 placeholder="Select or enter feather color..."
-                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
-                id="edit-feather-color"
+                listboxLabel={t('registry.featherColor')}
+                inputClassName="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
               />
-              <datalist id="edit-feather-color-options">
-                {featherColorOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label || opt.value}
-                  </option>
-                ))}
-              </datalist>
             </div>
             <div>
               <label
                 className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
-                htmlFor="edit-behavior-trait"
+                htmlFor="gt-edit-behavior-trait"
               >
                 Trait
                 {isCustomTrait && (
@@ -423,11 +390,10 @@ export default function EditFowlModal({
                   </span>
                 )}
               </label>
-              <input
-                type="text"
-                list="edit-trait-options"
+              <AutocompleteCombobox
+                id="gt-edit-behavior-trait"
                 value={editBehaviorTrait}
-                onChange={(e) => setEditBehaviorTrait(e.target.value)}
+                onChange={setEditBehaviorTrait}
                 onBlur={() => {
                   if (editBehaviorTrait) {
                     setEditBehaviorTrait(
@@ -438,17 +404,14 @@ export default function EditFowlModal({
                     );
                   }
                 }}
+                options={traitOptions.map((option) => ({
+                  value: option.value,
+                  label: option.label || option.value,
+                }))}
                 placeholder="Select or enter trait..."
-                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
-                id="edit-behavior-trait"
+                listboxLabel={t('registry.trait')}
+                inputClassName="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
               />
-              <datalist id="edit-trait-options">
-                {traitOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label || opt.value}
-                  </option>
-                ))}
-              </datalist>
             </div>
           </div>
         </div>
@@ -598,51 +561,21 @@ export default function EditFowlModal({
           <div className="mt-2">
             <label
               className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
-              htmlFor="leg-color"
+              htmlFor="gt-edit-leg-color"
             >
               Leg Color
             </label>
-            <input
-              type="text"
+            <AutocompleteCombobox
+              id="gt-edit-leg-color"
               value={editLegColor}
-              onChange={(e) => setEditLegColor(e.target.value)}
-              className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+              onChange={setEditLegColor}
+              options={availableLegColors}
               placeholder="Select or type a leg color..."
-              id="leg-color"
+              listboxLabel={t('registry.legColor')}
+              inputClassName="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+              onDeleteOption={deleteCustomLegColor}
+              canDeleteOption={(color) => customLegColorNames.has(color)}
             />
-            {availableLegColors.length > 0 && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {availableLegColors
-                  .filter(
-                    (s) =>
-                      s.toLowerCase().includes(editLegColor.toLowerCase()) && s !== editLegColor,
-                  )
-                  .slice(0, 5)
-                  .map((s) => (
-                    <div
-                      key={s}
-                      className="dark:bg-muted group flex items-center rounded-full bg-slate-100"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setEditLegColor(s)}
-                        className="dark:text-muted-foreground cursor-pointer px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"
-                      >
-                        {s}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteCustomLegColor(s)}
-                        aria-label={`Delete ${s}`}
-                        className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
-                        title={`Delete "${s}"`}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-              </div>
-            )}
           </div>
         </div>
 
@@ -787,14 +720,14 @@ export default function EditFowlModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
-                htmlFor="edit-sire"
+                htmlFor="gt-edit-sire"
                 className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
               >
                 Sire (Father){' '}
                 <span className="text-muted-foreground font-normal lowercase">(optional)</span>
               </label>
               <ParentSelector
-                id="edit-sire"
+                id="gt-edit-sire"
                 value={editSire}
                 onChange={(v) => {
                   setEditSire(v);
@@ -809,14 +742,14 @@ export default function EditFowlModal({
             </div>
             <div>
               <label
-                htmlFor="edit-dam"
+                htmlFor="gt-edit-dam"
                 className="text-muted-foreground mb-1 block text-xs font-bold uppercase"
               >
                 Dam (Mother){' '}
                 <span className="text-muted-foreground font-normal lowercase">(optional)</span>
               </label>
               <ParentSelector
-                id="edit-dam"
+                id="gt-edit-dam"
                 value={editDam}
                 onChange={(v) => {
                   setEditDam(v);

@@ -310,6 +310,9 @@ export default function DeclaredCompositionEditor({
                       {/* Breed selector */}
                       <div className="min-w-[140px] flex-1">
                         <select
+                          id={`gt-offspring-breed-share-${idx + 1}`}
+                          name={`gt-offspring-breed-share-${idx + 1}`}
+                          autoComplete="off"
                           disabled={disabled}
                           value={item.breed}
                           onChange={(e) => handleRowChange(idx, 'breed', e.target.value)}
@@ -519,6 +522,9 @@ export default function DeclaredCompositionEditor({
                             </div>
                           ) : (
                             <select
+                              id={`gt-foundation-breed-share-${idx + 1}`}
+                              name={`gt-foundation-breed-share-${idx + 1}`}
+                              autoComplete="off"
                               disabled={disabled}
                               value={item.breed}
                               onChange={(e) => handleRowChange(idx, 'breed', e.target.value)}

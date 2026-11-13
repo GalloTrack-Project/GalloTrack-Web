@@ -10,6 +10,8 @@ import {
 } from '@/lib/bloodline-composition';
 import ParentSelector from '@/components/modals/ParentSelector';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
+import AutocompleteCombobox from '@/components/ui/AutocompleteCombobox';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import DeclaredCompositionEditor from './DeclaredCompositionEditor';
 import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
 import {
@@ -190,6 +192,23 @@ export default function EncodeForm({
   const [legColorDropdownPos, setLegColorDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [strainError, setStrainError] = useState<string | null>(null);
+  const [activeStrainIndex, setActiveStrainIndex] = useState(-1);
+  const [activeLegColorIndex, setActiveLegColorIndex] = useState(-1);
+
+  const strainMatchingOptions = useMemo(() => {
+    const query = strainQuery.trim().toLowerCase();
+    return query
+      ? availableStrains.filter((strain) => strain.toLowerCase().includes(query))
+      : availableStrains;
+  }, [availableStrains, strainQuery]);
+
+  const legColorMatchingOptions = useMemo(() => {
+    const query = legColorQuery.trim().toLowerCase();
+    const matches = query
+      ? availableLegColors.filter((color) => color.toLowerCase().includes(query))
+      : availableLegColors;
+    return matches.slice(0, 8);
+  }, [availableLegColors, legColorQuery]);
 
   const birthdateValidation = useMemo(
     () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
@@ -223,6 +242,7 @@ export default function EncodeForm({
 
   const handleStrainChange = (value: string) => {
     setStrainQuery(value);
+    setActiveStrainIndex(-1);
     const trimmed = value.trim();
     const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
     setNewBreed(registered ?? value);
@@ -240,23 +260,27 @@ export default function EncodeForm({
       setNewBreed('');
       setStrainQuery('');
       setStrainOpen(false);
+      setActiveStrainIndex(-1);
       return;
     }
     if (loading) {
       setNewBreed(trimmed);
       setStrainOpen(false);
+      setActiveStrainIndex(-1);
       return;
     }
     const registered = availableStrains.find((s) => s.toLowerCase() === trimmed.toLowerCase());
     addStrain(registered ?? trimmed);
     setStrainError(null);
     setStrainOpen(false);
+    setActiveStrainIndex(-1);
   };
 
   const selectStrainOption = (strain: string) => {
     addStrain(strain);
     setStrainError(null);
     setStrainOpen(false);
+    setActiveStrainIndex(-1);
   };
 
   const handleStrainBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -383,7 +407,7 @@ export default function EncodeForm({
   const isCustomTrait = isCustomOption(newBehaviorTrait, baseTraitOptions.map((o) => o.value));
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-5 animate-fadeIn">
+    <form onSubmit={handleFormSubmit} autoComplete="off" className="space-y-5 animate-fadeIn">
       <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
           <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
@@ -528,7 +552,7 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="genetic-strain">{t('registry.geneticStrain')}</label>
+          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gt-genetic-strain">{t('registry.geneticStrain')}</label>
           {selectedStrains.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2.5">
               {selectedStrains.map((s, i) => (
@@ -542,17 +566,48 @@ export default function EncodeForm({
           )}
           <div className="relative" ref={strainInputRef}>
             <div className="relative">
-              <input
+              <ComboboxInput
                 ref={strainInputElRef}
-                type="text"
+                id="gt-genetic-strain"
                 value={strainQuery}
                 onChange={(e) => handleStrainChange(e.target.value)}
-                onFocus={() => setStrainOpen(true)}
+                onFocus={() => {
+                  setStrainOpen(true);
+                  setActiveStrainIndex(-1);
+                }}
                 onBlur={handleStrainBlur}
                 onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!strainOpen) setStrainOpen(true);
+                    if (strainMatchingOptions.length > 0) {
+                      setActiveStrainIndex((current) =>
+                        (current + 1) % strainMatchingOptions.length,
+                      );
+                    }
+                  }
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!strainOpen) setStrainOpen(true);
+                    if (strainMatchingOptions.length > 0) {
+                      setActiveStrainIndex((current) =>
+                        current <= 0
+                          ? strainMatchingOptions.length - 1
+                          : current - 1,
+                      );
+                    }
+                  }
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    commitStrain({ focusOnError: true });
+                    if (
+                      strainOpen &&
+                      activeStrainIndex >= 0 &&
+                      strainMatchingOptions[activeStrainIndex]
+                    ) {
+                      selectStrainOption(strainMatchingOptions[activeStrainIndex]);
+                    } else {
+                      commitStrain({ focusOnError: true });
+                    }
                   }
                   if (e.key === 'Tab') {
                     if (!strainQuery.trim() && selectedStrains.length === 0) {
@@ -561,38 +616,63 @@ export default function EncodeForm({
                     } else {
                       commitStrain();
                     }
+                    setActiveStrainIndex(-1);
                   }
-                  if (e.key === 'Escape') setStrainOpen(false);
+                  if (e.key === 'Escape') {
+                    setStrainOpen(false);
+                    setActiveStrainIndex(-1);
+                  }
                 }}
                 aria-invalid={Boolean(strainError)}
                 aria-describedby={strainError ? 'genetic-strain-error' : undefined}
+                expanded={strainOpen}
+                controls={strainOpen ? 'gt-genetic-strain-listbox' : undefined}
+                activeOptionId={
+                  strainOpen && activeStrainIndex >= 0
+                    ? `gt-genetic-strain-option-${activeStrainIndex}`
+                    : undefined
+                }
                 placeholder="Select or type a strain..."
                 className={`w-full pl-3 pr-9 p-3 border rounded-md text-sm bg-white dark:bg-input placeholder:text-muted-foreground dark:placeholder:text-muted-foreground font-semibold transition-all focus:ring-4 ${strainQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'} ${strainError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:border-rose-700 dark:focus:ring-rose-950/50' : 'border-input-border focus:border-emerald-500 focus:ring-emerald-100'}`}
-              id="genetic-strain" />
+              />
               <button
                 type="button"
                 onClick={() => setStrainOpen((o) => !o)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
                 aria-label="Toggle strain list"
+                aria-expanded={strainOpen}
+                aria-controls={strainOpen ? 'gt-genetic-strain-listbox' : undefined}
               >
                 ▾
               </button>
             </div>
             {strainOpen && strainDropdownPos && createPortal(
               <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: strainDropdownPos.top, left: strainDropdownPos.left, width: strainDropdownPos.width }}>
-                <div className="overflow-y-auto">
+                <div
+                  id="gt-genetic-strain-listbox"
+                  role="listbox"
+                  aria-label={t('registry.breedsBtn')}
+                  className="overflow-y-auto"
+                >
                   {(() => {
                     const q = strainQuery.trim().toLowerCase();
-                    const matching = q
-                      ? availableStrains.filter((s) => s.toLowerCase().includes(q))
-                      : availableStrains;
+                    const matching = strainMatchingOptions;
                     if (q && !availableStrains.some((s) => s.toLowerCase() === q)) {
                       return (
                         <>
                           {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Matching strains</div>}
-                          {matching.map((s) => (
+                          {matching.map((s, index) => (
                             <div key={s} className="flex items-center w-full group">
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                              <button
+                                id={`gt-genetic-strain-option-${index}`}
+                                type="button"
+                                role="option"
+                                aria-selected={selectedStrains.includes(s)}
+                                tabIndex={-1}
+                                onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }}
+                                onMouseEnter={() => setActiveStrainIndex(index)}
+                                className={`flex-1 text-left px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${index === activeStrainIndex ? 'bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-muted/50'} ${selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                              >
                                 {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
                               </button>
                             </div>
@@ -600,8 +680,18 @@ export default function EncodeForm({
                         </>
                       );
                     }
-                    return matching.map((s) => (
-                        <button key={s} type="button" onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }} className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                    return matching.map((s, index) => (
+                        <button
+                          key={s}
+                          id={`gt-genetic-strain-option-${index}`}
+                          type="button"
+                          role="option"
+                          aria-selected={selectedStrains.includes(s)}
+                          tabIndex={-1}
+                          onMouseDown={(e) => { e.preventDefault(); selectStrainOption(s); }}
+                          onMouseEnter={() => setActiveStrainIndex(index)}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${index === activeStrainIndex ? 'bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-muted/50'} ${s.toLowerCase() === strainQuery.trim().toLowerCase() ? 'text-success dark:text-emerald-300' : selectedStrains.includes(s) ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                        >
                           {s} {selectedStrains.includes(s) && <span className="text-xs text-success ml-1">✓ added</span>}
                         </button>
                     ));
@@ -659,62 +749,54 @@ export default function EncodeForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="feather-color">
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gt-feather-color">
               {t('registry.featherColor')}
               {isCustomColor && (
                 <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">{t('registry.customBadge')}</span>
               )}
             </label>
-            <input
-              type="text"
-              list="feather-color-options"
+            <AutocompleteCombobox
+              id="gt-feather-color"
               value={newColor}
-              onChange={(e) => setNewColor?.(e.target.value)}
+              onChange={(value) => setNewColor?.(value)}
               onBlur={() => {
                 if (newColor) {
                   setNewColor?.(normalizeOptionValue(newColor, featherColorOptions.map((o) => o.value)));
                 }
               }}
+              options={featherColorOptions.map((option) => ({
+                value: option.value,
+                label: option.label || option.value,
+              }))}
               placeholder={t('registry.featherColorPlaceholder')}
-              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
-              id="feather-color"
+              listboxLabel={t('registry.featherColor')}
+              inputClassName="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
             />
-            <datalist id="feather-color-options">
-              {featherColorOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label || opt.value}
-                </option>
-              ))}
-            </datalist>
           </div>
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="behavior-trait">
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gt-behavior-trait">
               {t('registry.trait')}
               {isCustomTrait && (
                 <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 ml-2 normal-case tracking-normal">{t('registry.customBadge')}</span>
               )}
             </label>
-            <input
-              type="text"
-              list="trait-options"
+            <AutocompleteCombobox
+              id="gt-behavior-trait"
               value={newBehaviorTrait}
-              onChange={(e) => setNewBehaviorTrait?.(e.target.value)}
+              onChange={(value) => setNewBehaviorTrait?.(value)}
               onBlur={() => {
                 if (newBehaviorTrait) {
                   setNewBehaviorTrait?.(normalizeOptionValue(newBehaviorTrait, traitOptions.map((o) => o.value)));
                 }
               }}
+              options={traitOptions.map((option) => ({
+                value: option.value,
+                label: option.label || option.value,
+              }))}
               placeholder={t('registry.traitPlaceholder')}
-              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
-              id="behavior-trait"
+              listboxLabel={t('registry.trait')}
+              inputClassName="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
             />
-            <datalist id="trait-options">
-              {traitOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label || opt.value}
-                </option>
-              ))}
-            </datalist>
           </div>
         </div>
       </div>
@@ -798,47 +880,114 @@ export default function EncodeForm({
         <div className="relative" ref={legColorInputRef}>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">{t('registry.legColor')}</label>
           <div className="relative">
-            <input
-              type="text"
+            <ComboboxInput
+              id="gt-leg-color"
               value={legColorQuery}
-              onChange={(e) => { setLegColorQuery(e.target.value); setNewLegColor(e.target.value); setLegColorOpen(true); }}
-              onFocus={() => setLegColorOpen(true)}
-              onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
+              onChange={(e) => {
+                setLegColorQuery(e.target.value);
+                setNewLegColor(e.target.value);
+                setLegColorOpen(true);
+                setActiveLegColorIndex(-1);
+              }}
+              onFocus={() => {
+                setLegColorOpen(true);
+                setActiveLegColorIndex(-1);
+              }}
+              onBlur={() => {
+                setTimeout(() => setLegColorOpen(false), 150);
+                setActiveLegColorIndex(-1);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  if (!legColorOpen) setLegColorOpen(true);
+                  if (legColorMatchingOptions.length > 0) {
+                    setActiveLegColorIndex((current) =>
+                      (current + 1) % legColorMatchingOptions.length,
+                    );
+                  }
+                }
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  if (!legColorOpen) setLegColorOpen(true);
+                  if (legColorMatchingOptions.length > 0) {
+                    setActiveLegColorIndex((current) =>
+                      current <= 0
+                        ? legColorMatchingOptions.length - 1
+                        : current - 1,
+                    );
+                  }
+                }
+                if (e.key === 'Enter' && legColorOpen && activeLegColorIndex >= 0) {
+                  const activeColor = legColorMatchingOptions[activeLegColorIndex];
+                  if (activeColor) {
+                    e.preventDefault();
+                    setLegColorQuery(activeColor);
+                    setNewLegColor(activeColor);
+                    setLegColorOpen(false);
+                    setActiveLegColorIndex(-1);
+                  }
+                }
+                if (e.key === 'Escape') {
+                  setLegColorOpen(false);
+                  setActiveLegColorIndex(-1);
+                }
+                if (e.key === 'Tab') {
+                  setLegColorOpen(false);
+                  setActiveLegColorIndex(-1);
+                }
+              }}
+              expanded={legColorOpen}
+              controls={legColorOpen ? 'gt-leg-color-listbox' : undefined}
+              activeOptionId={
+                legColorOpen && activeLegColorIndex >= 0
+                  ? `gt-leg-color-option-${activeLegColorIndex}`
+                  : undefined
+              }
               placeholder={t('registry.legColorPlaceholder')}
               className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
-            id="leg-color" />
+            />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
               aria-label={t('registry.toggleLegColorList')}
+              aria-expanded={legColorOpen}
+              aria-controls={legColorOpen ? 'gt-leg-color-listbox' : undefined}
             >
               ▾
             </button>
           </div>
           {legColorOpen && legColorDropdownPos && createPortal(
             <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}>
-              <div className="overflow-y-auto">
+              <div id="gt-leg-color-listbox" role="listbox" aria-label={t('registry.legColor')} className="overflow-y-auto">
                 {(() => {
                   const q = legColorQuery.trim().toLowerCase();
-                  const matching = q
-                    ? availableLegColors.filter((s) => s.toLowerCase().includes(q)).slice(0, 8)
-                    : availableLegColors.slice(0, 8);
+                  const matching = legColorMatchingOptions;
                   if (q && !availableLegColors.some((s) => s.toLowerCase() === q)) {
                     return (
                       <>
                           <button
                           type="button"
-                          onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(legColorQuery.trim()); setNewLegColor(legColorQuery.trim()); setLegColorOpen(false); }}
+                          onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(legColorQuery.trim()); setNewLegColor(legColorQuery.trim()); setLegColorOpen(false); setActiveLegColorIndex(-1); }}
                           className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-slate-200 dark:border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
                         >
                           <span className="text-sm font-black text-success dark:text-emerald-300">{t('registry.saveNewLegColor', { color: legColorQuery.trim() })}</span>
                           <span className="text-xs font-mono text-success uppercase shrink-0">{t('registry.autoSavedBadge')}</span>
                         </button>
                         {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('registry.matchingColors')}</div>}
-                        {matching.map((s) => (
+                        {matching.map((s, index) => (
                             <div key={s} className="flex items-center w-full group">
-                              <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className="flex-1 text-left px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer">
+                              <button
+                                id={`gt-leg-color-option-${index}`}
+                                type="button"
+                                role="option"
+                                aria-selected={legColorQuery.trim().toLowerCase() === s.toLowerCase()}
+                                tabIndex={-1}
+                                onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); setActiveLegColorIndex(-1); }}
+                                onMouseEnter={() => setActiveLegColorIndex(index)}
+                                className={`flex-1 text-left px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${index === activeLegColorIndex ? 'bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-muted/50'} text-slate-600 dark:text-muted-foreground`}
+                              >
                                 {s}
                               </button>
                               {customLegColorNames.has(s) && (
@@ -849,9 +998,18 @@ export default function EncodeForm({
                       </>
                     );
                   }
-                  return matching.map((s) => (
+                  return matching.map((s, index) => (
                       <div key={s} className="flex items-center w-full group">
-                        <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                        <button
+                          id={`gt-leg-color-option-${index}`}
+                          type="button"
+                          role="option"
+                          aria-selected={legColorQuery.trim().toLowerCase() === s.toLowerCase()}
+                          tabIndex={-1}
+                          onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); setActiveLegColorIndex(-1); }}
+                          onMouseEnter={() => setActiveLegColorIndex(index)}
+                          className={`flex-1 text-left px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${index === activeLegColorIndex ? 'bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-muted/50'} ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                        >
                           {s}
                         </button>
                         {customLegColorNames.has(s) && (
@@ -878,16 +1036,16 @@ export default function EncodeForm({
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-              <label htmlFor="encode-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+              <label htmlFor="gt-encode-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
                 {t('registry.sireFather')} <span className="text-muted-foreground font-normal lowercase">{t('registry.parentPickHelp')}</span>
               </label>
-              <ParentSelector id="encode-sire" value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder={t('registry.sirePlaceholder')} />
+              <ParentSelector id="gt-encode-sire" value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder={t('registry.sirePlaceholder')} />
           </div>
           <div>
-              <label htmlFor="encode-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
+              <label htmlFor="gt-encode-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
                 {t('registry.damMother')} <span className="text-muted-foreground font-normal lowercase">{t('registry.parentPickHelp')}</span>
               </label>
-              <ParentSelector id="encode-dam" value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder={t('registry.damPlaceholder')} />
+              <ParentSelector id="gt-encode-dam" value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder={t('registry.damPlaceholder')} />
           </div>
         </div>
         {(sireName.trim() || damName.trim()) && (() => {

@@ -159,7 +159,7 @@ describe('Registration genetic strain', () => {
 
     const input = strainInput();
     fireEvent.focus(input);
-    await screen.findByRole('button', { name: /CustomBreed/ });
+    await screen.findByRole('option', { name: /CustomBreed/ });
 
     await fillRequiredFields('custombreed');
     fireEvent.keyDown(strainInput(), { key: 'Tab' });
@@ -232,5 +232,27 @@ describe('Registration genetic strain', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Breed/strain is required.');
     expect(screen.getByText(/Missing:.*Genetic Strain/i)).toBeInTheDocument();
     expect(document.activeElement).toBe(strainInput());
+  });
+
+  it('selects a registered strain with ArrowDown and Enter', async () => {
+    fetchStrains.mockResolvedValue(['Honey Lemon', 'Hatch']);
+    await renderPageAndWait();
+
+    const input = strainInput();
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Hon' } });
+    expect(await screen.findByRole('option', { name: /Honey Lemon/ })).toBeInTheDocument();
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input).toHaveAttribute(
+      'aria-activedescendant',
+      'gt-genetic-strain-option-0',
+    );
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: 'Remove strain' })).toHaveLength(1),
+    );
+    expect(screen.getAllByText('Honey Lemon').length).toBeGreaterThan(0);
   });
 });
