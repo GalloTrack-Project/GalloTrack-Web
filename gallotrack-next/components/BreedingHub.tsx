@@ -66,6 +66,8 @@ import {
 } from '@/lib/services/breeding-service';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { BREEDING_TABS } from '@/lib/nav-manifest';
+import { useT } from '@/lib/i18n';
+import { buildIdentityGroups, parentCodeLabels } from '@/lib/hub-identity';
 import { classifyPairingRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
 import CrisscrossBadge from '@/components/CrisscrossBadge';
@@ -574,7 +576,7 @@ function BreedingPairCard({
 
         {expanded && (
           <div className="mt-2 space-y-1.5">
-            {offspringMatchStats.map(({ fowl, wins, losses, decided, draws, total, winRate }) => {
+            {offspringMatchStats.map(({ fowl, wins, losses, draws, total, winRate }) => {
               const code = codes.get(String(fowl.id)) || fowl.bird_code || '';
               return (
                 <button
@@ -596,17 +598,19 @@ function BreedingPairCard({
                       </p>
                     </div>
                   </div>
-                  {total > 0 ? (
-                    <span
-                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
-                    >
-                      {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L{draws > 0 ? `-${draws}D` : ''}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground/50 shrink-0 text-xs font-bold">
-                      No fights
-                    </span>
-                  )}
+                  {canFight(fowl) &&
+                    (total > 0 ? (
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                      >
+                        {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L
+                        {draws > 0 ? `-${draws}D` : ''}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/50 shrink-0 text-xs font-bold">
+                        No fights
+                      </span>
+                    ))}
                 </button>
               );
             })}
@@ -1335,9 +1339,12 @@ function BirdIdentityCard({
   matchHistory: MatchRecord[];
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }) {
+  const t = useT();
   const code = codeOf(fowl, codes);
   const displayCode = formatBirdCodeForDisplay(code);
   const codeType = classifyBirdCode(code);
+  const isFighter = canFight(fowl);
+  const parents = parentCodeLabels(fowl, fowls, codes);
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
 
@@ -1348,7 +1355,6 @@ function BirdIdentityCard({
   const record = getChickenMatchStats(matchStatsMap, fowl);
   const wins = canFight(fowl) ? record.wins : 0;
   const losses = canFight(fowl) ? record.losses : 0;
-  const decided = canFight(fowl) ? record.decided : 0;
   const total = canFight(fowl) ? record.total : 0;
   const draws = canFight(fowl) ? record.draws : 0;
   const winRate = canFight(fowl) ? record.winRate : null;
@@ -1380,35 +1386,73 @@ function BirdIdentityCard({
     },
   };
   const codeColor = codeColorMap[codeType];
+  const sireLabel = parents.sire || '—';
+  const damLabel = parents.dam || '—';
+  const tileAria =
+    codeType === 'sire'
+      ? t('hub.tileSireAria', { code: displayCode || '—' })
+      : codeType === 'dam'
+        ? t('hub.tileDamAria', { code: displayCode || '—' })
+        : codeType === 'offspring'
+          ? t('hub.tileOffspringAria', {
+              code: displayCode || '—',
+              sire: sireLabel,
+              dam: damLabel,
+            })
+          : t('hub.tileCustomAria', { code: displayCode || '—' });
+  const roleCaption =
+    codeType === 'sire'
+      ? t('hub.roleCaptionSire')
+      : codeType === 'dam'
+        ? t('hub.roleCaptionDam')
+        : codeType === 'offspring'
+          ? t('hub.roleCaptionOffspring', { sire: sireLabel, dam: damLabel })
+          : t('hub.roleCaptionCustom');
 
   return (
     <button
       type="button"
       onClick={() => setSelectedFowlForDetails(fowl)}
-      className="group bg-card border-border w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md dark:hover:border-emerald-700"
+      data-testid="identity-card"
+      data-fowl-name={fowl.name}
+      data-code-kind={codeType}
+      data-fighter={isFighter ? 'true' : 'false'}
+      className="hub-identity-card group bg-card border-border w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md dark:hover:border-emerald-700"
     >
       <div className="flex items-start gap-3">
-        <div
-          className={`h-12 w-12 shrink-0 rounded-xl ${codeColor.bg} ${codeColor.border} flex flex-col items-center justify-center border`}
+        <span
+          role="img"
+          aria-label={tileAria}
+          title={tileAria}
+          data-testid="identity-code-tile"
+          className={`hub-identity-tile rounded-xl border ${codeColor.bg} ${codeColor.border} ${codeColor.text}`}
         >
           <span
-            className={`text-xs font-black ${codeColor.text} leading-none tracking-widest uppercase`}
+            data-testid="identity-tile-label"
+            className="hub-identity-tile-label font-black tracking-widest uppercase"
           >
             {codeColor.label}
           </span>
-          <span className={`text-base font-black ${codeColor.text} mt-0.5 font-mono leading-none`}>
+          <span data-testid="identity-tile-code" className="hub-identity-tile-code font-black">
             {displayCode || '—'}
           </span>
-        </div>
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="text-card-foreground truncate text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+          <p className="hub-identity-fit text-card-foreground text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
             {fowl.name}
           </p>
-          <p className="text-muted-foreground truncate text-xs font-semibold">
-            {fowl.breed} · {sexLabel(fowl)}
+          <p className="hub-identity-fit text-muted-foreground text-xs font-semibold">
+            {fowl.breed ? `${fowl.breed} / ` : ''}
+            {sexLabel(fowl)}
           </p>
-          {fowl.wing_band && (
-            <p className="mt-0.5 text-xs font-bold text-violet-600 dark:text-violet-400">
+          <p
+            data-testid="identity-role-caption"
+            className="hub-identity-role-caption text-muted-foreground mt-0.5 font-semibold"
+          >
+            {roleCaption}
+          </p>
+          {isFighter && fowl.wing_band && (
+            <p className="hub-identity-fit mt-0.5 text-xs font-bold text-violet-600 dark:text-violet-400">
               Wing Band: {fowl.wing_band}
             </p>
           )}
@@ -1428,16 +1472,25 @@ function BirdIdentityCard({
           )}
         </div>
         <div className="shrink-0 text-right">
-          {total > 0 ? (
-            <span
-              className={`rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
-            >
-                      {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L{draws > 0 ? `-${draws}D` : ''}
-            </span>
-          ) : (
-            <span className="text-muted-foreground/50 text-xs font-bold">No fights</span>
-          )}
+          {isFighter &&
+            (total > 0 ? (
+              <span
+                data-testid="identity-fight-summary"
+                className={`rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+              >
+                {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L
+                {draws > 0 ? `-${draws}D` : ''}
+              </span>
+            ) : (
+              <span
+                data-testid="identity-fight-summary"
+                className="text-muted-foreground/50 text-xs font-bold"
+              >
+                No fights
+              </span>
+            ))}
           <p
+            data-testid="identity-status"
             className={`mt-1 text-xs font-bold ${fowl.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : fowl.status === 'Deceased' ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
           >
             {fowl.status}
@@ -1445,16 +1498,16 @@ function BirdIdentityCard({
         </div>
       </div>
       {(fowl.sire || fowl.dam) && (
-        <div className="border-border text-muted-foreground mt-2 flex items-center gap-3 border-t pt-2 text-xs font-semibold">
+        <div className="border-border text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs font-semibold">
           {fowl.sire && (
-            <span>
-               Sire: <strong className="text-card-foreground">{fowl.sire}</strong>
+            <span className="hub-identity-fit">
+              Sire: <strong className="text-card-foreground">{fowl.sire}</strong>
               {sireBreed ? ` · ${sireBreed}` : ''}
             </span>
           )}
           {fowl.dam && (
-            <span>
-               Dam: <strong className="text-card-foreground">{fowl.dam}</strong>
+            <span className="hub-identity-fit">
+              Dam: <strong className="text-card-foreground">{fowl.dam}</strong>
               {damBreed ? ` · ${damBreed}` : ''}
             </span>
           )}
@@ -1476,6 +1529,7 @@ export default function BreedingHub({
   pairingAnalytics,
   setSelectedFowlForDetails,
 }: BreedingHubProps) {
+  const t = useT();
   const [activeTab, setActiveTab] = useUrlTab<BreedingTab>({
     param: 'tab',
     values: BREEDING_TABS,
@@ -1528,6 +1582,15 @@ export default function BreedingHub({
       );
     });
   }, [fowls, codes, identitySearch]);
+
+  const allIdentityGroups = useMemo(() => buildIdentityGroups(fowls, codes), [fowls, codes]);
+  const identityGroups = useMemo(() => {
+    if (!identitySearch.trim()) return allIdentityGroups;
+    const allowed = new Set(filteredFowls.map((f) => f.id));
+    return allIdentityGroups
+      .map((group) => ({ ...group, fowls: group.fowls.filter((f) => allowed.has(f.id)) }))
+      .filter((group) => group.fowls.length > 0);
+  }, [allIdentityGroups, filteredFowls, identitySearch]);
 
   const addPair = useCallback(
     async (payload: Partial<BreedingPairRecord>) => {
@@ -2115,12 +2178,15 @@ export default function BreedingHub({
             </div>
           </div>
 
-          <div className="bg-card border-border flex flex-wrap gap-3 rounded-2xl border p-4 shadow-sm">
+          <div
+            data-testid="identity-legend"
+            className="hub-identity-legend bg-card border-border rounded-2xl border p-4 shadow-sm"
+          >
             {[
               {
                 type: 'SIRE',
                 code: '1',
-                desc: 'Foundation male',
+                desc: t('hub.legendSireDesc'),
                 bg: 'bg-sky-100 dark:bg-sky-950/50',
                 text: 'text-sky-700 dark:text-sky-400',
                 border: 'border-sky-200 dark:border-sky-800',
@@ -2128,7 +2194,7 @@ export default function BreedingHub({
               {
                 type: 'DAM',
                 code: 'A',
-                desc: 'Foundation female',
+                desc: t('hub.legendDamDesc'),
                 bg: 'bg-pink-100 dark:bg-pink-950/50',
                 text: 'text-pink-700 dark:text-pink-400',
                 border: 'border-pink-200 dark:border-pink-800',
@@ -2136,7 +2202,7 @@ export default function BreedingHub({
               {
                 type: 'OFFSPRING',
                 code: '1A₁',
-                desc: 'Child of Sire 1 × Dam A',
+                desc: t('hub.legendOffspringDesc'),
                 bg: 'bg-emerald-100 dark:bg-emerald-950/50',
                 text: 'text-emerald-700 dark:text-emerald-400',
                 border: 'border-emerald-200 dark:border-emerald-800',
@@ -2144,23 +2210,31 @@ export default function BreedingHub({
               {
                 type: 'CUSTOM',
                 code: '···',
-                desc: 'Manual override',
+                desc: t('hub.legendCustomDesc'),
                 bg: 'bg-violet-100 dark:bg-violet-950/50',
                 text: 'text-violet-700 dark:text-violet-400',
                 border: 'border-violet-200 dark:border-violet-800',
               },
             ].map((l) => (
-              <div key={l.type} className="flex items-center gap-2">
+              <div
+                key={l.type}
+                data-testid="identity-legend-item"
+                className="hub-identity-legend-item"
+              >
                 <div
-                  className={`h-8 w-8 rounded-lg ${l.bg} ${l.border} flex items-center justify-center border`}
+                  className={`hub-identity-legend-code rounded-lg border ${l.bg} ${l.border}`}
                 >
                   <span className={`text-xs font-black ${l.text} font-mono`}>{l.code}</span>
                 </div>
-                <div>
-                  <p className={`text-xs font-black ${l.text} tracking-widest uppercase`}>
+                <div className="min-w-0">
+                  <p
+                    className={`hub-identity-fit text-xs font-black ${l.text} tracking-widest uppercase`}
+                  >
                     {l.type}
                   </p>
-                  <p className="text-muted-foreground text-xs font-semibold">{l.desc}</p>
+                  <p className="hub-identity-fit text-muted-foreground text-xs font-semibold">
+                    {l.desc}
+                  </p>
                 </div>
               </div>
             ))}
@@ -2172,16 +2246,46 @@ export default function BreedingHub({
               <p className="text-muted-foreground mt-1 text-xs">Try a different name or code</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {filteredFowls.map((f) => (
-                <BirdIdentityCard
-                  key={f.id}
-                  fowl={f}
-                  fowls={fowls}
-                  codes={codes}
-                  matchHistory={matchHistory}
-                  setSelectedFowlForDetails={setSelectedFowlForDetails}
-                />
+            <div className="space-y-5">
+              {identityGroups.map((group) => (
+                <div
+                  key={group.key}
+                  data-testid="identity-group"
+                  data-group-kind={group.kind}
+                  className="space-y-2"
+                >
+                  {group.kind === 'offspring' && (
+                    <h3
+                      data-testid="identity-pair-heading"
+                      className="hub-identity-fit bg-muted/40 text-card-foreground rounded-lg px-3 py-1.5 text-xs font-black tracking-wide"
+                    >
+                      {t('hub.pairHeading', {
+                        sire: group.sireLabel || '—',
+                        dam: group.damLabel || '—',
+                      })}
+                    </h3>
+                  )}
+                  {group.kind === 'custom' && (
+                    <h3
+                      data-testid="identity-custom-heading"
+                      className="hub-identity-fit bg-muted/40 text-card-foreground rounded-lg px-3 py-1.5 text-xs font-black tracking-wide"
+                    >
+                      {t('hub.customGroupHeading')}
+                    </h3>
+                  )}
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {group.fowls.map((f) => (
+                      <BirdIdentityCard
+                        key={f.id}
+                        fowl={f}
+                        fowls={fowls}
+                        codes={codes}
+                        matchHistory={matchHistory}
+                        setSelectedFowlForDetails={setSelectedFowlForDetails}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}

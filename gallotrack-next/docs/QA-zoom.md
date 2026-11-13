@@ -26,6 +26,23 @@ Analytics & Match Logs modal in a real browser. The automated layout fixture is
 - [ ] Labels can wrap to two lines; any truncated label has a `title` tooltip.
 - [ ] Numbers and calculations are unchanged.
 
+## Breeding Hub Chicken Identity
+
+Run `npm run test:hub-layout` after `npm run build`. It checks the identity cards at 320, 375,
+640, 768, 1024, 1280, and 1920 px with device scale factors 1, 1.5, and 2 in English, Tagalog,
+Hiligaynon, light and dark. Then verify the manual zoom matrix:
+
+- [ ] At 25%, 50%, 75%, 100%, 125%, 150%, 200%, 300%, 400%, and 500% zoom, the code tile stays inside the card.
+- [ ] `OFFSPRING` never sticks out of the tile; the tile grows to fit its code and label.
+- [ ] In narrow cards the tile shows only the code, and the role caption appears under the chicken name.
+- [ ] In wide cards the tile label is visible and the role caption is hidden.
+- [ ] The legend wraps to multiple rows instead of squeezing or overflowing.
+- [ ] Long chicken names use `/` for strain and sex (`Lemon / Hen`, `Hatch / Cock`) and wrap inside the card.
+- [ ] Hens show no record, win rate, `No fights`, or fight action; cocks keep their record or `No fights`.
+- [ ] Wing band is shown for cocks only.
+- [ ] Parents come first, then offspring groups by pair code, then custom-coded birds; pair headings are readable.
+- [ ] No horizontal page scrollbar or clipped text at any checked width or zoom.
+
 ## Bloodline Report Modal
 
 Open **Individual Chicken Analytics & Match Logs** from the Historical Analytics Match Logs page

@@ -542,5 +542,21 @@
     "reversibleAuditNotice": "Ang gawaing ito ay nakatala sa {table} at maaaring bawiin.",
     "confirmPromotionBtn": "Kumpirmahin ang Promosyon at Piliin",
     "promotingBtn": "Ipinopromote..."
+  },
+  "hub": {
+    "legendSireDesc": "Code para sa foundation cock",
+    "legendDamDesc": "Code para sa foundation hen",
+    "legendOffspringDesc": "Anak ng Sire 1 × Dam A",
+    "legendCustomDesc": "Manual na override",
+    "tileSireAria": "Sire code para sa foundation cock: {code}",
+    "tileDamAria": "Dam code para sa foundation hen: {code}",
+    "tileOffspringAria": "Offspring code {code} nina Sire {sire} at Dam {dam}",
+    "tileCustomAria": "Custom na code ng manok: {code}",
+    "roleCaptionSire": "Sire code — foundation cock",
+    "roleCaptionDam": "Dam code — foundation hen",
+    "roleCaptionOffspring": "Offspring nina Sire {sire} at Dam {dam}",
+    "roleCaptionCustom": "Custom na code ng manok",
+    "pairHeading": "Sire {sire} × Dam {dam}",
+    "customGroupHeading": "Mga custom code"
   }
 }
