@@ -21,9 +21,11 @@ import {
   type NavItem,
 } from '@/lib/nav-manifest';
 import GlobalSearch from '@/components/nav/GlobalSearch';
+import NotificationBell from '@/components/nav/NotificationBell';
 import MobileNav from '@/components/nav/MobileNav';
 import SystemConfigSidebarItem from '@/components/nav/SystemConfigSidebarItem';
 import { SystemConfigNavProvider } from '@/lib/contexts/system-config-nav';
+import { NotificationProvider } from '@/lib/contexts/notification-context';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useT } from '@/lib/i18n';
@@ -32,7 +34,9 @@ import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SystemConfigNavProvider>
-      <DashboardShell>{children}</DashboardShell>
+      <NotificationProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </NotificationProvider>
     </SystemConfigNavProvider>
   );
 }
@@ -257,6 +261,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                 </div>
               )}
               <GlobalSearch />
+              {!isAdmin && <NotificationBell />}
               <div className="hidden items-center sm:flex">
                 <CompactLanguageSwitcher />
               </div>

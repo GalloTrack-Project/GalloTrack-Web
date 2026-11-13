@@ -9,6 +9,7 @@ import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useNotificationUnreadCount } from '@/lib/contexts/notification-context';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
 import BreedingPairPerformanceAnalytics from '@/components/BreedingPairPerformanceAnalytics';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, TrendingUp, PieChart, Search, Download, Printer, ChevronDown } from 'lucide-react';
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const { t } = useT();
   const fowl = useFowl();
   const ui = useUI();
+  const unreadNotificationCount = useNotificationUnreadCount();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const chart = useChartTokens(resolvedTheme);
@@ -624,7 +626,14 @@ export default function DashboardPage() {
                   <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
                 </div>
               </div>
-              <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-mono font-black text-success`}>AUTO</span>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {unreadNotificationCount > 0 && (
+                  <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 font-black text-rose-600 dark:text-rose-300`}>
+                    {unreadNotificationCount} unread
+                  </span>
+                )}
+                <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-mono font-black text-success`}>AUTO</span>
+              </div>
             </div>
             <div className="space-y-2 flex-1">
               {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {

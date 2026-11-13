@@ -31,6 +31,8 @@
     "audit:viewport": "tsx scripts/audit-mobile-overflow.ts",
     "verify:schema": "tsx scripts/verify-schema-contract.ts",
     "check:secrets": "tsx scripts/check-secrets.ts",
+    "verify:notification-rls": "tsx scripts/verify-notification-rls.ts",
+    "screenshots:notifications": "tsx scripts/notification-screenshots.ts",
     "i18n:export": "tsx scripts/i18n-export.ts",
     "i18n:import": "tsx scripts/i18n-import.ts",
     "i18n:audit": "tsx scripts/i18n-audit.ts",
