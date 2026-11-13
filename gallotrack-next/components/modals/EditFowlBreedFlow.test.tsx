@@ -57,6 +57,7 @@ vi.mock('@/lib/services/strain-service', () => ({
   fetchStrains: vi.fn().mockResolvedValue(['Kelso']),
   fetchLegColors: vi.fn().mockResolvedValue([]),
   saveCustomStrain: vi.fn().mockResolvedValue(true),
+  createRegisteredBreed: vi.fn().mockResolvedValue({ ok: true, name: 'Hatch' }),
   saveCustomLegColor: vi.fn().mockResolvedValue(true),
   deleteStrain: vi.fn().mockResolvedValue({}),
   deleteLegColor: vi.fn().mockResolvedValue({}),

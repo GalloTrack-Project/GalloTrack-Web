@@ -1,11 +1,20 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import EditFowlModal from '@/components/modals/EditFowlModal';
 import type { FowlRecord } from '@/lib/types';
 
+const createRegisteredBreed = vi.hoisted(() => vi.fn());
+
 vi.mock('@/lib/services/options-service', () => ({
   fetchRegistryOptions: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('@/lib/services/strain-service', () => ({
+  createRegisteredBreed,
+  saveCustomStrain: vi.fn().mockResolvedValue(true),
+  fetchStrains: vi.fn().mockResolvedValue([]),
+  deleteStrain: vi.fn().mockResolvedValue({}),
 }));
 
 const fowl: FowlRecord = {
@@ -33,7 +42,7 @@ const fowl: FowlRecord = {
   wing_band: 'WB-002',
 };
 
-function renderModal(onAddBreeds: () => void) {
+function renderModal(onAddBreeds: () => void, overrides: Record<string, unknown> = {}) {
   return render(
     <EditFowlModal
       editingFowl={fowl}
@@ -92,11 +101,38 @@ function renderModal(onAddBreeds: () => void) {
       getAgeMetrics={vi.fn()}
       generationOf={vi.fn()}
       generationPurity={vi.fn()}
+      {...overrides}
     />,
   );
 }
 
 describe('EditFowlModal Add Breeds', () => {
+  it('shows Not registered for a legacy strain and allows saving other fields', async () => {
+    const handleUpdateFowl = vi.fn((event: React.FormEvent) => event.preventDefault());
+    renderModal(vi.fn(), { handleUpdateFowl, canCreateBreed: false });
+
+    expect(await screen.findByText('Not registered')).toBeInTheDocument();
+    expect(
+      screen.getByText('Ask the farm owner to register this breed'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(handleUpdateFowl).toHaveBeenCalled());
+  });
+
+  it('shows the owner-permission message for an unmatched typed breed', async () => {
+    renderModal(vi.fn(), {
+      availableStrains: ['Kelso'],
+      editBreed: 'Roundhead',
+      canCreateBreed: false,
+    });
+
+    fireEvent.focus(screen.getByLabelText('Genetic Strain'));
+    expect(
+      await screen.findByText('Ask the farm owner to register this breed'),
+    ).toBeInTheDocument();
+  });
+
   it('opens the inline Breed Registry from the single Add breed button', async () => {
     const onAddBreeds = vi.fn();
     renderModal(onAddBreeds);

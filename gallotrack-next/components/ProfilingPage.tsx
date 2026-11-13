@@ -340,6 +340,7 @@ export default function ProfilingPage() {
         <EncodeForm
           fowls={fowls}
           onAddBreeds={handleAddBreedsFromForm}
+          canCreateBreed={canCreateBreeds}
           restoreDraft={restoreCreateDraft}
           onCancel={handleCancelRegistration}
           newName={newName}

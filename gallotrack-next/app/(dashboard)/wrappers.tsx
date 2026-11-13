@@ -97,6 +97,8 @@ export function ModalsWrapper() {
 
   const {
     currentUserId,
+    authChecked,
+    userActive,
     handleLogout,
     handleSendResetLink,
     forgotEmail,
@@ -106,6 +108,7 @@ export function ModalsWrapper() {
     forgotError,
     setForgotSent,
   } = useAuth();
+  const canCreateBreed = !authChecked || (Boolean(currentUserId) && userActive);
   return (
     <Modals
       selectedFowlForDetails={ui.selectedFowlForDetails}
@@ -132,6 +135,8 @@ export function ModalsWrapper() {
       setEditingFowl={ui.setEditingFowl}
       handleUpdateFowl={store.handleUpdateFowl}
       onAddBreeds={handleAddBreedsFromEdit}
+      canCreateBreed={canCreateBreed}
+      refreshStrains={store.refreshStrains}
       restoreEditDraft={store.restoreEditDraft}
       clearEditDraft={store.clearEditDraft}
       showLogoutModal={ui.showLogoutModal}

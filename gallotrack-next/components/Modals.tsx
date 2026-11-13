@@ -54,6 +54,8 @@ type ModalsProps = {
   setEditingFowl: (f: FowlRecord | null) => void;
   handleUpdateFowl: (e: React.FormEvent) => void;
   onAddBreeds?: () => void;
+  canCreateBreed?: boolean;
+  refreshStrains?: () => Promise<void>;
   restoreEditDraft?: (fowlId: number | string) => DraftRestoreResult;
   clearEditDraft?: (fowlId: number | string) => void;
 
@@ -201,6 +203,8 @@ export default function Modals(props: ModalsProps) {
         setEditingFowl={props.setEditingFowl}
         handleUpdateFowl={props.handleUpdateFowl}
         onAddBreeds={props.onAddBreeds}
+        canCreateBreed={props.canCreateBreed}
+        refreshStrains={props.refreshStrains}
         restoreDraft={props.restoreEditDraft}
         clearDraft={props.clearEditDraft}
         loading={props.loading}

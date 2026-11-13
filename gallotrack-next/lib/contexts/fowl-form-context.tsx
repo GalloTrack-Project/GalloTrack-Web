@@ -7,7 +7,7 @@ import {
 import { STRAIN_LIST, LEG_COLOR_LIST } from '@/lib/helpers';
 import { useDebounce } from '@/lib/use-debounce';
 import { fetchStrains } from '@/lib/services/strain-service';
-import { mergeStrainNames } from '@/lib/strain-options';
+import { findStrainName, mergeStrainNames } from '@/lib/strain-options';
 import type { DeclaredBreedShare } from '@/lib/types';
 import {
   clearFowlDraft,
@@ -93,7 +93,7 @@ interface FowlFormStateContextValue {
   strainOpen: boolean; setStrainOpen: (v: boolean | ((o: boolean) => boolean)) => void;
   selectedStrains: string[];
   setSelectedStrains: React.Dispatch<React.SetStateAction<string[]>>;
-  addStrain: (strain: string) => void;
+  addStrain: (strain: string, options?: { newlyRegistered?: boolean }) => void;
   removeStrain: (index: number) => void;
   refreshStrains: () => Promise<void>;
 
@@ -221,7 +221,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   const [editPhotoRemoved, setEditPhotoRemoved] = useState(false);
   const [editPhotoUploadError, setEditPhotoUploadError] = useState<string | null>(null);
 
-  const [availableStrains, setAvailableStrains] = useState<string[]>(STRAIN_LIST);
+  const [availableStrains, setAvailableStrains] = useState<string[]>([]);
   const [customStrainNames, setCustomStrainNames] = useState<Set<string>>(new Set());
   const [strainQuery, setStrainQuery] = useState('');
   const [strainOpen, setStrainOpen] = useState(false);
@@ -278,18 +278,19 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     }
   }, [editGender]);
 
-  const addStrain = useCallback((strain: string) => {
+  const addStrain = useCallback((strain: string, options?: { newlyRegistered?: boolean }) => {
     const trimmed = strain.trim();
     if (!trimmed) return;
-    setSelectedStrains((prev) =>
-      prev.some((value) => value.toLowerCase() === trimmed.toLowerCase())
-        ? prev
-        : [...prev, trimmed],
-    );
-    if (!availableStrains.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-      setAvailableStrains((prev) => [...prev, trimmed].sort((a, b) => a.localeCompare(b)));
-      setCustomStrainNames((prev) => new Set([...prev, trimmed]));
+    const canonical = findStrainName(availableStrains, trimmed) ?? (options?.newlyRegistered ? trimmed : null);
+    if (!canonical) return;
+    if (!availableStrains.some((value) => value.toLowerCase() === canonical.toLowerCase())) {
+      setAvailableStrains((prev) => mergeStrainNames(prev, [canonical]));
     }
+    setSelectedStrains((prev) =>
+      prev.some((value) => value.toLowerCase() === canonical.toLowerCase())
+        ? prev
+        : [...prev, canonical],
+    );
     setStrainQuery('');
     setNewBreed('');
   }, [availableStrains, setNewBreed]);
@@ -300,16 +301,18 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
 
   const refreshStrains = useCallback(async () => {
     const names = await fetchStrains();
-    setAvailableStrains((prev) => mergeStrainNames(prev, names, selectedStrains));
-    setCustomStrainNames((prev) => {
-      const next = new Set(prev);
-      const builtIn = new Set(STRAIN_LIST.map((name) => name.toLowerCase()));
-      for (const name of names) {
-        if (!builtIn.has(name.toLowerCase())) next.add(name);
-      }
-      return next;
-    });
-  }, [selectedStrains]);
+    setAvailableStrains(mergeStrainNames(names));
+    setCustomStrainNames(
+      new Set(
+        names.filter(
+          (name) =>
+            !STRAIN_LIST.some(
+              (builtIn) => builtIn.toLowerCase() === name.toLowerCase(),
+            ),
+        ),
+      ),
+    );
+  }, []);
 
   // -- Form drafts (survive the Breed Registry round trip and refreshes) --
   const getDraftUserId = useCallback((): string | null => {

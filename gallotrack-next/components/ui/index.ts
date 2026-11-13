@@ -2,6 +2,7 @@ export { cn } from './utils';
 export { Badge, badgeVariants } from './Badge';
 export { Breadcrumbs } from './Breadcrumbs';
 export { Button, buttonVariants } from './Button';
+export { default as ComboboxInput } from './ComboboxInput';
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card';
 export { EmptyState } from './EmptyState';
 export { FormField } from './FormField';
@@ -21,6 +22,7 @@ export { Tooltip } from './Tooltip';
 
 export type { BadgeProps } from './Badge';
 export type { BreadcrumbItem, BreadcrumbsProps } from './Breadcrumbs';
+export type { ComboboxInputProps } from './ComboboxInput';
 export type { ButtonProps } from './Button';
 export type { EmptyStateProps } from './EmptyState';
 export type { FieldControlProps, FormFieldProps } from './FormField';

@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import {
   Pencil,
   Tag,
@@ -16,6 +17,7 @@ import {
 import type { FowlRecord, AgeParts, DeclaredBreedShare } from '@/lib/types';
 import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import ParentSelector from './ParentSelector';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import {
   getDescendantFowls,
@@ -31,6 +33,9 @@ import {
   previewBirdCode,
 } from '@/lib/bird-code';
 import { bloodlineOf, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { findStrainName, normalizeStrainSearch, strainMatchesQuery } from '@/lib/strain-options';
+import { createRegisteredBreed } from '@/lib/services/strain-service';
+import { toastMessage } from '@/lib/toast-bus';
 import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useT } from '@/lib/i18n';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
@@ -102,6 +107,10 @@ type EditFowlModalProps = {
   canEditPhoto?: boolean;
   /** Opens the Breed Registry without discarding the edit draft. */
   onAddBreeds?: () => void;
+  /** Whether this account can create breeds in the shared registry. */
+  canCreateBreed?: boolean;
+  /** Refreshes the registered breed list after an inline create. */
+  refreshStrains?: () => Promise<void>;
   /** Restores a saved edit draft for this chicken. */
   restoreDraft?: (fowlId: number | string) => DraftRestoreResult;
   /** Clears the saved edit draft when the user cancels. */
@@ -165,6 +174,8 @@ export default function EditFowlModal({
   generationPurity,
   canEditPhoto = true,
   onAddBreeds,
+  canCreateBreed = true,
+  refreshStrains,
   restoreDraft,
   clearDraft,
 }: EditFowlModalProps) {
@@ -176,6 +187,128 @@ export default function EditFowlModal({
   const [draftRestored, setDraftRestored] = React.useState(false);
   const [draftPhotoNotice, setDraftPhotoNotice] = React.useState(false);
   const restoredDraftIdRef = React.useRef<number | string | null>(null);
+  const [strainOpen, setStrainOpen] = React.useState(false);
+  const [strainActiveIndex, setStrainActiveIndex] = React.useState(-1);
+  const [strainError, setStrainError] = React.useState<string | null>(null);
+  const [strainAnnouncement, setStrainAnnouncement] = React.useState('');
+  const [creatingBreed, setCreatingBreed] = React.useState(false);
+  const [strainDropdownPos, setStrainDropdownPos] = React.useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const strainBoxRef = React.useRef<HTMLDivElement>(null);
+  const strainInputRef = React.useRef<HTMLInputElement>(null);
+
+  const typedStrain = editBreed.trim();
+  const registeredEditBreed = findStrainName(availableStrains, editBreed);
+  const hasExactStrainMatch = Boolean(registeredEditBreed);
+  const breedsLoading = loading && availableStrains.length === 0;
+  const matchingStrains = availableStrains.filter((strain) =>
+    strainMatchesQuery(strain, editBreed),
+  );
+  const isLegacyStrain =
+    Boolean(editingFowl?.breed?.trim()) &&
+    normalizeStrainSearch(typedStrain) ===
+      normalizeStrainSearch(editingFowl?.breed || '') &&
+    !registeredEditBreed &&
+    !loading;
+  const showStrainAddRow = Boolean(typedStrain) && !hasExactStrainMatch && !breedsLoading;
+
+  React.useEffect(() => {
+    if (!strainOpen) return;
+    const update = () => {
+      const box = strainBoxRef.current;
+      if (!box) return;
+      const rect = box.getBoundingClientRect();
+      setStrainDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [strainOpen]);
+
+  const selectRegisteredStrain = (name: string) => {
+    setEditBreed(name);
+    setStrainError(null);
+    setStrainAnnouncement('');
+    setStrainOpen(false);
+    setStrainActiveIndex(-1);
+  };
+
+  const handleAddTypedBreed = async () => {
+    const trimmed = editBreed.trim();
+    if (!trimmed || creatingBreed) return;
+    if (!canCreateBreed) {
+      setStrainAnnouncement(t('registry.askOwnerToRegisterBreed'));
+      return;
+    }
+    const existing = findStrainName(availableStrains, trimmed);
+    if (existing) {
+      selectRegisteredStrain(existing);
+      return;
+    }
+    setCreatingBreed(true);
+    const result = await createRegisteredBreed(trimmed);
+    if (!result.ok || !result.name) {
+      setStrainError(t('registry.breedCreateFailed'));
+      setCreatingBreed(false);
+      return;
+    }
+    await refreshStrains?.();
+    setEditBreed(result.name);
+    setStrainError(null);
+    setStrainAnnouncement(t('registry.breedAddedSelected'));
+    toastMessage(t('registry.breedAddedSelected'), 'success');
+    setStrainOpen(false);
+    setStrainActiveIndex(-1);
+    setCreatingBreed(false);
+  };
+
+  const handleStrainInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!strainOpen) setStrainOpen(true);
+      if (matchingStrains.length > 0) {
+        setStrainActiveIndex((current) => (current + 1) % matchingStrains.length);
+      }
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!strainOpen) setStrainOpen(true);
+      if (matchingStrains.length > 0) {
+        setStrainActiveIndex((current) =>
+          current <= 0 ? matchingStrains.length - 1 : current - 1,
+        );
+      }
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (strainOpen && strainActiveIndex >= 0 && matchingStrains[strainActiveIndex]) {
+        selectRegisteredStrain(matchingStrains[strainActiveIndex]);
+      } else if (typedStrain && !hasExactStrainMatch) {
+        void handleAddTypedBreed();
+      } else if (registeredEditBreed) {
+        selectRegisteredStrain(registeredEditBreed);
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
+      setStrainOpen(false);
+      setStrainActiveIndex(-1);
+      return;
+    }
+    if (event.key === 'Tab') {
+      setStrainOpen(false);
+      setStrainActiveIndex(-1);
+    }
+  };
   const clearPhotoFile = photoForm?.setEditPhotoFile;
   const clearPhotoThumbnail = photoForm?.setEditPhotoThumbnail;
   const clearPhotoRemoved = photoForm?.setEditPhotoRemoved;
@@ -318,12 +451,24 @@ export default function EditFowlModal({
             e.preventDefault();
             return;
           }
+          const originalBreed = (editingFowl?.breed || '').trim();
+          const strainChanged =
+            normalizeStrainSearch(editBreed) !== normalizeStrainSearch(originalBreed);
+          if (strainChanged && !findStrainName(availableStrains, editBreed)) {
+            e.preventDefault();
+            setStrainError(t('registry.chooseRegisteredBreedOrAdd'));
+            setStrainAnnouncement(t('registry.noMatchingBreedPressEnter'));
+            setStrainOpen(true);
+            strainInputRef.current?.focus();
+            return;
+          }
           if (!birthdateValidation.valid) {
             e.preventDefault();
             return;
           }
           handleUpdateFowl(e);
         }}
+        autoComplete="off"
         className="space-y-4 overflow-y-auto p-6 text-sm"
       >
         {draftRestored && (
@@ -423,48 +568,160 @@ export default function EditFowlModal({
                   </button>
                 )}
               </div>
-              <input
-                type="text"
-                value={editBreed}
-                onChange={(e) => setEditBreed(e.target.value)}
-                className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
-                placeholder="Select or type strain"
-                required
-                id="genetic-strain"
-              />
-              {availableStrains.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {availableStrains
-                    .filter(
-                      (s) => s.toLowerCase().includes(editBreed.toLowerCase()) && s !== editBreed,
-                    )
-                    .slice(0, 5)
-                    .map((s) => (
-                      <div
-                        key={s}
-                        className="dark:bg-muted group flex items-center rounded-full bg-slate-100"
+              <div className="relative" ref={strainBoxRef}>
+                <ComboboxInput
+                  ref={strainInputRef}
+                  id="genetic-strain"
+                  value={editBreed}
+                  onChange={(e) => {
+                    setEditBreed(e.target.value);
+                    setStrainError(null);
+                    setStrainOpen(true);
+                    setStrainActiveIndex(-1);
+                    setStrainAnnouncement('');
+                  }}
+                  onFocus={() => {
+                    setStrainOpen(true);
+                    setStrainActiveIndex(-1);
+                  }}
+                  onBlur={() => setTimeout(() => setStrainOpen(false), 120)}
+                  onKeyDown={handleStrainInputKeyDown}
+                  aria-invalid={Boolean(strainError)}
+                  aria-describedby={strainError ? 'genetic-strain-error' : undefined}
+                  expanded={strainOpen}
+                  controls={strainOpen ? 'genetic-strain-listbox' : undefined}
+                  activeOptionId={
+                    strainOpen && strainActiveIndex >= 0
+                      ? `genetic-strain-option-${strainActiveIndex}`
+                      : undefined
+                  }
+                  className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
+                  placeholder="Select or type strain"
+                  required
+                />
+                <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+                  {strainAnnouncement}
+                </div>
+                {isLegacyStrain && (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-xs font-bold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                      {t('registry.notRegistered')}
+                    </span>
+                    {canCreateBreed ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleAddTypedBreed()}
+                        disabled={creatingBreed}
+                        className="cursor-pointer text-xs font-bold text-emerald-700 hover:underline disabled:opacity-60 dark:text-emerald-400"
                       >
-                        <button
-                          type="button"
-                          onClick={() => setEditBreed(s)}
-                          className="dark:text-muted-foreground cursor-pointer px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700 dark:hover:text-emerald-300"
-                        >
-                          {s}
-                        </button>
-                        {customStrainNames.has(s) && (
+                        {t('registry.registerThisBreed')}
+                      </button>
+                    ) : (
+                      <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                        {t('registry.askOwnerToRegisterBreed')}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {strainError && (
+                  <div
+                    id="genetic-strain-error"
+                    role="alert"
+                    className="mt-1.5 space-y-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300"
+                  >
+                    <p>{strainError}</p>
+                    {canCreateBreed ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleAddTypedBreed()}
+                        disabled={creatingBreed}
+                        className="cursor-pointer text-left underline disabled:opacity-60"
+                      >
+                        {t('registry.addTypedBreed', { strain: typedStrain })}
+                      </button>
+                    ) : (
+                      <p>{t('registry.askOwnerToRegisterBreed')}</p>
+                    )}
+                  </div>
+                )}
+                {strainOpen && strainDropdownPos && createPortal(
+                  <div
+                    className="fixed z-[10000] flex max-h-64 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                    style={{
+                      top: strainDropdownPos.top,
+                      left: strainDropdownPos.left,
+                      width: strainDropdownPos.width,
+                    }}
+                  >
+                    {showStrainAddRow && (
+                      <div className="border-b border-emerald-200 bg-emerald-50/70 p-1.5 dark:border-emerald-900/60 dark:bg-emerald-500/10">
+                        {canCreateBreed ? (
                           <button
                             type="button"
-                            onClick={() => deleteCustomStrain(s)}
-                            aria-label={`Delete ${s}`}
-                            className="text-danger mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xs font-bold transition-colors hover:border-rose-600 hover:bg-rose-600 hover:text-white dark:border-rose-900/60 dark:bg-rose-950/50"
+                            disabled={creatingBreed}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => void handleAddTypedBreed()}
+                            className="flex min-h-10 w-full cursor-pointer items-center px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 disabled:cursor-wait disabled:opacity-60 dark:text-emerald-300"
                           >
-                            <X className="h-3 w-3" aria-hidden="true" />
+                            {creatingBreed
+                              ? t('registry.breedsLoading')
+                              : t('registry.addTypedBreed', { strain: typedStrain })}
                           </button>
+                        ) : (
+                          <p className="px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-300">
+                            {t('registry.askOwnerToRegisterBreed')}
+                          </p>
                         )}
                       </div>
-                    ))}
-                </div>
-              )}
+                    )}
+                    <div
+                      id="genetic-strain-listbox"
+                      role="listbox"
+                      aria-label={t('registry.registeredBreeds')}
+                      className="min-h-0 flex-1 overflow-y-auto"
+                    >
+                      {breedsLoading ? (
+                        <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                          {t('registry.breedsLoading')}
+                        </div>
+                      ) : matchingStrains.length === 0 ? (
+                        !typedStrain ? (
+                          <div role="status" className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                            {t('registry.noRegisteredBreeds')}
+                          </div>
+                        ) : null
+                      ) : (
+                        matchingStrains.map((strain, index) => (
+                          <button
+                            key={strain}
+                            id={`genetic-strain-option-${index}`}
+                            type="button"
+                            role="option"
+                            aria-selected={strain === registeredEditBreed}
+                            tabIndex={-1}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onMouseEnter={() => setStrainActiveIndex(index)}
+                            onClick={() => selectRegisteredStrain(strain)}
+                            className={`flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${
+                              index === strainActiveIndex ? 'bg-emerald-500/10' : ''
+                            } ${
+                              strain === registeredEditBreed
+                                ? 'text-success dark:text-emerald-300'
+                                : 'text-slate-600 dark:text-muted-foreground'
+                            }`}
+                          >
+                            <span className="min-w-0 break-words">{strain}</span>
+                            {strain === registeredEditBreed && (
+                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>,
+                  document.body
+                )}
+              </div>
             </div>
             <div>
               <label

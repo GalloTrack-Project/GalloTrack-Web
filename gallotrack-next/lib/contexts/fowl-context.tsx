@@ -30,7 +30,7 @@ import {
   type DateRangePreset,
 } from '@/lib/helpers';
 import { generateBloodlineReport, generateFarmBloodlineSummary } from '@/lib/bloodlines';
-import { mergeStrainNames } from '@/lib/strain-options';
+import { findStrainName, mergeStrainNames, normalizeStrainSearch } from '@/lib/strain-options';
 import {
   computeBloodlineComposition,
   getBloodlineStats,
@@ -525,9 +525,18 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setMatchHistory(matchData);
       setMatchMedia(await mediaService.fetchMatchMedia(matchData));
       setBreedingPairs(pairings.data);
-      const mergedStrains = mergeStrainNames(strainNames, selectedStrains);
-      setAvailableStrains(mergedStrains);
-      setCustomStrainNames(new Set(mergedStrains.filter(s => !STRAIN_LIST.includes(s))));
+      const registeredStrains = mergeStrainNames(strainNames);
+      setAvailableStrains(registeredStrains);
+      setCustomStrainNames(
+        new Set(
+          registeredStrains.filter(
+            (name) =>
+              !STRAIN_LIST.some(
+                (builtIn) => builtIn.toLowerCase() === name.toLowerCase(),
+              ),
+          ),
+        ),
+      );
       setAvailableLegColors(legColorNames);
       setCustomLegColorNames(new Set(legColorNames.filter(s => !LEG_COLOR_LIST.includes(s))));
       setLoadError(null);
@@ -659,6 +668,21 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     },
   ) => {
     e.preventDefault();
+
+    const resolvedSelectedStrains = selectedStrains.map((strain) =>
+      findStrainName(availableStrains, strain),
+    );
+    const resolvedTypedBreed = findStrainName(availableStrains, newBreed);
+    const breedForSave =
+      selectedStrains.length > 0
+        ? resolvedSelectedStrains.every(Boolean)
+          ? resolvedSelectedStrains.join(', ')
+          : ''
+        : (resolvedTypedBreed ?? '');
+    if (!breedForSave) {
+      toastMessage('Choose a registered breed or add it as a new one.', 'error');
+      return;
+    }
 
     // 1. Upfront Form & Format Validation
     const validation = validateFowlForm({
@@ -793,7 +817,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       // 5. Construct payload & INSERT with up to 2 retries on unique violation
       const autoParts = autoCalcAge ? getAgePartsHelper(newBirthdate) : null;
-      const breedValue = sanitizeInput(effectiveBreed) || 'Unspecified Strain';
+      const breedValue = sanitizeInput(breedForSave);
       const composition = computeBloodlineComposition(
         {
           id: -1,
@@ -993,9 +1017,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
             : finalDisplayCode;
       toastMessage(`Chicken registered successfully (ID: ${finalIdLabel}).`, 'success');
 
-      for (const s of selectedStrains) {
-        await strainService.saveCustomStrain(s);
-      }
       const createdGender = newGender || 'Rooster';
       resetCreateForm();
       clearCreateDraft();
@@ -1369,11 +1390,22 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         return;
       }
 
+      const originalEditBreed = (ui.editingFowl.breed || '').trim();
+      const registeredEditBreed = findStrainName(availableStrains, editBreed);
+      const editBreedChanged =
+        normalizeStrainSearch(editBreed) !== normalizeStrainSearch(originalEditBreed);
+      const editBreedForSave =
+        registeredEditBreed ?? (!editBreedChanged ? originalEditBreed : '');
+      if (!editBreedForSave) {
+        toastMessage('Choose a registered breed or add it as a new one.', 'error');
+        return;
+      }
+
       const editComposition = computeBloodlineComposition(
         {
           id: ui.editingFowl.id,
           name: sanitizeInput(editName),
-          breed: sanitizeInput(editBreed),
+          breed: sanitizeInput(editBreedForSave),
           gender: editGender,
           sire: editSire.trim() ? sanitizeInput(editSire) : 'Foundation Stock',
           dam: editDam.trim() ? sanitizeInput(editDam) : 'Foundation Stock',
@@ -1467,7 +1499,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
       const payload: Record<string, unknown> = {
         name: sanitizeInput(editName),
-        breed: sanitizeInput(editBreed),
+        breed: sanitizeInput(editBreedForSave),
         gender: editGender,
         color: editColor,
         color_category: editColorCategory,
@@ -1551,7 +1583,6 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       }
 
       toastMessage('GalloTrack Node object updated in cloud cluster.', 'success');
-      await strainService.saveCustomStrain(editBreed);
       const editedRoot = {
         ...ui.editingFowl,
         name: String(payload.name),
