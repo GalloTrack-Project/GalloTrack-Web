@@ -26,9 +26,19 @@ const fowls: FowlRecord[] = [
 ];
 
 describe('ParentSelector sex enforcement', () => {
+  it('uses the shared no-native-suggestions combobox contract', () => {
+    render(<ParentSelector id="contract-sire" value="" onChange={vi.fn()} fowls={fowls} preferredGender="Male" />);
+    const input = screen.getByRole('combobox');
+    expect(input).toHaveAttribute('autocomplete', 'off');
+    expect(input).not.toHaveAttribute('list');
+    expect(input).toHaveAttribute('aria-autocomplete', 'list');
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(input).toHaveAttribute('name', 'gt-combobox-contract-sire');
+  });
+
   it('sire picker lists cocks only and excludes hens', () => {
     render(<ParentSelector value="" onChange={vi.fn()} fowls={fowls} preferredGender="Male" />);
-    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.focus(screen.getByRole('combobox'));
 
     expect(screen.getByText('Good Sire')).toBeInTheDocument();
     expect(screen.getByText('Offspring Cock')).toBeInTheDocument();
@@ -41,7 +51,7 @@ describe('ParentSelector sex enforcement', () => {
     render(
       <ParentSelector value="" onChange={vi.fn()} fowls={fowls} preferredGender="Female" accent="amber" />
     );
-    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.focus(screen.getByRole('combobox'));
 
     expect(screen.getByText('Good Dam')).toBeInTheDocument();
     expect(screen.getByText('Offspring Hen')).toBeInTheDocument();

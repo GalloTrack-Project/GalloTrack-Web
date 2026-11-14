@@ -785,6 +785,11 @@ export default function EditFowlModal({
               <input
                 type="text"
                 list="edit-feather-color-options"
+                name="gt-edit-feather-color"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 value={editColor}
                 onChange={(e) => {
                   const c = e.target.value;
@@ -828,6 +833,11 @@ export default function EditFowlModal({
               <input
                 type="text"
                 list="edit-trait-options"
+                name="gt-edit-behavior-trait"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 value={editBehaviorTrait}
                 onChange={(e) => setEditBehaviorTrait(e.target.value)}
                 onBlur={() => {
@@ -1018,6 +1028,11 @@ export default function EditFowlModal({
               type="text"
               value={editLegColor}
               onChange={(e) => setEditLegColor(e.target.value)}
+              name="gt-edit-leg-color"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
               placeholder="Select or type a leg color..."
               id="leg-color"
