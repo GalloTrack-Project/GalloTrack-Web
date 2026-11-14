@@ -9,6 +9,7 @@ import { useDebounce } from '@/lib/use-debounce';
 import { fetchStrains } from '@/lib/services/strain-service';
 import { findStrainName, mergeStrainNames } from '@/lib/strain-options';
 import type { DeclaredBreedShare } from '@/lib/types';
+import { DEFAULT_REGISTRATION_TYPE, type RegistrationType } from '@/lib/registration-type';
 import {
   clearFowlDraft,
   loadFowlDraft,
@@ -19,6 +20,7 @@ import {
 } from '@/lib/fowl-draft';
 
 interface FowlFormStateContextValue {
+  registrationType: RegistrationType; setRegistrationType: (v: RegistrationType) => void;
   newName: string; setNewName: (v: string) => void;
   newBreed: string; setNewBreed: (v: string) => void;
   newGender: string; setNewGender: (v: string) => void;
@@ -150,6 +152,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   function getAutoCalcAge(): boolean {
     return autoCalcAge;
   }
+  const [registrationType, setRegistrationType] = useState<RegistrationType>(DEFAULT_REGISTRATION_TYPE);
   const [newName, setNewName] = useState('');
   const [newBreed, setNewBreed] = useState('');
   const [newGender, setNewGender] = useState('');
@@ -325,6 +328,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const buildCreateDraftFields = useCallback((): CreateDraftFields => ({
+    registrationType,
     newName,
     newBreed,
     newGender,
@@ -349,7 +353,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     selectedStrains,
     legColorQuery,
   }), [
-    newName, newBreed, newGender, newColor, newColorCategory, newGrowthStage,
+    registrationType, newName, newBreed, newGender, newColor, newColorCategory, newGrowthStage,
     newBehaviorTrait, newEyeVariant, newBirthdate, sireName, damName, sirePct,
     damPct, weight, height, newLegColor, age, birdCode, wingBand,
     newDeclaredComposition, strainQuery, selectedStrains, legColorQuery,
@@ -413,7 +417,8 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   );
 
   const hasCreateContent = useCallback(() => Boolean(
-    newName.trim()
+    registrationType === 'offspring'
+    || newName.trim()
     || newBreed.trim()
     || selectedStrains.length > 0
     || selectedImage
@@ -431,7 +436,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     || newBehaviorTrait.trim()
     || (newDeclaredComposition && newDeclaredComposition.length > 0),
   ), [
-    newName, newBreed, selectedStrains, selectedImage, selectedPhotoThumbnail,
+    registrationType, newName, newBreed, selectedStrains, selectedImage, selectedPhotoThumbnail,
     newBirthdate, sireName, damName, birdCode, wingBand, weight, height, age,
     newLegColor, newColor, newBehaviorTrait, newDeclaredComposition,
   ]);
@@ -450,6 +455,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
     }
 
     const f = draft.fields;
+    setRegistrationType(f.registrationType === 'offspring' ? 'offspring' : 'new');
     setNewName(f.newName ?? '');
     setNewBreed(f.newBreed ?? '');
     setNewGender(f.newGender ?? '');
@@ -574,6 +580,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   }, [selectedStrains, availableStrains, persistCreateDraft, persistEditDraft]);
 
   const resetCreateForm = useCallback(() => {
+    setRegistrationType(DEFAULT_REGISTRATION_TYPE);
     setNewName('');
     setNewBreed('');
     setNewGender('');
@@ -615,6 +622,7 @@ export function FowlFormStateProvider({ children }: { children: React.ReactNode 
   }, [getDraftUserId, hasCreateContent, persistCreateDraft]);
 
   const value: FowlFormStateContextValue = {
+    registrationType, setRegistrationType,
     newName, setNewName, newBreed, setNewBreed, newGender, setNewGender,
     newColor, setNewColor, newFeatherColor: newColor, setNewFeatherColor: setNewColor,
     newColorCategory, setNewColorCategory,

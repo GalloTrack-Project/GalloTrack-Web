@@ -4,6 +4,7 @@ import { supabase } from '@/lib/registry';
 import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import { useUI } from './ui-context';
 import { FowlFormStateProvider, useFowlFormState, useFowlFormStateOptional } from './fowl-form-context';
+import { isOffspringRegistration, previewRegistrationIdentifier, type RegistrationType } from '@/lib/registration-type';
 import {
   isMale as isMaleHelper,
   isFemale as isFemaleHelper,
@@ -47,7 +48,6 @@ import {
   isValidBirdCode,
   nextFoundationCode,
   normalizeBirdCode,
-  previewBirdCode,
   resolveBirdCodes,
   validateIdentifierFormat,
   formatBirdCodeForDisplay,
@@ -117,6 +117,7 @@ interface FowlContextValue {
   /** Set when the registry fetch failed — the UI must say so instead of showing an empty farm. */
   loadError: string | null;
 
+  registrationType: RegistrationType; setRegistrationType: (v: RegistrationType) => void;
   newName: string; setNewName: (v: string) => void;
   newBreed: string; setNewBreed: (v: string) => void;
   newGender: string; setNewGender: (v: string) => void;
@@ -355,6 +356,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   const formState = useFowlFormState();
   const unitPrefs = useUnitPrefs();
   const {
+    registrationType,
     newName, newBreed, newGender,
     newColor, newColorCategory,
     newGrowthStage, newBehaviorTrait, newEyeVariant,
@@ -465,8 +467,16 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
   }, [birdCodes]);
   const birdCodeOf = useCallback((f: FowlRecord) => birdCodes.get(String(f.id)) || normalizeBirdCode(f.bird_code), [birdCodes]);
   const suggestedBirdCode = useMemo(
-    () => previewBirdCode({ gender: newGender, sireName, damName, fowls, taken: takenCodes }),
-    [newGender, sireName, damName, fowls, takenCodes]
+    () =>
+      previewRegistrationIdentifier({
+        registrationType,
+        gender: newGender,
+        sireName,
+        damName,
+        fowls,
+        taken: takenCodes,
+      }),
+    [registrationType, newGender, sireName, damName, fowls, takenCodes]
   );
 
   // ── Bloodline composition preview (hatian ng dugo per lahi) ──
@@ -719,16 +729,23 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     }
 
     const submittedCode = normalizeBirdCode(birdCode);
-    const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
-    const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
-    const isOffspring = hasSire || hasDam;
+    const isOffspring = isOffspringRegistration(registrationType);
     const role: 'sire' | 'dam' | 'offspring' = isOffspring ? 'offspring' : isFemaleHelper(newGender) ? 'dam' : 'sire';
 
-    // Role/sex rule: a sire must be a cock, a dam must be a hen.
-    const parentSexError = validateParentRoles({ sire: sireName, dam: damName }, fowls);
-    if (parentSexError) {
-      toastMessage(parentSexError, 'error');
-      return;
+    if (isOffspring) {
+      const sireBird = fowls.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
+      const damBird = fowls.find((f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase());
+      if (!sireBird || !damBird) {
+        toastMessage('Select a registered Sire and a registered Dam for an offspring.', 'error');
+        return;
+      }
+
+      // Role/sex rule: a sire must be a cock, a dam must be a hen.
+      const parentSexError = validateParentRoles({ sire: sireName, dam: damName }, fowls);
+      if (parentSexError) {
+        toastMessage(parentSexError, 'error');
+        return;
+      }
     }
 
     if (submittedCode) {
@@ -779,8 +796,12 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
 
         const sireBird = candidatePool.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
         const damBird = candidatePool.find((f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase());
-        const sireCode = sireBird ? (sireBird.bird_code || poolCodes.get(String(sireBird.id))) : (hasSire ? sireName.trim() : null);
-        const damCode = damBird ? (damBird.bird_code || poolCodes.get(String(damBird.id))) : (hasDam ? damName.trim() : null);
+        const sireCode = isOffspring && sireBird
+          ? sireBird.bird_code || poolCodes.get(String(sireBird.id))
+          : null;
+        const damCode = isOffspring && damBird
+          ? damBird.bird_code || poolCodes.get(String(damBird.id))
+          : null;
 
         let resolved = '';
         try {
@@ -801,11 +822,11 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         }
 
         if (!resolved) {
-          resolved = previewBirdCode({
+          resolved = previewRegistrationIdentifier({
+            registrationType,
             gender: newGender,
             sireName,
             damName,
-            isOffspring,
             fowls: candidatePool,
             taken: poolTaken,
           });
@@ -1036,7 +1057,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       setLoading(false);
       setUploadingImage(false);
     }
-  }, [newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, setPhotoUploadError, ui, fowls, autoCalcAge, unitPrefs]);
+  }, [registrationType, newName, newBreed, newGender, newBirthdate, age, weight, height, newLegColor, sireName, damName, sirePct, damPct, birdCode, wingBand, newDeclaredComposition, setNewDeclaredComposition, takenCodes, newColor, newColorCategory, newGrowthStage, newBehaviorTrait, newEyeVariant, selectedImage, selectedPhotoThumbnail, beginPhotoUpload, endPhotoUpload, computedBloodlinePct, selectedStrains, availableStrains, refreshDescendantCompositions, fetchDatabaseResources, clearCreateDraft, resetCreateForm, setPhotoUploadError, ui, fowls, autoCalcAge, unitPrefs]);
 
 
 

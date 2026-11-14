@@ -21,6 +21,8 @@ export type ParentSelectorProps = {
   placeholder?: string;
   accent?: 'emerald' | 'amber';
   compact?: boolean;
+  /** Offspring registration only accepts registered parents. */
+  allowExternal?: boolean;
 };
 
 function getChildrenOf(parentName: string, fowls: FowlRecord[], gender: 'sire' | 'dam'): FowlRecord[] {
@@ -69,7 +71,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
   );
 }
 
-export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
+export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact, allowExternal = true }: ParentSelectorProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(value);
@@ -343,22 +345,23 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
             </div>
           )}
 
-          {/* SECTION 3: Custom external / Foundation Stock name */}
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-muted/50 text-left cursor-pointer border-t border-slate-100 dark:border-border"
-          >
-            <span className={`w-7 h-7 rounded-sm ${accentBg} text-white flex items-center justify-center text-xs font-black shrink-0`}>{genderIcon}</span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">
-                {text.trim() ? t('registry.useAsCustomParent', { name: text.trim(), gender: preferredGender === 'Male' ? t('domain.roleSire') : t('domain.roleDam') }) : t('registry.externalFoundationPlaceholder')}
+          {allowExternal && (
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-muted/50 text-left cursor-pointer border-t border-slate-100 dark:border-border"
+            >
+              <span className={`w-7 h-7 rounded-sm ${accentBg} text-white flex items-center justify-center text-xs font-black shrink-0`}>{genderIcon}</span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">
+                  {text.trim() ? t('registry.useAsCustomParent', { name: text.trim(), gender: preferredGender === 'Male' ? t('domain.roleSire') : t('domain.roleDam') }) : t('registry.externalFoundationPlaceholder')}
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+          )}
         </div>
       )}
 

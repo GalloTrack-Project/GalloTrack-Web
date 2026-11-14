@@ -60,6 +60,7 @@ import { getBreedingClassification, isFoundationStockRecord } from '@/lib/breedi
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getOffspringParentageRelatedness } from '@/lib/relatedness-classification';
 import { formatBloodlineDisplayValue } from '@/lib/bloodline-report-ui';
+import { formatParentDisplayName } from '@/lib/registration-type';
 import RelatednessBadge from '@/components/RelatednessBadge';
 import { printReport } from '@/lib/report-export';
 import { Modal } from '@/components/ui';
@@ -1043,8 +1044,8 @@ export default function FowlDetailsModal({
                 .filter(Boolean)
                 .join(' · ') || '—'
             : foundation
-              ? 'Foundation'
-              : 'External / unresolved';
+              ? t('registry.unknownParents')
+              : t('registry.externalUnregistered');
           return (
             <div className="dark:border-border dark:bg-muted/50 flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-slate-50/60 p-2.5">
               <div className="flex min-w-0 items-center gap-2.5">
@@ -1068,7 +1069,10 @@ export default function FowlDetailsModal({
                     </button>
                   ) : (
                     <p className="dark:text-card-foreground truncate text-sm font-black text-slate-800">
-                      {foundation ? 'Foundation Stock' : fallbackName || '—'}
+                      {formatParentDisplayName(fallbackName, {
+                        external: t('registry.externalUnregistered'),
+                        unknown: t('registry.unknownParents'),
+                      })}
                     </p>
                   )}
                   <p className="text-muted-foreground truncate text-xs font-semibold tracking-wider uppercase">
@@ -2171,7 +2175,7 @@ export default function FowlDetailsModal({
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-xs font-black uppercase ${isRegistered ? 'border border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-800' : isFoundation ? 'dark:bg-muted text-muted-foreground dark:border-border border border-slate-200 bg-slate-100' : 'border border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-300'}`}
                   >
-                    {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
+                    {isRegistered ? t('registry.registered') : isFoundation ? t('registry.unknownParents') : t('registry.externalUnregistered')}
                   </span>
                 );
               })()}
@@ -2197,7 +2201,10 @@ export default function FowlDetailsModal({
                       </button>
                     ) : (
                       <span className="dark:text-muted-foreground text-slate-600">
-                        {name || '—'}
+                        {formatParentDisplayName(name, {
+                          external: t('registry.externalUnregistered'),
+                          unknown: t('registry.unknownParents'),
+                        })}
                       </span>
                     )}
                     {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
@@ -2232,7 +2239,7 @@ export default function FowlDetailsModal({
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-xs font-black uppercase ${isRegistered ? 'text-pink border border-pink-200 bg-pink-100 dark:border-pink-800' : isFoundation ? 'dark:bg-muted text-muted-foreground dark:border-border border border-slate-200 bg-slate-100' : 'border border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-300'}`}
                   >
-                    {isRegistered ? '✓ Registered' : isFoundation ? 'Foundation' : 'External'}
+                    {isRegistered ? t('registry.registered') : isFoundation ? t('registry.unknownParents') : t('registry.externalUnregistered')}
                   </span>
                 );
               })()}
@@ -2258,7 +2265,10 @@ export default function FowlDetailsModal({
                       </button>
                     ) : (
                       <span className="dark:text-muted-foreground text-slate-600">
-                        {name || '—'}
+                        {formatParentDisplayName(name, {
+                          external: t('registry.externalUnregistered'),
+                          unknown: t('registry.unknownParents'),
+                        })}
                       </span>
                     )}
                     {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}

@@ -12,6 +12,7 @@ import { getOffspringParentageRelatedness } from '@/lib/relatedness-classificati
 import RelatednessBadge from '@/components/RelatednessBadge';
 import { birdCodeOf, compareBirdCodesNatural, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useT } from '@/lib/i18n';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import ChickenIcon from '@/components/ChickenIcon';
 import ChickenPhoto from '@/components/ChickenPhoto';
@@ -270,6 +271,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
     onRegisterSingle,
   } = props;
   const { fowl, name, isMerged, role, childBreedHint, childName } = node;
+  const t = useT();
 
   const stats = useMemo(
     () => (!isMerged && fowl ? getFowlBloodlineStats(fowl, fowls ?? []) : null),
@@ -315,7 +317,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-card-foreground truncate text-xs leading-tight font-black">
-              Foundation stock
+              {t('registry.unknownParents')}
             </p>
             <p className="text-muted-foreground truncate text-[10px] font-semibold">
               Not registered
@@ -323,13 +325,13 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           </div>
         </div>
         {canRegisterAncestor && (
-          <Tooltip content="Register foundation ancestor">
+          <Tooltip content={t('registry.registerAncestor')}>
             <button
               type="button"
               onClick={() =>
                 onRegisterMerged({ breed: childBreedHint, childName: childName || '' })
               }
-              aria-label="Register foundation ancestor"
+              aria-label={t('registry.registerAncestor')}
               className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
               <Plus className="h-4 w-4" />
@@ -360,6 +362,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
   };
 
   if (missing) {
+    const missingDisplayName = name && !isFoundationName(name) ? name : t('registry.unknownParents');
     return (
       <div
         data-node-box="true"
@@ -373,9 +376,9 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           <div className="min-w-0 flex-1">
             <p
               className="text-card-foreground truncate text-xs leading-tight font-black"
-              title={name}
+              title={missingDisplayName}
             >
-              {name || 'Foundation stock'}
+              {missingDisplayName}
             </p>
             <p className="text-muted-foreground truncate text-[10px] font-semibold">
               Not registered
@@ -383,7 +386,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           </div>
         </div>
         {canRegisterAncestor && (
-          <Tooltip content={`Register ancestor ${name || ''}`}>
+          <Tooltip content={t('registry.registerAncestor')}>
             <button
               type="button"
               onClick={() =>
@@ -394,7 +397,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
                   placeholderName: name,
                 })
               }
-              aria-label={`Register ancestor ${name || ''}`}
+              aria-label={t('registry.registerAncestor')}
               className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
               <Plus className="h-4 w-4" />

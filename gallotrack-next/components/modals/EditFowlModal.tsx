@@ -1214,7 +1214,7 @@ export default function EditFowlModal({
                 onPick={(f) => setEditSirePct(parentBloodlinePct(f))}
                 fowls={fowls}
                 preferredGender="Male"
-                placeholder="Foundation Stock"
+                placeholder="External / Unregistered name..."
                 compact
               />
             </div>
@@ -1237,7 +1237,7 @@ export default function EditFowlModal({
                 fowls={fowls}
                 preferredGender="Female"
                 accent="amber"
-                placeholder="Foundation Stock"
+                placeholder="External / Unregistered name..."
                 compact
               />
             </div>

@@ -37,7 +37,7 @@ export default function BreedingTypeBadge({
     qualifierExplanation =
       compositionSource === 'assumed'
         ? 'Assumed from registered breed (not verified)'
-        : 'Lineage includes assumed foundation stock';
+        : 'Lineage includes assumed ancestry';
   }
 
   const hasQualifier = qualifierText !== '' && showQualifier;
