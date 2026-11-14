@@ -12,6 +12,7 @@ import {
   generationPurity,
   generationInfo,
   getAgeParts,
+  getMilestoneInfo,
   calculatePairingStats,
 } from './helpers';
 import type { FowlRecord } from './types';
@@ -256,5 +257,19 @@ describe('calculatePairingStats fowl_id isolation', () => {
     expect(pairing?.losses).toBe(1);
     expect(pairing?.decided).toBe(2);
     expect(pairing?.winRate).toBe(50);
+  });
+});
+
+describe('getMilestoneInfo', () => {
+  it('uses Senior Hen for the final female boundary instead of repeating Hen', () => {
+    const info = getMilestoneInfo('2025-09-01', 'Hen', new Date(2027, 3, 1));
+    expect(info?.current?.stage).toBe('Hen');
+    expect(info?.next?.stage).toBe('Senior Hen');
+    expect(info?.next?.stage).not.toBe(info?.current?.stage);
+  });
+
+  it('returns fully mature when no next stage exists', () => {
+    const info = getMilestoneInfo('2025-04-01', 'Rooster', new Date(2027, 5, 1));
+    expect(info?.next).toBeNull();
   });
 });

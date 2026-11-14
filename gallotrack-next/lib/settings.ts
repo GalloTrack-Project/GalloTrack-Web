@@ -13,12 +13,6 @@ export const DEFAULT_SETTINGS = {
   match_location_required: false,
   /** Headline count in the family view: offspring (approved) | total_birds | pairs */
   family_headline: 'offspring',
-  /** In-app milestone notification channels (email/push are future work). */
-  notify_stage_changed: true as boolean,
-  notify_fully_mature: true as boolean,
-  notify_stage_upcoming: true as boolean,
-  /** Days before a stage boundary to create the upcoming notification. */
-  notification_lead_days: 7 as number,
 } as const;
 
 export type SettingsKey = keyof typeof DEFAULT_SETTINGS;

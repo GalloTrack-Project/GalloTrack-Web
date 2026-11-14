@@ -6,97 +6,157 @@ import {
   useNotifications,
 } from './notification-context';
 import {
-  fetchNotifications,
-  fetchUnreadNotificationCount,
-  markAllNotificationsRead,
-  markNotificationRead,
-} from '@/lib/notifications/service';
+  loadNotificationStore,
+  saveNotificationPreferences,
+  saveNotificationState,
+} from '@/lib/notifications/storage';
+import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/lib/notifications/types';
 
-vi.mock('@/lib/notifications/service', () => ({
-  fetchNotifications: vi.fn(),
-  fetchUnreadNotificationCount: vi.fn(),
-  markNotificationRead: vi.fn(),
-  markAllNotificationsRead: vi.fn(),
+vi.mock('@/lib/contexts/fowl-context', () => ({
+  useFowl: () => ({
+    fowls: [
+      {
+        id: 7,
+        name: 'Pearl Lemon',
+        bird_code: '1A4',
+        gender: 'Rooster',
+        birthdate: '2026-10-12',
+        status: 'Active',
+        activity_status: 'active',
+      },
+    ],
+  }),
 }));
 
+vi.mock('@/lib/notifications/storage', () => ({
+  loadNotificationStore: vi.fn(),
+  saveNotificationState: vi.fn(),
+  saveNotificationPreferences: vi.fn(),
+}));
+
+const itemKey = '7::stag::2027-04-12::upcoming-7';
+const today = new Date(2027, 3, 5);
+
 function Harness() {
-  const { unreadCount, error, markRead, markAllRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    error,
+    usingLocalStorage,
+    preferences,
+    markRead,
+    markAllRead,
+    dismiss,
+    updatePreferences,
+  } = useNotifications();
   return (
     <div>
       <span data-testid="count">{unreadCount}</span>
       <span data-testid="error">{error}</span>
-      <button type="button" onClick={() => void markRead(1)}>
+      <span data-testid="local">{String(usingLocalStorage)}</span>
+      <span data-testid="audience">{preferences.audience}</span>
+      <span data-testid="key">{notifications[0]?.key ?? ''}</span>
+      <button type="button" onClick={() => void markRead(notifications[0].key)}>
         mark one
       </button>
       <button type="button" onClick={() => void markAllRead()}>
         mark all
       </button>
+      <button type="button" onClick={() => void dismiss(notifications[0].key)}>
+        dismiss one
+      </button>
+      <button
+        type="button"
+        onClick={() => void updatePreferences({ ...preferences, enabled: false })}
+      >
+        disable
+      </button>
     </div>
   );
 }
 
-const item = {
-  id: 1,
-  user_id: 'u1',
-  type: 'stage_upcoming' as const,
-  fowl_id: 7,
-  stage: 'Stag',
-  title: 'Stag coming up',
-  body: 'body',
-  due_date: '2026-11-18',
-  read_at: null,
-  created_at: '2026-11-13T00:00:00Z',
-  fowl: { id: 7, name: 'Pearl Lemon', bird_code: '1A4' },
-};
-
-describe('NotificationProvider', () => {
+describe('NotificationProvider derived flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchNotifications).mockResolvedValue({ data: [item] });
-    vi.mocked(fetchUnreadNotificationCount).mockResolvedValue({ count: 1 });
-    vi.mocked(markNotificationRead).mockResolvedValue({});
-    vi.mocked(markAllNotificationsRead).mockResolvedValue({ count: 1 });
+    vi.mocked(loadNotificationStore).mockResolvedValue({
+      preferences: DEFAULT_NOTIFICATION_PREFERENCES,
+      state: {},
+      mode: 'database',
+    });
+    vi.mocked(saveNotificationState).mockResolvedValue('database');
+    vi.mocked(saveNotificationPreferences).mockResolvedValue('database');
   });
 
-  it('loads the unread count and clears it after mark read', async () => {
+  it('derives the notification and persists a read action', async () => {
     render(
-      <NotificationProvider userId="u1">
+      <NotificationProvider userId="user-1" today={today}>
         <Harness />
       </NotificationProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('1'));
+    expect(screen.getByTestId('key')).toHaveTextContent(itemKey);
 
     fireEvent.click(screen.getByRole('button', { name: 'mark one' }));
     await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('0'));
-    expect(markNotificationRead).toHaveBeenCalledWith(1);
+    expect(saveNotificationState).toHaveBeenCalledWith(
+      'user-1',
+      expect.arrayContaining([
+        expect.objectContaining({ key: itemKey, read_at: expect.any(String) }),
+      ]),
+      'database',
+    );
   });
 
-  it('marks all notifications read', async () => {
+  it('marks all read and dismisses items', async () => {
     render(
-      <NotificationProvider userId="u1">
+      <NotificationProvider userId="user-1" today={today}>
         <Harness />
       </NotificationProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('1'));
-
     fireEvent.click(screen.getByRole('button', { name: 'mark all' }));
     await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('0'));
-    expect(markAllNotificationsRead).toHaveBeenCalled();
+    expect(saveNotificationState).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'dismiss one' }));
+    await waitFor(() => expect(screen.getByTestId('key')).toHaveTextContent(''));
   });
 
-  it('surfaces service errors', async () => {
-    vi.mocked(fetchNotifications).mockResolvedValue({ data: [], error: 'Notifications unavailable.' });
-    vi.mocked(fetchUnreadNotificationCount).mockResolvedValue({
-      count: 0,
-      error: 'Notifications unavailable.',
+  it('restores read state after reload', async () => {
+    vi.mocked(loadNotificationStore).mockResolvedValue({
+      preferences: DEFAULT_NOTIFICATION_PREFERENCES,
+      state: {
+        [itemKey]: { read_at: '2027-04-05T00:00:00.000Z', dismissed_at: null },
+      },
+      mode: 'database',
     });
     render(
-      <NotificationProvider userId="u1">
+      <NotificationProvider userId="user-1" today={today}>
         <Harness />
       </NotificationProvider>,
     );
-    await waitFor(() =>
-      expect(screen.getByTestId('error')).toHaveTextContent('Notifications unavailable.'),
+    await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('0'));
+    expect(screen.getByTestId('key')).toHaveTextContent(itemKey);
+  });
+
+  it('exposes the localStorage mode and saves preference changes', async () => {
+    vi.mocked(loadNotificationStore).mockResolvedValue({
+      preferences: DEFAULT_NOTIFICATION_PREFERENCES,
+      state: {},
+      mode: 'local',
+    });
+    render(
+      <NotificationProvider userId="user-1" today={today}>
+        <Harness />
+      </NotificationProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('local')).toHaveTextContent('true'));
+    fireEvent.click(screen.getByRole('button', { name: 'disable' }));
+    await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('0'));
+    expect(saveNotificationPreferences).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ enabled: false }),
+      'local',
     );
   });
 });

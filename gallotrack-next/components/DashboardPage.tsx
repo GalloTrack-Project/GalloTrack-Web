@@ -10,13 +10,14 @@ import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useNotificationUnreadCount } from '@/lib/contexts/notification-context';
+import { nextMilestoneLabel } from '@/lib/notifications/format';
+import { selectUpcomingMilestoneCard } from '@/lib/milestone-card';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
 import BreedingPairPerformanceAnalytics from '@/components/BreedingPairPerformanceAnalytics';
 import { LayoutDashboard, Trophy, Zap, Calendar, Dna, TrendingUp, PieChart, Search, Download, Printer, ChevronDown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import DateRangePicker from '@/components/DateRangePicker';
 import { downloadCsv, printReport } from '@/lib/report-export';
-import { ROLE_LABEL } from '@/lib/registry-roles';
 import { classifyFlock, getBreedingClassification } from '@/lib/breeding-classification';
 import { useT } from '@/lib/i18n';
 import {
@@ -117,11 +118,12 @@ export default function DashboardPage() {
     };
     return {
       activeNewThisMonth: activeFowls.filter((f) => isWithinThisMonth(f.created_at)).length,
-      activeNewThisWeek: activeFowls.filter((f) => isWithinThisWeek(f.created_at)).length,
       matchesThisWeek: matchHistory.filter((m) => isWithinThisWeek(m.date)).length,
     };
   }, [activeFowls, matchHistory]);
-  const { activeNewThisMonth, activeNewThisWeek, matchesThisWeek } = activityCounts;
+  const { activeNewThisMonth, matchesThisWeek } = activityCounts;
+  const milestoneCard = selectUpcomingMilestoneCard(upcomingMilestones);
+  const soonMilestones = milestoneCard.visible;
 
   const matchColumns = ['Date', 'Our Chicken', 'Opponent', 'Breed', 'Opponent Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition', 'Notes'];
   const matchRows = React.useMemo(
@@ -623,7 +625,11 @@ export default function DashboardPage() {
                 <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-success" /></span>
                 <div className="min-w-0">
                   <h2 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title={t('dashboard.upcomingMilestones')}>{t('dashboard.upcomingMilestones')}</h2>
-                  <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>{upcomingMilestones.filter(x => x.info.next && x.info.next.daysUntil >= 0 && x.info.next.daysUntil <= 30).length} in the next 30 days</p>
+                  <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>
+                    {milestoneCard.totalSoon > 0
+                      ? t('dashboard.inNext30Days', { count: milestoneCard.totalSoon })
+                      : t('dashboard.noUpcoming30Days')}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
@@ -636,45 +642,50 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="space-y-2 flex-1">
-              {upcomingMilestones.slice(0, 5).map(({ fowl, info }) => {
-                const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
-                const overdue = info.next !== null && info.next!.daysUntil < 0;
-                return (
-                  <div key={fowl.id} className={`flex flex-wrap items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-500/10 border-emerald-500/20' : overdue ? 'bg-rose-500/10 border-rose-500/20' : 'bg-muted/50 border-border'}`}>
-                    <span className="w-9 h-9 rounded-sm border border-border bg-muted flex items-center justify-center shrink-0"><ChickenIcon className="h-5 w-5" aria-hidden="true" /></span>
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words text-sm font-black text-card-foreground" title={fowl.name}>
-                        {fowl.name}
-                        {(() => {
-                          const code = formatBirdCodeForDisplay(birdCodes.get(String(fowl.id)) || fowl.bird_code || fowl.chicken_code || '');
-                          return code ? (
+              {soonMilestones.length === 0 ? (
+                <p className="text-muted-foreground py-6 text-center text-sm font-semibold">
+                  {t('dashboard.noUpcoming30Days')}
+                </p>
+              ) : (
+                soonMilestones.slice(0, 5).map(({ fowl, info }) => {
+                  const soon = info.next !== null && info.next.daysUntil >= 0;
+                  const code = formatBirdCodeForDisplay(
+                    birdCodes.get(String(fowl.id)) || fowl.bird_code || fowl.chicken_code || '',
+                  );
+                  return (
+                    <div
+                      key={fowl.id}
+                      className={`flex flex-wrap items-center gap-3 rounded-md border p-3 transition-all ${
+                        soon
+                          ? 'border-emerald-500/20 bg-emerald-500/10'
+                          : 'border-border bg-muted/50'
+                      }`}
+                    >
+                      <span className="border-border bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border">
+                        <ChickenIcon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-card-foreground text-sm font-black break-words" title={fowl.name}>
+                          {fowl.name}
+                          {code && (
                             <span className="ml-1.5 inline-flex max-w-full items-center break-words rounded-sm border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase text-emerald-700 dark:text-emerald-300">
                               {code}
                             </span>
-                          ) : null;
-                        })()}
-                      </p>
-                      <p className="break-words text-sm font-semibold text-muted-foreground">
-                        {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
-                      </p>
+                          )}
+                        </p>
+                        <p className="text-muted-foreground text-sm font-semibold break-words">
+                          {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
+                        </p>
+                      </div>
+                      <div className="min-w-0 text-right">
+                        <p className="text-sm font-black break-words text-emerald-700 dark:text-emerald-300">
+                          {nextMilestoneLabel(info.next, t)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 text-right">
-                      {info.next ? (
-                        <>
-                          <p className={`break-words text-sm font-black uppercase tracking-wide ${soon ? 'text-success' : overdue ? 'text-danger' : 'text-warning'}`}>
-                            {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
-                          </p>
-                          <p className="break-words font-mono text-sm font-bold text-muted-foreground">
-                            {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="break-words text-sm font-black uppercase text-success">Fully mature</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
             <button
               type="button"

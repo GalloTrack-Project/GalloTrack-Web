@@ -132,7 +132,7 @@ describe('nav-manifest', () => {
       '/lineage',
       '/breeding',
     ]);
-    expect(ownerGroups[1].items.map((i) => i.href)).toEqual(['/profile']);
+    expect(ownerGroups[1].items.map((i) => i.href)).toEqual(['/notifications', '/profile']);
     const adminGroups = groupNavItems(ADMIN_NAV);
     expect(adminGroups.map((g) => g.group)).toEqual(['Console', 'Account']);
   });

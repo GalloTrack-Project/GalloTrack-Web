@@ -1,55 +1,47 @@
 # Milestone Notifications
 
-## Single source of stage/milestone math
+Milestone notifications are derived in the browser from chicken birth dates. There is no
+notification cron job and no stored notification list.
 
-- `lib/helpers.ts` owns `getDevelopmentStages()` and `getMilestoneInfo()`.
-- `useFowlAnalytics()` maps `activeFowls` through `getMilestoneInfo()` and sorts by
-  `next.daysUntil`. That `upcomingMilestones` array is exposed by `FowlContext`.
-- The Dashboard "Upcoming Milestones" card and the Milestones page both read that same
-  `upcomingMilestones` array. No stage thresholds are redefined in those components.
-- The notification job calls `getStageBoundaries()`, which iterates
-  `getDevelopmentStages()` and `addMonthsToDate()`; it does not hardcode 6/12/24-month
-  thresholds or recalculate age independently.
+## Source of truth
 
-## Generation
+- `lib/helpers.ts` owns `getDevelopmentStages()`, `getMilestoneInfo()`, `getAgeParts()` and
+  `autoComputeGrowthStage()`.
+- `lib/notifications/milestones.ts` builds derived items with
+  `buildMilestoneNotifications(fowls, preferences, today)`.
+- Stage thresholds and labels come from `getDevelopmentStages()`; the notification module does
+  not keep a second copy of the 6/12/24-month rules.
+- The Dashboard card and `/milestones` still read the shared `upcomingMilestones` data from
+  `useFowl()` and use the same stage helper.
 
-- Scheduled by Vercel Cron: `/api/cron/milestone-notifications`, daily at `01:00 UTC`
-  (`vercel.json`). Vercel Cron is used because the project already deploys on Vercel and
-  has no existing pg_cron setup.
-- Required environment: `CRON_SECRET`. Vercel sends it as
-  `Authorization: Bearer <CRON_SECRET>`.
-- The route uses `SUPABASE_SERVICE_ROLE_KEY` only on the server.
-- Inserts are idempotent through the unique constraint
-  `(user_id, fowl_id, type, stage)` plus `upsert(..., ignoreDuplicates: true)`.
-- The first run creates upcoming notifications only. Stage-changed and fully-mature
-  notices require a stored `milestone_notifications_last_run_at` marker, so old transitions
-  are not replayed.
-- Archived/deceased chickens are skipped and their unread upcoming rows are removed.
-- Birth-date edits trigger deletion of that chicken's unread `stage_upcoming` rows. The next
-  daily run recreates any still-valid upcoming notices.
+## States
 
-## Migration review
+- `upcoming`: selected lead time before a stage boundary.
+- `today`: the stage boundary is today.
+- `reached`: the boundary passed within the last 14 days.
+- The 24-month boundary is presented as `Fully mature`.
 
-Apply only after review:
+Items use a stable key containing the chicken id, stage, target date and lead type. Dismissed
+items are hidden, and a birth-date edit naturally removes stale items because the list is
+recomputed from the current registry.
 
-`supabase/migrations/20261113000000_milestone_notifications.sql`
+## Persistence
 
-After applying it:
+- Migration: `supabase/migrations/20261114000000_notification_state_preferences.sql`
+- Tables: `notification_state` and `notification_preferences`.
+- Both tables are additive and owner-only through RLS.
+- If the tables are unavailable, preferences and read/dismiss state fall back to localStorage
+  keys scoped to the user id. The UI shows
+  “Notification settings are saved on this device only” and the console logs the fallback.
+- Old `user_settings` lead/stage values are read once when no new preference row exists.
 
-```powershell
-cd gallotrack-next
-npm run verify:notification-rls
-```
+## UI
 
-The script creates two disposable users, verifies own-row visibility, own `read_at`
-updates, cross-user blocking, owner insert blocking, and non-`read_at` column blocking.
-It removes both users when done.
+- `NotificationBell` opens the latest 10 items in a dropdown on desktop and a bottom sheet on
+  mobile, with Today / This week / Later / Earlier groups.
+- `/notifications` is the full list with All / Unread / Upcoming / Reached filters, search and
+  pagination.
+- Settings → Notifications contains the master switch, stage choices, lead times, audience and
+  reset-to-defaults controls.
 
-## Screenshots
-
-`npm run build` then `npm run screenshots:notifications` writes:
-
-- `docs/screenshots/notifications-bell.png`
-- `docs/screenshots/notifications-panel-unread.png`
-- `docs/screenshots/notifications-panel-empty.png`
-- `docs/screenshots/notifications-settings.png`
+Do not apply the migration automatically. Print and review the SQL first.
