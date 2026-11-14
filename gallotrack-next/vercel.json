@@ -1,14 +1,8 @@
 {
   "framework": "nextjs",
-  "crons": [
-    {
-      "path": "/api/cron/milestone-notifications",
-      "schedule": "0 1 * * *"
-    }
-  ],
   "rewrites": [
     { "source": "/dashboard", "destination": "/" },
     { "source": "/profiling", "destination": "/" },
-    { "source": "/((?!api|_next/static|_next/image|favicon.ico|profile|settings|auth/confirm|auth/update-password|register|auth/verify-otp|admin).*)", "destination": "/" }
+    { "source": "/((?!api|_next/static|_next/image|favicon.ico|profile|settings|notifications|auth/confirm|auth/update-password|register|auth/verify-otp|admin).*)", "destination": "/" }
   ]
 }

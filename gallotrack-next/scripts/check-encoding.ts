@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve, extname } from 'node:path';
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -88,7 +88,9 @@ function checkFile(relPath: string): Violation[] {
   return violations;
 }
 
-const files = listTrackedFiles().filter((rel) => !BINARY_EXTENSIONS.has(extname(rel).toLowerCase()));
+const files = listTrackedFiles().filter(
+  (rel) => !BINARY_EXTENSIONS.has(extname(rel).toLowerCase()) && existsSync(resolve(root, rel)),
+);
 const violations = files.flatMap(checkFile);
 
 if (violations.length > 0) {

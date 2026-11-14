@@ -26,7 +26,14 @@ import {
   type UserSettings as FarmSettings,
   type SettingsKey,
 } from '@/lib/settings';
-import { NOTIFICATION_LEAD_DAYS } from '@/lib/notifications/milestones';
+import { useNotificationsOptional } from '@/lib/contexts/notification-context';
+import { getMilestoneStageOptions } from '@/lib/notifications/milestones';
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  NOTIFICATION_LEAD_DAY_OPTIONS,
+  type MilestoneNotificationPreferences,
+  type NotificationAudience,
+} from '@/lib/notifications/types';
 import {
   fetchRegistryOptions,
   addRegistryOption,
@@ -213,6 +220,14 @@ export default function SettingsPage() {
   const [restoring, setRestoring] = useState(false);
   const restoreInputRef = useRef<HTMLInputElement | null>(null);
   const fowl = useFowl();
+  const notificationContext = useNotificationsOptional();
+  const notificationPreferences =
+    notificationContext?.preferences ??
+    (DEFAULT_NOTIFICATION_PREFERENCES as MilestoneNotificationPreferences);
+  const updatePreferences = notificationContext?.updatePreferences ?? (async () => {});
+  const resetPreferences = notificationContext?.resetPreferences ?? (async () => {});
+  const notificationsUseLocalStorage = notificationContext?.usingLocalStorage ?? false;
+  const [notificationNotice, setNotificationNotice] = useState('');
   const [dangerModal, setDangerModal] = useState<{
     type: 'match' | 'fowl' | 'all';
     title: string;
@@ -273,6 +288,12 @@ export default function SettingsPage() {
     const { error } = await setUserSetting(key, value as FarmSettings[SettingsKey]);
     setFarmCfgNotice(error ? `Failed to save: ${error}` : 'Farm setting saved.');
     setTimeout(() => setFarmCfgNotice(''), 3000);
+  }
+
+  async function saveNotificationPreferences(next: MilestoneNotificationPreferences) {
+    await updatePreferences(next);
+    setNotificationNotice(t('notifications.settings.saved'));
+    setTimeout(() => setNotificationNotice(''), 3000);
   }
 
   async function reloadRegistryOptions() {
@@ -1066,70 +1087,158 @@ export default function SettingsPage() {
           </div>
         );
 
-      case 'notifications':
+      case 'notifications': {
+        const stageOptions = getMilestoneStageOptions();
+        const toggleLead = (days: number) => {
+          const selected = new Set(notificationPreferences.leadDays);
+          if (selected.has(days)) {
+            if (selected.size === 1) return;
+            selected.delete(days);
+          } else {
+            selected.add(days);
+          }
+          void saveNotificationPreferences({
+            ...notificationPreferences,
+            leadDays: [...selected],
+          });
+        };
         return (
           <div className="space-y-4">
             <SectionCard
-              title="Milestone Notifications"
-              description="In-app alerts for chicken development stages. Saved per farm owner."
+              title={t('notifications.settings.title')}
+              description={t('notifications.settings.description')}
             >
-              {farmCfgNotice && (
-                <p className="py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                  {farmCfgNotice}
+              {notificationsUseLocalStorage && (
+                <p className="py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                  {t('notifications.localStorageNotice')}
+                </p>
+              )}
+              {notificationNotice && (
+                <p className="py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  {notificationNotice}
                 </p>
               )}
               <Field
-                label="Stage changed"
-                description="When a chicken enters a new development stage"
+                label={t('notifications.settings.enabled')}
+                description={t('notifications.settings.enabledDescription')}
               >
                 <Toggle
-                  checked={farmCfg.notify_stage_changed !== false}
-                  onChange={(v) => saveFarmSetting('notify_stage_changed', v)}
+                  checked={notificationPreferences.enabled}
+                  onChange={(value) =>
+                    void saveNotificationPreferences({
+                      ...notificationPreferences,
+                      enabled: value,
+                    })
+                  }
                 />
               </Field>
+              <div className="border-border border-b py-3.5">
+                <span className="text-foreground block text-sm font-extrabold">
+                  {t('notifications.settings.stages')}
+                </span>
+                <span className="text-muted-foreground block text-xs font-medium">
+                  {t('notifications.settings.stagesDescription')}
+                </span>
+                <div className="mt-3 space-y-2">
+                  {stageOptions.map((stage) => (
+                    <label
+                      key={stage.key}
+                      className="border-border bg-muted/30 flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2"
+                    >
+                      <span className="text-foreground text-xs font-bold">{stage.groupLabel}</span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.stages[stage.key]}
+                        onChange={(event) =>
+                          void saveNotificationPreferences({
+                            ...notificationPreferences,
+                            stages: {
+                              ...notificationPreferences.stages,
+                              [stage.key]: event.target.checked,
+                            },
+                          })
+                        }
+                        className="h-5 w-5 cursor-pointer accent-emerald-600"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="border-border border-b py-3.5">
+                <span className="text-foreground block text-sm font-extrabold">
+                  {t('notifications.settings.leadTimes')}
+                </span>
+                <span className="text-muted-foreground block text-xs font-medium">
+                  {t('notifications.settings.leadTimesDescription')}
+                </span>
+                <div
+                  className="mt-3 flex flex-wrap gap-1.5"
+                  role="group"
+                  aria-label={t('notifications.settings.leadTimes')}
+                >
+                  {NOTIFICATION_LEAD_DAY_OPTIONS.map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      aria-pressed={notificationPreferences.leadDays.includes(days)}
+                      onClick={() => toggleLead(days)}
+                      className={`min-h-11 cursor-pointer rounded-full border px-3 text-xs font-black transition-colors ${
+                        notificationPreferences.leadDays.includes(days)
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {days === 0
+                        ? t('notifications.settings.onDay')
+                        : t('notifications.settings.leadDays', { days })}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <Field
-                label="Fully mature"
-                description="When a chicken reaches 24 months and is fully mature"
-              >
-                <Toggle
-                  checked={farmCfg.notify_fully_mature !== false}
-                  onChange={(v) => saveFarmSetting('notify_fully_mature', v)}
-                />
-              </Field>
-              <Field
-                label="Upcoming stage"
-                description="Before a chicken reaches its next stage boundary"
-              >
-                <Toggle
-                  checked={farmCfg.notify_stage_upcoming !== false}
-                  onChange={(v) => saveFarmSetting('notify_stage_upcoming', v)}
-                />
-              </Field>
-              <Field
-                label="Upcoming lead time"
-                description="How many days before a stage boundary to notify"
+                label={t('notifications.settings.audience')}
+                description={t('notifications.settings.audienceDescription')}
               >
                 <SelectInput
-                  value={String(farmCfg.notification_lead_days ?? 7)}
-                  onChange={(v) => saveFarmSetting('notification_lead_days', Number(v))}
-                  options={NOTIFICATION_LEAD_DAYS.map((days) => ({
-                    value: String(days),
-                    label: `${days} days`,
-                  }))}
+                  value={notificationPreferences.audience}
+                  onChange={(value) =>
+                    void saveNotificationPreferences({
+                      ...notificationPreferences,
+                      audience: value as NotificationAudience,
+                    })
+                  }
+                  options={[
+                    { value: 'both', label: t('notifications.settings.audienceBoth') },
+                    { value: 'cocks', label: t('notifications.settings.audienceCocks') },
+                    { value: 'hens', label: t('notifications.settings.audienceHens') },
+                  ]}
                 />
               </Field>
-              <p className="text-muted-foreground text-xs font-medium">
-                Email and push notifications are not enabled yet. System event toasts stay
-                controlled by your local preferences.
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 py-3.5">
+                <p className="text-muted-foreground text-xs font-medium">
+                  {t('notifications.settings.leadTimesHelp')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void resetPreferences().then(() => {
+                      setNotificationNotice(t('notifications.settings.resetDone'));
+                      setTimeout(() => setNotificationNotice(''), 3000);
+                    });
+                  }}
+                  className="border-border bg-card text-foreground hover:bg-muted min-h-11 cursor-pointer rounded-md border px-3 text-xs font-black transition-colors"
+                >
+                  {t('notifications.settings.reset')}
+                </button>
+              </div>
             </SectionCard>
             <SectionCard
-              title="System Event Toasts"
-              description="Show toast notifications on save, delete, and errors"
+              title={t('notifications.settings.toastsTitle')}
+              description={t('notifications.settings.toastsDescription')}
             >
               <Field
-                label="Enable toast notifications"
-                description="Show toast notifications on save, delete, errors"
+                label={t('notifications.settings.toastsEnabled')}
+                description={t('notifications.settings.toastsDescription')}
               >
                 <Toggle
                   checked={settings.event_alerts !== false}
@@ -1139,7 +1248,7 @@ export default function SettingsPage() {
             </SectionCard>
           </div>
         );
-
+      }
       case 'registry':
         return (
           <div className="space-y-4">

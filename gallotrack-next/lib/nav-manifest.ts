@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   FlaskConical,
+  Bell,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import {
@@ -39,7 +40,7 @@ export type NavItem = {
   /** Sidebar group label; consecutive items with the same group are grouped. */
   group: string;
   /** Translation key in nav dictionary (optional) */
-  key?: 'dashboard' | 'registry' | 'inventory' | 'lineage' | 'breeding' | 'profile' | 'overview' | 'users' | 'config';
+  key?: 'dashboard' | 'registry' | 'inventory' | 'lineage' | 'breeding' | 'notifications' | 'profile' | 'overview' | 'users' | 'config';
   /** Group key in nav dictionary (optional) */
   groupKey?: 'farmGroup' | 'consoleGroup' | 'accountGroup';
   /** Optional expandable submenu rendered by the sidebar/mobile nav. */
@@ -77,6 +78,7 @@ export const OWNER_NAV: NavItem[] = [
   { href: '/catalog', label: 'Chicken Inventory', shortLabel: 'Inventory', icon: ChickenIcon, match: 'prefix', group: 'Farm', key: 'inventory', groupKey: 'farmGroup' },
   { href: '/lineage', label: 'Lineage Directory', shortLabel: 'Lineage', icon: TreePine, match: 'prefix', group: 'Farm', key: 'lineage', groupKey: 'farmGroup' },
   { href: '/breeding', label: 'Breeding Hub', shortLabel: 'Breeding', icon: FlaskConical, match: 'prefix', group: 'Farm', key: 'breeding', groupKey: 'farmGroup' },
+  { href: '/notifications', label: 'Notifications', shortLabel: 'Notifications', icon: Bell, match: 'prefix', group: 'Account', key: 'notifications', groupKey: 'accountGroup' },
   { href: '/profile', label: 'My Profile', shortLabel: 'Profile', icon: User, match: 'prefix', group: 'Account', key: 'profile', groupKey: 'accountGroup' },
 ];
 

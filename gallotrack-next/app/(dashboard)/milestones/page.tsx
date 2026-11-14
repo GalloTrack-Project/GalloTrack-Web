@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { getAgeLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { useT } from '@/lib/i18n';
+import { nextMilestoneLabel } from '@/lib/notifications/format';
 import { Calendar, CircleDot, Activity, Crown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 
@@ -12,6 +14,7 @@ type Filter = 'all' | 'soon' | 'overdue' | 'mature';
 export default function MilestonesPage() {
   const { upcomingMilestones, activeFowls, birdCodeOf } = useFowl();
   const router = useRouter();
+  const t = useT();
   const [filter, setFilter] = useState<Filter>('all');
 
   const filtered = upcomingMilestones.filter(({ info }) => {
@@ -96,17 +99,13 @@ export default function MilestonesPage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    {info.next ? (
-                      <>
-                        <p className={`text-xs font-black uppercase tracking-wide ${soon ? 'text-emerald-700 dark:text-emerald-300' : overdue ? 'text-danger dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'}`}>
-                          {info.next.stage} {soon ? '· SOON' : overdue ? '· OVERDUE' : ''}
-                        </p>
-                        <p className="text-xs font-mono text-muted-foreground font-bold">
-                          {info.next.date.toLocaleDateString()} · {info.next.daysUntil >= 0 ? `in ${info.next.daysUntil}d` : `${Math.abs(info.next.daysUntil)}d ago`}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase">Fully mature</p>
+                    <p className={`text-xs font-black ${soon ? 'text-emerald-700 dark:text-emerald-300' : overdue ? 'text-danger dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                      {nextMilestoneLabel(info.next, t)}
+                    </p>
+                    {info.next && (
+                      <p className="text-muted-foreground text-xs font-mono font-bold">
+                        {info.next.date.toLocaleDateString()}
+                      </p>
                     )}
                   </div>
                 </div>

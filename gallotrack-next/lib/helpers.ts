@@ -373,8 +373,14 @@ export const getMilestoneInfo = (birthdate?: string | null, gender?: string, fro
   const stages = getDevelopmentStages(gender);
   const current = stages.filter((s) => parts.totalMonths >= s.fromMonths && parts.totalMonths < s.toMonths).pop() || null;
   const nextStage = stages.find((s) => parts.totalMonths < s.fromMonths) || null;
+  const finalStage = stages[stages.length - 1] ?? null;
   const next: RolledMilestoneStage | null = nextStage
-    ? { ...nextStage, date: addMonthsToDate(birth, nextStage.fromMonths), daysUntil: Math.ceil((addMonthsToDate(birth, nextStage.fromMonths).getTime() - now.getTime()) / 86400000) }
+    ? {
+        ...nextStage,
+        stage: finalStage && nextStage.fromMonths === finalStage.fromMonths ? nextStage.id : nextStage.stage,
+        date: addMonthsToDate(birth, nextStage.fromMonths),
+        daysUntil: Math.ceil((addMonthsToDate(birth, nextStage.fromMonths).getTime() - now.getTime()) / 86400000),
+      }
     : null;
   return { parts, current, stages, next };
 };
