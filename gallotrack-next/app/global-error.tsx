@@ -45,23 +45,13 @@ export default function GlobalError({
             textAlign: 'center',
           }}
         >
-          <div
-            style={{
-              width: '56px',
-              height: '56px',
-              margin: '0 auto 16px',
-              borderRadius: '10px',
-              background: 'rgba(5, 150, 105, 0.15)',
-              border: '1px solid rgba(5, 150, 105, 0.35)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '26px',
-            }}
-            aria-hidden="true"
-          >
-            !
-          </div>
+          <img
+            src="/brand/logo-mark.svg"
+            alt="GalloTrack"
+            width={56}
+            height={56}
+            style={{ display: 'block', width: '56px', height: '56px', margin: '0 auto 16px' }}
+          />
           <h1
             style={{
               margin: '0 0 8px',

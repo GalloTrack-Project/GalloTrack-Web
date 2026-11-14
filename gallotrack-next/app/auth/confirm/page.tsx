@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { supabase, ensureOwnerRecords } from '@/lib/registry';
+import Logo from '@/components/brand/Logo';
 
 type OtpType = 'email' | 'signup' | 'magiclink' | 'recovery' | 'invite';
 type Status = 'loading' | 'success' | 'error';
@@ -97,7 +98,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
         <div className="p-8 sm:p-10 space-y-7 text-center">
           <div className="text-center space-y-2">
             <span className="text-xs font-bold tracking-[0.2em] text-success/90 uppercase block">ISUFST CICI Capstone Project</span>
-            <h1 className="text-3xl sm:text-4xl font-black text-card-foreground tracking-tight leading-none">GALLOTRACK</h1>
+            <Logo variant="full" size="md" className="mx-auto" />
             <p className="text-xs text-muted-foreground font-semibold">Advanced Chicken Lineage Analytics &amp; Structural Trace Registry</p>
           </div>
 
@@ -115,7 +116,7 @@ function StatusCard({ status, errorMessage }: { status: Status; errorMessage: st
               <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Email Confirmed Successfully! 🎉</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-card-foreground tracking-tight">Email Confirmed Successfully! </h2>
               <p className="text-sm text-muted-foreground font-semibold leading-relaxed">
                 Your account is now verified.
               </p>

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useT } from '@/lib/i18n';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import Logo from '@/components/brand/Logo';
 
 export default function NotFound() {
   const { t } = useT();
@@ -13,9 +14,7 @@ export default function NotFound() {
       </div>
       <title>{`${t('errors.notFoundTitle')} | GalloTrack`}</title>
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center text-4xl mx-auto">
-          🐓
-        </div>
+        <Logo variant="mark" size="lg" className="mx-auto" />
         <div className="space-y-2">
           <h1 className="text-4xl font-black tracking-tight">404</h1>
           <h2 className="text-lg font-bold text-muted-foreground">{t('errors.notFoundTitle')}</h2>

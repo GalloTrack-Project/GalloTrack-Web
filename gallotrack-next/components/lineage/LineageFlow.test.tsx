@@ -27,6 +27,11 @@ const family: FowlRecord[] = [
   bird({ id: 7, name: 'Grandchild', gender: 'Rooster', sire: 'Offspring 1A1', dam: 'Dam C', bird_code: '1A1C1' }),
 ];
 
+const deepFamily: FowlRecord[] = [
+  ...family,
+  bird({ id: 8, name: 'Great Grandchild', gender: 'Rooster', sire: 'Grandchild', bird_code: '1A1C1D1' }),
+];
+
 const match = (id: number, fowlId: number, entryName: string, outcome: 'Win' | 'Loss'): MatchRecord => ({
   id,
   fowl_id: fowlId,
@@ -164,14 +169,29 @@ describe('LineageFlow pedigree canvas', () => {
     expect(screen.getAllByTestId('lineage-bird-card')).toHaveLength(new Set(family.map((f) => f.id)).size);
   });
 
-  it('reveals deeper generations from the depth control and the hidden-relative badge', () => {
+  it('limits the canvas to three generations and removes the depth selector', () => {
+    render(<Harness fowls={deepFamily} />);
+
+    expect(screen.queryByLabelText('Generation depth')).not.toBeInTheDocument();
+    expect(screen.queryByText('Generations')).not.toBeInTheDocument();
+
+    expect(cardFor('Sire 1')).toBeInTheDocument();
+    expect(cardFor('Offspring 1A1')).toBeInTheDocument();
+    expect(cardFor('Grandchild')).toBeInTheDocument();
+    expect(
+      screen.queryAllByTestId('lineage-bird-card').some((el) => el.textContent?.includes('Great Grandchild'))
+    ).toBe(false);
+
+    // No depth-cut "+N" controls; collapsed branches still show their +N.
+    expect(screen.queryByRole('button', { name: /Show .* more relatives/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the +N badge for a collapsed branch inside the three generations', () => {
     render(<Harness />);
 
-    fireEvent.change(screen.getByLabelText('Generation depth'), { target: { value: '2' } });
-    expect(screen.queryAllByTestId('lineage-bird-card').some((el) => el.textContent?.includes('Grandchild'))).toBe(false);
-
-    fireEvent.click(screen.getByRole('button', { name: /Show 1 more relatives of Offspring 1A1/i }));
-    expect(cardFor('Grandchild')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse branch of Sire 1' }));
+    const expand = screen.getByRole('button', { name: /Expand branch of Sire 1/ });
+    expect(expand).toHaveTextContent(/\+\d+/);
   });
 
   it('walks ancestors above the selected bird', () => {
@@ -199,6 +219,18 @@ describe('LineageFlow pedigree canvas', () => {
 
     fireEvent.change(finder, { target: { value: 'zzz' } });
     expect(screen.getByText('No birds match.')).toBeInTheDocument();
+  });
+
+  it('re-roots from search and still shows only three generations from the new root', () => {
+    render(<Harness fowls={deepFamily} />);
+
+    const finder = screen.getByLabelText('Find a bird');
+    fireEvent.change(finder, { target: { value: 'Offspring 1A1' } });
+    fireEvent.keyDown(finder, { key: 'Enter' });
+
+    expect(cardFor('Offspring 1A1')).toHaveTextContent('Root');
+    expect(cardFor('Grandchild')).toBeInTheDocument();
+    expect(cardFor('Great Grandchild')).toBeInTheDocument();
   });
 
   it('surfaces global search matches and can focus the first one', () => {
@@ -285,6 +317,71 @@ describe('LineageFlow pedigree canvas', () => {
     expect(
       screen.getByRole('button', { name: 'Expand canvas' })
     ).toBeInTheDocument();
+  });
+
+  it('tags crisscross offspring in the bird card, details panel and keeps hen records hidden', () => {
+    const crisscrossFamily: FowlRecord[] = [
+      bird({ id: 1, name: 'Lemon Sire', gender: 'Rooster', breed: 'Lemon' }),
+      bird({ id: 2, name: 'Hatch Dam', gender: 'Hen', breed: 'Hatch' }),
+      bird({
+        id: 3,
+        name: 'Cross Dam',
+        gender: 'Hen',
+        breed: 'Lemon × Hatch',
+        sire: 'Lemon Sire',
+        dam: 'Hatch Dam',
+      }),
+      bird({ id: 4, name: 'Hatch Sire', gender: 'Rooster', breed: 'Hatch' }),
+      bird({
+        id: 5,
+        name: 'Cross Offspring',
+        gender: 'Rooster',
+        sire: 'Hatch Sire',
+        dam: 'Cross Dam',
+      }),
+      bird({
+        id: 6,
+        name: 'Cross Hen',
+        gender: 'Hen',
+        sire: 'Hatch Sire',
+        dam: 'Cross Dam',
+      }),
+    ];
+
+    render(<Harness fowls={crisscrossFamily} initialRoot="Hatch Sire" />);
+
+    const hub = screen.getByRole('button', {
+      name: /Breeding pair Hatch Sire .* Cross Dam/,
+    });
+    expect(screen.getAllByTestId('crisscross-badge').length).toBeGreaterThanOrEqual(2);
+
+    const offspringCard = cardFor('Cross Offspring');
+    const offspringTag = within(offspringCard).getByTestId('crisscross-badge');
+    expect(offspringTag).toHaveAttribute('title', expect.stringContaining('Hatch Sire'));
+    expect(offspringTag).toHaveAttribute('title', expect.stringContaining('Cross Dam'));
+
+    fireEvent.click(offspringCard);
+    const offspringDetails = screen.getByTestId('lineage-details');
+    expect(within(offspringDetails).getByTestId('crisscross-badge')).toHaveAttribute(
+      'title',
+      expect.stringContaining('Hatch Sire')
+    );
+    // The offspring is a cock, so its record/action remain; hens are covered below.
+    expect(within(offspringDetails).getByText('Record')).toBeInTheDocument();
+    expect(within(offspringDetails).getByRole('button', { name: /Fight history/i })).toBeInTheDocument();
+
+    const henCard = cardFor('Cross Hen');
+    expect(within(henCard).getByTestId('crisscross-badge')).toBeInTheDocument();
+    fireEvent.click(henCard);
+    const henDetails = screen.getByTestId('lineage-details');
+    expect(within(henDetails).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(henDetails).queryByText('Record')).not.toBeInTheDocument();
+    expect(within(henDetails).queryByRole('button', { name: /Fight history/i })).not.toBeInTheDocument();
+
+    fireEvent.click(hub);
+    const details = screen.getByTestId('lineage-details');
+    expect(within(details).getByTestId('crisscross-badge')).toBeInTheDocument();
+    expect(within(details).getByText(/Her sire was Lemon/i)).toBeInTheDocument();
   });
 
   it('never fabricates a parent that is not registered', () => {

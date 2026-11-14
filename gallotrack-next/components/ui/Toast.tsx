@@ -16,6 +16,7 @@ import { registerToastHandler, type ToastInput, type ToastVariant } from '@/lib/
 
 type ToastRecord = {
   id: number;
+  dedupeKey?: string;
   title: string;
   description?: string;
   variant: ToastVariant;
@@ -37,6 +38,8 @@ function useToast() {
   return context;
 }
 
+const MAX_VISIBLE_TOASTS = 3;
+
 const VARIANT_CLASS: Record<ToastVariant, string> = {
   default: 'border-border',
   success: 'border-success',
@@ -49,6 +52,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const nextId = useRef(0);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+  const activeDedupeKeys = useRef(new Map<string, number>());
 
   const dismiss = useCallback((id: number) => {
     const timer = timers.current.get(id);
@@ -56,28 +60,52 @@ function ToastProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       timers.current.delete(id);
     }
+    if (id != null) {
+      activeDedupeKeys.current.forEach((value, key) => {
+        if (value === id) activeDedupeKeys.current.delete(key);
+      });
+    }
     setToasts((current) => current.filter((item) => item.id !== id));
   }, []);
 
   const toast = useCallback(
     (input: ToastInput) => {
+      if (input.id) {
+        const existingId = activeDedupeKeys.current.get(input.id);
+        if (existingId != null) return existingId;
+      }
       const id = nextId.current++;
       const duration = input.duration ?? 5000;
-      setToasts((current) => [
-        ...current,
-        {
-          id,
-          title: input.title,
-          description: input.description,
-          variant: input.variant ?? 'default',
-          duration,
-        },
-      ]);
+      if (input.id) activeDedupeKeys.current.set(input.id, id);
+      setToasts((current) => {
+        const next = [
+          ...current,
+          {
+            id,
+            dedupeKey: input.id,
+            title: input.title,
+            description: input.description,
+            variant: input.variant ?? 'default',
+            duration,
+          },
+        ];
+        if (next.length <= MAX_VISIBLE_TOASTS) return next;
+
+        const dropped = next.slice(0, next.length - MAX_VISIBLE_TOASTS);
+        dropped.forEach((item) => {
+          const timer = timers.current.get(item.id);
+          if (timer) clearTimeout(timer);
+          timers.current.delete(item.id);
+          if (item.dedupeKey) activeDedupeKeys.current.delete(item.dedupeKey);
+        });
+        return next.slice(-MAX_VISIBLE_TOASTS);
+      });
       if (duration > 0) {
         timers.current.set(
           id,
           setTimeout(() => {
             timers.current.delete(id);
+            if (input.id) activeDedupeKeys.current.delete(input.id);
             setToasts((current) => current.filter((item) => item.id !== id));
           }, duration),
         );

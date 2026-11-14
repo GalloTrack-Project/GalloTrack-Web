@@ -343,20 +343,25 @@ describe('Composition Honesty System Tests (Requirement 8)', () => {
         sire: 'Foundation Stock',
         dam: 'Foundation Stock',
       });
-      const { container } = render(
+      const { container, getByRole } = render(
         <BloodlineBreakdown
           fowl={founder}
           fowls={[founder]}
           title="Bloodline Percentage"
+          onEditComposition={() => {}}
         />
       );
 
       // Must not display "50% Sire · 50% Dam"
       expect(container.textContent).not.toContain('50% Sire · 50% Dam');
-      // Must display assumed replacement summary
-      expect(container.textContent).toContain('Assumed 100% Lemon');
+      // Must show one assumption indicator with the breed fact
+      expect(container.textContent).toContain('Assumed, not verified');
+      expect(container.textContent).toContain('100% Lemon');
       // Must display explanatory note
       expect(container.textContent).toContain('No parents are recorded, so the system assumes');
+      expect(container.textContent).not.toContain('Source: Assumed from registered breed');
+      // Edit action must meet the 44px touch target
+      expect(getByRole('button', { name: 'Edit composition' }).className).toContain('min-h-11');
     });
 
     it('BloodlineBreakdown displays 50% Sire · 50% Dam sentence when both parents are recorded', () => {
@@ -414,6 +419,20 @@ describe('Composition Honesty System Tests (Requirement 8)', () => {
 
       expect(container.textContent).toContain('Purebred · 100% Lemon');
       expect(container.textContent).toContain('(assumed)');
+    });
+
+    it('can hide the assumed qualifier when the modal notice owns it', () => {
+      const classification = getBreedingClassification(
+        makeTestFowl({ breed: 'Lemon', sire: 'Foundation Stock', dam: 'Foundation Stock' }),
+        []
+      );
+
+      const { container } = render(
+        <BreedingTypeBadge classification={classification} showQualifier={false} />
+      );
+
+      expect(container.textContent).toContain('Purebred · 100% Lemon');
+      expect(container.textContent).not.toContain('(assumed)');
     });
 
     it('does NOT render assumed qualifier for declared foundation birds', () => {

@@ -1,6 +1,8 @@
 'use client';
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { FowlRecord } from '@/lib/types';
+import { formatBloodlineDisplayValue } from '@/lib/bloodline-report-ui';
 import {
   getBloodlineStats,
   getFowlBloodlineStats,
@@ -10,11 +12,7 @@ import {
   type BloodlineComposition,
   type BloodlineStats,
 } from '@/lib/bloodline-composition';
-import {
-  getCompositionSourceInfo,
-  hasBothParentsRecorded,
-  isFoundationStockRecord,
-} from '@/lib/breeding-classification';
+import { getCompositionSourceInfo, hasBothParentsRecorded } from '@/lib/breeding-classification';
 
 const PALETTE = [
   'bg-emerald-500',
@@ -202,22 +200,22 @@ export default function BloodlineBreakdown({
 
   if (compact) {
     return (
-      <div className="space-y-2 rounded-lg border border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-3 py-2 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-teal-950/40">
+      <div className="min-w-0 space-y-2 rounded-lg border border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-3 py-2 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-teal-950/40">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300">
-              🧬 {title || 'Bloodline Breakdown'}
+               {title || 'Bloodline Breakdown'}
             </p>
             <span className="inline-flex items-center rounded-full bg-slate-700 px-2 py-0.5 text-xs font-black tracking-wide text-white uppercase">
               {strainCount} strain{strainCount === 1 ? '' : 's'}
             </span>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-black tracking-wider text-white uppercase">
-            {dominant.strain} {dominant.pct}%
+            {formatBloodlineDisplayValue(dominant.strain)} {dominant.pct}%
           </span>
         </div>
 
-        {sourceLine && (
+        {sourceLine && !isAssumed && (
           <div className="space-y-0.5">
             <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
               Source: <span className="font-semibold">{sourceLine}</span>
@@ -236,7 +234,7 @@ export default function BloodlineBreakdown({
               key={entry.strain}
               className={`h-full ${barColor(entry.strain, i)}`}
               style={{ width: `${Math.max(entry.pct > 0 ? 0.5 : 0, entry.pct)}%` }}
-              title={`${entry.strain}: ${entry.pct}%`}
+              title={`${formatBloodlineDisplayValue(entry.strain)}: ${entry.pct}%`}
             />
           ))}
         </div>
@@ -248,13 +246,13 @@ export default function BloodlineBreakdown({
                 className={`inline-block h-2.5 w-2.5 shrink-0 rounded-sm ${barColor(entry.strain, i)}`}
               />
               <span
-                className={`truncate text-xs font-black ${
+                className={`min-w-0 text-xs font-black break-words ${
                   entry.isUnknown
                     ? 'text-muted-foreground'
                     : 'dark:text-card-foreground text-slate-700'
                 }`}
               >
-                {entry.strain}
+                {formatBloodlineDisplayValue(entry.strain)}
               </span>
               <span
                 className={`shrink-0 text-xs font-black tabular-nums ${
@@ -280,7 +278,7 @@ export default function BloodlineBreakdown({
               className="text-xs font-semibold text-amber-700 dark:text-amber-300"
               title="No parents are recorded, so the system assumes this bird is 100% of its registered breed. You can declare the real composition by editing the chicken."
             >
-              Assumed 100% {dominant.strain}
+              Assumed 100% {formatBloodlineDisplayValue(dominant.strain)}
             </p>
           )}
           {unknownPct > 0 && (
@@ -305,13 +303,13 @@ export default function BloodlineBreakdown({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-teal-950/40">
+    <div className="min-w-0 space-y-3 rounded-lg border border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-teal-950/40">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300">
-            🧬 {title || 'Bloodline Percentage Breakdown'}
+             {title || 'Bloodline Percentage Breakdown'}
           </p>
-          {sourceLine && (
+          {sourceLine && !isAssumed && (
             <div className="mt-0.5 space-y-0.5">
               <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
                 Source: <span className="font-semibold">{sourceLine}</span>
@@ -332,7 +330,7 @@ export default function BloodlineBreakdown({
         </div>
         <div className="shrink-0 sm:text-right">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-xs font-black tracking-wider text-white uppercase">
-            {dominant.strain} {dominant.pct}%
+            {formatBloodlineDisplayValue(dominant.strain)} {dominant.pct}%
           </span>
           <p className="text-muted-foreground mt-1 text-xs font-bold tracking-wide uppercase">
             {strainCount} bloodline{strainCount === 1 ? '' : 's'}
@@ -345,13 +343,13 @@ export default function BloodlineBreakdown({
           <div key={entry.strain} className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <span
-                className={`truncate text-xs font-black ${
+                className={`min-w-0 text-xs font-black break-words ${
                   entry.isUnknown
                     ? 'text-muted-foreground'
                     : 'dark:text-card-foreground text-slate-700'
                 }`}
               >
-                {entry.strain}
+                {formatBloodlineDisplayValue(entry.strain)}
               </span>
               <span
                 className={`shrink-0 text-xs font-black tabular-nums ${
@@ -374,26 +372,36 @@ export default function BloodlineBreakdown({
       </div>
 
       {isAssumed ? (
-        <div className="space-y-2 border-t border-emerald-100 pt-2 dark:border-emerald-900/50">
-          <p className="text-muted-foreground text-xs leading-relaxed font-semibold">
-            <span className="font-black text-emerald-700 dark:text-emerald-300">Summary:</span>{' '}
-            Assumed 100% {dominant.strain}
-          </p>
-          <div className="flex flex-col justify-between gap-2 rounded-md border border-amber-500/20 bg-amber-500/10 p-2.5 text-xs text-amber-900 sm:flex-row sm:items-center dark:text-amber-200">
-            <p className="leading-relaxed">
-              No parents are recorded, so the system assumes this bird is 100% of its registered
-              breed. You can declare the real composition by editing the chicken.
-            </p>
-            {canEditComposition && (
+        <div
+          data-assumed-notice
+          className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-amber-950 dark:text-amber-100"
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm font-black tracking-wide uppercase">Assumed, not verified</p>
+              <p className="text-sm leading-relaxed font-semibold">
+                No parents are recorded, so the system assumes 100%{' '}
+                {formatBloodlineDisplayValue(dominant.strain)} from the registered breed. Declare
+                the real composition if you know it.
+              </p>
+            </div>
+          </div>
+          {canEditComposition && (
+            <div className="mt-3 flex sm:justify-end">
               <button
                 type="button"
                 onClick={onEditComposition}
-                className="shrink-0 cursor-pointer self-start text-xs font-bold text-amber-800 underline hover:no-underline sm:self-auto dark:text-amber-300"
+                data-edit-composition
+                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-sm border border-amber-600/40 bg-amber-50 px-4 text-sm font-black text-amber-900 transition-colors hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-50 focus-visible:outline-none sm:w-auto dark:border-amber-400/40 dark:bg-amber-950/50 dark:text-amber-100 dark:hover:bg-amber-900/60 dark:focus-visible:ring-amber-300 dark:focus-visible:ring-offset-slate-950"
               >
-                Edit composition →
+                Edit composition
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-1.5 border-t border-emerald-100 pt-2 dark:border-emerald-900/50">
@@ -428,7 +436,7 @@ export default function BloodlineBreakdown({
               <button
                 type="button"
                 onClick={onEditComposition}
-                className="cursor-pointer text-xs font-bold text-emerald-700 underline hover:no-underline dark:text-emerald-300"
+                className="cursor-pointer rounded-sm text-xs font-bold text-emerald-700 underline underline-offset-2 hover:no-underline focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-emerald-300 dark:focus-visible:ring-emerald-300 dark:focus-visible:ring-offset-slate-950"
               >
                 Edit composition →
               </button>
@@ -456,7 +464,7 @@ export default function BloodlineBreakdown({
       {isDiluted && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/60 dark:bg-amber-950/40">
           <p className="text-xs font-black tracking-wider text-amber-700 uppercase dark:text-amber-300">
-            ⚠️ Banta ng “Galapsaw”
+             Banta ng “Galapsaw”
           </p>
           <p className="mt-0.5 text-xs leading-relaxed font-semibold text-amber-700/90 dark:text-amber-300/90">
             Masyado nang maraming halo ang lahi ({strainCount} bloodlines, nangunguna lang ang{' '}

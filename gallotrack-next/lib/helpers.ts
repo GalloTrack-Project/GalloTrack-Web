@@ -2,9 +2,9 @@ import type { FowlRecord, AgeParts, DevelopmentStage, RolledMilestoneStage, Mile
 import { getFowlBloodlineStats, type BloodlineStats } from './bloodline-composition';
 
 export const POST_FIGHT_CONDITIONS = [
-  { value: 'Fit / Recovered', icon: '🟢', short: 'FIT', desc: 'Pulled through cleanly' },
-  { value: 'Severely Injured / Critical', icon: '🟠', short: 'CRITICAL', desc: 'Badly hurt after the fight' },
-  { value: 'Deceased (Died from injuries)', icon: '💀', short: 'DECEASED', desc: 'Died from fight injuries' },
+  { value: 'Fit / Recovered', icon: '', short: 'FIT', desc: 'Pulled through cleanly' },
+  { value: 'Severely Injured / Critical', icon: '', short: 'CRITICAL', desc: 'Badly hurt after the fight' },
+  { value: 'Deceased (Died from injuries)', icon: '', short: 'DECEASED', desc: 'Died from fight injuries' },
 ] as const;
 
 export const STRAIN_LIST: string[] = [];
@@ -351,16 +351,16 @@ export const getDevelopmentStages = (gender?: string): DevelopmentStage[] => {
   const female = gender === 'Hen' || gender === 'Pullet';
   return female
     ? [
-        { id: 'Chick', stage: 'Chick', fromMonths: 0, toMonths: 6, icon: '🐣', note: 'Brooding & starter feed phase' },
-        { id: 'Pullet', stage: 'Pullet', fromMonths: 6, toMonths: 12, icon: '🐤', note: 'Grower phase — feathering out' },
-        { id: 'Hen', stage: 'Hen', fromMonths: 12, toMonths: 24, icon: '🐔', note: 'Mature laying hen' },
-        { id: 'Senior Hen', stage: 'Hen', fromMonths: 24, toMonths: Infinity, icon: '🦅', note: 'Senior breeder / retired rotation' },
+        { id: 'Chick', stage: 'Chick', fromMonths: 0, toMonths: 6, icon: '', note: 'Brooding & starter feed phase' },
+        { id: 'Pullet', stage: 'Pullet', fromMonths: 6, toMonths: 12, icon: '', note: 'Grower phase — feathering out' },
+        { id: 'Hen', stage: 'Hen', fromMonths: 12, toMonths: 24, icon: '', note: 'Mature laying hen' },
+        { id: 'Senior Hen', stage: 'Hen', fromMonths: 24, toMonths: Infinity, icon: '', note: 'Senior breeder / retired rotation' },
       ]
     : [
-        { id: 'Chick', stage: 'Chick', fromMonths: 0, toMonths: 6, icon: '🐣', note: 'Brooding & starter feed phase' },
-        { id: 'Stag', stage: 'Stag', fromMonths: 6, toMonths: 12, icon: '🐤', note: 'Grower phase — conditioning' },
-        { id: 'Bull Stag', stage: 'Bull Stag', fromMonths: 12, toMonths: 24, icon: '🐓', note: 'Training & fight preparation' },
-        { id: 'Cock', stage: 'Cock', fromMonths: 24, toMonths: Infinity, icon: '⚔️', note: 'Prime fighting cock / proven breeder' },
+        { id: 'Chick', stage: 'Chick', fromMonths: 0, toMonths: 6, icon: '', note: 'Brooding & starter feed phase' },
+        { id: 'Stag', stage: 'Stag', fromMonths: 6, toMonths: 12, icon: '', note: 'Grower phase — conditioning' },
+        { id: 'Bull Stag', stage: 'Bull Stag', fromMonths: 12, toMonths: 24, icon: '', note: 'Training & fight preparation' },
+        { id: 'Cock', stage: 'Cock', fromMonths: 24, toMonths: Infinity, icon: '', note: 'Prime fighting cock / proven breeder' },
       ];
 };
 

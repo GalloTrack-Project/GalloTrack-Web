@@ -10,6 +10,7 @@ import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useRouter } from 'next/navigation';
+import { useBreedsView } from '@/lib/hooks/use-breeds-view';
 
 export function DashboardPageWrapper() {
   return <DashboardPage />;
@@ -82,7 +83,22 @@ export function BreedingHubWrapper() {
 export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
+  const { breedsViewOpen, openBreeds } = useBreedsView();
+
+  const handleAddBreedsFromEdit = () => {
+    if (!ui.editingFowl) return;
+    store.saveEditDraft(ui.editingFowl.id);
+    ui.setBreedFlow({
+      target: { kind: 'edit', fowlId: ui.editingFowl.id },
+      autoOpenAddForm: true,
+    });
+    openBreeds();
+  };
+
   const {
+    currentUserId,
+    authChecked,
+    userActive,
     handleLogout,
     handleSendResetLink,
     forgotEmail,
@@ -92,6 +108,7 @@ export function ModalsWrapper() {
     forgotError,
     setForgotSent,
   } = useAuth();
+  const canCreateBreed = !authChecked || (Boolean(currentUserId) && userActive);
   return (
     <Modals
       selectedFowlForDetails={ui.selectedFowlForDetails}
@@ -114,9 +131,14 @@ export function ModalsWrapper() {
       setPendingPermanentDelete={ui.setPendingPermanentDelete}
       handlePermanentDelete={store.handlePermanentDelete}
       permanentDeleting={ui.permanentDeleting}
-      editingFowl={ui.editingFowl}
+      editingFowl={breedsViewOpen ? null : ui.editingFowl}
       setEditingFowl={ui.setEditingFowl}
       handleUpdateFowl={store.handleUpdateFowl}
+      onAddBreeds={handleAddBreedsFromEdit}
+      canCreateBreed={canCreateBreed}
+      refreshStrains={store.refreshStrains}
+      restoreEditDraft={store.restoreEditDraft}
+      clearEditDraft={store.clearEditDraft}
       showLogoutModal={ui.showLogoutModal}
       setShowLogoutModal={ui.setShowLogoutModal}
       handleLogout={handleLogout}
@@ -139,6 +161,9 @@ export function ModalsWrapper() {
       getAgeMetrics={store.getAgeMetrics}
       generationOf={store.generationOf}
       generationPurity={store.generationPurity}
+      canEditPhoto={
+        !ui.editingFowl?.user_id || String(ui.editingFowl.user_id) === currentUserId
+      }
       generationInfo={store.generationInfo}
       bloodlineOf={store.bloodlineOf}
       getSiblingRelations={store.getSiblingRelations}

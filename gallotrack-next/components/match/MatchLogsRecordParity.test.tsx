@@ -135,6 +135,7 @@ describe('Match Logs records match the Lineage Directory', () => {
     cleanup();
 
     // 2. Read the same chicken's badge in the Lineage Directory's Sire tab.
+    sessionStorage.setItem('gallotrack:lineage-parent-view', 'table');
     render(
       <UIProvider theme="light" setTheme={() => {}}>
         <LineageDirectory

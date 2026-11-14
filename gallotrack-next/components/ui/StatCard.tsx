@@ -11,6 +11,9 @@ type StatCardProps = {
     label?: string;
     tone?: 'positive' | 'negative' | 'neutral';
   };
+  density?: 'default' | 'compact';
+  valueClassName?: string;
+  title?: string;
   className?: string;
 };
 
@@ -20,22 +23,60 @@ const DELTA_TONE: Record<string, string> = {
   neutral: 'text-muted-foreground',
 };
 
-function StatCard({ label, value, hint, icon, delta, className }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  hint,
+  icon,
+  delta,
+  density = 'default',
+  valueClassName,
+  title,
+  className,
+}: StatCardProps) {
   const tone = delta?.tone ?? 'neutral';
+  const compact = density === 'compact';
 
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-md border border-border bg-card p-5 text-card-foreground shadow-xs',
+        'flex min-w-0 flex-col',
+        compact
+          ? 'border-border bg-card text-card-foreground gap-1.5 rounded-md border p-2.5 text-center shadow-xs'
+          : 'border-border bg-card text-card-foreground gap-3 rounded-md border p-5 shadow-xs',
         className,
       )}
+      title={title}
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+      <div
+        className={cn(
+          'flex min-w-0 items-center gap-3',
+          compact ? 'justify-center' : 'justify-between',
+        )}
+      >
+        <p
+          className={cn(
+            compact
+              ? 'text-muted-foreground text-xs font-bold tracking-wide break-words uppercase'
+              : 'text-muted-foreground text-sm font-medium',
+            'min-w-0',
+          )}
+        >
+          {label}
+        </p>
+        {icon ? <span className="text-muted-foreground shrink-0">{icon}</span> : null}
       </div>
-      <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground">{value}</p>
+      <div className={cn(compact ? 'min-w-0' : 'flex min-w-0 items-baseline gap-2')}>
+        <p
+          className={cn(
+            compact
+              ? 'text-sm leading-snug font-black break-words'
+              : 'text-foreground text-3xl font-semibold tracking-tight tabular-nums',
+            valueClassName,
+          )}
+        >
+          {value}
+        </p>
         {delta ? (
           <span className={cn('text-xs font-medium tabular-nums', DELTA_TONE[tone])}>
             {delta.value}
@@ -43,9 +84,23 @@ function StatCard({ label, value, hint, icon, delta, className }: StatCardProps)
         ) : null}
       </div>
       {delta?.label ? (
-        <p className="text-xs text-muted-foreground">{delta.label}</p>
+        <p
+          className={cn(
+            'text-xs',
+            compact ? 'text-muted-foreground leading-snug break-words' : 'text-muted-foreground',
+          )}
+        >
+          {delta.label}
+        </p>
       ) : hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
+        <p
+          className={cn(
+            'text-xs',
+            compact ? 'text-muted-foreground leading-snug break-words' : 'text-muted-foreground',
+          )}
+        >
+          {hint}
+        </p>
       ) : null}
     </div>
   );

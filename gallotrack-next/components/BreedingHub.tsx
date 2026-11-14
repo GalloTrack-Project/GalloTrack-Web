@@ -26,9 +26,14 @@ import {
   Eye,
   Loader2,
   RefreshCw,
+  Mars,
+  Venus,
+  Egg,
+  Link2,
 } from 'lucide-react';
 import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
-import { sexLabel, parentBreedOf, isFemale } from '@/lib/helpers';
+import { sexLabel, parentBreedOf, isFemale, canFight } from '@/lib/helpers';
+import { buildChickenMatchStatsMap, getChickenMatchStats } from '@/lib/win-rate';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
 import { ROLE_LABEL } from '@/lib/registry-roles';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
@@ -61,8 +66,12 @@ import {
 } from '@/lib/services/breeding-service';
 import { useUrlTab } from '@/lib/hooks/use-url-tab';
 import { BREEDING_TABS } from '@/lib/nav-manifest';
+import { useT } from '@/lib/i18n';
+import { buildIdentityGroups, parentCodeLabels } from '@/lib/hub-identity';
 import { classifyPairingRelatedness } from '@/lib/relatedness-classification';
 import RelatednessBadge from '@/components/RelatednessBadge';
+import CrisscrossBadge from '@/components/CrisscrossBadge';
+import { classifyCrisscross } from '@/lib/lineage';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import { computeBloodlineComposition, blendCompositions } from '@/lib/bloodline-composition';
@@ -362,7 +371,7 @@ function CodingSystemExplainer({
           </div>
         </div>
         <p className="text-muted-foreground mt-3 text-xs font-semibold">
-          💡 You may also add a descriptive name:{' '}
+           You may also add a descriptive name:{' '}
           <strong className="text-card-foreground">Lemon Ground Red · 1A₁</strong>
         </p>
       </div>
@@ -406,29 +415,34 @@ function BreedingPairCard({
     () => classifyPairingRelatedness(sire, dam, fowls),
     [sire, dam, fowls],
   );
+  const crisscross = useMemo(
+    () => classifyCrisscross(sire, dam, fowls),
+    [sire, dam, fowls],
+  );
 
   const offspring = offspringForPairing(pair, fowls);
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
+  );
 
   const offspringMatchStats = offspring.map((o) => {
-    const matches = matchHistory.filter(
-      (m) => m.entry_name?.toLowerCase() === o.name.toLowerCase(),
-    );
-    const wins = matches.filter((m) => m.outcome?.toLowerCase() === 'win').length;
-    const losses = matches.filter((m) => m.outcome?.toLowerCase() === 'loss').length;
-    const decided = wins + losses;
+    const record = getChickenMatchStats(matchStatsMap, o);
     return {
       fowl: o,
-      wins,
-      losses,
-      decided,
-      winRate: decided > 0 ? Math.round((wins / decided) * 100) : 0,
+      wins: canFight(o) ? record.wins : 0,
+      losses: canFight(o) ? record.losses : 0,
+      decided: canFight(o) ? record.decided : 0,
+      draws: canFight(o) ? record.draws : 0,
+      total: canFight(o) ? record.total : 0,
+      winRate: canFight(o) ? record.winRate : null,
     };
   });
 
   const totalWins = offspringMatchStats.reduce((a, s) => a + s.wins, 0);
   const totalLosses = offspringMatchStats.reduce((a, s) => a + s.losses, 0);
   const totalDecided = totalWins + totalLosses;
-  const combinedWinRate = totalDecided > 0 ? Math.round((totalWins / totalDecided) * 100) : 0;
+  const combinedWinRate = totalDecided > 0 ? Math.round((totalWins / totalDecided) * 100) : null;
 
   const outCfg = OUTCOME_CONFIG[pair.outcome];
   const offspringBaseCode = buildOffspringBaseCode(pair.sire_code, pair.dam_code) || '—';
@@ -460,7 +474,11 @@ function BreedingPairCard({
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            <RelatednessBadge classification={relatedness} compact />
+            {crisscross.isCrisscross ? (
+              <CrisscrossBadge classification={crisscross} compact />
+            ) : (
+              <RelatednessBadge classification={relatedness} compact />
+            )}
             <span
               className={`rounded-full border px-2 py-1 text-xs font-black ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}
             >
@@ -487,7 +505,7 @@ function BreedingPairCard({
           </div>
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p
-              className={`text-lg font-black ${combinedWinRate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : totalDecided > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
+              className={`text-lg font-black ${(combinedWinRate ?? 0) >= 50 ? 'text-emerald-600 dark:text-emerald-400' : totalDecided > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
             >
               {totalDecided > 0 ? `${combinedWinRate}%` : '—'}
             </p>
@@ -514,7 +532,7 @@ function BreedingPairCard({
             className="cursor-pointer rounded-xl border border-sky-200 bg-sky-50 p-2.5 text-left transition-colors hover:bg-sky-100 disabled:cursor-default dark:border-sky-800 dark:bg-sky-950/30 dark:hover:bg-sky-950/50"
           >
             <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
-              🐓 Sire
+               Sire
             </p>
             <p className="text-card-foreground truncate text-xs font-black">{pair.sire_name}</p>
             <p className="text-muted-foreground text-xs font-semibold">
@@ -529,7 +547,7 @@ function BreedingPairCard({
             className="cursor-pointer rounded-xl border border-pink-200 bg-pink-50 p-2.5 text-left transition-colors hover:bg-pink-100 disabled:cursor-default dark:border-pink-800 dark:bg-pink-950/30 dark:hover:bg-pink-950/50"
           >
             <p className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">
-              🐔 Dam
+               Dam
             </p>
             <p className="text-card-foreground truncate text-xs font-black">{pair.dam_name}</p>
             <p className="text-muted-foreground text-xs font-semibold">
@@ -541,7 +559,7 @@ function BreedingPairCard({
 
         {pair.notes && (
           <p className="text-muted-foreground bg-muted/30 mb-3 rounded-lg px-3 py-2 text-xs font-semibold">
-            📝 {pair.notes}
+             {pair.notes}
           </p>
         )}
 
@@ -558,7 +576,7 @@ function BreedingPairCard({
 
         {expanded && (
           <div className="mt-2 space-y-1.5">
-            {offspringMatchStats.map(({ fowl, wins, losses, decided, winRate }) => {
+            {offspringMatchStats.map(({ fowl, wins, losses, draws, total, winRate }) => {
               const code = codes.get(String(fowl.id)) || fowl.bird_code || '';
               return (
                 <button
@@ -580,17 +598,19 @@ function BreedingPairCard({
                       </p>
                     </div>
                   </div>
-                  {decided > 0 ? (
-                    <span
-                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
-                    >
-                      {winRate}% · {wins}W-{losses}L
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground/50 shrink-0 text-xs font-bold">
-                      No fights
-                    </span>
-                  )}
+                  {canFight(fowl) &&
+                    (total > 0 ? (
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                      >
+                        {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L
+                        {draws > 0 ? `-${draws}D` : ''}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/50 shrink-0 text-xs font-bold">
+                        No fights
+                      </span>
+                    ))}
                 </button>
               );
             })}
@@ -698,6 +718,11 @@ function AddPairingForm({
     return classifyPairingRelatedness(selectedSire, selectedDam, fowls);
   }, [selectedSire, selectedDam, fowls]);
 
+  const crisscross = useMemo(
+    () => classifyCrisscross(selectedSire ?? null, selectedDam ?? null, fowls),
+    [selectedSire, selectedDam, fowls],
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const problem = validatePairing(selectedSire, selectedDam);
@@ -752,7 +777,7 @@ function AddPairingForm({
             htmlFor="pair-sire"
             className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400"
           >
-            🐓 Sire
+             Sire
           </label>
           <select
             id="pair-sire"
@@ -774,7 +799,7 @@ function AddPairingForm({
             htmlFor="pair-dam"
             className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400"
           >
-            🐔 Dam
+             Dam
           </label>
           <select
             id="pair-dam"
@@ -795,8 +820,8 @@ function AddPairingForm({
 
       {conflict?.kind === 'occupied' && (
         <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-800 dark:bg-rose-950/40">
-          <span className="mt-0.5 shrink-0 text-sm leading-none text-rose-600 dark:text-rose-400">
-            ⛔
+          <span className="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
             <p className="text-xs font-black tracking-widest text-rose-600 uppercase dark:text-rose-400">
@@ -814,8 +839,8 @@ function AddPairingForm({
 
       {conflict?.kind === 'couple' && (
         <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-950/40">
-          <span className="mt-0.5 shrink-0 text-sm leading-none text-sky-600 dark:text-sky-400">
-            ℹ️
+          <span className="mt-0.5 shrink-0 text-sky-600 dark:text-sky-400">
+            <Info className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
             <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
@@ -871,7 +896,16 @@ function AddPairingForm({
               <p className="text-muted-foreground text-xs font-black tracking-wider uppercase">
                 Pairing Relatedness
               </p>
-              {relatedness ? (
+              {crisscross.isCrisscross ? (
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CrisscrossBadge classification={crisscross} />
+                  </div>
+                  <p className="text-muted-foreground text-xs font-semibold">
+                    {crisscross.reason}
+                  </p>
+                </div>
+              ) : relatedness ? (
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <RelatednessBadge classification={relatedness} showSecondary />
@@ -1305,19 +1339,25 @@ function BirdIdentityCard({
   matchHistory: MatchRecord[];
   setSelectedFowlForDetails: (f: FowlRecord) => void;
 }) {
+  const t = useT();
   const code = codeOf(fowl, codes);
   const displayCode = formatBirdCodeForDisplay(code);
   const codeType = classifyBirdCode(code);
+  const isFighter = canFight(fowl);
+  const parents = parentCodeLabels(fowl, fowls, codes);
   const sireBreed = parentBreedOf(fowl.sire, fowls);
   const damBreed = parentBreedOf(fowl.dam, fowls);
 
-  const matches = matchHistory.filter(
-    (m) => m.entry_name?.toLowerCase() === fowl.name.toLowerCase(),
+  const matchStatsMap = useMemo(
+    () => buildChickenMatchStatsMap(matchHistory, fowls),
+    [matchHistory, fowls],
   );
-  const wins = matches.filter((m) => m.outcome?.toLowerCase() === 'win').length;
-  const losses = matches.filter((m) => m.outcome?.toLowerCase() === 'loss').length;
-  const decided = wins + losses;
-  const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
+  const record = getChickenMatchStats(matchStatsMap, fowl);
+  const wins = canFight(fowl) ? record.wins : 0;
+  const losses = canFight(fowl) ? record.losses : 0;
+  const total = canFight(fowl) ? record.total : 0;
+  const draws = canFight(fowl) ? record.draws : 0;
+  const winRate = canFight(fowl) ? record.winRate : null;
 
   const codeColorMap = {
     sire: {
@@ -1346,35 +1386,73 @@ function BirdIdentityCard({
     },
   };
   const codeColor = codeColorMap[codeType];
+  const sireLabel = parents.sire || '—';
+  const damLabel = parents.dam || '—';
+  const tileAria =
+    codeType === 'sire'
+      ? t('hub.tileSireAria', { code: displayCode || '—' })
+      : codeType === 'dam'
+        ? t('hub.tileDamAria', { code: displayCode || '—' })
+        : codeType === 'offspring'
+          ? t('hub.tileOffspringAria', {
+              code: displayCode || '—',
+              sire: sireLabel,
+              dam: damLabel,
+            })
+          : t('hub.tileCustomAria', { code: displayCode || '—' });
+  const roleCaption =
+    codeType === 'sire'
+      ? t('hub.roleCaptionSire')
+      : codeType === 'dam'
+        ? t('hub.roleCaptionDam')
+        : codeType === 'offspring'
+          ? t('hub.roleCaptionOffspring', { sire: sireLabel, dam: damLabel })
+          : t('hub.roleCaptionCustom');
 
   return (
     <button
       type="button"
       onClick={() => setSelectedFowlForDetails(fowl)}
-      className="group bg-card border-border w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md dark:hover:border-emerald-700"
+      data-testid="identity-card"
+      data-fowl-name={fowl.name}
+      data-code-kind={codeType}
+      data-fighter={isFighter ? 'true' : 'false'}
+      className="hub-identity-card group bg-card border-border w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md dark:hover:border-emerald-700"
     >
       <div className="flex items-start gap-3">
-        <div
-          className={`h-12 w-12 shrink-0 rounded-xl ${codeColor.bg} ${codeColor.border} flex flex-col items-center justify-center border`}
+        <span
+          role="img"
+          aria-label={tileAria}
+          title={tileAria}
+          data-testid="identity-code-tile"
+          className={`hub-identity-tile rounded-xl border ${codeColor.bg} ${codeColor.border} ${codeColor.text}`}
         >
           <span
-            className={`text-xs font-black ${codeColor.text} leading-none tracking-widest uppercase`}
+            data-testid="identity-tile-label"
+            className="hub-identity-tile-label font-black tracking-widest uppercase"
           >
             {codeColor.label}
           </span>
-          <span className={`text-base font-black ${codeColor.text} mt-0.5 font-mono leading-none`}>
+          <span data-testid="identity-tile-code" className="hub-identity-tile-code font-black">
             {displayCode || '—'}
           </span>
-        </div>
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="text-card-foreground truncate text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+          <p className="hub-identity-fit text-card-foreground text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
             {fowl.name}
           </p>
-          <p className="text-muted-foreground truncate text-xs font-semibold">
-            {fowl.breed} · {sexLabel(fowl)}
+          <p className="hub-identity-fit text-muted-foreground text-xs font-semibold">
+            {fowl.breed ? `${fowl.breed} / ` : ''}
+            {sexLabel(fowl)}
           </p>
-          {fowl.wing_band && (
-            <p className="mt-0.5 text-xs font-bold text-violet-600 dark:text-violet-400">
+          <p
+            data-testid="identity-role-caption"
+            className="hub-identity-role-caption text-muted-foreground mt-0.5 font-semibold"
+          >
+            {roleCaption}
+          </p>
+          {isFighter && fowl.wing_band && (
+            <p className="hub-identity-fit mt-0.5 text-xs font-bold text-violet-600 dark:text-violet-400">
               Wing Band: {fowl.wing_band}
             </p>
           )}
@@ -1394,16 +1472,25 @@ function BirdIdentityCard({
           )}
         </div>
         <div className="shrink-0 text-right">
-          {decided > 0 ? (
-            <span
-              className={`rounded-full border px-2 py-0.5 text-xs font-black ${winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
-            >
-              {winRate}%
-            </span>
-          ) : (
-            <span className="text-muted-foreground/50 text-xs font-bold">No fights</span>
-          )}
+          {isFighter &&
+            (total > 0 ? (
+              <span
+                data-testid="identity-fight-summary"
+                className={`rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+              >
+                {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L
+                {draws > 0 ? `-${draws}D` : ''}
+              </span>
+            ) : (
+              <span
+                data-testid="identity-fight-summary"
+                className="text-muted-foreground/50 text-xs font-bold"
+              >
+                No fights
+              </span>
+            ))}
           <p
+            data-testid="identity-status"
             className={`mt-1 text-xs font-bold ${fowl.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : fowl.status === 'Deceased' ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
           >
             {fowl.status}
@@ -1411,16 +1498,16 @@ function BirdIdentityCard({
         </div>
       </div>
       {(fowl.sire || fowl.dam) && (
-        <div className="border-border text-muted-foreground mt-2 flex items-center gap-3 border-t pt-2 text-xs font-semibold">
+        <div className="border-border text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs font-semibold">
           {fowl.sire && (
-            <span>
-              🐓 Sire: <strong className="text-card-foreground">{fowl.sire}</strong>
+            <span className="hub-identity-fit">
+              Sire: <strong className="text-card-foreground">{fowl.sire}</strong>
               {sireBreed ? ` · ${sireBreed}` : ''}
             </span>
           )}
           {fowl.dam && (
-            <span>
-              🐔 Dam: <strong className="text-card-foreground">{fowl.dam}</strong>
+            <span className="hub-identity-fit">
+              Dam: <strong className="text-card-foreground">{fowl.dam}</strong>
               {damBreed ? ` · ${damBreed}` : ''}
             </span>
           )}
@@ -1442,6 +1529,7 @@ export default function BreedingHub({
   pairingAnalytics,
   setSelectedFowlForDetails,
 }: BreedingHubProps) {
+  const t = useT();
   const [activeTab, setActiveTab] = useUrlTab<BreedingTab>({
     param: 'tab',
     values: BREEDING_TABS,
@@ -1494,6 +1582,15 @@ export default function BreedingHub({
       );
     });
   }, [fowls, codes, identitySearch]);
+
+  const allIdentityGroups = useMemo(() => buildIdentityGroups(fowls, codes), [fowls, codes]);
+  const identityGroups = useMemo(() => {
+    if (!identitySearch.trim()) return allIdentityGroups;
+    const allowed = new Set(filteredFowls.map((f) => f.id));
+    return allIdentityGroups
+      .map((group) => ({ ...group, fowls: group.fowls.filter((f) => allowed.has(f.id)) }))
+      .filter((group) => group.fowls.length > 0);
+  }, [allIdentityGroups, filteredFowls, identitySearch]);
 
   const addPair = useCallback(
     async (payload: Partial<BreedingPairRecord>) => {
@@ -1708,33 +1805,41 @@ export default function BreedingHub({
               label: 'Breeding Males',
               value: totalMales,
               color: 'text-sky-600 dark:text-sky-400',
-              icon: '🐓',
+              icon: Mars,
+              iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400',
               sub: 'Coded: 1, 2, 3...',
             },
             {
               label: 'Breeding Females',
               value: totalFemales,
               color: 'text-pink-600 dark:text-pink-400',
-              icon: '🐔',
+              icon: Venus,
+              iconBg: 'bg-pink-100 text-pink-600 dark:bg-pink-950/50 dark:text-pink-400',
               sub: 'Coded: A, B, C...',
             },
             {
               label: ROLE_LABEL['Non-Breeding'],
               value: totalOffspring,
-              color: 'text-emerald-600 dark:text-emerald-400',
-              icon: '🐥',
+              color: 'text-amber-600 dark:text-amber-400',
+              icon: Egg,
+              iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400',
               sub: 'Coded: 1A₁, 1A₂...',
             },
             {
               label: 'Active Pairs',
               value: activePairs,
-              color: 'text-rose-600 dark:text-rose-400',
-              icon: '❤️',
+              color: 'text-emerald-600 dark:text-emerald-400',
+              icon: Link2,
+              iconBg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400',
               sub: 'Breeding pairs',
             },
           ].map((s) => (
             <div key={s.label} className="bg-muted/40 flex items-center gap-3 rounded-2xl p-4">
-              <span className="shrink-0 text-2xl">{s.icon}</span>
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.iconBg}`}
+              >
+                <s.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
               <div className="min-w-0">
                 <p className={`text-2xl font-black ${s.color} leading-none`}>{s.value}</p>
                 <p className="text-muted-foreground mt-0.5 text-xs font-bold tracking-wide uppercase">
@@ -1891,7 +1996,7 @@ export default function BreedingHub({
                       <div className="flex shrink-0 items-center gap-2">
                         {ps.decided > 0 && (
                           <span
-                            className={`rounded-full border px-2 py-0.5 text-xs font-black ${ps.winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                            className={`rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
                           >
                             {ps.winRate}%
                           </span>
@@ -2015,7 +2120,7 @@ export default function BreedingHub({
                     </div>
                     {ps.decided > 0 && (
                       <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${ps.winRate >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
                       >
                         {ps.winRate}% win rate
                       </span>
@@ -2073,12 +2178,15 @@ export default function BreedingHub({
             </div>
           </div>
 
-          <div className="bg-card border-border flex flex-wrap gap-3 rounded-2xl border p-4 shadow-sm">
+          <div
+            data-testid="identity-legend"
+            className="hub-identity-legend bg-card border-border rounded-2xl border p-4 shadow-sm"
+          >
             {[
               {
                 type: 'SIRE',
                 code: '1',
-                desc: 'Foundation male',
+                desc: t('hub.legendSireDesc'),
                 bg: 'bg-sky-100 dark:bg-sky-950/50',
                 text: 'text-sky-700 dark:text-sky-400',
                 border: 'border-sky-200 dark:border-sky-800',
@@ -2086,7 +2194,7 @@ export default function BreedingHub({
               {
                 type: 'DAM',
                 code: 'A',
-                desc: 'Foundation female',
+                desc: t('hub.legendDamDesc'),
                 bg: 'bg-pink-100 dark:bg-pink-950/50',
                 text: 'text-pink-700 dark:text-pink-400',
                 border: 'border-pink-200 dark:border-pink-800',
@@ -2094,7 +2202,7 @@ export default function BreedingHub({
               {
                 type: 'OFFSPRING',
                 code: '1A₁',
-                desc: 'Child of Sire 1 × Dam A',
+                desc: t('hub.legendOffspringDesc'),
                 bg: 'bg-emerald-100 dark:bg-emerald-950/50',
                 text: 'text-emerald-700 dark:text-emerald-400',
                 border: 'border-emerald-200 dark:border-emerald-800',
@@ -2102,23 +2210,31 @@ export default function BreedingHub({
               {
                 type: 'CUSTOM',
                 code: '···',
-                desc: 'Manual override',
+                desc: t('hub.legendCustomDesc'),
                 bg: 'bg-violet-100 dark:bg-violet-950/50',
                 text: 'text-violet-700 dark:text-violet-400',
                 border: 'border-violet-200 dark:border-violet-800',
               },
             ].map((l) => (
-              <div key={l.type} className="flex items-center gap-2">
+              <div
+                key={l.type}
+                data-testid="identity-legend-item"
+                className="hub-identity-legend-item"
+              >
                 <div
-                  className={`h-8 w-8 rounded-lg ${l.bg} ${l.border} flex items-center justify-center border`}
+                  className={`hub-identity-legend-code rounded-lg border ${l.bg} ${l.border}`}
                 >
                   <span className={`text-xs font-black ${l.text} font-mono`}>{l.code}</span>
                 </div>
-                <div>
-                  <p className={`text-xs font-black ${l.text} tracking-widest uppercase`}>
+                <div className="min-w-0">
+                  <p
+                    className={`hub-identity-fit text-xs font-black ${l.text} tracking-widest uppercase`}
+                  >
                     {l.type}
                   </p>
-                  <p className="text-muted-foreground text-xs font-semibold">{l.desc}</p>
+                  <p className="hub-identity-fit text-muted-foreground text-xs font-semibold">
+                    {l.desc}
+                  </p>
                 </div>
               </div>
             ))}
@@ -2130,16 +2246,46 @@ export default function BreedingHub({
               <p className="text-muted-foreground mt-1 text-xs">Try a different name or code</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {filteredFowls.map((f) => (
-                <BirdIdentityCard
-                  key={f.id}
-                  fowl={f}
-                  fowls={fowls}
-                  codes={codes}
-                  matchHistory={matchHistory}
-                  setSelectedFowlForDetails={setSelectedFowlForDetails}
-                />
+            <div className="space-y-5">
+              {identityGroups.map((group) => (
+                <div
+                  key={group.key}
+                  data-testid="identity-group"
+                  data-group-kind={group.kind}
+                  className="space-y-2"
+                >
+                  {group.kind === 'offspring' && (
+                    <h3
+                      data-testid="identity-pair-heading"
+                      className="hub-identity-fit bg-muted/40 text-card-foreground rounded-lg px-3 py-1.5 text-xs font-black tracking-wide"
+                    >
+                      {t('hub.pairHeading', {
+                        sire: group.sireLabel || '—',
+                        dam: group.damLabel || '—',
+                      })}
+                    </h3>
+                  )}
+                  {group.kind === 'custom' && (
+                    <h3
+                      data-testid="identity-custom-heading"
+                      className="hub-identity-fit bg-muted/40 text-card-foreground rounded-lg px-3 py-1.5 text-xs font-black tracking-wide"
+                    >
+                      {t('hub.customGroupHeading')}
+                    </h3>
+                  )}
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {group.fowls.map((f) => (
+                      <BirdIdentityCard
+                        key={f.id}
+                        fowl={f}
+                        fowls={fowls}
+                        codes={codes}
+                        matchHistory={matchHistory}
+                        setSelectedFowlForDetails={setSelectedFowlForDetails}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}

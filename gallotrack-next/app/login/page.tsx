@@ -7,6 +7,7 @@ import ForgotPasswordModal from '@/components/modals/ForgotPasswordModal';
 import { Dna, Swords, BarChart3, Building2, ArrowLeft } from 'lucide-react';
 import { sanitizeRedirectPath } from '@/lib/auth-redirect';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import Logo from '@/components/brand/Logo';
 import { useT } from '@/lib/i18n';
 import { BUILD_SHA } from '@/lib/build-info';
 
@@ -94,30 +95,13 @@ export default function LoginPage() {
         <div className="relative z-10 flex w-full flex-col justify-between p-10 xl:p-14">
           {/* Top — Logo and Back link */}
           <div className="flex items-center justify-between">
-            <Link href="/" className="group flex cursor-pointer items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/15 shadow-lg backdrop-blur-sm transition-colors group-hover:bg-white/20">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-xl font-black tracking-tight text-white">
-                  GALLO<span className="text-emerald-200">TRACK</span>
-                </h2>
-                <span className="block font-mono text-xs font-bold tracking-widest text-emerald-200/70 uppercase">
-                  v1.0.0 · build {BUILD_SHA}
-                </span>
-              </div>
+            <Link href="/" aria-label="GalloTrack home" className="group flex min-w-0 flex-col gap-2">
+              <span className="inline-flex w-fit rounded-lg bg-white/95 px-3 py-2 shadow-lg shadow-black/10">
+                <Logo variant="full" size="lg" onLight />
+              </span>
+              <span className="font-mono text-xs font-bold tracking-widest text-emerald-200/70 uppercase">
+                v1.0.0 · build {BUILD_SHA}
+              </span>
             </Link>
 
             <div className="flex flex-wrap items-center justify-end gap-3">
@@ -185,25 +169,8 @@ export default function LoginPage() {
         <div className="relative z-10 w-full max-w-md">
           {/* Mobile logo and Back link */}
           <div className="mb-8 flex flex-wrap items-center justify-between gap-2 lg:hidden">
-            <Link href="/" className="inline-flex min-w-0 items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 1.8 20.5 5v6c0 5.2-3.5 8.5-8.5 11.2C7 19.5 3.5 16.2 3.5 11V5L12 1.8z" />
-                </svg>
-              </div>
-              <span className="text-foreground hidden font-black tracking-tight sm:inline">
-                GALLOTRACK
-              </span>
+            <Link href="/" aria-label="GalloTrack home" className="inline-flex min-w-0 items-center">
+              <Logo variant="mark" size="md" />
             </Link>
             <div className="flex shrink-0 items-center gap-2">
               <CompactLanguageSwitcher />

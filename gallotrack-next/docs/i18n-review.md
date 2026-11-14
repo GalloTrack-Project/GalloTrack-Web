@@ -143,7 +143,7 @@ key-by-key enumeration with status and reason is the CSV.
 | `registry.fullSiblingsNotice` | ✓ {count} full sibling(s) with current dam | ✓ {count} bilog nga utod kaupod ang subong nga dam | "bilog" (whole) and "utod" (sibling) both need confirmation. |
 | `registry.lineageResolved` | Lineage resolved | Nahusay ang Kaliwat | "nahusay" (clean/neat) as "resolved" needs confirmation. |
 | `registry.matchingColors` | Matching colors | Nagasanto nga mga kolor | "nagasanto" (matched) needs confirmation. |
-| `registry.existingOffspringSiblings` | 👤 Existing Offspring & Siblings | 👤 Mga Yara nga Bata kag Utod | "Yara" (relatives) is uncertain; "Utod" (sibling) needs confirmation. |
+| `registry.existingOffspringSiblings` | Existing Offspring & Siblings | Mga Yara nga Bata kag Utod | "Yara" (relatives) is uncertain; "Utod" (sibling) needs confirmation. |
 | `registry.awaitingParents` | Awaiting Parents | Nagahulat sang Sire kag Dam | Changed in this review (glossary + consultant wording); confirm the verb "nagahulat". |
 | `registry.viewChildrenTitle` | View {count} children of {name} | Tan-awa ang {count} ka bata sang {name} | Changed in this review from "pisu" to "bata"; confirm "tan-awa". |
 | `registry.offspringOf` | Offspring of {name} | Mga Bata sang {name} | Changed in this review (plural noun rule). |
@@ -172,7 +172,7 @@ domain coinages, English loans, or wording changed during this review.
 | `registry.trait` | Trait | Katangian / Trait | "Katangian" is generic; confirm the term breeders use for gamefowl traits. |
 | `registry.genderClass` | Sex & Class | Kasarian at Klase | "Klase" is a direct English loan; "Uri" may be clearer. |
 | `registry.awaitingParents` | Awaiting Parents | Naghihintay ng Sire at Dam | Changed in this review (glossary: Parents = "Sire at Dam"). |
-| `registry.existingOffspringSiblings` | 👤 Existing Offspring & Siblings | 👤 Mga Kasalukuyang Anak at Kapatid | Changed in this review (plural noun rule). |
+| `registry.existingOffspringSiblings` | Existing Offspring & Siblings | Mga Kasalukuyang Anak at Kapatid | Changed in this review (plural noun rule). |
 | `registry.viewChildrenTitle` | View {count} children of {name} | Tingnan ang {count} na anak ng {name} | Changed in this review (was "inakay"). |
 | `registry.offspringOf` | Offspring of {name} | Mga Anak ng {name} | Changed in this review (plural noun rule). |
 | `registry.noOffspringDesc` | No offspring chickens found in the registry. | Walang nakitang mga anak sa rehistro. | Changed in this review (plural noun rule). |
@@ -201,6 +201,21 @@ domain coinages, English loans, or wording changed during this review.
 - `lib/i18n/index.ts` exposes `translateRelatedness()` for that switch; the
   badge migration is Feature 2 work.
 
+### 5.4 Breeding Pair Performance Analytics labels
+
+The Dashboard breeding-pair analytics table now displays sex labels as
+**Cock × Hen** instead of the parent-role wording. Parent-role terms remain
+unchanged in the Lineage Directory.
+
+| Key | English | Tagalog | Hiligaynon (Beta) |
+| :--- | :--- | :--- | :--- |
+| `breedingPairAnalytics.badge` | COCK × HEN MATRIX | COCK × HEN MATRIX | COCK × HEN MATRIX |
+| `breedingPairAnalytics.columnCross` | COCK × HEN CROSS | COCK × HEN CROSS | COCK × HEN CROSS |
+| `breedingPairAnalytics.pairLabel` | {cock} × {hen} | {cock} × {hen} | {cock} × {hen} |
+
+`Cock` and `Hen` are kept in English across all three languages because those
+are the canonical labels already used elsewhere in the app.
+
 ---
 
 ## 6. Review CSV Export
@@ -219,11 +234,11 @@ Run `npm run i18n:export` to generate `docs/i18n-review/translations.csv`
 confirmed. Curated reasons live in `scripts/i18n-review-notes.ts`; every
 remaining unreviewed Hiligaynon row gets the blanket reason automatically.
 
-**Latest export counts** (457 keys, regenerated with `npm run i18n:export`):
+**Latest export counts** (463 keys, regenerated with `npm run i18n:export`):
 | Language | Reviewed | Unreviewed | Needs Change |
 |:---|:---|:---|:---|
-| Tagalog (tl) | 61 | 396 | 0 |
-| Hiligaynon (hil) | 61 | 396 | 0 |
+| Tagalog (tl) | 64 | 399 | 0 |
+| Hiligaynon (hil) | 64 | 399 | 0 |
 
 ---
 

@@ -3,6 +3,16 @@ import React, { createContext, useContext, useState } from 'react';
 import type { PageId, ProfilingSubTab, FowlRecord, MatchRecord } from '@/lib/types';
 import type { RegistrySortKey } from '@/lib/registry-roles';
 
+export type BreedFlowTarget =
+  | { kind: 'create' }
+  | { kind: 'edit'; fowlId: number | string };
+
+export type BreedFlowState = {
+  target: BreedFlowTarget;
+  /** Auto-open the Add New Breed form when the registry appears. */
+  autoOpenAddForm: boolean;
+};
+
 interface UIContextValue {
   theme: string;
   setTheme: (v: string) => void;
@@ -12,6 +22,15 @@ interface UIContextValue {
   setCurrentPage: (v: PageId) => void;
   profilingSubTab: ProfilingSubTab;
   setProfilingSubTab: (v: ProfilingSubTab) => void;
+  /** True while the Breed Registry is open over the Chicken Registry. */
+  breedsViewOpen: boolean;
+  setBreedsViewOpen: (v: boolean) => void;
+  /** Where the Breed Registry should return after a quick-add round trip. */
+  breedFlow: BreedFlowState | null;
+  setBreedFlow: React.Dispatch<React.SetStateAction<BreedFlowState | null>>;
+  /** Shared Registry search text so Breeds can return to the same filtered list. */
+  registrySearch: string;
+  setRegistrySearch: (v: string) => void;
   /** Per-tab sort choice in the Registry (Task B). Identifier = natural order. */
   registrySortBy: Partial<Record<ProfilingSubTab, RegistrySortKey>>;
   setRegistrySort: (tab: ProfilingSubTab, key: RegistrySortKey) => void;
@@ -90,6 +109,9 @@ export function UIProvider({
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('login');
   const [profilingSubTab, setProfilingSubTab] = useState<ProfilingSubTab>('form');
+  const [breedsViewOpen, setBreedsViewOpen] = useState(false);
+  const [breedFlow, setBreedFlow] = useState<BreedFlowState | null>(null);
+  const [registrySearch, setRegistrySearch] = useState('');
   const [registrySortBy, setRegistrySortBy] = useState<Partial<Record<ProfilingSubTab, RegistrySortKey>>>({});
   const setRegistrySort = React.useCallback((tab: ProfilingSubTab, key: RegistrySortKey) => {
     setRegistrySortBy((prev) => ({ ...prev, [tab]: key }));
@@ -136,6 +158,9 @@ export function UIProvider({
     showSplash, setShowSplash,
     currentPage, setCurrentPage,
     profilingSubTab, setProfilingSubTab,
+    breedsViewOpen, setBreedsViewOpen,
+    breedFlow, setBreedFlow,
+    registrySearch, setRegistrySearch,
     registrySortBy, setRegistrySort,
     inventoryGenderFilter, setInventoryGenderFilter,
     inventoryStatusFilter, setInventoryStatusFilter,

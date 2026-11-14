@@ -24,6 +24,9 @@ describe('GalloTrack Favicon Suite & Metadata', () => {
       'public/icon-512x512.png',
       'public/icon-maskable-512x512.png',
       'public/manifest.json',
+      'public/brand/logo-mark.svg',
+      'public/brand/logo-full.svg',
+      'public/brand/logo-full-dark.svg',
     ];
 
     for (const rel of requiredFiles) {
@@ -88,7 +91,7 @@ describe('GalloTrack Favicon Suite & Metadata', () => {
 
     expect(content.name).toBe('GalloTrack');
     expect(content.short_name).toBe('GalloTrack');
-    expect(content.theme_color).toBe('#022c22');
+    expect(content.theme_color).toBe('#047857');
     expect(content.background_color).toBe('#090d16');
 
     const srcs = content.icons.map((i: { src: string }) => i.src);
@@ -106,8 +109,16 @@ describe('GalloTrack Favicon Suite & Metadata', () => {
       template: '%s | GalloTrack',
       default: 'GalloTrack | Gamefowl Breeding & Match Analytics',
     });
-    expect(layoutViewport.themeColor).toBe('#022c22');
+    expect(layoutViewport.themeColor).toBe('#047857');
     expect(layoutMetadata.manifest).toBe('/manifest.json');
+    const metadataIcons = layoutMetadata.icons;
+    const iconList = Array.isArray(metadataIcons)
+      ? metadataIcons
+      : ((metadataIcons as { icon?: Array<string | { url: string }> } | undefined)?.icon ?? []);
+    const iconUrls = iconList.map((icon) =>
+      typeof icon === 'string' ? icon : icon instanceof URL ? icon.toString() : icon.url,
+    );
+    expect(iconUrls).toContain('/brand/logo-mark.svg');
   });
 
   it('landing page metadata uses absolute title preventing duplicate template suffix', () => {

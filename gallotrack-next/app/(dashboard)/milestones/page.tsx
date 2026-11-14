@@ -1,15 +1,16 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAgeLabel, sexLabel } from '@/lib/helpers';
+import { getAgeLabel } from '@/lib/helpers';
 import { useFowl } from '@/lib/contexts/fowl-context';
+import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { Calendar, CircleDot, Activity, Crown } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 
 type Filter = 'all' | 'soon' | 'overdue' | 'mature';
 
 export default function MilestonesPage() {
-  const { upcomingMilestones, activeFowls } = useFowl();
+  const { upcomingMilestones, activeFowls, birdCodeOf } = useFowl();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>('all');
 
@@ -82,13 +83,16 @@ export default function MilestonesPage() {
             {filtered.map(({ fowl, info }) => {
               const soon = info.next !== null && info.next!.daysUntil >= 0 && info.next!.daysUntil <= 30;
               const overdue = info.next !== null && info.next!.daysUntil < 0;
+              const code =
+                formatBirdCodeForDisplay(birdCodeOf(fowl)) ||
+                formatBirdCodeForDisplay(fowl.bird_code || '');
               return (
                 <div key={fowl.id} className={`flex items-center gap-3 p-3 rounded-md border transition-all ${soon ? 'bg-emerald-50/80 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30' : overdue ? 'bg-rose-50/70 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30' : 'bg-slate-50/60 border-slate-100 dark:bg-muted/50 dark:border-border'}`}>
                   <span className="w-10 h-10 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-card flex items-center justify-center text-lg shrink-0">{info.current?.icon || <CircleDot size={20} />}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-800 dark:text-foreground truncate">{fowl.name} <span className="text-xs font-bold text-muted-foreground font-mono">#{fowl.id}</span></p>
+                    <p className="text-sm font-black text-slate-800 dark:text-foreground truncate">{fowl.name} {code && <span className="text-xs font-bold text-muted-foreground font-mono">{code}</span>}</p>
                     <p className="text-xs text-muted-foreground font-semibold truncate">
-                      {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)} · {sexLabel(fowl)}
+                      {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
                     </p>
                   </div>
                   <div className="text-right shrink-0">

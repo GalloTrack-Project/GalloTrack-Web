@@ -8,12 +8,14 @@ interface BreedingTypeBadgeProps {
   classification: BreedingClassification;
   className?: string;
   compact?: boolean;
+  showQualifier?: boolean;
 }
 
 export default function BreedingTypeBadge({
   classification,
   className,
   compact = false,
+  showQualifier = true,
 }: BreedingTypeBadgeProps) {
   const { type, badgeLabel, tooltipText, compositionSource, basedOnAssumed } = classification;
 
@@ -38,7 +40,7 @@ export default function BreedingTypeBadge({
         : 'Lineage includes assumed foundation stock';
   }
 
-  const hasQualifier = qualifierText !== '';
+  const hasQualifier = qualifierText !== '' && showQualifier;
   const fullTooltip = hasQualifier ? `${tooltipText} · ${qualifierExplanation}` : tooltipText;
 
   let colorClasses = '';

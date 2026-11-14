@@ -26,6 +26,7 @@ import {
   type UserSettings as FarmSettings,
   type SettingsKey,
 } from '@/lib/settings';
+import { NOTIFICATION_LEAD_DAYS } from '@/lib/notifications/milestones';
 import {
   fetchRegistryOptions,
   addRegistryOption,
@@ -941,7 +942,7 @@ export default function SettingsPage() {
               </Field>
               {isBeta(language) && (
                 <p className="py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                  ⚠️ {t('preferences.betaNotice')}
+                   {t('preferences.betaNotice')}
                 </p>
               )}
             </SectionCard>
@@ -1069,29 +1070,65 @@ export default function SettingsPage() {
         return (
           <div className="space-y-4">
             <SectionCard
-              title="Alert Preferences"
-              description="Control which notifications appear in the system"
+              title="Milestone Notifications"
+              description="In-app alerts for chicken development stages. Saved per farm owner."
+            >
+              {farmCfgNotice && (
+                <p className="py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  {farmCfgNotice}
+                </p>
+              )}
+              <Field
+                label="Stage changed"
+                description="When a chicken enters a new development stage"
+              >
+                <Toggle
+                  checked={farmCfg.notify_stage_changed !== false}
+                  onChange={(v) => saveFarmSetting('notify_stage_changed', v)}
+                />
+              </Field>
+              <Field
+                label="Fully mature"
+                description="When a chicken reaches 24 months and is fully mature"
+              >
+                <Toggle
+                  checked={farmCfg.notify_fully_mature !== false}
+                  onChange={(v) => saveFarmSetting('notify_fully_mature', v)}
+                />
+              </Field>
+              <Field
+                label="Upcoming stage"
+                description="Before a chicken reaches its next stage boundary"
+              >
+                <Toggle
+                  checked={farmCfg.notify_stage_upcoming !== false}
+                  onChange={(v) => saveFarmSetting('notify_stage_upcoming', v)}
+                />
+              </Field>
+              <Field
+                label="Upcoming lead time"
+                description="How many days before a stage boundary to notify"
+              >
+                <SelectInput
+                  value={String(farmCfg.notification_lead_days ?? 7)}
+                  onChange={(v) => saveFarmSetting('notification_lead_days', Number(v))}
+                  options={NOTIFICATION_LEAD_DAYS.map((days) => ({
+                    value: String(days),
+                    label: `${days} days`,
+                  }))}
+                />
+              </Field>
+              <p className="text-muted-foreground text-xs font-medium">
+                Email and push notifications are not enabled yet. System event toasts stay
+                controlled by your local preferences.
+              </p>
+            </SectionCard>
+            <SectionCard
+              title="System Event Toasts"
+              description="Show toast notifications on save, delete, and errors"
             >
               <Field
-                label="Milestone Alerts"
-                description="Notifications for upcoming growth stage transitions"
-              >
-                <Toggle
-                  checked={settings.milestone_alerts !== false}
-                  onChange={(v) => update('milestone_alerts', v)}
-                />
-              </Field>
-              <Field
-                label="Overdue Stage Warnings"
-                description="Highlight chickens past their expected stage transition"
-              >
-                <Toggle
-                  checked={settings.overdue_alerts !== false}
-                  onChange={(v) => update('overdue_alerts', v)}
-                />
-              </Field>
-              <Field
-                label="System Event Toasts"
+                label="Enable toast notifications"
                 description="Show toast notifications on save, delete, errors"
               >
                 <Toggle
@@ -1099,10 +1136,6 @@ export default function SettingsPage() {
                   onChange={(v) => update('event_alerts', v)}
                 />
               </Field>
-              <p className="text-muted-foreground text-xs font-medium">
-                Administrator audit logs are always recorded and are reviewed from the admin
-                console.
-              </p>
             </SectionCard>
           </div>
         );
@@ -1728,7 +1761,7 @@ export default function SettingsPage() {
 
       {systemConfig.system_status === 'Maintenance' && (
         <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm font-bold text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <span className="text-lg">🔧</span>
+          <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
           <div>
             <p className="font-black">System Under Maintenance</p>
             {systemConfig.maintenance_message && (
