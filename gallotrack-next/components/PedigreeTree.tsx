@@ -16,6 +16,7 @@ import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import ChickenIcon from '@/components/ChickenIcon';
 import ChickenPhoto from '@/components/ChickenPhoto';
 import { Card, CardContent } from '@/components/ui/Card';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Button } from '@/components/ui/Button';
@@ -537,7 +538,8 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
         >
           <Search className="h-3.5 w-3.5" />
         </span>
-        <input
+        <ComboboxInput
+          id="pedigree-subject-search"
           type="search"
           aria-label="Search pedigree subject"
           placeholder={displayLabel || 'Search subject by code, name, wing band…'}
@@ -554,6 +556,8 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
               setDropdownOpen(false);
             }
           }}
+          expanded={dropdownOpen}
+          controls={dropdownOpen ? 'pedigree-subject-listbox' : undefined}
           className="border-input-border bg-card text-card-foreground placeholder:text-foreground/90 h-9 w-full rounded-md border py-2 pr-8 pl-9 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:text-sm [&::-webkit-search-cancel-button]:appearance-none"
         />
         {searchQuery.length > 0 && (
@@ -573,6 +577,7 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
 
       {dropdownOpen && matchingFowls.length > 0 && (
         <div
+          id="pedigree-subject-listbox"
           role="listbox"
           aria-label="Matching chickens"
           className="bg-card border-border divide-border/50 absolute top-full right-0 left-0 z-50 mt-1.5 max-h-80 divide-y overflow-hidden overflow-y-auto rounded-lg border shadow-xl"

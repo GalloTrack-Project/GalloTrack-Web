@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import {
   sortParentEntries,
   type ParentPickerEntry,
@@ -216,16 +217,14 @@ export default function ParentCombobox({
     <div ref={wrapperRef} className="relative min-w-0 flex-1">
       <div className="flex items-center gap-1.5">
         <div className="relative min-w-0 flex-1">
-          <input
+          <ComboboxInput
             ref={inputRef}
+            id={`${listboxId}-input`}
             type="text"
-            role="combobox"
             aria-label={open ? `Search ${plural}` : closedLabel}
-            aria-expanded={open}
-            aria-haspopup="listbox"
-            aria-controls={listboxId}
-            aria-autocomplete="list"
-            aria-activedescendant={open ? activeOptionId : undefined}
+            expanded={open}
+            controls={listboxId}
+            activeOptionId={open ? activeOptionId : undefined}
             readOnly={!open}
             value={open ? query : ''}
             placeholder={open ? `Search ${plural} by name, code, or wing band...` : ''}
@@ -238,7 +237,6 @@ export default function ParentCombobox({
               if (!open) openPicker();
             }}
             onKeyDown={onKeyDown}
-            autoComplete="off"
             className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full cursor-pointer rounded-lg border py-2 pr-9 pl-3 text-sm font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none sm:min-h-10"
           />
           {!open && (

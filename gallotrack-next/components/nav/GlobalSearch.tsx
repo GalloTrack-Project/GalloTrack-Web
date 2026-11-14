@@ -197,6 +197,7 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
           }}
           onKeyDown={onInputKeyDown}
           role="combobox"
+          aria-autocomplete="list"
           aria-expanded="true"
           aria-controls="global-search-listbox"
           aria-activedescendant={
@@ -204,7 +205,11 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
           }
           aria-label="Search"
           placeholder="Search pages, chickens, and actions..."
+          name="gt-global-search"
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-accent/50 w-full rounded-sm border px-3 py-2.5 text-sm focus:ring-2 focus:outline-none"
         />
 

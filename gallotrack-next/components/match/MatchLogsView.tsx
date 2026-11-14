@@ -514,6 +514,11 @@ export default function MatchLogsView() {
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <input
               type="text"
+              name="gt-match-logs-search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search chicken, identifier, opponent..."

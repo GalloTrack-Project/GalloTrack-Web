@@ -1164,6 +1164,11 @@ export default function EncodeForm({
             <input
               type="text"
               list="feather-color-options"
+              name="gt-feather-color"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={newColor}
               onChange={(e) => setNewColor?.(e.target.value)}
               onBlur={() => {
@@ -1193,6 +1198,11 @@ export default function EncodeForm({
             <input
               type="text"
               list="trait-options"
+              name="gt-behavior-trait"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={newBehaviorTrait}
               onChange={(e) => setNewBehaviorTrait?.(e.target.value)}
               onBlur={() => {
@@ -1307,15 +1317,18 @@ export default function EncodeForm({
         <div className="relative" ref={legColorInputRef}>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">{t('registry.legColor')}</label>
           <div className="relative">
-            <input
+            <ComboboxInput
               type="text"
               value={legColorQuery}
               onChange={(e) => { setLegColorQuery(e.target.value); setNewLegColor(e.target.value); setLegColorOpen(true); }}
               onFocus={() => setLegColorOpen(true)}
               onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
+              expanded={legColorOpen}
+              controls={legColorOpen ? 'leg-color-listbox' : undefined}
               placeholder={t('registry.legColorPlaceholder')}
               className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
-            id="leg-color" />
+              id="leg-color"
+            />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
@@ -1326,7 +1339,13 @@ export default function EncodeForm({
             </button>
           </div>
           {legColorOpen && legColorDropdownPos && createPortal(
-            <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}>
+            <div
+              id="leg-color-listbox"
+              role="listbox"
+              aria-label={t('registry.legColor')}
+              className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col"
+              style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}
+            >
               <div className="overflow-y-auto">
                 {(() => {
                   const q = legColorQuery.trim().toLowerCase();
