@@ -130,8 +130,8 @@ function FowlCard({
         className="antigravity-avatar h-24 w-24 shrink-0 rounded-lg border border-slate-200/80 shadow-inner dark:border-border"
         fallback={<span className="text-xs font-mono">{t('registry.cardNoPhoto')}</span>}
       />
-      <div className="flex-1 w-full space-y-3">
-        <div className="flex items-center flex-wrap gap-2">
+      <div className="min-w-0 max-w-full flex-1 w-full space-y-3">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">
             <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 shadow-2xs tracking-tight">
               [<HighlightText text={formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'} query={highlightQuery} />]
@@ -141,7 +141,7 @@ function FowlCard({
           {fowl.wing_band && fowl.wing_band.trim().toLowerCase() !== normalizeBirdCode(fowl.bird_code).toLowerCase() ? (
             <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title={t('registry.wingBandTooltip')}> <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
-          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{displayBreed}</span>
+          <span className="antigravity-badge max-w-full whitespace-normal break-words text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800 [overflow-wrap:anywhere]">{displayBreed}</span>
           <BreedingTypeBadge classification={classification} />
           {(parentage.type === 'close' || parentage.type === 'line') && (
             <RelatednessBadge classification={parentage} compact />

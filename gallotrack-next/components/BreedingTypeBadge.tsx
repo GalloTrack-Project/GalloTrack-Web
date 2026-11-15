@@ -57,15 +57,18 @@ export default function BreedingTypeBadge({
 
   return (
     <span
+      data-breeding-badge
       className={cn(
-        'antigravity-badge inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-black tracking-tight uppercase transition-colors',
+        'antigravity-badge inline-flex max-w-full min-w-0 flex-wrap items-center gap-1 whitespace-normal rounded-full border px-2.5 py-0.5 text-xs font-black tracking-tight uppercase transition-colors [overflow-wrap:anywhere]',
         colorClasses,
         className,
       )}
       title={fullTooltip}
       aria-label={hasQualifier ? `${badgeLabel} ${qualifierText}` : badgeLabel}
     >
-      <span>{badgeLabel}</span>
+      <span className="min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere]">
+        {badgeLabel}
+      </span>
       {hasQualifier &&
         (compact ? (
           <span
@@ -77,7 +80,7 @@ export default function BreedingTypeBadge({
           </span>
         ) : (
           <span
-            className="shrink-0 text-xs font-bold lowercase opacity-85"
+            className="min-w-0 max-w-full text-xs font-bold lowercase opacity-85 [overflow-wrap:anywhere]"
             aria-label={qualifierExplanation}
             title={qualifierExplanation}
           >

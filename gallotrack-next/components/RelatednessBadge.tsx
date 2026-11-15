@@ -20,7 +20,15 @@ export default function RelatednessBadge({
   className,
   compact = false,
 }: RelatednessBadgeProps) {
-  const { type, label, secondaryLabel, relationship, tooltip, inbreedingCoefficient } = classification;
+  const {
+    type,
+    label,
+    secondaryLabel,
+    fullLabel,
+    relationship,
+    tooltip,
+    inbreedingCoefficient,
+  } = classification;
 
   let colorClasses = '';
   let Icon = HelpCircle;
@@ -50,7 +58,8 @@ export default function RelatednessBadge({
   }
 
   const tooltipParts = [
-    tooltip,
+    fullLabel,
+    tooltip !== fullLabel ? tooltip : '',
     relationship ? `Relation: ${relationship}` : '',
     inbreedingCoefficient !== null
       ? (inbreedingCoefficient > 0 ? `Inbreeding: ${inbreedingCoefficient}%` : 'Inbreeding: 0%')
@@ -58,20 +67,29 @@ export default function RelatednessBadge({
   ].filter(Boolean);
 
   const fullTooltip = tooltipParts.join(' · ');
+  const visibleLabel = compact ? label.split(' ')[0] : label;
+  const accessibleLabel = [
+    `${prefix ?? ''}${visibleLabel}${showSecondary && secondaryLabel ? ` (${secondaryLabel})` : ''}`,
+    fullTooltip,
+  ]
+    .filter(Boolean)
+    .join('. ');
 
   return (
     <span
+      data-relatedness-badge
       className={cn(
-        'antigravity-badge inline-flex items-center gap-1.5 text-xs font-black border px-2.5 py-0.5 rounded-full uppercase tracking-tight transition-colors shrink-0',
+        'antigravity-badge inline-flex max-w-full min-w-0 flex-wrap items-center gap-1.5 whitespace-normal rounded-full border px-2.5 py-0.5 text-xs font-black tracking-tight uppercase transition-colors [overflow-wrap:anywhere]',
         colorClasses,
         className
       )}
       title={fullTooltip}
+      aria-label={accessibleLabel}
     >
       <Icon className="w-3 h-3 shrink-0" aria-hidden="true" />
-      <span>
+      <span className="min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere]">
         {prefix}
-        {compact ? label.split(' ')[0] : label}
+        {visibleLabel}
         {showSecondary && secondaryLabel ? (
           <span className="font-medium normal-case ml-1 opacity-80">({secondaryLabel})</span>
         ) : null}

@@ -55,3 +55,18 @@ for a foundation-stock chicken, then expand **Details**.
 - [ ] Details content (Sire/Dam Strain, Color Genetics, Breed Compliance, Heritability) wraps at every width.
 - [ ] The modal itself has no horizontal scrollbar and no text escapes the dialog.
 - [ ] Repeat in light/dark and English/Tagalog; stored bloodline values and calculations are unchanged.
+
+## Profile and Inventory Badge Overflow
+
+Run `npm run test:profile-layout` after `npm run build`. It checks the profile badge row and
+Chicken Inventory card badges at 320, 375, 640, 768, 1024, 1280, and 1920 px and at 100%,
+125%, 150%, 175%, and 200% zoom in English, Tagalog, and Hiligaynon. Then complete the manual
+zoom matrix down to 25% and up to 500%.
+
+- [ ] The profile badge row wraps instead of pushing past the modal edge.
+- [ ] `Outcross` is the visible short label; its full explanation is in the tooltip and `aria-label`.
+- [ ] `Crossbred · 50% Hatch / 50% Lemon (assumed)` wraps or shortens with a tooltip; it is never clipped.
+- [ ] The inventory card badge chips keep their text inside the card at every width and zoom.
+- [ ] No badge has `white-space: nowrap`, a fixed width, or a fixed height.
+- [ ] No horizontal page scrollbar, clipped text, or badge outside its row appears at any checked width, zoom, theme, or language.
+- [ ] Stored bloodline values and calculations are unchanged.

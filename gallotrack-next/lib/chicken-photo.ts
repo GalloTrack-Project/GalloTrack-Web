@@ -387,6 +387,45 @@ async function flushBatch(): Promise<void> {
   }
 }
 
+/**
+ * Sign a private photo path right now, bypassing the in-memory/session cache.
+ * Report printing uses this so a long-open profile cannot print an expired URL.
+ */
+export async function resolveFreshChickenPhotoUrl(path?: string | null): Promise<string | null> {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path) || path.startsWith('data:')) return path;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      const response = await fetch('/api/fowl/photo/sign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ paths: [path] }),
+        cache: 'no-store',
+      });
+      const body = (await response.json().catch(() => null)) as
+        | { signedUrls?: Record<string, string> }
+        | null;
+      const url = response.ok ? body?.signedUrls?.[path] ?? null : null;
+      if (url) {
+        cacheSignedUrl(path, url);
+        return url;
+      }
+    }
+  } catch {
+    // Fall through to the direct storage client used by the normal resolver.
+  }
+
+  const direct = await signDirect(path);
+  return direct;
+}
+
 export async function resolveChickenPhotoUrl(path?: string | null): Promise<string | null> {
   if (!path) return null;
   if (/^https?:\/\//i.test(path) || path.startsWith('data:')) return path;
