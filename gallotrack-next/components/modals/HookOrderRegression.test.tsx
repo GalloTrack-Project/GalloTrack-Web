@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import FowlDetailsModal from './FowlDetailsModal';
+import { printReport } from '@/lib/report-export';
 import EditFowlModal from './EditFowlModal';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import PedigreeTree, { CompactNodeCard } from '@/components/PedigreeTree';
 import ParentSelector from './ParentSelector';
 import { UIProvider } from '@/lib/contexts/ui-context';
 import { FowlProviderWrapper } from '@/lib/contexts/fowl-context';
-import type { FowlRecord } from '@/lib/types';
+import type { FowlRecord, PairingAnalytics } from '@/lib/types';
 import type { BloodlineComposition } from '@/lib/bloodline-composition';
 
 vi.mock('next/navigation', () => ({
@@ -38,6 +39,27 @@ vi.mock('@/lib/context', () => ({
       crossPattern: null,
     }),
   }),
+}));
+
+vi.mock('@/lib/profile-report', () => ({
+  buildProfileReportSections: vi.fn(() => []),
+  buildProfileReportDocument: vi.fn(() => ({ title: 'profile-report' })),
+  withProfileReportAssets: vi.fn(
+    async (
+      _input: unknown,
+      callback: (assets: {
+        photoSrc: string | null;
+        gallerySrcs: string[];
+        photoFailed: boolean;
+      }) => void,
+    ) => {
+      callback({ photoSrc: null, gallerySrcs: [], photoFailed: false });
+    },
+  ),
+}));
+
+vi.mock('@/lib/report-export', () => ({
+  printReport: vi.fn(),
 }));
 
 const mockBird1: FowlRecord = {
@@ -149,6 +171,48 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
       screen.getByTestId('select-bird2').click();
     });
     expect(screen.getByText(/Lightning Hen/i)).toBeInTheDocument();
+  });
+
+  it('prints the profile report from the modal action', async () => {
+    vi.mocked(printReport).mockClear();
+
+    render(
+      <TestWrapper>
+        <FowlDetailsModal
+          selectedFowlForDetails={mockBird1}
+          setSelectedFowlForDetails={vi.fn()}
+          matchHistory={[]}
+          fowls={mockFowls}
+          getAgeParts={() => null}
+          getAgeLabel={() => '1y'}
+          getAgeExact={() => '1y 2m'}
+          getAgeMetrics={() => '14m'}
+          generationOf={() => 1}
+          generationInfo={() => ({ short: 'F1', label: 'First Gen', desc: '', tone: '' })}
+          bloodlineOf={() => 100}
+          getSiblingRelations={() => []}
+          getMilestoneInfo={() => null}
+          getArchiveBadgeStyle={() => ({ bg: '', text: '', border: '', label: '' })}
+          pairingAnalytics={
+            {
+              all: new Map(),
+              activePairs: 0,
+              topPairs: [],
+              underperformingPairs: [],
+            } as unknown as PairingAnalytics
+          }
+        />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Print \/ Export Profile Report/i }));
+
+    await waitFor(() => {
+      expect(printReport).toHaveBeenCalledTimes(1);
+    });
+    expect(printReport).toHaveBeenCalledWith(expect.objectContaining({ title: 'profile-report' }));
+    expect(screen.getByText(/Champion Stag/i)).toBeInTheDocument();
+    expect(document.querySelector('[data-relatedness-badge]')).not.toBeNull();
   });
 
   it('EditFowlModal survives closed (null) -> open (bird) -> closed (null) transitions without hook-order error', () => {
@@ -336,13 +400,13 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
 
     // Initial state: not merged -> shows bird name
     expect(screen.getByText('Champion Stag')).toBeInTheDocument();
-    expect(screen.queryByText('Foundation stock')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unknown parents')).not.toBeInTheDocument();
 
-    // Toggle to merged (Foundation stock)
+    // Toggle to merged (Unknown parents)
     act(() => {
       screen.getByTestId('toggle-merged').click();
     });
-    expect(screen.getByText('Foundation stock')).toBeInTheDocument();
+    expect(screen.getByText('Unknown parents')).toBeInTheDocument();
     expect(screen.queryByText('Champion Stag')).not.toBeInTheDocument();
 
     // Toggle back to not merged (bird)
@@ -350,7 +414,7 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
       screen.getByTestId('toggle-merged').click();
     });
     expect(screen.getByText('Champion Stag')).toBeInTheDocument();
-    expect(screen.queryByText('Foundation stock')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unknown parents')).not.toBeInTheDocument();
   });
 
   it('ParentSelector mounts safely both inside and outside FowlProvider without throwing', () => {

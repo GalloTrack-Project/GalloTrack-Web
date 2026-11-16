@@ -94,7 +94,7 @@ describe('chicken photo helpers', () => {
     await expect(resolveChickenPhotoUrl('')).resolves.toBeNull();
   });
 
-  it('batches multiple paths into one signing request and caches the results', async () => {
+  it('batches and deduplicates paths into one signing request and caches the results', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -108,6 +108,7 @@ describe('chicken photo helpers', () => {
     );
 
     const urls = await resolveChickenPhotoUrls([
+      'user-1/42/a.webp',
       'user-1/42/a.webp',
       'user-1/42/b.webp',
     ]);

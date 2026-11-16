@@ -302,10 +302,10 @@ describe('Registration genetic strain', () => {
 
     fireEvent.change(screen.getByLabelText('Gender Class'), { target: { value: 'Hen' } });
     fireEvent.change(screen.getByLabelText('Identifier Name'), { target: { value: 'Lemon Bird' } });
-    fireEvent.change(container.querySelector('#encode-sire') as HTMLInputElement, {
+    fireEvent.change(container.querySelector('#external-sire-name') as HTMLInputElement, {
       target: { value: 'Sire A' },
     });
-    fireEvent.change(container.querySelector('#encode-dam') as HTMLInputElement, {
+    fireEvent.change(container.querySelector('#external-dam-name') as HTMLInputElement, {
       target: { value: 'Dam B' },
     });
 

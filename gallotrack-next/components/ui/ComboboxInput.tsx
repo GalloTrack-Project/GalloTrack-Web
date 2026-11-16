@@ -25,7 +25,7 @@ type ComboboxInputProps = Omit<
 
 export default function ComboboxInput({
   id,
-  name = id,
+  name = `gt-combobox-${id}`,
   expanded = false,
   controls,
   activeOptionId,

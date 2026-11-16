@@ -25,6 +25,8 @@ export default function CreateChickenForMatch({
 }: Props) {
   const {
     fowls,
+    registrationType,
+    setRegistrationType,
     newName,
     setNewName,
     newBreed,
@@ -99,6 +101,7 @@ export default function CreateChickenForMatch({
   } = useFowl();
 
   useEffect(() => {
+    setRegistrationType('new');
     setNewName(initialName);
     setNewGender(initialSex || 'Rooster');
     setNewBreed(initialBreed);
@@ -113,6 +116,8 @@ export default function CreateChickenForMatch({
   return (
     <EncodeForm
       fowls={fowls}
+      registrationType={registrationType}
+      setRegistrationType={setRegistrationType}
       newName={newName}
       setNewName={setNewName}
       newBreed={newBreed}

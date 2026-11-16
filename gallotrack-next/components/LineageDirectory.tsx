@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import FamilyPhoto from '@/components/lineage/FamilyPhoto';
 import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
 import ParentOffspringTree, {
@@ -297,6 +298,8 @@ function FamilyCard({
 }: FamilyCardProps) {
   const sire = (g[0].sire || '').trim();
   const dam = (g[0].dam || '').trim();
+  const sireRecord = parentRecordOf(g[0], 'sire', fowls);
+  const damRecord = parentRecordOf(g[0], 'dam', fowls);
   const sireBreed = parentBreedOf(sire, fowls);
   const damBreed = parentBreedOf(dam, fowls);
 
@@ -363,7 +366,7 @@ function FamilyCard({
     ) : null;
 
   return (
-    <article className="bg-card border-border rounded-lg border shadow-xs">
+    <article className="family-card-container bg-card border-border w-full max-w-full min-w-0 rounded-lg border shadow-xs">
       <div className="flex flex-col gap-2 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="text-card-foreground text-sm font-black">Family {index + 1}</h4>
@@ -372,36 +375,70 @@ function FamilyCard({
           </span>
           <CrisscrossBadge classification={crisscross} compact />
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="border-border bg-muted/40 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-[11px]">
+          <span className="family-parent-chip border-border bg-muted/40 inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full border px-2.5 py-1">
+            <span className="family-parent-chip-avatar inline-flex shrink-0">
+              {sireRecord ? (
+                <FamilyPhoto
+                  fowl={sireRecord}
+                  size={28}
+                  onViewProfile={() => setSelectedFowlForDetails(sireRecord)}
+                />
+              ) : (
+                <span
+                  className="border-border bg-muted/70 text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full border font-mono text-[9px] font-black"
+                  title={sire || '?'}
+                >
+                  {getInitials(sire)}
+                </span>
+              )}
+            </span>
             <span className="text-muted-foreground text-[9px] font-black tracking-widest uppercase">
               Sire
             </span>
-            <span className="text-card-foreground font-bold">{sire || '?'}</span>
+            <span className="text-card-foreground min-w-0 break-words font-bold [overflow-wrap:anywhere]">{sire || '?'}</span>
             {sireBreed && (
-              <span className="text-muted-foreground text-[10px] font-semibold">{sireBreed}</span>
+              <span className="text-muted-foreground min-w-0 text-[10px] font-semibold break-words">{sireBreed}</span>
             )}
           </span>
-          <span className="border-border bg-muted/40 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
+          <span className="family-parent-chip border-border bg-muted/40 inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full border px-2.5 py-1">
+            <span className="family-parent-chip-avatar inline-flex shrink-0">
+              {damRecord ? (
+                <FamilyPhoto
+                  fowl={damRecord}
+                  size={28}
+                  onViewProfile={() => setSelectedFowlForDetails(damRecord)}
+                />
+              ) : (
+                <span
+                  className="border-border bg-muted/70 text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full border font-mono text-[9px] font-black"
+                  title={dam || '?'}
+                >
+                  {getInitials(dam)}
+                </span>
+              )}
+            </span>
             <span className="text-muted-foreground text-[9px] font-black tracking-widest uppercase">
               Dam
             </span>
-            <span className="text-card-foreground font-bold">{dam || '?'}</span>
+            <span className="text-card-foreground min-w-0 break-words font-bold [overflow-wrap:anywhere]">{dam || '?'}</span>
             {damBreed && (
-              <span className="text-muted-foreground text-[10px] font-semibold">{damBreed}</span>
+              <span className="text-muted-foreground min-w-0 text-[10px] font-semibold break-words">{damBreed}</span>
             )}
           </span>
         </div>
       </div>
 
-      <div className="w-full overflow-hidden">
-        <table className="w-full table-fixed border-collapse text-left text-xs">
+      <div className="w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+        <table className="w-full min-w-[34rem] table-fixed sm:min-w-0 border-collapse text-left text-xs">
           <thead>
             <tr className="text-muted-foreground border-b border-border/60 text-[9px] font-black tracking-wider uppercase">
-              <th className="hidden w-16 px-3 py-2 md:table-cell">ID</th>
+              <th className="w-12 px-0.5 py-2 md:w-32 md:px-3">
+                <span className="sr-only md:not-sr-only">ID</span>
+              </th>
               <th className="px-3 py-2">Name</th>
-              <th className="w-16 px-1 py-2 text-right">Record</th>
-              <th className="w-16 px-1 py-2 text-right">Win rate</th>
+              <th className="w-12 px-1 py-2 text-right md:w-16">Record</th>
+              <th className="w-12 px-1 py-2 text-right md:w-16">Win rate</th>
               <th className="hidden w-28 px-3 py-2 md:table-cell">Sample</th>
               <th className="w-12 px-1 py-2">
                 <span className="sr-only">Actions</span>
@@ -446,31 +483,38 @@ function FamilyCard({
                   }}
                   className={`group cursor-pointer border-b border-border/50 transition-colors last:border-b-0 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${tint}`}
                 >
-                  <td className="text-muted-foreground hidden px-3 py-2 font-mono font-bold whitespace-nowrap md:table-cell">
-                    <span className="border-border bg-muted/70 text-foreground rounded border px-1.5 py-0.5 text-[10px] font-black">
-                      {code || '?'}
-                    </span>
+                  <td className="text-muted-foreground px-0.5 py-2 font-mono font-bold md:px-3">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <FamilyPhoto
+                        fowl={cock}
+                        size={44}
+                        shape="square"
+                        onViewProfile={() => setSelectedFowlForDetails(cock)}
+                      />
+                      <span className="border-border bg-muted/70 text-foreground hidden rounded border px-1.5 py-0.5 text-[10px] font-black md:inline-flex">
+                        {code || '?'}
+                      </span>
+                    </div>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="min-w-0 px-3 py-2">
                     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       <span className="border-border bg-muted/70 text-muted-foreground rounded border px-1 py-0.5 font-mono text-[9px] font-black md:hidden">
                         {code || '?'}
                       </span>
-                      <span className="text-card-foreground min-w-0 truncate font-bold">
-                        {cock.name}
+                      <span className="family-cock-name text-card-foreground min-w-0 font-bold break-words whitespace-normal [overflow-wrap:anywhere]">{cock.name}
                       </span>
                       {stats.total === 0 && (
-                        <span className="text-muted-foreground shrink-0 text-[10px] font-semibold">
+                        <span className="text-muted-foreground text-[10px] font-semibold break-words">
                           No fights
                         </span>
                       )}
                     </div>
                     <div className="mt-1 md:hidden">{sampleBadge(stats)}</div>
                   </td>
-                  <td className="text-card-foreground px-1 py-2 text-right font-mono font-black whitespace-nowrap">
+                  <td className="text-card-foreground px-1 py-2 text-right font-mono font-black break-words whitespace-normal">
                     {record}
                   </td>
-                  <td className={`px-1 py-2 text-right font-black whitespace-nowrap ${rateTone}`}>
+                  <td className={`px-1 py-2 text-right font-black break-words whitespace-normal ${rateTone}`}>
                     {rateLabelI}
                   </td>
                   <td className="hidden px-3 py-2 md:table-cell">{sampleBadge(stats)}</td>
@@ -507,12 +551,12 @@ function FamilyCard({
                     </span>
                   </div>
                   {cocks.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-card-foreground text-xs font-black whitespace-nowrap">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="text-card-foreground min-w-0 text-xs font-black break-words">
                         {totalRecord}
                       </span>
                       <span
-                        className={`text-sm font-black whitespace-nowrap ${
+                        className={`min-w-0 text-sm font-black break-words ${
                           familyTotal.winRate === null
                             ? 'text-muted-foreground'
                             : familyTotal.winRate >= 50
@@ -541,12 +585,18 @@ function FamilyCard({
             {hens.map((hen) => (
               <span
                 key={hen.id}
-                className="border-border bg-muted/40 text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold"
+                className="border-border bg-muted/40 text-muted-foreground inline-flex min-w-0 max-w-full flex-wrap items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold"
               >
+                <FamilyPhoto
+                  fowl={hen}
+                  size={32}
+                  onViewProfile={() => setSelectedFowlForDetails(hen)}
+                />
                 <span className="font-mono text-[9px] font-black text-foreground/80">
                   {formatBirdCodeForDisplay(codeOf(hen)) || '?'}
                 </span>
-                <span className="text-foreground/80">{hen.name}</span>
+                <span className="family-hen-name text-foreground/80 min-w-0 break-words [overflow-wrap:anywhere]">{hen.name}
+                </span>
               </span>
             ))}
           </div>
@@ -2901,7 +2951,7 @@ export default function LineageDirectory({
                 hint="Chickens need at least one sibling with the same Sire and Dam to form a family."
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+              <div className="grid min-w-0 max-w-full grid-cols-1 items-stretch gap-5 md:grid-cols-2">
                 {filteredFullFamilies.map((g, i) => {
                   const familyKey = `${nameKey(g[0].sire)}|||${nameKey(g[0].dam)}`;
                   const familyInfo = familyClassifications.get(familyKey);

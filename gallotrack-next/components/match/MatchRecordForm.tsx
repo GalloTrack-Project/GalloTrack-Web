@@ -940,6 +940,11 @@ export default function MatchRecordForm({
               <input
                 list="arena-locations"
                 id="arena-location-hub"
+                name="gt-arena-location"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 value={form.matchLocation}
                 onChange={(e) => {
                   setForm((prev) => ({ ...prev, matchLocation: e.target.value }));

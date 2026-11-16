@@ -12,10 +12,12 @@ import { getOffspringParentageRelatedness } from '@/lib/relatedness-classificati
 import RelatednessBadge from '@/components/RelatednessBadge';
 import { birdCodeOf, compareBirdCodesNatural, formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { useUI } from '@/lib/contexts/ui-context';
+import { useT } from '@/lib/i18n';
 import BloodlineBreakdown from '@/components/BloodlineBreakdown';
 import ChickenIcon from '@/components/ChickenIcon';
 import ChickenPhoto from '@/components/ChickenPhoto';
 import { Card, CardContent } from '@/components/ui/Card';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Button } from '@/components/ui/Button';
@@ -270,6 +272,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
     onRegisterSingle,
   } = props;
   const { fowl, name, isMerged, role, childBreedHint, childName } = node;
+  const t = useT();
 
   const stats = useMemo(
     () => (!isMerged && fowl ? getFowlBloodlineStats(fowl, fowls ?? []) : null),
@@ -315,7 +318,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-card-foreground truncate text-xs leading-tight font-black">
-              Foundation stock
+              {t('registry.unknownParents')}
             </p>
             <p className="text-muted-foreground truncate text-[10px] font-semibold">
               Not registered
@@ -323,13 +326,13 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           </div>
         </div>
         {canRegisterAncestor && (
-          <Tooltip content="Register foundation ancestor">
+          <Tooltip content={t('registry.registerAncestor')}>
             <button
               type="button"
               onClick={() =>
                 onRegisterMerged({ breed: childBreedHint, childName: childName || '' })
               }
-              aria-label="Register foundation ancestor"
+              aria-label={t('registry.registerAncestor')}
               className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
               <Plus className="h-4 w-4" />
@@ -360,6 +363,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
   };
 
   if (missing) {
+    const missingDisplayName = name && !isFoundationName(name) ? name : t('registry.unknownParents');
     return (
       <div
         data-node-box="true"
@@ -373,9 +377,9 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           <div className="min-w-0 flex-1">
             <p
               className="text-card-foreground truncate text-xs leading-tight font-black"
-              title={name}
+              title={missingDisplayName}
             >
-              {name || 'Foundation stock'}
+              {missingDisplayName}
             </p>
             <p className="text-muted-foreground truncate text-[10px] font-semibold">
               Not registered
@@ -383,7 +387,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
           </div>
         </div>
         {canRegisterAncestor && (
-          <Tooltip content={`Register ancestor ${name || ''}`}>
+          <Tooltip content={t('registry.registerAncestor')}>
             <button
               type="button"
               onClick={() =>
@@ -394,7 +398,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
                   placeholderName: name,
                 })
               }
-              aria-label={`Register ancestor ${name || ''}`}
+              aria-label={t('registry.registerAncestor')}
               className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
               <Plus className="h-4 w-4" />
@@ -537,7 +541,8 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
         >
           <Search className="h-3.5 w-3.5" />
         </span>
-        <input
+        <ComboboxInput
+          id="pedigree-subject-search"
           type="search"
           aria-label="Search pedigree subject"
           placeholder={displayLabel || 'Search subject by code, name, wing band…'}
@@ -554,6 +559,8 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
               setDropdownOpen(false);
             }
           }}
+          expanded={dropdownOpen}
+          controls={dropdownOpen ? 'pedigree-subject-listbox' : undefined}
           className="border-input-border bg-card text-card-foreground placeholder:text-foreground/90 h-9 w-full rounded-md border py-2 pr-8 pl-9 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:text-sm [&::-webkit-search-cancel-button]:appearance-none"
         />
         {searchQuery.length > 0 && (
@@ -573,6 +580,7 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
 
       {dropdownOpen && matchingFowls.length > 0 && (
         <div
+          id="pedigree-subject-listbox"
           role="listbox"
           aria-label="Matching chickens"
           className="bg-card border-border divide-border/50 absolute top-full right-0 left-0 z-50 mt-1.5 max-h-80 divide-y overflow-hidden overflow-y-auto rounded-lg border shadow-xl"
