@@ -32,8 +32,8 @@ export function getBloodlineParentageDisplay(relatedness: ParentageInput): {
   if (isFoundation) {
     return {
       primary: 'Unknown',
-      secondary: 'Foundation stock, no recorded parents',
-      title: fullLabel || label || 'Unknown (foundation stock, no recorded parents)',
+      secondary: 'Unknown parents, no recorded lineage',
+      title: 'Unknown parents (no recorded lineage)',
     };
   }
 

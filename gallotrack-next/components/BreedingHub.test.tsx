@@ -133,8 +133,8 @@ describe('Breeding Hub chicken identity', () => {
     ]);
     expect(screen.getByTestId('identity-pair-heading')).toHaveTextContent('Sire 1 × Dam A');
     expect(screen.getAllByText('Offspring of Sire 1 × Dam A').length).toBeGreaterThan(0);
-    expect(screen.getByText('Code for a foundation cock')).toBeInTheDocument();
-    expect(screen.getByText('Code for a foundation hen')).toBeInTheDocument();
+    expect(screen.getByText('Code for a new bird cock')).toBeInTheDocument();
+    expect(screen.getByText('Code for a new bird hen')).toBeInTheDocument();
     expect(screen.getByTestId('identity-legend')).toHaveClass('hub-identity-legend');
   });
 
@@ -199,8 +199,8 @@ describe('Breeding Hub chicken identity', () => {
   });
 
   it.each([
-    ['tl', 'Code para sa foundation cock', 'Offspring nina Sire 1 at Dam A'],
-    ['hil', 'Code para sa foundation cock', 'Offspring ni Sire 1 kag Dam A'],
+    ['tl', 'Code para sa new bird cock', 'Offspring nina Sire 1 at Dam A'],
+    ['hil', 'Code para sa new bird cock', 'Offspring ni Sire 1 kag Dam A'],
   ] as const)('shows translated legend and offspring caption in %s', async (lang, legend, caption) => {
     render(
       <LanguageProvider initialLanguage={lang}>

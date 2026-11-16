@@ -19,6 +19,7 @@ import {
 } from '@/lib/bloodline-composition';
 import { getBreedingClassification, type CompositionSource } from '@/lib/breeding-classification';
 import { cn } from '@/components/ui/utils';
+import { useT } from '@/lib/i18n';
 
 export interface DeclaredCompositionEditorProps {
   registeredBreed: string;
@@ -53,6 +54,7 @@ export default function DeclaredCompositionEditor({
   calculatedValue,
   source,
 }: DeclaredCompositionEditorProps) {
+  const t = useT();
   const currentBreed = registeredBreed.trim() || 'Registered Breed';
   const isCustomDeclared = Array.isArray(value) && value.length > 0;
 
@@ -197,7 +199,7 @@ export default function DeclaredCompositionEditor({
           <h4 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase">
             Purity (breed composition)
             <span className="border-border bg-muted/50 text-foreground rounded-full border px-1.5 py-0.5 text-xs font-normal normal-case">
-              {hasParents ? 'Recorded Lineage' : 'Foundation Stock'}
+              {hasParents ? t('registry.recordedLineage') : t('registry.newBird')}
             </span>
           </h4>
           <p className="text-muted-foreground mt-0.5 text-xs">

@@ -74,7 +74,7 @@ describe('BloodlineReportCard', () => {
     const parentage = screen.getByTestId('bloodline-parentage');
     expect(within(parentage).getByText('Unknown')).toBeInTheDocument();
     expect(
-      within(parentage).getByText('Foundation stock, no recorded parents'),
+      within(parentage).getByText('Unknown parents, no recorded lineage'),
     ).toBeInTheDocument();
   });
 

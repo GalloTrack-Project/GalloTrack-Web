@@ -50,7 +50,7 @@ describe('bloodline report layout utilities', () => {
     expect(formatBloodlineDisplayValue('')).toBe('Unknown');
   });
 
-  it('shortens foundation parentage while preserving the full tooltip meaning', () => {
+  it('shortens new-bird parentage while preserving the full tooltip meaning', () => {
     const display = getBloodlineParentageDisplay({
       type: 'unknown',
       label: 'Unknown (foundation stock, no recorded parents)',
@@ -59,8 +59,8 @@ describe('bloodline report layout utilities', () => {
     });
 
     expect(display.primary).toBe('Unknown');
-    expect(display.secondary).toBe('Foundation stock, no recorded parents');
-    expect(display.title).toContain('Unknown (foundation stock, no recorded parents)');
+    expect(display.secondary).toBe('Unknown parents, no recorded lineage');
+    expect(display.title).toBe('Unknown parents (no recorded lineage)');
   });
 
   it('keeps non-foundation parentage labels intact', () => {

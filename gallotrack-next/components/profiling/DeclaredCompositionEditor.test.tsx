@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import DeclaredCompositionEditor from './DeclaredCompositionEditor';
 
 describe('DeclaredCompositionEditor Component UI', () => {
-  it('renders foundation stock view with empty inputs when no parents and no declaration', () => {
+  it('renders new bird view with empty inputs when no parents and no declaration', () => {
     const onChange = vi.fn();
     render(
       <DeclaredCompositionEditor
@@ -17,7 +17,7 @@ describe('DeclaredCompositionEditor Component UI', () => {
     );
 
     expect(screen.getByText('Purity (breed composition)')).toBeDefined();
-    expect(screen.getByText('Foundation Stock')).toBeDefined();
+    expect(screen.getByText('New bird')).toBeDefined();
     expect(
       screen.getByText(/Enter it manually if you know it\. Leave blank if unknown/i)
     ).toBeDefined();
