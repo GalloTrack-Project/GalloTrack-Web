@@ -70,3 +70,16 @@ zoom matrix down to 25% and up to 500%.
 - [ ] No badge has `white-space: nowrap`, a fixed width, or a fixed height.
 - [ ] No horizontal page scrollbar, clipped text, or badge outside its row appears at any checked width, zoom, theme, or language.
 - [ ] Stored bloodline values and calculations are unchanged.
+
+## Full Siblings & Families Cards
+
+Verify the family card at 320, 375, 640, 768, 1024, 1280, and 1920 px and at 100% to 200%
+zoom. Then verify the manual matrix down to 25% and up to 500%.
+
+- [ ] Cock rows keep the ID, NAME, RECORD, WIN RATE, and SAMPLE columns with a 44 px rounded-square avatar.
+- [ ] Hen chips show a 32 px round avatar before the code and name.
+- [ ] Header Sire/Dam chips show a 28 px round avatar before the name and keep the variety text.
+- [ ] At narrow container widths the header chip hides its avatar before the name wraps.
+- [ ] Names wrap with `overflow-wrap: anywhere`; badges wrap; no fixed heights or `nowrap` clip text.
+- [ ] Light/dark and English/Tagalog/Hiligaynon labels stay inside the card.
+- [ ] No horizontal page scrollbar and no clipped text at any checked width or zoom.

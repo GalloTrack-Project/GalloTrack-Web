@@ -1,4 +1,5 @@
 import type { DeclaredBreedShare } from '@/lib/types';
+import type { RegistrationType } from '@/lib/registration-type';
 
 export const FOWL_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -12,6 +13,7 @@ export type DraftRestoreResult = {
 };
 
 export type CreateDraftFields = {
+  registrationType?: RegistrationType;
   newName: string;
   newBreed: string;
   newGender: string;

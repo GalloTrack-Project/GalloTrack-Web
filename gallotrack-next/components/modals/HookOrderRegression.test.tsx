@@ -336,13 +336,13 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
 
     // Initial state: not merged -> shows bird name
     expect(screen.getByText('Champion Stag')).toBeInTheDocument();
-    expect(screen.queryByText('Foundation stock')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unknown parents')).not.toBeInTheDocument();
 
-    // Toggle to merged (Foundation stock)
+    // Toggle to merged (Unknown parents)
     act(() => {
       screen.getByTestId('toggle-merged').click();
     });
-    expect(screen.getByText('Foundation stock')).toBeInTheDocument();
+    expect(screen.getByText('Unknown parents')).toBeInTheDocument();
     expect(screen.queryByText('Champion Stag')).not.toBeInTheDocument();
 
     // Toggle back to not merged (bird)
@@ -350,7 +350,7 @@ describe('Hook Order Regression Tests (React Error 310 Prevention)', () => {
       screen.getByTestId('toggle-merged').click();
     });
     expect(screen.getByText('Champion Stag')).toBeInTheDocument();
-    expect(screen.queryByText('Foundation stock')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unknown parents')).not.toBeInTheDocument();
   });
 
   it('ParentSelector mounts safely both inside and outside FowlProvider without throwing', () => {

@@ -24,6 +24,16 @@ type Props = {
   showLightbox?: boolean;
   eager?: boolean;
   fit?: 'cover' | 'contain';
+  /** Override the <img> alt text without changing the lightbox title. */
+  imgAlt?: string;
+  /** Override the avatar button's accessible label. */
+  photoAriaLabel?: string;
+  /** Optional "View profile" action shown inside the lightbox. */
+  onViewProfile?: () => void;
+  /** Label for the optional lightbox profile action. */
+  viewProfileLabel?: string;
+  /** Avatar silhouette: cocks use a rounded square, hens and parents use circles. */
+  shape?: 'square' | 'round';
 };
 
 export default function ChickenPhoto({
@@ -40,8 +50,13 @@ export default function ChickenPhoto({
   showLightbox = true,
   eager = false,
   fit = 'cover',
+  imgAlt,
+  photoAriaLabel,
+  onViewProfile,
+  viewProfileLabel,
+  shape = 'round',
 }: Props) {
-  const { t } = useT();
+  const t = useT();
   const hasPhoto = Boolean(imageUrl || photoPath || photoThumbPath);
   const thumbPath = photoThumbPath || photoPath;
   const [fullSrc, setFullSrc] = useState<string | null>(null);
@@ -101,6 +116,8 @@ export default function ChickenPhoto({
   }, [fit, lightboxOpen, fullSrc, photoPath, thumbPath, imageUrl, retryNonce]);
 
   const alt = code ? `${name} (${formatBirdCodeForDisplay(code)})` : name;
+  const imageAlt = imgAlt ?? alt;
+  const accessiblePhotoLabel = photoAriaLabel ?? t('registry.viewPhotoOf', { name: alt });
   const displaySrc = fit === 'contain' ? fullSrc || thumbSrc : thumbSrc;
   const resolving = thumbResolving || ((fit === 'contain' || lightboxOpen) && fullResolving);
   const unavailable = hasPhoto && (failed || (!displaySrc && !resolving));
@@ -109,6 +126,13 @@ export default function ChickenPhoto({
     <ChickenIcon className="text-muted-foreground h-1/2 w-1/2" />
   );
   const canInteract = interactive && showLightbox && Boolean(displaySrc) && !unavailable;
+  const shapeClass = shape === 'square' ? 'rounded-lg' : 'rounded-full';
+
+  useEffect(() => {
+    if (!unavailable) return;
+    const path = photoThumbPath || photoPath || null;
+    console.warn('[chicken-photo] photo unavailable', { name, path });
+  }, [unavailable, name, photoThumbPath, photoPath]);
 
   const retry = (event?: React.MouseEvent) => {
     event?.stopPropagation();
@@ -130,9 +154,11 @@ export default function ChickenPhoto({
 
   const frameClass = cn(
     'flex h-full w-full items-center justify-center overflow-hidden text-center',
+    shapeClass,
     className,
   );
   const frameStyle = { width: size, height: size };
+  const PhotoWrapper = canInteract ? 'button' : 'span';
 
   const body = !hasPhoto ? (
     <span className={frameClass} style={frameStyle}>
@@ -175,23 +201,13 @@ export default function ChickenPhoto({
       />
     </span>
   ) : (
-    <span
-      role={canInteract ? 'button' : undefined}
-      tabIndex={canInteract ? 0 : undefined}
-      aria-label={canInteract ? `View photo of ${alt}` : undefined}
+    <PhotoWrapper
+      type={canInteract ? 'button' : undefined}
+      aria-label={canInteract ? accessiblePhotoLabel : undefined}
       onClick={canInteract ? openLightbox : (event) => event.stopPropagation()}
-      onKeyDown={
-        canInteract
-          ? (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                openLightbox(event);
-              }
-            }
-          : undefined
-      }
       className={cn(
-        'block shrink-0 overflow-hidden rounded-full outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70',
+        'block shrink-0 overflow-hidden p-0 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70',
+        shapeClass,
         canInteract && 'cursor-zoom-in',
         className,
       )}
@@ -200,7 +216,7 @@ export default function ChickenPhoto({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={displaySrc ?? undefined}
-        alt={alt}
+        alt={imageAlt}
         width={size}
         height={size}
         loading={eager ? 'eager' : 'lazy'}
@@ -209,7 +225,7 @@ export default function ChickenPhoto({
         style={fit === 'cover' ? { objectPosition: '50% 30%' } : undefined}
         onError={() => setFailed(true)}
       />
-    </span>
+    </PhotoWrapper>
   );
 
   const lightboxSrc = fullSrc || thumbSrc;
@@ -224,13 +240,29 @@ export default function ChickenPhoto({
           title={alt}
           description="Chicken photo"
           className="max-w-4xl"
+          footer={
+            onViewProfile ? (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxOpen(false);
+                    onViewProfile();
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md px-4 text-sm font-black text-white transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {viewProfileLabel ?? t('registry.viewProfile')}
+                </button>
+              </div>
+            ) : undefined
+          }
         >
           <div className="bg-muted/40 flex max-h-[80vh] items-center justify-center overflow-hidden rounded-lg p-2">
             {lightboxSrc ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={lightboxSrc}
-                alt={alt}
+                alt={imageAlt}
                 className="max-h-[76vh] w-auto max-w-full object-contain"
               />
             ) : (

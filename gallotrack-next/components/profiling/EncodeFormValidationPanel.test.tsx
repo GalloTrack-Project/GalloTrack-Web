@@ -146,7 +146,7 @@ describe('Validation & Summary Panel', () => {
     expect(wingBandInput).toBeInTheDocument();
     expect(wingBandInput).toHaveAttribute('maxLength', '50');
 
-    expect(screen.getByText(/Auto-Assigned \(Sire\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Auto · Sire/i)).toBeInTheDocument();
     expect(screen.getByText(/This number will be banded on the chicken’s wing/i)).toBeInTheDocument();
   });
   it('disables register while the selected photo is still processing', async () => {

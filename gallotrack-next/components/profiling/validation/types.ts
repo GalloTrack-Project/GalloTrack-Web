@@ -1,6 +1,6 @@
 export type StatusTone = 'neutral' | 'pending' | 'warning' | 'success' | 'error';
 
-export type ValidationFieldKey = 'name' | 'strain' | 'gender' | 'birthdate';
+export type ValidationFieldKey = 'name' | 'strain' | 'gender' | 'birthdate' | 'parentage';
 
 export type ValidationFieldItem = {
   key: ValidationFieldKey;
