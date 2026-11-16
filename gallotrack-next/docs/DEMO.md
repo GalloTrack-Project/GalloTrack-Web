@@ -3,8 +3,9 @@
 `npm run seed:demo` creates a small, clearly marked set of chickens and matches for demoing
 milestone notifications and a non-zero win rate.
 
-> **Warning:** run this on the demo account only. It signs in as `DEMO_EMAIL` with the anon key
-> and normal RLS. It never uses the service-role key and never writes to another user's rows.
+> **Warning:** use a separate demo account only. Never point `DEMO_EMAIL` at the production owner
+> or a real customer account. The script signs in as `DEMO_EMAIL` with the anon key and normal RLS,
+> never uses the service-role key, and never writes to another user's rows.
 
 ## Environment
 
@@ -54,14 +55,18 @@ bands. Bird identifiers use the real foundation scheme (cocks `1`, `2`, `3`; hen
 remain valid when role-based identifier validation is enforced.
 
 Milestone notifications are derived in the browser from these birthdates. There is no notification
-cron or daily job. With the default notification lead days (`7` and `0`), the demo produces:
+cron or daily job. The default lead days `[7, 0]` show **3 of the 5** demo cases:
 
-- `Demo Pullet Today`: today alert
-- `Demo Mature Cock`: 7-day upcoming alert
-- `Demo Reached Hen`: recently-reached alert
+| Demo chicken | Default `[7, 0]` | All leads `[7, 3, 1, 0]` |
+|---|---|---|
+| `Demo Stag Soon` | none | upcoming 3 days |
+| `Demo Pullet Today` | today | today |
+| `Demo Bull Stag Tomorrow` | none | upcoming 1 day |
+| `Demo Mature Cock` | upcoming 7 days | upcoming 7 days |
+| `Demo Reached Hen` | recently reached (5 days ago) | recently reached (5 days ago) |
 
-`Demo Stag Soon` (3 days) needs the 3-day lead, and `Demo Bull Stag Tomorrow` (1 day) needs the 1-day
-lead. Enable those lead times in Milestone notifications to see all five.
+Enable all four lead times (`7`, `3`, `1`, `0`) in Settings → Notifications to see all five demo
+cases. The seed summary table prints both the default and all-leads alert for every demo chicken.
 
 ## Safety and cleanup
 

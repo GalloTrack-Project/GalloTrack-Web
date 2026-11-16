@@ -6,14 +6,18 @@ import { isValidWingBand } from '@/lib/wing-band';
 import { buildMilestoneNotifications } from '@/lib/notifications/milestones';
 import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/lib/notifications/types';
 import {
+  DEMO_ALL_LEAD_DAYS,
   DEMO_CASES,
+  DEMO_DEFAULT_LEAD_DAYS,
   DEMO_MARKER,
   addDays,
   applyConfirmationError,
+  buildDemoAlertRows,
   buildDemoFowlPlan,
   computeDemoBirthdates,
   dateKey,
   demoEnvError,
+  formatTable,
   parseDateKey,
   parseDemoEnvFile,
   parseSeedDemoArgs,
@@ -308,7 +312,7 @@ describe('demo milestone notifications', () => {
   });
 
   it('adds the 3-day and 1-day alerts only when those lead times are enabled', () => {
-    const notifications = notificationsFor([7, 3, 1, 0]);
+    const notifications = notificationsFor([...DEMO_ALL_LEAD_DAYS]);
     const byName = new Map(notifications.map((notification) => [notification.fowlName, notification]));
 
     expect(byName.get('Demo Stag Soon')).toMatchObject({
@@ -320,6 +324,39 @@ describe('demo milestone notifications', () => {
       daysUntil: 1,
     });
     expect(notifications).toHaveLength(5);
+  });
+
+  it('summarizes the default and all-leads alert per demo chicken', () => {
+    expect(buildDemoAlertRows(parseDateKey(D)!)).toEqual([
+      { name: 'Demo Stag Soon', defaultAlert: 'none', allLeadsAlert: 'upcoming 3d' },
+      { name: 'Demo Pullet Today', defaultAlert: 'today', allLeadsAlert: 'today' },
+      {
+        name: 'Demo Bull Stag Tomorrow',
+        defaultAlert: 'none',
+        allLeadsAlert: 'upcoming 1d',
+      },
+      { name: 'Demo Mature Cock', defaultAlert: 'upcoming 7d', allLeadsAlert: 'upcoming 7d' },
+      { name: 'Demo Reached Hen', defaultAlert: 'reached 5d ago', allLeadsAlert: 'reached 5d ago' },
+    ]);
+    expect([...DEMO_DEFAULT_LEAD_DAYS]).toEqual([7, 0]);
+    expect([...DEMO_ALL_LEAD_DAYS]).toEqual([7, 3, 1, 0]);
+  });
+
+  it('prints both lead-day alert columns in the seed summary', () => {
+    const table = formatTable([
+      {
+        action: 'WOULD CREATE',
+        kind: 'fowl',
+        name: 'Demo Stag Soon',
+        detail: 'birthdate',
+        defaultAlert: 'none',
+        allLeadsAlert: 'upcoming 3d',
+      },
+    ]);
+
+    expect(table).toContain('DEFAULT [7,0]');
+    expect(table).toContain('ALL [7,3,1,0]');
+    expect(table).toContain('upcoming 3d');
   });
 });
 
@@ -404,6 +441,14 @@ SUPABASE_SERVICE_ROLE_KEY=must-not-be-read`);
     expect(state.insertedFowl).toHaveLength(0);
     expect(state.insertedMatches).toHaveLength(0);
     expect(summary.rows.filter((row) => row.action === 'WOULD CREATE')).toHaveLength(7);
+    expect(summary.rows.find((row) => row.name === 'Demo Stag Soon')).toMatchObject({
+      defaultAlert: 'none',
+      allLeadsAlert: 'upcoming 3d',
+    });
+    expect(summary.rows.find((row) => row.name === 'Demo Mature Cock')).toMatchObject({
+      defaultAlert: 'upcoming 7d',
+      allLeadsAlert: 'upcoming 7d',
+    });
   });
 
   it('skips demo chickens that already carry the DEMO marker and name', async () => {

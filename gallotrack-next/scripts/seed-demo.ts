@@ -8,8 +8,15 @@ import {
   getAgeParts,
 } from '@/lib/helpers';
 import { buildCodeSet, generateBirdCode, type CodeSet } from '@/lib/bird-code';
+import { buildMilestoneNotifications } from '@/lib/notifications/milestones';
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  type NotificationMember,
+} from '@/lib/notifications/types';
 export const DEMO_MARKER = 'DEMO DATA';
 export const DEMO_BREED_FALLBACK = 'Lemon';
+export const DEMO_DEFAULT_LEAD_DAYS = [7, 0] as const;
+export const DEMO_ALL_LEAD_DAYS = [7, 3, 1, 0] as const;
 export const DEMO_DATE_FORMAT_MESSAGE = 'Use --date=YYYY-MM-DD (for example --date=2026-11-16).';
 
 type DemoCaseKey = 'stag-soon' | 'pullet-today' | 'bull-stag-tomorrow' | 'mature-soon' | 'reached-hen';
@@ -95,6 +102,14 @@ export type DemoSummaryRow = {
   kind: 'fowl' | 'match';
   name: string;
   detail: string;
+  defaultAlert?: string;
+  allLeadsAlert?: string;
+};
+
+export type DemoAlertRow = {
+  name: string;
+  defaultAlert: string;
+  allLeadsAlert: string;
 };
 
 export type DemoRunSummary = {
@@ -250,6 +265,58 @@ export function computeDemoBirthdates(defenseDate: Date): Record<DemoCaseKey, st
     },
     {} as Record<DemoCaseKey, string>,
   );
+}
+
+function describeDemoAlert(member: NotificationMember): string {
+  if (member.type === 'today') return 'today';
+  if (member.type === 'upcoming') return `upcoming ${member.daysUntil}d`;
+  return `reached ${Math.abs(member.daysUntil)}d ago`;
+}
+
+function demoAlertsForLeadDays(
+  fowls: Array<{
+    id: number;
+    name: string;
+    gender: 'Rooster' | 'Hen';
+    birthdate: string;
+    status: string;
+    activity_status: string;
+  }>,
+  defenseDate: Date,
+  leadDays: readonly number[],
+): Map<string, string> {
+  const notifications = buildMilestoneNotifications(
+    fowls,
+    { ...DEFAULT_NOTIFICATION_PREFERENCES, leadDays: [...leadDays] },
+    defenseDate,
+  );
+  const byName = new Map<string, string>();
+  for (const notification of notifications) {
+    for (const member of notification.members) {
+      byName.set(member.fowlName, describeDemoAlert(member));
+    }
+  }
+  return byName;
+}
+
+export function buildDemoAlertRows(defenseDate: Date): DemoAlertRow[] {
+  const birthdates = computeDemoBirthdates(defenseDate);
+  const fowls = DEMO_CASES.map((demo, index) => ({
+    id: index + 1,
+    name: demo.name,
+    gender: demo.gender,
+    birthdate: birthdates[demo.key],
+    status: 'Active',
+    activity_status: 'active',
+  }));
+  const defaultAlerts = demoAlertsForLeadDays(fowls, defenseDate, DEMO_DEFAULT_LEAD_DAYS);
+  const allAlerts = demoAlertsForLeadDays(fowls, defenseDate, DEMO_ALL_LEAD_DAYS);
+
+  return DEMO_CASES.map((demo) => ({
+    name: demo.name,
+    defaultAlert: defaultAlerts.get(demo.name) ?? 'none',
+    allLeadsAlert: allAlerts.get(demo.name) ?? 'none',
+  }));
 }
 
 export function isDemoFowlRow(row: Pick<ExistingFowl, 'name' | 'notes'>): boolean {
@@ -451,6 +518,7 @@ async function fetchExistingMatches(
 export async function runDemoSeed(options: DemoSeedOptions): Promise<DemoRunSummary> {
   const defenseDate = parseDateKey(options.date);
   if (!defenseDate) throw new DemoSeedError(`Invalid --date. ${DEMO_DATE_FORMAT_MESSAGE}`);
+  const alertByName = new Map(buildDemoAlertRows(defenseDate).map((row) => [row.name, row]));
 
   const requestedBreed = (options.breedName || DEMO_BREED_FALLBACK).trim();
   const breeds = await fetchRegisteredBreeds(options.client);
@@ -514,15 +582,19 @@ export async function runDemoSeed(options: DemoSeedOptions): Promise<DemoRunSumm
   });
 
   for (const row of skipped) {
+    const alerts = alertByName.get(row.name || '');
     summary.rows.push({
       action: 'SKIP',
       kind: 'fowl',
       name: row.name || '(unnamed)',
       detail: 'already exists with DEMO DATA marker',
+      defaultAlert: alerts?.defaultAlert ?? 'none',
+      allLeadsAlert: alerts?.allLeadsAlert ?? 'none',
     });
   }
 
   for (const plan of plans) {
+    const alerts = alertByName.get(plan.name);
     summary.rows.push({
       action: options.apply ? 'CREATE' : 'WOULD CREATE',
       kind: 'fowl',
@@ -530,6 +602,8 @@ export async function runDemoSeed(options: DemoSeedOptions): Promise<DemoRunSumm
       detail: `${plan.birthdate} · ${plan.growthStage} · ${plan.milestoneLabel} · ${plan.birdCode}${
         plan.wingBand ? ` · band ${plan.wingBand}` : ''
       }`,
+      defaultAlert: alerts?.defaultAlert ?? 'none',
+      allLeadsAlert: alerts?.allLeadsAlert ?? 'none',
     });
 
     if (!options.apply) continue;
@@ -668,17 +742,26 @@ async function cleanDemoData(input: DemoSeedOptions & {
   return summary;
 }
 
-function formatTable(rows: DemoSummaryRow[]): string {
+export function formatTable(rows: DemoSummaryRow[]): string {
   if (rows.length === 0) return '(nothing to do)';
+  const hasAlerts = rows.some((row) => row.defaultAlert !== undefined);
   const widths = {
     action: Math.max(6, ...rows.map((row) => row.action.length)),
     kind: Math.max(4, ...rows.map((row) => row.kind.length)),
     name: Math.max(4, ...rows.map((row) => row.name.length)),
+    defaultAlert: Math.max(14, ...rows.map((row) => (row.defaultAlert || '').length)),
+    allLeadsAlert: Math.max(19, ...rows.map((row) => (row.allLeadsAlert || '').length)),
   };
   const header = [
     'ACTION'.padEnd(widths.action),
     'TYPE'.padEnd(widths.kind),
     'NAME'.padEnd(widths.name),
+    ...(hasAlerts
+      ? [
+          'DEFAULT [7,0]'.padEnd(widths.defaultAlert),
+          'ALL [7,3,1,0]'.padEnd(widths.allLeadsAlert),
+        ]
+      : []),
     'DETAIL',
   ].join('  ');
   const divider = '-'.repeat(header.length);
@@ -690,6 +773,12 @@ function formatTable(rows: DemoSummaryRow[]): string {
         row.action.padEnd(widths.action),
         row.kind.padEnd(widths.kind),
         row.name.padEnd(widths.name),
+        ...(hasAlerts
+          ? [
+              (row.defaultAlert || '').padEnd(widths.defaultAlert),
+              (row.allLeadsAlert || '').padEnd(widths.allLeadsAlert),
+            ]
+          : []),
         row.detail,
       ].join('  '),
     ),
@@ -698,7 +787,14 @@ function formatTable(rows: DemoSummaryRow[]): string {
 
 function printSummary(summary: DemoRunSummary): void {
   console.log(`\nBreed: ${summary.breed}`);
-  console.log(`Mode: ${summary.mode.toUpperCase()}${summary.clean ? ' · CLEAN' : ''}\n`);
+  console.log(`Mode: ${summary.mode.toUpperCase()}${summary.clean ? ' · CLEAN' : ''}`);
+  if (!summary.clean) {
+    console.log(
+      `Notification leads: default [${DEMO_DEFAULT_LEAD_DAYS.join(', ')}] vs all [${DEMO_ALL_LEAD_DAYS.join(', ')}]\n`,
+    );
+  } else {
+    console.log('');
+  }
   console.log(formatTable(summary.rows));
 
   if (summary.clean) {
