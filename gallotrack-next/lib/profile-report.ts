@@ -127,30 +127,31 @@ export function buildProfileReportSections(input: {
       ],
     });
 
-    sections.push({
-      heading: labels.matchHistory,
-      table: {
-        columns: [
-          'Date',
-          'Opponent',
-          'Breed',
-          'Event',
-          'Outcome',
-          'Location',
-          'Post-Fight Condition',
-        ],
-        rows: fights.map((match) => [
-          match.date,
-          match.opponent,
-          [match.breed, match.opponent_breed].filter(Boolean).join(' vs '),
-          [match.event_type, match.type].filter(Boolean).join(' · '),
-          match.outcome,
-          match.location,
-          match.post_fight_condition,
-        ]),
-        emptyText: labels.noFightsRecorded,
-      },
-    });
+    if (fights.length > 0) {
+      sections.push({
+        heading: labels.matchHistory,
+        table: {
+          columns: [
+            'Date',
+            'Opponent',
+            'Breed',
+            'Event',
+            'Outcome',
+            'Location',
+            'Post-Fight Condition',
+          ],
+          rows: fights.map((match) => [
+            match.date,
+            match.opponent,
+            [match.breed, match.opponent_breed].filter(Boolean).join(' vs '),
+            [match.event_type, match.type].filter(Boolean).join(' · '),
+            match.outcome,
+            match.location,
+            match.post_fight_condition,
+          ]),
+        },
+      });
+    }
     return sections;
   }
 
@@ -276,6 +277,5 @@ export function buildProfileReportDocument(input: {
       name: 'GalloTrack',
     },
     footerUrl: PROFILE_REPORT_URL,
-    showPrintFooter: true,
   };
 }

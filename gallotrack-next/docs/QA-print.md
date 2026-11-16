@@ -10,7 +10,7 @@ Chrome or Edge and to a physical printer if available.
 - [ ] Section headers, borders, and the photo frame keep their colors (`print-color-adjust: exact`).
 - [ ] Tables and sections do not split awkwardly across pages (`break-inside: avoid`).
 - [ ] No on-screen buttons, tabs, or modal controls appear in the printed output.
-- [ ] The footer shows the GalloTrack URL and a page number.
+- [ ] The footer shows the GalloTrack URL and the standard generated-report text; page numbers come only from the browser.
 
 ## Header and photo
 
@@ -28,7 +28,7 @@ Chrome or Edge and to a physical printer if available.
 - [ ] The header and Gender field say `Cock` or `Hen`, never `Rooster` or a raw stored value.
 - [ ] A hen report has no Performance Metrics, win rate, or Match History.
 - [ ] A hen report shows Breeding, offspring count, and pairing history only when those records exist.
-- [ ] A cock report has Performance Metrics, `Overall win rate (all time)` from the shared record helper, and Match History.
-- [ ] A cock with no fights shows `No fights recorded` and `—%`, not a table of empty zeros.
+- [ ] A cock report has Performance Metrics, `Overall win rate (all time)` from the shared record helper, and Match History when matches exist.
+- [ ] A cock with no fights shows `No fights recorded` and `—%`, and the entire Match History section is hidden.
 - [ ] Sire and Dam appear only as parent roles in parent rows.
 - [ ] Existing report fields and values are otherwise unchanged.

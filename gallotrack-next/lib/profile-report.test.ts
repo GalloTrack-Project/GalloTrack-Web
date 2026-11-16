@@ -152,7 +152,7 @@ describe('profile report labels and structure', () => {
     expect(sections[3].table?.rows).toHaveLength(1);
   });
 
-  it('shows No fights recorded and —% for a cock with no fights', () => {
+  it('shows No fights recorded and hides Match History for a cock with no fights', () => {
     const sections = buildProfileReportSections({
       bird: bird(),
       fights: [],
@@ -162,6 +162,11 @@ describe('profile report labels and structure', () => {
       labels,
     });
 
+    expect(sections.map((section) => section.heading)).toEqual([
+      'Profile',
+      'Bloodline Composition',
+      'Performance Metrics',
+    ]);
     expect(sections[2].fields).toContainEqual({
       label: 'Total fights',
       value: 'No fights recorded',
@@ -170,7 +175,7 @@ describe('profile report labels and structure', () => {
       label: 'Overall win rate (all time)',
       value: '—%',
     });
-    expect(sections[3].table?.emptyText).toBe('No fights recorded');
+    expect(sections.some((section) => section.heading === 'Match History')).toBe(false);
   });
 
   it('omits performance, win rate and match history for a hen and shows breeding data', () => {
@@ -378,6 +383,6 @@ describe('buildProfileReportDocument', () => {
     expect(doc.brand?.logoSrc).toBe('/brand/logo-mark.svg');
     expect(doc.photo?.caption).toBe('E - Champion Stag');
     expect(doc.gallery?.images).toHaveLength(1);
-    expect(doc.showPrintFooter).toBe(true);
+    expect(doc.footerUrl).toBe('https://gallotrack.app');
   });
 });
