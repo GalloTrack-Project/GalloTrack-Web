@@ -248,6 +248,11 @@ export default function LinkChickenModal({
                   id="link-chicken-search"
                   ref={searchRef}
                   type="search"
+                  name="gt-link-chicken-search"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search name, code, or band..."

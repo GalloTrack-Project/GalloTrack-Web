@@ -19,11 +19,12 @@ import {
   checkParentageMatch,
   normalizeBirdCode,
 } from '@/lib/bird-code';
-import { isFoundationStock, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { isFoundationStock, isCustomOption, normalizeOptionValue, isMale, isFemale } from '@/lib/helpers';
+import { isOffspringRegistration, type RegistrationType } from '@/lib/registration-type';
 import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
-import { validateOffspringBirthdate } from '@/lib/registry-roles';
+import { isActiveStatus, validateOffspringBirthdate } from '@/lib/registry-roles';
 import {
   CheckCircle2,
   ChevronDown,
@@ -47,6 +48,8 @@ import type { StatusTone, ValidationFieldItem } from './validation/types';
 
 type Props = {
   fowls: FowlRecord[];
+  registrationType?: RegistrationType;
+  setRegistrationType?: (v: RegistrationType) => void;
   newName: string;
   setNewName: (v: string) => void;
   newBreed: string;
@@ -130,6 +133,8 @@ type Props = {
 
 export default function EncodeForm({
   fowls,
+  registrationType: controlledRegistrationType,
+  setRegistrationType: controlledSetRegistrationType,
   newName, setNewName,
   newBreed, setNewBreed,
   newGender, setNewGender,
@@ -180,6 +185,10 @@ export default function EncodeForm({
   const { t } = useT();
   const unitPrefs = useUnitPrefs();
   const photoForm = useFowlFormStateOptional();
+  const [localRegistrationType, setLocalRegistrationType] = useState<RegistrationType>('new');
+  const activeRegistrationType = controlledRegistrationType ?? localRegistrationType;
+  const setActiveRegistrationType = controlledSetRegistrationType ?? setLocalRegistrationType;
+  const registrationIsOffspring = isOffspringRegistration(activeRegistrationType);
   const hasAnyParent = sireName.trim() !== '' || damName.trim() !== '';
   const strainInputRef = useRef<HTMLDivElement>(null);
   const strainDropdownRef = useRef<HTMLDivElement>(null);
@@ -208,19 +217,83 @@ export default function EncodeForm({
   }, [restoreDraft]);
 
   const birthdateValidation = useMemo(
-    () => validateOffspringBirthdate(newBirthdate, sireName, damName, fowls),
-    [newBirthdate, sireName, damName, fowls],
+    () =>
+      validateOffspringBirthdate(
+        newBirthdate,
+        registrationIsOffspring ? sireName : '',
+        registrationIsOffspring ? damName : '',
+        fowls,
+      ),
+    [newBirthdate, registrationIsOffspring, sireName, damName, fowls],
   );
 
   const hasSire = !!sireName.trim() && sireName.trim().toLowerCase() !== 'foundation stock';
   const hasDam = !!damName.trim() && damName.trim().toLowerCase() !== 'foundation stock';
-  const isOffspring = hasSire || hasDam;
-  const currentRole: 'sire' | 'dam' | 'offspring' = isOffspring
+  const isOffspring = registrationIsOffspring;
+  const currentRole: 'sire' | 'dam' | 'offspring' = registrationIsOffspring
     ? 'offspring'
     : newGender === 'Hen' || newGender === 'Female'
       ? 'dam'
       : 'sire';
+  const hasLineageParents = registrationIsOffspring && hasAnyParent;
 
+  const registeredSires = fowls.filter(
+    (f) => isActiveStatus(f) && isMale(f.gender) && (f.name || '').trim() && !isFoundationStock(f.name),
+  );
+  const registeredDams = fowls.filter(
+    (f) => isActiveStatus(f) && isFemale(f.gender) && (f.name || '').trim() && !isFoundationStock(f.name),
+  );
+  const selectedSireFowl = fowls.find(
+    (f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase(),
+  );
+  const selectedDamFowl = fowls.find(
+    (f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase(),
+  );
+  const bothParentsRegistered = Boolean(selectedSireFowl && selectedDamFowl);
+  const pairOffspringCount = bothParentsRegistered
+    ? fowls.filter(
+        (f) =>
+          f.sire.trim().toLowerCase() === sireName.trim().toLowerCase() &&
+          f.dam.trim().toLowerCase() === damName.trim().toLowerCase(),
+      ).length
+    : 0;
+  const identifierReady =
+    Boolean(suggestedBirdCode) &&
+    (registrationIsOffspring ? bothParentsRegistered : Boolean(newGender.trim()));
+  const identifierMessage = identifierReady
+    ? ''
+    : registrationIsOffspring
+      ? !sireName.trim() || !damName.trim()
+        ? t('registry.identifierSelectParents')
+        : t('registry.identifierNeedRegisteredParents')
+      : !newGender.trim()
+        ? t('registry.identifierSelectGender')
+        : t('registry.identifierPending');
+
+  function changeRegistrationType(next: RegistrationType) {
+    if (next === activeRegistrationType) return;
+    setActiveRegistrationType(next);
+    setIsManualOverride(false);
+    setBirdCode('');
+  }
+
+  function changeSire(value: string) {
+    setSireName(value);
+    setIsManualOverride(false);
+    setBirdCode('');
+  }
+
+  function changeDam(value: string) {
+    setDamName(value);
+    setIsManualOverride(false);
+    setBirdCode('');
+  }
+
+  function changeGender(value: string) {
+    setNewGender(value);
+    setIsManualOverride(false);
+    setBirdCode('');
+  }
   const breedOptions = useMemo(() => mergeStrainNames(availableStrains), [availableStrains]);
   const registeredTypedBreed = findStrainName(availableStrains, newBreed);
   const effectiveBreed =
@@ -519,7 +592,7 @@ export default function EncodeForm({
   };
 
   const pedigreeComposition = useMemo<BloodlineComposition | null>(() => {
-    if (!hasAnyParent) return null;
+    if (!hasLineageParents) return null;
     const draft = {
       id: -1,
       name: newName.trim() || '__preview__',
@@ -529,7 +602,7 @@ export default function EncodeForm({
       dam: damName,
     } as FowlRecord;
     return computePedigreeComposition(draft, fowls);
-  }, [hasAnyParent, newName, effectiveBreed, newGender, sireName, damName, fowls]);
+  }, [hasLineageParents, newName, effectiveBreed, newGender, sireName, damName, fowls]);
 
   const declaredValidation = useMemo(() => {
     if (!newDeclaredComposition || newDeclaredComposition.length === 0) {
@@ -566,6 +639,16 @@ export default function EncodeForm({
       complete: newBirthdate.trim().length > 0,
       targetId: 'birth-date',
     },
+    ...(registrationIsOffspring
+      ? [
+          {
+            key: 'parentage' as const,
+            label: t('registry.parentage'),
+            complete: bothParentsRegistered,
+            targetId: 'encode-sire',
+          },
+        ]
+      : []),
   ];
 
   const missingCount = requiredFields.filter((field) => !field.complete).length;
@@ -605,8 +688,8 @@ export default function EncodeForm({
         : t('registry.registerBlockedMissing', { count: String(missingCount) })
       : birthdateError || declaredError || t('registry.validationPendingHelper');
 
-  const hasSireParent = sireName.trim().length > 0 && !isFoundationStock(sireName);
-  const hasDamParent = damName.trim().length > 0 && !isFoundationStock(damName);
+  const hasSireParent = registrationIsOffspring && sireName.trim().length > 0 && !isFoundationStock(sireName);
+  const hasDamParent = registrationIsOffspring && damName.trim().length > 0 && !isFoundationStock(damName);
   const parentCount = Number(hasSireParent) + Number(hasDamParent);
 
   let lineageTone: StatusTone = 'neutral';
@@ -779,103 +862,297 @@ export default function EncodeForm({
           </h3>
           <span className="text-xs font-mono bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full font-black shrink-0">ID: {nextNodeId}</span>
         </div>
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">{t('registry.identifierName')}</label>
-          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder={t('registry.identifierPlaceholder')} required id="identifier-name" />
+        <div role="radiogroup" aria-label={t('registry.registrationTypeQuestion')} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {([
+            { value: 'new' as const, title: t('registry.newBird'), helper: t('registry.newBirdHelper') },
+            { value: 'offspring' as const, title: t('registry.offspring'), helper: t('registry.offspringHelper') },
+          ]).map((option) => {
+            const selected = activeRegistrationType === option.value;
+            return (
+              <label
+                key={option.value}
+                className={`flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors focus-within:ring-2 focus-within:ring-emerald-500/60 ${
+                  selected
+                    ? 'border-emerald-500 bg-emerald-50/70 dark:border-emerald-700 dark:bg-emerald-950/30'
+                    : 'border-border bg-card hover:border-emerald-300 dark:hover:border-emerald-800'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="registration-type"
+                  value={option.value}
+                  checked={selected}
+                  onChange={() => changeRegistrationType(option.value)}
+                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-emerald-600"
+                />
+                <span className="min-w-0">
+                  <span className="text-foreground block text-sm font-black">{option.title}</span>
+                  <span className="text-muted-foreground mt-0.5 block text-xs font-semibold leading-relaxed">
+                    {option.helper}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+
+        {registrationIsOffspring ? (
+          <div className="border-border space-y-3 rounded-lg border bg-muted/20 p-3">
+            <div>
+              <h4 className="text-foreground text-sm font-black">{t('registry.parentage')}</h4>
+              <p className="text-muted-foreground mt-0.5 text-xs font-semibold">
+                {t('registry.offspringParentageHelp')}
+              </p>
+            </div>
+            {registeredSires.length === 0 || registeredDams.length === 0 ? (
+              <div className="border-border rounded-md border border-dashed bg-card p-3">
+                <p className="text-foreground text-sm font-bold">{t('registry.registerNewBirdFirst')}</p>
+                <a
+                  href="#identifier-name"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    changeRegistrationType('new');
+                  }}
+                  className="mt-1 inline-flex min-h-11 items-center text-xs font-black text-emerald-700 underline underline-offset-2 dark:text-emerald-300"
+                >
+                  {t('registry.registerNewBirdFirstLink')}
+                </a>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="encode-sire" className="text-muted-foreground mb-1.5 block text-xs font-bold tracking-wider uppercase">
+                      {t('registry.sireFather')}
+                    </label>
+                    <ParentSelector
+                      id="encode-sire"
+                      value={sireName}
+                      onChange={changeSire}
+                      onPick={() => {}}
+                      fowls={fowls}
+                      preferredGender="Male"
+                      placeholder={t('registry.sireSearchPlaceholder')}
+                      allowExternal={false}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="encode-dam" className="text-muted-foreground mb-1.5 block text-xs font-bold tracking-wider uppercase">
+                      {t('registry.damMother')}
+                    </label>
+                    <ParentSelector
+                      id="encode-dam"
+                      value={damName}
+                      onChange={changeDam}
+                      onPick={() => {}}
+                      fowls={fowls}
+                      preferredGender="Female"
+                      accent="amber"
+                      placeholder={t('registry.damSearchPlaceholder')}
+                      allowExternal={false}
+                    />
+                  </div>
+                </div>
+                {bothParentsRegistered && (
+                  <p className="text-muted-foreground text-xs font-bold" data-testid="pair-summary">
+                    {t('registry.pairSummary', {
+                      sire: sireName.trim(),
+                      dam: damName.trim(),
+                      count: pairOffspringCount,
+                    })}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        ) : (
+          <details className="border-border rounded-lg border bg-muted/20 p-3">
+            <summary className="text-foreground flex min-h-11 cursor-pointer list-none items-center gap-2 text-xs font-black">
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('registry.addExternalParents')}
+            </summary>
+            <div className="grid grid-cols-1 gap-3 pt-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="external-sire-name" className="text-muted-foreground mb-1.5 block text-xs font-bold tracking-wider uppercase">
+                  {t('registry.externalSireName')}
+                </label>
+                <input
+                  id="external-sire-name"
+                  type="text"
+                  value={sireName}
+                  onChange={(event) => changeSire(event.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={t('registry.externalParentPlaceholder')}
+                  className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full rounded-md border p-3 text-sm font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                />
+              </div>
+              <div>
+                <label htmlFor="external-dam-name" className="text-muted-foreground mb-1.5 block text-xs font-bold tracking-wider uppercase">
+                  {t('registry.externalDamName')}
+                </label>
+                <input
+                  id="external-dam-name"
+                  type="text"
+                  value={damName}
+                  onChange={(event) => changeDam(event.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={t('registry.externalParentPlaceholder')}
+                  className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full rounded-md border p-3 text-sm font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                />
+              </div>
+            </div>
+            <p className="text-muted-foreground mt-2 text-xs font-semibold">
+              {t('registry.externalParentsHelp')}
+            </p>
+          </details>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">{t('registry.identifierName')}</label>
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder={t('registry.identifierPlaceholder')} required id="identifier-name" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
+            <select
+              value={newGender}
+              onChange={(e) => changeGender(e.target.value)}
+              className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
+              required
+              id="gender-class"
+            >
+              <option value="" disabled className="bg-popover text-muted-foreground">{t('registry.selectGenderClass')}</option>
+              {GENDER_CLASS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value} className="bg-popover text-popover-foreground">
+                  {t(option.labelKey)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         {(() => {
-          const sireBird = fowls.find((f) => f.name.trim().toLowerCase() === sireName.trim().toLowerCase());
-          const damBird = fowls.find((f) => f.name.trim().toLowerCase() === damName.trim().toLowerCase());
-          const sireBirdCode = sireBird ? (sireBird.bird_code || String(sireBird.id)) : (hasSire ? sireName.trim() : null);
-          const damBirdCode = damBird ? (damBird.bird_code || String(damBird.id)) : (hasDam ? damName.trim() : null);
-
+          const sireBirdCode = selectedSireFowl
+            ? selectedSireFowl.bird_code || String(selectedSireFowl.id)
+            : hasSire
+              ? sireName.trim()
+              : null;
+          const damBirdCode = selectedDamFowl
+            ? selectedDamFowl.bird_code || String(selectedDamFowl.id)
+            : hasDam
+              ? damName.trim()
+              : null;
+          const manualIdentifier = isManualOverride && identifierReady;
           const formatCheck = birdCode.trim() ? validateIdentifierFormat(birdCode.trim(), currentRole) : null;
           const isDuplicate = birdCode.trim()
             ? fowls.some((f) => normalizeBirdCode(f.bird_code).toLowerCase() === normalizeBirdCode(birdCode).toLowerCase())
             : false;
-          const parentCheck = (currentRole === 'offspring' && birdCode.trim())
-            ? checkParentageMatch(birdCode.trim(), sireBirdCode, damBirdCode)
-            : { matches: true };
+          const parentCheck =
+            currentRole === 'offspring' && birdCode.trim()
+              ? checkParentageMatch(birdCode.trim(), sireBirdCode, damBirdCode)
+              : { matches: true };
+          const badge =
+            currentRole === 'offspring'
+              ? t('registry.autoBadgeOffspring')
+              : currentRole === 'dam'
+                ? t('registry.autoBadgeDam')
+                : t('registry.autoBadgeSire');
 
           return (
-            <div className="bg-slate-50/80 dark:bg-muted/40 p-4 rounded-lg border border-slate-200/80 dark:border-border space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-black text-slate-800 dark:text-card-foreground uppercase tracking-wider" htmlFor="chicken-code">
+            <div className="bg-slate-50/80 dark:bg-muted/40 space-y-2.5 rounded-lg border border-slate-200/80 p-4 dark:border-border">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-xs font-black tracking-wider text-slate-800 uppercase dark:text-card-foreground" htmlFor="chicken-code">
                   {t('registry.uniqueChickenId')}
                 </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsManualOverride(!isManualOverride);
-                    if (isManualOverride) setBirdCode('');
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  {isManualOverride ? (
-                    <>
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>{t('registry.useAutoAssignedCode')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>{t('registry.editIdManually')}</span>
-                    </>
-                  )}
-                </button>
+                {identifierReady && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsManualOverride((value) => !value);
+                      if (manualIdentifier) setBirdCode('');
+                    }}
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
+                  >
+                    {manualIdentifier ? (
+                      <>
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{t('registry.useAutoAssignedCode')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Edit3 className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{t('registry.editIdManually')}</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
-              {!isManualOverride ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 flex items-center justify-between p-3 rounded-md border border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('registry.identifierLabel')}</span>
-                      <span className="font-mono text-base font-extrabold tracking-wide text-emerald-800 dark:text-emerald-300">
-                        {suggestedBirdCode ? formatBirdCodeForDisplay(suggestedBirdCode) : currentRole === 'offspring' ? t('registry.selectSireAndDam') : t('registry.generating')}
+              <div role="status" aria-live="polite" aria-atomic="true" data-testid="identifier-status">
+                {!manualIdentifier ? (
+                  <div
+                    className={`flex min-h-14 flex-wrap items-center justify-between gap-2 rounded-md border p-3 ${
+                      identifierReady
+                        ? 'border-emerald-300 bg-emerald-50/60 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                        : 'border-border border-dashed bg-muted/30 text-muted-foreground'
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Lock
+                        className={`h-4 w-4 shrink-0 ${identifierReady ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-bold tracking-wider uppercase">{t('registry.identifierLabel')}</span>
+                      <span className="font-mono text-base font-extrabold tracking-wide">
+                        {identifierReady ? formatBirdCodeForDisplay(suggestedBirdCode) : '—'}
                       </span>
                     </div>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
-                      {suggestedBirdCode
-                        ? currentRole === 'sire' ? t('registry.autoAssignedSire') : currentRole === 'dam' ? t('registry.autoAssignedDam') : t('registry.autoAssignedOffspring')
-                        : currentRole === 'offspring'
-                          ? t('registry.awaitingParents')
-                          : t('registry.autoAssigned')}
-                    </span>
+                    {identifierReady ? (
+                      <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
+                        {badge}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold">{identifierMessage}</span>
+                    )}
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <div className="relative">
+                ) : (
+                  <div className="space-y-1.5">
                     <input
                       type="text"
                       value={birdCode}
                       onChange={(e) => setBirdCode(e.target.value)}
-                      className="w-full p-3 border border-emerald-500 rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-mono font-bold focus:ring-4 focus:ring-emerald-100"
-                      placeholder={formatBirdCodeForDisplay(suggestedBirdCode) || (currentRole === 'sire' ? 'e.g. 1' : currentRole === 'dam' ? 'e.g. A' : 'e.g. 1A1')}
+                      className="w-full rounded-md border border-emerald-500 bg-white p-3 font-mono text-sm font-bold text-neutral-900 focus:ring-4 focus:ring-emerald-100 dark:bg-input dark:text-foreground"
+                      placeholder={formatBirdCodeForDisplay(suggestedBirdCode)}
                       id="chicken-code"
                     />
+                    <div className="flex flex-col gap-1 text-xs font-semibold">
+                      {birdCode.trim() ? (
+                        <>
+                          {formatCheck && !formatCheck.valid ? (
+                            <span className="font-bold text-rose-600 dark:text-rose-400">{formatCheck.error}</span>
+                          ) : isDuplicate ? (
+                            <span className="font-bold text-rose-600 dark:text-rose-400">
+                              {t('registry.idAlreadyInUse', { code: birdCode.trim() })}
+                            </span>
+                          ) : (
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                              {t('registry.validFormatForRole', { role: currentRole })}
+                            </span>
+                          )}
+                          {!parentCheck.matches && parentCheck.warning && (
+                            <span className="rounded border border-amber-200 bg-amber-50 p-1 font-bold text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                              {parentCheck.warning}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">{t('registry.formatHelpText')}</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1 text-xs font-semibold">
-                    {birdCode.trim() ? (
-                      <>
-                        {formatCheck && !formatCheck.valid ? (
-                          <span className="text-rose-600 dark:text-rose-400 font-bold"> {formatCheck.error}</span>
-                        ) : isDuplicate ? (
-                          <span className="text-rose-600 dark:text-rose-400 font-bold">{t('registry.idAlreadyInUse', { code: birdCode.trim() })}</span>
-                        ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{t('registry.validFormatForRole', { role: currentRole })}</span>
-                        )}
-                        {!parentCheck.matches && parentCheck.warning && (
-                          <span className="text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded p-1"> {parentCheck.warning}</span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">{t('registry.formatHelpText')}</span>
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           );
         })()}
@@ -1125,22 +1402,7 @@ export default function EncodeForm({
             </p>
           ) : null}
           </div>
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
-            <select value={newGender} onChange={(e) => { const g = e.target.value; setNewGender(g); if (age.trim() !== '' && !isNaN(Number(age))) { setNewGrowthStage(autoComputeGrowthStageLocal(Number(age), g)); } else { setNewGrowthStage(''); } }} className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`} required id="gender-class">
-              <option value="" disabled className="bg-popover text-muted-foreground">{t('registry.selectGenderClass')}</option>
-              {GENDER_CLASS_OPTIONS.map((option) => (
-                <option
-                  key={option.value}
-                  value={option.value}
-                  className="bg-popover text-popover-foreground"
-                >
-                  {t(option.labelKey)}
-                </option>
-              ))}
-            </select>
-          </div>
-          {!hasAnyParent && (
+          {!hasLineageParents && (
             <div className="sm:col-span-2 pt-1">
               <DeclaredCompositionEditor
                 registeredBreed={effectiveBreed}
@@ -1164,6 +1426,11 @@ export default function EncodeForm({
             <input
               type="text"
               list="feather-color-options"
+              name="gt-feather-color"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={newColor}
               onChange={(e) => setNewColor?.(e.target.value)}
               onBlur={() => {
@@ -1193,6 +1460,11 @@ export default function EncodeForm({
             <input
               type="text"
               list="trait-options"
+              name="gt-behavior-trait"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={newBehaviorTrait}
               onChange={(e) => setNewBehaviorTrait?.(e.target.value)}
               onBlur={() => {
@@ -1307,15 +1579,18 @@ export default function EncodeForm({
         <div className="relative" ref={legColorInputRef}>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="leg-color">{t('registry.legColor')}</label>
           <div className="relative">
-            <input
+            <ComboboxInput
               type="text"
               value={legColorQuery}
               onChange={(e) => { setLegColorQuery(e.target.value); setNewLegColor(e.target.value); setLegColorOpen(true); }}
               onFocus={() => setLegColorOpen(true)}
               onBlur={() => setTimeout(() => setLegColorOpen(false), 150)}
+              expanded={legColorOpen}
+              controls={legColorOpen ? 'leg-color-listbox' : undefined}
               placeholder={t('registry.legColorPlaceholder')}
               className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
-            id="leg-color" />
+              id="leg-color"
+            />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
@@ -1326,7 +1601,13 @@ export default function EncodeForm({
             </button>
           </div>
           {legColorOpen && legColorDropdownPos && createPortal(
-            <div className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col" style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}>
+            <div
+              id="leg-color-listbox"
+              role="listbox"
+              aria-label={t('registry.legColor')}
+              className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col"
+              style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}
+            >
               <div className="overflow-y-auto">
                 {(() => {
                   const q = legColorQuery.trim().toLowerCase();
@@ -1385,21 +1666,7 @@ export default function EncodeForm({
           <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">3</span>
           <span>{t('registry.step3Title')}</span>
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-              <label htmlFor="encode-sire" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-                {t('registry.sireFather')} <span className="text-muted-foreground font-normal lowercase">{t('registry.parentPickHelp')}</span>
-              </label>
-              <ParentSelector id="encode-sire" value={sireName} onChange={(v) => setSireName(v)} onPick={() => {}} fowls={fowls} preferredGender="Male" placeholder={t('registry.sirePlaceholder')} />
-          </div>
-          <div>
-              <label htmlFor="encode-dam" className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider">
-                {t('registry.damMother')} <span className="text-muted-foreground font-normal lowercase">{t('registry.parentPickHelp')}</span>
-              </label>
-              <ParentSelector id="encode-dam" value={damName} onChange={(v) => setDamName(v)} onPick={() => {}} fowls={fowls} preferredGender="Female" accent="amber" placeholder={t('registry.damPlaceholder')} />
-          </div>
-        </div>
-        {(sireName.trim() || damName.trim()) && (() => {
+        {hasLineageParents && (() => {
           const sireChildren = sireName.trim() ? fowls.filter((f) => (f.sire || '').trim().toLowerCase() === sireName.trim().toLowerCase()) : [];
           const damChildren = damName.trim() ? fowls.filter((f) => (f.dam || '').trim().toLowerCase() === damName.trim().toLowerCase()) : [];
           const sireFullSibs = sireChildren.filter((c) => (c.dam || '').trim().toLowerCase() === (damName.trim().toLowerCase()));
@@ -1440,7 +1707,7 @@ export default function EncodeForm({
             </div>
           );
         })()}
-        {hasAnyParent && (
+        {hasLineageParents && (
           <div className="pt-1">
             <DeclaredCompositionEditor
               registeredBreed={effectiveBreed}
@@ -1459,7 +1726,7 @@ export default function EncodeForm({
               <p className="text-xs text-muted-foreground font-semibold mt-0.5">{t('registry.lineageGenerationHelp')}</p>
             </div>
             <div className="shrink-0 sm:text-right">
-              {hasAnyParent ? (
+              {hasLineageParents ? (
                 <>
                   <span className="inline-flex items-center gap-1.5 bg-teal-700 text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">{offspringGenInfo.short} · {offspringGenInfo.label}</span>
                   <p className="text-2xl font-black text-teal mt-1.5">{computedBloodlinePct}%</p>
@@ -1554,18 +1821,6 @@ export default function EncodeForm({
       />
     </form>
   );
-}
-
-function autoComputeGrowthStageLocal(ageMonths: number, gender: string): string {
-  const g = gender.toLowerCase();
-  if (ageMonths < 3) return 'Chick';
-  if (g === 'male' || g === 'rooster') {
-    if (ageMonths < 6) return 'Stag';
-    if (ageMonths < 12) return 'Bull Stag';
-    return 'Cock';
-  }
-  if (ageMonths < 6) return 'Pullet';
-  return 'Hen';
 }
 
 type AgePartsLocal = { years: number; months: number; days: number; totalMonths: number };

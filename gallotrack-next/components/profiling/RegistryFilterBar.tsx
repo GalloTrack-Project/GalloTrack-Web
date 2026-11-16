@@ -156,6 +156,11 @@ function SearchableParentDropdown({
               <input
                 ref={searchInputRef}
                 type="text"
+                name="gt-registry-filter-search"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 placeholder={t('registry.searchParentPlaceholder', { label: label.toLowerCase() })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
