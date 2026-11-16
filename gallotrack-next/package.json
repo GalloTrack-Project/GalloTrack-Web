@@ -32,6 +32,7 @@
     "verify:schema": "tsx scripts/verify-schema-contract.ts",
     "check:secrets": "tsx scripts/check-secrets.ts",
     "screenshots:lineage": "tsx --env-file=.env.local scripts/lineage-offspring-screenshots.ts",
+    "screenshots:registration": "tsx scripts/registration-step1-screenshots.ts",
     "i18n:export": "tsx scripts/i18n-export.ts",
     "i18n:import": "tsx scripts/i18n-import.ts",
     "i18n:audit": "tsx scripts/i18n-audit.ts",

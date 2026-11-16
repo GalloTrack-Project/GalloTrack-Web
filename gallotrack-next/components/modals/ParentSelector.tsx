@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { Eye, Award } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import { sexLabel, isMale, isFemale } from '@/lib/helpers';
@@ -9,6 +9,7 @@ import { buildRegistryContext, roleOf, isActiveStatus, ROLE_LABEL } from '@/lib/
 import { buildCodeSet, nextFoundationCode } from '@/lib/bird-code';
 import { useFowlOptional } from '@/lib/contexts/fowl-context';
 import PromoteToBreederModal from './PromoteToBreederModal';
+import ComboboxInput from '@/components/ui/ComboboxInput';
 import { useT } from '@/lib/i18n';
 
 export type ParentSelectorProps = {
@@ -21,6 +22,8 @@ export type ParentSelectorProps = {
   placeholder?: string;
   accent?: 'emerald' | 'amber';
   compact?: boolean;
+  /** Offspring registration only accepts registered parents. */
+  allowExternal?: boolean;
 };
 
 function getChildrenOf(parentName: string, fowls: FowlRecord[], gender: 'sire' | 'dam'): FowlRecord[] {
@@ -69,7 +72,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
   );
 }
 
-export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact }: ParentSelectorProps) {
+export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact, allowExternal = true }: ParentSelectorProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(value);
@@ -79,6 +82,9 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
   const [promotingFowl, setPromotingFowl] = useState<FowlRecord | null>(null);
   const [promoteModalOpen, setPromoteModalOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const generatedId = useId();
+  const inputId = id ?? `gt-parent-${preferredGender?.toLowerCase() ?? 'selector'}-${generatedId}`;
+  const listboxId = `${inputId}-listbox`;
   const fowlContext = useFowlOptional();
 
   if (prevValue !== value) {
@@ -171,12 +177,14 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
 
   return (
     <div ref={boxRef} className="relative">
-      <input
-        id={id}
+      <ComboboxInput
+        id={inputId}
         type="text"
         value={text}
         onChange={(e) => { setText(e.target.value); onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
+        expanded={open}
+        controls={open ? listboxId : undefined}
         className={`w-full ${pad} border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />
@@ -186,7 +194,12 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
         </p>
       )}
       {open && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label={preferredGender === 'Male' ? t('registry.sireFather') : t('registry.damMother')}
+          className="absolute z-50 mt-1.5 w-full bg-white dark:bg-popover border border-slate-200 dark:border-border rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto"
+        >
           {/* SECTION 1: Breeding Stock (Exclusive role) */}
           <div className="px-3 py-2 bg-slate-50 dark:bg-muted/50 border-b border-slate-100 dark:border-border text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center justify-between">
             <span>{preferredGender === 'Male' ? 'Breeding Males (Sires)' : 'Breeding Females (Dams)'}</span>
@@ -343,22 +356,23 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
             </div>
           )}
 
-          {/* SECTION 3: Custom external / Foundation Stock name */}
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-muted/50 text-left cursor-pointer border-t border-slate-100 dark:border-border"
-          >
-            <span className={`w-7 h-7 rounded-sm ${accentBg} text-white flex items-center justify-center text-xs font-black shrink-0`}>{genderIcon}</span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">
-                {text.trim() ? t('registry.useAsCustomParent', { name: text.trim(), gender: preferredGender === 'Male' ? t('domain.roleSire') : t('domain.roleDam') }) : t('registry.externalFoundationPlaceholder')}
+          {allowExternal && (
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-muted/50 text-left cursor-pointer border-t border-slate-100 dark:border-border"
+            >
+              <span className={`w-7 h-7 rounded-sm ${accentBg} text-white flex items-center justify-center text-xs font-black shrink-0`}>{genderIcon}</span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-black text-slate-800 dark:text-card-foreground truncate">
+                  {text.trim() ? t('registry.useAsCustomParent', { name: text.trim(), gender: preferredGender === 'Male' ? t('domain.roleSire') : t('domain.roleDam') }) : t('registry.externalFoundationPlaceholder')}
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+          )}
         </div>
       )}
 

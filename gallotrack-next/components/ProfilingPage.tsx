@@ -28,6 +28,8 @@ export default function ProfilingPage() {
 
   const {
     fowls,
+    registrationType,
+    setRegistrationType,
     registryLists,
     registryCounts,
     matchHistory,
@@ -339,6 +341,8 @@ export default function ProfilingPage() {
       {!breedsViewOpen && profilingSubTab === 'form' && (
         <EncodeForm
           fowls={fowls}
+          registrationType={registrationType}
+          setRegistrationType={setRegistrationType}
           onAddBreeds={handleAddBreedsFromForm}
           canCreateBreed={canCreateBreeds}
           restoreDraft={restoreCreateDraft}

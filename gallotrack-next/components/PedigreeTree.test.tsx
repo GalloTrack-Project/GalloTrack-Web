@@ -132,7 +132,7 @@ function renderWithUI(ui: React.ReactNode) {
 }
 
 describe('PedigreeTree Component & Grid Layout', () => {
-  it('renders Subject 2E1 and merges unregistered grandparents into Foundation stock nodes', () => {
+  it('renders Subject 2E1 and merges unregistered grandparents into Unknown parent nodes', () => {
     const codes = resolveBirdCodes(sampleFowls);
     renderWithUI(
       <PedigreeTree
@@ -152,7 +152,7 @@ describe('PedigreeTree Component & Grid Layout', () => {
     expect(screen.getAllByText('Crimson Belle').length).toBeGreaterThan(0);
 
     // G2 grandparent nodes are merged unknown nodes
-    const mergedNodes = screen.getAllByText('Foundation stock');
+    const mergedNodes = screen.getAllByText('Unknown parents');
     expect(mergedNodes.length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText('Not registered').length).toBeGreaterThanOrEqual(2);
   });
