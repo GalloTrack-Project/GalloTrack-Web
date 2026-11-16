@@ -26,17 +26,17 @@ Supabase's Free Tier permits **two active projects** per organization.
 
 All database migrations are stored in `supabase/migrations/*.sql`.
 
-### Option A: Using Supabase CLI (Recommended)
-```bash
-# Link your local CLI to the staging project
-npx supabase link --project-ref <your-staging-project-ref>
+Apply migrations **one reviewed file at a time through the Supabase SQL Editor**, in filename
+order. Do not use `supabase db push`: it applies every migration the ledger considers pending and
+cannot account for objects that were created manually or are already present.
 
-# Push all unapplied migration files to staging database
-npx supabase db push
-```
+Before each file:
 
-### Option B: Using SQL Editor
-If the CLI is not linked, copy and execute the contents of each migration file from `supabase/migrations/*.sql` in sequential filename order inside the Supabase SQL Editor.
+1. Run the file's read-only preflight checks.
+2. Confirm the objects it creates or changes are not already present.
+3. Apply only that file.
+4. Run its verification queries.
+5. Record/confirm the migration ledger entry only after successful verification.
 
 ---
 

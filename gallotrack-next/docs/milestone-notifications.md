@@ -29,11 +29,23 @@ recomputed from the current registry.
 
 - Migration: `supabase/migrations/20261114000000_notification_state_preferences.sql`
 - Tables: `notification_state` and `notification_preferences`.
-- Both tables are additive and owner-only through RLS.
+- Both tables are additive and owner-only through RLS; production already has these tables.
+- The migration is idempotent, revokes `anon` access, and maintains
+  `notification_preferences.updated_at` with a trigger.
 - If the tables are unavailable, preferences and read/dismiss state fall back to localStorage
   keys scoped to the user id. The UI shows
   “Notification settings are saved on this device only” and the console logs the fallback.
 - Old `user_settings` lead/stage values are read once when no new preference row exists.
+
+## Legacy stored design
+
+The earlier design stored notification rows in `public.notifications` and generated them with a
+service-role cron route at `/api/cron/milestone-notifications`, scheduled daily at `01:00 UTC`.
+That design was removed in commit `bb19b36`: the route, schedule, old migration, and generator are
+gone. Current application code does not read or write `public.notifications`.
+
+The old table may still exist in production. Do not drop it until any old trigger/function that
+references it has been removed and external consumers have been ruled out.
 
 ## UI
 
