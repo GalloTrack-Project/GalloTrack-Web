@@ -1,16 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { addMonthsToDate } from '@/lib/helpers';
+import { validateIdentifierFormat } from '@/lib/bird-code';
+import { isValidWingBand } from '@/lib/wing-band';
+import { buildMilestoneNotifications } from '@/lib/notifications/milestones';
+import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/lib/notifications/types';
 import {
   DEMO_CASES,
   DEMO_MARKER,
   addDays,
+  applyConfirmationError,
   buildDemoFowlPlan,
   computeDemoBirthdates,
   dateKey,
+  demoEnvError,
   parseDateKey,
+  parseDemoEnvFile,
   parseSeedDemoArgs,
   runDemoSeed,
+  targetProjectLabel,
 } from '../scripts/seed-demo';
 
 type Row = Record<string, unknown> & { id: number; user_id?: string };
@@ -208,13 +216,173 @@ describe('demo seed date computation', () => {
     });
 
     for (const plan of plans) {
-      if (plan.gender === 'Rooster') expect(plan.wingBand).toBeTruthy();
-      else expect(plan.wingBand).toBeNull();
+      if (plan.gender === 'Rooster') {
+        expect(plan.wingBand).toBeTruthy();
+        expect(isValidWingBand(plan.wingBand)).toBe(true);
+      } else {
+        expect(plan.wingBand).toBeNull();
+      }
     }
+  });
+
+  it('uses scheme-valid foundation identifiers that stay unique per farm', () => {
+    const defenseDate = parseDateKey(D)!;
+    const existing = [
+      {
+        id: 1,
+        name: 'Existing Cock',
+        gender: 'Rooster',
+        bird_code: '1',
+        wing_band: 'REAL-WB-1',
+        notes: 'owner row',
+      },
+      {
+        id: 2,
+        name: 'Existing Hen',
+        gender: 'Hen',
+        bird_code: 'A',
+        wing_band: null,
+        notes: 'owner row',
+      },
+    ];
+    const { plans } = buildDemoFowlPlan({
+      defenseDate,
+      userId: 'user-1',
+      breed: 'Lemon',
+      existing,
+    });
+
+    for (const plan of plans) {
+      const role = plan.gender === 'Hen' ? 'dam' : 'sire';
+      expect(validateIdentifierFormat(plan.birdCode, role)).toEqual({ valid: true });
+    }
+
+    const codes = plans.map((plan) => plan.birdCode.toLowerCase());
+    const bands = plans.flatMap((plan) => (plan.wingBand ? [plan.wingBand.toLowerCase()] : []));
+    expect(new Set(codes).size).toBe(codes.length);
+    expect(new Set(bands).size).toBe(bands.length);
+    expect(codes).not.toContain('1');
+    expect(codes).not.toContain('a');
+    expect(bands).not.toContain('real-wb-1');
+  });
+});
+
+describe('demo milestone notifications', () => {
+  function notificationsFor(leadDays: number[]) {
+    const defenseDate = parseDateKey(D)!;
+    const { plans } = buildDemoFowlPlan({
+      defenseDate,
+      userId: 'user-1',
+      breed: 'Lemon',
+      existing: [],
+    });
+    const fowls = plans.map((plan, index) => ({
+      id: index + 1,
+      name: plan.name,
+      gender: plan.gender,
+      birthdate: plan.birthdate,
+      status: 'Active',
+      activity_status: 'active',
+    }));
+    return buildMilestoneNotifications(
+      fowls,
+      { ...DEFAULT_NOTIFICATION_PREFERENCES, leadDays },
+      defenseDate,
+    );
+  }
+
+  it('produces today, 7-day, and recently-reached alerts with default lead days', () => {
+    const notifications = notificationsFor(DEFAULT_NOTIFICATION_PREFERENCES.leadDays);
+
+    expect(
+      notifications.map((notification) => ({
+        name: notification.fowlName,
+        type: notification.type,
+        daysUntil: notification.daysUntil,
+      })),
+    ).toEqual([
+      { name: 'Demo Pullet Today', type: 'today', daysUntil: 0 },
+      { name: 'Demo Mature Cock', type: 'upcoming', daysUntil: 7 },
+      { name: 'Demo Reached Hen', type: 'reached', daysUntil: -5 },
+    ]);
+  });
+
+  it('adds the 3-day and 1-day alerts only when those lead times are enabled', () => {
+    const notifications = notificationsFor([7, 3, 1, 0]);
+    const byName = new Map(notifications.map((notification) => [notification.fowlName, notification]));
+
+    expect(byName.get('Demo Stag Soon')).toMatchObject({
+      type: 'upcoming',
+      daysUntil: 3,
+    });
+    expect(byName.get('Demo Bull Stag Tomorrow')).toMatchObject({
+      type: 'upcoming',
+      daysUntil: 1,
+    });
+    expect(notifications).toHaveLength(5);
   });
 });
 
 describe('demo seed safety', () => {
+  it('requires an exact DEMO_EMAIL confirmation before --apply', () => {
+    const dryRun = { apply: false, confirmEmail: null };
+    expect(applyConfirmationError(dryRun, 'demo@example.com')).toBeNull();
+
+    const missing = { apply: true, confirmEmail: null };
+    expect(applyConfirmationError(missing, 'demo@example.com')).toContain(
+      '--confirm-email=demo@example.com',
+    );
+
+    const wrong = { apply: true, confirmEmail: 'owner@example.com' };
+    expect(applyConfirmationError(wrong, 'demo@example.com')).toContain(
+      'does not match DEMO_EMAIL',
+    );
+
+    const matching = { apply: true, confirmEmail: ' Demo@Example.com ' };
+    expect(applyConfirmationError(matching, 'demo@example.com')).toBeNull();
+
+    expect(
+      parseSeedDemoArgs([`--date=${D}`, '--apply', '--confirm-email=demo@example.com'])
+        .confirmEmail,
+    ).toBe('demo@example.com');
+  });
+
+  it('refuses to run when DEMO_EMAIL is not explicitly set', () => {
+    const base = {
+      supabaseUrl: 'https://project.supabase.co',
+      supabaseAnonKey: 'anon',
+      demoEmail: '',
+      demoPassword: 'secret',
+      breedName: 'Lemon',
+    };
+    expect(demoEnvError(base)).toBe(
+      'Missing DEMO_EMAIL. Set it explicitly to the demo account email.',
+    );
+    expect(demoEnvError({ ...base, demoEmail: 'demo@example.com' })).toBeNull();
+  });
+
+  it('never loads the service-role key from .env.local', () => {
+    const parsed = parseDemoEnvFile(`NEXT_PUBLIC_SUPABASE_URL=https://project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=anon
+DEMO_EMAIL=demo@example.com
+DEMO_PASSWORD=secret
+SUPABASE_SERVICE_ROLE_KEY=must-not-be-read`);
+
+    expect(parsed.DEMO_EMAIL).toBe('demo@example.com');
+    expect(parsed).not.toHaveProperty('SUPABASE_SERVICE_ROLE_KEY');
+    expect(Object.keys(parsed).sort()).toEqual([
+      'DEMO_EMAIL',
+      'DEMO_PASSWORD',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+      'NEXT_PUBLIC_SUPABASE_URL',
+    ]);
+  });
+
+  it('prints only the account and project host as the write target', () => {
+    expect(targetProjectLabel('https://abcdefgh.supabase.co')).toBe('abcdefgh.supabase.co');
+    expect(targetProjectLabel('not a url')).toBe('(invalid NEXT_PUBLIC_SUPABASE_URL)');
+  });
+
   it('defaults to a dry run and writes nothing', async () => {
     expect(parseSeedDemoArgs([`--date=${D}`])).toMatchObject({
       date: D,

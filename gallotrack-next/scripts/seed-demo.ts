@@ -7,7 +7,7 @@ import {
   getAgeLabel,
   getAgeParts,
 } from '@/lib/helpers';
-import { buildCodeSet, type CodeSet } from '@/lib/bird-code';
+import { buildCodeSet, generateBirdCode, type CodeSet } from '@/lib/bird-code';
 export const DEMO_MARKER = 'DEMO DATA';
 export const DEMO_BREED_FALLBACK = 'Lemon';
 export const DEMO_DATE_FORMAT_MESSAGE = 'Use --date=YYYY-MM-DD (for example --date=2026-11-16).';
@@ -142,6 +142,7 @@ export type SeedDemoArgs = {
   apply: boolean;
   clean: boolean;
   help: boolean;
+  confirmEmail: string | null;
 };
 
 export class DemoSeedError extends Error {}
@@ -151,20 +152,39 @@ export function parseSeedDemoArgs(argv: string[]): SeedDemoArgs {
   let apply = false;
   let clean = false;
   let help = false;
+  let confirmEmail: string | null = null;
 
   for (const arg of argv) {
     if (arg === '--apply') apply = true;
     else if (arg === '--clean') clean = true;
     else if (arg === '--help' || arg === '-h') help = true;
     else if (arg.startsWith('--date=')) date = arg.slice('--date='.length);
-    else throw new DemoSeedError(`Unknown argument: ${arg}.`);
+    else if (arg.startsWith('--confirm-email=')) {
+      confirmEmail = arg.slice('--confirm-email='.length);
+    } else throw new DemoSeedError(`Unknown argument: ${arg}.`);
   }
 
-  if (help) return { date, apply, clean, help };
+  if (help) return { date, apply, clean, help, confirmEmail };
   if (!date) throw new DemoSeedError(`Missing --date. ${DEMO_DATE_FORMAT_MESSAGE}`);
   if (!parseDateKey(date)) throw new DemoSeedError(`Invalid --date. ${DEMO_DATE_FORMAT_MESSAGE}`);
 
-  return { date, apply, clean, help };
+  return { date, apply, clean, help, confirmEmail };
+}
+
+export function applyConfirmationError(
+  args: Pick<SeedDemoArgs, 'apply' | 'confirmEmail'>,
+  demoEmail: string,
+): string | null {
+  if (!args.apply) return null;
+  const expected = demoEmail.trim().toLowerCase();
+  const confirmed = (args.confirmEmail || '').trim().toLowerCase();
+  if (!confirmed) {
+    return `Refusing --apply without --confirm-email=${demoEmail}.`;
+  }
+  if (confirmed !== expected) {
+    return 'Refusing --apply: --confirm-email does not match DEMO_EMAIL.';
+  }
+  return null;
 }
 
 export function parseDateKey(value: string): Date | null {
@@ -259,6 +279,12 @@ function uniqueDemoLabel(base: string, taken: Set<string>): string {
   return candidate;
 }
 
+function nextSchemeBirdCode(gender: 'Rooster' | 'Hen', taken: CodeSet): string {
+  const code = generateBirdCode({ gender, taken });
+  taken.add(code.toLowerCase());
+  return code;
+}
+
 function buildFowlPayload(input: {
   userId: string;
   breed: string;
@@ -336,7 +362,7 @@ export function buildDemoFowlPlan(input: {
     const totalMonths = ageParts?.totalMonths ?? 0;
     const growthStage = autoComputeGrowthStage(totalMonths, demo.gender);
     const age = ageParts ? getAgeLabel(ageParts) : '';
-    const birdCode = uniqueDemoLabel(`DEMO-${String(DEMO_CASES.indexOf(demo) + 1)}`, takenCodes);
+    const birdCode = nextSchemeBirdCode(demo.gender, takenCodes);
     const wingBand =
       demo.gender === 'Rooster'
         ? uniqueDemoLabel(
@@ -702,7 +728,7 @@ function printSummary(summary: DemoRunSummary): void {
   );
 }
 
-type DemoEnv = {
+export type DemoEnv = {
   supabaseUrl: string;
   supabaseAnonKey: string;
   demoEmail: string;
@@ -710,18 +736,52 @@ type DemoEnv = {
   breedName: string;
 };
 
-function loadDemoEnv(): DemoEnv {
+const DEMO_ENV_KEYS = new Set([
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'DEMO_EMAIL',
+  'DEMO_PASSWORD',
+  'DEMO_BREED',
+]);
+
+export function parseDemoEnvFile(contents: string): Record<string, string> {
   const fileEnv: Record<string, string> = {};
-  const envPath = path.resolve(__dirname, '../.env.local');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
-      if (!line.includes('=') || line.trim().startsWith('#')) continue;
-      const index = line.indexOf('=');
-      const key = line.slice(0, index).trim();
-      const value = line.slice(index + 1).trim();
-      if (!(key in process.env)) fileEnv[key] = value;
-    }
+  for (const line of contents.split(/\r?\n/)) {
+    if (!line.includes('=') || line.trim().startsWith('#')) continue;
+    const index = line.indexOf('=');
+    const key = line.slice(0, index).trim();
+    if (!DEMO_ENV_KEYS.has(key)) continue;
+    fileEnv[key] = line.slice(index + 1).trim();
   }
+  return fileEnv;
+}
+
+export function demoEnvError(env: DemoEnv): string | null {
+  if (!env.supabaseUrl || !env.supabaseAnonKey) {
+    return 'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.';
+  }
+  if (!env.demoEmail) {
+    return 'Missing DEMO_EMAIL. Set it explicitly to the demo account email.';
+  }
+  if (!env.demoPassword) {
+    return 'Missing DEMO_PASSWORD. Use the demo account only.';
+  }
+  return null;
+}
+
+export function targetProjectLabel(supabaseUrl: string): string {
+  try {
+    return new URL(supabaseUrl).host;
+  } catch {
+    return '(invalid NEXT_PUBLIC_SUPABASE_URL)';
+  }
+}
+
+function loadDemoEnv(): DemoEnv {
+  const envPath = path.resolve(__dirname, '../.env.local');
+  const fileEnv = fs.existsSync(envPath)
+    ? parseDemoEnvFile(fs.readFileSync(envPath, 'utf8'))
+    : {};
   const read = (key: string) => process.env[key] || fileEnv[key] || '';
   return {
     supabaseUrl: read('NEXT_PUBLIC_SUPABASE_URL'),
@@ -736,24 +796,22 @@ export async function runSeedDemoCli(argv = process.argv.slice(2)): Promise<numb
   try {
     const args = parseSeedDemoArgs(argv);
     if (args.help) {
-      console.log(`Usage: npm run seed:demo -- --date=YYYY-MM-DD [--apply] [--clean]
+      console.log(`Usage: npm run seed:demo -- --date=YYYY-MM-DD [--apply --confirm-email=DEMO_EMAIL] [--clean]
 
 Without --apply this is a dry run and writes nothing.
+--apply requires --confirm-email to exactly match DEMO_EMAIL.
 --clean deletes only chickens/matches created by this script (notes "${DEMO_MARKER}") and exits.`);
       return 0;
     }
 
     const env = loadDemoEnv();
-    if (!env.supabaseUrl || !env.supabaseAnonKey) {
-      throw new DemoSeedError(
-        'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.',
-      );
-    }
-    if (!env.demoEmail || !env.demoPassword) {
-      throw new DemoSeedError(
-        'Missing DEMO_EMAIL or DEMO_PASSWORD. Use the demo account only.',
-      );
-    }
+    const envError = demoEnvError(env);
+    if (envError) throw new DemoSeedError(envError);
+    const confirmationError = applyConfirmationError(args, env.demoEmail);
+    if (confirmationError) throw new DemoSeedError(confirmationError);
+
+    console.log(`Target account: ${env.demoEmail}`);
+    console.log(`Target project: ${targetProjectLabel(env.supabaseUrl)}`);
 
     const client = createClient(env.supabaseUrl, env.supabaseAnonKey, {
       auth: { persistSession: false },
@@ -764,6 +822,12 @@ Without --apply this is a dry run and writes nothing.
     });
     if (error || !auth.user) {
       throw new DemoSeedError(`Demo sign-in failed: ${error?.message || 'No user returned.'}`);
+    }
+    const signedInEmail = (auth.user.email || '').trim().toLowerCase();
+    if (!signedInEmail || signedInEmail !== env.demoEmail.trim().toLowerCase()) {
+      throw new DemoSeedError(
+        `Signed-in account does not match DEMO_EMAIL (${env.demoEmail}).`,
+      );
     }
 
     const summary = await runDemoSeed({
