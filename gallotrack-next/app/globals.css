@@ -595,6 +595,26 @@ html {
   }
 }
 
+.family-card-container {
+  container-type: inline-size;
+}
+
+.family-card-container th,
+.family-card-container td,
+.family-card-container .family-cock-name,
+.family-card-container .family-hen-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+@container (max-width: 30rem) {
+  .family-card-container .family-parent-chip-avatar {
+    display: none;
+  }
+}
+
 /* PRINT STYLES — pedigree / certificate / profile printable views */
 @media print {
   @page {
