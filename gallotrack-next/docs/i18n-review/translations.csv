@@ -91,10 +91,32 @@ auth.loginTitle,Sign In to GalloTrack,Mag-sign In sa GalloTrack,unreviewed,Await
 auth.loginSubtitle,Professional gamefowl breeding & competitive match analytics,Propesyonal na pagpapalahi ng manok at pagsusuri ng laban,unreviewed,Awaiting native reviewer confirmation.,Propesyonal nga pagpaliwat sang manok kag pag-usisa sang hampang,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.registerTitle,Create Owner Account,Gumawa ng Account ng May-ari,unreviewed,Awaiting native reviewer confirmation.,Maghimo sang Account sang Tag-iya,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.registerSubtitle,Register your breeding farm and manage lineage records,Irehistro ang iyong kural at pamahalaan ang mga tala ng lahi,unreviewed,"""kural at pamahalaan"" (pen and management) - confirm against the breeder's own phrasing.",Ilista ang imo kudal kag dumalahon ang mga rekord sang kaliwat,unreviewed,"""dumalahon"" (to record) and ""kudal"" (pen) need confirmation."
+auth.brandingLead,Advanced,Advanced,reviewed,,Advanced,reviewed,
+auth.brandingAccent,Gamefowl Breeding,Gamefowl Breeding,reviewed,,Gamefowl Breeding,reviewed,
+auth.brandingTail,& Match Analytics,at Match Analytics,unreviewed,Awaiting native reviewer confirmation.,kag Match Analytics,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.buildLine,V1.0.0 • BUILD {sha},V1.0.0 • BUILD {sha},reviewed,,V1.0.0 • BUILD {sha},reviewed,
+auth.backHome,Back to Home,Bumalik sa Home,unreviewed,Awaiting native reviewer confirmation.,Magbalik sa Home,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.featureLineageTitle,Lineage Tracking,Lineage Tracking,reviewed,,Lineage Tracking,reviewed,
+auth.featureLineageDesc,"Breeding Males, Females & Offspring","Breeding Males, Females at Offspring",unreviewed,Awaiting native reviewer confirmation.,"Breeding Males, Females kag Offspring",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.featureMatchTitle,Match Logs,Match Logs,reviewed,,Match Logs,reviewed,
+auth.featureMatchDesc,Fight records & win rates,Fight records at win rates,unreviewed,Awaiting native reviewer confirmation.,Fight records kag win rates,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.featureDashboardTitle,Flock Dashboard,Flock Dashboard,reviewed,,Flock Dashboard,reviewed,
+auth.featureDashboardDesc,Active flock overview,Active flock overview,reviewed,,Active flock overview,reviewed,
+auth.featureRegistryTitle,Farm Registry,Farm Registry,reviewed,,Farm Registry,reviewed,
+auth.featureRegistryDesc,Breeding classifications,Breeding classifications,reviewed,,Breeding classifications,reviewed,
+auth.capstoneTagline,Gamefowl Lineage & Fight Intelligence,Gamefowl Lineage at Fight Intelligence,unreviewed,Awaiting native reviewer confirmation.,Gamefowl Lineage kag Fight Intelligence,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.emailLabel,Email Address,Email Address,reviewed,,Email Address,reviewed,
 auth.emailPlaceholder,you@example.com,ikaw@halimbawa.com,unreviewed,Awaiting native reviewer confirmation.,ikaw@halimbawa.com,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.emailRequired,Email address is required.,Kailangan ang email address.,unreviewed,Awaiting native reviewer confirmation.,Kinahanglan ang email address.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.emailInvalid,Enter a valid email address.,Maglagay ng valid na email address.,unreviewed,Awaiting native reviewer confirmation.,Magbutang sang husto nga email address.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.passwordLabel,Password,Password,reviewed,,Password,reviewed,
 auth.passwordPlaceholder,Enter your password,Ilagay ang iyong password,unreviewed,Awaiting native reviewer confirmation.,Isulod ang imo password,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.passwordRequired,Password is required.,Kailangan ang password.,unreviewed,Awaiting native reviewer confirmation.,Kinahanglan ang password.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.passwordMin,Password must be at least 8 characters.,Dapat hindi bababa sa 8 karakter ang password.,unreviewed,Awaiting native reviewer confirmation.,Dapat indi magkubos sa 8 ka letra ang password.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.showPassword,Show password,Ipakita ang password,unreviewed,Awaiting native reviewer confirmation.,Ipakita ang password,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.hidePassword,Hide password,Itago ang password,unreviewed,Awaiting native reviewer confirmation.,Tagoa ang password,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.rememberMe,Remember Me,Tandaan Ako,unreviewed,Awaiting native reviewer confirmation.,Dumdumon Ako,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+auth.or,OR,O,unreviewed,Awaiting native reviewer confirmation.,UKON,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.confirmPasswordLabel,Confirm Password,Kumpirmahin ang Password,unreviewed,Awaiting native reviewer confirmation.,Kumpirmaha ang Password,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.confirmPasswordPlaceholder,Re-enter your password,Muling ilagay ang iyong password,unreviewed,Awaiting native reviewer confirmation.,Isulod liwat ang imo password,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.farmNameLabel,Farm / Breeding Yard Name,Pangalan ng Kural o Bakuran,unreviewed,Awaiting native reviewer confirmation.,Ngalan sang Kudal o Palatukuran,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.

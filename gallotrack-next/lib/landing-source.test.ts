@@ -19,6 +19,10 @@ const landingFiles = [
     .readdirSync(path.join(root, 'components/about'))
     .filter((file) => file.endsWith('.tsx') && !file.endsWith('.test.tsx'))
     .map((file) => `components/about/${file}`),
+  ...fs
+    .readdirSync(path.join(root, 'components/auth'))
+    .filter((file) => file.endsWith('.tsx') && !file.endsWith('.test.tsx'))
+    .map((file) => `components/auth/${file}`),
 ];
 
 describe('Landing page source rules', () => {

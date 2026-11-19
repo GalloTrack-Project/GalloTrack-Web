@@ -5,6 +5,12 @@ import { isAdminProfile } from '@/lib/admin';
 import { useUI } from './ui-context';
 import { toastMessage } from '@/lib/toast-bus';
 
+export type LoginCredentials = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+};
+
 interface AuthContextValue {
   currentUserId: string | null;
   isAdmin: boolean;
@@ -36,7 +42,7 @@ interface AuthContextValue {
   loading: boolean;
   setLoading: (v: boolean) => void;
   authChecked: boolean;
-  handleLogin: (e: React.FormEvent) => Promise<void>;
+  handleLogin: (e?: React.SyntheticEvent, credentials?: LoginCredentials) => Promise<void>;
   handleLogout: () => Promise<void>;
   handleSendResetLink: (e: React.FormEvent) => Promise<void>;
 }
@@ -91,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.user) {
             setCurrentUserId(session.user.id);
             localStorage.setItem('gallotrack_user_id', session.user.id);
-            document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
+            document.cookie = `gallotrack_session=1; path=/${savedRememberMe ? '; max-age=2592000' : ''}; SameSite=Lax`;
             setUsername(session.user.email?.split('@')[0] || 'admin');
             ui.setCurrentPage('dashboard');
             try {
@@ -297,18 +303,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const handleLogin = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async (e?: React.SyntheticEvent, credentials?: LoginCredentials) => {
+      e?.preventDefault();
       setError('');
       setSuccessMessage('');
       setLoading(true);
 
-      const loginEmail = username.trim();
+      const loginEmail = (credentials?.email ?? username).trim();
+      const loginPassword = credentials?.password ?? password;
+      const loginRememberMe = credentials?.rememberMe ?? rememberMe;
 
       try {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: loginEmail,
-          password: password,
+          password: loginPassword,
         });
 
         if (authError) {
@@ -340,7 +348,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentUserId(data.user.id);
         if (typeof window !== 'undefined') {
           localStorage.setItem('gallotrack_user_id', data.user.id);
-          document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
+          document.cookie = `gallotrack_session=1; path=/${loginRememberMe ? '; max-age=2592000' : ''}; SameSite=Lax`;
         }
 
         if (!data.user.email_confirmed_at) {
@@ -351,7 +359,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (typeof window !== 'undefined' && rememberMe) {
+        if (typeof window !== 'undefined' && loginRememberMe) {
           localStorage.setItem('gallotrack_rememberMe', 'true');
         }
 
@@ -368,7 +376,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         let finalWelcomeName = welcomeName;
         if (!profile) {
-          finalWelcomeName = await syncProfileFromUser(data.user, username);
+          finalWelcomeName = await syncProfileFromUser(data.user, loginEmail);
         }
 
         ui.setCurrentPage('dashboard');
