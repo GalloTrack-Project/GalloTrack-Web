@@ -19,6 +19,7 @@ describe('Hero Farm Image Configuration', () => {
     expect(primary.id).toBe('hero-farm');
     expect(primary.src).toBe('/images/hero-farm.jpg');
     expect(primary.alt).toBe('Gamefowl A-frame coops and shed on the farm');
+    expect(primary.caption).toBe('A-frame coops and a shaded shed on the farm');
     expect(primary.credit).toBe('');
     expect(primary.isPrimary).toBe(true);
     expect(primary.aspectRatio).toBe('4/3');
@@ -29,6 +30,7 @@ describe('Hero Farm Image Configuration', () => {
     expect(secondary).toBeDefined();
     expect(secondary?.src).toBe('/images/farm-2.jpg');
     expect(secondary?.alt).toBe('Gamefowl farm banana trees and coops');
+    expect(secondary?.caption).toBe('Banana trees beside the farm coops');
     expect(secondary?.credit).toBe('');
     expect(secondary?.isPrimary).toBe(false);
     expect(secondary?.aspectRatio).toBe('4/3');

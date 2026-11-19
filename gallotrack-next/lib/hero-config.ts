@@ -2,6 +2,7 @@ export interface HeroImageConfig {
   id: string;
   src: string;
   alt: string;
+  caption: string;
   credit: string;
   isPrimary?: boolean;
   width?: number;
@@ -18,6 +19,7 @@ export const HERO_IMAGES: HeroImageConfig[] = [
     id: 'hero-farm',
     src: '/images/hero-farm.jpg',
     alt: 'Gamefowl A-frame coops and shed on the farm',
+    caption: 'A-frame coops and a shaded shed on the farm',
     credit: '',
     isPrimary: true,
     width: 2040,
@@ -28,6 +30,7 @@ export const HERO_IMAGES: HeroImageConfig[] = [
     id: 'farm-2',
     src: '/images/farm-2.jpg',
     alt: 'Gamefowl farm banana trees and coops',
+    caption: 'Banana trees beside the farm coops',
     credit: '',
     isPrimary: false,
     width: 2040,

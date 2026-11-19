@@ -80,3 +80,19 @@ zoom. Then verify the manual matrix down to 25% and up to 500%.
 - [ ] Names wrap with `overflow-wrap: anywhere`; badges wrap; no fixed heights or `nowrap` clip text.
 - [ ] Light/dark and English/Tagalog/Hiligaynon labels stay inside the card.
 - [ ] No horizontal page scrollbar and no clipped text at any checked width or zoom.
+
+## Heritage Landing Page
+
+Check the public landing page at 320, 375, 640, 768, 1024, 1280, and 1920 px, then at manual zoom
+levels from 25% to 500%, in English, Tagalog, and Hiligaynon, light and dark.
+
+- [ ] Header links, logo, language switcher, theme toggle, Log in, and Sign up stay inside the bar at every width.
+- [ ] The mobile menu opens as a drawer, traps Tab focus, closes with Escape, and returns focus to the menu button.
+- [ ] Hero headline, badge, subtitle, buttons, and reassurance lines wrap without clipping.
+- [ ] The farm photo keeps its 4/3 frame, the caption comes from `HERO_IMAGES`, and image-error fallback shows the brand mark.
+- [ ] With two images, arrows, dots, and pause work; autoplay stops on hover/focus and is off under reduced motion.
+- [ ] Decorative swooshes, feather watermarks, and the farm silhouette stay behind text and are hidden on small screens.
+- [ ] The five feature cards stack without horizontal scroll and link to the matching capability anchors below.
+- [ ] Core capabilities, workflow, about, CTA, and footer text stays inside cards in all three languages.
+- [ ] Login and Sign-up keep the same header and preserve their forms, validation, and auth routes.
+- [ ] No horizontal page scrollbar appears at any checked width, zoom, theme, or language.

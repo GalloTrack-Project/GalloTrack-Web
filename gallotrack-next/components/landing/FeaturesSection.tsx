@@ -1,99 +1,121 @@
 'use client';
-import React from 'react';
-import { Dna, Swords, BarChart3, Building2 } from 'lucide-react';
 
-const features = [
+import React from 'react';
+import { Bell, Bird, GitBranch, HeartHandshake, Trophy } from 'lucide-react';
+import { useT, type TranslationKey } from '@/lib/i18n';
+
+type Capability = {
+  id: string;
+  icon: typeof Bird;
+  titleKey: TranslationKey;
+  subtitleKey: TranslationKey;
+  descriptionKey: TranslationKey;
+  highlightKey: TranslationKey;
+  tone: string;
+};
+
+const CAPABILITIES: Capability[] = [
   {
-    icon: Dna,
-    title: 'Lineage Tracking',
-    subtitle: 'Ancestry & Genetics',
-    description:
-      'Map sire and dam parentage with structured offspring birth codes (such as 1A1, 2B1) and automatic bloodline percentage breakdowns.',
-    highlight: 'Parentage & Bloodline Math',
+    id: 'capability-registry',
+    icon: Bird,
+    titleKey: 'landing.capabilityRegistryTitle',
+    subtitleKey: 'landing.capabilityRegistrySubtitle',
+    descriptionKey: 'landing.capabilityRegistryDesc',
+    highlightKey: 'landing.capabilityRegistryHighlight',
+    tone: 'bg-primary text-primary-foreground',
   },
   {
-    icon: Swords,
-    title: 'Match Analytics',
-    subtitle: 'Match Logs',
-    description:
-      'Log official battle encounters, opponent details, match outcomes (win, loss, draw), calculated win rates, and post-fight condition status.',
-    highlight: 'Match Logs & Win Rates',
+    id: 'capability-matches',
+    icon: Trophy,
+    titleKey: 'landing.capabilityMatchesTitle',
+    subtitleKey: 'landing.capabilityMatchesSubtitle',
+    descriptionKey: 'landing.capabilityMatchesDesc',
+    highlightKey: 'landing.capabilityMatchesHighlight',
+    tone: 'bg-brand-orange text-primary-foreground',
   },
   {
-    icon: BarChart3,
-    title: 'Flock Dashboard',
-    subtitle: 'Flock Overview',
-    description:
-      'Monitor active rosters across roosters, breeding hens, and growing stags with centralized flock counts and fight status splits.',
-    highlight: 'Flock Overview & Status',
+    id: 'capability-lineage',
+    icon: GitBranch,
+    titleKey: 'landing.capabilityLineageTitle',
+    subtitleKey: 'landing.capabilityLineageSubtitle',
+    descriptionKey: 'landing.capabilityLineageDesc',
+    highlightKey: 'landing.capabilityLineageHighlight',
+    tone: 'bg-sidebar text-sidebar-foreground',
   },
   {
-    icon: Building2,
-    title: 'Farm Registry',
-    subtitle: 'Chicken Registry & Inventory',
-    description:
-      'Catalog active breeders, offspring, and archived chickens with physical wing band tracking and structured breeding classifications.',
-    highlight: 'Breeding Registry & Inventory',
+    id: 'capability-breeding',
+    icon: HeartHandshake,
+    titleKey: 'landing.capabilityBreedingTitle',
+    subtitleKey: 'landing.capabilityBreedingSubtitle',
+    descriptionKey: 'landing.capabilityBreedingDesc',
+    highlightKey: 'landing.capabilityBreedingHighlight',
+    tone: 'bg-primary text-primary-foreground',
+  },
+  {
+    id: 'capability-notifications',
+    icon: Bell,
+    titleKey: 'landing.capabilityNotificationsTitle',
+    subtitleKey: 'landing.capabilityNotificationsSubtitle',
+    descriptionKey: 'landing.capabilityNotificationsDesc',
+    highlightKey: 'landing.capabilityNotificationsHighlight',
+    tone: 'bg-brand-orange text-primary-foreground',
   },
 ];
 
 export default function FeaturesSection() {
+  const t = useT();
+
   return (
-    <section
-      id="features"
-      className="bg-muted/40 border-border/60 relative scroll-mt-24 border-y py-14 sm:py-20"
-    >
+    <section id="features" className="bg-muted/40 border-border/60 relative scroll-mt-24 border-y py-14 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
         <div className="mx-auto mb-10 max-w-3xl space-y-3 text-center sm:mb-12">
-          <h2 className="font-mono text-xs font-black tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
-            Core Capabilities
+          <h2 className="text-brand-red font-mono text-xs font-black tracking-widest uppercase">
+            {t('landing.capabilitiesEyebrow')}
           </h2>
-          <p className="text-foreground text-2xl font-black tracking-tight sm:text-3xl">
-            Built for Gamefowl Breeders
+          <p className="text-foreground text-2xl font-black tracking-tight break-words sm:text-3xl">
+            {t('landing.capabilitiesTitle')}
           </p>
-          <p className="text-muted-foreground text-sm leading-relaxed font-medium sm:text-base">
-            Eliminate paper ledgers. GalloTrack gives breeders reliable digital tools to record
-            heritage, track match logs, and plan breeding pairings.
+          <p className="text-muted-foreground text-sm leading-relaxed font-medium break-words sm:text-base">
+            {t('landing.capabilitiesDescription')}
           </p>
         </div>
 
-        {/* 4 Feature Cards Grid */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature) => {
-            const Icon = feature.icon;
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {CAPABILITIES.map((capability) => {
+            const Icon = capability.icon;
             return (
-              <div
-                key={feature.title}
-                className="group border-border/80 bg-card relative flex flex-col justify-between rounded-xl border p-5 shadow-sm transition-all duration-200 hover:border-emerald-500/40 hover:shadow-md"
+              <article
+                key={capability.id}
+                id={capability.id}
+                className="group border-border/80 bg-card flex min-w-0 scroll-mt-28 flex-col justify-between rounded-xl border p-5 shadow-sm transition-colors hover:border-brand-orange/50 motion-reduce:transition-none"
               >
-                {/* Top Icon and Label */}
                 <div className="space-y-3.5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 transition-colors duration-200 group-hover:bg-emerald-600 group-hover:text-white dark:text-emerald-400">
-                    <Icon className="h-5 w-5" />
+                  <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-lg ${capability.tone}`}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
 
                   <div className="space-y-1">
                     <span className="text-muted-foreground block font-mono text-xs font-bold tracking-wider uppercase">
-                      {feature.subtitle}
+                      {t(capability.subtitleKey)}
                     </span>
-                    <h3 className="text-foreground text-lg font-black tracking-tight">
-                      {feature.title}
+                    <h3 className="text-foreground text-lg font-black tracking-tight break-words">
+                      {t(capability.titleKey)}
                     </h3>
                   </div>
 
-                  <p className="text-muted-foreground text-xs leading-relaxed font-medium sm:text-sm">
-                    {feature.description}
+                  <p className="text-muted-foreground text-xs leading-relaxed font-medium break-words sm:text-sm">
+                    {t(capability.descriptionKey)}
                   </p>
                 </div>
 
-                {/* Bottom Highlight Tag */}
                 <div className="border-border/60 mt-5 border-t pt-4">
-                  <span className="inline-flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    {feature.highlight}
+                  <span className="text-brand-red inline-flex text-xs font-bold break-words">
+                    {t(capability.highlightKey)}
                   </span>
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>

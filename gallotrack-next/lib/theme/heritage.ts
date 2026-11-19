@@ -30,6 +30,7 @@ export type ThemeTokens = {
   sidebarActive: string;
   sidebarActiveForeground: string;
   brandOrange: string;
+  brandRed: string;
   heroStart: string;
   heroMid: string;
   heroEnd: string;
@@ -80,6 +81,7 @@ export const THEME_PRESETS: Record<ThemePresetName, Record<ThemeMode, ThemeToken
       sidebarActive: '#C2410C',
       sidebarActiveForeground: '#FFFFFF',
       brandOrange: '#EA580C',
+      brandRed: '#B3200F',
       heroStart: '#7A0E0A',
       heroMid: '#B3200F',
       heroEnd: '#EA580C',
@@ -125,6 +127,7 @@ export const THEME_PRESETS: Record<ThemePresetName, Record<ThemeMode, ThemeToken
       sidebarActive: '#C2410C',
       sidebarActiveForeground: '#FFFFFF',
       brandOrange: '#FB923C',
+      brandRed: '#FCA5A5',
       heroStart: '#5A0906',
       heroMid: '#7A0E0A',
       heroEnd: '#C2410C',
@@ -172,6 +175,7 @@ export const THEME_PRESETS: Record<ThemePresetName, Record<ThemeMode, ThemeToken
       sidebarActive: '#047857',
       sidebarActiveForeground: '#FFFFFF',
       brandOrange: '#047857',
+      brandRed: '#065F46',
       heroStart: '#022C22',
       heroMid: '#065F46',
       heroEnd: '#047857',
@@ -217,9 +221,10 @@ export const THEME_PRESETS: Record<ThemePresetName, Record<ThemeMode, ThemeToken
       sidebarActive: '#047857',
       sidebarActiveForeground: '#FFFFFF',
       brandOrange: '#34D399',
+      brandRed: '#5EEAD4',
       heroStart: '#022C22',
       heroMid: '#065F46',
-      heroEnd: '#10B981',
+      heroEnd: '#047857',
       win: '#86EFAC',
       winBg: '#14351F',
       loss: '#FDA4AF',
@@ -273,6 +278,7 @@ export function themeCssVariables(tokens: ThemeTokens): Record<`--${string}`, st
     '--sidebar-active': tokens.sidebarActive,
     '--sidebar-active-foreground': tokens.sidebarActiveForeground,
     '--brand-orange': tokens.brandOrange,
+    '--brand-red': tokens.brandRed,
     '--hero-start': tokens.heroStart,
     '--hero-mid': tokens.heroMid,
     '--hero-end': tokens.heroEnd,
