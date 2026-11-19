@@ -4,9 +4,9 @@ import { render, screen } from '@testing-library/react';
 import LandingPage from '@/app/page';
 import LandingNavbar from './Navbar';
 import HeroSection from './HeroSection';
+import FeatureStrip from './FeatureStrip';
 import FeaturesSection from './FeaturesSection';
 import HowItWorksSection from './HowItWorksSection';
-import AboutSection from './AboutSection';
 import CtaSection from './CtaSection';
 import Footer from './Footer';
 import ProductPreviewMockup from './ProductPreviewMockup';
@@ -38,6 +38,8 @@ describe('GalloTrack Public Landing Page', () => {
       // Single H1 in Hero
       const h1 = screen.getByRole('heading', { level: 1 });
       expect(h1).toHaveTextContent(/Advanced Gamefowl/i);
+      expect(h1).toHaveTextContent(/Breeding & Match/i);
+      expect(h1).toHaveTextContent(/Analytics/i);
 
       // Section headings
       expect(screen.getByText(/Core Capabilities/i)).toBeInTheDocument();
@@ -45,28 +47,69 @@ describe('GalloTrack Public Landing Page', () => {
       expect(screen.getByText(/About GalloTrack/i)).toBeInTheDocument();
       expect(screen.getByText(/Start Managing Your Breeding Records with GalloTrack/i)).toBeInTheDocument();
 
-      // Brand Logo in navbar and footer
+      // Brand marks in navbar and footer
       const brandLogos = screen.getAllByRole('img', { name: 'GalloTrack' });
       expect(brandLogos.length).toBeGreaterThanOrEqual(2);
-      expect(screen.queryByText(/\bGALLOTRACK\b/)).not.toBeInTheDocument();
 
       // Capstone Credit
       const capstoneCredits = screen.getAllByText(/ISUFST CICI Capstone Project/i);
       expect(capstoneCredits.length).toBeGreaterThan(0);
     });
 
-    it('contains all 4 core features matching the current app capabilities', () => {
+    it('contains all 5 capability cards with real concepts', () => {
       render(<FeaturesSection />);
 
-      expect(screen.getByRole('heading', { name: /Lineage Tracking/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Chicken Registry/i })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /Match Analytics/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: /Flock Dashboard/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: /Farm Registry/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Lineage Directory/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Breeding Hub/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Notifications/i })).toBeInTheDocument();
 
       // Concrete descriptions mention real concepts (sire/dam, 1A1, outcomes)
       expect(screen.getByText(/sire and dam/i)).toBeInTheDocument();
       expect(screen.getByText(/1A1, 2B1/i)).toBeInTheDocument();
       expect(screen.getByText(/win, loss, draw/i)).toBeInTheDocument();
+    });
+
+    it('links the five feature shortcuts to anchors that exist on the page', () => {
+      render(<LandingPage />);
+
+      const links = [
+        ['Chicken Registry', '#capability-registry'],
+        ['Match Analytics', '#capability-matches'],
+        ['Lineage Directory', '#capability-lineage'],
+        ['Breeding Hub', '#capability-breeding'],
+        ['Notifications', '#capability-notifications'],
+      ] as const;
+
+      for (const [name, href] of links) {
+        const link = screen.getByRole('link', { name: new RegExp(name, 'i') });
+        expect(link).toHaveAttribute('href', href);
+        expect(document.querySelector(href)).not.toBeNull();
+      }
+    });
+
+    it('renders the hero badge, CTA buttons, and reassurance lines', () => {
+      render(<HeroSection />);
+
+      expect(screen.getByText(/ISUFST CICI Capstone Project/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Get Started/i })).toHaveAttribute('href', '/register');
+      expect(screen.getByRole('link', { name: /^Log in$/i })).toHaveAttribute('href', '/login');
+      expect(screen.getByText(/Private farm records/i)).toBeInTheDocument();
+      expect(screen.getByText(/Automatic bloodline calculation/i)).toBeInTheDocument();
+    });
+
+    it('renders the five feature shortcuts', () => {
+      render(<FeatureStrip />);
+
+      expect(screen.getByRole('link', { name: /Chicken Registry/i })).toHaveAttribute(
+        'href',
+        '#capability-registry',
+      );
+      expect(screen.getByRole('link', { name: /Notifications/i })).toHaveAttribute(
+        'href',
+        '#capability-notifications',
+      );
     });
 
     it('contains all 4 concrete workflow steps', () => {

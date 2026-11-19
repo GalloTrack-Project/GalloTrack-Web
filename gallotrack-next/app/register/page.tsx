@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, fullNameFromMetadata } from '@/lib/registry';
 import { Dna, BarChart3, Building2, ShieldCheck } from 'lucide-react';
-import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useT } from '@/lib/i18n';
-import Logo from '@/components/brand/Logo';
+import LandingNavbar from '@/components/landing/Navbar';
+import LandingSkipLink from '@/components/landing/LandingSkipLink';
+import LandingThemeScope from '@/components/landing/LandingThemeScope';
 
 const ICONS = {
   user: (
@@ -44,7 +45,7 @@ const ICONS = {
 
 function FieldIcon({ which }: { which: keyof typeof ICONS }) {
   return (
-    <span className="text-success pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2">
+    <span className="text-brand-red pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="15"
@@ -206,15 +207,18 @@ export default function RegisterPage() {
   };
 
   const inputBase =
-    'w-full p-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground';
+    'w-full p-3 border border-input-border rounded-md text-sm bg-muted/60 focus:bg-muted focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-semibold text-foreground placeholder:text-muted-foreground';
   const inputIcon = `${inputBase} pl-9`;
   const labelClass =
     'block text-xs font-black text-muted-foreground mb-2 uppercase tracking-widest';
 
   return (
-    <div className="bg-background flex min-h-screen w-full">
+    <LandingThemeScope>
+      <LandingSkipLink />
+      <LandingNavbar linkPrefix="/" />
+      <div className="flex min-h-0 w-full flex-1">
       {/* LEFT PANEL — Branding. Mirrors the login page so the two entry points read as one product. */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 lg:flex lg:w-1/2">
+      <div className="from-hero-start via-hero-mid to-sidebar-end relative hidden overflow-hidden bg-gradient-to-br lg:flex lg:w-1/2">
         <div className="absolute inset-0 opacity-[0.07]">
           <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
@@ -226,31 +230,22 @@ export default function RegisterPage() {
           </svg>
         </div>
         <div className="absolute top-0 -left-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"></div>
-        <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-teal-400/20 blur-3xl"></div>
+        <div className="bg-brand-orange/20 absolute -right-20 bottom-0 h-96 w-96 rounded-full blur-3xl"></div>
 
-        <div className="relative z-10 flex w-full flex-col justify-between p-10 xl:p-14">
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex w-fit rounded-lg bg-white/95 px-3 py-2 shadow-lg shadow-black/10">
-              <Logo variant="full" size="lg" onLight />
-            </span>
-            <span className="font-mono text-xs font-medium tracking-widest text-emerald-200/70 uppercase">
-              v1.0.0
-            </span>
-          </div>
-
+        <div className="relative z-10 flex w-full flex-col justify-center gap-12 p-10 xl:p-14">
           <div className="space-y-8">
             <div className="space-y-4">
-              <p className="text-xs font-semibold tracking-[0.2em] text-emerald-200/80 uppercase">
+              <p className="text-xs font-semibold tracking-[0.2em] text-sidebar-muted uppercase">
                 ISUFST CICI Capstone Project
               </p>
               <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-white xl:text-5xl">
                 Set up your
                 <br />
-                <span className="text-emerald-200">farm</span>
+                <span className="text-sidebar-foreground">farm</span>
                 <br />
                 in three steps
               </h1>
-              <p className="max-w-md text-sm leading-relaxed font-medium text-emerald-100/80">
+              <p className="max-w-md text-sm leading-relaxed font-medium text-sidebar-muted">
                 Create your farm owner account to manage lineage, match performance and flock
                 records in one place.
               </p>
@@ -267,19 +262,19 @@ export default function RegisterPage() {
                   key={f.title}
                   className="space-y-1.5 rounded-md border border-white/10 bg-white/10 p-3.5 backdrop-blur-sm"
                 >
-                  <f.icon className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+                  <f.icon className="h-5 w-5 text-sidebar-foreground" aria-hidden="true" />
                   <p className="text-sm font-semibold text-white">{f.title}</p>
-                  <p className="text-xs font-medium text-emerald-200/70">{f.desc}</p>
+                  <p className="text-xs font-medium text-sidebar-muted">{f.desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <p className="text-xs font-medium text-emerald-200/70">
+          <p className="text-xs font-medium text-sidebar-muted">
             Already registered?{' '}
             <Link
               href="/login"
-              className="text-emerald-100 underline decoration-emerald-200/50 underline-offset-2 transition-colors hover:decoration-emerald-100"
+              className="text-sidebar-foreground underline decoration-sidebar-muted/50 underline-offset-2 transition-colors hover:decoration-sidebar-foreground"
             >
               Sign in
             </Link>
@@ -288,30 +283,25 @@ export default function RegisterPage() {
       </div>
 
       {/* RIGHT PANEL — Registration form */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden p-4 sm:p-6">
-        <div className="pointer-events-none absolute top-1/4 -left-20 h-64 w-64 rounded-full bg-emerald-500/5 blur-3xl"></div>
-        <div className="pointer-events-none absolute -right-20 bottom-1/4 h-72 w-72 rounded-full bg-teal-400/5 blur-3xl"></div>
+      <div
+        id="main-content"
+        tabIndex={-1}
+        className="relative flex flex-1 items-center justify-center overflow-hidden p-4 sm:p-6"
+      >
+        <div className="bg-brand-orange/10 pointer-events-none absolute top-1/4 -left-20 h-64 w-64 rounded-full blur-3xl"></div>
+        <div className="bg-primary/10 pointer-events-none absolute -right-20 bottom-1/4 h-72 w-72 rounded-full blur-3xl"></div>
 
         <div className="bg-card border-border relative z-10 my-4 w-full max-w-md rounded-lg border shadow-xl">
           <div className="space-y-5 p-6 sm:p-8">
-            {/* Header */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
-                  <Logo variant="mark" size="md" />
-                </div>
-                <CompactLanguageSwitcher />
-              </div>
-              <div className="space-y-1.5">
-                <h1 className="text-card-foreground text-2xl leading-tight font-semibold tracking-tight">
-                  {t('auth.registerTitle')}
-                </h1>
-                <p className="text-muted-foreground text-sm">{t('auth.registerSubtitle')}</p>
-              </div>
+            <div className="space-y-1.5">
+              <h2 className="text-card-foreground text-2xl leading-tight font-semibold tracking-tight">
+                {t('auth.registerTitle')}
+              </h2>
+              <p className="text-muted-foreground text-sm">{t('auth.registerSubtitle')}</p>
             </div>
 
             {maintenanceMsg && (
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-center text-sm font-bold text-amber-700 dark:text-amber-300">
+              <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-center text-sm font-bold text-warning">
                 {maintenanceMsg}
               </div>
             )}
@@ -324,9 +314,9 @@ export default function RegisterPage() {
                     <div
                       className={`flex h-9 w-9 items-center justify-center rounded-md text-sm font-black transition-all duration-300 sm:h-10 sm:w-10 ${
                         step > s.id
-                          ? 'bg-emerald-500 text-white'
+                          ? 'bg-primary text-primary-foreground'
                           : step === s.id
-                            ? 'text-success border-2 border-emerald-500 bg-emerald-500/20'
+                            ? 'text-brand-red border-2 border-primary bg-primary/15'
                             : 'bg-muted border-border text-muted-foreground border'
                       }`}
                     >
@@ -361,14 +351,14 @@ export default function RegisterPage() {
                       )}
                     </div>
                     <span
-                      className={`max-w-[72px] text-center text-xs leading-tight font-bold tracking-wider break-words sm:max-w-none ${step === s.id ? 'text-success' : 'text-muted-foreground'}`}
+                      className={`max-w-[72px] text-center text-xs leading-tight font-bold tracking-wider break-words sm:max-w-none ${step === s.id ? 'text-brand-red' : 'text-muted-foreground'}`}
                     >
                       {s.label}
                     </span>
                   </div>
                   {i < STEPS.length - 1 && (
                     <div
-                      className={`mb-5 h-0.5 w-5 rounded-full transition-all duration-300 sm:w-12 ${step > s.id ? 'bg-emerald-500' : 'bg-border'}`}
+                      className={`mb-5 h-0.5 w-5 rounded-full transition-all duration-300 sm:w-12 ${step > s.id ? 'bg-primary' : 'bg-border'}`}
                     ></div>
                   )}
                 </div>
@@ -376,7 +366,7 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <div className="text-danger light:text-danger light:bg-rose-500/10 rounded-md border border-rose-500/30 bg-rose-500/10 p-3 text-center text-sm font-bold">
+              <div className="rounded-md border border-danger/20 bg-danger/10 p-3 text-center text-sm font-bold text-danger">
                 {error}
               </div>
             )}
@@ -397,7 +387,7 @@ export default function RegisterPage() {
                 <div className="animate-enter-right space-y-4">
                   <div className="bg-muted/25 border-border space-y-4 rounded-lg border p-4 sm:p-5">
                     <h2 className="text-card-foreground border-border flex items-center gap-2.5 border-b pb-2.5 text-xs font-black tracking-widest uppercase">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-emerald-500/30 bg-emerald-500/15 text-xs">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-primary/30 bg-primary/15 text-xs">
 
                       </span>
                       Personal Information
@@ -461,7 +451,7 @@ export default function RegisterPage() {
                 <div className="animate-enter-right space-y-4">
                   <div className="bg-muted/25 border-border space-y-4 rounded-lg border p-4 sm:p-5">
                     <h2 className="text-card-foreground border-border flex items-center gap-2.5 border-b pb-2.5 text-xs font-black tracking-widest uppercase">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-emerald-500/30 bg-emerald-500/15 text-xs">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-primary/30 bg-primary/15 text-xs">
 
                       </span>
                       Farm / Business Information
@@ -508,7 +498,7 @@ export default function RegisterPage() {
                 <div className="animate-enter-right space-y-4">
                   <div className="bg-muted/25 border-border space-y-4 rounded-lg border p-4 sm:p-5">
                     <h2 className="text-card-foreground border-border flex items-center gap-2.5 border-b pb-2.5 text-xs font-black tracking-widest uppercase">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-emerald-500/30 bg-emerald-500/15 text-xs">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-primary/30 bg-primary/15 text-xs">
 
                       </span>
                       Account Security
@@ -550,7 +540,7 @@ export default function RegisterPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="text-muted-foreground hover:text-success absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-sm p-1 transition-colors"
+                          className="text-muted-foreground hover:text-brand-red absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-sm p-1 transition-colors"
                         >
                           {showPassword ? (
                             <svg
@@ -638,7 +628,7 @@ export default function RegisterPage() {
                   type={step === 3 ? 'submit' : 'button'}
                   onClick={step < 3 ? handleNext : undefined}
                   disabled={loading || systemBlocked}
-                  className="group relative flex-1 cursor-pointer overflow-hidden rounded-md bg-gradient-to-r from-emerald-500 to-emerald-600 py-3.5 font-black text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group relative flex-1 cursor-pointer overflow-hidden rounded-md bg-gradient-to-r from-sidebar to-sidebar-end py-3.5 font-black text-sidebar-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:from-hero-mid hover:to-sidebar active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <div className="absolute inset-0 bg-white/5 opacity-0 transition-opacity group-hover:opacity-100"></div>
                   <span className="relative flex items-center justify-center gap-2">
@@ -691,7 +681,7 @@ export default function RegisterPage() {
               <div className="pt-1">
                 <Link
                   href="/login"
-                  className="text-muted-foreground hover:text-success decoration-muted-foreground/50 block w-full cursor-pointer text-center text-xs font-bold tracking-wide underline underline-offset-2 transition-colors hover:decoration-emerald-400"
+                  className="text-muted-foreground hover:text-brand-red decoration-muted-foreground/50 block w-full cursor-pointer text-center text-xs font-bold tracking-wide underline underline-offset-2 transition-colors hover:decoration-brand-red"
                 >
                   {t('auth.haveAccountPrompt')} {t('auth.signInLink')}
                 </Link>
@@ -700,6 +690,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </LandingThemeScope>
   );
 }

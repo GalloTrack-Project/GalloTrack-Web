@@ -135,6 +135,7 @@ html:has(.match-form-scroll) {
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-brand-orange: var(--brand-orange);
+  --color-brand-red: var(--brand-red);
   --color-hero-start: var(--hero-start);
   --color-hero-mid: var(--hero-mid);
   --color-hero-end: var(--hero-end);

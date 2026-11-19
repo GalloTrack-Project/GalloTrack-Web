@@ -1,205 +1,196 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState, type FocusEvent } from 'react';
 import Image from 'next/image';
+import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import Logo from '@/components/brand/Logo';
+import { useT } from '@/lib/i18n';
 import { HERO_IMAGES, type HeroImageConfig } from '@/lib/hero-config';
 
 interface HeroCarouselProps {
   images?: HeroImageConfig[];
   autoPlayIntervalMs?: number;
   className?: string;
-  showThumbnails?: boolean;
-  showCaption?: boolean;
 }
 
 export function HeroCarousel({
   images = HERO_IMAGES,
   autoPlayIntervalMs = 6000,
   className = '',
-  showThumbnails = true,
-  showCaption = true,
 }: HeroCarouselProps) {
+  const t = useT();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [isPaused, setIsPaused] = useState(false);
+  const [interactionPaused, setInteractionPaused] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   const nextSlide = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % images.length);
+    setActiveIndex((previous) => (previous + 1) % images.length);
   }, [images.length]);
 
-  const prevSlide = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
+  const previousSlide = useCallback(() => {
+    setActiveIndex((previous) => (previous - 1 + images.length) % images.length);
   }, [images.length]);
 
-  // Optional subtle autoplay, paused on hover
   useEffect(() => {
-    if (images.length <= 1 || isPaused || autoPlayIntervalMs <= 0) return;
-    const timer = setInterval(nextSlide, autoPlayIntervalMs);
-    return () => clearInterval(timer);
-  }, [images.length, isPaused, autoPlayIntervalMs, nextSlide]);
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduceMotion(media.matches);
+    const handleChange = (event: MediaQueryListEvent) => setReduceMotion(event.matches);
+    media.addEventListener?.('change', handleChange);
+    return () => media.removeEventListener?.('change', handleChange);
+  }, []);
 
-  const handleImageError = (id: string) => {
-    setFailedImages((prev) => ({ ...prev, [id]: true }));
+  useEffect(() => {
+    if (images.length <= 1 || isPaused || interactionPaused || reduceMotion || autoPlayIntervalMs <= 0) {
+      return;
+    }
+    const timer = window.setInterval(nextSlide, autoPlayIntervalMs);
+    return () => window.clearInterval(timer);
+  }, [autoPlayIntervalMs, images.length, interactionPaused, isPaused, nextSlide, reduceMotion]);
+
+  const handleBlur = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setInteractionPaused(false);
+    }
   };
 
+  if (images.length === 0) return null;
+
   const activeImage = images[activeIndex] || images[0];
+  const hasMultipleImages = images.length > 1;
+  const isGalleryPaused = isPaused || reduceMotion;
 
   return (
     <section
-      aria-label="Farm showcase gallery"
-      className={`flex flex-col gap-3 w-full ${className}`}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      aria-label={t('landing.heroGallery')}
+      className={`w-full min-w-0 ${className}`}
+      onMouseEnter={() => setInteractionPaused(true)}
+      onMouseLeave={() => setInteractionPaused(false)}
+      onFocusCapture={() => setInteractionPaused(true)}
+      onBlurCapture={handleBlur}
     >
-      {/* Primary viewport with strict 4/3 aspect ratio to prevent layout shift */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-emerald-500/30 bg-muted/40 shadow-xl shadow-black/20 dark:shadow-black/50 group">
-        {images.map((img, idx) => {
-          const isActive = idx === activeIndex;
-          const isErrored = failedImages[img.id];
+      <div className="border-white/80 shadow-primary/15 dark:border-white/30 relative aspect-[4/3] w-full overflow-hidden rounded-3xl border-2 shadow-2xl">
+        {images.map((image, index) => {
+          const isActive = index === activeIndex;
+          const failed = failedImages[image.id];
 
           return (
             <div
-              key={img.id}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-              }`}
+              key={image.id}
               aria-hidden={!isActive}
+              className={`absolute inset-0 transition-opacity duration-500 motion-reduce:transition-none ${
+                isActive ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'
+              }`}
             >
-              {isErrored ? (
-                // Fallback UI when image cannot be loaded
+              {failed ? (
                 <div
-                  data-testid={`hero-fallback-${img.id}`}
-                  className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted to-muted/60 text-muted-foreground p-6 text-center"
+                  data-testid={`hero-fallback-${image.id}`}
+                  className="from-primary/10 via-accent-soft to-brand-orange/25 flex h-full w-full flex-col items-center justify-center gap-4 bg-gradient-to-br p-6 text-center"
                 >
-                  <svg
-                    className="w-16 h-16 text-emerald-500/60 mb-3"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-                    />
-                  </svg>
-                  <span className="text-xs font-bold uppercase tracking-wider text-card-foreground">
-                    {img.alt}
+                  <span className="bg-background ring-border inline-flex h-16 w-16 items-center justify-center rounded-2xl p-2 shadow-md ring-1">
+                    <Logo variant="mark" size="lg" />
                   </span>
-                  <span className="text-[10px] mt-1 text-muted-foreground">
-                    Image preview unavailable
+                  <span className="text-foreground text-sm font-bold break-words">
+                    {t('landing.photoUnavailable')}
                   </span>
                 </div>
               ) : (
-                <div className="relative w-full h-full">
+                <div className="relative h-full w-full">
                   <Image
-                    src={img.src}
-                    alt={img.alt}
+                    src={image.src}
+                    alt={image.alt}
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                    priority={idx === 0}
-                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    priority={index === 0}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 90vw, 560px"
                     className="object-cover object-center select-none"
-                    onError={() => handleImageError(img.id)}
+                    onError={() =>
+                      setFailedImages((previous) => ({ ...previous, [image.id]: true }))
+                    }
                   />
-                  {/* Subtle lighting gradient overlay for theme integration & legibility */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+                  <div className="from-sidebar/55 pointer-events-none absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
                 </div>
               )}
             </div>
           );
         })}
 
-        {/* Carousel overlay badges & caption */}
-        {showCaption && activeImage && (
-          <div className="absolute bottom-3 left-3 right-3 z-20 flex items-end justify-between gap-2 pointer-events-none">
-            <div className="bg-black/65 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 max-w-[80%]">
-              <p className="text-[11px] font-bold text-white tracking-wide truncate">
-                {activeImage.alt}
-              </p>
-              {activeImage.credit && activeImage.credit.trim().length > 0 && (
-                <p className="text-[9px] text-white/70 font-medium tracking-wide">
-                  Photo: {activeImage.credit}
-                </p>
-              )}
-            </div>
-
-            {/* Slide indicator pill (hidden for a single image) */}
-            {images.length > 1 && (
-              <div className="bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[10px] font-mono font-bold text-emerald-400">
-                {activeIndex + 1} / {images.length}
-              </div>
-            )}
+        <div className="absolute inset-x-3 bottom-3 z-30 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="bg-sidebar/90 text-sidebar-foreground max-w-full rounded-xl px-3 py-2 shadow-lg backdrop-blur-sm">
+            <p className="text-xs leading-snug font-bold break-words sm:text-sm">
+              {activeImage.caption}
+            </p>
           </div>
-        )}
 
-        {/* Navigation arrows (shown when more than 1 image exists) */}
-        {images.length > 1 && (
-          <div className="absolute inset-y-0 left-2 right-2 flex items-center justify-between z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              onClick={prevSlide}
-              aria-label="Previous slide"
-              className="pointer-events-auto w-8 h-8 rounded-full bg-black/60 hover:bg-emerald-600 text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow-md"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={nextSlide}
-              aria-label="Next slide"
-              className="pointer-events-auto w-8 h-8 rounded-full bg-black/60 hover:bg-emerald-600 text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow-md"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Interactive Thumbnail Strip */}
-      {showThumbnails && images.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Farm gallery thumbnails"
-          className="flex items-center gap-2.5 overflow-x-auto py-1 px-0.5"
-        >
-          {images.map((img, idx) => {
-            const isCurrent = idx === activeIndex;
-            return (
+          {hasMultipleImages && (
+            <div className="bg-sidebar/90 text-sidebar-foreground flex shrink-0 flex-wrap items-center gap-1 rounded-xl p-1 shadow-lg backdrop-blur-sm">
               <button
-                key={`thumb-${img.id}`}
                 type="button"
-                role="tab"
-                aria-selected={isCurrent}
-                aria-label={`View ${img.alt}`}
-                onClick={() => setActiveIndex(idx)}
-                className={`relative aspect-[4/3] w-20 sm:w-24 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer shrink-0 ${
-                  isCurrent
-                    ? 'border-emerald-500 ring-2 ring-emerald-500/40 scale-[1.03] shadow-md shadow-emerald-500/20'
-                    : 'border-border/60 hover:border-emerald-500/50 opacity-70 hover:opacity-100'
-                }`}
+                onClick={previousSlide}
+                aria-label={t('landing.photoPrevious')}
+                className="hover:bg-sidebar-active focus-visible:ring-sidebar-foreground inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none"
               >
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  sizes="96px"
-                  className="object-cover object-center select-none"
-                />
-                {isCurrent && (
-                  <div className="absolute inset-0 bg-emerald-500/10 pointer-events-none" />
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+
+              <div
+                role="tablist"
+                aria-label={t('landing.heroGallery')}
+                className="flex items-center"
+              >
+                {images.map((image, index) => {
+                  const isCurrent = index === activeIndex;
+                  return (
+                    <button
+                      key={`dot-${image.id}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={isCurrent}
+                      aria-label={t('landing.photoShow', {
+                        index: index + 1,
+                        caption: image.caption,
+                      })}
+                      tabIndex={isCurrent ? 0 : -1}
+                      onClick={() => setActiveIndex(index)}
+                      className="focus-visible:ring-sidebar-foreground inline-flex h-11 w-6 items-center justify-center rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <span
+                        className={`block h-2.5 w-2.5 rounded-full border border-white/70 transition-colors motion-reduce:transition-none ${
+                          isCurrent ? 'bg-white' : 'bg-transparent'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={nextSlide}
+                aria-label={t('landing.photoNext')}
+                className="hover:bg-sidebar-active focus-visible:ring-sidebar-foreground inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPaused((previous) => !previous)}
+                aria-label={isGalleryPaused ? t('landing.photoPlay') : t('landing.photoPause')}
+                className="hover:bg-sidebar-active focus-visible:ring-sidebar-foreground inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none"
+              >
+                {isGalleryPaused ? (
+                  <Play className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Pause className="h-4 w-4" aria-hidden="true" />
                 )}
               </button>
-            );
-          })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </section>
   );
 }
