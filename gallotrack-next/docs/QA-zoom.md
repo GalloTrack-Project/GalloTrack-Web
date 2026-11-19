@@ -56,6 +56,18 @@ for a foundation-stock chicken, then expand **Details**.
 - [ ] The modal itself has no horizontal scrollbar and no text escapes the dialog.
 - [ ] Repeat in light/dark and English/Tagalog; stored bloodline values and calculations are unchanged.
 
+## Heritage Dashboard Shell
+
+Check the dashboard at 320, 375, 640, 768, 1024, 1280, and 1920 px, then at every manual zoom level
+from 25% to 500%, in English, Tagalog, and Hiligaynon.
+
+- [ ] The red sidebar becomes a drawer on mobile; menu, focus trap, Escape close, and 44 px targets work.
+- [ ] Header title, accent bar, date/report actions, search, bell, and avatar menu stay inside the header.
+- [ ] Global search still opens with Ctrl/Cmd+K; language switcher, theme toggle, settings, and logout are reachable from the avatar menu.
+- [ ] Hero counts are the live registry and bloodline counts; the banner hides and restores from its control.
+- [ ] KPI cards, milestone rows, bloodline cards, donut legend, and recent match rows wrap without clipping.
+- [ ] No horizontal page scrollbar appears at any width, zoom, theme, or language.
+
 ## Full Siblings & Families Cards
 
 Verify the family card at 320, 375, 640, 768, 1024, 1280, and 1920 px and at 100% to 200%

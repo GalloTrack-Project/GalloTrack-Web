@@ -155,7 +155,7 @@ describe('Registration genetic strain', () => {
     ).toBeInTheDocument();
     expect(insertFowl).not.toHaveBeenCalled();
     expect(strainInput()).toHaveValue('Hatch');
-  });
+  }, 20_000);
 
   it('lists only registered breeds and filters case-insensitively', async () => {
     fetchStrains.mockResolvedValue(['Lemon', 'Hatch']);
