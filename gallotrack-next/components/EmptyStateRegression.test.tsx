@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import DashboardPage from './DashboardPage';
 import ProfilingPage from './ProfilingPage';
 import MarketplacePage from './MarketplacePage';
@@ -87,8 +87,14 @@ describe('Empty State Regression Suite (Zero Data State Post-Clear)', () => {
   it('1. Dashboard renders cleanly with zero fowls and zero matches without throwing', () => {
     const { container } = renderWithProviders(<DashboardPage />);
     expect(container).toBeTruthy();
-    // Dashboard header should be present
     expect(screen.getByText(/Dashboard/i)).toBeDefined();
+    expect(screen.getByText(/Your Flock\. Your Legacy\./i)).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: /Hide welcome banner/i }));
+    expect(screen.getByRole('button', { name: /Show welcome banner/i })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: /Show welcome banner/i }));
+    expect(screen.getByRole('button', { name: /Hide welcome banner/i })).toBeDefined();
   });
 
   it('2. Registry tabs (ProfilingPage) render cleanly with zero birds without throwing', () => {

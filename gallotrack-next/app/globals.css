@@ -127,6 +127,29 @@ html:has(.match-form-scroll) {
   --color-ring: var(--ring);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-end: var(--sidebar-end);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-brand-orange: var(--brand-orange);
+  --color-hero-start: var(--hero-start);
+  --color-hero-mid: var(--hero-mid);
+  --color-hero-end: var(--hero-end);
+  --color-win: var(--win);
+  --color-win-bg: var(--win-bg);
+  --color-loss: var(--loss);
+  --color-loss-bg: var(--loss-bg);
+  --color-draw: var(--draw);
+  --color-draw-bg: var(--draw-bg);
+  --color-low-sample: var(--low-sample);
+  --color-low-sample-bg: var(--low-sample-bg);
+  --color-cock: var(--cock);
+  --color-cock-bg: var(--cock-bg);
+  --color-hen: var(--hen);
+  --color-hen-bg: var(--hen-bg);
 
   /* Radius scale: three semantic sizes. sm = controls, md = cards/panels/modals,
      lg = large blocks. xl/2xl/3xl/4xl are pinned onto the same scale as a safety

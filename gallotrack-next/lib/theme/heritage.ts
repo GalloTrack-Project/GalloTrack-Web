@@ -1,0 +1,318 @@
+export type ThemeMode = 'light' | 'dark';
+export type ThemePresetName = 'heritage' | 'green';
+
+export type ThemeTokens = {
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  popover: string;
+  popoverForeground: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  input: string;
+  inputBorder: string;
+  success: string;
+  warning: string;
+  danger: string;
+  info: string;
+  primary: string;
+  primaryForeground: string;
+  accent: string;
+  accentForeground: string;
+  accentSoft: string;
+  ring: string;
+  sidebar: string;
+  sidebarEnd: string;
+  sidebarForeground: string;
+  sidebarMuted: string;
+  sidebarActive: string;
+  sidebarActiveForeground: string;
+  brandOrange: string;
+  heroStart: string;
+  heroMid: string;
+  heroEnd: string;
+  win: string;
+  winBg: string;
+  loss: string;
+  lossBg: string;
+  draw: string;
+  drawBg: string;
+  lowSample: string;
+  lowSampleBg: string;
+  cock: string;
+  cockBg: string;
+  hen: string;
+  henBg: string;
+};
+
+export const ACTIVE_THEME_PRESET: ThemePresetName = 'heritage';
+
+export const THEME_PRESETS: Record<ThemePresetName, Record<ThemeMode, ThemeTokens>> = {
+  heritage: {
+    light: {
+      background: '#FFF8F1',
+      foreground: '#241713',
+      card: '#FFFFFF',
+      cardForeground: '#241713',
+      popover: '#FFFFFF',
+      popoverForeground: '#241713',
+      muted: '#F6EDE5',
+      mutedForeground: '#6B4F45',
+      border: '#EAD7C8',
+      input: '#FFFFFF',
+      inputBorder: '#8A5A4A',
+      success: '#166534',
+      warning: '#92400E',
+      danger: '#991B1B',
+      info: '#1D4ED8',
+      primary: '#B3200F',
+      primaryForeground: '#FFFFFF',
+      accent: '#C2410C',
+      accentForeground: '#FFFFFF',
+      accentSoft: '#FDE7D7',
+      ring: '#B3200F',
+      sidebar: '#B3200F',
+      sidebarEnd: '#7A0E0A',
+      sidebarForeground: '#FFFFFF',
+      sidebarMuted: '#FFE8DE',
+      sidebarActive: '#C2410C',
+      sidebarActiveForeground: '#FFFFFF',
+      brandOrange: '#EA580C',
+      heroStart: '#7A0E0A',
+      heroMid: '#B3200F',
+      heroEnd: '#EA580C',
+      win: '#166534',
+      winBg: '#DCFCE7',
+      loss: '#991B1B',
+      lossBg: '#FEE2E2',
+      draw: '#475569',
+      drawBg: '#E2E8F0',
+      lowSample: '#92400E',
+      lowSampleBg: '#FEF3C7',
+      cock: '#1D4ED8',
+      cockBg: '#DBEAFE',
+      hen: '#BE185D',
+      henBg: '#FCE7F3',
+    },
+    dark: {
+      background: '#140B09',
+      foreground: '#FBEFE9',
+      card: '#1F1311',
+      cardForeground: '#FBEFE9',
+      popover: '#1F1311',
+      popoverForeground: '#FBEFE9',
+      muted: '#2A1916',
+      mutedForeground: '#D6BDB1',
+      border: '#4A2C24',
+      input: '#2A1916',
+      inputBorder: '#A97866',
+      success: '#86EFAC',
+      warning: '#FCD34D',
+      danger: '#FDA4AF',
+      info: '#93C5FD',
+      primary: '#FB923C',
+      primaryForeground: '#1A0B07',
+      accent: '#FB923C',
+      accentForeground: '#1A0B07',
+      accentSoft: '#3A1B0C',
+      ring: '#FDBA74',
+      sidebar: '#5A0906',
+      sidebarEnd: '#2B0504',
+      sidebarForeground: '#FFF7F2',
+      sidebarMuted: '#E8C9BB',
+      sidebarActive: '#C2410C',
+      sidebarActiveForeground: '#FFFFFF',
+      brandOrange: '#FB923C',
+      heroStart: '#5A0906',
+      heroMid: '#7A0E0A',
+      heroEnd: '#C2410C',
+      win: '#86EFAC',
+      winBg: '#14351F',
+      loss: '#FDA4AF',
+      lossBg: '#4C0519',
+      draw: '#CBD5E1',
+      drawBg: '#1E293B',
+      lowSample: '#FCD34D',
+      lowSampleBg: '#3A2406',
+      cock: '#93C5FD',
+      cockBg: '#172554',
+      hen: '#F9A8D4',
+      henBg: '#500724',
+    },
+  },
+  green: {
+    light: {
+      background: '#F8FAFC',
+      foreground: '#0F172A',
+      card: '#FFFFFF',
+      cardForeground: '#0F172A',
+      popover: '#FFFFFF',
+      popoverForeground: '#0F172A',
+      muted: '#F1F5F9',
+      mutedForeground: '#64748B',
+      border: '#E2E8F0',
+      input: '#FFFFFF',
+      inputBorder: '#6B7C93',
+      success: '#065F46',
+      warning: '#92400E',
+      danger: '#9F1239',
+      info: '#075985',
+      primary: '#065F46',
+      primaryForeground: '#FFFFFF',
+      accent: '#065F46',
+      accentForeground: '#FFFFFF',
+      accentSoft: '#D1FAE5',
+      ring: '#0F172A',
+      sidebar: '#065F46',
+      sidebarEnd: '#022C22',
+      sidebarForeground: '#FFFFFF',
+      sidebarMuted: '#D1FAE5',
+      sidebarActive: '#047857',
+      sidebarActiveForeground: '#FFFFFF',
+      brandOrange: '#047857',
+      heroStart: '#022C22',
+      heroMid: '#065F46',
+      heroEnd: '#047857',
+      win: '#166534',
+      winBg: '#DCFCE7',
+      loss: '#9F1239',
+      lossBg: '#FFE4E6',
+      draw: '#475569',
+      drawBg: '#E2E8F0',
+      lowSample: '#92400E',
+      lowSampleBg: '#FEF3C7',
+      cock: '#1D4ED8',
+      cockBg: '#DBEAFE',
+      hen: '#BE185D',
+      henBg: '#FCE7F3',
+    },
+    dark: {
+      background: '#090D16',
+      foreground: '#E2E8F0',
+      card: '#0F172A',
+      cardForeground: '#E2E8F0',
+      popover: '#0F172A',
+      popoverForeground: '#E2E8F0',
+      muted: '#1E293B',
+      mutedForeground: '#94A3B8',
+      border: '#1E293B',
+      input: '#1E293B',
+      inputBorder: '#64748B',
+      success: '#4ADE80',
+      warning: '#FBBF24',
+      danger: '#FDA4AF',
+      info: '#7DD3FC',
+      primary: '#10B981',
+      primaryForeground: '#04210F',
+      accent: '#10B981',
+      accentForeground: '#04210F',
+      accentSoft: '#052E1B',
+      ring: '#E2E8F0',
+      sidebar: '#065F46',
+      sidebarEnd: '#022C22',
+      sidebarForeground: '#FFFFFF',
+      sidebarMuted: '#A7F3D0',
+      sidebarActive: '#047857',
+      sidebarActiveForeground: '#FFFFFF',
+      brandOrange: '#34D399',
+      heroStart: '#022C22',
+      heroMid: '#065F46',
+      heroEnd: '#10B981',
+      win: '#86EFAC',
+      winBg: '#14351F',
+      loss: '#FDA4AF',
+      lossBg: '#4C0519',
+      draw: '#CBD5E1',
+      drawBg: '#1E293B',
+      lowSample: '#FCD34D',
+      lowSampleBg: '#3A2406',
+      cock: '#93C5FD',
+      cockBg: '#172554',
+      hen: '#F9A8D4',
+      henBg: '#500724',
+    },
+  },
+};
+
+export function getThemeTokens(
+  preset: ThemePresetName = ACTIVE_THEME_PRESET,
+  mode: ThemeMode = 'light',
+): ThemeTokens {
+  return THEME_PRESETS[preset][mode];
+}
+
+export function themeCssVariables(tokens: ThemeTokens): Record<`--${string}`, string> {
+  return {
+    '--background': tokens.background,
+    '--foreground': tokens.foreground,
+    '--card': tokens.card,
+    '--card-foreground': tokens.cardForeground,
+    '--popover': tokens.popover,
+    '--popover-foreground': tokens.popoverForeground,
+    '--muted': tokens.muted,
+    '--muted-foreground': tokens.mutedForeground,
+    '--border': tokens.border,
+    '--input': tokens.input,
+    '--input-border': tokens.inputBorder,
+    '--success': tokens.success,
+    '--warning': tokens.warning,
+    '--danger': tokens.danger,
+    '--info': tokens.info,
+    '--primary': tokens.primary,
+    '--primary-foreground': tokens.primaryForeground,
+    '--accent': tokens.accent,
+    '--accent-foreground': tokens.accentForeground,
+    '--accent-soft': tokens.accentSoft,
+    '--ring': tokens.ring,
+    '--sidebar': tokens.sidebar,
+    '--sidebar-end': tokens.sidebarEnd,
+    '--sidebar-foreground': tokens.sidebarForeground,
+    '--sidebar-muted': tokens.sidebarMuted,
+    '--sidebar-active': tokens.sidebarActive,
+    '--sidebar-active-foreground': tokens.sidebarActiveForeground,
+    '--brand-orange': tokens.brandOrange,
+    '--hero-start': tokens.heroStart,
+    '--hero-mid': tokens.heroMid,
+    '--hero-end': tokens.heroEnd,
+    '--win': tokens.win,
+    '--win-bg': tokens.winBg,
+    '--loss': tokens.loss,
+    '--loss-bg': tokens.lossBg,
+    '--draw': tokens.draw,
+    '--draw-bg': tokens.drawBg,
+    '--low-sample': tokens.lowSample,
+    '--low-sample-bg': tokens.lowSampleBg,
+    '--cock': tokens.cock,
+    '--cock-bg': tokens.cockBg,
+    '--hen': tokens.hen,
+    '--hen-bg': tokens.henBg,
+  };
+}
+
+export const STRAIN_COLORS: Record<string, string> = {
+  Lemon: '#D97706',
+  Sweater: '#B91C1C',
+  Hatch: '#CA8A04',
+  Roundhead: '#9A3412',
+  Kelso: '#0F766E',
+  'Black Butcher': '#1F2937',
+  'Black Breasted Red': '#7C2D12',
+  Wheaten: '#B45309',
+  White: '#64748B',
+  Grey: '#475569',
+  Gray: '#475569',
+  Unknown: '#78716C',
+};
+
+const STRAIN_FALLBACK = ['#D97706', '#B91C1C', '#CA8A04', '#9A3412', '#0F766E', '#7C3AED'];
+
+export function strainColor(name: string): string {
+  const trimmed = (name || 'Unknown').trim();
+  const known = Object.keys(STRAIN_COLORS).find((key) => key.toLowerCase() === trimmed.toLowerCase());
+  if (known) return STRAIN_COLORS[known];
+  let hash = 0;
+  for (let i = 0; i < trimmed.length; i += 1) hash = (hash * 31 + trimmed.charCodeAt(i)) >>> 0;
+  return STRAIN_FALLBACK[hash % STRAIN_FALLBACK.length];
+}
