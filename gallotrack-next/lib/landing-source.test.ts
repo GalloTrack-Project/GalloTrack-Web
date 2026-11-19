@@ -8,12 +8,17 @@ import { hil } from '@/lib/i18n/hil';
 const root = process.cwd();
 const landingFiles = [
   'app/page.tsx',
+  'app/about/page.tsx',
   'lib/hero-config.ts',
   'components/hero/HeroCarousel.tsx',
   ...fs
     .readdirSync(path.join(root, 'components/landing'))
     .filter((file) => file.endsWith('.tsx') && !file.endsWith('.test.tsx'))
     .map((file) => `components/landing/${file}`),
+  ...fs
+    .readdirSync(path.join(root, 'components/about'))
+    .filter((file) => file.endsWith('.tsx') && !file.endsWith('.test.tsx'))
+    .map((file) => `components/about/${file}`),
 ];
 
 describe('Landing page source rules', () => {

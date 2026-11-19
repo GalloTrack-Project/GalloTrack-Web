@@ -43,6 +43,7 @@ describe('Auth Routing & Redirect Flow Integration Tests', () => {
       expect(PUBLIC_PATHS.has('/login')).toBe(true);
       expect(PUBLIC_PATHS.has('/register')).toBe(true);
       expect(PUBLIC_PATHS.has('/')).toBe(true);
+      expect(PUBLIC_PATHS.has('/about')).toBe(true);
     });
 
     it('allows an unauthenticated visitor to reach /login on the first click without 307 bounce to /', async () => {
@@ -145,6 +146,21 @@ describe('Auth Routing & Redirect Flow Integration Tests', () => {
       const response = await proxy(shareReq);
       expect(response.status).toBe(200);
       expect(mockGetUser).not.toHaveBeenCalled();
+    });
+
+    it('allows visitors and authenticated users to browse the public About page', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error('No session') });
+      const guest = await proxy(new NextRequest('https://gallotrack.vercel.app/about'));
+      expect(guest.status).not.toBe(307);
+      expect(guest.headers.get('location')).toBeNull();
+
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: 'user-123', email: 'breeder@farm.ph' } },
+        error: null,
+      });
+      const member = await proxy(new NextRequest('https://gallotrack.vercel.app/about'));
+      expect(member.status).not.toBe(307);
+      expect(member.headers.get('location')).toBeNull();
     });
 
     it('allows both visitors and authenticated users to browse the public landing page /', async () => {

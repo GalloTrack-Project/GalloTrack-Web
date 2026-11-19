@@ -7,7 +7,7 @@ import { BUILD_SHA } from '@/lib/build-info';
 import Logo from '@/components/brand/Logo';
 import { useT } from '@/lib/i18n';
 
-export default function Footer() {
+export default function Footer({ linkPrefix = '' }: { linkPrefix?: '' | '/' }) {
   const t = useT();
   const currentYear = new Date().getFullYear();
 
@@ -41,23 +41,23 @@ export default function Footer() {
 
           <div className="text-muted-foreground flex flex-wrap items-center gap-5 text-xs font-bold">
             <a
-              href="#features"
+              href={`${linkPrefix}#features`}
               className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('landing.features')}
             </a>
             <a
-              href="#how-it-works"
+              href={`${linkPrefix}#how-it-works`}
               className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('landing.howItWorks')}
             </a>
-            <a
-              href="#about"
+            <Link
+              href="/about"
               className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('landing.about')}
-            </a>
+            </Link>
             <Link
               href="/login"
               className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"

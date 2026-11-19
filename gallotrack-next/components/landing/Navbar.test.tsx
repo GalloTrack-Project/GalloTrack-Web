@@ -60,7 +60,7 @@ describe('Landing header', () => {
       'href',
       '#how-it-works',
     );
-    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '#about');
+    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '/about');
     expect(screen.getByRole('button', { name: /Change language/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Switch to light mode/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^Log in$/i })).toHaveAttribute('href', '/login');
@@ -156,6 +156,19 @@ describe('Landing header', () => {
     expect(screen.getByRole('link', { name: 'How it works' })).toHaveAttribute(
       'href',
       '/#how-it-works',
+    );
+    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '/about');
+  });
+
+  it('marks About as the current page on the About route', () => {
+    render(<LandingNavbar linkPrefix="/" activePage="about" />);
+
+    const about = screen.getByRole('link', { name: 'About' });
+    expect(about).toHaveAttribute('aria-current', 'page');
+    expect(about).toHaveClass('text-brand-red');
+    expect(screen.getByRole('link', { name: 'Features' })).toHaveAttribute(
+      'href',
+      '/#features',
     );
   });
 });
