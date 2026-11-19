@@ -780,21 +780,22 @@ export const tl: AppTranslations = {
       'Subaybayan ang stage changes, milestone reminders, at farm activity sa malinaw na notifications.',
     capabilityNotificationsHighlight: 'Milestones at Updates',
     workflowEyebrow: 'Daloy ng Gawain',
+    workflowBadge: 'SIMPLE • SMART • MAKAPANGYARIHAN',
     workflowTitle: 'Paano Gumagana ang GalloTrack',
     workflowDescription:
       'Maayos na proseso mula sa pagpaparehistro ng breeder hanggang sa match logs at win rate tracking.',
     stepRegisterTitle: 'Irehistro ang Iyong Breeders',
     stepRegisterDesc:
-      'I-enroll ang aktibong sires (Breeding Males na may numeric IDs) at dams (Breeding Females na may letter IDs) kasama ang bloodlines, wing bands, at physical traits.',
+      'I-enroll ang aktibong sires (Breeding Roosters) at dams (Hens) at itago ang kanilang detalye. Punuin ng breed na gagamitin sa pagpapalahi, kasama ang mga larawan at physical traits.',
     stepOffspringTitle: 'Subaybayan ang Offspring at Lineage',
     stepOffspringDesc:
-      'Itala ang bagong clutches at magbigay ng structured offspring codes (hal. 1A1) habang awtomatikong kinukwenta ang bloodline composition percentages.',
+      'Itala ang mga bagong chicks at magbigay ng structured offspring codes para mapanatiling tumpak ang lineage at pedigree information.',
     stepMatchesTitle: 'Itala ang Match Logs',
     stepMatchesDesc:
-      'Itala ang laban kasama ang detalye ng kalaban, arena, resulta (Win/Loss/Draw), at condition pagkatapos ng laban.',
+      'Itala ang mga laban kasama ang detalye ng kalaban, lokasyon ng arena, resulta ng laban, at i-link sa performance ng iyong mga manok.',
     stepReviewTitle: 'Suriin ang Performance at Insights',
     stepReviewDesc:
-      'Tingnan ang individual at pairing win rates, subaybayan ang battle-tested offspring, at gumawa ng mas maayos na breeding pairings.',
+      'Suriin ang individual at pairing win rates, subaybayan ang health records, at bantayan ang breeding outcomes sa detalyadong reports.',
     aboutBadge: 'Academic Capstone Project',
     aboutTitle: 'Tungkol sa GalloTrack',
     aboutDescription:

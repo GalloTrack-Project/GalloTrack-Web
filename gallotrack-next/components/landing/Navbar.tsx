@@ -3,7 +3,17 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react';
+import {
+  ArrowRight,
+  Home,
+  Info,
+  Menu,
+  Moon,
+  Route,
+  Sun,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import Logo from '@/components/brand/Logo';
@@ -16,12 +26,13 @@ type LandingNavbarProps = {
 type NavItem = {
   id: string;
   labelKey: TranslationKey;
+  icon: typeof Home;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'features', labelKey: 'landing.features' },
-  { id: 'how-it-works', labelKey: 'landing.howItWorks' },
-  { id: 'about', labelKey: 'landing.about' },
+  { id: 'features', labelKey: 'landing.features', icon: Home },
+  { id: 'how-it-works', labelKey: 'landing.howItWorks', icon: Route },
+  { id: 'about', labelKey: 'landing.about', icon: Info },
 ];
 
 export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
@@ -155,7 +166,7 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
         <Link
           href="/login"
           onClick={closeMobileMenu}
-          className={`border-border bg-card/80 text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 items-center justify-center rounded-md border px-4 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+          className={`border-border bg-card/80 text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
             fullWidth ? 'w-full' : ''
           }`}
         >
@@ -164,10 +175,11 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
         <Link
           href="/register"
           onClick={closeMobileMenu}
-          className={`bg-gradient-to-r from-sidebar to-sidebar-end text-sidebar-foreground focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-black shadow-md transition-colors hover:from-hero-mid hover:to-sidebar focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+          className={`from-sidebar to-sidebar-active text-sidebar-foreground focus-visible:ring-ring focus-visible:ring-offset-background hover:from-sidebar-end inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r px-4 text-sm font-black shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
             fullWidth ? 'w-full' : ''
           }`}
         >
+          <UserPlus className="h-4 w-4" aria-hidden="true" />
           {t('landing.signUp')}
         </Link>
       </div>
@@ -175,7 +187,7 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
 
   return (
     <>
-      <header className="border-border/80 bg-background/85 sticky top-0 z-50 w-full border-b backdrop-blur-md">
+      <header className="border-border/80 bg-background/85 sticky top-0 z-50 w-full border-b shadow-sm backdrop-blur-md">
       <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
         <Link
           href="/"
@@ -195,22 +207,26 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
           </span>
         </Link>
 
-        <nav aria-label={t('landing.navAria')} className="hidden items-center gap-7 lg:flex">
+        <nav aria-label={t('landing.navAria')} className="hidden items-center gap-2 lg:flex">
           {NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
+            const Icon = item.icon;
             return (
               <a
                 key={item.id}
                 href={anchorHref(item.id)}
                 aria-current={isActive ? 'location' : undefined}
-                className={`focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex min-h-11 items-center rounded-sm text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none ${
-                  isActive ? 'text-brand-red' : 'text-muted-foreground hover:text-foreground'
+                className={`focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none ${
+                  isActive
+                    ? 'bg-accent-soft text-brand-red'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                 }`}
               >
+                <Icon className="h-4 w-4" aria-hidden="true" />
                 {t(item.labelKey)}
                 <span
                   aria-hidden="true"
-                  className={`bg-brand-red absolute right-0 bottom-1 left-0 h-0.5 rounded-full transition-opacity motion-reduce:transition-none ${
+                  className={`bg-brand-red absolute right-3 bottom-0 left-3 h-0.5 rounded-full transition-opacity motion-reduce:transition-none ${
                     isActive ? 'opacity-100' : 'opacity-0'
                   }`}
                 />
@@ -221,6 +237,7 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
 
         <div className="hidden items-center gap-2.5 md:flex lg:gap-3">
           <CompactLanguageSwitcher />
+          <span aria-hidden="true" className="bg-border h-6 w-px" />
           {mounted && themeButton()}
           {authActions()}
         </div>
@@ -273,16 +290,26 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
             </div>
 
             <nav aria-label={t('landing.mobileNavAria')} className="flex flex-col gap-1 p-4">
-              {NAV_ITEMS.map((item) => (
-                <a
-                  key={item.id}
-                  href={anchorHref(item.id)}
-                  onClick={closeMobileMenu}
-                  className="text-foreground hover:bg-muted focus-visible:ring-ring flex min-h-11 items-center rounded-md px-3 text-base font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none"
-                >
-                  {t(item.labelKey)}
-                </a>
-              ))}
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeSection === item.id;
+                return (
+                  <a
+                    key={item.id}
+                    href={anchorHref(item.id)}
+                    onClick={closeMobileMenu}
+                    aria-current={isActive ? 'location' : undefined}
+                    className={`focus-visible:ring-ring flex min-h-11 items-center gap-2 rounded-full px-3 text-base font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none ${
+                      isActive
+                        ? 'bg-accent-soft text-brand-red'
+                        : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {t(item.labelKey)}
+                  </a>
+                );
+              })}
             </nav>
 
             <div className="border-border mt-auto space-y-3 border-t p-4">

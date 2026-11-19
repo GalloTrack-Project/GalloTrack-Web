@@ -780,21 +780,22 @@ export const hil: AppTranslations = {
       'Subaybayan ang stage changes, milestone reminders, kag farm activity paagi sa maathag nga notifications.',
     capabilityNotificationsHighlight: 'Milestones kag Updates',
     workflowEyebrow: 'Dagay sang Buluhaton',
+    workflowBadge: 'SIMPLE • SMART • GAMHANAN',
     workflowTitle: 'Paano Nagagana ang GalloTrack',
     workflowDescription:
       'Organisado nga proseso halin sa pagparehistro sang breeder tubtob sa match logs kag win rate tracking.',
     stepRegisterTitle: 'Ilista ang Imo mga Breeder',
     stepRegisterDesc:
-      'I-enroll ang aktibo nga sires (Breeding Males nga may numeric IDs) kag dams (Breeding Females nga may letter IDs) upod ang bloodlines, wing bands, kag physical traits.',
+      'I-enroll ang aktibo nga sires (Breeding Roosters) kag dams (Hens) kag tipigi ang ila mga detalye. Butangi sang breed nga gamiton sa pagpaliwat, upod ang mga larawan kag physical traits.',
     stepOffspringTitle: 'Subaybayan ang Offspring kag Lineage',
     stepOffspringDesc:
-      'Irekord ang bag-o nga clutches kag maghatag sang structured offspring codes (hal. 1A1) samtang awtomatiko nga ginakuwenta ang bloodline composition percentages.',
+      'Irekord ang mga bag-o nga chicks kag maghatag sang structured offspring codes agud husto ang lineage kag pedigree information.',
     stepMatchesTitle: 'Irekord ang Match Logs',
     stepMatchesDesc:
-      'Irekord ang hampang upod ang detalye sang kuntra, arena, resulta (Win/Loss/Draw), kag condition pagkatapos sang hampang.',
+      'Irekord ang mga hampang upod ang detalye sang kuntra, lokasyon sang arena, resulta sang hampang, kag i-link sa performance sang imo mga manok.',
     stepReviewTitle: 'Usisaon ang Performance kag Insights',
     stepReviewDesc:
-      'Tan-awon ang individual kag pairing win rates, subaybayan ang battle-tested offspring, kag maghimo sang mas maayo nga breeding pairings.',
+      'Usisaon ang individual kag pairing win rates, subaybayan ang health records, kag bantayan ang breeding outcomes paagi sa detalyado nga reports.',
     aboutBadge: 'Academic Capstone Project',
     aboutTitle: 'Parte sang GalloTrack',
     aboutDescription:
