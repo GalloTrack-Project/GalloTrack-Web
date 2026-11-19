@@ -1,141 +1,277 @@
 'use client';
+
 import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler } from 'chart.js';
-import { getAgeLabel, isMale, isFemale, formatColorDisplay } from '@/lib/helpers';
-import { formatBirdCodeForDisplay } from '@/lib/bird-code';
-import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
-import { useFowl } from '@/lib/contexts/fowl-context';
-import { useUI } from '@/lib/contexts/ui-context';
-import { useNotificationUnreadCount } from '@/lib/contexts/notification-context';
-import { nextMilestoneLabel } from '@/lib/notifications/format';
-import { selectUpcomingMilestoneCard } from '@/lib/milestone-card';
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Tooltip,
+} from 'chart.js';
+import { Doughnut, Line } from 'react-chartjs-2';
+import {
+  CalendarClock,
+  Dna,
+  PieChart,
+  Eye,
+  EyeOff,
+  Plus,
+  Swords,
+  Star,
+  Trophy,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
+import ChickenIcon from '@/components/ChickenIcon';
+import ChickenPhoto from '@/components/ChickenPhoto';
+import DateRangePicker from '@/components/DateRangePicker';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
 import BreedingPairPerformanceAnalytics from '@/components/BreedingPairPerformanceAnalytics';
-import { LayoutDashboard, Trophy, Zap, Calendar, Dna, TrendingUp, PieChart, Search, Download, Printer, ChevronDown } from 'lucide-react';
-import ChickenIcon from '@/components/ChickenIcon';
-import DateRangePicker from '@/components/DateRangePicker';
-import { downloadCsv, printReport } from '@/lib/report-export';
+import { useFowl } from '@/lib/contexts/fowl-context';
+import { useUI } from '@/lib/contexts/ui-context';
+import { useAuthOptional } from '@/lib/contexts/auth-context';
+import { formatDate, useT } from '@/lib/i18n';
+import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { canFight, formatColorDisplay, isFemale, isMale } from '@/lib/helpers';
+import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
+import { selectUpcomingMilestoneCard } from '@/lib/milestone-card';
+import { getPrimaryHeroImage } from '@/lib/hero-config';
 import { classifyFlock, getBreedingClassification } from '@/lib/breeding-classification';
-import { useT } from '@/lib/i18n';
+import { downloadCsv, printReport } from '@/lib/report-export';
+import type { FowlRecord } from '@/lib/types';
+import { strainColor } from '@/lib/theme/heritage';
 import {
-  DASHBOARD_KPI_CAPTION,
   DASHBOARD_KPI_CARD,
+  DASHBOARD_KPI_CAPTION,
   DASHBOARD_KPI_LABEL,
-  DASHBOARD_KPI_SEX_ROW,
-  DASHBOARD_KPI_STAT_GRID,
-  DASHBOARD_KPI_STAT_VALUE,
   DASHBOARD_KPI_VALUE,
 } from '@/lib/dashboard-kpi';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler);
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Filler,
+);
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+function initials(name: string): string {
+  const parts = (name || '?').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
 
-function TrendChip({ up, label }: { up: boolean; label: string }) {
-  if (!up) {
-    return <span className="text-sm font-bold text-muted-foreground">{label}</span>;
-  }
-  return (
-    <span className="inline-flex items-center gap-1 text-sm font-bold text-success bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
-      {label}
-    </span>
-  );
+function strainName(label: string): string {
+  return label.replace(/\s+Cross$/i, '').trim();
+}
+
+function plainPhoto(fowl?: FowlRecord | null) {
+  return Boolean(fowl?.image_url || fowl?.photo_path || fowl?.photo_thumb_path);
 }
 
 export default function DashboardPage() {
-  const { t } = useT();
+  const t = useT();
   const fowl = useFowl();
   const ui = useUI();
-  const unreadNotificationCount = useNotificationUnreadCount();
+  const auth = useAuthOptional();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const chart = useChartTokens(resolvedTheme);
 
   const {
-    fowls, matchHistory, pairingAnalytics, activeFowls, registryCounts,
-    monthLabels, matchesByMonth, activeSpark, trendWinRate,
-    upcomingMilestones, crossbreedChartData, winRatePct, winsCount, lossesCount,
-    dateRangeLabel, dateRangeOpen, setDateRangeOpen,
-    dateRangePreset, setDateRangePreset,
-    dateRangeCustom, setDateRangeCustom,
-    fetchDatabaseResources, loading,
+    fowls,
+    matchHistory,
+    pairingAnalytics,
+    activeFowls,
+    registryCounts,
+    monthLabels,
+    activeSpark,
+    trendWinRate,
+    matchesByMonth,
+    upcomingMilestones,
+    crossbreedChartData,
+    winRatePct,
+    winsCount,
+    lossesCount,
+    dateRangeLabel,
+    dateRangeOpen,
+    setDateRangeOpen,
+    dateRangePreset,
+    setDateRangePreset,
+    dateRangeCustom,
+    setDateRangeCustom,
+    fetchDatabaseResources,
     birdCodes,
   } = fowl;
 
-  const [reportsMenuOpen, setReportsMenuOpen] = React.useState(false);
-  const [selectedCrossbreedIndex, setSelectedCrossbreedIndex] = React.useState<number | null>(null);
+  const [heroHidden, setHeroHidden] = React.useState(false);
+  const [heroImageFailed, setHeroImageFailed] = React.useState(false);
+  const heroStorageKey = `gt_heritage_hero_hidden_${auth?.currentUserId || 'guest'}`;
 
-  const crossbreedItems = crossbreedChartData.labels.map((label, i) => ({
-    label,
-    share: crossbreedChartData.data[i] ?? 0,
-    winRate: crossbreedChartData.winRates[i] ?? 0,
-    wins: crossbreedChartData.wins[i] ?? 0,
-    losses: crossbreedChartData.losses[i] ?? 0,
-    total: crossbreedChartData.totals[i] ?? 0,
-    color: chart.series[i % chart.series.length],
-  }));
-  const selectedCrossbreed =
-    selectedCrossbreedIndex !== null ? crossbreedItems[selectedCrossbreedIndex] ?? null : null;
+  React.useEffect(() => {
+    try {
+      setHeroHidden(window.localStorage.getItem(heroStorageKey) === '1');
+    } catch {
+      setHeroHidden(false);
+    }
+  }, [heroStorageKey]);
+
+  const toggleHero = () => {
+    setHeroHidden((hidden) => {
+      const next = !hidden;
+      try {
+        window.localStorage.setItem(heroStorageKey, next ? '1' : '0');
+      } catch {
+        /* localStorage can be unavailable */
+      }
+      return next;
+    });
+  };
 
   const navigate = (page: string, subTab?: string) => {
     if (subTab) ui.setProfilingSubTab(subTab as never);
     router.push(`/${page}`);
   };
+  const drawsCount = React.useMemo(
+    () =>
+      matchHistory.filter((match) => (match.outcome || '').toLowerCase() === 'draw').length,
+    [matchHistory],
+  );
+  const decidedCount = winsCount + lossesCount;
+  const lowSample = decidedCount > 0 && decidedCount < 3;
 
-  // Sex split counts cover the whole living roster, so drill into the full
-  // inventory ('all') — the 'active' tab is now the narrower Active Breeders herd.
-  const navigateToInventoryWithSex = (gender: 'male' | 'female') => {
-    ui.setInventoryGenderFilter(gender);
-    ui.setInventoryStatusFilter('all');
-    router.push('/catalog');
-  };
+  const bloodlineCount = React.useMemo(() => {
+    const names = new Set<string>();
+    activeFowls.forEach((bird) => {
+      (bird.breed || '')
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .forEach((name) => names.add(name));
+    });
+    return names.size;
+  }, [activeFowls]);
 
-  const navigateToInventoryWithStatus = (status: 'all' | 'active' | 'archived' | 'deceased') => {
-    ui.setInventoryStatusFilter(status);
-    ui.setInventoryGenderFilter('all');
-    router.push('/catalog');
-  };
+  const welcomeName =
+    (auth?.adminName || '').trim().split(/\s+/)[0] ||
+    (auth?.username || '').trim().split('@')[0] ||
+    'Farmer';
 
-  const activityCounts = React.useMemo(() => {
-    const now = new Date();
-    const curYear = now.getFullYear();
-    const curMonth = now.getMonth();
-    const nowMs = now.getTime();
-
-    const isWithinThisMonth = (value?: string) => {
-      if (!value) return false;
-      const d = new Date(value);
-      return !isNaN(d.getTime()) && d.getFullYear() === curYear && d.getMonth() === curMonth;
-    };
-    const isWithinThisWeek = (value?: string) => {
-      if (!value) return false;
-      const t = new Date(value).getTime();
-      return !isNaN(t) && nowMs - t < WEEK_MS;
-    };
-    return {
-      activeNewThisMonth: activeFowls.filter((f) => isWithinThisMonth(f.created_at)).length,
-      matchesThisWeek: matchHistory.filter((m) => isWithinThisWeek(m.date)).length,
-    };
-  }, [activeFowls, matchHistory]);
-  const { activeNewThisMonth, matchesThisWeek } = activityCounts;
   const milestoneCard = selectUpcomingMilestoneCard(upcomingMilestones);
-  const soonMilestones = milestoneCard.visible;
+  const visibleMilestones = milestoneCard.visible.slice(0, 4);
 
-  const matchColumns = ['Date', 'Our Chicken', 'Opponent', 'Breed', 'Opponent Breed', 'Event', 'Outcome', 'Location', 'Post-Fight Condition', 'Notes'];
+  const topStrains = React.useMemo(() => {
+    const strainMap = new Map<string, { count: number; males: number; females: number }>();
+    activeFowls.forEach((bird) => {
+      (bird.breed || 'Unspecified')
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .forEach((name) => {
+          const current = strainMap.get(name) || { count: 0, males: 0, females: 0 };
+          current.count += 1;
+          if (isMale(bird.gender)) current.males += 1;
+          else if (isFemale(bird.gender)) current.females += 1;
+          strainMap.set(name, current);
+        });
+    });
+    return Array.from(strainMap.entries())
+      .sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))
+      .slice(0, 6);
+  }, [activeFowls]);
+
+  const strainPhoto = React.useMemo(() => {
+    const map = new Map<string, FowlRecord>();
+    topStrains.forEach(([strain]) => {
+      const match = activeFowls.find((bird) =>
+        (bird.breed || '')
+          .split(',')
+          .map((name) => name.trim().toLowerCase())
+          .includes(strain.toLowerCase()),
+      );
+      if (match) map.set(strain, match);
+    });
+    return map;
+  }, [activeFowls, topStrains]);
+
+  const trendPointCount = React.useMemo(
+    () =>
+      monthLabels.filter((_, index) => activeSpark[index] > 0 || matchesByMonth[index] > 0)
+        .length,
+    [activeSpark, matchesByMonth, monthLabels],
+  );
+
+  const recentCockMatches = React.useMemo(() => {
+    const fowlById = new Map(fowls.map((bird) => [bird.id, bird]));
+    return matchHistory
+      .filter((match) => {
+        if (match.fowl_id == null) return true;
+        const bird = fowlById.get(Number(match.fowl_id));
+        return !bird || canFight(bird);
+      })
+      .slice()
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .slice(0, 5);
+  }, [fowls, matchHistory]);
+
+  const unlinkedCount = React.useMemo(
+    () => recentCockMatches.filter((match) => match.fowl_id == null).length,
+    [recentCockMatches],
+  );
+
+  const crossbreedItems = crossbreedChartData.labels.map((label, index) => ({
+    label,
+    name: strainName(label),
+    share: crossbreedChartData.data[index] ?? 0,
+    winRate: crossbreedChartData.winRates[index] ?? 0,
+    wins: crossbreedChartData.wins[index] ?? 0,
+    losses: crossbreedChartData.losses[index] ?? 0,
+    total: crossbreedChartData.totals[index] ?? 0,
+    color: strainColor(strainName(label)),
+  }));
+
+  const matchColumns = [
+    'Date',
+    'Our Chicken',
+    'Opponent',
+    'Breed',
+    'Opponent Breed',
+    'Event',
+    'Outcome',
+    'Location',
+    'Post-Fight Condition',
+    'Notes',
+  ];
   const matchRows = React.useMemo(
     () =>
-      matchHistory.map((m) => [
-        m.date, m.entry_name, m.opponent, m.breed, m.opponent_breed,
-        [m.event_type, m.type, m.age_category].filter(Boolean).join(' · '), m.outcome, m.location,
-        m.post_fight_condition, [m.side, m.notes].filter(Boolean).join(' · '),
+      matchHistory.map((match) => [
+        match.date,
+        match.entry_name,
+        match.opponent,
+        match.breed,
+        match.opponent_breed,
+        [match.event_type, match.type, match.age_category].filter(Boolean).join(' · '),
+        match.outcome,
+        match.location,
+        match.post_fight_condition,
+        [match.side, match.notes].filter(Boolean).join(' · '),
       ]),
     [matchHistory],
   );
-
   const registryColumns = [
     'Bird Code',
     'Name',
@@ -155,58 +291,43 @@ export default function DashboardPage() {
   ];
   const registryRows = React.useMemo(() => {
     const classMap = classifyFlock(fowls);
-    return fowls.map((f) => {
-      const classification = classMap.get(String(f.id)) ?? getBreedingClassification(f, fowls);
-      const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : f.breed;
+    return fowls.map((bird) => {
+      const classification =
+        classMap.get(String(bird.id)) ?? getBreedingClassification(bird, fowls);
+      const displayBreed =
+        classification.type === 'Crossbred' ? classification.derivedBreed : bird.breed;
       const compositionBasis =
         classification.compositionSource === 'declared'
           ? 'Declared'
           : classification.compositionSource === 'adjusted'
-          ? 'Adjusted'
-          : classification.compositionSource === 'assumed'
-          ? 'Assumed'
-          : 'Derived';
-      const featherColor = formatColorDisplay(f.feather_color || f.color, f.color_category);
-      const trait = f.trait || f.behavior_trait || '—';
+            ? 'Adjusted'
+            : classification.compositionSource === 'assumed'
+              ? 'Assumed'
+              : 'Derived';
       return [
-        formatBirdCodeForDisplay(birdCodes.get(String(f.id)) || f.bird_code || ''),
-        f.name,
-        f.gender,
+        formatBirdCodeForDisplay(birdCodes.get(String(bird.id)) || bird.bird_code || ''),
+        bird.name,
+        bird.gender,
         displayBreed,
-        featherColor,
-        trait,
-        f.birthdate,
-        f.age,
-        f.status,
-        f.weight,
-        f.height,
-        f.sire,
-        f.dam,
+        formatColorDisplay(bird.feather_color || bird.color, bird.color_category),
+        bird.trait || bird.behavior_trait || '—',
+        bird.birthdate,
+        bird.age,
+        bird.status,
+        bird.weight,
+        bird.height,
+        bird.sire,
+        bird.dam,
         classification.purityPct,
         compositionBasis,
       ];
     });
-  }, [fowls, birdCodes]);
+  }, [birdCodes, fowls]);
 
-  const topStrains = React.useMemo(() => {
-    const strainMap = new Map<string, { count: number; males: number; females: number }>();
-    activeFowls.forEach((f) => {
-      const strains = (f.breed || 'Unspecified').split(',').map(s => s.trim()).filter(Boolean);
-      strains.forEach((strain) => {
-        const existing = strainMap.get(strain) || { count: 0, males: 0, females: 0 };
-        existing.count++;
-        if (isMale(f.gender)) existing.males++;
-        else if (isFemale(f.gender)) existing.females++;
-        strainMap.set(strain, existing);
-      });
-    });
-    return Array.from(strainMap.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 5);
-  }, [activeFowls]);
-
-  const exportMatchesCsv = () => downloadCsv('gallotrack-match-history', [matchColumns, ...matchRows]);
-  const exportRegistryCsv = () => downloadCsv('gallotrack-fowl-registry', [registryColumns, ...registryRows]);
+  const exportMatchesCsv = () =>
+    downloadCsv('gallotrack-match-history', [matchColumns, ...matchRows]);
+  const exportRegistryCsv = () =>
+    downloadCsv('gallotrack-fowl-registry', [registryColumns, ...registryRows]);
   const printPerformanceReport = () =>
     printReport({
       title: 'GalloTrack Performance Report',
@@ -215,10 +336,16 @@ export default function DashboardPage() {
         {
           heading: 'Performance Metrics',
           fields: [
-            { label: 'Overall (all time)', value: winsCount + lossesCount > 0 ? `${winRatePct}%` : '—' },
-            { label: 'Record', value: `${winsCount}W – ${lossesCount}L` },
+            {
+              label: 'Overall (all time)',
+              value: decidedCount > 0 ? `${winRatePct}%` : '—',
+            },
+            { label: 'Record', value: `${winsCount}W - ${lossesCount}L - ${drawsCount}D` },
             { label: 'Matches logged', value: String(matchHistory.length) },
-            { label: 'Active registry', value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} offspring | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)` },
+            {
+              label: 'Active registry',
+              value: `${registryCounts.total} active (${registryCounts.breedingMales} breeding males · ${registryCounts.breedingFemales} breeding females · ${registryCounts.nonBreeding} offspring | ${registryCounts.maleSex} male · ${registryCounts.femaleSex} female)`,
+            },
           ],
         },
         {
@@ -239,10 +366,10 @@ export default function DashboardPage() {
           heading: 'Monthly Activity',
           table: {
             columns: ['Month', 'Matches', 'Win rate %'],
-            rows: monthLabels.map((l, i) => [
-              l,
-              matchesByMonth[i],
-              trendWinRate[i] ?? 'No matches',
+            rows: monthLabels.map((label, index) => [
+              label,
+              matchesByMonth[index],
+              trendWinRate[index] ?? 'No matches',
             ]),
           },
         },
@@ -250,541 +377,332 @@ export default function DashboardPage() {
       ],
     });
 
+  const actionRef = React.useRef<(action: string) => void>(() => {});
+
+  React.useEffect(() => {
+    actionRef.current = (action) => {
+      if (action === 'matches') exportMatchesCsv();
+      else if (action === 'registry') exportRegistryCsv();
+      else if (action === 'print') printPerformanceReport();
+      else if (action === 'sync') void fetchDatabaseResources();
+    };
+  });
+
+  React.useEffect(() => {
+    const handler = (event: Event) => {
+      actionRef.current((event as CustomEvent<string>).detail);
+    };
+    window.addEventListener('gt-dashboard-action', handler);
+    return () => window.removeEventListener('gt-dashboard-action', handler);
+  }, []);
+
+  const heroImage = getPrimaryHeroImage();
+
   return (
-    <div className="space-y-6 animate-fadeIn">
-
-      {/* HEADER CARDS */}
-      <div className="rounded-lg border border-border bg-card/70 p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-inner"><LayoutDashboard className="w-5 h-5 text-success" /></div>
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-card-foreground tracking-tight">Chicken Farm Dashboard</h1>
-            <p className="text-sm text-muted-foreground font-semibold mt-1">Registry, match results, milestones, and bloodline performance of your chickens</p>
-          </div>
-        </div>
-        {/* HEADER ACTIONS: DATE RANGE PICKER & DASHBOARD REPORTS */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <DateRangePicker
-            label={dateRangeLabel}
-            preset={dateRangePreset}
-            custom={dateRangeCustom}
-            open={dateRangeOpen}
-            onOpenChange={setDateRangeOpen}
-            onApply={(p, c) => { setDateRangePreset(p); setDateRangeCustom(c); }}
-          />
-
-          {/* DEDICATED REPORTS & EXPORTS MENU */}
-          <div className="relative">
-            {reportsMenuOpen && (
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setReportsMenuOpen(false)}
-                aria-hidden="true"
-              />
-            )}
-            <button
-              type="button"
-              onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-card border border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/40 shadow-2xs transition-colors cursor-pointer"
-              aria-label="Export reports and data"
-              aria-expanded={reportsMenuOpen}
-            >
-              <Download className="w-4 h-4 text-emerald-600" />
-              <span>Export & Reports</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${reportsMenuOpen ? "rotate-180" : ""}`} />
-            </button>
-
-            {reportsMenuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 mt-2 z-50 w-56 rounded-xl bg-white dark:bg-card border border-slate-200/90 dark:border-border shadow-xl p-1.5 space-y-0.5"
-              >
-                <div className="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Data Exports
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setReportsMenuOpen(false); exportMatchesCsv(); }}
-                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
-                >
-                  <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Export matches (CSV)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setReportsMenuOpen(false); exportRegistryCsv(); }}
-                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
-                >
-                  <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Export registry (CSV)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setReportsMenuOpen(false); printPerformanceReport(); }}
-                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
-                >
-                  <Printer className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span>Print report</span>
-                </button>
-
-                <div className="h-px bg-slate-100 dark:bg-border my-1" />
-
-                <button
-                  type="button"
-                  onClick={() => { setReportsMenuOpen(false); fetchDatabaseResources(); }}
-                  disabled={loading}
-                  className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer flex items-center gap-2.5"
-                >
-                  <span className={`text-xs ${loading ? "animate-spin" : ""}`}>↻</span>
-                  <span>{loading ? "Syncing..." : "Sync Data"}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="min-w-0 space-y-5 animate-fadeIn">
+      <p className="sr-only">{t('nav.dashboard')}</p>
+      <div className="flex justify-start lg:hidden">
+        <DateRangePicker
+          label={dateRangeLabel}
+          preset={dateRangePreset}
+          custom={dateRangeCustom}
+          open={dateRangeOpen}
+          onOpenChange={setDateRangeOpen}
+          onApply={(preset, custom) => {
+            setDateRangePreset(preset);
+            setDateRangeCustom(custom);
+          }}
+        />
       </div>
-
-      {/* TOP METRICS ROW — 4 CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-
-        {/* ACTIVE FOWL REGISTRY */}
-        <div className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden`}>
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-t-lg"></div>
-          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
-            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title={t('dashboard.registryCardLabel')}>{t('dashboard.registryCardLabel')}</span>
-            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"><ChickenIcon className="w-4 h-4 text-white" /></div>
-          </div>
-          {/* Main Total: 29 Active chickens (tooltip: Cocks + Hens + Total Offspring) */}
-          <div className="flex min-w-0 flex-col gap-1 mt-1">
-            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-              <button
-                type="button"
-                onClick={() => navigate('profiling', 'males')}
-                className={`${DASHBOARD_KPI_VALUE} text-left font-black text-card-foreground tracking-tight hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer`}
-                title="Cocks + Hens + Total Offspring"
-                aria-label={`${registryCounts.total} Active chickens. Cocks + Hens + Total Offspring. Click to view Chicken Registry`}
-              >
-                {registryCounts.total}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('profiling', 'males')}
-                className={`${DASHBOARD_KPI_LABEL} text-left font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer`}
-                title={t('dashboard.activeChickens')}
-                aria-label={`${t('dashboard.activeChickens')}: ${t('dashboard.cocks')} + ${t('dashboard.hens')} + ${t('dashboard.totalOffspring')}`}
-              >
-                {t('dashboard.activeChickens')}
-              </button>
-            </div>
-
-            {/* Whole Flock secondary line: 31 total · 1 archived · 1 deceased (links to Inventory status filters) */}
-            <div className={`${DASHBOARD_KPI_CAPTION} flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-muted-foreground font-semibold`}>
-              <button
-                type="button"
-                onClick={() => navigateToInventoryWithStatus('all')}
-                className="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition-colors cursor-pointer"
-                title="View all chickens in Chicken Inventory"
-                aria-label={`View all ${registryCounts.flockTotal} chickens in Chicken Inventory`}
-              >
-                {registryCounts.flockTotal} total
-              </button>
-              <span className="text-muted-foreground/40 font-normal">·</span>
-              <button
-                type="button"
-                onClick={() => navigateToInventoryWithStatus('archived')}
-                className="hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors cursor-pointer"
-                title="View archived chickens in Chicken Inventory"
-                aria-label={`View ${registryCounts.archived} archived chickens in Chicken Inventory`}
-              >
-                {registryCounts.archived} archived
-              </button>
-              <span className="text-muted-foreground/40 font-normal">·</span>
-              <button
-                type="button"
-                onClick={() => navigateToInventoryWithStatus('deceased')}
-                className="hover:text-rose-600 dark:hover:text-rose-400 hover:underline transition-colors cursor-pointer"
-                title="View deceased chickens in Chicken Inventory"
-                aria-label={`View ${registryCounts.deceased} deceased chickens in Chicken Inventory`}
-              >
-                {registryCounts.deceased} deceased
-              </button>
+      <section
+        aria-label={`${t('heritage.welcomeBack')} ${welcomeName}`}
+        className={`from-hero-start via-hero-mid to-hero-end relative overflow-hidden rounded-2xl bg-gradient-to-r shadow-xl ${
+          heroHidden ? 'min-h-12' : ''
+        }`}
+      >
+        <div
+          hidden={heroHidden}
+          className="relative z-10 grid min-h-[12rem] gap-4 p-5 sm:min-h-[13rem] sm:p-7 lg:grid-cols-[1fr_38%] lg:items-center"
+        >
+          <div className="min-w-0">
+            <p className="text-white/85 text-sm font-black tracking-wide">
+              {t('heritage.welcomeBack')}, {welcomeName}
+            </p>
+            <h2 className="mt-1 max-w-2xl text-3xl leading-tight font-black text-white sm:text-4xl">
+              {t('heritage.heroTitle')}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm font-semibold text-white/85 sm:text-base">
+              {t('heritage.heroDescription')}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/30 bg-black/20 px-3 text-xs font-black text-white">
+                <ChickenIcon className="text-hero-start h-4 w-4" />
+                {t('heritage.registeredChickens', { count: registryCounts.flockTotal })}
+              </span>
+              <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/30 bg-black/20 px-3 text-xs font-black text-white">
+                <span className="text-brand-orange h-3.5 w-3.5 rounded-full border-2 border-current" />
+                {t('heritage.bloodlines', { count: bloodlineCount })}
+              </span>
             </div>
           </div>
-
-          {/* Role Breakdown (Matches Chicken Registry tabs) */}
-          <div className={DASHBOARD_KPI_STAT_GRID}>
-            <button
-              type="button"
-              onClick={() => navigate('profiling', 'males')}
-              className="flex min-w-0 flex-col items-center justify-center gap-1 p-2 text-center rounded-md bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 dark:border-sky-500/30 hover:bg-sky-500/20 dark:hover:bg-sky-500/25 hover:border-sky-500/40 transition-all cursor-pointer group/m"
-              title={`${t('dashboard.cocks')}: ${registryCounts.breedingMales}`}
-              aria-label={`${t('dashboard.cocks')}: ${registryCounts.breedingMales}`}
-            >
-              <p className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-sky-700 dark:text-sky-300`}>{registryCounts.breedingMales}</p>
-              <p className={`${DASHBOARD_KPI_LABEL} font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 group-hover/m:underline`} title={t('dashboard.cocks')}>{t('dashboard.cocks')}</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('profiling', 'females')}
-              className="flex min-w-0 flex-col items-center justify-center gap-1 p-2 text-center rounded-md bg-pink-500/10 dark:bg-pink-500/15 border border-pink-500/20 dark:border-pink-500/30 hover:bg-pink-500/20 dark:hover:bg-pink-500/25 hover:border-pink-500/40 transition-all cursor-pointer group/f"
-              title={`${t('dashboard.hens')}: ${registryCounts.breedingFemales}`}
-              aria-label={`${t('dashboard.hens')}: ${registryCounts.breedingFemales}`}
-            >
-              <p className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-pink-700 dark:text-pink-300`}>{registryCounts.breedingFemales}</p>
-              <p className={`${DASHBOARD_KPI_LABEL} font-black uppercase tracking-wider text-pink-700 dark:text-pink-300 group-hover/f:underline`} title={t('dashboard.hens')}>{t('dashboard.hens')}</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('profiling', 'offspring')}
-              className="flex min-w-0 flex-col items-center justify-center p-2 text-center rounded-md bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 dark:border-amber-500/30 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/40 transition-all cursor-pointer group/nb"
-              title={`${t('dashboard.totalOffspring')}: ${registryCounts.nonBreeding}. ${t('dashboard.totalOffspringTooltip')}`}
-              aria-label={`${t('dashboard.totalOffspring')}: ${registryCounts.nonBreeding}`}
-            >
-              <p className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-amber-700 dark:text-amber-300`}>{registryCounts.nonBreeding}</p>
-              <p className={`${DASHBOARD_KPI_LABEL} mt-1 font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 group-hover/nb:underline`} title={`${t('dashboard.totalOffspring')}. ${t('dashboard.totalOffspringTooltip')}`}>{t('dashboard.totalOffspring')}</p>
-            </button>
-          </div>
-
-          {/* Sex Split (Clearly labeled as sex, links to Inventory with sex filter applied) */}
-          <div className={`${DASHBOARD_KPI_SEX_ROW} text-xs font-bold text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-2.5 py-1.5`}>
-            <span className={`${DASHBOARD_KPI_LABEL} uppercase tracking-wider font-extrabold text-muted-foreground/90`} title={t('dashboard.bySex')}>{t('dashboard.bySex')}</span>
-            <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-              <button
-                type="button"
-                onClick={() => navigateToInventoryWithSex('male')}
-                className="inline-flex min-w-0 cursor-pointer items-center gap-1 font-bold transition-colors hover:text-info hover:underline"
-                title="View male chickens in Inventory"
-                aria-label={`Filter inventory by ${registryCounts.maleSex} male chickens`}
-              >
-                <ChickenIcon className="w-3 h-3 shrink-0 text-info" />
-                <span className="break-words">{registryCounts.maleSex} male</span>
-              </button>
-              <span className="font-normal text-muted-foreground/40">·</span>
-              <button
-                type="button"
-                onClick={() => navigateToInventoryWithSex('female')}
-                className="inline-flex min-w-0 cursor-pointer items-center gap-1 font-bold transition-colors hover:text-pink hover:underline"
-                title="View female chickens in Inventory"
-                aria-label={`Filter inventory by ${registryCounts.femaleSex} female chickens`}
-              >
-                <ChickenIcon className="w-3 h-3 shrink-0 text-pink" />
-                <span className="break-words">{registryCounts.femaleSex} female</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="h-12 -mx-1">
-            {activeFowls.length > 0 ? (
-              <Line
-                data={{
-                  labels: monthLabels,
-                  datasets: [{ data: activeSpark, borderColor: chart.success, backgroundColor: withAlpha(chart.success, 0.14), fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
-                }}
-                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
+          <div className="relative hidden h-48 min-w-0 lg:block">
+            {!heroImageFailed ? (
+              <Image
+                src={heroImage.src}
+                alt={heroImage.alt}
+                fill
+                priority
+                sizes="(min-width: 1024px) 440px, 0px"
+                className="rounded-2xl object-cover"
+                onError={() => setHeroImageFailed(true)}
               />
             ) : (
-              <div className="text-sm font-bold text-muted-foreground pt-2">No active chickens yet</div>
+              <div className="flex h-full items-center justify-center rounded-2xl bg-black/15">
+                <img src="/brand/logo-mark.svg" alt="" className="h-32 w-32 opacity-40" />
+              </div>
             )}
+            <div className="from-hero-start/50 pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r via-transparent to-transparent" />
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
-            <TrendChip
-              up={activeNewThisMonth > 0}
-              label={`${activeNewThisMonth} added this month`}
-            />
-            <span
-              className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full px-2 py-0.5 font-bold uppercase tracking-widest ${
-                activeNewThisMonth > 0
-                  ? 'text-success bg-emerald-500/10'
-                  : 'text-muted-foreground bg-muted/60 border border-border/50'
-              }`}
-            >
-              Registered
+        </div>
+        <button
+          type="button"
+          onClick={toggleHero}
+          aria-label={heroHidden ? t('heritage.showBanner') : t('heritage.hideBanner')}
+          className="absolute top-3 right-3 z-20 inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-white/30 bg-black/20 px-2.5 text-xs font-black text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+        >
+          {heroHidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+          {heroHidden ? t('heritage.show') : t('heritage.hide')}
+        </button>
+        {heroHidden && (
+          <div className="border-card/20 bg-card text-muted-foreground flex min-h-12 items-center border-t px-4 text-xs font-semibold">
+            {t('heritage.showBanner')}
+          </div>
+        )}
+      </section>
+
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          icon={<ChickenIcon className="h-5 w-5" />}
+          label={t('dashboard.registryCardLabel')}
+          value={registryCounts.flockTotal}
+          caption={`${registryCounts.total} ${t('domain.statusActive').toLowerCase()} · ${registryCounts.archived} ${t('domain.statusArchived').toLowerCase()} · ${registryCounts.deceased} ${t('domain.statusDeceased').toLowerCase()}`}
+          watermark={<ChickenIcon className="h-28 w-28" />}
+          onClick={() => navigate('profiling', 'males')}
+        />
+        <KpiCard
+          icon={<Trophy className="h-5 w-5" />}
+          label={t('dashboard.totalMatchesLogged')}
+          value={matchHistory.length}
+          caption={t('heritage.matchRecords', { count: matchHistory.length })}
+          watermark={<Trophy className="h-28 w-28" />}
+          tone="orange"
+          onClick={() => navigate('profiling', 'matchForm')}
+        />
+        <KpiCard
+          icon={<Star className="h-5 w-5" />}
+          label={t('dashboard.overallWinRate')}
+          value={decidedCount > 0 ? `${winRatePct}%` : '—%'}
+          caption={`${winsCount}W - ${lossesCount}L - ${drawsCount}D`}
+          badge={
+            lowSample
+              ? decidedCount === 1
+                ? t('heritage.oneMatch')
+                : t('heritage.lowSample')
+              : undefined
+          }
+          watermark={<Star className="h-28 w-28" />}
+          tone="gold"
+          onClick={() => ui.setShowPerFowlBreakdownModal(true)}
+        />
+        <div className={`${DASHBOARD_KPI_CARD} border-border bg-card flex min-h-full min-w-0 flex-col rounded-2xl border p-5 shadow-sm`}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className={`${DASHBOARD_KPI_LABEL} text-muted-foreground font-black tracking-wider uppercase`}>
+              {t('heritage.quickActions')}
+            </span>
+            <span className="bg-accent-soft text-accent flex h-10 w-10 items-center justify-center rounded-full">
+              <Zap className="h-5 w-5" aria-hidden="true" />
             </span>
           </div>
-        </div>
-
-        {/* TOTAL MATCHES LOGGED */}
-        <div className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden`}>
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-t-lg"></div>
-          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
-            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title={t('dashboard.totalMatchesLogged')}>{t('dashboard.totalMatchesLogged')}</span>
-            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20"><Trophy className="w-4 h-4 text-white" /></div>
-          </div>
-          <div className={`${DASHBOARD_KPI_VALUE} mt-1 font-black text-card-foreground tracking-tight`}>{matchHistory.length}</div>
-          <div className="h-12 -mx-1">
-            {matchHistory.length > 0 ? (
-              <Bar
-                data={{
-                  labels: monthLabels,
-                  datasets: [{ data: matchesByMonth, backgroundColor: chart.info, borderRadius: 4, maxBarThickness: 14 }],
-                }}
-                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0 } } }}
-              />
-            ) : (
-              <div className="text-sm font-bold text-muted-foreground pt-2">No matches logged yet</div>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
-            <TrendChip up={matchesThisWeek > 0} label={matchesThisWeek > 0 ? `${matchesThisWeek} this week` : 'No change'} />
-            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full bg-indigo-500/10 px-2 py-0.5 font-bold uppercase tracking-widest text-indigo`}>Logged</span>
-          </div>
-        </div>
-
-        {/* OVERALL WIN RATE */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label={`Overall (all time): ${winsCount + lossesCount > 0 ? `${winRatePct}%` : 'No fights'}, ${winsCount}W ${lossesCount}L. Click to view win rate breakdown by chicken`}
-          onClick={() => ui.setShowPerFowlBreakdownModal(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              ui.setShowPerFowlBreakdownModal(true);
-            }
-          }}
-          className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400/60 cursor-pointer transition-all duration-300 overflow-hidden focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500`}
-        >
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 to-teal-400 rounded-t-lg"></div>
-          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
-            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title={t('dashboard.overallWinRate')}>{t('dashboard.overallWinRate')}</span>
-            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-center font-black text-success`}>{winsCount}W · {lossesCount}L</span>
-          </div>
-          <div className={`${DASHBOARD_KPI_VALUE} mt-1 font-black text-success tracking-tight`}>
-            {winsCount + lossesCount > 0 ? `${winRatePct}%` : '—'}
-          </div>
-          <p className={`${DASHBOARD_KPI_CAPTION} -mt-1.5 font-semibold text-muted-foreground`}>
-            Wins ÷ (wins + losses) — draws are excluded
-          </p>
-          <div className="h-12 -mx-1">
-            {matchHistory.length > 0 ? (
-              <Line
-                data={{
-                  labels: monthLabels,
-                  datasets: [{ data: trendWinRate, borderColor: chart.success, backgroundColor: withAlpha(chart.success, 0.16), fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }],
-                }}
-                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } } }}
-              />
-            ) : (
-              <div className="text-sm font-bold text-muted-foreground pt-2">No matches logged yet</div>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className={`${DASHBOARD_KPI_CAPTION} font-extrabold text-success`}>Win trend</span>
+          <div className="flex flex-1 flex-col justify-center gap-2">
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                ui.setShowPerFowlBreakdownModal(true);
-              }}
-              className="text-sm font-black text-muted-foreground group-hover:text-success transition-colors flex items-center gap-1 cursor-pointer focus:outline-hidden hover:underline"
-              aria-label="View win rate breakdown by chicken"
-            >
-              <Search className="w-3 h-3" /> Breakdown
-            </button>
-          </div>
-        </div>
-
-        {/* QUICK ACTIONS */}
-        <div className={`${DASHBOARD_KPI_CARD} group relative bg-card rounded-lg border border-border shadow-sm p-5 flex flex-col gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden`}>
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400 rounded-t-lg"></div>
-          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
-            <span className={`${DASHBOARD_KPI_LABEL} font-bold text-muted-foreground uppercase tracking-wider`} title="Quick Actions">Quick Actions</span>
-            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20"><Zap className="w-4 h-4 text-white" /></div>
-          </div>
-          <div className="space-y-2 mt-1">
-            <button
               onClick={() => navigate('profiling', 'form')}
-              className="w-full min-w-0 text-left bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="border-accent/25 bg-accent-soft text-accent hover:border-accent flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-sm font-black"
             >
-              <p className="break-words text-sm font-extrabold text-success group-hover/btn:text-success">+ Register New Chicken</p>
-              <p className="break-words text-sm text-success/70 font-semibold mt-0.5">Add to your roster</p>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t('heritage.registerChicken')}
             </button>
             <button
+              type="button"
               onClick={() => navigate('profiling', 'matchForm')}
-              className="w-full min-w-0 text-left bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-md px-3.5 py-3 transition-all cursor-pointer group/btn"
+              className="border-border bg-muted text-foreground hover:bg-accent-soft hover:border-accent/30 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-sm font-black"
             >
-              <p className="break-words text-sm font-extrabold text-indigo group-hover/btn:text-indigo">+ Log Match Result</p>
-              <p className="break-words text-sm text-indigo/70 font-semibold mt-0.5">Record fight outcome</p>
+              <Swords className="h-4 w-4" aria-hidden="true" />
+              {t('heritage.logMatch')}
             </button>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
-            <span className={`${DASHBOARD_KPI_CAPTION} font-extrabold text-muted-foreground`}>Start here</span>
-            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full bg-violet-500/10 px-2 py-0.5 font-bold uppercase tracking-widest text-violet`}>Actions</span>
           </div>
         </div>
       </div>
 
-      {/* MILESTONES & BLOODLINE ROW — 2 CARDS */}
-      {upcomingMilestones.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-          {/* DEVELOPMENT CALENDAR & UPCOMING MILESTONES */}
-          <div className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col`}>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="w-9 h-9 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-success" /></span>
-                <div className="min-w-0">
-                  <h2 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title={t('dashboard.upcomingMilestones')}>{t('dashboard.upcomingMilestones')}</h2>
-                  <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>
-                    {milestoneCard.totalSoon > 0
-                      ? t('dashboard.inNext30Days', { count: milestoneCard.totalSoon })
-                      : t('dashboard.noUpcoming30Days')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {unreadNotificationCount > 0 && (
-                  <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 font-black text-rose-600 dark:text-rose-300`}>
-                    {unreadNotificationCount} unread
-                  </span>
-                )}
-                <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-mono font-black text-success`}>AUTO</span>
-              </div>
-            </div>
-            <div className="space-y-2 flex-1">
-              {soonMilestones.length === 0 ? (
-                <p className="text-muted-foreground py-6 text-center text-sm font-semibold">
-                  {t('dashboard.noUpcoming30Days')}
-                </p>
-              ) : (
-                soonMilestones.slice(0, 5).map(({ fowl, info }) => {
-                  const soon = info.next !== null && info.next.daysUntil >= 0;
-                  const code = formatBirdCodeForDisplay(
-                    birdCodes.get(String(fowl.id)) || fowl.bird_code || fowl.chicken_code || '',
-                  );
-                  return (
-                    <div
-                      key={fowl.id}
-                      className={`flex flex-wrap items-center gap-3 rounded-md border p-3 transition-all ${
-                        soon
-                          ? 'border-emerald-500/20 bg-emerald-500/10'
-                          : 'border-border bg-muted/50'
-                      }`}
-                    >
-                      <span className="border-border bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border">
-                        <ChickenIcon className="h-5 w-5" aria-hidden="true" />
+      <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-12">
+        <section className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 shadow-sm sm:p-5 lg:col-span-5">
+          <SectionHeader
+            icon={<CalendarClock className="h-4 w-4" />}
+            title={t('dashboard.upcomingMilestones')}
+            subtitle={
+              milestoneCard.totalSoon > 0
+                ? t('dashboard.inNext30Days', { count: milestoneCard.totalSoon })
+                : t('heritage.noMilestones')
+            }
+            action={
+              <Link href="/milestones" className="text-accent min-h-11 text-xs font-black uppercase hover:underline">
+                {t('heritage.viewAll')}
+              </Link>
+            }
+          />
+          <div className="mt-3 flex-1 space-y-2">
+            {visibleMilestones.length === 0 ? (
+              <p className="text-muted-foreground py-8 text-center text-sm font-semibold">
+                {t('heritage.noMilestones')}
+              </p>
+            ) : (
+              visibleMilestones.map(({ fowl: bird, info }) => {
+                const code = birdCodes.get(String(bird.id)) || bird.bird_code || bird.chicken_code || '';
+                const next = info.next;
+                return (
+                  <div key={bird.id} className="border-border bg-muted/35 flex min-w-0 items-center gap-3 rounded-xl border p-2.5">
+                    <ChickenPhoto
+                      name={bird.name}
+                      code={code}
+                      imageUrl={bird.image_url}
+                      photoPath={bird.photo_path}
+                      photoThumbPath={bird.photo_thumb_path}
+                      size={40}
+                      shape="square"
+                      interactive={false}
+                      showLightbox={false}
+                      fallback={<span className="text-muted-foreground font-mono text-xs font-black">{initials(bird.name)}</span>}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-card-foreground break-words text-sm font-black">{bird.name}</p>
+                      <p className="text-muted-foreground break-words text-xs font-semibold">
+                        {next ? t('heritage.becomesStage', { stage: next.stage }) : t('notifications.fullyMature')}
+                      </p>
+                    </div>
+                    {next && (
+                      <span className="border-accent/20 bg-accent-soft text-accent shrink-0 rounded-full border px-2 py-1 text-xs font-black">
+                        {formatDate(next.date, t.language, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-card-foreground text-sm font-black break-words" title={fowl.name}>
-                          {fowl.name}
-                          {code && (
-                            <span className="ml-1.5 inline-flex max-w-full items-center break-words rounded-sm border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-black uppercase text-emerald-700 dark:text-emerald-300">
-                              {code}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-muted-foreground text-sm font-semibold break-words">
-                          {info.current?.stage || 'Chick'} · Age {getAgeLabel(info.parts)}
-                        </p>
-                      </div>
-                      <div className="min-w-0 text-right">
-                        <p className="text-sm font-black break-words text-emerald-700 dark:text-emerald-300">
-                          {nextMilestoneLabel(info.next, t)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => router.push('/milestones')}
-              className="mt-3 w-full text-center text-sm font-bold text-success hover:text-success hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md py-2 transition-all cursor-pointer"
-            >
-              View All Milestones →
-            </button>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
+        </section>
 
-          {/* BLOODLINE OVERVIEW */}
-          <div className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col`}>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4 mb-4">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="w-9 h-9 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"><Dna className="w-4 h-4 text-teal" /></span>
-                <div className="min-w-0">
-                  <h3 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title={t('dashboard.bloodlineOverview')}>{t('dashboard.bloodlineOverview')}</h3>
-                  <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>{activeFowls.length} active chickens across all strains</p>
-                </div>
-              </div>
-              <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-teal-500/20 bg-teal-500/10 px-2.5 py-1 font-mono font-black text-teal`}>LIVE</span>
-            </div>
-            <div className="space-y-2 flex-1">
-              {(() => {
-                if (topStrains.length === 0) return <p className="text-sm text-muted-foreground font-semibold text-center py-4">No strain data yet.</p>;
-                const maxCount = topStrains[0][1].count;
-                return topStrains.map(([strain, data]) => (
-                  <div key={strain} className="min-w-0 rounded-md border border-border bg-muted/50 px-3 py-2.5">
-                    <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                      <span className="break-words text-sm font-black text-card-foreground">{strain}</span>
-                      <span className="break-words text-sm font-bold text-teal">{data.count} chicken{data.count !== 1 ? 's' : ''}</span>
+        <section className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 shadow-sm sm:p-5 lg:col-span-4">
+          <SectionHeader
+            icon={<Dna className="h-4 w-4" aria-hidden="true" />}
+            title={t('heritage.bloodlineOverview')}
+            subtitle={t('heritage.bloodlineSubtitle')}
+            action={
+              <Link href="/lineage" className="text-accent min-h-11 text-xs font-black uppercase hover:underline">
+                {t('heritage.viewDetails')}
+              </Link>
+            }
+          />
+          <div className="mt-3 grid min-w-0 grid-cols-2 gap-2.5">
+            {topStrains.length === 0 ? (
+              <p className="text-muted-foreground col-span-2 py-8 text-center text-sm font-semibold">
+                {t('heritage.noBloodlines')}
+              </p>
+            ) : (
+              topStrains.slice(0, 4).map(([strain, data]) => {
+                const photo = strainPhoto.get(strain);
+                return (
+                  <div key={strain} className="border-border bg-muted/25 min-w-0 overflow-hidden rounded-xl border">
+                    <div className="relative h-20 w-full bg-muted">
+                      {photo && plainPhoto(photo) ? (
+                        <ChickenPhoto
+                          name={photo.name}
+                          code={birdCodes.get(String(photo.id)) || photo.bird_code || photo.chicken_code || ''}
+                          imageUrl={photo.image_url}
+                          photoPath={photo.photo_path}
+                          photoThumbPath={photo.photo_thumb_path}
+                          size={80}
+                          shape="square"
+                          interactive={false}
+                          showLightbox={false}
+                          className="h-20 w-full rounded-none"
+                          imgClassName="object-cover"
+                          fallback={<span className="text-muted-foreground font-mono text-lg font-black">{initials(strain)}</span>}
+                        />
+                      ) : (
+                        <span className="text-muted-foreground flex h-full items-center justify-center font-mono text-lg font-black">
+                          {initials(strain)}
+                        </span>
+                      )}
                     </div>
-                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all" style={{ width: `${(data.count / maxCount) * 100}%` }}></div>
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="flex min-w-0 items-center gap-1 text-xs font-bold text-info"><ChickenIcon className="w-3 h-3 shrink-0" /> <span className="break-words">{data.males} male</span></span>
-                      <span className="flex min-w-0 items-center gap-1 text-xs font-bold text-pink"><ChickenIcon className="w-3 h-3 shrink-0" /> <span className="break-words">{data.females} female</span></span>
+                    <div className="min-w-0 border-t-4 p-2.5" style={{ borderTopColor: strainColor(strain) }}>
+                      <p className="text-card-foreground break-words text-sm font-black">{strain}</p>
+                      <p className="text-muted-foreground text-xs font-semibold">
+                        {t('heritage.strainChickenCount', { count: data.count })}
+                      </p>
                     </div>
                   </div>
-                ));
-              })()}
-            </div>
-            <button
-              type="button"
-              onClick={() => router.push('/lineage')}
-              className="mt-3 w-full text-center text-sm font-bold text-teal hover:text-teal hover:bg-teal-500/10 border border-teal-500/20 rounded-md py-2 transition-all cursor-pointer"
-            >
-              View Full Lineage →
-            </button>
+                );
+              })
+            )}
           </div>
-        </div>
-      )}
+        </section>
 
-      {/* MIDDLE CHARTS ROW — 2 EQUAL CARDS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* GAMEFOWL POPULATION & PERFORMANCE TRENDS */}
-        <div className="bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-            <div>
-              <h3 className="text-sm font-black text-card-foreground tracking-tight">Chicken Population & Performance Trends (Last 6 Months)</h3>
-              <p className="text-sm text-muted-foreground font-semibold mt-0.5">Population growth versus empirical win-rate trajectory across the last six months</p>
+        <section className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 shadow-sm sm:p-5 lg:col-span-3">
+          <SectionHeader
+            icon={<TrendingUp className="h-4 w-4" />}
+            title={t('heritage.populationPerformance')}
+            subtitle={t('heritage.populationPerformanceSubtitle')}
+          />
+          {trendPointCount < 4 ? (
+            <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+              <TrendingUp className="text-muted-foreground mb-2 h-8 w-8" aria-hidden="true" />
+              <p className="text-card-foreground text-sm font-black">{t('heritage.trendNotEnough')}</p>
+              <p className="text-muted-foreground mt-1 text-xs font-semibold">
+                {t('heritage.trendNotEnoughDesc')}
+              </p>
             </div>
-            <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-success"></span>Population</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded border-t-2 border-dashed border-info bg-transparent"></span>Win Rate %</span>
-            </div>
-          </div>
-          {fowls.length > 0 || matchHistory.length > 0 ? (
-            <div className="w-full flex-1 min-h-72 my-4">
+          ) : (
+            <div className="mt-3 min-h-56 flex-1">
               <Line
+                aria-label={`${t('heritage.populationPerformance')}. ${t('heritage.populationPerformanceSubtitle')}.`}
                 data={{
                   labels: monthLabels,
                   datasets: [
                     {
-                      label: 'Population',
+                      label: t('heritage.totalPopulation'),
                       data: activeSpark,
                       borderColor: chart.success,
                       backgroundColor: withAlpha(chart.success, 0.16),
                       fill: true,
                       borderWidth: 2.5,
                       pointRadius: 3,
-                      pointBackgroundColor: chart.success,
-                      tension: 0.4,
-                      yAxisID: 'y',
+                      tension: 0.35,
                     },
                     {
-                      label: 'Win Rate %',
+                      label: t('heritage.winRateTrend'),
                       data: trendWinRate,
-                      borderColor: chart.info,
-                      backgroundColor: withAlpha(chart.info, 0.06),
+                      borderColor: chart.warning,
+                      backgroundColor: withAlpha(chart.warning, 0.06),
                       fill: false,
-                      spanGaps: false,
                       borderWidth: 2,
-                      borderDash: [6, 5],
+                      borderDash: [5, 4],
                       pointRadius: 3,
-                      pointBackgroundColor: chart.info,
-                      tension: 0.4,
+                      spanGaps: false,
+                      tension: 0.35,
                       yAxisID: 'y1',
                     },
                   ],
@@ -792,211 +710,239 @@ export default function DashboardPage() {
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
-                  layout: { padding: { right: 12 } },
                   interaction: { mode: 'index', intersect: false },
                   plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (ctx) => {
-                          if (ctx.dataset.label === 'Win Rate %') {
-                            const matches = matchesByMonth[ctx.dataIndex] ?? 0;
-                            return matches > 0
-                              ? ` Win Rate: ${ctx.formattedValue}%`
-                              : ' Win Rate: No matches';
-                          }
-                          return ` Population: ${ctx.formattedValue}`;
-                        },
-                      },
-                      backgroundColor: chart.card,
-                      titleColor: chart.foreground,
-                      bodyColor: chart.foreground,
-                      borderColor: chart.border,
-                      borderWidth: 1,
-                      titleFont: { size: 11, weight: 'bold' },
-                      bodyFont: { size: 11 },
-                      padding: 10,
-                      cornerRadius: 8,
-                    },
+                    legend: { display: true, labels: { boxWidth: 10, boxHeight: 10, color: chart.foreground, font: { size: 10, weight: 'bold' } } },
+                    tooltip: { backgroundColor: chart.card, titleColor: chart.foreground, bodyColor: chart.foreground, borderColor: chart.border, borderWidth: 1 },
                   },
                   scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: chart.mutedForeground } },
-                    y: { min: 0, grid: { color: withAlpha(chart.mutedForeground, 0.2) }, ticks: { font: { size: 10, weight: 'bold' }, color: chart.mutedForeground }, title: { display: true, text: 'Population', font: { size: 9, weight: 'bold' }, color: chart.mutedForeground } },
-                    y1: { min: 0, max: 100, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10, weight: 'bold' }, color: chart.info, callback: (v) => `${v}%` }, title: { display: true, text: 'Win Rate', font: { size: 9, weight: 'bold' }, color: chart.mutedForeground } },
+                    x: {
+                      grid: { display: false },
+                      ticks: { color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
+                      title: { display: true, text: t('heritage.month'), color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
+                    },
+                    y: {
+                      beginAtZero: true,
+                      grid: { color: withAlpha(chart.mutedForeground, 0.2) },
+                      ticks: { color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
+                      title: { display: true, text: t('heritage.totalPopulation'), color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
+                    },
+                    y1: {
+                      beginAtZero: true,
+                      max: 100,
+                      position: 'right',
+                      grid: { drawOnChartArea: false },
+                      ticks: { color: chart.warning, callback: (value) => `${value}%`, font: { size: 10, weight: 'bold' } },
+                      title: { display: true, text: t('heritage.winRateTrend'), color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
+                    },
                   },
                 }}
               />
-            </div>
-          ) : (
-            <div className="my-auto flex flex-col items-center justify-center text-center p-10 space-y-2">
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"><TrendingUp className="w-5 h-5" /></div>
-              <p className="text-sm font-extrabold text-muted-foreground">No data available</p>
-              <p className="text-sm text-muted-foreground max-w-[220px]">Encode chickens and log matches to visualize population and performance trends.</p>
+              <table className="sr-only">
+                <caption>{t('heritage.populationPerformance')}</caption>
+                <thead><tr><th>{t('heritage.date')}</th><th>{t('heritage.totalPopulation')}</th><th>{t('heritage.winRateTrend')}</th></tr></thead>
+                <tbody>
+                  {monthLabels.map((label, index) => (
+                    <tr key={label}><td>{label}</td><td>{activeSpark[index]}</td><td>{trendWinRate[index] == null ? '—' : `${trendWinRate[index]}%`}</td></tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
-        </div>
+        </section>
+      </div>
 
-        {/* BLOODLINE WIN RATIOS */}
-        <div className={`${DASHBOARD_KPI_CARD} bg-card rounded-lg border border-border shadow-sm p-5 sm:p-6 flex flex-col`}>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-            <div className="min-w-0">
-              <h3 className={`${DASHBOARD_KPI_LABEL} font-black text-card-foreground tracking-tight`} title="Bloodline Win Ratios">Bloodline Win Ratios</h3>
-              <p className={`${DASHBOARD_KPI_CAPTION} mt-0.5 font-semibold text-muted-foreground`}>Win share by primary genetic strain</p>
-            </div>
-            <span className={`${DASHBOARD_KPI_CAPTION} max-w-full whitespace-normal rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono font-black text-success`}>GENETIC</span>
-          </div>
+      <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12">
+        <section className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 shadow-sm sm:p-5 xl:col-span-4">
+          <SectionHeader
+            icon={<PieChart className="h-4 w-4" aria-hidden="true" />}
+            title={t('heritage.bloodlineWinRatios')}
+            subtitle={t('heritage.bloodlineWinSubtitle')}
+          />
           {crossbreedChartData.hasData ? (
             <>
-              <div className="relative mx-auto my-4 h-52 w-52 sm:h-56 sm:w-56">
+              <div className="relative mx-auto my-3 h-44 w-44">
                 <Doughnut
+                  aria-label={t('heritage.bloodlineWinRatios')}
                   data={{
-                    labels: crossbreedItems.map((item) => item.label),
+                    labels: crossbreedItems.map((item) => item.name),
                     datasets: [{
                       data: crossbreedItems.map((item) => item.share),
                       backgroundColor: crossbreedItems.map((item) => item.color),
-                      borderWidth: 3,
                       borderColor: chart.card,
-                      hoverOffset: 6,
+                      borderWidth: 3,
+                      hoverOffset: 4,
                     }],
                   }}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '68%',
-                    onClick: (_event, elements) => {
-                      if (elements.length > 0) {
-                        const index = elements[0].index;
-                        setSelectedCrossbreedIndex((current) => (current === index ? null : index));
-                      }
-                    },
+                    cutout: '70%',
                     plugins: {
                       legend: { display: false },
                       tooltip: {
                         callbacks: {
-                          title: (items) => crossbreedItems[items[0]?.dataIndex ?? -1]?.label ?? '',
-                          label: (ctx) => {
-                            const item = crossbreedItems[ctx.dataIndex];
-                            if (!item) return '';
-                            return [
-                              ` ${item.wins}W · ${item.losses}L · ${item.total} matches`,
-                              ` ${item.winRate}% win rate`,
-                              ` ${item.share}% of total wins`,
-                            ];
+                          label: (context) => {
+                            const item = crossbreedItems[context.dataIndex];
+                            return item
+                              ? `${item.name}: ${item.share}% ${t('heritage.winShare').toLowerCase()} · ${item.wins}W-${item.losses}L`
+                              : '';
                           },
                         },
-                        backgroundColor: chart.card,
-                        titleColor: chart.foreground,
-                        bodyColor: chart.foreground,
-                        borderColor: chart.border,
-                        borderWidth: 1,
-                        padding: 10,
-                        cornerRadius: 8,
                       },
                     },
                   }}
                 />
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className={`${DASHBOARD_KPI_STAT_VALUE} font-black text-success`}>
-                    {winsCount + lossesCount > 0 ? `${winRatePct}%` : '—'}
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-card-foreground text-xl font-black">
+                    {decidedCount > 0 ? `${winRatePct}%` : '—%'}
                   </span>
-                  <span className={`${DASHBOARD_KPI_CAPTION} font-semibold uppercase tracking-wider text-muted-foreground`}>Win Rate</span>
+                  <span className="text-muted-foreground text-xs font-black tracking-wider uppercase">
+                    {t('heritage.winRateTrend')}
+                  </span>
                 </div>
               </div>
-              <div className="mx-auto w-full max-w-sm">
-                <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2 text-[0.625rem] font-black uppercase tracking-wider text-muted-foreground">
-                  <span>Strain</span>
-                  <span>Share · Win rate</span>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {crossbreedItems.map((item, i) => {
-                    const isSelected = selectedCrossbreedIndex === i;
-                    return (
-                      <li key={item.label}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedCrossbreedIndex((current) => (current === i ? null : i))}
-                          aria-pressed={isSelected}
-                          aria-label={`${item.label}: ${item.wins} wins, ${item.losses} losses, ${item.total} matches, ${item.winRate}% win rate, ${item.share}% of total wins`}
-                          title={`${item.wins}W · ${item.losses}L · ${item.total} matches · ${item.winRate}% win rate · ${item.share}% of total wins`}
-                          className={`flex w-full min-w-0 flex-wrap cursor-pointer items-center gap-x-2 gap-y-1 rounded-md border px-2.5 py-1.5 text-left text-sm font-medium transition-colors ${
-                            isSelected
-                              ? 'border-emerald-500/40 bg-emerald-500/10 text-foreground'
-                              : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted/60'
-                          }`}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span className="min-w-0 flex-1 break-words" title={item.label}>{item.label}</span>
-                          <span className="shrink-0 font-black text-foreground">{item.share}%</span>
-                          <span className="shrink-0 text-[0.6875rem] font-bold text-muted-foreground">{item.winRate}% WR</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {selectedCrossbreed && (
-                  <div className="mt-3 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="min-w-0 break-words text-sm font-black text-card-foreground">{selectedCrossbreed.label}</p>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedCrossbreedIndex(null)}
-                        className="cursor-pointer text-[0.6875rem] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                    <p className="mt-0.5 break-words text-xs font-bold text-foreground">
-                      {selectedCrossbreed.wins}W · {selectedCrossbreed.losses}L · {selectedCrossbreed.total} matches
-                    </p>
-                    <p className="break-words text-[0.6875rem] font-semibold text-muted-foreground">
-                      {selectedCrossbreed.winRate}% win rate · {selectedCrossbreed.share}% of total wins
-                    </p>
-                  </div>
-                )}
-              </div>
-              <p className="mt-3 text-center text-sm font-semibold text-muted-foreground">
-                Based on {matchHistory.length} total {matchHistory.length === 1 ? 'match' : 'matches'} · click a strain for exact W-L
+              <ul className="space-y-1.5">
+                {crossbreedItems.map((item) => {
+                  const decided = item.wins + item.losses;
+                  return (
+                    <li key={item.label} className="flex min-w-0 items-center gap-2 text-xs font-semibold">
+                      <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="text-foreground min-w-0 flex-1 break-words">{item.name}</span>
+                      <span className="text-muted-foreground shrink-0 tabular-nums">
+                        {decided > 0 ? `${item.share}%` : '—'}
+                      </span>
+                      <span className="text-muted-foreground shrink-0 tabular-nums">
+                        {decided > 0
+                          ? `${item.winRate}% · ${t('heritage.fights', { count: item.total })}`
+                          : t('heritage.noFights')}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="text-muted-foreground mt-3 text-center text-xs font-semibold">
+                {t('heritage.smallSampleNote')}
               </p>
             </>
           ) : (
-            <div className="my-auto flex flex-col items-center justify-center text-center p-6 space-y-2">
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"><PieChart className="w-5 h-5" /></div>
-              <p className="text-sm font-extrabold text-muted-foreground">No data available</p>
-              <p className="text-sm text-muted-foreground max-w-[200px]">Log match records to generate bloodline win ratio breakdowns.</p>
+            <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+              <PieChart className="text-muted-foreground mb-2 h-8 w-8" aria-hidden="true" />
+              <p className="text-card-foreground mt-2 text-sm font-black">{t('heritage.noFights')}</p>
             </div>
           )}
-        </div>
-      </div>
+        </section>
 
-      {/* BREEDING PAIR PERFORMANCE ANALYTICS */}
-      {pairingAnalytics.ranked.length > 0 && (
-        <BreedingPairPerformanceAnalytics ranked={pairingAnalytics.ranked} />
-      )}
-
-      {/* HISTORICAL ANALYTICS MATCH LOGS TABLE */}
-      <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border bg-muted/30 flex flex-wrap justify-between items-center gap-3">
-          <div>
-            <h3 className="text-sm font-black text-card-foreground tracking-tight">Historical Analytics Match Logs</h3>
-            <p className="text-sm text-muted-foreground font-semibold mt-0.5">Complete record of logged derby and arena encounters</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-mono bg-emerald-500/10 text-success border border-emerald-500/20 font-black px-3 py-1 rounded-full hidden sm:inline">D4 ANALYTICS DB</span>
+        <section className="border-border bg-card min-w-0 overflow-hidden rounded-2xl border shadow-sm xl:col-span-8">
+          <div className="border-border flex flex-wrap items-start justify-between gap-2 border-b p-4 sm:p-5">
+            <div className="min-w-0">
+              <h3 className="text-card-foreground text-base font-black">{t('heritage.historicalMatches')}</h3>
+              <p className="text-muted-foreground mt-0.5 text-xs font-semibold">{t('heritage.recentMatches')}</p>
+              {unlinkedCount > 0 && (
+                <p className="text-low-sample mt-1 text-xs font-bold" role="status">
+                  {t('heritage.warningNoMatch')}: {t('heritage.warningNoMatchDesc', { count: unlinkedCount })}
+                </p>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => navigate('profiling', 'matchForm')}
-              className="bg-card hover:bg-emerald-500/20 active:scale-[0.98] text-card-foreground text-sm font-black px-4 py-2 rounded-sm border border-border shadow-sm transition-all cursor-pointer"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex min-h-11 cursor-pointer items-center rounded-xl px-3.5 text-xs font-black"
             >
-              View All →
+              {t('heritage.viewAllRecords')}
             </button>
           </div>
-        </div>
-        <MatchLogsTable />
+          <div className="max-h-[28rem] overflow-y-auto">
+            <MatchLogsTable matches={recentCockMatches} emptyText={t('heritage.noMatches')} returnTo="/dashboard" />
+          </div>
+        </section>
       </div>
+
+      {pairingAnalytics.ranked.length > 0 && (
+        <BreedingPairPerformanceAnalytics ranked={pairingAnalytics.ranked} />
+      )}
+    </div>
+  );
+}
+
+function KpiCard({
+  icon,
+  label,
+  value,
+  caption,
+  watermark,
+  badge,
+  tone = 'red',
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  caption: string;
+  watermark: React.ReactNode;
+  badge?: string;
+  tone?: 'red' | 'orange' | 'gold';
+  onClick: () => void;
+}) {
+  const toneClass =
+    tone === 'orange'
+      ? 'bg-brand-orange/15 text-brand-orange'
+      : tone === 'gold'
+        ? 'bg-low-sample-bg text-low-sample'
+        : 'bg-accent-soft text-accent';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${DASHBOARD_KPI_CARD} border-border bg-card group relative min-h-full min-w-0 cursor-pointer overflow-hidden rounded-2xl border p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+    >
+      <span aria-hidden="true" className={`${DASHBOARD_KPI_CAPTION} pointer-events-none absolute -right-3 -bottom-4 opacity-[0.06]`}>
+        {watermark}
+      </span>
+      <div className="flex items-start justify-between gap-2">
+        <span className={`${DASHBOARD_KPI_LABEL} text-muted-foreground font-black tracking-wider uppercase`}>
+          {label}
+        </span>
+        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${toneClass}`}>
+          {icon}
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-baseline gap-2">
+        <span className={`${DASHBOARD_KPI_VALUE} text-card-foreground font-black tabular-nums`}>{value}</span>
+        {badge && (
+          <span className="bg-low-sample-bg text-low-sample rounded-full px-2 py-0.5 text-xs font-black uppercase">
+            {badge}
+          </span>
+        )}
+      </div>
+      <p className={`${DASHBOARD_KPI_CAPTION} text-muted-foreground mt-1 font-semibold break-words`}>{caption}</p>
+    </button>
+  );
+}
+
+function SectionHeader({
+  icon,
+  title,
+  subtitle,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 items-start justify-between gap-2">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <span className="bg-accent-soft text-accent flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-card-foreground text-sm font-black break-words">{title}</h3>
+          {subtitle && <p className="text-muted-foreground mt-0.5 text-xs font-semibold break-words">{subtitle}</p>}
+        </div>
+      </div>
+      {action}
     </div>
   );
 }
