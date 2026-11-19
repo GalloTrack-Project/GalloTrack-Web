@@ -798,6 +798,7 @@ export const hil: AppTranslations = {
       'Usisaon ang individual kag pairing win rates, subaybayan ang health records, kag bantayan ang breeding outcomes paagi sa detalyado nga reports.',
     aboutBadge: 'Academic Capstone Project',
     aboutTitle: 'Parte sang GalloTrack',
+    aboutRoosterAlt: 'Makulay nga gamefowl rooster nga nagatindog sa tuod sang kahoy',
     aboutDescription:
       'Ang GalloTrack ginhimo bilang ISUFST CICI Capstone Project sa Iloilo State University of Fisheries Science and Technology.',
     aboutNarrativeOne:

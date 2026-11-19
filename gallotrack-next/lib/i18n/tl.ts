@@ -798,6 +798,7 @@ export const tl: AppTranslations = {
       'Suriin ang individual at pairing win rates, subaybayan ang health records, at bantayan ang breeding outcomes sa detalyadong reports.',
     aboutBadge: 'Academic Capstone Project',
     aboutTitle: 'Tungkol sa GalloTrack',
+    aboutRoosterAlt: 'Makulay na gamefowl rooster na nakatayo sa tuod ng puno',
     aboutDescription:
       'Ang GalloTrack ay binuo bilang ISUFST CICI Capstone Project sa Iloilo State University of Fisheries Science and Technology.',
     aboutNarrativeOne:

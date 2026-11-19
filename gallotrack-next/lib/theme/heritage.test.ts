@@ -37,6 +37,7 @@ const textPairs: Array<[keyof ThemeTokens, keyof ThemeTokens]> = [
   ['brandRed', 'background'],
   ['brandRed', 'card'],
   ['brandRed', 'accentSoft'],
+  ['brandGold', 'heroMid'],
   ['sidebarForeground', 'heroStart'],
   ['sidebarForeground', 'heroMid'],
   ['sidebarMuted', 'heroMid'],

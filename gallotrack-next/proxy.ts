@@ -5,7 +5,7 @@ import { sanitizeRedirectPath } from '@/lib/auth-redirect';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/design-kit']);
+export const PUBLIC_PATHS = new Set(['/', '/about', '/login', '/register', '/design-kit']);
 export const PUBLIC_PREFIXES = ['/auth', '/share', '/api', '/_next'];
 
 const STATIC_EXTENSIONS = [
@@ -40,7 +40,7 @@ function redirectTarget(request: NextRequest, destination: string, search = ''):
  *
  * - Unauthenticated requests to protected screens are sent to `/login` with a sanitized `?redirect=` param.
  * - Logged-in users visiting `/login` or `/register` are redirected to `/dashboard`.
- * - Public routes (`/`, `/design-kit`, `/auth/*`, `/share/*`, `/api/*`, static assets) remain accessible.
+ * - Public routes (`/`, `/about`, `/design-kit`, `/auth/*`, `/share/*`, `/api/*`, static assets) remain accessible.
  * - `/admin/*` is additionally restricted to admin profiles.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
@@ -51,8 +51,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next();
   }
 
-  // 2. Public landing pages (/ and /design-kit) accessible without redirection for both guests and authenticated users
-  if (pathname === '/' || pathname === '/design-kit') {
+  // 2. Public landing pages (/ and /about) accessible without redirection for both guests and authenticated users
+  if (pathname === '/' || pathname === '/about' || pathname === '/design-kit') {
     return NextResponse.next();
   }
 

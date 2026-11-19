@@ -804,6 +804,7 @@ export const en = {
       'Analyze individual and pairing win rates, track health records, and monitor breeding outcomes through detailed reports.',
     aboutBadge: 'Academic Capstone Project',
     aboutTitle: 'About GalloTrack',
+    aboutRoosterAlt: 'Colorful gamefowl rooster standing on a tree stump',
     aboutDescription:
       'GalloTrack was conceived and developed as an ISUFST CICI Capstone Project at Iloilo State University of Fisheries Science and Technology.',
     aboutNarrativeOne:

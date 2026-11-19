@@ -7,9 +7,9 @@ import {
   ArrowRight,
   Home,
   Info,
+  Lightbulb,
   Menu,
   Moon,
-  Route,
   Sun,
   UserPlus,
   X,
@@ -21,21 +21,32 @@ import { useT, type TranslationKey } from '@/lib/i18n';
 
 type LandingNavbarProps = {
   linkPrefix?: '' | '/';
+  activePage?: 'about';
 };
 
 type NavItem = {
   id: string;
   labelKey: TranslationKey;
   icon: typeof Home;
+  href: string;
+  page?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'features', labelKey: 'landing.features', icon: Home },
-  { id: 'how-it-works', labelKey: 'landing.howItWorks', icon: Route },
-  { id: 'about', labelKey: 'landing.about', icon: Info },
+  { id: 'features', labelKey: 'landing.features', icon: Home, href: '#features' },
+  {
+    id: 'how-it-works',
+    labelKey: 'landing.howItWorks',
+    icon: Lightbulb,
+    href: '#how-it-works',
+  },
+  { id: 'about', labelKey: 'landing.about', icon: Info, href: '/about', page: true },
 ];
 
-export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
+export default function LandingNavbar({
+  linkPrefix = '',
+  activePage,
+}: LandingNavbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const auth = useAuth();
   const t = useT();
@@ -55,9 +66,9 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
   useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
-    const elements = NAV_ITEMS.map((item) => document.getElementById(item.id)).filter(
-      (element): element is HTMLElement => element !== null,
-    );
+    const elements = NAV_ITEMS.filter((item) => !item.page)
+      .map((item) => document.getElementById(item.id))
+      .filter((element): element is HTMLElement => element !== null);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -126,7 +137,7 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
     };
   }, [mobileMenuOpen]);
 
-  const anchorHref = (id: string) => `${linkPrefix}#${id}`;
+  const itemHref = (item: NavItem) => (item.page ? item.href : `${linkPrefix}${item.href}`);
   const closeMobileMenu = () => setMobileMenuOpen(false);
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
@@ -209,16 +220,20 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
 
         <nav aria-label={t('landing.navAria')} className="hidden items-center gap-2 lg:flex">
           {NAV_ITEMS.map((item) => {
-            const isActive = activeSection === item.id;
+            const isPageActive = activePage === item.id;
+            const isSectionActive = !isPageActive && activeSection === item.id;
+            const isActive = isPageActive || isSectionActive;
             const Icon = item.icon;
             return (
-              <a
+              <Link
                 key={item.id}
-                href={anchorHref(item.id)}
-                aria-current={isActive ? 'location' : undefined}
+                href={itemHref(item)}
+                aria-current={isPageActive ? 'page' : isSectionActive ? 'location' : undefined}
                 className={`focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none ${
                   isActive
-                    ? 'bg-accent-soft text-brand-red'
+                    ? isPageActive
+                      ? 'text-brand-red'
+                      : 'bg-accent-soft text-brand-red'
                     : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                 }`}
               >
@@ -230,7 +245,7 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
                     isActive ? 'opacity-100' : 'opacity-0'
                   }`}
                 />
-              </a>
+              </Link>
             );
           })}
         </nav>
@@ -292,22 +307,26 @@ export default function LandingNavbar({ linkPrefix = '' }: LandingNavbarProps) {
             <nav aria-label={t('landing.mobileNavAria')} className="flex flex-col gap-1 p-4">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
-                const isActive = activeSection === item.id;
+                const isPageActive = activePage === item.id;
+                const isSectionActive = !isPageActive && activeSection === item.id;
+                const isActive = isPageActive || isSectionActive;
                 return (
-                  <a
+                  <Link
                     key={item.id}
-                    href={anchorHref(item.id)}
+                    href={itemHref(item)}
                     onClick={closeMobileMenu}
-                    aria-current={isActive ? 'location' : undefined}
+                    aria-current={isPageActive ? 'page' : isSectionActive ? 'location' : undefined}
                     className={`focus-visible:ring-ring flex min-h-11 items-center gap-2 rounded-full px-3 text-base font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none ${
                       isActive
-                        ? 'bg-accent-soft text-brand-red'
+                        ? isPageActive
+                          ? 'text-brand-red'
+                          : 'bg-accent-soft text-brand-red'
                         : 'text-foreground hover:bg-muted'
                     }`}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                     {t(item.labelKey)}
-                  </a>
+                  </Link>
                 );
               })}
             </nav>
