@@ -91,10 +91,10 @@ describe('Landing header', () => {
       );
     });
 
-    expect(screen.getByRole('link', { name: 'Features' })).toHaveAttribute(
-      'aria-current',
-      'location',
-    );
+    const activeLink = screen.getByRole('link', { name: 'Features' });
+    expect(activeLink).toHaveAttribute('aria-current', 'location');
+    expect(activeLink).toHaveClass('bg-accent-soft', 'text-brand-red');
+    expect(activeLink.querySelector('svg')).not.toBeNull();
   });
 
   it('opens a mobile drawer, traps Tab focus, and closes with Escape', async () => {

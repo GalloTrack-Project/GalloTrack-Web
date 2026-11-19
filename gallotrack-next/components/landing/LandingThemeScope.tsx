@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from 'next-themes';
 import {
   ACTIVE_THEME_PRESET,
@@ -10,7 +10,13 @@ import {
 
 export default function LandingThemeScope({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme();
-  const mode = resolvedTheme === 'dark' ? 'dark' : 'light';
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const mode = mounted && resolvedTheme === 'dark' ? 'dark' : 'light';
   const themeVars = useMemo(
     () => themeCssVariables(getThemeTokens(ACTIVE_THEME_PRESET, mode)),
     [mode],

@@ -43,7 +43,9 @@ describe('GalloTrack Public Landing Page', () => {
 
       // Section headings
       expect(screen.getByText(/Core Capabilities/i)).toBeInTheDocument();
-      expect(screen.getByText(/How GalloTrack Works/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 2, name: /How GalloTrack Works/i }),
+      ).toBeInTheDocument();
       expect(screen.getByText(/About GalloTrack/i)).toBeInTheDocument();
       expect(screen.getByText(/Start Managing Your Breeding Records with GalloTrack/i)).toBeInTheDocument();
 

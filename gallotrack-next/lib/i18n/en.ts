@@ -786,21 +786,22 @@ export const en = {
       'Stay on top of stage changes, milestone reminders, and farm activity with clear notifications.',
     capabilityNotificationsHighlight: 'Milestones & Updates',
     workflowEyebrow: 'Workflow',
+    workflowBadge: 'SIMPLE • SMART • POWERFUL',
     workflowTitle: 'How GalloTrack Works',
     workflowDescription:
       'A structured protocol from breeder registration through match logs and win rate tracking.',
     stepRegisterTitle: 'Register Your Breeders',
     stepRegisterDesc:
-      'Enroll your active sires (Breeding Males with numeric IDs) and dams (Breeding Females with letter IDs) with bloodlines, wing bands, and physical traits.',
+      'Enroll your active sires (Breeding Roosters) and dams (Hens) and store their details. Populate with the breed that will be used for breeding, with photos and physical traits.',
     stepOffspringTitle: 'Track Offspring & Lineage',
     stepOffspringDesc:
-      'Log new clutches and assign structured offspring codes (e.g., 1A1) while automatically calculating bloodline composition percentages.',
+      'Log new chicks and assign structured offspring codes to maintain accurate lineage and pedigree information.',
     stepMatchesTitle: 'Record Match Logs',
     stepMatchesDesc:
-      'Log fight encounters with opponent details, arena locations, fight outcomes (Win/Loss/Draw), and post-fight condition status.',
+      "Log fight encounters with opponent details, arena location, fight outcome, and link to your chickens' performance.",
     stepReviewTitle: 'Review Performance & Insights',
     stepReviewDesc:
-      'Evaluate individual and pairing win rates, track battle-tested offspring, and make informed breeding pairings.',
+      'Analyze individual and pairing win rates, track health records, and monitor breeding outcomes through detailed reports.',
     aboutBadge: 'Academic Capstone Project',
     aboutTitle: 'About GalloTrack',
     aboutDescription:
