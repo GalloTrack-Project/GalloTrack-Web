@@ -172,6 +172,28 @@ describe('LineageDirectory redesigned top section', () => {
     expect(pedigreeTab).toBeInTheDocument();
   });
 
+  it('uses cock and hen icons for the sire and dam tabs and selected parents', () => {
+    renderDirectory();
+
+    const sireTab = screen.getByRole('tab', { name: /Sire Offspring Tree/i });
+    const damTab = screen.getByRole('tab', { name: /Dam Offspring Tree/i });
+    const sireIcon = sireTab.querySelector('svg[data-fowl-sex="cock"]');
+    const damIcon = damTab.querySelector('svg[data-fowl-sex="hen"]');
+
+    expect(sireIcon).not.toBeNull();
+    expect(damIcon).not.toBeNull();
+    expect(sireIcon).toHaveAttribute('stroke', 'currentColor');
+    expect(damIcon).toHaveAttribute('stroke', 'currentColor');
+
+    fireEvent.click(sireTab);
+    const sirePicker = screen.getByRole('combobox', { name: /Select sire/i });
+    expect(sirePicker.parentElement?.querySelector('svg[data-fowl-sex="cock"]')).not.toBeNull();
+
+    fireEvent.click(damTab);
+    const damPicker = screen.getByRole('combobox', { name: /Select dam/i });
+    expect(damPicker.parentElement?.querySelector('svg[data-fowl-sex="hen"]')).not.toBeNull();
+  });
+
   it('renders tabs with 2-column grid below sm and fifth tab spanning both columns', () => {
     renderDirectory();
     const tablist = screen.getByRole('tablist', { name: /Family Lineage Directory Tabs/i });

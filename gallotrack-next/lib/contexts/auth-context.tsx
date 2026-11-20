@@ -16,6 +16,7 @@ interface AuthContextValue {
   isAdmin: boolean;
   adminName: string;
   setAdminName: (v: string) => void;
+  email: string;
   avatarUrl: string;
   setAvatarUrl: (v: string) => void;
   userHub: string;
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminName, setAdminName] = useState('Farm Owner');
+  const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userHub, setUserHub] = useState('ISUFST DINGLE HUB');
   const [userActive, setUserActive] = useState(true);
@@ -99,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('gallotrack_user_id', session.user.id);
             document.cookie = `gallotrack_session=1; path=/${savedRememberMe ? '; max-age=2592000' : ''}; SameSite=Lax`;
             setUsername(session.user.email?.split('@')[0] || 'admin');
+            setEmail(session.user.email || '');
             ui.setCurrentPage('dashboard');
             try {
               const { data: profile } = await supabase
@@ -153,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setCurrentUserId(null);
       setUsername('');
+      setEmail('');
       setPassword('');
       setError('');
       ui.setCurrentPage('login');
@@ -189,6 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
+          setEmail(user.email || '');
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -346,6 +351,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setCurrentUserId(data.user.id);
+        setEmail(data.user.email || loginEmail);
         if (typeof window !== 'undefined') {
           localStorage.setItem('gallotrack_user_id', data.user.id);
           document.cookie = `gallotrack_session=1; path=/${loginRememberMe ? '; max-age=2592000' : ''}; SameSite=Lax`;
@@ -399,6 +405,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleLogout = useCallback(async () => {
     setCurrentUserId(null);
     setUsername('');
+    setEmail('');
     setPassword('');
     ui.setCurrentPage('login');
     if (typeof window !== 'undefined') {
@@ -450,6 +457,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAdmin,
     adminName,
     setAdminName,
+    email,
     avatarUrl,
     setAvatarUrl,
     userHub,

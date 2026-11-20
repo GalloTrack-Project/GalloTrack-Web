@@ -3,20 +3,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import {
-  AlertTriangle,
-  ChevronDown,
-  LogOut,
-  Menu,
-  Moon,
-  RefreshCw,
-  Settings,
-  Sun,
-  User,
-  X,
-} from 'lucide-react';
+import { AlertTriangle, Menu, RefreshCw, X } from 'lucide-react';
 import Logo from '@/components/brand/Logo';
-import { useUI } from '@/lib/contexts/ui-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { supabase } from '@/lib/registry';
@@ -33,6 +21,7 @@ import {
 } from '@/lib/nav-manifest';
 import GlobalSearch from '@/components/nav/GlobalSearch';
 import NotificationBell from '@/components/nav/NotificationBell';
+import UserMenu from '@/components/nav/UserMenu';
 import DashboardHeaderActions from '@/components/dashboard/DashboardHeaderActions';
 import SystemConfigSidebarItem from '@/components/nav/SystemConfigSidebarItem';
 import { SystemConfigNavProvider } from '@/lib/contexts/system-config-nav';
@@ -40,7 +29,6 @@ import { NotificationProvider, useNotificationUnreadCount } from '@/lib/contexts
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useT } from '@/lib/i18n';
-import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { unreadBadgeText } from '@/lib/notifications/format';
 import {
   ACTIVE_THEME_PRESET,
@@ -68,8 +56,6 @@ type SidebarProps = {
 };
 
 function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose }: SidebarProps) {
-  const auth = useAuth();
-  const ui = useUI();
   const t = useT();
   const badge = unreadBadgeText(unreadCount);
   const groups = groupNavItems(navItems);
@@ -147,7 +133,7 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
         ))}
       </nav>
 
-      <div className="border-sidebar-foreground/15 shrink-0 space-y-3 border-t p-4">
+      <div className="border-sidebar-foreground/15 mt-auto shrink-0 space-y-3 border-t p-4">
         {isAdmin && (
           <div className="text-sidebar-muted space-y-1.5 px-1">
             <p className="text-xs font-black tracking-widest uppercase">{t('nav.consoleGroup')}</p>
@@ -174,50 +160,17 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
           </div>
         )}
 
-        <div className="flex items-center gap-3 rounded-xl bg-black/10 p-2.5">
-          {auth.avatarUrl ? (
-            <img
-              src={auth.avatarUrl}
-              alt=""
-              className="border-sidebar-foreground/30 h-10 w-10 rounded-full border object-cover"
-            />
-          ) : (
-            <div className="bg-sidebar-foreground/15 border-sidebar-foreground/25 flex h-10 w-10 items-center justify-center rounded-full border">
-              <User className="text-sidebar-foreground h-5 w-5" aria-hidden="true" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-sidebar-foreground break-words text-sm font-black">{auth.adminName}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="bg-sidebar-foreground/15 text-sidebar-foreground rounded-full px-2 py-0.5 text-xs font-black tracking-wider uppercase">
-                {isAdmin ? t('header.adminPortal') : t('header.portal')}
-              </span>
-              <span className="text-sidebar-muted inline-flex items-center gap-1 text-xs font-bold uppercase">
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'h-1.5 w-1.5 rounded-full',
-                    auth.userActive ? 'bg-emerald-300' : 'bg-rose-300',
-                  )}
-                />
-                {auth.userActive ? t('header.accessActive') : t('header.accessRestricted')}
-              </span>
-            </div>
-          </div>
+        <div className="space-y-1.5 pt-1">
+          <p className="text-sidebar-muted flex items-center justify-center gap-1.5 text-[11px] font-bold tracking-[0.16em] uppercase">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+            <span>{t('nav.version')}</span>
+            <span aria-hidden="true">·</span>
+            <span>{t('heritage.onlineStatus')}</span>
+          </p>
+          <p className="text-sidebar-muted text-center text-xs font-bold tracking-[0.2em] uppercase">
+            {t('heritage.footerTagline')}
+          </p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => ui.setShowLogoutModal(true)}
-          className="text-sidebar-foreground hover:bg-sidebar-foreground/15 focus-visible:ring-sidebar-foreground flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl border border-white/15 px-4 py-2.5 text-left text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          <span>{t('nav.logout')}</span>
-        </button>
-
-        <p className="text-sidebar-muted text-center text-xs font-bold tracking-[0.2em] uppercase">
-          {t('heritage.footerTagline')}
-        </p>
       </div>
 
       <img
@@ -232,17 +185,14 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { resolvedTheme, setTheme } = useTheme();
-  const ui = useUI();
+  const { resolvedTheme } = useTheme();
   const auth = useAuth();
   const fowl = useFowl();
   const t = useT();
   const unreadCount = useNotificationUnreadCount();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [stats, setStats] = useState({ total_users: 0, total_fowls: 0, total_matches: 0 });
-  const accountRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -288,24 +238,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       delete root.dataset.themePreset;
     };
   }, [themeVars]);
-
-  useEffect(() => {
-    if (!accountOpen) return;
-    const onPointer = (event: PointerEvent) => {
-      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
-        setAccountOpen(false);
-      }
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setAccountOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [accountOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -411,101 +343,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               {isDashboard && !isAdmin && <DashboardHeaderActions />}
               <GlobalSearch />
               {!isAdmin && <NotificationBell />}
-              <div ref={accountRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setAccountOpen((open) => !open)}
-                  aria-haspopup="menu"
-                  aria-expanded={accountOpen}
-                  aria-label={t('heritage.accountMenu')}
-                  className="border-border bg-card hover:bg-muted focus-visible:ring-ring flex h-11 cursor-pointer items-center gap-2 rounded-full border p-1 pr-2 focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  {auth.avatarUrl ? (
-                    <img src={auth.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-                  ) : (
-                    <span className="bg-accent-soft text-accent flex h-9 w-9 items-center justify-center rounded-full">
-                      <User className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                  )}
-                  <ChevronDown className="text-muted-foreground h-4 w-4" aria-hidden="true" />
-                </button>
-                {accountOpen && (
-                  <div
-                    role="menu"
-                    aria-label={t('heritage.accountMenu')}
-                    className="border-border bg-popover text-popover-foreground absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border p-2 shadow-xl"
-                  >
-                    <div className="border-border mb-2 border-b px-2 pb-2">
-                      <p className="truncate text-sm font-black">{auth.adminName}</p>
-                      <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'h-2 w-2 rounded-full',
-                            auth.userActive ? 'bg-emerald-500' : 'bg-rose-500',
-                          )}
-                        />
-                        {auth.userActive ? t('header.accessActive') : t('header.accessRestricted')}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <div
-                        className="text-muted-foreground flex min-h-11 items-center gap-2 rounded-lg px-3 text-xs font-semibold"
-                        title={t('header.connected')}
-                      >
-                        <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-500" />
-                        {t('header.connected')}
-                      </div>
-                      <div className="flex min-h-11 items-center justify-between gap-2 rounded-lg px-2">
-                        <span className="text-muted-foreground text-xs font-semibold">
-                          {t('header.languageSwitcher')}
-                        </span>
-                        <CompactLanguageSwitcher />
-                      </div>
-                      {mounted && (
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                          className="text-foreground hover:bg-muted flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold"
-                        >
-                          {resolvedTheme === 'dark' ? (
-                            <Sun className="h-4 w-4" aria-hidden="true" />
-                          ) : (
-                            <Moon className="h-4 w-4" aria-hidden="true" />
-                          )}
-                          {resolvedTheme === 'dark'
-                            ? t('header.switchToLight')
-                            : t('header.switchToDark')}
-                        </button>
-                      )}
-                      {!isAdmin && (
-                        <Link
-                          href="/settings"
-                          role="menuitem"
-                          onClick={() => setAccountOpen(false)}
-                          className="text-foreground hover:bg-muted flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold"
-                        >
-                          <Settings className="h-4 w-4" aria-hidden="true" />
-                          {t('header.settings')}
-                        </Link>
-                      )}
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setAccountOpen(false);
-                          ui.setShowLogoutModal(true);
-                        }}
-                        className="text-danger hover:bg-danger/10 flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold"
-                      >
-                        <LogOut className="h-4 w-4" aria-hidden="true" />
-                        {t('nav.logout')}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <UserMenu />
             </div>
           </div>
         </header>

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, BarChart3, CheckCircle2 } from 'lucide-react';
 import HeroCarousel from '@/components/hero/HeroCarousel';
-import { HERO_IMAGES } from '@/lib/hero-config';
+import { HERO_SLIDES } from '@/lib/hero-slides';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { useT } from '@/lib/i18n';
 import HeroDecorations from './HeroDecorations';
@@ -77,7 +77,7 @@ export default function HeroSection() {
           </div>
 
           <div className="flex min-w-0 justify-center lg:col-span-6">
-            <HeroCarousel images={HERO_IMAGES} className="max-w-xl" />
+            <HeroCarousel slides={HERO_SLIDES} className="max-w-xl" />
           </div>
         </div>
       </div>

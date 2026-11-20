@@ -84,6 +84,9 @@ export const hil: AppTranslations = {
     more: 'Iban Pa',
     morePages: 'Iban pa nga mga pahina',
     logout: 'Mag-gwa (Log Out)',
+    logoutConfirmTitle: 'Mag-log out sa GalloTrack?',
+    logoutConfirmBody:
+      'Mawala ang imo aktibo nga session kag kinahanglan mo mag-sign in liwat.',
     version: 'v1.0.0',
     adminPanel: 'Panel sang Admin',
     farmConsole: 'Konsola sa pagdumala sang kudal',
@@ -758,6 +761,9 @@ export const hil: AppTranslations = {
     getStarted: 'Magsugod',
     privateRecords: 'Pribado nga rekord sang kudal',
     automaticBloodline: 'Awtomatiko nga kalkulasyon sang bloodline',
+    heroSlideChampion: 'Champion nga Bloodline - Hatch',
+    heroSlideFoundation: 'Foundation Stock - Lemon',
+    heroSlideFarm: 'Mga kulungan kag breeding pen sa uma',
     heroGallery: 'Galerya sang mga larawan sang kudal',
     photoPrevious: 'Nagligad nga larawan sang kudal',
     photoNext: 'Sunod nga larawan sang kudal',
@@ -848,6 +854,7 @@ export const hil: AppTranslations = {
   },
   heritage: {
     brandTagline: 'Pangamuhan sang Uma sang Manok',
+    onlineStatus: 'Online',
     footerTagline: 'Subaybay · Pagpasanay · Kadalag-an',
     farmOverviewSubtitle: 'Kinatibuk-an nga talan-awon kag performance sang uma',
     dashboardTitle: 'Dashboard sang Uma sang Manok',

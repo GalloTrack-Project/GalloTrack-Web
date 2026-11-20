@@ -69,6 +69,8 @@ nav.accountGroup,Account,Account,reviewed,,Account,reviewed,
 nav.more,More,Iba pa,unreviewed,Awaiting native reviewer confirmation.,Iban Pa,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 nav.morePages,More navigation pages,Iba pang pahina ng pag-navigate,unreviewed,Awaiting native reviewer confirmation.,Iban pa nga mga pahina,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 nav.logout,Log Out,Mag-log Out,unreviewed,Awaiting native reviewer confirmation.,Mag-gwa (Log Out),unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+nav.logoutConfirmTitle,Log out of GalloTrack?,Mag-log out sa GalloTrack?,unreviewed,Awaiting native reviewer confirmation.,Mag-log out sa GalloTrack?,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+nav.logoutConfirmBody,Your active session will end and you will need to sign in again.,Mawawala ang iyong aktibong session at kailangan mong mag-sign in muli.,unreviewed,Awaiting native reviewer confirmation.,Mawala ang imo aktibo nga session kag kinahanglan mo mag-sign in liwat.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 nav.version,v1.0.0,v1.0.0,reviewed,,v1.0.0,reviewed,
 nav.adminPanel,Admin Panel,Panel ng Admin,unreviewed,Awaiting native reviewer confirmation.,Panel sang Admin,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 nav.farmConsole,Farm management console,Konsola ng pamamahala ng kural,unreviewed,Awaiting native reviewer confirmation.,Konsola sa pagdumala sang kudal,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
@@ -700,6 +702,9 @@ landing.subtitle,"Optimize your breeding program with lineage tracking, fight pe
 landing.getStarted,Get Started,Magsimula,unreviewed,Awaiting native reviewer confirmation.,Magsugod,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 landing.privateRecords,Private farm records,Pribadong talaan ng bukid,unreviewed,Awaiting native reviewer confirmation.,Pribado nga rekord sang kudal,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 landing.automaticBloodline,Automatic bloodline calculation,Awtomatikong kalkulasyon ng bloodline,unreviewed,Awaiting native reviewer confirmation.,Awtomatiko nga kalkulasyon sang bloodline,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+landing.heroSlideChampion,Champion Bloodline - Hatch,Champion na Bloodline - Hatch,unreviewed,Awaiting native reviewer confirmation.,Champion nga Bloodline - Hatch,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+landing.heroSlideFoundation,Foundation Stock - Lemon,Foundation Stock - Lemon,reviewed,,Foundation Stock - Lemon,reviewed,
+landing.heroSlideFarm,Farm coops and breeding pens,Mga kulungan at breeding pen sa bukid,unreviewed,Awaiting native reviewer confirmation.,Mga kulungan kag breeding pen sa uma,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 landing.heroGallery,Farm photo gallery,Galerya ng larawan ng bukid,unreviewed,Awaiting native reviewer confirmation.,Galerya sang mga larawan sang kudal,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 landing.photoPrevious,Previous farm photo,Nakaraang larawan ng bukid,unreviewed,Awaiting native reviewer confirmation.,Nagligad nga larawan sang kudal,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 landing.photoNext,Next farm photo,Susunod na larawan ng bukid,unreviewed,Awaiting native reviewer confirmation.,Sunod nga larawan sang kudal,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
@@ -773,6 +778,7 @@ landing.footerRights,All rights reserved.,Nakalaan ang lahat ng karapatan.,unrev
 landing.footerCapstone,ISUFST CICI Capstone Project,ISUFST CICI Capstone Project,reviewed,,ISUFST CICI Capstone Project,reviewed,
 landing.footerBuild,build {sha},build {sha},reviewed,,build {sha},reviewed,
 heritage.brandTagline,Chicken Farm Management,Pamamahala ng Bukid ng Manok,unreviewed,Awaiting native reviewer confirmation.,Pangamuhan sang Uma sang Manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+heritage.onlineStatus,Online,Online,reviewed,,Online,reviewed,
 heritage.footerTagline,Track · Breed · Excel,Subaybay · Pagpaparami · Tagumpay,unreviewed,Awaiting native reviewer confirmation.,Subaybay · Pagpasanay · Kadalag-an,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 heritage.farmOverviewSubtitle,Farm overview and performance,Pangkalahatang tanawin at performance ng bukid,unreviewed,Awaiting native reviewer confirmation.,Kinatibuk-an nga talan-awon kag performance sang uma,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 heritage.dashboardTitle,Chicken Farm Dashboard,Dashboard ng Bukid ng Manok,unreviewed,Awaiting native reviewer confirmation.,Dashboard sang Uma sang Manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.

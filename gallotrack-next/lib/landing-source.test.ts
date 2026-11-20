@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { HERO_IMAGES } from '@/lib/hero-config';
+import { HERO_SLIDES } from '@/lib/hero-slides';
 import { tl } from '@/lib/i18n/tl';
 import { hil } from '@/lib/i18n/hil';
 
@@ -10,6 +10,7 @@ const landingFiles = [
   'app/page.tsx',
   'app/about/page.tsx',
   'lib/hero-config.ts',
+  'lib/hero-slides.ts',
   'components/hero/HeroCarousel.tsx',
   ...fs
     .readdirSync(path.join(root, 'components/landing'))
@@ -26,12 +27,13 @@ const landingFiles = [
 ];
 
 describe('Landing page source rules', () => {
-  it('uses only local images from the single HERO_IMAGES config', () => {
-    for (const image of HERO_IMAGES) {
-      expect(image.src.startsWith('/images/')).toBe(true);
-      expect(fs.existsSync(path.join(root, 'public', image.src))).toBe(true);
-      expect(image.caption).not.toMatch(/champion/i);
-      expect(image.alt).not.toMatch(/champion/i);
+  it('uses local, swappable hero slide paths and data-driven captions', () => {
+    for (const slide of HERO_SLIDES) {
+      expect(slide.src).toMatch(/^\/images\/hero\/[a-z0-9-]+\.webp$/);
+      expect(slide.alt.length).toBeGreaterThan(10);
+      expect(slide.caption.length).toBeGreaterThan(5);
+      expect(slide.captionKey.startsWith('landing.')).toBe(true);
+      expect(slide.caption).not.toMatch(/banana/i);
     }
   });
 

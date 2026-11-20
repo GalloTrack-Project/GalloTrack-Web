@@ -16,7 +16,8 @@ import { inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
 import ChickenPhoto from '@/components/ChickenPhoto';
-import { Search, Egg, Archive, Skull, Dna, Ban, Mars, Venus, CalendarDays } from 'lucide-react';
+import { Search, Egg, Archive, Skull, Dna, Ban, CalendarDays } from 'lucide-react';
+import { CockIcon, HenIcon } from '@/components/icons/FowlSexIcons';
 import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
 import {
   getBreedingClassification,
@@ -703,7 +704,11 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
     const birds = paginatedBirds.list;
     const pagedList = paginatedBirds.pagedList;
     const totalPages = paginatedBirds.totalPages;
-    const tabIcon = isMaleTab ? <Mars className="h-5 w-5" aria-hidden="true" /> : <Venus className="h-5 w-5" aria-hidden="true" />;
+    const tabIcon = isMaleTab ? (
+      <CockIcon className="h-5 w-5" aria-hidden="true" />
+    ) : (
+      <HenIcon className="h-5 w-5" aria-hidden="true" />
+    );
     const tabLabel = isMaleTab ? t('registry.maleRegistryTitle') : t('registry.femaleRegistryTitle');
     const tabSub = isMaleTab ? t('registry.maleRegistryDesc') : t('registry.femaleRegistryDesc');
     const accentBg = isMaleTab ? 'bg-sky-600' : 'bg-pink-600';

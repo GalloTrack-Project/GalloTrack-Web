@@ -17,7 +17,7 @@ import {
   ChevronUp,
   ChevronRight,
 } from 'lucide-react';
-import ChickenIcon from '@/components/ChickenIcon';
+import { CockIcon, HenIcon } from '@/components/icons/FowlSexIcons';
 import FamilyPhoto from '@/components/lineage/FamilyPhoto';
 import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
@@ -1380,8 +1380,8 @@ export default function LineageDirectory({
   const tabs: { id: LineageTab; label: string; icon: React.ReactNode; count: number }[] = [
     { id: 'tree', label: 'Family Tree', icon: <Network className="w-4 h-4" />, count: breedingPairs.length },
     { id: 'families', label: 'Full Siblings & Families', icon: <Users className="w-4 h-4" />, count: fullFamilies.length },
-    { id: 'sire', label: 'Sire Offspring Tree', icon: <ChickenIcon className="w-4 h-4" />, count: sireEntries.length },
-    { id: 'dam', label: 'Dam Offspring Tree', icon: <ChickenIcon className="w-4 h-4" />, count: damEntries.length },
+    { id: 'sire', label: 'Sire Offspring Tree', icon: <CockIcon className="w-4 h-4" />, count: sireEntries.length },
+    { id: 'dam', label: 'Dam Offspring Tree', icon: <HenIcon className="w-4 h-4" />, count: damEntries.length },
     { id: 'pedigree', label: 'Pedigree / Ancestors', icon: <GitBranch className="w-4 h-4" />, count: fowls.length },
   ];
 

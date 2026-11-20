@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Shield, Egg, FileText, Trophy } from 'lucide-react';
-import ChickenIcon from '@/components/ChickenIcon';
+import { Egg, FileText } from 'lucide-react';
+import { CockIcon, HenIcon } from '@/components/icons/FowlSexIcons';
 import type { ProfilingSubTab } from '@/lib/types';
-import { ROLE_LABEL } from '@/lib/registry-roles';
 import { useT } from '@/lib/i18n';
 
 export interface MainRegistryTabItem {
@@ -36,14 +35,14 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
       id: 'males',
       label: t('registry.tabMales'),
       shortLabel: t('registry.tabMalesShort'),
-      icon: <Trophy className="h-4 w-4 shrink-0" />,
+      icon: <CockIcon className="h-4 w-4 shrink-0" />,
       count: counts.males,
     },
     {
       id: 'females',
       label: t('registry.tabFemales'),
       shortLabel: t('registry.tabFemalesShort'),
-      icon: <ChickenIcon className="h-4 w-4 shrink-0" />,
+      icon: <HenIcon className="h-4 w-4 shrink-0" />,
       count: counts.females,
     },
     {

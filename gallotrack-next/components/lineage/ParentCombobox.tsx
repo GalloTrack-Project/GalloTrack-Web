@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { CockIcon, HenIcon } from '@/components/icons/FowlSexIcons';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import ComboboxInput from '@/components/ui/ComboboxInput';
 import {
@@ -36,6 +37,7 @@ export default function ParentCombobox({
 }: Props) {
   const noun = kind === 'sire' ? 'sire' : 'dam';
   const plural = kind === 'sire' ? 'sires' : 'dams';
+  const SexIcon = kind === 'sire' ? CockIcon : HenIcon;
   const listboxId = `${kind}-parent-listbox`;
   const [open, setOpen] = useState(defaultOpen);
   const [query, setQuery] = useState('');
@@ -189,6 +191,7 @@ export default function ParentCombobox({
         <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs font-black uppercase">
           {formatBirdCodeForDisplay(entry.code)}
         </span>
+        <SexIcon className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1">
           <span className="text-card-foreground block truncate text-sm font-black">
             {entry.name}
@@ -246,6 +249,7 @@ export default function ParentCombobox({
                   <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs font-black uppercase">
                     {formatBirdCodeForDisplay(selected.code)}
                   </span>
+                  <SexIcon className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
                   <span className="text-card-foreground min-w-0 flex-1 truncate text-sm font-black">
                     {selected.name}
                   </span>
