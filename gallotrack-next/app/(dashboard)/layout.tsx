@@ -42,6 +42,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { useT } from '@/lib/i18n';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { unreadBadgeText } from '@/lib/notifications/format';
+import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import {
   ACTIVE_THEME_PRESET,
   getThemeTokens,
@@ -64,12 +65,19 @@ type SidebarProps = {
   isAdmin: boolean;
   unreadCount: number;
   stats: { total_users: number; total_fowls: number; total_matches: number };
+  online: boolean;
   onClose?: () => void;
 };
 
-function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose }: SidebarProps) {
-  const auth = useAuth();
-  const ui = useUI();
+function SidebarBody({
+  navItems,
+  pathname,
+  isAdmin,
+  unreadCount,
+  stats,
+  online,
+  onClose,
+}: SidebarProps) {
   const t = useT();
   const badge = unreadBadgeText(unreadCount);
   const groups = groupNavItems(navItems);
@@ -147,7 +155,7 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
         ))}
       </nav>
 
-      <div className="border-sidebar-foreground/15 shrink-0 space-y-3 border-t p-4">
+      <div className="border-sidebar-foreground/15 mt-auto shrink-0 space-y-3 border-t p-4">
         {isAdmin && (
           <div className="text-sidebar-muted space-y-1.5 px-1">
             <p className="text-xs font-black tracking-widest uppercase">{t('nav.consoleGroup')}</p>
@@ -174,49 +182,23 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
           </div>
         )}
 
-        <div className="flex items-center gap-3 rounded-xl bg-black/10 p-2.5">
-          {auth.avatarUrl ? (
-            <img
-              src={auth.avatarUrl}
-              alt=""
-              className="border-sidebar-foreground/30 h-10 w-10 rounded-full border object-cover"
+        <p className="border-sidebar-foreground/20 text-sidebar-foreground/90 rounded-xl border px-3 py-2 text-center text-[10px] font-black tracking-wider uppercase">
+          {t('heritage.capstoneBadge')}
+        </p>
+
+        <div className="text-sidebar-muted flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] font-bold tracking-widest uppercase">
+          <span>{t('nav.version')}</span>
+          <span className="inline-flex items-center gap-1.5" title={online ? t('header.connected') : t('heritage.offlineTooltip')}>
+            <span
+              aria-hidden="true"
+              className={cn('h-1.5 w-1.5 rounded-full', online ? 'bg-success' : 'bg-warning')}
             />
-          ) : (
-            <div className="bg-sidebar-foreground/15 border-sidebar-foreground/25 flex h-10 w-10 items-center justify-center rounded-full border">
-              <User className="text-sidebar-foreground h-5 w-5" aria-hidden="true" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-sidebar-foreground break-words text-sm font-black">{auth.adminName}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="bg-sidebar-foreground/15 text-sidebar-foreground rounded-full px-2 py-0.5 text-xs font-black tracking-wider uppercase">
-                {isAdmin ? t('header.adminPortal') : t('header.portal')}
-              </span>
-              <span className="text-sidebar-muted inline-flex items-center gap-1 text-xs font-bold uppercase">
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'h-1.5 w-1.5 rounded-full',
-                    auth.userActive ? 'bg-emerald-300' : 'bg-rose-300',
-                  )}
-                />
-                {auth.userActive ? t('header.accessActive') : t('header.accessRestricted')}
-              </span>
-            </div>
-          </div>
+            {online ? t('heritage.onlineStatus') : t('heritage.offlineStatus')}
+          </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => ui.setShowLogoutModal(true)}
-          className="text-sidebar-foreground hover:bg-sidebar-foreground/15 focus-visible:ring-sidebar-foreground flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl border border-white/15 px-4 py-2.5 text-left text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          <span>{t('nav.logout')}</span>
-        </button>
-
         <p className="text-sidebar-muted text-center text-xs font-bold tracking-[0.2em] uppercase">
-          {t('heritage.footerTagline')}
+          {t(BRAND_TAGLINE_KEY)}
         </p>
       </div>
 
@@ -263,6 +245,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [auth.isAdmin]);
 
   const isAdmin = auth.isAdmin;
+  const settingsHref = isAdmin ? '/admin/settings' : '/settings';
   const rawNavItems: NavItem[] = isAdmin ? ADMIN_NAV : OWNER_NAV;
   const navItems: NavItem[] = getTranslatedNavItems(rawNavItems, t as (k: string) => string);
   const currentNav = findActiveNav(navItems, pathname);
@@ -355,6 +338,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           isAdmin={isAdmin}
           unreadCount={unreadCount}
           stats={stats}
+          online={!fowl.loadError}
         />
       </aside>
 
@@ -378,6 +362,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               isAdmin={isAdmin}
               unreadCount={unreadCount}
               stats={stats}
+              online={!fowl.loadError}
               onClose={() => setMobileOpen(false)}
             />
           </div>
@@ -398,19 +383,48 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               </button>
               <span aria-hidden="true" className="bg-brand-orange h-10 w-1 shrink-0 rounded-full" />
               <div className="min-w-0">
-                <h1 className="text-foreground break-words text-lg font-black tracking-tight sm:text-xl">
-                  {isDashboard ? t('heritage.dashboardTitle') : activeTitle}
-                </h1>
-                <p className="text-muted-foreground break-words text-xs font-semibold sm:text-sm">
-                  {isDashboard ? t('heritage.farmOverviewSubtitle') : assetContentSubtitle(pathname, t)}
-                </p>
+                <div className="border-primary/15 bg-accent-soft text-brand-red mb-1 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase">
+                  <span>{isAdmin ? t('header.adminPortal') : t('header.portal')}</span>
+                  <span aria-hidden="true" className="text-muted-foreground">
+                    /
+                  </span>
+                  <span className="text-foreground normal-case tracking-wide">
+                    {isDashboard ? t('heritage.dashboardTitle') : activeTitle}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
               {isDashboard && !isAdmin && <DashboardHeaderActions />}
               <GlobalSearch />
-              {!isAdmin && <NotificationBell />}
+              <div className="hidden items-center gap-1.5 md:flex">
+                <CompactLanguageSwitcher />
+                <Link
+                  href={settingsHref}
+                  aria-label={t('header.settings')}
+                  title={t('header.settings')}
+                  className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex h-11 w-11 items-center justify-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <Settings className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                {mounted && (
+                  <button
+                    type="button"
+                    onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                    aria-label={t('header.toggleTheme')}
+                    title={t('header.toggleTheme')}
+                    className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex h-11 w-11 items-center justify-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    {resolvedTheme === 'dark' ? (
+                      <Sun className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Moon className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                )}
+              </div>
+              <NotificationBell />
               <div ref={accountRef} className="relative">
                 <button
                   type="button"
@@ -479,17 +493,15 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                             : t('header.switchToDark')}
                         </button>
                       )}
-                      {!isAdmin && (
-                        <Link
-                          href="/settings"
-                          role="menuitem"
-                          onClick={() => setAccountOpen(false)}
-                          className="text-foreground hover:bg-muted flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold"
-                        >
-                          <Settings className="h-4 w-4" aria-hidden="true" />
-                          {t('header.settings')}
-                        </Link>
-                      )}
+                      <Link
+                        href={settingsHref}
+                        role="menuitem"
+                        onClick={() => setAccountOpen(false)}
+                        className="text-foreground hover:bg-muted flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold"
+                      >
+                        <Settings className="h-4 w-4" aria-hidden="true" />
+                        {t('header.settings')}
+                      </Link>
                       <button
                         type="button"
                         role="menuitem"
@@ -537,6 +549,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
           <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
+          <DashboardFooterBand />
         </main>
 
         <ModalsWrapper />
@@ -545,12 +558,23 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function assetContentSubtitle(pathname: string, t: ReturnType<typeof useT>): string {
-  if (pathname.startsWith('/profiling')) return t('nav.registry');
-  if (pathname.startsWith('/catalog')) return t('nav.inventory');
-  if (pathname.startsWith('/lineage')) return t('nav.lineage');
-  if (pathname.startsWith('/breeding')) return t('nav.breeding');
-  if (pathname.startsWith('/notifications')) return t('notifications.subtitle');
-  if (pathname.startsWith('/profile')) return t('nav.profile');
-  return t('nav.farmConsole');
+function DashboardFooterBand() {
+  const t = useT();
+
+  return (
+    <div
+      aria-hidden="true"
+      className="border-primary/10 from-accent-soft via-background to-brand-orange/15 relative mt-10 hidden min-h-28 items-center justify-center overflow-hidden rounded-2xl border bg-gradient-to-r px-6 md:flex [@media(max-height:700px)]:hidden"
+    >
+      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-r from-brand-red/15 via-brand-orange/10 to-transparent" />
+      <div className="relative flex min-w-0 items-center gap-3">
+        <span className="bg-background ring-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-sm ring-1">
+          <Logo variant="mark" size="sm" />
+        </span>
+        <p className="text-brand-red text-sm font-black tracking-[0.16em] uppercase">
+          {t(BRAND_TAGLINE_KEY)}
+        </p>
+      </div>
+    </div>
+  );
 }
