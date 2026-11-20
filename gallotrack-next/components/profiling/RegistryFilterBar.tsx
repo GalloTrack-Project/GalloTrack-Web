@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2, ArrowDownUp, Shield } from 'lucide-react';
+import { Search, X, Filter, ChevronDown, Check, RotateCcw, Loader2, ArrowDownUp, Shield, List, LayoutGrid } from 'lucide-react';
 import { cn } from '@/components/ui/utils';
 import { REGISTRY_SORT_OPTIONS, type RegistrySortKey } from '@/lib/registry-roles';
 import { RETIRED_FIGHTER_LABEL, RETIRED_FIGHTER_TOOLTIP } from '@/lib/registry-labels';
@@ -62,6 +62,8 @@ export interface RegistryFilterBarProps {
   filteredCount: number;
   totalCount: number;
   onResetAll: () => void;
+  viewMode?: 'list' | 'grid';
+  onViewModeChange?: (mode: 'list' | 'grid') => void;
 }
 
 /**
@@ -135,9 +137,9 @@ function SearchableParentDropdown({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={cn(
-          'h-9 w-full px-3 text-xs font-medium rounded-md border text-left flex items-center justify-between gap-2 transition-all cursor-pointer',
+          'h-11 w-full px-3 text-sm font-medium rounded-xl border text-left flex items-center justify-between gap-2 transition-all cursor-pointer',
           value !== 'all'
-            ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+            ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold'
             : 'border-border bg-background text-muted-foreground hover:bg-muted/50'
         )}
       >
@@ -164,7 +166,7 @@ function SearchableParentDropdown({
                 placeholder={t('registry.searchParentPlaceholder', { label: label.toLowerCase() })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1 text-xs rounded-sm border border-border bg-background focus:outline-hidden focus:border-emerald-500"
+                className="w-full pl-8 pr-2.5 py-1 text-xs rounded-sm border border-border bg-background focus:outline-hidden focus:border-primary"
               />
             </div>
           </div>
@@ -179,7 +181,7 @@ function SearchableParentDropdown({
               }}
               className={cn(
                 'w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-sm text-left transition-colors cursor-pointer',
-                value === 'all' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold' : 'hover:bg-muted text-foreground'
+                value === 'all' ? 'bg-accent-soft text-brand-red font-bold' : 'hover:bg-muted text-foreground'
               )}
             >
               <span>{placeholder}</span>
@@ -204,7 +206,7 @@ function SearchableParentDropdown({
                     }}
                     className={cn(
                       'w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-sm text-left transition-colors cursor-pointer',
-                      isSelected ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold' : 'hover:bg-muted text-foreground'
+                      isSelected ? 'bg-accent-soft text-brand-red font-bold' : 'hover:bg-muted text-foreground'
                     )}
                   >
                     <div className="flex items-center gap-1.5 truncate">
@@ -261,6 +263,8 @@ export default function RegistryFilterBar({
   filteredCount,
   totalCount,
   onResetAll,
+  viewMode,
+  onViewModeChange,
 }: RegistryFilterBarProps) {
   const { t } = useT();
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
@@ -296,7 +300,7 @@ export default function RegistryFilterBar({
   const hasActiveFilters = activeFiltersCount > 0;
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-xs p-4 sm:p-5 space-y-3.5">
+    <div className="bg-card border-border space-y-4 rounded-[20px] border p-4 shadow-lg shadow-primary/5 sm:p-5">
       {/* Top Row: Search Input + Mobile Filter Toggle + Result Counter Badge */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
@@ -305,7 +309,7 @@ export default function RegistryFilterBar({
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground"
           >
             {isDebouncing ? (
-              <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+              <Loader2 className="w-4 h-4 animate-spin text-brand-red" />
             ) : (
               <Search className="w-4 h-4" />
             )}
@@ -325,9 +329,9 @@ export default function RegistryFilterBar({
             placeholder={t('registry.searchPlaceholderShort')}
             aria-label={t('registry.searchAriaLabel')}
             className={cn(
-              'h-10 w-full rounded-md border border-input-border bg-background py-2 pl-9 pr-16 text-sm text-foreground font-medium',
+              'border-input-border bg-muted/50 text-foreground h-11 w-full rounded-full border py-2 pr-16 pl-10 text-sm font-medium',
               'placeholder:text-muted-foreground placeholder:font-normal',
-              'focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+              'focus:border-primary focus:ring-primary/15 focus:ring-4 focus:outline-hidden',
               'transition-all duration-150',
               '[&::-webkit-search-cancel-button]:appearance-none'
             )}
@@ -366,18 +370,49 @@ export default function RegistryFilterBar({
           className={cn(
             'md:hidden h-10 px-3 rounded-md border text-xs font-bold flex items-center gap-2 cursor-pointer transition-colors',
             hasActiveFilters
-              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+              ? 'border-primary/40 bg-accent-soft text-brand-red'
               : 'border-border bg-muted/60 text-muted-foreground hover:bg-muted'
           )}
         >
           <Filter className="w-3.5 h-3.5" />
           <span>{t('registry.mobileFiltersBtn')}</span>
           {activeFiltersCount > (query.trim() ? 1 : 0) && (
-            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">
               {activeFiltersCount - (query.trim() ? 1 : 0)}
             </span>
           )}
         </button>
+
+        {viewMode && onViewModeChange && (
+          <div className="border-border bg-muted/50 hidden items-center gap-0.5 rounded-full border p-0.5 sm:flex">
+            <button
+              type="button"
+              onClick={() => onViewModeChange('list')}
+              aria-label={t('registry.listView')}
+              aria-pressed={viewMode === 'list'}
+              className={`focus-visible:ring-ring inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                viewMode === 'list'
+                  ? 'bg-card text-brand-red shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <List className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewModeChange('grid')}
+              aria-label={t('registry.gridView')}
+              aria-pressed={viewMode === 'grid'}
+              className={`focus-visible:ring-ring inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                viewMode === 'grid'
+                  ? 'bg-card text-brand-red shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {/* Live Result Count Badge */}
         <div className="hidden sm:flex items-center shrink-0">
@@ -430,9 +465,9 @@ export default function RegistryFilterBar({
                 value={filterStage}
                 onChange={(e) => onFilterStageChange(e.target.value)}
                 className={cn(
-                  'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                  'h-11 w-full px-3 pr-8 text-sm font-medium rounded-xl border appearance-none transition-all cursor-pointer',
                   filterStage !== 'all'
-                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                    ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold'
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
                 )}
               >
@@ -458,9 +493,9 @@ export default function RegistryFilterBar({
                 value={filterBreed}
                 onChange={(e) => onFilterBreedChange(e.target.value)}
                 className={cn(
-                  'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                  'h-11 w-full px-3 pr-8 text-sm font-medium rounded-xl border appearance-none transition-all cursor-pointer',
                   filterBreed !== 'all'
-                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                    ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold'
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
                 )}
               >
@@ -490,9 +525,9 @@ export default function RegistryFilterBar({
                   value={filterBreedingType}
                   onChange={(e) => onFilterBreedingTypeChange(e.target.value as any)}
                   className={cn(
-                    'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                    'h-11 w-full px-3 pr-8 text-sm font-medium rounded-xl border appearance-none transition-all cursor-pointer',
                     filterBreedingType !== 'all'
-                      ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                      ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold'
                       : 'border-border bg-background text-foreground hover:bg-muted/50'
                   )}
                 >
@@ -522,11 +557,11 @@ export default function RegistryFilterBar({
                 title={fightsDisabled ? fightsDisabledTooltip : undefined}
                 onChange={(e) => onFilterFightsChange(e.target.value as 'all' | 'with' | 'without')}
                 className={cn(
-                  'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all',
+                  'h-11 w-full px-3 pr-8 text-sm font-medium rounded-xl border appearance-none transition-all',
                   fightsDisabled
                     ? 'opacity-70 cursor-not-allowed bg-muted/60 border-border text-muted-foreground'
                     : filterFights !== 'all'
-                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold cursor-pointer'
+                    ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold cursor-pointer'
                     : 'border-border bg-background text-foreground hover:bg-muted/50 cursor-pointer'
                 )}
               >
@@ -550,7 +585,7 @@ export default function RegistryFilterBar({
                 title={RETIRED_FIGHTER_TOOLTIP}
                 onClick={() => onFilterRetiredFighterChange(!filterRetiredFighter)}
                 className={cn(
-                  'h-9 w-full px-3 text-xs font-bold rounded-md border flex items-center justify-between gap-1.5 transition-all cursor-pointer',
+                  'h-11 w-full px-3 text-sm font-bold rounded-xl border flex items-center justify-between gap-1.5 transition-all cursor-pointer',
                   filterRetiredFighter
                     ? 'border-amber-500/80 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-extrabold ring-1 ring-amber-500/30'
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
@@ -577,9 +612,9 @@ export default function RegistryFilterBar({
                 value={sort}
                 onChange={(e) => onSortChange(e.target.value as RegistrySortKey)}
                 className={cn(
-                  'h-9 w-full pl-8 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                  'h-11 w-full pl-8 pr-8 text-sm font-medium rounded-xl border appearance-none transition-all cursor-pointer',
                   sort !== 'identifier'
-                    ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                    ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold'
                     : 'border-border bg-background text-foreground hover:bg-muted/50'
                 )}
               >
@@ -622,9 +657,9 @@ export default function RegistryFilterBar({
                   value={filterReason}
                   onChange={(e) => onFilterReasonChange(e.target.value)}
                   className={cn(
-                    'h-9 w-full px-3 pr-8 text-xs font-medium rounded-md border appearance-none transition-all cursor-pointer',
+                    'h-11 w-full px-3 pr-8 text-sm font-medium rounded-xl border appearance-none transition-all cursor-pointer',
                     filterReason !== 'all'
-                      ? 'border-emerald-500/50 bg-emerald-500/5 text-foreground font-bold'
+                      ? 'border-primary/45 bg-accent-soft/50 text-foreground font-bold'
                       : 'border-border bg-background text-foreground hover:bg-muted/50'
                   )}
                 >
@@ -650,12 +685,12 @@ export default function RegistryFilterBar({
           </span>
 
           {query.trim() && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-accent-soft text-brand-red border border-primary/20">
               <span>{t('registry.searchChip', { query })}</span>
               <button
                 type="button"
                 onClick={() => onQueryChange('')}
-                className="hover:text-emerald-950 dark:hover:text-white cursor-pointer"
+                className="hover:text-brand-red cursor-pointer"
                 aria-label={t('registry.removeSearchFilterAria')}
               >
                 <X className="w-3 h-3" />

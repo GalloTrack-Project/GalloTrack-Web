@@ -16,7 +16,7 @@ import { inspectFowlMatch, compareFowlSearchRelevance } from '@/lib/lineage';
 import { useDebounce } from '@/lib/use-debounce';
 import { HighlightText } from '@/components/ui/HighlightText';
 import ChickenPhoto from '@/components/ChickenPhoto';
-import { Search, Egg, Archive, Skull, Dna, Ban, Mars, Venus } from 'lucide-react';
+import { Search, Egg, Archive, Skull, Dna, Ban, Mars, Venus, CalendarDays } from 'lucide-react';
 import RegistryFilterBar, { type ParentOption } from './RegistryFilterBar';
 import {
   getBreedingClassification,
@@ -85,6 +85,7 @@ function FowlCard({
   highlightQuery,
   classificationMap,
   isRetired,
+  viewMode = 'list',
 }: {
   fowl: FowlRecord;
   index: number;
@@ -98,6 +99,7 @@ function FowlCard({
   highlightQuery?: string;
   classificationMap?: Map<string, GeneticClassification>;
   isRetired?: boolean;
+  viewMode?: 'list' | 'grid';
 }) {
   const { t } = useT();
   const siblings = getSiblingRelations(fowl, allFowls).map((s: SiblingRelation) => s.name);
@@ -110,48 +112,59 @@ function FowlCard({
   const classification = classificationMap?.get(String(fowl.id)) ?? getBreedingClassification(fowl, allFowls);
   const parentage = getOffspringParentageRelatedness(fowl, allFowls);
   const displayBreed = classification.type === 'Crossbred' ? classification.derivedBreed : fowl.breed;
+  const isFoundation =
+    !fowl.sire?.trim() &&
+    !fowl.dam?.trim()
+      ? true
+      : [fowl.sire, fowl.dam]
+          .filter((parent): parent is string => Boolean(parent?.trim()))
+          .every((parent) => parent.trim().toLowerCase() === 'foundation stock');
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; onOpenDetails?.(fowl); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDetails?.(fowl); } }}
-      className="antigravity-card bg-white dark:bg-card p-5 rounded-lg border border-slate-200/80 dark:border-border shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-5 items-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all focus:ring-2 focus:ring-emerald-400/60"
-      style={{ animationDelay: `${(index % 5) * 0.8}s` }}
+      className={`landing-step-in bg-card border-border hover:shadow-primary/10 relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-[20px] border p-4 shadow-lg shadow-primary/5 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
+        viewMode === 'grid' ? 'items-center text-center' : 'items-center sm:flex-row'
+      }`}
+      style={{ animationDelay: `${(index % 5) * 60}ms` }}
     >
-      <span className="antigravity-badge absolute top-0 right-0 text-xs font-black uppercase px-3.5 py-1 bg-slate-900 text-white rounded-bl-md tracking-widest shadow-2xs">{fowl.growth_stage || 'Stag'}</span>
+      <span className="bg-sidebar-end text-sidebar-foreground absolute top-0 right-0 rounded-bl-xl px-3 py-1 text-xs font-black tracking-widest uppercase shadow-sm">
+        {fowl.growth_stage || (gender === 'Male' ? 'Cock' : 'Hen')}
+      </span>
       <ChickenPhoto
         name={fowl.name}
         code={birdCodeOf(fowl, allFowls)}
         imageUrl={fowl.image_url}
         photoPath={fowl.photo_path}
         photoThumbPath={fowl.photo_thumb_path}
-        size={96}
-        className="antigravity-avatar h-24 w-24 shrink-0 rounded-lg border border-slate-200/80 shadow-inner dark:border-border"
+        size={viewMode === 'grid' ? 160 : 120}
+        className="border-border shrink-0 rounded-xl border shadow-inner"
         fallback={<span className="text-xs font-mono">{t('registry.cardNoPhoto')}</span>}
       />
       <div className="flex-1 w-full space-y-3">
         <div className="flex items-center flex-wrap gap-2">
-          <h4 className="text-base font-black text-slate-900 dark:text-card-foreground flex items-center gap-2">
-            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 shadow-2xs tracking-tight">
+          <h4 className="text-base font-black text-foreground flex items-center gap-2">
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-success bg-success/10 border-success/25 tracking-tight">
               [<HighlightText text={formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'} query={highlightQuery} />]
             </span>
             <HighlightText text={fowl.name} query={highlightQuery} />
           </h4>
           {fowl.wing_band && fowl.wing_band.trim().toLowerCase() !== normalizeBirdCode(fowl.bird_code).toLowerCase() ? (
-            <span className="antigravity-badge text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800" title={t('registry.wingBandTooltip')}> <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
+            <span className="text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-warning bg-warning/10 border-warning/25" title={t('registry.wingBandTooltip')}> <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
-          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800">{displayBreed}</span>
+          <span className="text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-success bg-success/10 border-success/20">{displayBreed}</span>
           <BreedingTypeBadge classification={classification} />
           {(parentage.type === 'close' || parentage.type === 'line') && (
             <RelatednessBadge classification={parentage} compact />
           )}
           {isRetired && <RetiredFighterBadge />}
-          <span className={`antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-800' : 'text-pink bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-800'}`}>
+          <span className={`text-xs font-black border px-2.5 py-0.5 rounded-full uppercase ${gender === 'Male' ? 'bg-cock-bg text-cock border-cock/30' : 'bg-hen-bg text-hen border-hen/30'}`}>
             {gender === 'Male' ? t('registry.badgeMale') : t('registry.badgeFemale')}
           </span>
           {isBreeder && (
-            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-800" title={t('registry.registeredBreederTooltip')}>
+            <span className="text-xs font-black border px-2.5 py-0.5 rounded-full uppercase bg-accent-soft text-accent border-accent/30" title={t('registry.registeredBreederTooltip')}>
               {cardRole === 'Breeding Male' ? `Sire ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}` : `Dam ${formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls))}`}
               {fowl.birth_code ? (
                 <span className="ml-1 opacity-90 normal-case font-bold">{t('registry.cardBornAs', { code: fowl.birth_code })}</span>
@@ -159,13 +172,21 @@ function FowlCard({
             </span>
           )}
           {isNonBreeding && (
-            <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-800" title={t('registry.offspringFarmTooltip')}>
+            <span className="text-xs font-black border px-2.5 py-0.5 rounded-full uppercase bg-accent-soft text-accent border-accent/30" title={t('registry.offspringFarmTooltip')}>
               {ROLE_LABEL['Non-Breeding']}
             </span>
           )}
-          <span className="antigravity-badge text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-teal bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800">{cardGenInfo.short}</span>
+          <span className="text-xs font-black border px-2.5 py-0.5 rounded-full uppercase bg-accent-soft text-brand-red border-primary/20">{cardGenInfo.short}</span>
+          {isFoundation && (
+            <span
+              className="border-success/40 text-success rounded-full border px-2 py-0.5 text-xs font-black"
+              title="Foundation Stock"
+            >
+              FO
+            </span>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground bg-slate-50/80 dark:bg-muted/50 p-3 rounded-lg border border-slate-100 dark:border-border">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border">
           <div>{t('registry.cardSireLabel')} {(() => {
             const name = (fowl.sire || '').trim();
             const target = name && name.toLowerCase() !== 'foundation stock' ? allFowls.find((f) => f.name.trim().toLowerCase() === name.toLowerCase()) : undefined;
@@ -175,7 +196,7 @@ function FowlCard({
               <>
                 {target ? (
                   <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-sky-700 dark:text-sky-300 hover:underline underline-offset-2 cursor-pointer" title={t('registry.openSireProfileTooltip')}>{name}</button>
-                ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.sire || 'N/A'}</strong>}
+                ) : <strong className="text-foreground">{fowl.sire || 'N/A'}</strong>}
                 {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
               </>
             );
@@ -189,44 +210,44 @@ function FowlCard({
               <>
                 {target ? (
                   <button type="button" onClick={(e) => { e.stopPropagation(); onOpenDetails?.(target); }} className="font-bold text-pink hover:underline underline-offset-2 cursor-pointer" title={t('registry.openDamProfileTooltip')}>{name}</button>
-                ) : <strong className="text-slate-800 dark:text-card-foreground">{fowl.dam || 'N/A'}</strong>}
+                ) : <strong className="text-foreground">{fowl.dam || 'N/A'}</strong>}
                 {targetBreed && <span className="font-semibold"> · {targetBreed}</span>}
               </>
             );
           })()}</div>
-          <div>{t('registry.cardColorLabel')} <strong className="text-slate-800 dark:text-card-foreground">{formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</strong></div>
-          <div>{t('registry.cardTraitLabel')} <strong className="text-emerald-700 dark:text-emerald-300">{fowl.trait || fowl.behavior_trait || t('registry.cardNotSpecified')}</strong></div>
-          <div>{t('registry.cardLegsLabel')} <strong className="text-slate-800 dark:text-card-foreground">{fowl.leg_color || 'N/A'}</strong></div>
-          <div className="col-span-2 pt-1 border-t border-slate-200/60 dark:border-border flex items-center justify-between text-xs">
+          <div>{t('registry.cardColorLabel')} <strong className="text-foreground">{formatColorDisplay(fowl.feather_color || fowl.color, fowl.color_category)}</strong></div>
+          <div>{t('registry.cardTraitLabel')} <strong className="text-success">{fowl.trait || fowl.behavior_trait || t('registry.cardNotSpecified')}</strong></div>
+          <div>{t('registry.cardLegsLabel')} <strong className="text-foreground">{fowl.leg_color || 'N/A'}</strong></div>
+          <div className="col-span-2 pt-1 border-t border-border flex items-center justify-between text-xs">
             <span>{t('registry.cardAgeLabel')}</span>
             {(() => {
               const p = getAgeParts(fowl.birthdate);
               return p ? (
-                <strong className="text-emerald-700 dark:text-emerald-300 font-black">{getAgeLabel(p)} <span className="font-mono font-semibold text-muted-foreground">{t('registry.cardBornDate', { date: fowl.birthdate })}</span></strong>
+                <strong className="text-success inline-flex items-center gap-1.5 font-black"><CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />{getAgeLabel(p)} <span className="font-mono font-semibold text-muted-foreground">{t('registry.cardBornDate', { date: fowl.birthdate })}</span></strong>
               ) : (
-                <strong className="text-amber-700 dark:text-amber-300 font-bold">{fowl.age || t('registry.cardNoBirthDate')}</strong>
+                <strong className="text-warning font-bold">{fowl.age || t('registry.cardNoBirthDate')}</strong>
               );
             })()}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground flex justify-between items-center bg-slate-50 dark:bg-muted/50 p-2.5 px-3.5 rounded-md border border-slate-100 dark:border-border">
-          <div className="font-semibold">{t('registry.cardSiblingsLabel')} <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">{siblings.length > 0 ? siblings.join(', ') : t('registry.cardNone')}</span></div>
+        <div className="text-xs text-muted-foreground flex justify-between items-center bg-muted/40 p-2.5 px-3.5 rounded-xl border border-border">
+          <div className="font-semibold">{t('registry.cardSiblingsLabel')} <span className="text-success font-extrabold">{siblings.length > 0 ? siblings.join(', ') : t('registry.cardNone')}</span></div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onEdit(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-success bg-success/10 hover:bg-success/15 border border-success/30 min-h-9 px-3 py-1.5 rounded-full transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
             {t('registry.cardActionEdit')}
           </button>
-          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-warning dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onArchive(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-warning bg-warning/10 hover:bg-warning/15 border border-warning/30 min-h-9 px-3 py-1.5 rounded-full transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 8-2-2H5l-2 2"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M10 12h4"/></svg>
             {t('registry.cardActionArchive')}
           </button>
-          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-danger dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+          <button type="button" onClick={() => onDeceased(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-danger bg-danger/10 hover:bg-danger/15 border border-danger/30 min-h-9 px-3 py-1.5 rounded-full transition-all cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
             {t('registry.cardActionDeceased')}
           </button>
           {onSetActive && (
-            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-success dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 px-3 py-1.5 rounded-sm transition-all cursor-pointer">
+            <button type="button" onClick={() => onSetActive(fowl)} className="inline-flex items-center gap-1.5 text-xs font-bold text-success bg-success/10 hover:bg-success/15 border border-success/30 min-h-9 px-3 py-1.5 rounded-full transition-all cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h18"/><path d="m9 16-4-4 4-4"/></svg>
               {t('registry.cardActionSetActive')}
             </button>
@@ -250,7 +271,7 @@ function InventoryHint({ onGoToInventory }: { onGoToInventory?: () => void }) {
       <button
         type="button"
         onClick={onGoToInventory}
-        className="shrink-0 font-black text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer text-left sm:text-right"
+        className="shrink-0 font-black text-success hover:underline cursor-pointer text-left sm:text-right"
       >
         {t('registry.openChickenInventory')}
       </button>
@@ -379,8 +400,22 @@ function FowlListsBody({
   }, []);
   const [filterBreedingType, setFilterBreedingType] = useState<'all' | 'purebred' | 'crossbred' | 'unverified'>('all');
   const [internalSort, setInternalSort] = useState<RegistrySortKey>('identifier');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const sort = sortKey ?? internalSort;
   const changeSort = onSortChange ?? setInternalSort;
+  const cardsContainerClass =
+    viewMode === 'grid'
+      ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'
+      : 'space-y-4';
+
+  useEffect(() => {
+    if (window.localStorage.getItem('gt-registry-view') === 'grid') setViewMode('grid');
+  }, []);
+
+  const changeViewMode = (mode: 'list' | 'grid') => {
+    setViewMode(mode);
+    window.localStorage.setItem('gt-registry-view', mode);
+  };
 
 const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
   'all': 'all',
@@ -600,6 +635,8 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       filteredCount={paginatedBirds.list.length}
       totalCount={categoryList.length}
       onResetAll={clearFilters}
+      viewMode={viewMode}
+      onViewModeChange={changeViewMode}
     />
   );
 
@@ -656,6 +693,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
       highlightQuery={debouncedQuery}
       classificationMap={breedingClassificationMap}
       isRetired={isRetiredFighter(fowl, foughtFowlIds, foughtNames, regCtx)}
+      viewMode={viewMode}
     />
   );
 
@@ -680,7 +718,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 ${accentSoft}`}>{tabIcon}</div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">{tabLabel}</h2>
+              <h2 className="text-sm sm:text-base font-black text-foreground tracking-tight">{tabLabel}</h2>
               <p className="text-xs text-muted-foreground font-semibold">{tabSub}</p>
             </div>
           </div>
@@ -696,7 +734,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
         ) : birds.length === 0 ? (
           <div className="bg-white dark:bg-card p-12 text-center rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-3">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto ${isMaleTab ? 'bg-sky-50 dark:bg-sky-500/10' : 'bg-pink-50 dark:bg-pink-500/10'} ${accentText}`}>{tabIcon}</div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">{emptyTitle}</h3>
+            <h3 className="text-base font-extrabold text-foreground">{emptyTitle}</h3>
             <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">{emptyHint}</p>
             <button type="button" onClick={() => setProfilingSubTab('form')} className="mt-2 inline-block bg-slate-900 text-white font-bold px-5 py-2.5 rounded-md text-sm cursor-pointer hover:bg-emerald-700 transition-all">
               {isMaleTab ? t('registry.encodeFirstMale') : t('registry.encodeFirstFemale')}
@@ -704,7 +742,9 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
           </div>
         ) : (
           <>
-            {pagedList.map((fowl, index) => renderCard(fowl, index, isMaleTab ? 'Male' : 'Female'))}
+            <div className={cardsContainerClass}>
+              {pagedList.map((fowl, index) => renderCard(fowl, index, isMaleTab ? 'Male' : 'Female'))}
+            </div>
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -733,7 +773,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-md border flex items-center justify-center text-xl shrink-0 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-800 text-teal"></div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-card-foreground tracking-tight">{t('registry.offspringRegistryTitle')}</h2>
+              <h2 className="text-sm sm:text-base font-black text-foreground tracking-tight">{t('registry.offspringRegistryTitle')}</h2>
               <p className="text-xs text-muted-foreground font-semibold">{t('registry.offspringRegistryDesc')}</p>
             </div>
           </div>
@@ -800,7 +840,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
                 <Egg className="h-7 w-7" aria-hidden="true" />
               )}
             </div>
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-card-foreground">
+            <h3 className="text-base font-extrabold text-foreground">
               {category === 'breeding-stock'
                 ? t('registry.noBreedingStock')
                 : category === 'non-breeding'
@@ -822,10 +862,12 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
           </div>
         ) : (
           <>
-            {pagedList.map((child, index) => {
-              const childGender: 'Male' | 'Female' = child.gender === 'Male' || child.gender === 'Rooster' ? 'Male' : 'Female';
-              return renderCard(child, index, childGender);
-            })}
+            <div className={cardsContainerClass}>
+              {pagedList.map((child, index) => {
+                const childGender: 'Male' | 'Female' = child.gender === 'Male' || child.gender === 'Rooster' ? 'Male' : 'Female';
+                return renderCard(child, index, childGender);
+              })}
+            </div>
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
@@ -837,6 +879,7 @@ const CLASSIFICATION_ALIASES: Record<string, BreedingClassification> = {
 }
 
 export default function FowlLists(props: Props) {
+  const { t } = useT();
   const { tab, fowls } = props;
   const [internalQuery, setInternalQuery] = useState('');
   const query = props.query ?? internalQuery;
@@ -852,6 +895,26 @@ export default function FowlLists(props: Props) {
         deceasedCount={lists.deceased.length}
         onGoToInventory={props.onGoToInventory}
       />
+    );
+  }
+
+  if (props.loading) {
+    return (
+      <div className="space-y-4" aria-busy="true" aria-label={t('common.loading')}>
+        {[0, 1, 2].map((item) => (
+          <div
+            key={item}
+            className="bg-card border-border flex animate-pulse flex-col gap-4 rounded-[20px] border p-5 shadow-sm sm:flex-row"
+          >
+            <div className="bg-muted h-[120px] w-full rounded-xl sm:w-[120px]" />
+            <div className="flex-1 space-y-3">
+              <div className="bg-muted h-5 w-2/3 rounded-full" />
+              <div className="bg-muted h-4 w-1/2 rounded-full" />
+              <div className="bg-muted h-20 w-full rounded-xl" />
+            </div>
+          </div>
+        ))}
+      </div>
     );
   }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Shield, Egg, FileText } from 'lucide-react';
+import { Shield, Egg, FileText, Trophy } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import type { ProfilingSubTab } from '@/lib/types';
 import { ROLE_LABEL } from '@/lib/registry-roles';
@@ -36,7 +36,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
       id: 'males',
       label: t('registry.tabMales'),
       shortLabel: t('registry.tabMalesShort'),
-      icon: <ChickenIcon className="h-4 w-4 shrink-0" />,
+      icon: <Trophy className="h-4 w-4 shrink-0" />,
       count: counts.males,
     },
     {
@@ -100,11 +100,11 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
         - Same active color for every tab (emerald-600).
         - Thin divider line running under the whole tab row.
       */}
-      <div className="border-border/70 hidden w-full border-b md:block">
+      <div className="bg-card border-border hidden w-full rounded-2xl border p-1.5 shadow-md md:block">
         <div
           role="tablist"
           aria-label={t('registry.navAria')}
-          className="-mb-px flex flex-wrap items-center gap-1 sm:gap-2"
+          className="flex flex-wrap items-center gap-1"
         >
           {tabs.map((tab, idx) => {
             const isSelected = currentTab === tab.id;
@@ -123,14 +123,14 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
                 tabIndex={isSelected ? 0 : -1}
                 onClick={() => onSelectTab(tab.id)}
                 onKeyDown={(e) => handleKeyDown(e, idx, false)}
-                className={`group relative inline-flex cursor-pointer items-center gap-2 rounded-t-sm border-b-2 px-3 py-3 text-sm font-bold whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 ${
+                className={`group focus-visible:ring-ring focus-visible:ring-offset-card inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3.5 py-2 text-sm font-bold whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   isSelected
-                    ? 'border-emerald-600 font-extrabold text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground hover:text-foreground hover:border-border/80 border-transparent'
+                    ? 'bg-primary text-primary-foreground font-extrabold shadow-md'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <span
-                  className={`transition-colors ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground group-hover:text-foreground'}`}
+                  className={isSelected ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'}
                 >
                   {tab.icon}
                 </span>
@@ -139,7 +139,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-black transition-colors ${
                       isSelected
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                        ? 'bg-white/20 text-white'
                         : 'bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground'
                     }`}
                   >
@@ -184,7 +184,7 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
                 onKeyDown={(e) => handleKeyDown(e, idx, true)}
                 className={`relative flex min-h-[48px] cursor-pointer flex-col items-center justify-center rounded-md px-1 py-1 transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                   isSelected
-                    ? 'bg-emerald-50/50 font-extrabold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400'
+                    ? 'bg-primary text-primary-foreground font-extrabold'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -194,8 +194,8 @@ export default function RegistryNav({ currentTab, onSelectTab, counts }: Registr
                     <span
                       className={`absolute -top-1.5 -right-3 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-1 text-xs leading-none font-black ${
                         isSelected
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-muted text-muted-foreground border-border border'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-muted text-muted-foreground border-border border'
                       }`}
                     >
                       {tab.count}
