@@ -428,6 +428,7 @@ export const tl: AppTranslations = {
     imagePreviewAlt: 'Preview ng Larawan',
     validationSummaryPanel: 'Panel ng Pagpapatunay at Buod',
     nextIdLabel: 'Susunod na ID: {id}',
+    nextIdTitle: 'Susunod na ID',
     dataIntegrity: 'Integridad ng Datos at Katumpakan ng Lahi',
     validationStatus: 'Pagpapatunay',
     validationPassed: 'Pumasa',

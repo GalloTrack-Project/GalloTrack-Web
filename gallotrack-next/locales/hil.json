@@ -405,6 +405,7 @@
     "imagePreviewAlt": "Preview sang Litrato",
     "validationSummaryPanel": "Panel sang Pagpamatuod kag Kabilugan",
     "nextIdLabel": "Sunod nga ID: {id}",
+    "nextIdTitle": "Sunod nga ID",
     "dataIntegrity": "Kaluwasan sang Datos kag Katumpakan sang Kaliwat",
     "validationStatus": "Pagpamatuod",
     "validationPassed": "Napasar",

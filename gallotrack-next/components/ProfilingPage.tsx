@@ -266,13 +266,13 @@ export default function ProfilingPage() {
     <div className="animate-fadeIn space-y-5 pb-24 md:pb-6">
       <RegistryPageHeader
         onOpenBreeds={handleOpenBreedsHeader}
-        onRegister={() => selectProfilingTab(formViewActive ? 'males' : 'form')}
+        onRegister={() => selectProfilingTab('form')}
         registerActive={formViewActive}
       />
 
       <div className="relative z-10 -mt-2 px-1 sm:px-2">
         <RegistryNav
-          currentTab={profilingSubTab}
+          currentTab={formViewActive ? 'males' : profilingSubTab}
           onSelectTab={selectProfilingTab}
           counts={{
             males: registryCounts.breedingMales,

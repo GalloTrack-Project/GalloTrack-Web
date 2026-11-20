@@ -384,6 +384,7 @@ registry.chooseImageFile,Choose chicken image file,Pumili ng file ng larawan ng 
 registry.imagePreviewAlt,Preview,Preview ng Larawan,unreviewed,Awaiting native reviewer confirmation.,Preview sang Litrato,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.validationSummaryPanel,Validation & Summary Panel,Panel ng Pagpapatunay at Buod,unreviewed,Awaiting native reviewer confirmation.,Panel sang Pagpamatuod kag Kabilugan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.nextIdLabel,Next ID: {id},Susunod na ID: {id},unreviewed,Awaiting native reviewer confirmation.,Sunod nga ID: {id},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+registry.nextIdTitle,Next ID,Susunod na ID,unreviewed,Awaiting native reviewer confirmation.,Sunod nga ID,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.dataIntegrity,Data Integrity & Lineage Accuracy,Integridad ng Datos at Katumpakan ng Lahi,unreviewed,Awaiting native reviewer confirmation.,Kaluwasan sang Datos kag Katumpakan sang Kaliwat,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.validationStatus,Validation,Pagpapatunay,unreviewed,Awaiting native reviewer confirmation.,Pagpamatuod,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.validationPassed,Passed,Pumasa,unreviewed,"""Pumasa"" - standard Tagalog.",Napasar,unreviewed,"""Napasar"" is a loan from English ""pass""; confirm."

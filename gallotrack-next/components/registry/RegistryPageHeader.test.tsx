@@ -24,4 +24,16 @@ describe('RegistryPageHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: /Register Chicken/i }));
     expect(onRegister).toHaveBeenCalledTimes(1);
   });
+
+  it('shows the back affordance and keeps Register Chicken active on the form', () => {
+    const { container } = render(
+      <RegistryPageHeader onOpenBreeds={vi.fn()} onRegister={vi.fn()} registerActive />,
+    );
+
+    expect(screen.getByRole('button', { name: /Breeds/i })).toBeInTheDocument();
+    expect(container.querySelector('.lucide-arrow-left')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Register Chicken/i }).className).toContain(
+      'ring-brand-gold/60',
+    );
+  });
 });

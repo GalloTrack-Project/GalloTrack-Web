@@ -434,6 +434,7 @@ export const en = {
     imagePreviewAlt: 'Preview',
     validationSummaryPanel: 'Validation & Summary Panel',
     nextIdLabel: 'Next ID: {id}',
+    nextIdTitle: 'Next ID',
     dataIntegrity: 'Data Integrity & Lineage Accuracy',
     validationStatus: 'Validation',
     validationPassed: 'Passed',

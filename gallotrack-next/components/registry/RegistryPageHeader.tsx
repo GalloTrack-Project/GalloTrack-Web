@@ -1,7 +1,8 @@
 'use client';
 
-import { Dna, Plus } from 'lucide-react';
+import { ArrowLeft, Dna, Plus } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
+import RoosterHeadSilhouette from '@/components/about/RoosterHeadSilhouette';
 import { useT } from '@/lib/i18n';
 
 export default function RegistryPageHeader({
@@ -17,6 +18,9 @@ export default function RegistryPageHeader({
 
   return (
     <section className="border-border from-background via-accent-soft/35 to-brand-orange/20 relative overflow-hidden rounded-[24px] border bg-gradient-to-r px-5 py-6 shadow-lg shadow-primary/5 sm:px-7 sm:py-7">
+      <RoosterHeadSilhouette
+        className="text-brand-red pointer-events-none absolute -top-24 -left-16 h-[190%] w-auto opacity-[0.055]"
+      />
       <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-[58%] lg:block">
         <svg
           className="h-full w-full"
@@ -73,7 +77,11 @@ export default function RegistryPageHeader({
             onClick={onOpenBreeds}
             className="border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            <Dna className="text-brand-red h-4 w-4" aria-hidden="true" />
+            {registerActive ? (
+              <ArrowLeft className="text-brand-red h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Dna className="text-brand-red h-4 w-4" aria-hidden="true" />
+            )}
             {t('registry.breedsBtn')}
           </button>
           <button
@@ -84,7 +92,7 @@ export default function RegistryPageHeader({
             }`}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
-            {registerActive ? t('registry.viewRegistryBtn') : t('registry.registerChickenBtn')}
+            {t('registry.registerChickenBtn')}
           </button>
         </div>
       </div>
