@@ -519,6 +519,9 @@ registry.pressToSearchTitle,Press / anywhere to search,Pindutin ang / saanman up
 registry.mobileFiltersBtn,Filters,Mga Filter,unreviewed,Awaiting native reviewer confirmation.,Mga Filter,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.resultsLabel,Results:,Mga Resulta:,unreviewed,Awaiting native reviewer confirmation.,Mga Resulta:,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.resultsRatio,{filtered} of {total},{filtered} ng {total},unreviewed,Awaiting native reviewer confirmation.,{filtered} sa {total},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+registry.listView,List view,Listahan,unreviewed,Awaiting native reviewer confirmation.,Listahan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+registry.gridView,Grid view,Grid na tanaw,unreviewed,Awaiting native reviewer confirmation.,Grid nga panan-aw,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+registry.footerTagline,Track • Breed • Preserve,Subaybay • Pagpaparami • Pangalagaan,unreviewed,Awaiting native reviewer confirmation.,Subaybay • Pagpasanay • Pangamlig,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.fatherSireLabel,Sire,Sire,reviewed,,Sire,reviewed,
 registry.allFathersPlaceholder,All Sires,Lahat ng Sire,unreviewed,Awaiting native reviewer confirmation.,Tanan nga Sire,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 registry.motherDamLabel,Dam,Dam,reviewed,,Dam,reviewed,
