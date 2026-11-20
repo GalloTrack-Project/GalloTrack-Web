@@ -165,7 +165,18 @@ export default function ChickenPhoto({
       {placeholder}
     </span>
   ) : unavailable ? (
-    size >= 80 ? (
+    !interactive ? (
+      <span
+        className={cn(frameClass, 'flex-col gap-0.5 border border-border bg-muted/40 p-1')}
+        style={frameStyle}
+        title={t('registry.cardPhotoUnavailable')}
+      >
+        <AlertTriangle className="text-warning h-1/2 w-1/2" aria-hidden="true" />
+        <span className="text-[8px] leading-tight font-bold break-words text-muted-foreground">
+          {t('registry.cardPhotoUnavailable')}
+        </span>
+      </span>
+    ) : size >= 80 ? (
       <span className={cn(frameClass, 'flex-col gap-1 border border-border bg-muted/40 p-1')} style={frameStyle}>
         <span className="text-[10px] leading-tight font-bold break-words text-muted-foreground">
           {t('registry.cardPhotoUnavailable')}
