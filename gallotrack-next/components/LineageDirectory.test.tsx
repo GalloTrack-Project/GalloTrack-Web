@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -141,16 +141,37 @@ describe('LineageDirectory redesigned top section', () => {
     expect(screen.queryByText(/Dam Offspring Groups/i)).not.toBeInTheDocument();
   });
 
-  it('renders compact header with title, subtitle, and search input', () => {
+  it('renders the shared page banner with the page h1', () => {
     renderDirectory();
-    expect(screen.getByRole('heading', { level: 1, name: /Family Lineage Directory/i })).toBeInTheDocument();
-    expect(screen.getByText(/Track sibling groups, sire & dam offspring trees to compare performance per bloodline/i)).toBeInTheDocument();
-    const searchInput = screen.getByLabelText(/Search family, sire, dam or chicken name/i);
-    expect(searchInput).toBeInTheDocument();
-    expect(searchInput).toHaveAttribute('placeholder', 'Search name, ID, or wing band…');
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Family Lineage Directory/i }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(
+      screen.getByText(/Explore the families, offspring and ancestors of your chickens/i),
+    ).toBeInTheDocument();
   });
 
-  it('renders underline tabs with accurate count badges and tablist semantics', () => {
+  it('shows one tree search on Family Tree and the page search on other tabs', () => {
+    renderDirectory();
+    expect(screen.getAllByRole('searchbox')).toHaveLength(1);
+    expect(
+      screen.getByLabelText(/Search by name, ID or wing band/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/Search family, sire, dam or chicken name/i),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(familiesTab());
+    expect(
+      screen.getByLabelText(/Search family, sire, dam or chicken name/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/Search by name, ID or wing band/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders pill tabs with accurate count badges and tablist semantics', () => {
     renderDirectory();
     const tablist = screen.getByRole('tablist', { name: /Family Lineage Directory Tabs/i });
     expect(tablist).toBeInTheDocument();
@@ -171,6 +192,7 @@ describe('LineageDirectory redesigned top section', () => {
     expect(damTab).toBeInTheDocument();
     expect(pedigreeTab).toBeInTheDocument();
   });
+
 
   it('uses cock and hen icons for the sire and dam tabs and selected parents', () => {
     renderDirectory();
@@ -194,43 +216,48 @@ describe('LineageDirectory redesigned top section', () => {
     expect(damPicker.parentElement?.querySelector('svg[data-fowl-sex="hen"]')).not.toBeNull();
   });
 
-  it('renders tabs with 2-column grid below sm and fifth tab spanning both columns', () => {
+  it('keeps tabs in an internally scrolling strip without a two-column grid', () => {
     renderDirectory();
     const tablist = screen.getByRole('tablist', { name: /Family Lineage Directory Tabs/i });
-    expect(tablist).toHaveClass('grid', 'grid-cols-2', 'sm:flex');
+    expect(tablist).toHaveClass('flex', 'min-w-max');
+    expect(tablist).not.toHaveClass('grid', 'grid-cols-2');
 
+    const strip = tablist.parentElement;
+    expect(strip).toHaveClass('overflow-x-auto');
     const pedigreeTab = screen.getByRole('tab', { name: /Pedigree \/ Ancestors/i });
-    expect(pedigreeTab).toHaveClass('col-span-2', 'sm:col-span-1');
+    expect(pedigreeTab).toHaveClass('rounded-full');
   });
 
-  it('ensures context bar and top container never stick while scrolling', () => {
+  it('keeps the tree toolbar and top container non-sticky', () => {
     renderDirectory();
-    const contextBar = screen.getByTestId('lineage-context-bar');
-    expect(contextBar).toHaveClass('static');
-    const contextBarClasses = contextBar.className.split(/\s+/);
-    expect(contextBarClasses.includes('sticky')).toBe(false);
-    expect(contextBarClasses.includes('md:sticky')).toBe(false);
+    expect(screen.queryByTestId('lineage-context-bar')).not.toBeInTheDocument();
 
     const topContainer = screen.getByTestId('lineage-top-container');
     expect(topContainer).toHaveClass('static');
     const topContainerClasses = topContainer.className.split(/\s+/);
     expect(topContainerClasses.includes('sticky')).toBe(false);
     expect(topContainerClasses.includes('md:sticky')).toBe(false);
+
+    fireEvent.click(familiesTab());
+    const contextBar = screen.getByTestId('lineage-context-bar');
+    expect(contextBar).toHaveClass('static');
+    expect(contextBar.className.split(/\s+/)).not.toContain('sticky');
   });
 
-  it('defaults to Family Tree and shows its context summary', () => {
+  it('defaults to Family Tree with its toolbar, then shows the family summary', () => {
     renderDirectory();
     expect(screen.getByRole('tab', { name: /Family Tree/i })).toHaveAttribute(
       'aria-selected',
       'true',
     );
-
-    const contextBar = screen.getByTestId('lineage-context-bar');
-    expect(contextBar).toHaveTextContent(/2 breeding pairs/i);
-    expect(contextBar).toHaveTextContent(/4 offspring/i);
-    expect(contextBar).toHaveTextContent(/7 chickens tracked/i);
+    expect(screen.getByLabelText('Sort')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Expand all' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collapse all' })).toBeInTheDocument();
+    expect(screen.queryByTestId('lineage-context-bar')).not.toBeInTheDocument();
 
     fireEvent.click(familiesTab());
+    expect(window.location.search).toContain('tab=families');
+    const contextBar = screen.getByTestId('lineage-context-bar');
     expect(contextBar).toHaveTextContent(/0 of 2 cocks fought/i);
     expect(contextBar).toHaveTextContent(/0W-0L/);
     expect(contextBar).toHaveTextContent(/\u2014%/);
@@ -532,8 +559,8 @@ describe('LineageDirectory redesigned top section', () => {
     it('tints decided rows and leaves no-decision rows untinted', () => {
       renderFamiliesDirectory(vi.fn(), { fowls, matchHistory: records });
 
-      expect(rowFor('Male A').className).toContain('bg-emerald-50/70');
-      expect(rowFor('Male B').className).toContain('bg-rose-50/70');
+      expect(rowFor('Male A').className).toContain('bg-win-bg/70');
+      expect(rowFor('Male B').className).toContain('bg-loss-bg/70');
       expect(rowFor('Male C').className).not.toMatch(/bg-emerald-50\/70|bg-rose-50\/70/);
     });
 
@@ -554,7 +581,7 @@ describe('LineageDirectory redesigned top section', () => {
 
       expect(within(rowFor('Half Cock')).getByText('1W-1L')).toBeInTheDocument();
       expect(within(rowFor('Half Cock')).getByText('50%')).toBeInTheDocument();
-      expect(rowFor('Half Cock').className).toContain('bg-emerald-50/70');
+      expect(rowFor('Half Cock').className).toContain('bg-win-bg/70');
 
       expect(within(rowFor('Draw Cock')).getByText('0W-0L-1D')).toBeInTheDocument();
       expect(within(rowFor('Draw Cock')).getByText('\u2014%')).toBeInTheDocument();
@@ -709,13 +736,10 @@ describe('LineageDirectory redesigned top section', () => {
 
   it('updates context bar summary text dynamically when switching to other tabs', () => {
     renderDirectory();
+    fireEvent.click(familiesTab());
     const contextBar = screen.getByTestId('lineage-context-bar');
-
-    // Switch to Family Tree
-    fireEvent.click(screen.getByRole('tab', { name: /Family Tree/i }));
-    expect(contextBar).toHaveTextContent(/2 breeding pairs/i);
-    expect(contextBar).toHaveTextContent(/4 offspring/i);
-    expect(contextBar).toHaveTextContent(/7 chickens tracked/i);
+    expect(contextBar).toHaveTextContent(/0 of 2 cocks fought/i);
+    expect(contextBar).toHaveTextContent(/0W-0L/);
 
     // Switch to Sire Offspring Tree
     fireEvent.click(screen.getByRole('tab', { name: /Sire Offspring Tree/i }));
@@ -732,14 +756,14 @@ describe('LineageDirectory redesigned top section', () => {
     expect(contextBar).toHaveTextContent(/7 chickens tracked/i);
   });
 
-  it('shows the sort dropdown on Family Tree and families, and expand/collapse only on Family Tree', () => {
+  it('keeps one Sort and one Expand all/Collapse all pair in the Family Tree toolbar', () => {
     renderDirectory();
 
-    // Default Family Tree tab has sort and expand/collapse controls.
-    expect(screen.getByLabelText(/Sort options/i)).toBeInTheDocument();
-    const treeTools = screen.getByTestId('lineage-context-bar');
-    expect(within(treeTools).getByRole('button', { name: /Expand all/i })).toBeInTheDocument();
-    expect(within(treeTools).getByRole('button', { name: /Collapse all/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('Sort')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Sort options/i)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Expand all/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /Collapse all/i })).toHaveLength(1);
+    expect(screen.queryByTestId('lineage-context-bar')).not.toBeInTheDocument();
 
     fireEvent.click(familiesTab());
     expect(screen.getByLabelText(/Sort options/i)).toBeInTheDocument();
@@ -751,10 +775,9 @@ describe('LineageDirectory redesigned top section', () => {
     expect(screen.queryByRole('button', { name: /Expand all/i })).not.toBeInTheDocument();
   });
 
-  it('renders context bar tab tools with responsive flex-wrap classes to prevent mobile overflow', () => {
-    renderDirectory();
+  it('keeps context-bar tab tools responsive to prevent mobile overflow', () => {
+    renderFamiliesDirectory();
     const sortDropdown = screen.getByLabelText(/Sort options/i);
-    // Find the enclosing tab tools container
     const toolsContainer = sortDropdown.closest('.flex-wrap');
     expect(toolsContainer).toBeInTheDocument();
     expect(toolsContainer).toHaveClass('w-full', 'justify-between', 'sm:w-auto', 'sm:justify-end');
@@ -1497,6 +1520,12 @@ describe('LineageDirectory redesigned top section', () => {
 });
 
 describe('crisscross integration in the redesigned family cards', () => {
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/lineage');
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
   const crisscrossFamily: FowlRecord[] = [
     bird({ id: 101, name: 'Lemon Sire', gender: 'Rooster', breed: 'Lemon', bird_code: 'L' }),
     bird({ id: 102, name: 'Hatch Dam', gender: 'Hen', breed: 'Hatch', bird_code: 'H' }),
@@ -1559,4 +1588,158 @@ describe('crisscross integration in the redesigned family cards', () => {
     const sireRegion = screen.getByRole('region', { name: /Hatch Sire details/i });
     expect(within(sireRegion).getByTestId('crisscross-badge')).toBeInTheDocument();
   });
+
+  it('renders the shared banner and footer band', () => {
+    renderDirectory();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Family Lineage Directory/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Track · Breed · Excel/i)).toBeInTheDocument();
+  });
+
+  it('lists only feather colors that exist in the data', () => {
+    const colored = family.map((fowl, index) => ({
+      ...fowl,
+      feather_color: index % 2 === 0 ? 'White' : 'Brown Red',
+    }));
+    renderDirectory(vi.fn(), { fowls: colored });
+    const select = screen.getByLabelText('Feather color');
+    const options = within(select)
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    expect(options).toContain('White');
+    expect(options).toContain('Brown Red');
+    expect(options).not.toContain('Ginger');
+  });
+
+  it('dims non-matching birds, updates the live count and restores from the URL', async () => {
+    renderDirectory();
+    const count = screen.getByText(/7 birds match/i);
+    expect(count).toBeInTheDocument();
+
+    const cardCount = screen.getAllByTestId('lineage-bird-card').length;
+    const connectorCount = screen
+      .getByTestId('lineage-canvas')
+      .querySelectorAll('svg path').length;
+
+    fireEvent.change(screen.getByLabelText('Generation'), { target: { value: '2' } });
+    expect(window.location.search).toContain('gen=2');
+    expect(screen.getByText(/4 birds match/i)).toBeInTheDocument();
+    expect(cardForTest('Sire 1').className).toMatch(/opacity-40/);
+    expect(cardForTest('Offspring 1A1').className).not.toMatch(/opacity-40/);
+    expect(screen.getAllByTestId('lineage-bird-card')).toHaveLength(cardCount);
+    expect(
+      screen.getByTestId('lineage-canvas').querySelectorAll('svg path'),
+    ).toHaveLength(connectorCount);
+
+    fireEvent.click(screen.getByRole('button', { name: /Clear filters/i }));
+    expect(screen.getByText(/7 birds match/i)).toBeInTheDocument();
+    expect(window.location.search).not.toContain('gen=');
+
+    window.history.replaceState({}, '', '/lineage?tab=tree&gen=3&sex=male&pair=others');
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText('Generation')).toHaveValue('3');
+    });
+    expect(screen.getByRole('button', { name: 'Cocks' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByLabelText('Pair type')).toHaveValue('others');
+  });
+
+  it('switches to Table View, filters rows, sorts and opens the same details panel', async () => {
+    renderDirectory();
+    fireEvent.click(screen.getByRole('button', { name: 'Table View' }));
+    expect(window.location.search).toContain('view=table');
+
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('row')).toHaveLength(8);
+    expect(within(table).getAllByText('Offspring 1A1').length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getByLabelText('Generation'), { target: { value: '2' } });
+    expect(screen.getAllByText(/4 of 7 birds/i).length).toBeGreaterThan(0);
+    expect(within(table).getAllByRole('row')).toHaveLength(5);
+    expect(
+      within(table).queryByRole('button', { name: 'Open details for Sire 1' }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(within(table).getByRole('button', { name: 'Name' }));
+    expect(within(table).getByRole('columnheader', { name: 'Name' })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
+    fireEvent.click(within(table).getByRole('button', { name: 'Name' }));
+    expect(within(table).getByRole('columnheader', { name: 'Name' })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
+
+    fireEvent.click(within(table).getByRole('button', { name: /Open details for Offspring 1A1/i }));
+    expect(screen.getByTestId('lineage-details')).toHaveTextContent('Offspring 1A1');
+    fireEvent.click(screen.getByRole('button', { name: /Back to insights/i }));
+    expect(screen.getByTestId('lineage-insights')).toBeInTheDocument();
+
+    window.history.pushState({}, '', '/lineage?tab=tree');
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('lineage-canvas')).toBeInTheDocument();
+    });
+  });
+
+  it('restores view and filters from the URL after a refresh', () => {
+    window.history.replaceState({}, '', '/lineage?tab=tree&view=table&gen=2&sex=female');
+    renderDirectory();
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByLabelText('Generation')).toHaveValue('2');
+    expect(screen.getByRole('button', { name: 'Hens' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Table View' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('shows real insights figures and returns from details', () => {
+    renderDirectory();
+    const insights = screen.getByTestId('lineage-insights');
+    expect(within(insights).getByText(/Sire 1/i)).toBeInTheDocument();
+    expect(within(insights).getByText('Birds shown').nextElementSibling).toHaveTextContent('7');
+    expect(
+      within(insights).getByText('Generations shown').nextElementSibling,
+    ).toHaveTextContent('3');
+    expect(within(insights).getByText('Breeding pairs').nextElementSibling).toHaveTextContent(
+      '2',
+    );
+    expect(within(insights).getByText('Cocks that fought').nextElementSibling).toHaveTextContent(
+      '0 / 3',
+    );
+
+    fireEvent.click(cardForTest('Offspring 1A1'));
+    expect(screen.getByTestId('lineage-details')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back to insights/i }));
+    expect(screen.getByTestId('lineage-insights')).toBeInTheDocument();
+
+    fireEvent.click(cardForTest('Offspring 1A1'));
+    fireEvent.click(screen.getByRole('button', { name: /View ancestors/i }));
+    expect(screen.getByRole('tab', { name: /Pedigree \/ Ancestors/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+  });
 });
+
+function cardForTest(name: string): HTMLElement {
+  const card = screen
+    .getAllByTestId('lineage-bird-card')
+    .find((element) => element.textContent?.includes(name));
+  if (!card) throw new Error(`No lineage card for ${name}`);
+  return card;
+}

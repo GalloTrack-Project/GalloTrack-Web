@@ -21,6 +21,17 @@ import { CockIcon, HenIcon } from '@/components/icons/FowlSexIcons';
 import FamilyPhoto from '@/components/lineage/FamilyPhoto';
 import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
+import LineageStatusBadge from '@/components/lineage/LineageStatusBadge';
+import PageBanner from '@/components/layout/PageBanner';
+import FooterBand from '@/components/layout/FooterBand';
+import { useT } from '@/lib/i18n';
+import {
+  DEFAULT_LINEAGE_TREE_FILTERS,
+  type LineageGenerationFilter,
+  type LineagePairFilter,
+  type LineageSexFilter,
+  type LineageTreeFilters,
+} from '@/lib/lineage-filters';
 import ParentOffspringTree, {
   type ParentTreePair,
 } from '@/components/lineage/ParentOffspringTree';
@@ -89,9 +100,9 @@ function SexBadge({ chicken }: { chicken: Pick<FowlRecord, 'gender'> }) {
   const label = sexLabel(chicken);
   const tone =
     label === 'Cock'
-      ? 'text-sky-600 dark:text-sky-400'
+      ? 'text-cock '
       : label === 'Hen'
-      ? 'text-pink-600 dark:text-pink-400'
+      ? 'text-hen '
       : 'text-muted-foreground';
   return (
     <span className={`inline-flex items-center gap-1 font-bold ${tone}`}>
@@ -158,48 +169,6 @@ function compareBirthCodes(aCode: string, bCode: string): number {
   return compareBirdCodesNatural(aCode, bCode);
 }
 
-function StatusPill({
-  status,
-  archiveReason,
-  deathReason,
-}: {
-  status: string;
-  archiveReason?: string;
-  deathReason?: string;
-}) {
-  if (status === 'Archived') {
-    return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0"
-        title={archiveReason ? `Archived: ${archiveReason}` : 'Archived'}
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-        Archived
-      </span>
-    );
-  }
-  if (status === 'Deceased') {
-    return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 shrink-0"
-        title={deathReason ? `Deceased: ${deathReason}` : 'Deceased'}
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-        Deceased
-      </span>
-    );
-  }
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0"
-      title="Active in flock"
-    >
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-      Active
-    </span>
-  );
-}
-
 function EmptyState({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="bg-card p-10 text-center rounded-lg border border-border shadow-xs space-y-2">
@@ -215,7 +184,7 @@ function EmptyState({ title, hint }: { title: string; hint: string }) {
 function SearchEmptyState({ query, onClear }: { query: string; onClear: () => void }) {
   return (
     <div className="bg-card p-12 text-center rounded-lg border border-border shadow-xs space-y-3.5 max-w-md mx-auto my-6 animate-fadeIn">
-      <div className="w-14 h-14 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/20">
+      <div className="w-14 h-14 bg-win-bg0/10 text-primary  rounded-2xl flex items-center justify-center text-2xl mx-auto border border-primary/20">
         <Search className="h-6 w-6" aria-hidden="true" />
       </div>
       <div className="space-y-1">
@@ -229,7 +198,7 @@ function SearchEmptyState({ query, onClear }: { query: string; onClear: () => vo
       <button
         type="button"
         onClick={onClear}
-        className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all cursor-pointer"
+        className="bg-primary text-primary-foreground hover:bg-accent focus-visible:ring-brand-orange mt-2 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold shadow-xs transition-all focus-visible:ring-2 focus-visible:outline-none"
       >
         Clear search
       </button>
@@ -255,6 +224,19 @@ const isLineageTab = (value: string | null): value is LineageTab =>
 type SortOption = 'most' | 'name' | 'newest';
 type FamilySortOption = 'winrate' | 'offspring' | 'fights' | 'name';
 type FamilyPairFilter = 'all' | 'crisscross' | 'outcross' | 'others';
+type LineageView = 'tree' | 'table';
+const LINEAGE_VIEWS: readonly LineageView[] = ['tree', 'table'];
+const isLineageView = (value: string | null): value is LineageView =>
+  value !== null && (LINEAGE_VIEWS as readonly string[]).includes(value);
+const LINEAGE_GENERATIONS: readonly LineageGenerationFilter[] = ['all', '1', '2', '3'];
+const isLineageGeneration = (value: string | null): value is LineageGenerationFilter =>
+  value !== null && (LINEAGE_GENERATIONS as readonly string[]).includes(value);
+const LINEAGE_SEXES: readonly LineageSexFilter[] = ['all', 'male', 'female'];
+const isLineageSex = (value: string | null): value is LineageSexFilter =>
+  value !== null && (LINEAGE_SEXES as readonly string[]).includes(value);
+const LINEAGE_PAIRS: readonly LineagePairFilter[] = ['all', 'crisscross', 'outcross', 'others'];
+const isLineagePair = (value: string | null): value is LineagePairFilter =>
+  value !== null && (LINEAGE_PAIRS as readonly string[]).includes(value);
 
 const FAMILY_PAIR_FILTER_LABELS: Record<FamilyPairFilter, string> = {
   all: 'All',
@@ -360,17 +342,17 @@ function FamilyCard({
 
   const sampleBadge = (stats: WinRateStats) =>
     stats.isLowSample ? (
-      <span className="inline-flex shrink-0 items-center rounded border border-amber-300/70 bg-amber-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-800 uppercase dark:border-amber-700/70 dark:bg-amber-950/60 dark:text-amber-300">
+      <span className="inline-flex shrink-0 items-center rounded border border-low-sample/40 bg-low-sample-bg px-1.5 py-0.5 text-[9px] font-black tracking-wider text-low-sample uppercase   ">
         {stats.decided === 1 ? '1 MATCH' : 'LOW SAMPLE'}
       </span>
     ) : null;
 
   return (
-    <article className="family-card-container bg-card border-border w-full max-w-full min-w-0 rounded-lg border shadow-xs">
+    <article className="family-card-container bg-card border-border w-full max-w-full min-w-0 rounded-xl border shadow-sm">
       <div className="flex flex-col gap-2 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="text-card-foreground text-sm font-black">Family {index + 1}</h4>
-          <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-emerald-700 uppercase dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+          <span className="rounded-full border border-primary/30 bg-win-bg px-2 py-0.5 text-[10px] font-black tracking-wider text-primary uppercase   ">
             Full Siblings
           </span>
           <CrisscrossBadge classification={crisscross} compact />
@@ -455,12 +437,12 @@ function FamilyCard({
                 rate === null
                   ? 'text-muted-foreground'
                   : rate >= 50
-                    ? 'text-emerald-700 dark:text-emerald-400'
-                    : 'text-rose-700 dark:text-rose-400';
+                    ? 'text-primary '
+                    : 'text-loss ';
               const tint = decided
                 ? rate !== null && rate >= 50
-                  ? 'bg-emerald-50/70 dark:bg-emerald-950/25'
-                  : 'bg-rose-50/70 dark:bg-rose-950/25'
+                  ? 'bg-win-bg/70 '
+                  : 'bg-loss-bg/70 '
                 : '';
               const record =
                 stats.total === 0
@@ -481,7 +463,7 @@ function FamilyCard({
                       setSelectedFowlForDetails(cock);
                     }
                   }}
-                  className={`group cursor-pointer border-b border-border/50 transition-colors last:border-b-0 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${tint}`}
+                  className={`group cursor-pointer border-b border-border/50 transition-colors last:border-b-0 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/50 ${tint}`}
                 >
                   <td className="text-muted-foreground px-0.5 py-2 font-mono font-bold md:px-3">
                     <div className="flex min-w-0 items-center gap-1.5">
@@ -527,7 +509,7 @@ function FamilyCard({
                       }}
                       aria-label={`View all fights for ${cock.name}`}
                       title="View all fights"
-                      className="border-border text-muted-foreground hover:border-emerald-400 hover:text-emerald-700 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded border transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:outline-none md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                      className="border-border text-muted-foreground hover:border-brand-orange/60 hover:text-primary inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded border transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:outline-none md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
                     >
                       <Swords className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
@@ -560,8 +542,8 @@ function FamilyCard({
                           familyTotal.winRate === null
                             ? 'text-muted-foreground'
                             : familyTotal.winRate >= 50
-                              ? 'text-emerald-700 dark:text-emerald-400'
-                              : 'text-rose-700 dark:text-rose-400'
+                              ? 'text-primary '
+                              : 'text-loss '
                         }`}
                       >
                         {totalRate}
@@ -621,8 +603,13 @@ export default function LineageDirectory({
   const internalDebouncedSearch = useDebounce(search || '', 250);
   const debouncedSearch = (propDebouncedSearch !== undefined ? propDebouncedSearch : internalDebouncedSearch) || '';
 
+  const t = useT();
   const [activeTab, setActiveTab] = useState<LineageTab>(DEFAULT_LINEAGE_TAB);
   const [sortBy, setSortBy] = useState<SortOption>('most');
+  const [lineageView, setLineageView] = useState<LineageView>('tree');
+  const [lineageFilters, setLineageFilters] = useState<LineageTreeFilters>(
+    DEFAULT_LINEAGE_TREE_FILTERS,
+  );
 
   const router = useRouter();
   const ui = useUI();
@@ -666,6 +653,53 @@ export default function LineageDirectory({
     } catch {
       /* session storage may be unavailable */
     }
+  };
+
+  const writeUrlState = (
+    updates: Record<string, string | null>,
+    mode: 'push' | 'replace' = 'push',
+  ) => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === '') url.searchParams.delete(key);
+      else url.searchParams.set(key, value);
+    });
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (next === current) return;
+    window.history[mode === 'push' ? 'pushState' : 'replaceState']({}, '', next);
+  };
+
+  const changeTab = (tab: LineageTab) => {
+    setActiveTab(tab);
+    if (tab === 'tree') {
+      setSearch('');
+      setIsSearchDropdownOpen(false);
+    }
+    writeUrlState({
+      tab,
+      sire: null,
+      dam: null,
+      chicken: null,
+      child: null,
+    });
+  };
+
+  const changeLineageView = (view: LineageView) => {
+    setLineageView(view);
+    writeUrlState({ view });
+  };
+
+  const changeLineageFilters = (next: LineageTreeFilters) => {
+    setLineageFilters(next);
+    setFamilyPairFilter(next.pair);
+    writeUrlState({
+      gen: next.generation === 'all' ? null : next.generation,
+      color: next.feather === 'all' ? null : next.feather,
+      pair: next.pair === 'all' ? null : next.pair,
+      sex: next.sex === 'all' ? null : next.sex,
+    });
   };
 
   // Highlighted chicken ID (for smooth scroll & flash)
@@ -829,19 +863,24 @@ export default function LineageDirectory({
     const syncFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab');
-      if (isLineageTab(tabParam)) {
-        setActiveTab(tabParam);
-      }
+      setActiveTab(isLineageTab(tabParam) ? tabParam : DEFAULT_LINEAGE_TAB);
+
+      const viewParam = params.get('view');
+      setLineageView(isLineageView(viewParam) ? viewParam : 'tree');
+
       const pairParam = params.get('pair');
-      if (
-        pairParam === 'crisscross' ||
-        pairParam === 'outcross' ||
-        pairParam === 'others' ||
-        pairParam === 'all'
-      ) {
-        setFamilyPairFilter(pairParam as FamilyPairFilter);
-        if (!tabParam) setActiveTab('families');
-      }
+      const nextPair: LineagePairFilter = isLineagePair(pairParam) ? pairParam : 'all';
+      setFamilyPairFilter(nextPair);
+      if (nextPair !== 'all' && !tabParam) setActiveTab('families');
+
+      const sexParam = params.get('sex');
+      const genParam = params.get('gen');
+      setLineageFilters({
+        sex: isLineageSex(sexParam) ? sexParam : 'all',
+        generation: isLineageGeneration(genParam) ? genParam : 'all',
+        feather: params.get('color') || 'all',
+        pair: nextPair,
+      });
       const sireParam = params.get('sire');
       if (sireParam && sireEntries.length > 0) {
         const norm = sireParam.trim().toLowerCase();
@@ -951,12 +990,8 @@ export default function LineageDirectory({
 
   const handleFamilyPairFilterChange = (value: FamilyPairFilter) => {
     setFamilyPairFilter(value);
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      if (value === 'all') url.searchParams.delete('pair');
-      else url.searchParams.set('pair', value);
-      window.history.pushState({}, '', url.toString());
-    }
+    setLineageFilters((current) => ({ ...current, pair: value }));
+    writeUrlState({ pair: value === 'all' ? null : value });
   };
 
   const handleSelectParent = (name: string, kind: 'sire' | 'dam', code: string) => {
@@ -987,6 +1022,11 @@ export default function LineageDirectory({
     setActiveTab(kind);
   };
 
+  const openAncestorsTab = (fowl: FowlRecord) => {
+    setSelectedPedigreeId(fowl.id);
+    changeTab('pedigree');
+  };
+
   const handleSelectSearchedChicken = (child: FowlRecord) => {
     setSearch('');
     setIsSearchDropdownOpen(false);
@@ -994,12 +1034,12 @@ export default function LineageDirectory({
     const hasDam = Boolean(child.dam && isKnownParent(child.dam));
 
     if (hasSire) {
-      setActiveTab('sire');
+      changeTab('sire');
       setSelectedSireName(child.sire);
         const mate = isKnownParent(child.dam) ? normalizeParentName(child.dam) : 'Unknown dam';
       setExpandedPairs((prev) => new Map(prev).set(`sire|||${child.sire}|||${mate}`, true));
     } else if (hasDam) {
-      setActiveTab('dam');
+      changeTab('dam');
       setSelectedDamName(child.dam);
         const mate = isKnownParent(child.sire) ? normalizeParentName(child.sire) : 'Unknown sire';
       setExpandedPairs((prev) => new Map(prev).set(`dam|||${child.dam}|||${mate}`, true));
@@ -1363,6 +1403,23 @@ export default function LineageDirectory({
   const tabIds = LINEAGE_TAB_IDS;
   const tabButtonRefs = useRef<Map<LineageTab, HTMLButtonElement>>(new Map());
 
+  useEffect(() => {
+    const el = tabButtonRefs.current.get(activeTab);
+    if (!el) return;
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false);
+    try {
+      el.scrollIntoView?.({
+        inline: 'nearest',
+        block: 'nearest',
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      });
+    } catch {
+      /* jsdom and some embedded browsers do not implement scrolling. */
+    }
+  }, [activeTab]);
+
   const handleTabKeyDown = (e: React.KeyboardEvent, index: number) => {
     let nextIndex = index;
     if (e.key === 'ArrowRight') nextIndex = (index + 1) % tabIds.length;
@@ -1373,7 +1430,7 @@ export default function LineageDirectory({
 
     e.preventDefault();
     const nextTab = tabIds[nextIndex];
-    setActiveTab(nextTab);
+    changeTab(nextTab);
     tabButtonRefs.current.get(nextTab)?.focus();
   };
 
@@ -1673,7 +1730,7 @@ export default function LineageDirectory({
                       type="button"
                       aria-pressed={parentViewMode === mode}
                       onClick={() => changeParentView(mode)}
-                      className={`min-h-11 cursor-pointer rounded-md px-3 text-xs font-black capitalize transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none sm:min-h-8 sm:px-2.5 ${
+                      className={`min-h-11 cursor-pointer rounded-md px-3 text-xs font-black capitalize transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none sm:min-h-8 sm:px-2.5 ${
                         parentViewMode === mode
                           ? 'bg-card text-foreground shadow-2xs'
                           : 'text-muted-foreground hover:text-foreground'
@@ -1687,7 +1744,7 @@ export default function LineageDirectory({
                   <button
                     type="button"
                     onClick={toggleAllPairs}
-                    className="text-muted-foreground hover:text-foreground min-h-11 cursor-pointer rounded-md border border-transparent px-3 text-xs font-bold transition-colors hover:border-emerald-300 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none dark:hover:bg-emerald-950/30 sm:min-h-8"
+                    className="text-muted-foreground hover:text-foreground min-h-11 cursor-pointer rounded-md border border-transparent px-3 text-xs font-bold transition-colors hover:border-primary/30 hover:bg-win-bg focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none  sm:min-h-8"
                   >
                     {allPairsExpanded ? 'Collapse all' : 'Expand all'}
                   </button>
@@ -1743,13 +1800,13 @@ export default function LineageDirectory({
                         type="button"
                         aria-pressed={treeSexFilter === value}
                         onClick={() => setTreeSexFilter(value)}
-                        className={`min-h-11 cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none sm:min-h-8 ${
+                        className={`min-h-11 cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none sm:min-h-8 ${
                           treeSexFilter === value
                             ? value === 'males'
-                              ? 'bg-sky-600 text-white shadow-2xs'
+                              ? 'bg-cock text-cock-bg shadow-2xs'
                               : value === 'females'
-                                ? 'bg-pink-600 text-white shadow-2xs'
-                                : 'bg-emerald-600 text-white shadow-2xs'
+                                ? 'bg-hen text-hen-bg shadow-2xs'
+                                : 'bg-primary text-primary-foreground shadow-2xs'
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         }`}
                       >
@@ -1765,7 +1822,7 @@ export default function LineageDirectory({
                       onChange={(event) =>
                         setPairSortBy(event.target.value as PairSortOption)
                       }
-                      className="border-border bg-card text-foreground focus:border-emerald-500 min-h-11 cursor-pointer rounded border px-2 text-xs font-bold focus:outline-none sm:min-h-8"
+                      className="border-border bg-card text-foreground focus:border-primary min-h-11 cursor-pointer rounded border px-2 text-xs font-bold focus:outline-none sm:min-h-8"
                     >
                       <option value="males-first">Cocks first, then code</option>
                       <option value="winrate">Win rate</option>
@@ -1855,7 +1912,7 @@ export default function LineageDirectory({
                       {pg.archivedCount > 0 && (
                         <>
                           <span className="text-muted-foreground/60 select-none">·</span>
-                          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 shrink-0">
+                          <span className="text-xs font-bold text-low-sample  shrink-0">
                             {pg.archivedCount} archived
                           </span>
                         </>
@@ -1863,7 +1920,7 @@ export default function LineageDirectory({
                       {pg.deceasedCount > 0 && (
                         <>
                           <span className="text-muted-foreground/60 select-none">·</span>
-                          <span className="text-xs font-bold text-rose-600 dark:text-rose-400 shrink-0">
+                          <span className="text-xs font-bold text-loss  shrink-0">
                             {pg.deceasedCount} deceased
                           </span>
                         </>
@@ -1902,7 +1959,7 @@ export default function LineageDirectory({
                             onClick={() => setTreeSexFilter('males')}
                             className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
                               treeSexFilter === 'males'
-                                ? 'bg-sky-600 text-white shadow-2xs'
+                                ? 'bg-cock text-cock-bg shadow-2xs'
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
@@ -1913,7 +1970,7 @@ export default function LineageDirectory({
                             onClick={() => setTreeSexFilter('females')}
                             className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
                               treeSexFilter === 'females'
-                                ? 'bg-pink-600 text-white shadow-2xs'
+                                ? 'bg-hen text-hen-bg shadow-2xs'
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
@@ -1927,7 +1984,7 @@ export default function LineageDirectory({
                             value={pairSortBy}
                             onChange={(e) => setPairSortBy(e.target.value as PairSortOption)}
                             aria-label="Sort pair offspring"
-                            className="text-xs bg-muted border border-input-border rounded px-2 py-1 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500"
+                            className="text-xs bg-muted border border-input-border rounded px-2 py-1 font-bold text-foreground cursor-pointer focus:ring-1 focus:ring-primary"
                           >
                             <option value="males-first">Cocks first, then code</option>
                             <option value="winrate">Win rate</option>
@@ -1983,7 +2040,7 @@ export default function LineageDirectory({
                                       isDimmed ? 'opacity-65' : ''
                                     } ${
                                       isHighlighted
-                                        ? 'ring-2 ring-emerald-500 bg-emerald-500/15 animate-pulse'
+                                        ? 'ring-2 ring-brand-orange bg-win-bg0/15 animate-pulse'
                                         : ''
                                     }`}
                                   >
@@ -2009,7 +2066,7 @@ export default function LineageDirectory({
                                           <button
                                             type="button"
                                             onClick={() => setSelectedFowlForDetails(child)}
-                                            className="font-bold text-card-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate block text-left cursor-pointer"
+                                            className="font-bold text-card-foreground hover:text-primary  transition-colors truncate block text-left cursor-pointer"
                                           >
                                             {child.name}
                                           </button>
@@ -2028,7 +2085,7 @@ export default function LineageDirectory({
                                       {formatAge(child.birthdate, child.age)}
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap">
-                                      <StatusPill status={child.status} />
+                                      <LineageStatusBadge fowl={child} />
                                     </td>
                                     <td className="py-2.5 px-2.5 whitespace-nowrap">
                                       <div className="flex items-center gap-2">
@@ -2043,7 +2100,7 @@ export default function LineageDirectory({
                                             <button
                                               type="button"
                                               onClick={() => openFights(child)}
-                                              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
+                                              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-bold text-muted-foreground hover:text-primary  hover:bg-muted px-2 py-1 rounded transition-colors cursor-pointer"
                                               title={`View ${child.name} fight history`}
                                             >
                                               <Swords className="w-3.5 h-3.5" />
@@ -2118,10 +2175,10 @@ export default function LineageDirectory({
                                 return (
                                   <>
                                     {males.length > 0 && (
-                                      <tr className="bg-sky-500/5 border-y border-sky-500/10">
+                                      <tr className="bg-cock-bg/40 border-y border-cock/20">
                                         <td
                                           colSpan={7}
-                                          className="py-1 px-2.5 text-xs font-bold text-sky-700 dark:text-sky-400 tracking-wide"
+                                          className="py-1 px-2.5 text-xs font-bold text-cock  tracking-wide"
                                         >
                                           M Cocks ({males.length})
                                         </td>
@@ -2129,10 +2186,10 @@ export default function LineageDirectory({
                                     )}
                                     {males.map(renderRow)}
                                     {females.length > 0 && (
-                                      <tr className="bg-pink-500/5 border-y border-pink-500/10">
+                                      <tr className="bg-hen-bg/40 border-y border-hen/20">
                                         <td
                                           colSpan={7}
-                                          className="py-1 px-2.5 text-xs font-bold text-pink-700 dark:text-pink-400 tracking-wide"
+                                          className="py-1 px-2.5 text-xs font-bold text-hen  tracking-wide"
                                         >
                                           F Hens ({females.length})
                                         </td>
@@ -2195,7 +2252,7 @@ export default function LineageDirectory({
                                   isDimmed ? 'opacity-65' : ''
                                 } ${
                                   isHighlighted
-                                    ? 'ring-2 ring-emerald-500 bg-emerald-500/15 animate-pulse'
+                                    ? 'ring-2 ring-brand-orange bg-win-bg0/15 animate-pulse'
                                     : ''
                                 }`}
                               >
@@ -2218,7 +2275,7 @@ export default function LineageDirectory({
                                     <button
                                       type="button"
                                       onClick={() => setSelectedFowlForDetails(child)}
-                                      className="text-xs font-black text-card-foreground hover:text-emerald-600 dark:hover:text-emerald-400 truncate text-left cursor-pointer"
+                                      className="text-xs font-black text-card-foreground hover:text-primary  truncate text-left cursor-pointer"
                                     >
                                       {child.name}
                                     </button>
@@ -2287,7 +2344,7 @@ export default function LineageDirectory({
                                         <button
                                           type="button"
                                           onClick={() => openFights(child)}
-                                          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-primary  hover:bg-muted px-1.5 py-0.5 rounded transition-colors cursor-pointer"
                                           title={`View ${child.name} fight history`}
                                         >
                                           <Swords className="w-3 h-3" />
@@ -2298,7 +2355,7 @@ export default function LineageDirectory({
                                       <span className="font-bold">—</span>
                                     )}
                                   </div>
-                                  <StatusPill status={child.status} />
+                                  <LineageStatusBadge fowl={child} />
                                 </div>
                               </div>
                             );
@@ -2313,13 +2370,13 @@ export default function LineageDirectory({
                                   return (
                                     <>
                                       {males.length > 0 && (
-                                        <div className="px-2 py-1 bg-sky-500/5 border-l-2 border-sky-500 text-xs font-bold text-sky-700 dark:text-sky-400">
+                                        <div className="px-2 py-1 bg-cock-bg/40 border-l-2 border-cock text-xs font-bold text-cock ">
                                           M Cocks ({males.length})
                                         </div>
                                       )}
                                       {males.map(renderCard)}
                                       {females.length > 0 && (
-                                        <div className="px-2 py-1 bg-pink-500/5 border-l-2 border-pink-500 text-xs font-bold text-pink-700 dark:text-pink-400 mt-2">
+                                        <div className="px-2 py-1 bg-hen-bg/40 border-l-2 border-hen text-xs font-bold text-hen  mt-2">
                                           F Hens ({females.length})
                                         </div>
                                       )}
@@ -2505,64 +2562,215 @@ export default function LineageDirectory({
   };
 
   return (
-    <div className="space-y-4 animate-fadeIn pb-[calc(65px+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-6">
+    <div className="animate-fadeIn min-w-0 space-y-4 pb-[calc(65px+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-6">
+      <PageBanner
+        icon={Network}
+        title={t('lineageDirectory.title')}
+        subtitle={t('lineageDirectory.subtitle')}
+        imageSrc="/images/hero-farm.jpg"
+      />
+
       {/* TOP CONTAINER: Scrolls naturally with the page on every viewport so it never covers content */}
-      <div
-        data-testid="lineage-top-container"
-        className="static bg-background/95 backdrop-blur-md pt-1 pb-2.5 space-y-2 border-b border-border shadow-2xs"
-      >
-        {/* A. Compact Header Row (~56px tall) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-h-[48px] sm:min-h-[56px] px-1">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-2xs">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-emerald-600 dark:text-emerald-400"
+      <div data-testid="lineage-top-container" className="static min-w-0 space-y-2">
+        {activeTab !== 'tree' && (
+          <div className="flex justify-end px-1">
+            <div className="relative w-full sm:w-80">
+              <span
+                aria-hidden="true"
+                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
               >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-none truncate">
-                Family Lineage Directory
-              </h1>
-              <p className="text-xs text-muted-foreground font-semibold mt-1 break-words line-clamp-2 sm:line-clamp-none">
-                {activeTab === 'families'
-                  ? "Win rate sits at the end of each cock's row. Hens are listed separately."
-                  : 'Track sibling groups, sire & dam offspring trees to compare performance per bloodline'}
-              </p>
+                <Search className="h-3.5 w-3.5" />
+              </span>
+              <input
+                type="search"
+                aria-label="Search family, sire, dam or chicken name"
+                placeholder="Search name, ID, or wing band…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setIsSearchDropdownOpen(e.target.value.trim().length > 0);
+                }}
+                onFocus={() => {
+                  if (search.trim().length > 0) setIsSearchDropdownOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setSearch('');
+                    setIsSearchDropdownOpen(false);
+                  }
+                }}
+                className="border-input-border bg-card text-card-foreground placeholder:text-muted-foreground focus-visible:ring-brand-orange h-11 w-full rounded-lg border py-2 pr-8 pl-9 text-xs font-semibold transition-all focus-visible:ring-2 focus-visible:outline-none sm:text-sm [&::-webkit-search-cancel-button]:appearance-none"
+              />
+              {search.length > 0 && (
+                <button
+                  type="button"
+                  aria-label="Clear search input"
+                  onClick={() => {
+                    setSearch('');
+                    setIsSearchDropdownOpen(false);
+                  }}
+                  className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-orange absolute top-1/2 right-2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded after:absolute after:-inset-2.5 after:content-[''] focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+
+              {isSearchDropdownOpen && matchingChickens.length > 0 && (
+                <div
+                  role="listbox"
+                  aria-label="Matching chickens"
+                  className="bg-card border-border absolute top-full right-0 left-0 z-50 mt-1.5 max-h-80 divide-y divide-border/50 overflow-y-auto rounded-lg border shadow-xl"
+                >
+                  <div className="bg-muted/50 text-muted-foreground px-3 py-1.5 text-xs font-bold tracking-wider uppercase">
+                    Matching Chickens ({matchingChickens.length})
+                  </div>
+                  {matchingChickens.map((mc) => {
+                    const code = mc.bird_code || birdCodes.get(String(mc.id)) || '';
+                    const hasParent = Boolean(
+                      (mc.sire && isKnownParent(mc.sire)) || (mc.dam && isKnownParent(mc.dam))
+                    );
+                    return (
+                      <button
+                        key={mc.id}
+                        type="button"
+                        onClick={() => handleSelectSearchedChicken(mc)}
+                        className="hover:bg-accent-soft focus-visible:ring-brand-orange flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          {mc.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={mc.image_url}
+                              alt=""
+                              className="border-border h-7 w-7 shrink-0 rounded-full border object-cover"
+                            />
+                          ) : (
+                            <div className="bg-accent-soft text-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                              {getInitials(mc.name)}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              {code && (
+                                <span className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs font-bold">
+                                  [{formatBirdCodeForDisplay(code)}]
+                                </span>
+                              )}
+                              <span className="text-foreground truncate text-xs font-bold">
+                                {mc.name}
+                              </span>
+                              <SexBadge chicken={mc} />
+                            </div>
+                            <div className="text-muted-foreground truncate text-xs">
+                              {mc.sire ? `Sire: ${mc.sire}` : ''}{' '}
+                              {mc.dam ? ` · Dam: ${mc.dam}` : ''}
+                            </div>
+                          </div>
+                        </div>
+                        {hasParent ? (
+                          <span className="text-primary flex shrink-0 items-center gap-1 text-xs font-bold">
+                            View family <ChevronRight className="h-3 w-3" />
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground shrink-0 text-xs">No parents</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        )}
+
+        {/* B. Pill tabs: internal horizontal scroll on narrow screens. */}
+        <div className="relative min-w-0">
+          <div
+            aria-hidden="true"
+            className="from-background pointer-events-none absolute inset-y-0 left-0 z-10 w-5 bg-gradient-to-r to-transparent"
+          />
+          <div className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              role="tablist"
+              aria-label="Family Lineage Directory Tabs"
+              className="flex min-w-max items-center gap-2 px-1"
+            >
+              {tabs.map((tab, idx) => {
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    ref={(el) => {
+                      if (el) tabButtonRefs.current.set(tab.id, el);
+                      else tabButtonRefs.current.delete(tab.id);
+                    }}
+                    type="button"
+                    role="tab"
+                    id={`lineage-tab-${tab.id}`}
+                    aria-selected={isSelected}
+                    aria-controls={`lineage-tabpanel-${tab.id}`}
+                    tabIndex={isSelected ? 0 : -1}
+                    onClick={() => changeTab(tab.id)}
+                    onKeyDown={(e) => handleTabKeyDown(e, idx)}
+                    className={`group flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-colors select-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none sm:text-sm ${
+                      isSelected
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-card text-muted-foreground hover:border-brand-orange/50 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="shrink-0">{tab.icon}</span>
+                      <span className="whitespace-nowrap">{tab.label}</span>
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-black tabular-nums ${
+                        isSelected
+                          ? 'bg-primary-foreground/20 text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            className="from-background pointer-events-none absolute inset-y-0 right-0 z-10 w-5 bg-gradient-to-l to-transparent"
+          />
+        </div>
+
+        {/* C. Context bar for non-tree tabs only; the Family Tree owns its toolbar. */}
+        {activeTab !== 'tree' && (
+        <div
+          data-testid="lineage-context-bar"
+          className="bg-muted/40 border-border/70 static flex min-h-[38px] flex-col justify-between gap-2 rounded-lg border px-3 py-2 text-xs sm:flex-row sm:items-center sm:px-4"
+        >
+          {/* Left: Tab-specific summary text */}
+          <div className="text-muted-foreground flex flex-wrap items-center gap-2 font-medium">
             {activeTab === 'families' && (
               <div
                 role="group"
                 aria-label="Family view"
-                className="border-border bg-muted/40 flex items-center gap-0.5 rounded-lg border p-0.5"
+                className="border-border bg-card flex items-center gap-0.5 rounded-lg border p-0.5"
               >
-                {([
-                  ['full-family', 'Full Family'],
-                  ['full-siblings', 'Full Siblings'],
-                ] as const).map(([value, label]) => (
+                {(
+                  [
+                    ['full-family', 'Full Family'],
+                    ['full-siblings', 'Full Siblings'],
+                  ] as const
+                ).map(([value, label]) => (
                   <button
                     key={value}
                     type="button"
                     aria-pressed={familyViewMode === value}
                     onClick={() => setFamilyViewMode(value)}
-                    className={`h-8 cursor-pointer rounded-md px-3 text-xs font-black transition-colors ${
+                    className={`focus-visible:ring-brand-orange h-9 min-h-11 cursor-pointer rounded-md px-3 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                       familyViewMode === value
-                        ? 'bg-card text-foreground shadow-xs'
+                        ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -2571,186 +2779,7 @@ export default function LineageDirectory({
                 ))}
               </div>
             )}
-          <div className="relative w-full sm:w-64 md:w-72 shrink-0">
-            <span
-              aria-hidden="true"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-            >
-              <Search className="w-3.5 h-3.5" />
-            </span>
-            <input
-              type="search"
-              aria-label="Search family, sire, dam or chicken name"
-              placeholder="Search name, ID, or wing band…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setIsSearchDropdownOpen(e.target.value.trim().length > 0);
-              }}
-              onFocus={() => {
-                if (search.trim().length > 0) setIsSearchDropdownOpen(true);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  e.preventDefault();
-                  setSearch('');
-                  setIsSearchDropdownOpen(false);
-                }
-              }}
-              className="w-full pl-8.5 pr-8 py-2 border border-input-border rounded-md bg-card text-card-foreground placeholder:text-muted-foreground text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-semibold [&::-webkit-search-cancel-button]:appearance-none"
-            />
-            {search.length > 0 && (
-              <button
-                type="button"
-                aria-label="Clear search input"
-                onClick={() => {
-                  setSearch('');
-                  setIsSearchDropdownOpen(false);
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Global Search Dropdown */}
-            {isSearchDropdownOpen && matchingChickens.length > 0 && (
-              <div
-                role="listbox"
-                aria-label="Matching chickens"
-                className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-border/50 max-h-80 overflow-y-auto"
-              >
-                <div className="px-3 py-1.5 bg-muted/50 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Matching Chickens ({matchingChickens.length})
-                </div>
-                {matchingChickens.map((mc) => {
-                  const code = mc.bird_code || birdCodes.get(String(mc.id)) || '';
-                  const hasParent = Boolean(
-                    (mc.sire && isKnownParent(mc.sire)) || (mc.dam && isKnownParent(mc.dam))
-                  );
-                  return (
-                    <button
-                      key={mc.id}
-                      type="button"
-                      onClick={() => handleSelectSearchedChicken(mc)}
-                      className="w-full text-left px-3 py-2 hover:bg-emerald-500/10 dark:hover:bg-emerald-950/30 flex items-center justify-between gap-2 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {mc.image_url ? (
-                          <img
-                            src={mc.image_url}
-                            alt=""
-                            className="w-7 h-7 rounded-full object-cover shrink-0 border border-border"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-emerald-500/10 text-emerald-600 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/20">
-                            {getInitials(mc.name)}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            {code && (
-                              <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-muted text-foreground">
-                                [{formatBirdCodeForDisplay(code)}]
-                              </span>
-                            )}
-                            <span className="font-bold text-xs text-foreground truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                              {mc.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {mc.gender === 'Female' ? 'F' : 'M'}
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {mc.sire ? `Sire: ${mc.sire}` : ''}{' '}
-                            {mc.dam ? `· Dam: ${mc.dam}` : ''}
-                          </div>
-                        </div>
-                      </div>
-                      {hasParent ? (
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-1">
-                          View family <ChevronRight className="w-3 h-3" />
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          No parents
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          </div>
-        </div>
-
-        {/* B. Underline-Style Tabs Row: 2-column grid on phones (< sm) with 5th tab spanning 2 cols; flex on larger screens */}
-        <div className="border-b border-border/80 -mb-px">
-          <div
-            role="tablist"
-            aria-label="Family Lineage Directory Tabs"
-            className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2"
-          >
-            {tabs.map((tab, idx) => {
-              const isSelected = activeTab === tab.id;
-              const isFifthTab = idx === 4;
-              return (
-                <button
-                  key={tab.id}
-                  ref={(el) => {
-                    if (el) tabButtonRefs.current.set(tab.id, el);
-                    else tabButtonRefs.current.delete(tab.id);
-                  }}
-                  type="button"
-                  role="tab"
-                  id={`lineage-tab-${tab.id}`}
-                  aria-selected={isSelected}
-                  aria-controls={`lineage-tabpanel-${tab.id}`}
-                  tabIndex={isSelected ? 0 : -1}
-                  onClick={() => setActiveTab(tab.id)}
-                  onKeyDown={(e) => handleTabKeyDown(e, idx)}
-                  className={`group relative flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 rounded-t-sm min-h-[44px] ${
-                    isFifthTab ? 'col-span-2 sm:col-span-1' : 'col-span-1'
-                  } ${
-                    isSelected
-                      ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 font-extrabold'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border/80'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 min-w-0 truncate">
-                    <span
-                      className={`shrink-0 transition-colors ${
-                        isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground group-hover:text-foreground'
-                      }`}
-                    >
-                      {tab.icon}
-                    </span>
-                    <span className="truncate">{tab.label}</span>
-                  </span>
-                  <span
-                    className={`text-xs font-black px-1.5 sm:px-2 py-0.5 rounded-full transition-colors shrink-0 ${
-                      isSelected
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                        : 'bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* C. Context Bar Row: Compact static bar below md, counts wrap, Sort and Expand/Collapse in one row */}
-        <div
-          data-testid="lineage-context-bar"
-          className="min-h-[38px] py-2 px-3 sm:px-4 bg-muted/40 rounded-md border border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs static"
-        >
-          {/* Left: Tab-specific summary text */}
-          <div className="flex items-center gap-1.5 flex-wrap text-muted-foreground font-medium">
-            {renderSummaryText()}
+            <div className="flex flex-wrap items-center gap-1.5">{renderSummaryText()}</div>
           </div>
 
           {/* Right: Tab tools */}
@@ -2771,7 +2800,7 @@ export default function LineageDirectory({
                       setSortBy(e.target.value as SortOption);
                     }
                   }}
-                  className="h-7 px-2 text-xs font-bold rounded border border-border bg-card text-foreground cursor-pointer focus:border-emerald-500 focus:outline-none transition-colors"
+                  className="h-7 px-2 text-xs font-bold rounded border border-border bg-card text-foreground cursor-pointer focus:border-primary focus:outline-none transition-colors"
                 >
                   {activeTab === 'families' ? (
                     <>
@@ -2805,7 +2834,7 @@ export default function LineageDirectory({
                     onChange={(e) =>
                       handleFamilyPairFilterChange(e.target.value as FamilyPairFilter)
                     }
-                    className="border-border bg-card text-foreground focus:border-emerald-500 h-7 cursor-pointer rounded border px-2 text-xs font-bold transition-colors focus:outline-none"
+                    className="border-border bg-card text-foreground focus:border-primary h-7 cursor-pointer rounded border px-2 text-xs font-bold transition-colors focus:outline-none"
                   >
                     {(['all', 'crisscross', 'outcross', 'others'] as const).map(
                       (value) => (
@@ -2841,6 +2870,7 @@ export default function LineageDirectory({
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* D. Main Content Area */}
@@ -2853,36 +2883,37 @@ export default function LineageDirectory({
         {/* TAB 1: Family Tree */}
         {activeTab === 'tree' && (
           <section className="space-y-4">
-            {filteredBreedingPairs.length === 0 && q ? (
-              <SearchEmptyState query={search} onClear={() => setSearch('')} />
-            ) : (
-              <LineageFlow
-                fowls={fowls}
-                codes={birdCodes}
-                matchHistory={matchHistory}
-                query={debouncedSearch}
-                sortBy={sortBy}
-                rootName={treeRootName}
-                onRootChange={setTreeRootName}
-                direction={treeDirection}
-                onDirectionChange={setTreeDirection}
-                collapsedNodes={collapsedFlowNodes}
-                onToggleCollapsed={(id) =>
-                  setCollapsedFlowNodes((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(id)) next.delete(id);
-                    else next.add(id);
-                    return next;
-                  })
-                }
-                onExpandAll={() => setCollapsedFlowNodes(new Set())}
-                onCollapseAll={() => setCollapsedFlowNodes(new Set(lineageParentIds))}
-                onPick={setSelectedFowlForDetails}
-                onShowFights={openFights}
-                onOpenAsSire={(fowl) => openParentOffspringTree(fowl, 'sire')}
-                onOpenAsDam={(fowl) => openParentOffspringTree(fowl, 'dam')}
-              />
-            )}
+            <LineageFlow
+              fowls={fowls}
+              codes={birdCodes}
+              matchHistory={matchHistory}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              view={lineageView}
+              onViewChange={changeLineageView}
+              filters={lineageFilters}
+              onFiltersChange={changeLineageFilters}
+              rootName={treeRootName}
+              onRootChange={setTreeRootName}
+              direction={treeDirection}
+              onDirectionChange={setTreeDirection}
+              collapsedNodes={collapsedFlowNodes}
+              onToggleCollapsed={(id) =>
+                setCollapsedFlowNodes((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  return next;
+                })
+              }
+              onExpandAll={() => setCollapsedFlowNodes(new Set())}
+              onCollapseAll={() => setCollapsedFlowNodes(new Set(lineageParentIds))}
+              onPick={setSelectedFowlForDetails}
+              onShowFights={openFights}
+              onOpenAsSire={(fowl) => openParentOffspringTree(fowl, 'sire')}
+              onOpenAsDam={(fowl) => openParentOffspringTree(fowl, 'dam')}
+              onViewAncestors={openAncestorsTab}
+            />
           </section>
         )}
 
@@ -2986,9 +3017,9 @@ export default function LineageDirectory({
               const eliteCount = rankedPairings.filter((p) => p.decided >= 3 && p.winRate >= 70).length;
               const weakCount = rankedPairings.filter((p) => p.decided >= 3 && p.winRate < 50).length;
               return (
-                <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border border-emerald-200/60 dark:border-emerald-800/60 rounded-lg p-5 sm:p-6 space-y-3">
+                <div className="mt-6 bg-gradient-to-r from-accent-soft to-background   border border-primary/20  rounded-lg p-5 sm:p-6 space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-8 h-8 bg-emerald-600 text-white rounded-md flex items-center justify-center">
+                    <span className="w-8 h-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center">
                       <Trophy className="w-4 h-4" />
                     </span>
                     <div>
@@ -2997,35 +3028,35 @@ export default function LineageDirectory({
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-lg p-3">
-                      <p className="text-xs font-black text-success dark:text-emerald-400 uppercase tracking-widest">
+                    <div className="bg-card/80 border border-primary/20  rounded-lg p-3">
+                      <p className="text-xs font-black text-success  uppercase tracking-widest">
                         <Trophy className="w-3 h-3 inline" /> Best Cross
                       </p>
                       <p className="text-sm font-black text-card-foreground mt-1">
                         {best.sire} × {best.dam}
                       </p>
-                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                      <p className="text-xs font-bold text-primary ">
                         {best.winRate}% win rate · {best.wins}W-{best.losses}L
                       </p>
                     </div>
                     {eliteCount > 0 && (
-                      <div className="bg-card/80 border border-emerald-200/50 dark:border-emerald-800/50 rounded-lg p-3">
-                        <p className="text-xs font-black text-success dark:text-emerald-400 uppercase tracking-widest">
+                      <div className="bg-card/80 border border-primary/20  rounded-lg p-3">
+                        <p className="text-xs font-black text-success  uppercase tracking-widest">
                           <CheckCircle className="w-3 h-3 inline" /> Elite Crosses
                         </p>
-                        <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{eliteCount}</p>
+                        <p className="text-2xl font-black text-primary  mt-1">{eliteCount}</p>
                         <p className="text-xs font-bold text-muted-foreground">crosses with 70%+ win rate</p>
                       </div>
                     )}
                     {weakCount > 0 && (
-                      <div className="bg-card/80 border border-rose-200/50 dark:border-rose-800/50 rounded-lg p-3">
-                        <p className="text-xs font-black text-danger dark:text-rose-400 uppercase tracking-widest">
+                      <div className="bg-card/80 border border-loss/20  rounded-lg p-3">
+                        <p className="text-xs font-black text-danger  uppercase tracking-widest">
                           <AlertTriangle className="w-3 h-3 inline" /> Avoid
                         </p>
                         <p className="text-sm font-black text-card-foreground mt-1">
                           {worst.sire} × {worst.dam}
                         </p>
-                        <p className="text-xs font-bold text-danger dark:text-rose-400">
+                        <p className="text-xs font-bold text-danger ">
                           {worst.winRate}% win rate · Consider different pairing
                         </p>
                       </div>
@@ -3087,6 +3118,8 @@ export default function LineageDirectory({
           </section>
         )}
       </div>
+
+      <FooterBand />
     </div>
   );
 }

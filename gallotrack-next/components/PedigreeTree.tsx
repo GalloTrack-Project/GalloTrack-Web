@@ -219,7 +219,7 @@ function AncestorAvatar({
   code?: string | null;
   gender?: string;
 }) {
-  const tone = gender && gender.toLowerCase().includes('hen') ? 'text-pink-500' : 'text-info';
+  const tone = gender && gender.toLowerCase().includes('hen') ? 'text-hen' : 'text-info';
   if (name) {
     return (
       <ChickenPhoto
@@ -296,12 +296,12 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
 
   const roleBorder =
     role === 'subject'
-      ? 'border-l-4 border-l-emerald-500 border-border bg-card'
+      ? 'border-l-4 border-l-primary border-border bg-card'
       : role === 'sire'
-        ? 'border-l-4 border-l-sky-500 border-border bg-card'
+        ? 'border-l-4 border-l-cock border-border bg-card'
         : role === 'dam'
-          ? 'border-l-4 border-l-pink-500 border-border bg-card'
-          : 'border-l-4 border-l-slate-400 border-dashed border-border bg-card/85';
+          ? 'border-l-4 border-l-hen border-border bg-card'
+          : 'border-l-4 border-l-input-border border-dashed border-border bg-card/85';
 
   if (isMerged) {
     return (
@@ -333,7 +333,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
                 onRegisterMerged({ breed: childBreedHint, childName: childName || '' })
               }
               aria-label={t('registry.registerAncestor')}
-              className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
+              className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-win/20 hover:text-primary "
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -399,7 +399,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
                 })
               }
               aria-label={t('registry.registerAncestor')}
-              className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400"
+              className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-win/20 hover:text-primary "
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -424,14 +424,14 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
       aria-level={node.gen + 1}
       onClick={recenter}
       onKeyDown={onKey}
-      className={`group h-[64px] w-[220px] shrink-0 rounded-md border text-left ${roleBorder} flex cursor-pointer items-center justify-between gap-2 self-center px-2.5 py-1.5 shadow-2xs transition-all hover:border-emerald-400/80 hover:shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none`}
+      className={`group h-[64px] w-[220px] shrink-0 rounded-md border text-left ${roleBorder} flex cursor-pointer items-center justify-between gap-2 self-center px-2.5 py-1.5 shadow-2xs transition-all hover:border-brand-orange/60 hover:shadow-xs focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <AncestorAvatar image_url={fowl.image_url} photo_path={fowl.photo_path} photo_thumb_path={fowl.photo_thumb_path} name={fowl.name} code={code} gender={fowl.gender} />
         <div className="min-w-0 flex-1 space-y-0.5">
           <div className="flex min-w-0 items-center gap-1">
             {code && (
-              <span className="py-0.2 shrink-0 rounded bg-emerald-100/80 px-1 font-mono text-[10px] font-black text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300">
+              <span className="py-0.2 shrink-0 rounded bg-accent-soft/80 px-1 font-mono text-[10px] font-black text-primary  ">
                 [{code}]
               </span>
             )}
@@ -446,7 +446,7 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
             <span>{baseSummary}</span>
             {isAssumed && baseSummary !== 'Not registered' && (
               <span
-                className="ml-1 text-xs font-extrabold text-amber-600 dark:text-amber-400"
+                className="ml-1 text-xs font-extrabold text-low-sample "
                 aria-label="Assumed lineage"
               >
                 ~
@@ -458,22 +458,22 @@ export function CompactNodeCard(props: CompactNodeCardProps) {
 
       <div className="flex shrink-0 items-center gap-1">
         {fowl.status === 'Archived' ? (
-          <span className="rounded bg-amber-100 px-1 text-[9px] font-extrabold text-amber-700 uppercase dark:bg-amber-950/80 dark:text-amber-300">
+          <span className="rounded bg-low-sample-bg px-1 text-[9px] font-extrabold text-low-sample uppercase  ">
             Archived
           </span>
         ) : fowl.status === 'Deceased' ? (
-          <span className="rounded bg-rose-100 px-1 text-[9px] font-extrabold text-rose-700 uppercase dark:bg-rose-950/80 dark:text-rose-300">
+          <span className="rounded bg-loss-bg px-1 text-[9px] font-extrabold text-loss uppercase  ">
             Deceased
           </span>
         ) : (
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" title="Active" />
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-win" title="Active" />
         )}
         <button
           type="button"
           onClick={viewProfile}
           aria-label={`View profile of ${name}`}
           title={`View profile of ${name}`}
-          className="text-muted-foreground cursor-pointer rounded p-1 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
+          className="text-muted-foreground cursor-pointer rounded p-1 transition-colors hover:text-primary "
         >
           <ExternalLink className="h-3.5 w-3.5" />
         </button>
@@ -561,7 +561,7 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
           }}
           expanded={dropdownOpen}
           controls={dropdownOpen ? 'pedigree-subject-listbox' : undefined}
-          className="border-input-border bg-card text-card-foreground placeholder:text-foreground/90 h-9 w-full rounded-md border py-2 pr-8 pl-9 text-xs font-bold transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:text-sm [&::-webkit-search-cancel-button]:appearance-none"
+          className="border-input-border bg-card text-card-foreground placeholder:text-foreground/90 h-9 w-full rounded-md border py-2 pr-8 pl-9 text-xs font-bold transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-sm [&::-webkit-search-cancel-button]:appearance-none"
         />
         {searchQuery.length > 0 && (
           <button
@@ -602,15 +602,15 @@ function SubjectSelector({ fowls, codes, subject, onSelect }: SubjectSelectorPro
                   setDropdownOpen(false);
                   setSearchQuery('');
                 }}
-                className={`group flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left transition-colors ${isSelected ? 'bg-emerald-500/10 dark:bg-emerald-950/30' : 'hover:bg-emerald-500/10 dark:hover:bg-emerald-950/30'}`}
+                className={`group flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left transition-colors ${isSelected ? 'bg-win/10 ' : 'hover:bg-win/10 '}`}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   {code && (
-                    <span className="shrink-0 rounded border border-emerald-200/60 bg-emerald-100 px-1.5 py-0.5 font-mono text-xs font-black text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
+                    <span className="shrink-0 rounded border border-primary/20 bg-accent-soft px-1.5 py-0.5 font-mono text-xs font-black text-primary   ">
                       [{formatBirdCodeForDisplay(code)}]
                     </span>
                   )}
-                  <span className="text-card-foreground truncate text-xs font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                  <span className="text-card-foreground truncate text-xs font-bold group-hover:text-primary ">
                     {f.name}
                   </span>
                 </div>
@@ -992,7 +992,7 @@ export default function PedigreeTree({
                       onClick={() => setNumGens(3)}
                       className={`cursor-pointer rounded px-2.5 py-1 text-xs font-black transition-colors ${
                         numGens === 3
-                          ? 'bg-card text-emerald-600 shadow-2xs dark:text-emerald-400'
+                          ? 'bg-card text-primary shadow-2xs '
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
@@ -1003,7 +1003,7 @@ export default function PedigreeTree({
                       onClick={() => setNumGens(4)}
                       className={`cursor-pointer rounded px-2.5 py-1 text-xs font-black transition-colors ${
                         numGens === 4
-                          ? 'bg-card text-emerald-600 shadow-2xs dark:text-emerald-400'
+                          ? 'bg-card text-primary shadow-2xs '
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
@@ -1100,7 +1100,7 @@ export default function PedigreeTree({
                       <path
                         key={c.id}
                         d={c.path}
-                        className="stroke-slate-400 dark:stroke-slate-600"
+                        className="stroke-input-border"
                         fill="none"
                         strokeWidth={1.5}
                         strokeDasharray={c.isDashed ? '4 3' : undefined}

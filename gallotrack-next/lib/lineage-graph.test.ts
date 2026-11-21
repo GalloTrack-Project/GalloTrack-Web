@@ -6,6 +6,7 @@ import {
   layoutLineageTopology,
   lineageBirdCode,
   pickDefaultRootId,
+  LINEAGE_NODE_HEIGHT,
   LINEAGE_NODE_WIDTH,
   FAMILY_TREE_GENERATIONS,
 } from './lineage-graph';
@@ -255,6 +256,15 @@ describe('lineage graph — layout', () => {
   })!;
   const layout = layoutLineageTopology(topology);
 
+  it('uses the shared 232 x 116 card geometry constants', () => {
+    expect(LINEAGE_NODE_WIDTH).toBe(232);
+    expect(LINEAGE_NODE_HEIGHT).toBe(116);
+    layout.nodes.forEach((node) => {
+      expect(node.width).toBe(LINEAGE_NODE_WIDTH);
+      expect(node.height).toBe(LINEAGE_NODE_HEIGHT);
+    });
+  });
+
   it('places a generation on one row with no overlapping cards', () => {
     const rows = new Map<number, typeof layout.nodes>();
     layout.nodes.forEach((node) => {
@@ -312,7 +322,7 @@ describe('lineage graph — wrapped layout', () => {
   const wideFamily: FowlRecord[] = [
     bird({ id: 1, name: 'Root Sire', gender: 'Rooster' }),
     bird({ id: 2, name: 'Root Dam', gender: 'Hen' }),
-    ...Array.from({ length: 8 }, (_, i) =>
+    ...Array.from({ length: 12 }, (_, i) =>
       bird({
         id: 10 + i,
         name: `Child ${i + 1}`,
@@ -336,8 +346,9 @@ describe('lineage graph — wrapped layout', () => {
     paddingX: PADDING_X,
   });
 
-  it('wraps a wide generation into extra rows and keeps every card in bounds', () => {
+  it('wraps 12 children in one generation into extra rows and keeps every card in bounds', () => {
     const children = wrapped.nodes.filter((node) => node.generation === 1);
+    expect(children).toHaveLength(12);
     expect(new Set(children.map((node) => node.y)).size).toBeGreaterThan(1);
 
     wrapped.nodes.forEach((node) => {

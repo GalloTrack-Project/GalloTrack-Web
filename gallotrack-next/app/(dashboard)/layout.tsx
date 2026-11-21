@@ -29,9 +29,9 @@ import { NotificationProvider, useNotificationUnreadCount } from '@/lib/contexts
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useT } from '@/lib/i18n';
+import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { unreadBadgeText } from '@/lib/notifications/format';
-import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import {
   ACTIVE_THEME_PRESET,
   getThemeTokens,

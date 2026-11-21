@@ -20,6 +20,8 @@ type Props = {
   className?: string;
   imgClassName?: string;
   fallback?: React.ReactNode;
+  /** Replaces the compact warning icon when a stored photo fails to load. */
+  unavailableFallback?: React.ReactNode;
   interactive?: boolean;
   showLightbox?: boolean;
   eager?: boolean;
@@ -46,6 +48,7 @@ export default function ChickenPhoto({
   className,
   imgClassName,
   fallback,
+  unavailableFallback,
   interactive = true,
   showLightbox = true,
   eager = false,
@@ -192,15 +195,17 @@ export default function ChickenPhoto({
       </span>
     ) : (
       <span className={cn(frameClass, 'border border-border bg-muted/40')} style={frameStyle}>
-        <button
-          type="button"
-          onClick={retry}
-          aria-label={`${t('registry.cardPhotoUnavailable')}. ${t('registry.retryPhoto')}`}
-          title={`${t('registry.cardPhotoUnavailable')}. ${t('registry.retryPhoto')}`}
-          className="flex h-full w-full cursor-pointer items-center justify-center text-warning focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
-        >
-          <AlertTriangle className="h-1/2 w-1/2" aria-hidden="true" />
-        </button>
+        {unavailableFallback ?? (
+          <button
+            type="button"
+            onClick={retry}
+            aria-label={`${t('registry.cardPhotoUnavailable')}. ${t('registry.retryPhoto')}`}
+            title={`${t('registry.cardPhotoUnavailable')}. ${t('registry.retryPhoto')}`}
+            className="focus-visible:ring-primary flex h-full w-full cursor-pointer items-center justify-center text-warning focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+          >
+            <AlertTriangle className="h-1/2 w-1/2" aria-hidden="true" />
+          </button>
+        )}
       </span>
     )
   ) : loading ? (
