@@ -39,7 +39,9 @@ import { SystemConfigNavProvider } from '@/lib/contexts/system-config-nav';
 import { NotificationProvider, useNotificationUnreadCount } from '@/lib/contexts/notification-context';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import FooterBand from '@/components/layout/FooterBand';
 import { useT } from '@/lib/i18n';
+import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { unreadBadgeText } from '@/lib/notifications/format';
 import {
@@ -216,7 +218,7 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
         </button>
 
         <p className="text-sidebar-muted text-center text-xs font-bold tracking-[0.2em] uppercase">
-          {t('heritage.footerTagline')}
+          {t(BRAND_TAGLINE_KEY)}
         </p>
       </div>
 
@@ -535,8 +537,13 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
-          <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-full min-w-0 flex-col p-4 sm:p-6 md:p-8">
+            <div className="min-w-0 flex-1">
+              <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
+            </div>
+            <FooterBand />
+          </div>
         </main>
 
         <ModalsWrapper />
