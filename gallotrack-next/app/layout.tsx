@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { GalloTrackProvider } from "@/lib/context";
@@ -14,6 +14,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -51,7 +57,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#047857",
+  themeColor: "#A80F17",
 };
 
 import StagingBanner from "@/components/StagingBanner";
@@ -68,9 +74,9 @@ export default async function RootLayout({
   const lang = getLanguageFromCookies(cookieStore);
 
   return (
-    <html lang={lang} suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={lang} suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem storageKey="theme">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="theme">
           <LanguageProvider initialLanguage={lang}>
             <ToastProvider>
               <GalloTrackProvider>
