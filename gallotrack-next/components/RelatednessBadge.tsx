@@ -28,23 +28,23 @@ export default function RelatednessBadge({
   switch (type) {
     case 'close':
       colorClasses =
-        'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800';
+        'text-low-sample bg-low-sample-bg border-low-sample/25';
       Icon = AlertTriangle;
       break;
     case 'line':
       colorClasses =
-        'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800';
+        'text-cock bg-cock-bg border-cock/25';
       Icon = GitBranch;
       break;
     case 'outcross':
       colorClasses =
-        'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800';
+        'text-win bg-win-bg border-win/25';
       Icon = CheckCircle2;
       break;
     case 'unknown':
     default:
       colorClasses =
-        'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-muted/80 border-slate-300 dark:border-border';
+        'text-muted-foreground bg-muted border-border';
       Icon = HelpCircle;
       break;
   }

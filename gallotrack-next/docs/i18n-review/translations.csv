@@ -734,3 +734,86 @@ dashboard.upcomingMilestones,Upcoming Milestones,Mga Paparating na Milestone,unr
 dashboard.inNext30Days,{count} in the next 30 days,{count} sa susunod na 30 araw,unreviewed,Awaiting native reviewer confirmation.,{count} sa masunod nga 30 ka adlaw,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 dashboard.noUpcoming30Days,No stage changes in the next 30 days,Walang pagbabago ng stage sa susunod na 30 araw,unreviewed,Awaiting native reviewer confirmation.,Wala sang pagbag-o sang stage sa masunod nga 30 ka adlaw,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 dashboard.bloodlineOverview,Bloodline Overview,Pangkalahatang Bloodline,unreviewed,Awaiting native reviewer confirmation.,Kinatibuk-an nga Bloodline,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.title,Family Lineage Directory,Direktoryo ng Pamilya at Lineage,unreviewed,Awaiting native reviewer confirmation.,Direktoryo sang Pamilya kag Lineage,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.subtitle,"Explore the families, offspring and ancestors of your chickens.","Tuklasin ang mga pamilya, supling at ninuno ng iyong mga manok.",unreviewed,Awaiting native reviewer confirmation.,"Usisaon ang mga pamilya, kaliwat kag ginikanan sang imo mga manok.",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.searchPlaceholder,"Search by name, ID or wing band...","Maghanap sa pangalan, ID o wing band...",unreviewed,Awaiting native reviewer confirmation.,"Pangitaa sa ngalan, ID ukon wing band...",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.searchLabel,"Search by name, ID or wing band","Maghanap sa pangalan, ID o wing band",unreviewed,Awaiting native reviewer confirmation.,"Pangitaa sa ngalan, ID ukon wing band",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.noSearchResults,No chickens match.,Walang tumutugmang manok.,unreviewed,Awaiting native reviewer confirmation.,Wala sang manok nga nagatugma.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sortLabel,Sort,Ayusin,unreviewed,Awaiting native reviewer confirmation.,Ihan-ay,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sortMost,Most offspring,Pinakamaraming offspring,unreviewed,Awaiting native reviewer confirmation.,Pinakamadamo nga offspring,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sortName,Name,Pangalan,unreviewed,Awaiting native reviewer confirmation.,Ngalan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sortNewest,Newest,Pinakabago,unreviewed,Awaiting native reviewer confirmation.,Pinakabag-o,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.startingBird,Starting bird,Simulang manok,unreviewed,Awaiting native reviewer confirmation.,Sugod nga manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sexHighlight,Highlight sex,I-highlight ang kasarian,unreviewed,Awaiting native reviewer confirmation.,I-highlight ang kasarian,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sexAll,All,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.sexCocks,Cocks,Cocks,reviewed,,Cocks,reviewed,
+lineageDirectory.sexHens,Hens,Hens,reviewed,,Hens,reviewed,
+lineageDirectory.highlightFilters,Highlight filters,Mga highlight filter,unreviewed,Awaiting native reviewer confirmation.,Mga highlight filter,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.generation,Generation,Henerasyon,unreviewed,Awaiting native reviewer confirmation.,Henerasyon,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.generationAll,All,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.generationOne,1,1,reviewed,,1,reviewed,
+lineageDirectory.generationTwo,2,2,reviewed,,2,reviewed,
+lineageDirectory.generationThree,3,3,reviewed,,3,reviewed,
+lineageDirectory.featherColor,Feather color,Kulay ng balahibo,unreviewed,Awaiting native reviewer confirmation.,Kolor sang balahibo,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.featherAll,All,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.pairType,Pair type,Uri ng pair,unreviewed,Awaiting native reviewer confirmation.,Klase sang pair,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.pairAll,All,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.pairCrisscross,Crisscross,Crisscross,reviewed,,Crisscross,reviewed,
+lineageDirectory.pairOutcross,Outcross,Outcross,reviewed,,Outcross,reviewed,
+lineageDirectory.pairOthers,Others,Iba pa,unreviewed,Awaiting native reviewer confirmation.,Iban pa,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.matchCount,{count} birds match,{count} manok ang tumutugma,unreviewed,Awaiting native reviewer confirmation.,{count} manok ang nagatugma,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.clearFilters,Clear filters,I-clear ang mga filter,unreviewed,Awaiting native reviewer confirmation.,Tinluan ang mga filter,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.viewLabel,Tree view,Tanaw,unreviewed,Awaiting native reviewer confirmation.,Tan-aw,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.viewTree,Tree View,Tree View,reviewed,,Tree View,reviewed,
+lineageDirectory.viewTable,Table View,Table View,reviewed,,Table View,reviewed,
+lineageDirectory.tableCount,{shown} of {total} birds,{shown} sa {total} manok,unreviewed,Awaiting native reviewer confirmation.,{shown} sa {total} manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.tableEmpty,No birds match the current filters.,Walang manok na tumutugma sa mga filter.,unreviewed,Awaiting native reviewer confirmation.,Wala sang manok nga nagatugma sa mga filter.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.columnPhoto,Photo,Larawan,unreviewed,Awaiting native reviewer confirmation.,Retrato,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.columnCode,Code,Code,reviewed,,Code,reviewed,
+lineageDirectory.columnName,Name,Pangalan,unreviewed,Awaiting native reviewer confirmation.,Ngalan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.columnSex,Cock/Hen,Cock/Hen,reviewed,,Cock/Hen,reviewed,
+lineageDirectory.columnStrain,Strain,Strain,reviewed,,Strain,reviewed,
+lineageDirectory.columnFeather,Feather color,Kulay ng balahibo,unreviewed,Awaiting native reviewer confirmation.,Kolor sang balahibo,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.columnGeneration,Generation,Henerasyon,unreviewed,Awaiting native reviewer confirmation.,Henerasyon,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.columnSire,Sire,Sire,reviewed,,Sire,reviewed,
+lineageDirectory.columnDam,Dam,Dam,reviewed,,Dam,reviewed,
+lineageDirectory.columnStatus,Status,Status,reviewed,,Status,reviewed,
+lineageDirectory.columnRecord,Record,Rekord,unreviewed,Awaiting native reviewer confirmation.,Rekord,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.openDetails,Open details for {name},Buksan ang detalye ng {name},unreviewed,Awaiting native reviewer confirmation.,Buksan ang detalye ni {name},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.rootTag,Root,Root,reviewed,,Root,reviewed,
+lineageDirectory.hiddenRelatives,+{count} hidden relatives,+{count} nakatagong kamag-anak,unreviewed,Awaiting native reviewer confirmation.,+{count} natago nga paryente,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.wingBand,Wing band: {band},Wing band: {band},reviewed,,Wing band: {band},reviewed,
+lineageDirectory.noFights,No fights,Walang laban,unreviewed,Awaiting native reviewer confirmation.,Wala sang away,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.pairLabel,{sire} × {dam} · {count},{sire} × {dam} · {count},reviewed,,{sire} × {dam} · {count},reviewed,
+lineageDirectory.pairAria,"Breeding pair {sire} × {dam}, {count} offspring","Breeding pair {sire} at {dam}, {count} offspring",unreviewed,Awaiting native reviewer confirmation.,"Breeding pair {sire} kag {dam}, {count} offspring",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.generationParents,Generation 1 - Parents,Henerasyon 1 - Mga Magulang,unreviewed,Awaiting native reviewer confirmation.,Henerasyon 1 - Mga Ginikanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.generationNumber,Generation {number},Henerasyon {number},unreviewed,Awaiting native reviewer confirmation.,Henerasyon {number},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.insightsTitle,Lineage Tree Insights,Mga Insight sa Lineage Tree,unreviewed,Awaiting native reviewer confirmation.,Mga Insight sang Lineage Tree,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.insightsSummary,"Explore the complete lineage of {names}, including their offspring and descendants.","Tuklasin ang buong lineage nina {names}, kasama ang kanilang mga supling at inapo.",unreviewed,Awaiting native reviewer confirmation.,"Usisaon ang bug-os nga lineage nanday {names}, upod ang ila mga anak kag kaliwat.",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.birdsShown,Birds shown,Mga manok na nakikita,unreviewed,Awaiting native reviewer confirmation.,Mga manok nga ginpakita,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.generationsShown,Generations shown,Mga henerasyong nakikita,unreviewed,Awaiting native reviewer confirmation.,Mga henerasyon nga ginpakita,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.breedingPairs,Breeding pairs,Mga breeding pair,unreviewed,Awaiting native reviewer confirmation.,Mga breeding pair,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.cocksFought,Cocks that fought,Cocks na lumaban,unreviewed,Awaiting native reviewer confirmation.,Mga cock nga nag-away,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.combinedRecord,Combined record,Pinagsamang rekord,unreviewed,Awaiting native reviewer confirmation.,Pinagsama nga rekord,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.legend,Legend,Legend,reviewed,,Legend,reviewed,
+lineageDirectory.legendCock,Cock,Cock,reviewed,,Cock,reviewed,
+lineageDirectory.legendHen,Hen,Hen,reviewed,,Hen,reviewed,
+lineageDirectory.legendBreedingPair,Breeding pair,Breeding pair,reviewed,,Breeding pair,reviewed,
+lineageDirectory.legendCrisscrossPair,Crisscross pair,Crisscross pair,reviewed,,Crisscross pair,reviewed,
+lineageDirectory.legendHidden,Hidden relatives,Nakatagong kamag-anak,unreviewed,Awaiting native reviewer confirmation.,Natago nga paryente,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.insightsTip,Click a chicken card to see its details.,I-click ang card ng manok para makita ang detalye.,unreviewed,Awaiting native reviewer confirmation.,I-click ang card sang manok para makita ang detalye.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.backToInsights,Back to insights,Bumalik sa insights,unreviewed,Awaiting native reviewer confirmation.,Balik sa insights,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.recordLabel,Record,Rekord,unreviewed,Awaiting native reviewer confirmation.,Rekord,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.parentsLabel,Parents,Mga Magulang,unreviewed,Awaiting native reviewer confirmation.,Mga Ginikanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.offspringLabel,Offspring,Offspring,reviewed,,Offspring,reviewed,
+lineageDirectory.breedingPairsLabel,Breeding pairs,Mga breeding pair,unreviewed,Awaiting native reviewer confirmation.,Mga breeding pair,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.viewProfile,View profile,Tingnan ang profile,unreviewed,Awaiting native reviewer confirmation.,Tan-awa ang profile,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.fightHistory,Fight history,Kasaysayan ng laban,unreviewed,Awaiting native reviewer confirmation.,Kasaysayan sang away,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.focus,Focus,I-focus,unreviewed,Awaiting native reviewer confirmation.,I-focus,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.viewAncestors,View ancestors,Tingnan ang mga ninuno,unreviewed,Awaiting native reviewer confirmation.,Tan-awa ang mga ginikanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.noRegisteredOffspring,No registered offspring.,Walang rehistradong offspring.,unreviewed,Awaiting native reviewer confirmation.,Wala sang rehistrado nga offspring.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.notRecorded,Not recorded,Hindi naitala,unreviewed,Awaiting native reviewer confirmation.,Wala naitala,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.notRegistered,{name} (not registered),{name} (hindi rehistrado),unreviewed,Awaiting native reviewer confirmation.,{name} (indi rehistrado),unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.noCode,No code,Walang code,unreviewed,Awaiting native reviewer confirmation.,Wala sang code,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.closeDetails,Close lineage details,Isara ang detalye ng lineage,unreviewed,Awaiting native reviewer confirmation.,Isara ang detalye sang lineage,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+lineageDirectory.detailsAria,Lineage details,Detalye ng lineage,unreviewed,Awaiting native reviewer confirmation.,Detalye sang lineage,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.

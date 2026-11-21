@@ -2,32 +2,52 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowLeft,
   ChevronDown,
-  Link2,
+  GitBranch,
   Maximize2,
   Minimize2,
   Minus,
+  Network,
   Search,
+  SlidersHorizontal,
   Swords,
+  Table2,
   User,
   X,
 } from 'lucide-react';
 import type { FowlRecord, MatchRecord } from '@/lib/types';
-import { isMale, canFight, fightersOf, sexLabel } from '@/lib/helpers';
+import { canFight, fightersOf, sexLabel } from '@/lib/helpers';
 import { nameKey } from '@/lib/family-tree';
 import {
   buildChickenMatchStatsMap,
   combineWinRates,
-  computeWinRate,
   getChickenMatchStats,
   type WinRateStats,
 } from '@/lib/win-rate';
-import WinRatePill from '@/components/match/WinRatePill';
 import CrisscrossBadge from '@/components/CrisscrossBadge';
 import { classifyCrisscross } from '@/lib/lineage';
 import ChickenPhoto from '@/components/ChickenPhoto';
+import { useT } from '@/lib/i18n';
+import {
+  DEFAULT_LINEAGE_TREE_FILTERS,
+  distinctFeatherColors,
+  featherColorOf,
+  isWingBandSearchMatch,
+  lineagePairTypeOf,
+  matchesLineageTreeFilters,
+  type LineageGenerationFilter,
+  type LineagePairFilter,
+  type LineagePairType,
+  type LineageSexFilter,
+  type LineageTreeFilters,
+} from '@/lib/lineage-filters';
 import LineageBirdCard from './LineageBirdCard';
 import LineagePairBadge from './LineagePairBadge';
+import LineageRecordPill from './LineageRecordPill';
+import LineageStatusBadge from './LineageStatusBadge';
+import LineageTableView from './LineageTableView';
+import LineageInsights from './LineageInsights';
 import {
   buildLineageIndex,
   buildLineageTopology,
@@ -45,8 +65,13 @@ export interface LineageFlowProps {
   codes: Map<string, string>;
   matchHistory: MatchRecord[];
   query?: string;
-  /** Shared toolbar order; keeps the family selector ordering consistent. */
+  /** Shared toolbar order; keeps the starting-bird selector and results consistent. */
   sortBy?: 'most' | 'name' | 'newest';
+  onSortChange?: (sort: 'most' | 'name' | 'newest') => void;
+  view?: 'tree' | 'table';
+  onViewChange?: (view: 'tree' | 'table') => void;
+  filters?: LineageTreeFilters;
+  onFiltersChange?: (filters: LineageTreeFilters) => void;
   rootName?: string | null;
   onRootChange?: (name: string) => void;
   direction: LineageDirection;
@@ -59,6 +84,7 @@ export interface LineageFlowProps {
   onShowFights: (fowl: FowlRecord) => void;
   onOpenAsSire?: (fowl: FowlRecord) => void;
   onOpenAsDam?: (fowl: FowlRecord) => void;
+  onViewAncestors?: (fowl: FowlRecord) => void;
 }
 
 type Selection = { kind: 'bird'; id: string } | { kind: 'pair'; key: string } | null;
@@ -84,8 +110,8 @@ function recordLabel(stats?: WinRateStats): string {
 
 function sexTone(fowl: FowlRecord): string {
   const label = sexLabel(fowl);
-  if (label === 'Cock') return 'text-sky-600 dark:text-sky-400';
-  if (label === 'Hen') return 'text-pink-600 dark:text-pink-400';
+  if (label === 'Cock') return 'text-cock';
+  if (label === 'Hen') return 'text-hen';
   return 'text-muted-foreground';
 }
 
@@ -109,6 +135,11 @@ export default function LineageFlow({
   matchHistory,
   query = '',
   sortBy = 'most',
+  onSortChange,
+  view: viewProp,
+  onViewChange,
+  filters: filtersProp,
+  onFiltersChange,
   rootName,
   onRootChange,
   direction,
@@ -121,7 +152,23 @@ export default function LineageFlow({
   onShowFights,
   onOpenAsSire,
   onOpenAsDam,
+  onViewAncestors,
 }: LineageFlowProps) {
+  const t = useT();
+  const [internalView, setInternalView] = useState<'tree' | 'table'>('tree');
+  const [internalFilters, setInternalFilters] = useState<LineageTreeFilters>(
+    DEFAULT_LINEAGE_TREE_FILTERS,
+  );
+  const view = viewProp ?? internalView;
+  const filters = filtersProp ?? internalFilters;
+  const changeView = (nextView: 'tree' | 'table') => {
+    if (onViewChange) onViewChange(nextView);
+    else setInternalView(nextView);
+  };
+  const changeFilters = (nextFilters: LineageTreeFilters) => {
+    if (onFiltersChange) onFiltersChange(nextFilters);
+    else setInternalFilters(nextFilters);
+  };
   const index = useMemo(() => buildLineageIndex(fowls), [fowls]);
   const defaultRootId = useMemo(() => pickDefaultRootId(fowls, index), [fowls, index]);
 
@@ -139,8 +186,10 @@ export default function LineageFlow({
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [finder, setFinder] = useState('');
   const [finderIndex, setFinderIndex] = useState(0);
-  const [sexFocus, setSexFocus] = useState<'all' | 'male' | 'female'>('all');
   const [containerWidth, setContainerWidth] = useState(0);
+  const sexFocus = filters.sex;
+  const setSexFocus = (value: LineageSexFilter) =>
+    changeFilters({ ...filters, sex: value });
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const finderRef = useRef<HTMLDivElement | null>(null);
@@ -197,15 +246,6 @@ export default function LineageFlow({
     });
   }, [index, sortBy]);
 
-  const activePairKey = useMemo(() => {
-    if (!root) return '';
-    const candidates = pairOptions.filter(
-      (pair) => pair.sire.id === root.id || pair.dam.id === root.id
-    );
-    candidates.sort((a, b) => b.childIds.length - a.childIds.length);
-    return candidates[0]?.key ?? '';
-  }, [pairOptions, root]);
-
   const topology = useMemo(() => {
     if (!root) return null;
     return buildLineageTopology(index, {
@@ -222,7 +262,7 @@ export default function LineageFlow({
   const paddingX = compact ? 8 : 92;
   const nodeGap = compact ? 20 : 28;
   const chainGap = compact ? 24 : 74;
-  const rowGap = compact ? 96 : 138;
+  const rowGap = compact ? 156 : 174;
   const wrapGap = compact ? 56 : 84;
   const paddingY = compact ? 40 : 64;
   const maxRowWidth = Math.max(0, measuredWidth / MIN_SCALE - paddingX * 2);
@@ -248,6 +288,39 @@ export default function LineageFlow({
     ? Math.max(MIN_SCALE, Math.min(1, measuredWidth / layout.width))
     : 1;
 
+  const generationNumberByGen = useMemo(
+    () => new Map((layout?.generations ?? []).map((row, rowIndex) => [row.gen, rowIndex + 1])),
+    [layout],
+  );
+  const featherOptions = useMemo(() => distinctFeatherColors(fowls), [fowls]);
+  const pairTypeByNode = useMemo(() => {
+    const map = new Map<string, LineagePairType>();
+    (layout?.nodes ?? []).forEach((node) => {
+      map.set(node.id, lineagePairTypeOf(node.fowl, index, fowls));
+    });
+    return map;
+  }, [layout, index, fowls]);
+  const matchingNodeIds = useMemo(() => {
+    const set = new Set<string>();
+    (layout?.nodes ?? []).forEach((node) => {
+      if (
+        matchesLineageTreeFilters(filters, {
+          fowl: node.fowl,
+          generation: generationNumberByGen.get(node.generation) ?? 1,
+          pairType: pairTypeByNode.get(node.id) ?? 'others',
+        })
+      ) {
+        set.add(node.id);
+      }
+    });
+    return set;
+  }, [layout, filters, generationNumberByGen, pairTypeByNode]);
+  const hasActiveFilters =
+    filters.sex !== 'all' ||
+    filters.generation !== 'all' ||
+    filters.feather !== 'all' ||
+    filters.pair !== 'all';
+
   const queryMatches = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return [];
@@ -256,7 +329,7 @@ export default function LineageFlow({
       return (
         fowl.name.toLowerCase().includes(term) ||
         code.includes(term) ||
-        (fowl.wing_band || '').toLowerCase().includes(term) ||
+        isWingBandSearchMatch(fowl, term) ||
         String(fowl.id) === term
       );
     });
@@ -265,6 +338,22 @@ export default function LineageFlow({
   const queryMatchIds = useMemo(
     () => new Set(queryMatches.map((f) => String(f.id))),
     [queryMatches]
+  );
+
+  const sortBirds = useCallback(
+    (a: FowlRecord, b: FowlRecord) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name) || a.id - b.id;
+      if (sortBy === 'newest') return b.id - a.id || a.name.localeCompare(b.name);
+      const offspringA = index.childrenByParent.get(String(a.id))?.length ?? 0;
+      const offspringB = index.childrenByParent.get(String(b.id))?.length ?? 0;
+      return offspringB - offspringA || a.name.localeCompare(b.name) || a.id - b.id;
+    },
+    [index, sortBy],
+  );
+
+  const startingBirdOptions = useMemo(
+    () => [...fowls].sort(sortBirds),
+    [fowls, sortBirds],
   );
 
   const finderMatches = useMemo(() => {
@@ -276,17 +365,17 @@ export default function LineageFlow({
         return (
           fowl.name.toLowerCase().includes(term) ||
           code.includes(term) ||
-          (fowl.wing_band || '').toLowerCase().includes(term) ||
+          isWingBandSearchMatch(fowl, term) ||
           String(fowl.id) === term
         );
       })
       .sort((a, b) => {
         const aStarts = a.name.toLowerCase().startsWith(term) ? 0 : 1;
         const bStarts = b.name.toLowerCase().startsWith(term) ? 0 : 1;
-        return aStarts - bStarts || a.name.localeCompare(b.name);
+        return aStarts - bStarts || sortBirds(a, b);
       })
       .slice(0, 6);
-  }, [finder, fowls, codes]);
+  }, [finder, fowls, codes, sortBirds]);
 
   const selectedBird =
     selected?.kind === 'bird' ? index.byId.get(selected.id) ?? null : null;
@@ -315,6 +404,17 @@ export default function LineageFlow({
     : [];
   const pairFightingBirds = fightersOf(pairOffspring);
   const pairStats = combineWinRates(pairFightingBirds.map((fowl) => statsOf(fowl)));
+
+  const treeCocks = (layout?.nodes ?? []).filter((node) => canFight(node.fowl));
+  const treeFoughtCocks = treeCocks.filter((node) => statsOf(node.fowl).total > 0);
+  const treeCombinedRecord = combineWinRates(treeCocks.map((node) => statsOf(node.fowl)));
+  const shownGenerationCount = layout?.generations.length ?? 0;
+  const shownPairCount = layout?.pairs.length ?? 0;
+  const rootNames = (layout?.nodes ?? [])
+    .filter((node) => node.isRoot)
+    .map((node) => node.fowl.name)
+    .join(', ');
+  const tableNodes = (layout?.nodes ?? []).filter((node) => matchingNodeIds.has(node.id));
 
   // Track the canvas width and re-fit whenever the container resizes.
   useEffect(() => {
@@ -387,7 +487,7 @@ export default function LineageFlow({
     (fowl: FowlRecord) => {
       const id = String(fowl.id);
       onRootChange?.(fowl.name);
-      onDirectionChange('both');
+      onDirectionChange('down');
       setSelected({ kind: 'bird', id });
       setHighlightId(id);
       setFinder('');
@@ -418,16 +518,17 @@ export default function LineageFlow({
     [onRootChange]
   );
 
-  const onFamilyChange = (key: string) => {
-    const option = pairOptions.find((pair) => pair.key === key);
-    if (!option) return;
-    const pairCount = (birdId: number) =>
-      pairOptions.filter((pair) => pair.sire.id === birdId || pair.dam.id === birdId).length;
-    const member =
-      pairCount(option.sire.id) <= pairCount(option.dam.id) ? option.sire : option.dam;
-    onRootChange?.(member.name);
+  const onStartingBirdChange = (value: string) => {
+    const next = fowls.find((fowl) => String(fowl.id) === value);
+    if (!next) return;
+    onRootChange?.(next.name);
     onDirectionChange('down');
     setSelected(null);
+    setHighlightId(null);
+  };
+
+  const clearFilters = () => {
+    changeFilters(DEFAULT_LINEAGE_TREE_FILTERS);
     setHighlightId(null);
   };
 
@@ -447,8 +548,9 @@ export default function LineageFlow({
           aria-label={`Expand branch of ${node.fowl.name}${
             node.hiddenDescendants > 0 ? ` (${node.hiddenDescendants} hidden)` : ''
           }`}
+          aria-expanded="false"
           title="Expand this branch"
-          className="border-border bg-card text-foreground absolute -top-2 -right-2 z-10 inline-flex h-5 min-w-5 cursor-pointer items-center justify-center rounded-full border px-1 text-[10px] font-black shadow-xs hover:bg-muted"
+          className="border-border bg-card text-foreground focus-visible:ring-brand-orange absolute -top-2 -right-2 z-10 inline-flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-full border px-1 text-[10px] font-black shadow-xs after:absolute after:-inset-2.5 after:content-[''] hover:bg-muted focus-visible:ring-2 focus-visible:outline-none"
         >
           {node.hiddenDescendants > 0 ? `+${node.hiddenDescendants}` : <ChevronDown className="h-3 w-3" />}
         </button>
@@ -467,8 +569,9 @@ export default function LineageFlow({
           onToggleCollapsed(node.id);
         }}
         aria-label={`Collapse branch of ${node.fowl.name}`}
+        aria-expanded="true"
         title="Collapse this branch"
-        className="border-border bg-card text-muted-foreground absolute -top-2 -right-2 z-10 inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border shadow-xs hover:bg-muted hover:text-foreground"
+        className="border-border bg-card text-muted-foreground focus-visible:ring-brand-orange absolute -top-2 -right-2 z-10 inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border shadow-xs after:absolute after:-inset-2.5 after:content-[''] hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:outline-none"
       >
         <Minus className="h-3 w-3" />
       </button>
@@ -481,8 +584,7 @@ export default function LineageFlow({
     const stats = statsOf(fowl);
     const isSelected = selected?.kind === 'bird' && selected.id === node.id;
     const isHighlighted = highlightId === node.id || queryMatchIds.has(node.id);
-    const isDimmed =
-      sexFocus !== 'all' && (sexFocus === 'male') !== isMale(fowl.gender);
+    const isDimmed = !matchingNodeIds.has(node.id);
     const offspringCount = (index.childrenByParent.get(node.id) ?? []).length;
     const fightsEnabled = canFight(fowl);
     const birdCrisscross = crisscrossForBird(fowl);
@@ -552,7 +654,6 @@ export default function LineageFlow({
     );
   };
 
-  const rootLabel = root ? `${root.name}` : 'No bird selected';
   const isExpandedClass = expanded
     ? 'flex min-h-[calc(100dvh-4rem)] w-full flex-col gap-2'
     : 'space-y-3';
@@ -560,19 +661,19 @@ export default function LineageFlow({
   return (
     <section className={isExpandedClass}>
       {/* Toolbar */}
-      <div className="bg-card border-border rounded-lg border p-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div ref={finderRef} className="relative min-w-0 flex-1 sm:max-w-xs">
+      <div className="bg-card border-border rounded-xl border p-2.5 shadow-xs">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div ref={finderRef} className="relative min-w-[15rem] flex-[1_1_20rem] sm:max-w-md">
             <span
               aria-hidden="true"
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
             >
-              <Search className="h-3.5 w-3.5" />
+              <Search className="h-4 w-4" />
             </span>
             <input
-              type="text"
-              aria-label="Find a bird"
-              placeholder="Find a bird by name, ID or leg band…"
+              type="search"
+              aria-label={t('lineageDirectory.searchLabel')}
+              placeholder={t('lineageDirectory.searchPlaceholder')}
               value={finder}
               onChange={(event) => {
                 setFinder(event.target.value);
@@ -593,26 +694,28 @@ export default function LineageFlow({
                   setFinder('');
                 }
               }}
-              className="border-input-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500 h-8 w-full rounded-md border py-1.5 pr-7 pl-8 text-xs font-semibold focus:ring-1"
+              className="border-input-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-brand-orange h-11 w-full rounded-lg border py-2 pr-9 pl-10 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none [&::-webkit-search-cancel-button]:appearance-none"
             />
             {finder && (
               <button
                 type="button"
-                aria-label="Clear bird search"
+                aria-label={t('common.clear')}
                 onClick={() => setFinder('')}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer p-0.5"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-orange absolute top-1/2 right-2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded after:absolute after:-inset-2.5 after:content-[''] focus-visible:ring-2 focus-visible:outline-none"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
             {finder.trim() !== '' && (
               <div
                 role="listbox"
-                aria-label="Bird matches"
-                className="bg-card border-border absolute top-full right-0 left-0 z-30 mt-1 max-h-64 overflow-y-auto rounded-md border p-1 shadow-lg"
+                aria-label={t('lineageDirectory.searchLabel')}
+                className="bg-card border-border absolute top-full right-0 left-0 z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border p-1 shadow-lg"
               >
                 {finderMatches.length === 0 ? (
-                  <p className="text-muted-foreground px-2 py-2 text-xs">No birds match.</p>
+                  <p className="text-muted-foreground px-2 py-2 text-xs">
+                    {t('lineageDirectory.noSearchResults')}
+                  </p>
                 ) : (
                   finderMatches.map((match, i) => (
                     <button
@@ -622,8 +725,8 @@ export default function LineageFlow({
                       aria-selected={i === finderIndex}
                       onMouseEnter={() => setFinderIndex(i)}
                       onClick={() => focusBird(match)}
-                      className={`flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-xs ${
-                        i === finderIndex ? 'bg-muted' : 'hover:bg-muted/60'
+                      className={`flex min-h-11 w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-xs ${
+                        i === finderIndex ? 'bg-accent-soft' : 'hover:bg-muted/60'
                       }`}
                     >
                       <span className="border-border bg-muted shrink-0 rounded border px-1 py-0.5 font-mono text-[10px] font-black">
@@ -642,32 +745,51 @@ export default function LineageFlow({
             )}
           </div>
 
-          <div className="flex min-w-0 items-center gap-1.5">
-            <label htmlFor="lineage-flow-family" className="sr-only">
-              Starting family
+          <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+            <label htmlFor="lineage-flow-start" className="sr-only">
+              {t('lineageDirectory.startingBird')}
             </label>
             <select
-              id="lineage-flow-family"
-              aria-label="Starting family"
-              value={activePairKey}
-              onChange={(event) => onFamilyChange(event.target.value)}
-              className="border-border bg-card text-foreground focus:border-emerald-500 h-8 max-w-[230px] cursor-pointer rounded border px-2 text-xs font-bold focus:outline-none"
+              id="lineage-flow-start"
+              aria-label={t('lineageDirectory.startingBird')}
+              value={root ? String(root.id) : ''}
+              onChange={(event) => onStartingBirdChange(event.target.value)}
+              className="border-border bg-card text-foreground focus-visible:ring-brand-orange h-11 min-w-[12rem] max-w-[15rem] cursor-pointer rounded-lg border px-2 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
             >
-              {activePairKey === '' && (
-                <option value="">Starting bird: {rootLabel}</option>
-              )}
-              {pairOptions.map((pair) => (
-                <option key={pair.key} value={pair.key}>
-                  {pair.sire.name} × {pair.dam.name} · {pair.childIds.length} offspring
+              {startingBirdOptions.map((fowl) => (
+                <option key={fowl.id} value={String(fowl.id)}>
+                  {lineageBirdCode(fowl, codes) ? `${lineageBirdCode(fowl, codes)} · ` : ''}
+                  {fowl.name}
                 </option>
               ))}
             </select>
           </div>
 
+          <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+            <label htmlFor="lineage-flow-sort" className="sr-only">
+              {t('lineageDirectory.sortLabel')}
+            </label>
+            <select
+              id="lineage-flow-sort"
+              aria-label={t('lineageDirectory.sortLabel')}
+              value={sortBy}
+              onChange={(event) =>
+                onSortChange?.(event.target.value as 'most' | 'name' | 'newest')
+              }
+              className="border-border bg-card text-foreground focus-visible:ring-brand-orange h-11 cursor-pointer rounded-lg border px-2 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <option value="most">{t('lineageDirectory.sortMost')}</option>
+              <option value="name">{t('lineageDirectory.sortName')}</option>
+              <option value="newest">{t('lineageDirectory.sortNewest')}</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-2">
           <div
             role="group"
             aria-label="View direction"
-            className="border-border flex items-center overflow-hidden rounded border"
+            className="border-border flex items-center overflow-hidden rounded-lg border"
           >
             {(
               [
@@ -681,9 +803,9 @@ export default function LineageFlow({
                 type="button"
                 aria-pressed={direction === value}
                 onClick={() => onDirectionChange(value)}
-                className={`h-8 cursor-pointer px-2 text-xs font-bold transition-colors ${
+                className={`h-10 min-h-11 cursor-pointer px-2.5 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none ${
                   direction === value
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
@@ -692,33 +814,83 @@ export default function LineageFlow({
             ))}
           </div>
 
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={onExpandAll}
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground h-8 cursor-pointer rounded border px-2 text-xs font-bold whitespace-nowrap"
-            >
-              Expand all
-            </button>
-            <button
-              type="button"
-              onClick={onCollapseAll}
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground h-8 cursor-pointer rounded border px-2 text-xs font-bold whitespace-nowrap"
-            >
-              Collapse all
-            </button>
-          </div>
+          {view === 'tree' && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={onExpandAll}
+                className="border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-orange h-10 min-h-11 cursor-pointer rounded-lg border px-2 text-xs font-bold whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none"
+              >
+                Expand all
+              </button>
+              <button
+                type="button"
+                onClick={onCollapseAll}
+                className="border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-orange h-10 min-h-11 cursor-pointer rounded-lg border px-2 text-xs font-bold whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none"
+              >
+                Collapse all
+              </button>
+            </div>
+          )}
 
+          <div className="flex items-center gap-1.5">
+            {view === 'tree' && (
+              <button
+                type="button"
+                aria-pressed={expanded}
+                onClick={() => setExpanded((value) => !value)}
+                aria-label={expanded ? 'Exit expanded canvas' : 'Expand canvas'}
+                title={expanded ? 'Exit expanded canvas' : 'Expand canvas'}
+                className="border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-orange inline-flex h-10 min-h-11 cursor-pointer items-center gap-1 rounded-lg border px-2 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
+              >
+                {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                {expanded ? 'Exit' : 'Expand'}
+              </button>
+            )}
+
+            <div
+              role="group"
+              aria-label={t('lineageDirectory.viewLabel')}
+              className="border-border bg-muted/40 flex items-center gap-0.5 rounded-lg border p-0.5"
+            >
+              {(
+                [
+                  ['tree', t('lineageDirectory.viewTree'), Network],
+                  ['table', t('lineageDirectory.viewTable'), Table2],
+                ] as const
+              ).map(([value, label, Icon]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={view === value}
+                  aria-label={label}
+                  title={label}
+                  onClick={() => changeView(value)}
+                  className={`inline-flex h-10 min-h-11 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none ${
+                    view === value
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-border/70 mt-2.5 flex min-w-0 flex-wrap items-center gap-2 border-t pt-2.5">
           <div
             role="group"
-            aria-label="Highlight sex"
-            className="border-border flex items-center overflow-hidden rounded border"
+            aria-label={t('lineageDirectory.sexHighlight')}
+            className="border-border flex items-center overflow-hidden rounded-lg border"
           >
             {(
               [
-                ['all', 'All'],
-                ['male', 'Cocks'],
-                ['female', 'Hens'],
+                ['all', t('lineageDirectory.sexAll')],
+                ['male', t('lineageDirectory.sexCocks')],
+                ['female', t('lineageDirectory.sexHens')],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -726,9 +898,9 @@ export default function LineageFlow({
                 type="button"
                 aria-pressed={sexFocus === value}
                 onClick={() => setSexFocus(value)}
-                className={`h-8 cursor-pointer px-2 text-xs font-bold transition-colors ${
+                className={`h-9 min-h-11 cursor-pointer px-2.5 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none ${
                   sexFocus === value
-                    ? 'bg-sky-600 text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
@@ -736,45 +908,144 @@ export default function LineageFlow({
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {query.trim() !== '' && (
-              <span className="text-muted-foreground text-xs font-semibold">
-                {queryMatches.length === 0 ? (
-                  <>No birds match “{query.trim()}”.</>
-                ) : (
-                  <>
-                    {queryMatches.length} match{queryMatches.length === 1 ? '' : 'es'} for “
-                    {query.trim()}”{' '}
-                    <button
-                      type="button"
-                      onClick={() => focusBird(queryMatches[0])}
-                      className="cursor-pointer font-bold text-emerald-600 hover:underline dark:text-emerald-400"
-                    >
-                      Focus first
-                    </button>
-                  </>
-                )}
-              </span>
-            )}
+          <span className="text-muted-foreground inline-flex items-center gap-1 text-[10px] font-black tracking-wider uppercase">
+            <SlidersHorizontal className="h-3 w-3" aria-hidden="true" />
+            {t('lineageDirectory.highlightFilters')}
+          </span>
+
+          <label className="text-muted-foreground inline-flex items-center gap-1 text-xs font-bold">
+            <span className="sr-only">{t('lineageDirectory.generation')}</span>
+            <select
+              aria-label={t('lineageDirectory.generation')}
+              value={filters.generation}
+              onChange={(event) =>
+                changeFilters({
+                  ...filters,
+                  generation: event.target.value as LineageGenerationFilter,
+                })
+              }
+              className="border-border bg-card text-foreground focus-visible:ring-brand-orange h-9 min-h-11 cursor-pointer rounded-lg border px-2 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <option value="all">
+                {t('lineageDirectory.generation')}: {t('lineageDirectory.generationAll')}
+              </option>
+              <option value="1">
+                {t('lineageDirectory.generation')}: {t('lineageDirectory.generationOne')}
+              </option>
+              <option value="2">
+                {t('lineageDirectory.generation')}: {t('lineageDirectory.generationTwo')}
+              </option>
+              <option value="3">
+                {t('lineageDirectory.generation')}: {t('lineageDirectory.generationThree')}
+              </option>
+            </select>
+          </label>
+
+          <label className="text-muted-foreground inline-flex items-center gap-1 text-xs font-bold">
+            <span className="sr-only">{t('lineageDirectory.featherColor')}</span>
+            <select
+              aria-label={t('lineageDirectory.featherColor')}
+              value={filters.feather}
+              onChange={(event) =>
+                changeFilters({ ...filters, feather: event.target.value })
+              }
+              className="border-border bg-card text-foreground focus-visible:ring-brand-orange h-9 min-h-11 max-w-[12rem] cursor-pointer rounded-lg border px-2 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <option value="all">
+                {t('lineageDirectory.featherColor')}: {t('lineageDirectory.featherAll')}
+              </option>
+              {featherOptions.map((color) => (
+                <option key={color} value={color}>
+                  {color}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-muted-foreground inline-flex items-center gap-1 text-xs font-bold">
+            <span className="sr-only">{t('lineageDirectory.pairType')}</span>
+            <select
+              aria-label={t('lineageDirectory.pairType')}
+              value={filters.pair}
+              onChange={(event) =>
+                changeFilters({
+                  ...filters,
+                  pair: event.target.value as LineagePairFilter,
+                })
+              }
+              className="border-border bg-card text-foreground focus-visible:ring-brand-orange h-9 min-h-11 cursor-pointer rounded-lg border px-2 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <option value="all">
+                {t('lineageDirectory.pairType')}: {t('lineageDirectory.pairAll')}
+              </option>
+              <option value="crisscross">{t('lineageDirectory.pairCrisscross')}</option>
+              <option value="outcross">{t('lineageDirectory.pairOutcross')}</option>
+              <option value="others">{t('lineageDirectory.pairOthers')}</option>
+            </select>
+          </label>
+
+          <span
+            aria-live="polite"
+            className="text-muted-foreground ml-auto text-xs font-bold"
+          >
+            {t('lineageDirectory.matchCount', {
+              count: matchingNodeIds.size,
+            })}
+          </span>
+          {hasActiveFilters && (
             <button
               type="button"
-              aria-pressed={expanded}
-              onClick={() => setExpanded((value) => !value)}
-              aria-label={expanded ? 'Exit expanded canvas' : 'Expand canvas'}
-              title={expanded ? 'Exit expanded canvas' : 'Expand canvas'}
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-7 cursor-pointer items-center gap-1 rounded border px-2 text-xs font-bold"
+              onClick={clearFilters}
+              className="text-primary focus-visible:ring-brand-orange h-9 min-h-11 cursor-pointer rounded-lg px-2 text-xs font-black underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none"
             >
-              {expanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-              {expanded ? 'Exit' : 'Expand'}
+              {t('lineageDirectory.clearFilters')}
             </button>
-          </div>
+          )}
         </div>
+
+        {query.trim() !== '' && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 px-1">
+            <span className="text-muted-foreground text-xs font-semibold">
+              {queryMatches.length === 0 ? (
+                <>
+                  {t('lineageDirectory.noSearchResults')} “{query.trim()}”
+                </>
+              ) : (
+                <>
+                  {queryMatches.length} match{queryMatches.length === 1 ? '' : 'es'} for “
+                  {query.trim()}”
+                  <button
+                    type="button"
+                    onClick={() => focusBird(queryMatches[0])}
+                    className="text-primary focus-visible:ring-brand-orange ml-1 cursor-pointer font-bold hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    Focus first
+                  </button>
+                </>
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className={`flex min-h-0 flex-col gap-3 ${expanded ? 'flex-1 xl:flex-row' : 'xl:flex-row xl:items-start'}`}>
+        {view === 'table' ? (
+          <div className="min-w-0 flex-1">
+            <LineageTableView
+              nodes={tableNodes}
+              totalCount={layout?.nodes.length ?? 0}
+              codes={codes}
+              index={index}
+              statsOf={statsOf}
+              generationNumberByGen={generationNumberByGen}
+              pairTypeByNode={pairTypeByNode}
+              selectedId={selectedBird ? String(selectedBird.id) : null}
+              onSelect={(fowl) => selectBird(fowl)}
+            />
+          </div>
+        ) : (
+        <>
         {/* Canvas */}
         <div className="relative min-w-0 flex-1">
           <div
@@ -812,15 +1083,16 @@ export default function LineageFlow({
                   transformOrigin: 'top center',
                 }}
               >
-                {layout.generations.map((row) => (
+                {layout.generations.map((row, rowIndex) => (
                   <div
                     key={row.gen}
                     className="absolute flex items-center gap-1.5"
-                    style={{ left: 12, top: row.y - 24 }}
+                    style={{ left: 12, top: row.y - 28 }}
                   >
-                    <span className="border-border bg-card/90 text-muted-foreground rounded border px-1.5 py-0.5 text-[10px] font-black tracking-widest uppercase">
-                      {row.label}
-                      {row.isRoot ? ' · Root' : ''}
+                    <span className="border-primary/20 bg-accent-soft text-primary rounded-full border px-2 py-0.5 text-[10px] font-black tracking-wider uppercase shadow-xs">
+                      {rowIndex === 0
+                        ? t('lineageDirectory.generationParents')
+                        : t('lineageDirectory.generationNumber', { number: rowIndex + 1 })}
                     </span>
                   </div>
                 ))}
@@ -828,7 +1100,7 @@ export default function LineageFlow({
                 <svg
                   width={layout.width}
                   height={layout.height}
-                  className="text-muted-foreground/50 pointer-events-none absolute inset-0"
+                  className="text-input-border pointer-events-none absolute inset-0"
                   aria-hidden="true"
                 >
                   <g
@@ -917,15 +1189,25 @@ export default function LineageFlow({
             pair.
           </p>
         </div>
+        </>
+        )}
 
         {/* Details / legend */}
         {!expanded && (
           <aside
-            aria-label="Lineage details"
-            className="bg-card border-border w-full shrink-0 rounded-lg border p-4 xl:w-80 2xl:w-96"
+            aria-label={t('lineageDirectory.detailsAria')}
+            className="bg-card border-border w-full shrink-0 rounded-xl border p-4 shadow-sm xl:w-80 2xl:w-96"
           >
             {selectedBird ? (
               <div className="space-y-3" data-testid="lineage-details">
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="text-primary focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded text-xs font-black hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('lineageDirectory.backToInsights')}
+                </button>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <ChickenPhoto
@@ -940,8 +1222,8 @@ export default function LineageFlow({
                         <span
                           className={`flex h-full w-full items-center justify-center text-xs font-black ${
                             sexLabel(selectedBird) === 'Hen'
-                              ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
-                              : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
+                              ? 'bg-hen-bg text-hen'
+                              : 'bg-cock-bg text-cock'
                           }`}
                         >
                           {initials(selectedBird.name)}
@@ -976,9 +1258,17 @@ export default function LineageFlow({
                       {selectedBird.breed}
                     </span>
                   )}
-                  <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 font-bold">
-                    {selectedBird.status || 'Unknown status'}
-                  </span>
+                  {featherColorOf(selectedBird) && (
+                    <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 font-bold">
+                      {featherColorOf(selectedBird)}
+                    </span>
+                  )}
+                  {canFight(selectedBird) && selectedBird.wing_band && (
+                    <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 font-bold">
+                      {t('lineageDirectory.wingBand', { band: selectedBird.wing_band })}
+                    </span>
+                  )}
+                  <LineageStatusBadge fowl={selectedBird} />
                   {selectedBird.age && (
                     <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 font-bold">
                       {selectedBird.age}
@@ -1001,7 +1291,13 @@ export default function LineageFlow({
                     <span className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
                       Record
                     </span>
-                    <WinRatePill stats={selectedBirdStats ?? computeWinRate(0, 0)} />
+                    {(selectedBirdStats?.total ?? 0) > 0 ? (
+                      <LineageRecordPill stats={selectedBirdStats!} compact={false} />
+                    ) : (
+                      <span className="text-muted-foreground text-xs font-bold">
+                        {t('lineageDirectory.noFights')}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -1027,7 +1323,7 @@ export default function LineageFlow({
                           <button
                             type="button"
                             onClick={() => selectBird(resolved, true)}
-                            className="text-card-foreground max-w-[70%] cursor-pointer truncate font-bold hover:text-emerald-700 hover:underline dark:hover:text-emerald-400"
+                            className="text-card-foreground hover:text-primary max-w-[70%] cursor-pointer truncate font-bold hover:underline"
                           >
                             {resolved.name}
                           </button>
@@ -1101,26 +1397,35 @@ export default function LineageFlow({
                   <button
                     type="button"
                     onClick={() => onPick(selectedBird)}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded bg-emerald-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                    className="bg-primary text-primary-foreground hover:bg-accent focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded px-2 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    <User className="h-3.5 w-3.5" /> View profile
+                    <User className="h-3.5 w-3.5" /> {t('lineageDirectory.viewProfile')}
                   </button>
                   {canFight(selectedBird) && (
                     <button
                       type="button"
                       onClick={() => onShowFights(selectedBird)}
-                      className="border-border hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold"
+                      className="border-border hover:bg-muted focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
                     >
-                      <Swords className="h-3.5 w-3.5" /> Fight history
+                      <Swords className="h-3.5 w-3.5" /> {t('lineageDirectory.fightHistory')}
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => focusInTree(selectedBird)}
-                    className="border-border hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold"
+                    className="border-border hover:bg-muted focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    Focus
+                    {t('lineageDirectory.focus')}
                   </button>
+                  {onViewAncestors && (
+                    <button
+                      type="button"
+                      onClick={() => onViewAncestors(selectedBird)}
+                      className="border-border hover:bg-muted focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded border px-2 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <GitBranch className="h-3.5 w-3.5" /> {t('lineageDirectory.viewAncestors')}
+                    </button>
+                  )}
                   {selectedBirdChildren.length > 0 && onOpenAsSire && (
                     <button
                       type="button"
@@ -1143,6 +1448,14 @@ export default function LineageFlow({
               </div>
             ) : selectedPair ? (
               <div className="space-y-3" data-testid="lineage-details">
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="text-primary focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded text-xs font-black hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('lineageDirectory.backToInsights')}
+                </button>
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-card-foreground text-sm font-black">Breeding pair</p>
@@ -1180,15 +1493,13 @@ export default function LineageFlow({
                       key={label}
                       className={`rounded-md border p-2 ${
                         tone === 'sky'
-                          ? 'border-sky-200 bg-sky-50/70 dark:border-sky-800 dark:bg-sky-950/30'
-                          : 'border-pink-200 bg-pink-50/70 dark:border-pink-800 dark:bg-pink-950/30'
+                          ? 'border-cock/20 bg-cock-bg/60'
+                          : 'border-hen/20 bg-hen-bg/60'
                       }`}
                     >
                       <p
                         className={`text-[10px] font-black tracking-wider uppercase ${
-                          tone === 'sky'
-                            ? 'text-sky-700 dark:text-sky-400'
-                            : 'text-pink-700 dark:text-pink-400'
+                          tone === 'sky' ? 'text-cock' : 'text-hen'
                         }`}
                       >
                         {label}
@@ -1243,7 +1554,7 @@ export default function LineageFlow({
                   <p className="text-muted-foreground mb-1 text-[10px] font-black tracking-widest uppercase">
                     Offspring record
                   </p>
-                  <WinRatePill stats={pairStats} />
+                  <LineageRecordPill stats={pairStats} compact={false} />
                   <p className="text-muted-foreground mt-1 text-[10px] font-semibold">
                     {pairStats.foughtCount} of {pairFightingBirds.length} cocks fought
                   </p>
@@ -1267,56 +1578,22 @@ export default function LineageFlow({
                   <button
                     type="button"
                     onClick={() => onRootChange?.(selectedPair.sire.name)}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded bg-emerald-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                    className="bg-primary text-primary-foreground hover:bg-accent focus-visible:ring-brand-orange inline-flex min-h-11 cursor-pointer items-center gap-1 rounded px-2 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:outline-none"
                   >
                     Focus family
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-3" data-testid="lineage-details">
-                <div>
-                  <p className="text-card-foreground text-sm font-black">Explore the pedigree</p>
-                  <p className="text-muted-foreground mt-1 text-xs font-semibold">
-                    Select a bird card for its parents, offspring and records, or a pair badge to
-                    inspect the breeding pair. The tree fits the page width automatically; scroll
-                    the page for taller trees.
-                  </p>
-                </div>
-                <div className="border-border space-y-1.5 border-t border-border/60 pt-3">
-                  <p className="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-                    Legend
-                  </p>
-                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-                    <span className="inline-flex items-center gap-1">
-                      <span className="font-black text-sky-600 dark:text-sky-400">M</span> Cock
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <span className="font-black text-pink-600 dark:text-pink-400">F</span> Hen
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Link2 className="h-3 w-3" /> Breeding pair
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <span className="border-border rounded border px-1 text-[10px] font-black">
-                        +N
-                      </span>
-                      Hidden relatives
-                    </span>
-                  </div>
-                </div>
-                <div className="border-border border-t border-border/60 pt-3 text-xs font-semibold text-muted-foreground">
-                  <p>
-                    Root bird: <span className="text-card-foreground font-black">{rootLabel}</span>
-                  </p>
-                  <p className="mt-1">
-                    Showing {layout?.nodes.length ?? 0} bird
-                    {(layout?.nodes.length ?? 0) === 1 ? '' : 's'} across{' '}
-                    {layout?.generations.length ?? 0} generation
-                    {(layout?.generations.length ?? 0) === 1 ? '' : 's'}.
-                  </p>
-                </div>
-              </div>
+              <LineageInsights
+                rootNames={rootNames}
+                birdCount={layout?.nodes.length ?? 0}
+                generationCount={shownGenerationCount}
+                pairCount={shownPairCount}
+                cocksFought={treeFoughtCocks.length}
+                cocksShown={treeCocks.length}
+                combinedRecord={treeCombinedRecord}
+              />
             )}
           </aside>
         )}

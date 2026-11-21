@@ -40,6 +40,7 @@ import { NotificationProvider, useNotificationUnreadCount } from '@/lib/contexts
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useT } from '@/lib/i18n';
+import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { unreadBadgeText } from '@/lib/notifications/format';
 import {
@@ -216,7 +217,7 @@ function SidebarBody({ navItems, pathname, isAdmin, unreadCount, stats, onClose 
         </button>
 
         <p className="text-sidebar-muted text-center text-xs font-bold tracking-[0.2em] uppercase">
-          {t('heritage.footerTagline')}
+          {t(BRAND_TAGLINE_KEY)}
         </p>
       </div>
 

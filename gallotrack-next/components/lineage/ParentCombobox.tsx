@@ -180,7 +180,7 @@ export default function ParentCombobox({
         style={style}
         className={`border-border flex min-h-16 w-full cursor-pointer items-center gap-2 border-b px-3 py-2 text-left transition-colors last:border-b-0 ${
           isActive
-            ? 'bg-emerald-50 dark:bg-emerald-950/40'
+            ? 'bg-accent-soft '
             : isSelected
               ? 'bg-muted/70'
               : 'bg-card hover:bg-muted/50'
@@ -200,7 +200,7 @@ export default function ParentCombobox({
           </span>
         </span>
         {isSelected && (
-          <span className="text-xs font-black text-emerald-700 dark:text-emerald-300">
+          <span className="text-xs font-black text-primary ">
             <Check className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">Selected</span>
           </span>
@@ -237,7 +237,7 @@ export default function ParentCombobox({
               if (!open) openPicker();
             }}
             onKeyDown={onKeyDown}
-            className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full cursor-pointer rounded-lg border py-2 pr-9 pl-3 text-sm font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none sm:min-h-10"
+            className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full cursor-pointer rounded-lg border py-2 pr-9 pl-3 text-sm font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none sm:min-h-10"
           />
           {!open && (
             <span className="pointer-events-none absolute inset-0 flex min-w-0 items-center gap-2 py-2 pr-9 pl-3">
@@ -269,7 +269,7 @@ export default function ParentCombobox({
           disabled={ordered.length <= 1}
           aria-label={`Previous ${noun}`}
           title={`Previous ${noun}`}
-          className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
+          className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -279,7 +279,7 @@ export default function ParentCombobox({
           disabled={ordered.length <= 1}
           aria-label={`Next ${noun}`}
           title={`Next ${noun}`}
-          className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
+          className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
         >
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -298,7 +298,7 @@ export default function ParentCombobox({
                 value={sort}
                 onChange={(event) => onSortChange(event.target.value as ParentPickerSort)}
                 aria-label={`Sort ${plural}`}
-                className="border-input-border bg-card text-foreground h-9 min-w-0 flex-1 cursor-pointer rounded border px-2 text-xs font-bold focus:border-emerald-500 focus:outline-none"
+                className="border-input-border bg-card text-foreground h-9 min-w-0 flex-1 cursor-pointer rounded border px-2 text-xs font-bold focus:border-primary focus:outline-none"
               >
                 <option value="most">Most offspring</option>
                 <option value="name">Name</option>
