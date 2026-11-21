@@ -23,7 +23,6 @@ import PedigreeTree from '@/components/PedigreeTree';
 import LineageFlow from '@/components/lineage/LineageFlow';
 import LineageStatusBadge from '@/components/lineage/LineageStatusBadge';
 import PageBanner from '@/components/layout/PageBanner';
-import FooterBand from '@/components/layout/FooterBand';
 import { useT } from '@/lib/i18n';
 import {
   DEFAULT_LINEAGE_TREE_FILTERS,
@@ -3119,7 +3118,6 @@ export default function LineageDirectory({
         )}
       </div>
 
-      <FooterBand />
     </div>
   );
 }

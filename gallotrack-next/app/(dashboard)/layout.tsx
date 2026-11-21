@@ -28,6 +28,7 @@ import { SystemConfigNavProvider } from '@/lib/contexts/system-config-nav';
 import { NotificationProvider, useNotificationUnreadCount } from '@/lib/contexts/notification-context';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import FooterBand from '@/components/layout/FooterBand';
 import { useT } from '@/lib/i18n';
 import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
@@ -426,33 +427,16 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
-          <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
-          <DashboardFooterBand />
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-full min-w-0 flex-col p-4 sm:p-6 md:p-8">
+            <div className="min-w-0 flex-1">
+              <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
+            </div>
+            <FooterBand />
+          </div>
         </main>
 
         <ModalsWrapper />
-      </div>
-    </div>
-  );
-}
-
-function DashboardFooterBand() {
-  const t = useT();
-
-  return (
-    <div
-      aria-hidden="true"
-      className="border-primary/10 from-accent-soft via-background to-brand-orange/15 relative mt-10 hidden min-h-28 items-center justify-center overflow-hidden rounded-2xl border bg-gradient-to-r px-6 md:flex [@media(max-height:700px)]:hidden"
-    >
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-r from-brand-red/15 via-brand-orange/10 to-transparent" />
-      <div className="relative flex min-w-0 items-center gap-3">
-        <span className="bg-background ring-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-sm ring-1">
-          <Logo variant="mark" size="sm" />
-        </span>
-        <p className="text-brand-red text-sm font-black tracking-[0.16em] uppercase">
-          {t(BRAND_TAGLINE_KEY)}
-        </p>
       </div>
     </div>
   );

@@ -1589,12 +1589,12 @@ describe('crisscross integration in the redesigned family cards', () => {
     expect(within(sireRegion).getByTestId('crisscross-badge')).toBeInTheDocument();
   });
 
-  it('renders the shared banner and footer band', () => {
+  it('renders the shared banner without rendering a page-level footer band', () => {
     renderDirectory();
     expect(
       screen.getByRole('heading', { level: 1, name: /Family Lineage Directory/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Track · Breed · Excel/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('footer-band')).not.toBeInTheDocument();
   });
 
   it('lists only feather colors that exist in the data', () => {

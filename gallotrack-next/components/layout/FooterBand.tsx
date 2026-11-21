@@ -9,6 +9,7 @@ export default function FooterBand({ className = '' }: { className?: string }) {
 
   return (
     <div
+      data-testid="footer-band"
       aria-hidden="true"
       className={`border-primary/10 from-accent-soft via-background to-brand-orange/15 relative mt-10 hidden min-h-28 items-center justify-center overflow-hidden rounded-2xl border bg-gradient-to-r px-6 md:flex [@media(max-height:700px)]:hidden ${className}`}
     >
