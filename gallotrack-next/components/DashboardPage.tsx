@@ -99,7 +99,7 @@ export default function DashboardPage() {
     activeFowls,
     registryCounts,
     monthLabels,
-    activeSpark,
+    populationHistory,
     trendWinRate,
     matchesByMonth,
     upcomingMilestones,
@@ -115,6 +115,8 @@ export default function DashboardPage() {
     dateRangeCustom,
     setDateRangeCustom,
     fetchDatabaseResources,
+    loading,
+    loadError,
     birdCodes,
   } = fowl;
 
@@ -656,11 +658,11 @@ export default function DashboardPage() {
 
         <PopulationTrendCard
           activeCount={registryCounts.total}
-          monthLabels={monthLabels}
-          activeSpark={activeSpark}
-          trendWinRate={trendWinRate}
-          matchesByMonth={matchesByMonth}
+          populationHistory={populationHistory}
           chart={chart}
+          loading={loading}
+          error={loadError}
+          onRetry={() => void fetchDatabaseResources()}
         />
       </div>
 

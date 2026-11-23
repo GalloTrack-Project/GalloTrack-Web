@@ -58,7 +58,7 @@ import { nameKey } from '@/lib/family-tree';
 import { parentLinkIds } from '@/lib/lineage';
 import { parentSexMismatchMessage, validateParentRoles } from '@/lib/parent-sex';
 import { generateBreedCompliance } from '@/lib/breed-standards';
-import { useFowlAnalytics, type CrossbreedChartData } from '@/lib/hooks/use-fowl-analytics';
+import { useFowlAnalytics, type CrossbreedChartData, type PopulationHistory } from '@/lib/hooks/use-fowl-analytics';
 import { validateFowlForm, validateMatchForm } from '@/lib/validation';
 import * as fowlService from '@/lib/services/fowl-service';
 import { deleteChickenPhotoPaths, uploadChickenPhoto } from '@/lib/services/chicken-photo-service';
@@ -209,6 +209,7 @@ interface FowlContextValue {
   matchesByMonth: number[];
   winsByMonth: number[];
   activeSpark: number[];
+  populationHistory: PopulationHistory;
   trendWinRate: (number | null)[];
   upcomingMilestones: { fowl: FowlRecord; info: NonNullable<ReturnType<typeof getMilestoneInfoHelper>> }[];
   dateRangeLabel: string;
@@ -1657,6 +1658,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     matchesByMonth: analytics.matchesByMonth,
     winsByMonth: analytics.winsByMonth,
     activeSpark: analytics.activeSpark,
+    populationHistory: analytics.populationHistory,
     trendWinRate: analytics.trendWinRate,
     upcomingMilestones: analytics.upcomingMilestones,
     dateRangeLabel: analytics.dateRangeLabel,

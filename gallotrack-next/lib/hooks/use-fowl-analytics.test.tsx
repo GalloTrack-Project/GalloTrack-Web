@@ -70,11 +70,16 @@ describe('useFowlAnalytics - active population history', () => {
       bird(6, 'Active', 0),
     ];
 
+    const activeFowls = fowls.filter(
+      (f) => f.status === 'Active' || !f.status || f.status === 'active',
+    );
     const { result } = renderHook(() =>
-      useFowlAnalytics(fowls, [], 'all', Date.now(), [])
+      useFowlAnalytics(fowls, [], 'all', Date.now(), activeFowls)
     );
 
     expect(result.current.activeSpark).toEqual([1, 1, 1, 1, 1, 4]);
     expect(result.current.activeSpark[5]).toBe(4);
+    expect(result.current.populationHistory.labels).toHaveLength(12);
+    expect(result.current.populationHistory.active[11]).toBe(activeFowls.length);
   });
 });
