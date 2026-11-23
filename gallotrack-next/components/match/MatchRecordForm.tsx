@@ -1114,20 +1114,25 @@ export default function MatchRecordForm({
               >
                 Number of Cocks
               </label>
-              <div className="flex items-center gap-2">
+              <div className="relative min-w-0">
                 <input
                   type="number"
                   min={1}
                   max={99}
+                  inputMode="numeric"
+                  onWheel={(e) => e.currentTarget.blur()}
                   id="number-of-cocks"
                   value={form.cockCount || ''}
                   onChange={(e) => {
                     const count = Number(e.target.value) || 0;
                     setForm((prev) => ({ ...prev, cockCount: count }));
                   }}
-                  className={`${inputClass()} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                  className={`${inputClass()} no-spinner w-full pr-20`}
                 />
-                <span className="bg-muted text-muted-foreground flex h-11 shrink-0 items-center rounded-lg px-4 py-3 text-xs font-bold sm:h-12 sm:text-sm">
+                <span
+                  aria-hidden="true"
+                  className="bg-muted text-muted-foreground pointer-events-none absolute inset-y-0 right-1.5 my-auto flex h-9 items-center rounded-md px-3 text-xs font-bold sm:text-sm"
+                >
                   cocks
                 </span>
               </div>

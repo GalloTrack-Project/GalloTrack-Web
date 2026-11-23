@@ -52,7 +52,7 @@ type ModalsProps = {
 
   editingFowl: FowlRecord | null;
   setEditingFowl: (f: FowlRecord | null) => void;
-  handleUpdateFowl: (e: React.FormEvent) => void;
+  handleUpdateFowl: (e: React.FormEvent) => Promise<{ ok: boolean; error?: string }>;
   onAddBreeds?: () => void;
   canCreateBreed?: boolean;
   refreshStrains?: () => Promise<void>;

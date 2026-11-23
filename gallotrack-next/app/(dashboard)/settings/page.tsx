@@ -1051,11 +1051,13 @@ export default function SettingsPage() {
                   type="number"
                   min={1}
                   max={99}
+                  inputMode="numeric"
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={farmCfg.ranking_min_matches}
                   onChange={(e) =>
                     saveFarmSetting('ranking_min_matches', Math.max(1, Number(e.target.value) || 1))
                   }
-                  className="border-input-border w-24 rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  className="no-spinner border-input-border w-24 rounded-md border bg-white p-2.5 px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 />
               </Field>
               <Field
