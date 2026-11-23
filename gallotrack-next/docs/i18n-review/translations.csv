@@ -89,6 +89,73 @@ header.userMenu,User menu,Menu ng gumagamit,unreviewed,Awaiting native reviewer 
 header.accessActive,Access Active,Aktibo ang Akses,unreviewed,Awaiting native reviewer confirmation.,Bukas ang Pagsulod,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 header.accessRestricted,Access Restricted,Limitado ang Akses,unreviewed,Awaiting native reviewer confirmation.,Limitado ang Pagsulod,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 header.languageSwitcher,Change language,Palitan ang wika,unreviewed,"""Palitan ang wika"" - standard Tagalog.",Ilisi ang hambal/pinulongan,unreviewed,"""hamba"" as a word for ""language"" needs confirmation (""pinulongan"" is certain)."
+inventory.title,Chicken Inventory,Imbentaryo ng Manok,unreviewed,Awaiting native reviewer confirmation.,Imbentaryo sang Manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.subtitle,"All your chickens in one list: status, age, weight, stage and lineage.","Lahat ng manok sa isang listahan: katayuan, edad, timbang, yugto at lineage.",unreviewed,Awaiting native reviewer confirmation.,"Tanan nga manok sa isa ka listahan: kahimtangan, edad, timbang, yugto kag lineage.",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.searchLabel,Search inventory,Hanapin sa imbentaryo,unreviewed,Awaiting native reviewer confirmation.,Pangitaa sa imbentaryo,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.searchPlaceholder,"Search name, bird code, or wing band...","Maghanap ng pangalan, bird code, o wing band...",unreviewed,Awaiting native reviewer confirmation.,"Pangitaa ang ngalan, bird code, ukon wing band...",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.includeParents,Include parents,Isama ang mga magulang,unreviewed,Awaiting native reviewer confirmation.,Iupod ang mga ginikanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.searchIncludesParents,Sire and dam names are included,Kasama ang pangalan ng sire at dam,unreviewed,Awaiting native reviewer confirmation.,Ginapangita man ang mga ngalan sang sire kag dam,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.clearSearch,Clear search,Linisin ang paghahanap,unreviewed,Awaiting native reviewer confirmation.,Tinluan ang pagpangita,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.resultsCount,{count} chickens,{count} manok,unreviewed,Awaiting native reviewer confirmation.,{count} ka manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabLabel,Chicken inventory tabs,Mga tab ng imbentaryo ng manok,unreviewed,Awaiting native reviewer confirmation.,Mga tab sang imbentaryo sang manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabAll,All chickens,Lahat ng manok,unreviewed,Awaiting native reviewer confirmation.,Tanan nga manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabActive,Active,Aktibo,unreviewed,Awaiting native reviewer confirmation.,Aktibo,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabBreeders,Active breeders,Aktibong breeder,unreviewed,Awaiting native reviewer confirmation.,Aktibo nga breeder,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabReady,Ready to breed,Handa nang magpalahi,unreviewed,Awaiting native reviewer confirmation.,Handa magpaliwat,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabArchived,Archived,Naka-archive,unreviewed,Awaiting native reviewer confirmation.,Naka-archive,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.tabDeceased,Deceased,Pumanaw,unreviewed,Awaiting native reviewer confirmation.,Napatay,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.filterRole,Role,Tungkulin,unreviewed,Awaiting native reviewer confirmation.,Katungdanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.filterSex,Sex,Kasarian,unreviewed,Awaiting native reviewer confirmation.,Kasarian,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.filterType,Breeding type,Uri ng pagpapalahi,unreviewed,Awaiting native reviewer confirmation.,Klase sang pagpaliwat,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.filterSort,Sort,Ayusin,unreviewed,Awaiting native reviewer confirmation.,Ihan-ay,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.allRoles,All roles,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.allSexes,All sexes,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sexCock,Cock,Cock,reviewed,,Cock,reviewed,
+inventory.sexHen,Hen,Hen,reviewed,,Hen,reviewed,
+inventory.allTypes,All breeding types,Lahat,unreviewed,Awaiting native reviewer confirmation.,Tanan,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.typePurebred,Purebred,Purebred,reviewed,,Purebred,reviewed,
+inventory.typeCrossbred,Crossbred,Crossbred,reviewed,,Crossbred,reviewed,
+inventory.typeFoundation,Foundation stock,Foundation stock,reviewed,,Foundation stock,reviewed,
+inventory.sortNameAsc,Name A-Z,Pangalan A-Z,unreviewed,Awaiting native reviewer confirmation.,Ngalan A-Z,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortNameDesc,Name Z-A,Pangalan Z-A,unreviewed,Awaiting native reviewer confirmation.,Ngalan Z-A,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortNewest,Newest,Pinakabago,unreviewed,Awaiting native reviewer confirmation.,Pinakabag-o,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortOldest,Oldest,Pinakaluma,unreviewed,Awaiting native reviewer confirmation.,Pinakaluma,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortAge,Age (youngest first),Edad (bunso muna),unreviewed,Awaiting native reviewer confirmation.,Edad (pinakabata una),unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortWeight,Weight (lightest first),Timbang (magaan muna),unreviewed,Awaiting native reviewer confirmation.,Timbang (pinakamagaan una),unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortIdentifier,Identifier (1A2 before 1A10),Identifier (1A2 bago ang 1A10),unreviewed,Awaiting native reviewer confirmation.,Identifier (1A2 antes sang 1A10),unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.sortStrain,Strain A-Z,Strain A-Z,reviewed,,Strain A-Z,reviewed,
+inventory.sortWinRate,Win rate (highest),Win rate (pinakamataas),unreviewed,Awaiting native reviewer confirmation.,Win rate (pinakamataas),unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.activeFilters,Active filters,Mga aktibong filter,unreviewed,Awaiting native reviewer confirmation.,Aktibo nga mga filter,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.clearFilters,Clear filters,Alisin ang mga filter,unreviewed,Awaiting native reviewer confirmation.,Kuhaon ang mga filter,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.showing,Showing {shown} of {total},Ipinapakita ang {shown} sa {total},unreviewed,Awaiting native reviewer confirmation.,Ginapakita ang {shown} sa {total},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.emptyTitle,No chickens yet,Wala pang manok,unreviewed,Awaiting native reviewer confirmation.,Wala pa manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.emptyBody,"Register your first chicken to start tracking status, age, weight, stage and lineage.","Magrehistro ng unang manok para masimulan ang pagsubaybay sa katayuan, edad, timbang, yugto at lineage.",unreviewed,Awaiting native reviewer confirmation.,"Magpatala sang una nga manok agod masugdan ang pagsubay sa kahimtangan, edad, timbang, yugto kag lineage.",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.registerChicken,Register a chicken,Magrehistro ng manok,unreviewed,Awaiting native reviewer confirmation.,Magpatala sang manok,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.noResultsTitle,No chickens match your filters,Walang manok na tumutugma sa mga filter,unreviewed,Awaiting native reviewer confirmation.,Wala manok nga nagatakdo sa mga filter,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.noResultsBody,Try a different search or clear the filters.,Subukan ang ibang paghahanap o alisin ang mga filter.,unreviewed,Awaiting native reviewer confirmation.,Tilawi ang iban nga pagpangita ukon kuhaon ang mga filter.,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.copyCode,Copy code,Kopyahin ang code,unreviewed,Awaiting native reviewer confirmation.,Kopyahon ang code,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.copyCodeOf,Copy code of {name},Kopyahin ang code ni {name},unreviewed,Awaiting native reviewer confirmation.,Kopyahon ang code ni {name},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.codeCopied,Code copied,Nakopya ang code,unreviewed,Awaiting native reviewer confirmation.,Nakopya ang code,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.codeCopyFailed,Could not copy code,Hindi makopya ang code,unreviewed,Awaiting native reviewer confirmation.,Indi makopya ang code,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.fullProfile,Full profile,Buong profile,unreviewed,Awaiting native reviewer confirmation.,Bug-os nga profile,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.age,Age,Edad,unreviewed,Awaiting native reviewer confirmation.,Edad,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.weight,Weight,Timbang,unreviewed,Awaiting native reviewer confirmation.,Timbang,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.stage,Stage,Yugto,unreviewed,Awaiting native reviewer confirmation.,Yugto,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.lineage,Lineage,Lineage,reviewed,,Lineage,reviewed,
+inventory.sex,Sex,Kasarian,unreviewed,Awaiting native reviewer confirmation.,Kasarian,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.foundationStock,Foundation stock,Foundation stock,reviewed,,Foundation stock,reviewed,
+inventory.matchedVia,Matched via,Tugma sa,unreviewed,Awaiting native reviewer confirmation.,Nagtakdo sa,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.restoreToActive,Restore to Active,Ibalik sa Aktibo,unreviewed,Awaiting native reviewer confirmation.,Ibalik sa Aktibo,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.restoreTitle,Restore to Active?,Ibalik sa Aktibo?,unreviewed,Awaiting native reviewer confirmation.,Ibalik sa Aktibo?,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.restoreBody,"Move {name} back to the active registry? It will reappear in the Chicken Registry tabs, count as Active, and a history entry will be logged.","Ilipat si {name} pabalik sa aktibong rehistro? Lilitaw siyang muli sa mga tab ng Chicken Registry, mabibilang na Aktibo, at may maitalang history entry.",unreviewed,Awaiting native reviewer confirmation.,"Ibalik si {name} sa aktibo nga rehistro? Magtunga sia liwat sa mga tab sang Chicken Registry, maibilang nga Aktibo, kag may maitala nga history entry.",unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.restoring,Restoring...,Ibinabalik...,unreviewed,Awaiting native reviewer confirmation.,Ginabalik...,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.pagination,Pagination,Pagination,reviewed,,Pagination,reviewed,
+inventory.previousPage,Previous page,Nakaraang pahina,unreviewed,Awaiting native reviewer confirmation.,Nagligad nga pahina,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.nextPage,Next page,Susunod na pahina,unreviewed,Awaiting native reviewer confirmation.,Sunod nga pahina,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.pageNumber,Page {page},Pahina {page},unreviewed,Awaiting native reviewer confirmation.,Pahina {page},unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.loading,Loading chickens...,Nilo-load ang mga manok...,unreviewed,Awaiting native reviewer confirmation.,Ginakarga ang mga manok...,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.ageUnknown,Needs birth date,Kailangan ang petsa ng kapanganakan,unreviewed,Awaiting native reviewer confirmation.,Kinahanglan ang petsa sang pagkatawo,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
+inventory.noValue,Not recorded,Hindi naitala,unreviewed,Awaiting native reviewer confirmation.,Wala natala,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.loginTitle,Sign In to GalloTrack,Mag-sign In sa GalloTrack,unreviewed,Awaiting native reviewer confirmation.,Magsulod sa GalloTrack,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.loginSubtitle,Professional gamefowl breeding & competitive match analytics,Propesyonal na pagpapalahi ng manok at pagsusuri ng laban,unreviewed,Awaiting native reviewer confirmation.,Propesyonal nga pagpaliwat sang manok kag pag-usisa sang hampang,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.
 auth.registerTitle,Create Owner Account,Gumawa ng Account ng May-ari,unreviewed,Awaiting native reviewer confirmation.,Maghimo sang Account sang Tag-iya,unreviewed,Hiligaynon (Beta): not yet confirmed by a native Ilonggo speaker.

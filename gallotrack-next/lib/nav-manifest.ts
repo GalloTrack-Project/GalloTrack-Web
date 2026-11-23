@@ -63,6 +63,7 @@ export const REGISTRY_TABS = [
 export const INVENTORY_STATUS_TABS = [
   'all',
   'active',
+  'breeders',
   'breeding',
   'archived',
   'deceased',
@@ -119,8 +120,8 @@ export const OWNER_QUICK_ACTIONS: QuickAction[] = [
   { id: 'register', label: 'Register a chicken', hint: 'Registry form', href: '/profiling?tab=form' },
   { id: 'log-match', label: 'Log a match', hint: 'Match logs', href: '/profiling?tab=matchForm' },
   { id: 'fight-prospects', label: 'View Offspring', hint: 'Registry tab', href: '/profiling?tab=offspring' },
-  { id: 'breeders-stock', label: 'Browse Active Breeders', hint: 'Inventory tab', href: '/catalog?status=active' },
-  { id: 'ready-to-breed', label: 'View Ready to Breed', hint: 'Inventory tab', href: '/catalog?status=breeding' },
+  { id: 'breeders-stock', label: 'Browse Active Breeders', hint: 'Inventory tab', href: '/catalog?tab=breeders' },
+  { id: 'ready-to-breed', label: 'View Ready to Breed', hint: 'Inventory tab', href: '/catalog?tab=breeding' },
 ];
 
 export const ADMIN_QUICK_ACTIONS: QuickAction[] = [
