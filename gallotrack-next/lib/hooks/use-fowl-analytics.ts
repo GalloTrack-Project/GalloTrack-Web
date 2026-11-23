@@ -29,6 +29,13 @@ export interface CrossbreedChartData {
   hasData: boolean;
 }
 
+export interface PopulationHistory {
+  labels: string[];
+  active: number[];
+  matches: number[];
+  winRate: (number | null)[];
+}
+
 export interface FowlAnalytics {
   pairingAnalytics: PairingAnalytics;
   crossbreedChartData: CrossbreedChartData;
@@ -39,6 +46,8 @@ export interface FowlAnalytics {
   matchesByMonth: number[];
   winsByMonth: number[];
   activeSpark: number[];
+  /** Twelve-month series for the range-selectable population chart. */
+  populationHistory: PopulationHistory;
   /** Null means no matches were logged that month, so no honest win rate exists. */
   trendWinRate: (number | null)[];
   upcomingMilestones: { fowl: FowlRecord; info: NonNullable<ReturnType<typeof getMilestoneInfoHelper>> }[];
@@ -141,6 +150,60 @@ export function useFowlAnalytics(
       return arr;
     })();
 
+    const populationHistory = (() => {
+      const monthCount = 12;
+      const now = new Date();
+      const labels: string[] = [];
+      for (let i = monthCount - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(d.toLocaleString('en-US', { month: 'short' }));
+      }
+
+      const active = new Array(monthCount).fill(0);
+      fowls.forEach((f) => {
+        if (f.status === 'Active' || !f.status || f.status === 'active') {
+          if (!f.created_at) {
+            active[0]++;
+            return;
+          }
+          const d = new Date(f.created_at);
+          if (isNaN(d.getTime())) {
+            active[0]++;
+            return;
+          }
+          const diff =
+            now.getFullYear() * 12 + now.getMonth() - (d.getFullYear() * 12 + d.getMonth());
+          const idx = monthCount - 1 - diff;
+          if (idx < 0) active[0]++;
+          else if (idx < monthCount) active[idx]++;
+          else active[monthCount - 1]++;
+        }
+      });
+      for (let i = 1; i < monthCount; i++) active[i] += active[i - 1];
+
+      const matches = new Array(monthCount).fill(0);
+      const wins = new Array(monthCount).fill(0);
+      const losses = new Array(monthCount).fill(0);
+      matchHistory.forEach((m) => {
+        if (!m.date) return;
+        const d = new Date(m.date);
+        if (isNaN(d.getTime())) return;
+        const diff =
+          now.getFullYear() * 12 + now.getMonth() - (d.getFullYear() * 12 + d.getMonth());
+        const idx = monthCount - 1 - diff;
+        if (idx < 0 || idx >= monthCount) return;
+        matches[idx]++;
+        const outcome = (m.outcome || '').toLowerCase();
+        if (outcome === 'win') wins[idx]++;
+        if (outcome === 'loss') losses[idx]++;
+      });
+      const winRate = labels.map((_, i) =>
+        matches[i] > 0 ? winRateOf(wins[i], losses[i]) : null,
+      );
+
+      return { labels, active, matches, winRate };
+    })();
+
     const activeSpark = (() => {
       const arr = new Array(6).fill(0);
       const now = new Date();
@@ -201,6 +264,7 @@ export function useFowlAnalytics(
       matchesByMonth,
       winsByMonth,
       activeSpark,
+      populationHistory,
       trendWinRate,
       upcomingMilestones,
       dateRangeLabel,

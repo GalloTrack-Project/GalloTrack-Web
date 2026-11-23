@@ -17,7 +17,7 @@ import {
   PointElement,
   Tooltip,
 } from 'chart.js';
-import { Doughnut, Line } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
 import {
   CalendarClock,
   Dna,
@@ -28,13 +28,13 @@ import {
   Swords,
   Star,
   Trophy,
-  TrendingUp,
   Zap,
 } from 'lucide-react';
 import ChickenIcon from '@/components/ChickenIcon';
 import ChickenPhoto from '@/components/ChickenPhoto';
 import DateRangePicker from '@/components/DateRangePicker';
 import MatchLogsTable from '@/components/match/MatchLogsTable';
+import { PopulationTrendCard } from '@/components/dashboard/PopulationTrendCard';
 import BreedingPairPerformanceAnalytics from '@/components/BreedingPairPerformanceAnalytics';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -42,7 +42,7 @@ import { useAuthOptional } from '@/lib/contexts/auth-context';
 import { formatDate, useT } from '@/lib/i18n';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
 import { canFight, formatColorDisplay, isFemale, isMale } from '@/lib/helpers';
-import { useChartTokens, withAlpha } from '@/lib/chart-tokens';
+import { useChartTokens } from '@/lib/chart-tokens';
 import { selectUpcomingMilestoneCard } from '@/lib/milestone-card';
 import { getPrimaryHeroImage } from '@/lib/hero-config';
 import { classifyFlock, getBreedingClassification } from '@/lib/breeding-classification';
@@ -99,7 +99,7 @@ export default function DashboardPage() {
     activeFowls,
     registryCounts,
     monthLabels,
-    activeSpark,
+    populationHistory,
     trendWinRate,
     matchesByMonth,
     upcomingMilestones,
@@ -115,6 +115,8 @@ export default function DashboardPage() {
     dateRangeCustom,
     setDateRangeCustom,
     fetchDatabaseResources,
+    loading,
+    loadError,
     birdCodes,
   } = fowl;
 
@@ -207,13 +209,6 @@ export default function DashboardPage() {
     });
     return map;
   }, [activeFowls, topStrains]);
-
-  const trendPointCount = React.useMemo(
-    () =>
-      monthLabels.filter((_, index) => activeSpark[index] > 0 || matchesByMonth[index] > 0)
-        .length,
-    [activeSpark, matchesByMonth, monthLabels],
-  );
 
   const recentCockMatches = React.useMemo(() => {
     const fowlById = new Map(fowls.map((bird) => [bird.id, bird]));
@@ -661,95 +656,14 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 shadow-sm sm:p-5 lg:col-span-3">
-          <SectionHeader
-            icon={<TrendingUp className="h-4 w-4" />}
-            title={t('heritage.populationPerformance')}
-            subtitle={t('heritage.populationPerformanceSubtitle')}
-          />
-          {trendPointCount < 4 ? (
-            <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
-              <TrendingUp className="text-muted-foreground mb-2 h-8 w-8" aria-hidden="true" />
-              <p className="text-card-foreground text-sm font-black">{t('heritage.trendNotEnough')}</p>
-              <p className="text-muted-foreground mt-1 text-xs font-semibold">
-                {t('heritage.trendNotEnoughDesc')}
-              </p>
-            </div>
-          ) : (
-            <div className="mt-3 min-h-56 flex-1">
-              <Line
-                aria-label={`${t('heritage.populationPerformance')}. ${t('heritage.populationPerformanceSubtitle')}.`}
-                data={{
-                  labels: monthLabels,
-                  datasets: [
-                    {
-                      label: t('heritage.totalPopulation'),
-                      data: activeSpark,
-                      borderColor: chart.success,
-                      backgroundColor: withAlpha(chart.success, 0.16),
-                      fill: true,
-                      borderWidth: 2.5,
-                      pointRadius: 3,
-                      tension: 0.35,
-                    },
-                    {
-                      label: t('heritage.winRateTrend'),
-                      data: trendWinRate,
-                      borderColor: chart.warning,
-                      backgroundColor: withAlpha(chart.warning, 0.06),
-                      fill: false,
-                      borderWidth: 2,
-                      borderDash: [5, 4],
-                      pointRadius: 3,
-                      spanGaps: false,
-                      tension: 0.35,
-                      yAxisID: 'y1',
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  interaction: { mode: 'index', intersect: false },
-                  plugins: {
-                    legend: { display: true, labels: { boxWidth: 10, boxHeight: 10, color: chart.foreground, font: { size: 10, weight: 'bold' } } },
-                    tooltip: { backgroundColor: chart.card, titleColor: chart.foreground, bodyColor: chart.foreground, borderColor: chart.border, borderWidth: 1 },
-                  },
-                  scales: {
-                    x: {
-                      grid: { display: false },
-                      ticks: { color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
-                      title: { display: true, text: t('heritage.month'), color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
-                    },
-                    y: {
-                      beginAtZero: true,
-                      grid: { color: withAlpha(chart.mutedForeground, 0.2) },
-                      ticks: { color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
-                      title: { display: true, text: t('heritage.totalPopulation'), color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
-                    },
-                    y1: {
-                      beginAtZero: true,
-                      max: 100,
-                      position: 'right',
-                      grid: { drawOnChartArea: false },
-                      ticks: { color: chart.warning, callback: (value) => `${value}%`, font: { size: 10, weight: 'bold' } },
-                      title: { display: true, text: t('heritage.winRateTrend'), color: chart.mutedForeground, font: { size: 10, weight: 'bold' } },
-                    },
-                  },
-                }}
-              />
-              <table className="sr-only">
-                <caption>{t('heritage.populationPerformance')}</caption>
-                <thead><tr><th>{t('heritage.date')}</th><th>{t('heritage.totalPopulation')}</th><th>{t('heritage.winRateTrend')}</th></tr></thead>
-                <tbody>
-                  {monthLabels.map((label, index) => (
-                    <tr key={label}><td>{label}</td><td>{activeSpark[index]}</td><td>{trendWinRate[index] == null ? '—' : `${trendWinRate[index]}%`}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        <PopulationTrendCard
+          activeCount={registryCounts.total}
+          populationHistory={populationHistory}
+          chart={chart}
+          loading={loading}
+          error={loadError}
+          onRetry={() => void fetchDatabaseResources()}
+        />
       </div>
 
       <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12">
