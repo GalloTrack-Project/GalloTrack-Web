@@ -227,18 +227,18 @@ export default function ChickenPhotoField({
   return (
     <section
       ref={sectionRef}
-      className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4"
+      className="dark:bg-muted/50 dark:border-border min-w-0 space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-2.5 sm:p-4"
       aria-labelledby="chicken-photo-heading"
       data-testid="chicken-photo-field"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h4
           id="chicken-photo-heading"
-          className="flex items-center gap-1.5 text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300"
+          className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs font-black tracking-widest text-emerald-700 uppercase dark:text-emerald-300"
         >
-          <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Photo
+          <Camera className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> Photo
         </h4>
-        <Badge variant="neutral" size="sm" aria-label="Optional field">
+        <Badge variant="neutral" size="sm" aria-label="Optional field" className="max-w-full whitespace-normal">
           Optional
         </Badge>
       </div>

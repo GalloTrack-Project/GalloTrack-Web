@@ -203,10 +203,10 @@ export default function PhotoUploader({
               </div>
 
               {canInteract ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex min-w-0 flex-wrap gap-2">
                   <Button
                     variant="secondary"
-                    className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    className="h-auto min-h-11 max-w-full min-w-0 py-2 whitespace-normal! focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 max-sm:px-1.5 max-sm:text-xs"
                     onClick={openPicker}
                   >
                     <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -214,7 +214,7 @@ export default function PhotoUploader({
                   </Button>
                   <Button
                     variant="ghost"
-                    className="h-11 text-danger hover:bg-danger/10 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    className="h-auto min-h-11 max-w-full min-w-0 py-2 whitespace-normal! text-danger hover:bg-danger/10 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 max-sm:px-1.5 max-sm:text-xs"
                     onClick={() => setConfirmRemove(true)}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -233,10 +233,10 @@ export default function PhotoUploader({
                 <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">
                   Remove this photo?
                 </p>
-                <div className="flex gap-2">
+                <div className="flex min-w-0 flex-wrap gap-2">
                   <Button
                     variant="danger"
-                    className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    className="h-auto min-h-11 max-w-full min-w-0 py-2 whitespace-normal! focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 max-sm:px-1.5 max-sm:text-xs"
                     onClick={() => {
                       setConfirmRemove(false);
                       onRemove();
@@ -246,7 +246,7 @@ export default function PhotoUploader({
                   </Button>
                   <Button
                     variant="secondary"
-                    className="h-11 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                    className="h-auto min-h-11 max-w-full min-w-0 py-2 whitespace-normal! focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 max-sm:px-1.5 max-sm:text-xs"
                     onClick={() => setConfirmRemove(false)}
                   >
                     Keep

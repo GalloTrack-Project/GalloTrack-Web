@@ -240,7 +240,7 @@ interface FowlContextValue {
       historicalEntryName?: string;
     },
   ) => Promise<void>;
-  handleUpdateFowl: (e: React.FormEvent) => Promise<void>;
+  handleUpdateFowl: (e: React.FormEvent) => Promise<{ ok: boolean; error?: string }>;
   handleOpenEditModal: (fowl: FowlRecord) => void;
   handleArchiveFowlOnly: (id: number) => Promise<void>;
   handleArchiveFowlWithReason: (draft?: ArchiveDraft) => Promise<void>;
@@ -1344,10 +1344,14 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
     saveEditDraft(ui.editingFowl.id);
   }, [ui.editingFowl, saveEditDraft]);
 
-  const handleUpdateFowl = useCallback(async (e: React.FormEvent) => {
+  const handleUpdateFowl = useCallback(async (e: React.FormEvent): Promise<{ ok: boolean; error?: string }> => {
     e.preventDefault();
-    if (!ui.editingFowl) return;
+    if (!ui.editingFowl) return { ok: false, error: 'No chicken selected.' };
     setLoading(true);
+    const failUpdate = (message: string) => {
+      toastMessage(message, 'error');
+      return { ok: false, error: message };
+    };
 
     try {
       const sPct = editSirePct === '' || editSirePct === null || isNaN(Number(editSirePct)) ? 0 : Number(editSirePct);
@@ -1364,8 +1368,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const codeToUse = submittedCode || originalCode;
 
       if (!isValidBirdCode(codeToUse)) {
-        toastMessage('Invalid Chicken Identifier: use letters, numbers only (max 24 chars).', 'error');
-        return;
+        return failUpdate('Invalid Chicken Identifier: use letters, numbers only (max 24 chars).');
       }
 
       const hasSire = !!editSire.trim() && editSire.trim().toLowerCase() !== 'foundation stock';
@@ -1376,8 +1379,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       if (codeToUse.toLowerCase() !== originalCode.toLowerCase()) {
         const formatCheck = validateIdentifierFormat(codeToUse, role);
         if (!formatCheck.valid) {
-          toastMessage(`Identifier Format Error: ${formatCheck.error}`, 'error');
-          return;
+          return failUpdate(`Identifier Format Error: ${formatCheck.error}`);
         }
 
         const editingId = String(ui.editingFowl.id);
@@ -1385,30 +1387,30 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
           ([id, code]) => editingId !== id && code.toLowerCase() === codeToUse.toLowerCase()
         );
         if (duplicateCode) {
-          toastMessage(`Chicken Identifier "${codeToUse}" is already in use by another chicken. Pick another.`, 'error');
-          return;
+          return failUpdate(`Chicken Identifier "${codeToUse}" is already in use by another chicken. Pick another.`);
         }
       }
 
       // ── Unique name: one chicken per name (excluding the record being edited) ──
       const editKey = nameKey(sanitizeInput(editName));
       if (editKey && fowls.some((f) => f.id !== ui.editingFowl?.id && nameKey(f.name) === editKey)) {
-        toastMessage(`A chicken named "${editName.trim()}" already exists. Pick a unique name.`, 'error');
-        return;
+        return failUpdate(`A chicken named "${editName.trim()}" already exists. Pick a unique name.`);
       }
 
       // ── Wing Banding: physical band number, unique across the farm ──
       const editBand = editWingBand.trim();
-      if (editBand && !isValidWingBand(editBand)) {
-        toastMessage(WING_BAND_ERROR, 'error');
-        return;
-      }
-      const duplicateBand = fowls.some(
-        (f) => f.id !== ui.editingFowl?.id && (f.wing_band || '').trim().toLowerCase() === editBand.toLowerCase()
-      );
-      if (editBand && duplicateBand) {
-        toastMessage(`Wing Band "${editBand}" is already in use. Pick another.`, 'error');
-        return;
+      const originalEditBand = (ui.editingFowl.wing_band || '').trim();
+      const editBandChanged = editBand.toLowerCase() !== originalEditBand.toLowerCase();
+      if (editBandChanged) {
+        if (editBand && !isValidWingBand(editBand)) {
+          return failUpdate(WING_BAND_ERROR);
+        }
+        const duplicateBand = fowls.some(
+          (f) => f.id !== ui.editingFowl?.id && (f.wing_band || '').trim().toLowerCase() === editBand.toLowerCase()
+        );
+        if (editBand && duplicateBand) {
+          return failUpdate(`Wing Band "${editBand}" is already in use. Pick another.`);
+        }
       }
 
       const originalEditBreed = (ui.editingFowl.breed || '').trim();
@@ -1418,8 +1420,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       const editBreedForSave =
         registeredEditBreed ?? (!editBreedChanged ? originalEditBreed : '');
       if (!editBreedForSave) {
-        toastMessage('Choose a registered breed or add it as a new one.', 'error');
-        return;
+        return failUpdate('Choose a registered breed or add it as a new one.');
       }
 
       const editComposition = computeBloodlineComposition(
@@ -1450,8 +1451,7 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         }
       );
       if (editParentSexError) {
-        toastMessage(editParentSexError, 'error');
-        return;
+        return failUpdate(editParentSexError);
       }
       const resolvedParents = parentLinkIds(
         { id: editing.id, user_id: editing.user_id },
@@ -1471,10 +1471,9 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       if (Boolean(editPhotoFile) !== Boolean(editPhotoThumbnail)) {
         const message = 'The photo is still processing. Wait a moment and try again.';
         setEditPhotoUploadError(message);
-        toastMessage(message, 'error');
         setUploadingImage(false);
         setPhotoUploadProgress(0);
-        return;
+        return failUpdate(message);
       }
 
       let nextPhotoPath = editing.photo_path ?? null;
@@ -1499,14 +1498,13 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
         if (photoResult.error === CHICKEN_PHOTO_UPLOAD_CANCELLED) {
           setUploadingImage(false);
           setPhotoUploadProgress(0);
-          return;
+          return { ok: false, error: '' };
         }
         if (photoResult.error) {
           setUploadingImage(false);
           setPhotoUploadProgress(0);
           setEditPhotoUploadError(photoResult.error);
-          toastMessage(photoResult.error, 'error');
-          return;
+          return failUpdate(photoResult.error);
         }
         nextPhotoPath = photoResult.fullPath ?? null;
         nextPhotoThumbPath = photoResult.thumbPath ?? null;
@@ -1621,15 +1619,17 @@ export function FowlProviderInternal({ children }: { children: React.ReactNode }
       clearEditDraft(ui.editingFowl.id);
       ui.setEditingFowl(null);
       fetchDatabaseResources();
+      return { ok: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const photoSetupFailure =
         message === CHICKEN_PHOTO_SETUP_MESSAGE ||
         /photo_|chicken-photos|bucket\s+not\s+found/i.test(message);
-      toastMessage(
-        photoSetupFailure ? CHICKEN_PHOTO_SETUP_MESSAGE : `Update Cluster Failure: ${message}`,
-        'error',
-      );
+      const displayMessage = photoSetupFailure
+        ? CHICKEN_PHOTO_SETUP_MESSAGE
+        : `Update Cluster Failure: ${message}`;
+      toastMessage(displayMessage, 'error');
+      return { ok: false, error: displayMessage };
     } finally {
       setLoading(false);
       setUploadingImage(false);

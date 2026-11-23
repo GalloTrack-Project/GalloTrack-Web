@@ -526,7 +526,18 @@ h4,
   color: #e2e8f0;
 }
 
-/* Hides the native up/down spinner arrows on number inputs (Height/Weight). */
+/* Hides native up/down spinner arrows on every number input. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Kept for existing callers that opt in explicitly. */
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
   -webkit-appearance: none;
