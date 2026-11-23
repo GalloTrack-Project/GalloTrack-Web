@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { isMale } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { Z_LAYERS } from '@/lib/ui-layers';
 import { mergeOptions } from '@/lib/lifecycle';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { useUserSettings } from '@/lib/hooks/use-user-settings';
@@ -1554,7 +1555,7 @@ export default function MatchRecordForm({
               top border and shadow, kept INSIDE the page container (no negative
               margins) and padded for the iOS safe-area inset.
             - lg and up: static, at the end of the form, so it never covers a field. */}
-        <div className="bg-card border-border sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] sm:gap-4 sm:pt-5 lg:static lg:border-t-0 lg:bg-transparent lg:pt-6 lg:pb-0 lg:shadow-none dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+        <div className="bg-card border-border sticky bottom-0 flex items-center justify-between gap-3 border-t pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] sm:gap-4 sm:pt-5 lg:static lg:border-t-0 lg:bg-transparent lg:pt-6 lg:pb-0 lg:shadow-none dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]" style={{ zIndex: Z_LAYERS.actionBar }}>
           <button
             type="button"
             onClick={() => handleCancel(onSuccessRedirect)}

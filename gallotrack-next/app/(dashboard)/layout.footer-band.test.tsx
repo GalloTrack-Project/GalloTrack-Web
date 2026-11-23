@@ -96,6 +96,8 @@ describe('DashboardLayout footer band', () => {
     expect(footer.className).toContain('[@media(max-height:700px)]:hidden');
     expect(footer).toHaveAttribute('aria-hidden', 'true');
 
+    expect(within(main).getAllByText(/Track .* Breed .* Excel/i)).toHaveLength(1);
+
     const sidebar = document.querySelector('aside');
     expect(sidebar).not.toBeNull();
     expect(within(sidebar as HTMLElement).getAllByText(/Track · Breed · Excel/i)).toHaveLength(1);
@@ -148,6 +150,18 @@ describe('DashboardLayout footer band', () => {
     expect(column).toHaveClass('flex', 'min-h-full', 'flex-col');
     expect(within(main).getByTestId('route-content').parentElement).toHaveClass('flex-1');
     unmount();
+  });
+
+  it('does not render a page-level footer band or legacy tagline', () => {
+    const root = process.cwd();
+    const files = [...walk(join(root, 'app')), ...walk(join(root, 'components')), ...walk(join(root, 'lib'))].filter(
+      (file) => /\\.(tsx?|jsx?)$/.test(file) && !/\\.test\\.(tsx?|jsx?)$/.test(file),
+    );
+    const offenders = files.filter((file) => {
+      const source = readFileSync(file, 'utf8');
+      return /RegistryFooterWave|registry\.footerTagline/.test(source);
+    });
+    expect(offenders.map((file) => relative(root, file))).toEqual([]);
   });
 
   it('never imports FooterBand from a page or feature component', () => {

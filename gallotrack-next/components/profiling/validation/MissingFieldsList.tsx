@@ -5,22 +5,13 @@ import { CheckCircle2, Circle } from 'lucide-react';
 import { useT } from '@/lib/i18n';
 import { cn } from '@/components/ui/utils';
 import { StatusBadge } from './StatusBadge';
+import { focusValidationField } from './focus-validation-field';
 import type { ValidationFieldItem } from './types';
 
 export type MissingFieldsListProps = {
   items: ValidationFieldItem[];
   title?: string;
 };
-
-function focusField(targetId: string) {
-  if (typeof document === 'undefined') return;
-  const field = document.getElementById(targetId);
-  if (!field) return;
-  if (typeof field.scrollIntoView === 'function') {
-    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-  field.focus({ preventScroll: true });
-}
 
 export function MissingFieldsList({ items, title }: MissingFieldsListProps) {
   const { t } = useT();
@@ -49,7 +40,7 @@ export function MissingFieldsList({ items, title }: MissingFieldsListProps) {
             <button
               type="button"
               data-field-key={item.key}
-              onClick={() => focusField(item.targetId)}
+              onClick={() => focusValidationField(item.targetId)}
               aria-label={`${t('registry.focusFieldAria', { field: item.label })} — ${
                 item.complete
                   ? t('registry.requiredFieldComplete')

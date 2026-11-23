@@ -31,7 +31,6 @@ function baseProps(overrides: Partial<ValidationSummaryPanelProps> = {}): Valida
     lineageTone: 'neutral',
     lineageLabel: 'Not required',
     lineageHelper: 'No parents selected — lineage starts with this chicken.',
-    registerDisabled: true,
     registerBusy: false,
     registerLabel: 'REGISTER',
     registerHelper: 'Complete 4 required fields to register.',
@@ -40,7 +39,7 @@ function baseProps(overrides: Partial<ValidationSummaryPanelProps> = {}): Valida
 }
 
 describe('ValidationSummaryPanel', () => {
-  it('shows the empty state with a 0 of 4 checklist and disabled register', () => {
+  it('shows the empty state with a 0 of 4 checklist and an enabled register button', () => {
     render(<ValidationSummaryPanel {...baseProps()} />);
 
     expect(screen.getByText('Required fields')).toBeInTheDocument();
@@ -49,8 +48,8 @@ describe('ValidationSummaryPanel', () => {
     expect(screen.getAllByText('Missing').length).toBe(4);
 
     const register = screen.getByRole('button', { name: /REGISTER/i });
-    expect(register).toBeDisabled();
-    expect(register.className).toContain('cursor-not-allowed');
+    expect(register).toBeEnabled();
+    expect(register.className).not.toContain('cursor-not-allowed');
     expect(screen.getAllByText('Complete 4 required fields to register.').length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText(/Missing:/i)).not.toBeInTheDocument();
   });
@@ -80,7 +79,6 @@ describe('ValidationSummaryPanel', () => {
           validationTone: 'success',
           validationLabel: 'Ready',
           validationHelper: 'All required fields are complete and valid.',
-          registerDisabled: false,
           registerHelper: '🔒 Verify lineage accuracy before registering to the farm registry.',
         })}
       />,

@@ -433,6 +433,11 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               <ErrorBoundary label="Dashboard Section">{children}</ErrorBoundary>
             </div>
             <FooterBand />
+            <div
+              aria-hidden="true"
+              className="shrink-0"
+              style={{ height: 'var(--form-action-bar-height, 0px)' }}
+            />
           </div>
         </main>
 

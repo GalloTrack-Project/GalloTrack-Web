@@ -1,8 +1,6 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 import RegistryPageHeader from '@/components/registry/RegistryPageHeader';
-import RegistryFooterWave from '@/components/registry/RegistryFooterWave';
-import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useAuthOptional } from '@/lib/contexts/auth-context';
@@ -263,7 +261,7 @@ export default function ProfilingPage() {
   };
 
   return (
-    <div className="animate-fadeIn space-y-5 pb-24 md:pb-6">
+    <div className="space-y-5">
       <RegistryPageHeader
         onOpenBreeds={handleOpenBreedsHeader}
         onRegister={() => selectProfilingTab('form')}
@@ -397,7 +395,6 @@ export default function ProfilingPage() {
         />
       )}
 
-      <RegistryFooterWave />
     </div>
   );
 }

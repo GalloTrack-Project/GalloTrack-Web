@@ -581,7 +581,10 @@ export const en = {
     registering: 'Registering...',
     uploadingAttachment: 'Uploading Attachment...',
     verifyBeforeRegistering: 'Verify lineage accuracy before registering to the farm registry.',
-
+    cannotRegisterSummary: 'Cannot register yet: {count} required fields',
+    cannotRegisterSummaryOne: 'Cannot register yet: 1 required field',
+    requiredFieldInline: '{field} is required.',
+    completeRequiredFieldsHelper: 'Complete the required fields to register',
     // FowlLists & Filters
     maleRegistryTitle: 'Cocks Registry',
     maleRegistryDesc: 'Active breeding cocks — every registered cock in the program',
@@ -680,7 +683,6 @@ export const en = {
     resultsRatio: '{filtered} of {total}',
     listView: 'List view',
     gridView: 'Grid view',
-    footerTagline: 'Track • Breed • Preserve',
     fatherSireLabel: 'Sire',
     allFathersPlaceholder: 'All Sires',
     motherDamLabel: 'Dam',

@@ -575,7 +575,10 @@ export const tl: AppTranslations = {
     registering: 'Nirerehistro...',
     uploadingAttachment: 'Ina-upload ang Kalakip...',
     verifyBeforeRegistering: 'Tiyaking tumpak ang lahi bago irehistro sa kural.',
-
+    cannotRegisterSummary: 'Hindi pa makapagrehistro: {count} kailangang field',
+    cannotRegisterSummaryOne: 'Hindi pa makapagrehistro: 1 kailangang field',
+    requiredFieldInline: 'Kailangan ang {field}.',
+    completeRequiredFieldsHelper: 'Kumpletuhin ang mga kailangang field para makapagrehistro',
     // FowlLists & Filters
     maleRegistryTitle: 'Rehistro ng Cocks',
     maleRegistryDesc: 'Mga aktibong breeding cock — bawat rehistradong cock sa programa',
@@ -674,7 +677,6 @@ export const tl: AppTranslations = {
     resultsRatio: '{filtered} ng {total}',
     listView: 'Listahan',
     gridView: 'Grid na tanaw',
-    footerTagline: 'Subaybay • Pagpaparami • Pangalagaan',
     fatherSireLabel: 'Sire',
     allFathersPlaceholder: 'Lahat ng Sire',
     motherDamLabel: 'Dam',

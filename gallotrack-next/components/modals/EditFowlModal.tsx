@@ -51,6 +51,7 @@ import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/li
 import { Modal } from '@/components/ui';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
+import { Z_LAYERS } from '@/lib/ui-layers';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
@@ -984,8 +985,9 @@ export default function EditFowlModal({
                     ))}
                 {strainOpen && strainDropdownPos && createPortal(
                   <div
-                    className="fixed z-[10000] flex max-h-64 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                    className="fixed flex max-h-64 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
                     style={{
+                      zIndex: Z_LAYERS.modalPopover,
                       top: strainDropdownPos.top,
                       left: strainDropdownPos.left,
                       width: strainDropdownPos.width,
@@ -1698,18 +1700,18 @@ export default function EditFowlModal({
           </div>
         )}
 
-        <div className="border-border bg-card sticky bottom-0 z-20 mt-2 flex min-w-0 flex-col-reverse gap-2 border-t py-3 sm:flex-row">
+        <div className="bg-card border-border sticky bottom-0 mt-2 flex min-w-0 flex-col-reverse gap-2 border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] sm:flex-row dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]" style={{ zIndex: Z_LAYERS.actionBar }}>
           <button
             type="button"
             onClick={handleClose}
-            className="border-border bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground focus-visible:ring-focus-ring focus-visible:ring-offset-background min-h-11 min-w-0 cursor-pointer rounded-md border px-4 py-3 text-xs font-black tracking-widest uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:w-36"
+            className="border-border bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground focus-visible:ring-focus-ring focus-visible:ring-offset-background min-h-11 w-full min-w-0 cursor-pointer rounded-md border px-4 py-2.5 text-xs font-black tracking-widest uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none max-sm:px-1 max-sm:text-[10px] max-sm:tracking-normal sm:w-36"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={saveBusy}
-            className="bg-brand text-brand-foreground hover:bg-brand-strong focus-visible:ring-focus-ring focus-visible:ring-offset-background flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-extrabold tracking-wider uppercase shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
+            className="bg-brand text-brand-foreground hover:bg-brand-strong focus-visible:ring-focus-ring focus-visible:ring-offset-background flex min-h-11 w-full min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-extrabold tracking-wider uppercase shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70 max-sm:px-2 max-sm:text-xs sm:w-auto"
           >
             {saveBusy && (
               <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
