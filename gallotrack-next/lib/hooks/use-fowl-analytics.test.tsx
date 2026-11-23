@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-import type { MatchRecord } from '@/lib/types';
+import type { FowlRecord, MatchRecord } from '@/lib/types';
 import { useFowlAnalytics } from './use-fowl-analytics';
 
 const now = new Date();
@@ -18,7 +18,6 @@ const match = (id: number, breed: string, outcome: string): MatchRecord => ({
   outcome,
   status: 'Verified',
 });
-
 describe('useFowlAnalytics — Bloodline Win Ratios', () => {
   it('uses win share for doughnut slices and keeps exact per-strain records', () => {
     const matches: MatchRecord[] = [
@@ -47,5 +46,35 @@ describe('useFowlAnalytics — Bloodline Win Ratios', () => {
     // Months with no logged matches must not be reported as a 0% win rate.
     expect(result.current.trendWinRate.slice(0, 5)).toEqual([null, null, null, null, null]);
     expect(result.current.trendWinRate[5]).toBe(60);
+  });
+});
+
+describe('useFowlAnalytics - active population history', () => {
+  it('counts active statuses by registration month and excludes archived/deceased birds', () => {
+    const createdAt = (monthsAgo: number) =>
+      new Date(now.getFullYear(), now.getMonth() - monthsAgo, 15).toISOString();
+    const bird = (id: number, status: string | undefined, monthsAgo: number) =>
+      ({
+        id,
+        name: `Bird ${id}`,
+        status,
+        created_at: createdAt(monthsAgo),
+      }) as FowlRecord;
+
+    const fowls = [
+      bird(1, 'Active', 5),
+      bird(2, 'Archived', 0),
+      bird(3, 'Deceased', 0),
+      bird(4, undefined, 0),
+      bird(5, 'active', 0),
+      bird(6, 'Active', 0),
+    ];
+
+    const { result } = renderHook(() =>
+      useFowlAnalytics(fowls, [], 'all', Date.now(), [])
+    );
+
+    expect(result.current.activeSpark).toEqual([1, 1, 1, 1, 1, 4]);
+    expect(result.current.activeSpark[5]).toBe(4);
   });
 });
