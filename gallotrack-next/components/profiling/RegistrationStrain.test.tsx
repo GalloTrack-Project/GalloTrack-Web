@@ -490,14 +490,18 @@ describe('Registration genetic strain', () => {
     expect(document.activeElement).toBe(strainInput());
   });
 
-  it('disables register and keeps typed values when a required field is blank', async () => {
+  it('keeps register enabled and shows the missing-field summary when a required field is blank', async () => {
     await renderPageAndWait();
     await fillRequiredFields('   ');
 
     const register = screen.getByRole('button', { name: /^REGISTER$/i });
-    expect(register).toBeDisabled();
-    expect(screen.getAllByText('Complete 1 required field to register.').length).toBeGreaterThanOrEqual(1);
+    expect(register).toBeEnabled();
+    fireEvent.click(register);
 
+    expect(
+      await screen.findByText('Cannot register yet: 1 required field'),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('Complete the required fields to register').length).toBeGreaterThan(0);
     expect(insertFowl).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Identifier Name')).toHaveValue('Strain Test Bird');
     expect(screen.getByLabelText('Gender Class')).toHaveValue('Rooster');

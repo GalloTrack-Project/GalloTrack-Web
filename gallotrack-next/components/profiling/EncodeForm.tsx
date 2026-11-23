@@ -44,6 +44,9 @@ import { createRegisteredBreed } from '@/lib/services/strain-service';
 import { toastMessage } from '@/lib/toast-bus';
 import type { DraftRestoreResult } from '@/lib/fowl-draft';
 import { ValidationSummaryPanel } from './validation/ValidationSummaryPanel';
+import { ValidationErrorSummary } from './validation/ValidationErrorSummary';
+import { focusValidationField } from './validation/focus-validation-field';
+import { Z_LAYERS } from '@/lib/ui-layers';
 import type { StatusTone, ValidationFieldItem } from './validation/types';
 
 type Props = {
@@ -204,6 +207,7 @@ export default function EncodeForm({
   const [strainLoading, setStrainLoading] = useState(false);
   const [creatingBreed, setCreatingBreed] = useState(false);
   const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [registrationAttempted, setRegistrationAttempted] = useState(false);
   const [draftNotice, setDraftNotice] = useState<{ photoSelected: boolean } | null>(null);
   const draftRestoredRef = useRef(false);
 
@@ -549,48 +553,6 @@ export default function EncodeForm({
     onAddBreeds?.();
   };
 
-  const handleFormSubmit = (event: React.FormEvent) => {
-    if (photoProcessing || uploadingImage || loading) {
-      event.preventDefault();
-      return;
-    }
-    if (selectedStrains.length > 0) {
-      const allRegistered = selectedStrains.every(
-        (strain) => findStrainName(availableStrains, strain) !== null,
-      );
-      if (!allRegistered) {
-        event.preventDefault();
-        setStrainError(t('registry.chooseRegisteredBreedOrAdd'));
-        setStrainOpen(true);
-        focusStrainField();
-        return;
-      }
-      setStrainError(null);
-    } else {
-      const typedBreed = (strainQuery.trim() || newBreed.trim()).trim();
-      if (!typedBreed) {
-        event.preventDefault();
-        setStrainError(t('registry.strainRequired'));
-        focusStrainField();
-        return;
-      }
-      if (!findStrainName(availableStrains, typedBreed)) {
-        event.preventDefault();
-        setStrainError(t('registry.chooseRegisteredBreedOrAdd'));
-        setStrainAnnouncement(t('registry.noMatchingBreedPressEnter'));
-        setStrainOpen(true);
-        focusStrainField();
-        return;
-      }
-      setStrainError(null);
-    }
-    if (!birthdateValidation.valid) {
-      event.preventDefault();
-      return;
-    }
-    handleAddFowl(event);
-  };
-
   const pedigreeComposition = useMemo<BloodlineComposition | null>(() => {
     if (!hasLineageParents) return null;
     const draft = {
@@ -651,8 +613,13 @@ export default function EncodeForm({
       : []),
   ];
 
-  const missingCount = requiredFields.filter((field) => !field.complete).length;
+  const missingFields = requiredFields.filter((field) => !field.complete);
+  const missingCount = missingFields.length;
   const requiredComplete = missingCount === 0;
+  const summaryTitle =
+    missingCount === 1
+      ? t('registry.cannotRegisterSummaryOne')
+      : t('registry.cannotRegisterSummary', { count: String(missingCount) });
   const birthdateError = birthdateValidation.errors[0];
   const declaredError = !declaredValidation.valid
     ? ('error' in declaredValidation && declaredValidation.error) || t('registry.registerBlockedDetails')
@@ -713,14 +680,11 @@ export default function EncodeForm({
   }
 
   const registerBusy = loading || uploadingImage || photoProcessing;
-  const registerDisabled = registerBusy || !validationOk;
-  const registerLabel = uploadingImage
-    ? t('registry.uploadingAttachment')
-    : loading
+  const registerLabel = photoProcessing
+    ? t('registry.processingPhoto')
+    : registerBusy
       ? t('registry.registering')
-      : photoProcessing
-        ? t('registry.processingPhoto')
-        : t('registry.registerBtn');
+      : t('registry.registerBtn');
 
   const registerHelper = photoProcessing
     ? t('registry.registerBlockedProcessing')
@@ -729,9 +693,7 @@ export default function EncodeForm({
         ? t('registry.registerBlockedUpload')
         : t('registry.registering')
       : missingCount > 0
-        ? missingCount === 1
-          ? t('registry.registerBlockedOne')
-          : t('registry.registerBlockedMissing', { count: String(missingCount) })
+        ? t('registry.completeRequiredFieldsHelper')
         : birthdateError
           ? birthdateError
           : declaredError
@@ -740,6 +702,63 @@ export default function EncodeForm({
               ? t('registry.validationPendingHelper')
               : t('registry.verifyBeforeRegistering');
 
+  const handleFormSubmit = (event: React.FormEvent) => {
+    if (photoProcessing || uploadingImage || loading) {
+      event.preventDefault();
+      return;
+    }
+    setRegistrationAttempted(true);
+    const missingFields = requiredFields.filter((field) => !field.complete);
+    if (missingFields.length > 0) {
+      event.preventDefault();
+      if (missingFields.some((field) => field.key === 'strain')) {
+        setStrainError(t('registry.strainRequired'));
+      }
+      focusValidationField(missingFields[0].targetId);
+      return;
+    }
+    if (selectedStrains.length > 0) {
+      const allRegistered = selectedStrains.every(
+        (strain) => findStrainName(availableStrains, strain) !== null,
+      );
+      if (!allRegistered) {
+        event.preventDefault();
+        setStrainError(t('registry.chooseRegisteredBreedOrAdd'));
+        setStrainOpen(true);
+        focusStrainField();
+        return;
+      }
+      setStrainError(null);
+    } else {
+      const typedBreed = (strainQuery.trim() || newBreed.trim()).trim();
+      if (!typedBreed) {
+        event.preventDefault();
+        setStrainError(t('registry.strainRequired'));
+        focusStrainField();
+        return;
+      }
+      if (!findStrainName(availableStrains, typedBreed)) {
+        event.preventDefault();
+        setStrainError(t('registry.chooseRegisteredBreedOrAdd'));
+        setStrainAnnouncement(t('registry.noMatchingBreedPressEnter'));
+        setStrainOpen(true);
+        focusStrainField();
+        return;
+      }
+      setStrainError(null);
+    }
+    if (!birthdateValidation.valid) {
+      event.preventDefault();
+      focusValidationField('birth-date');
+      return;
+    }
+    if (!declaredValidation.valid) {
+      event.preventDefault();
+      focusValidationField('declared-percent-0');
+      return;
+    }
+    handleAddFowl(event);
+  };
   const nextIdLabel = useMemo(() => {
     const rawCode = formatBirdCodeForDisplay(birdCode.trim() || suggestedBirdCode);
     if (!rawCode) return currentRole === 'offspring' ? '— (Select parents)' : '—';
@@ -831,7 +850,12 @@ export default function EncodeForm({
   const isCustomTrait = isCustomOption(newBehaviorTrait, baseTraitOptions.map((o) => o.value));
 
   return (
-    <form onSubmit={handleFormSubmit} className="animate-fadeIn space-y-5 pb-48 md:pb-32">
+    <form
+      noValidate
+      onSubmit={handleFormSubmit}
+      className="space-y-5"
+      style={{ paddingBottom: 'var(--form-action-bar-height, 8rem)' }}
+    >
       {draftNotice && (
         <div
           role="status"
@@ -853,6 +877,9 @@ export default function EncodeForm({
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
+      )}
+      {registrationAttempted && missingCount > 0 && (
+        <ValidationErrorSummary title={summaryTitle} items={missingFields} />
       )}
       <div className="bg-card border-border rounded-[20px] border p-6 shadow-lg shadow-primary/5 space-y-4 relative z-30 overflow-visible">
         <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-border">
@@ -1012,14 +1039,31 @@ export default function EncodeForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">{t('registry.identifierName')}</label>
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/15 transition-all font-semibold" placeholder={t('registry.identifierPlaceholder')} required id="identifier-name" />
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className={`w-full p-3 border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:ring-4 transition-all font-semibold ${registrationAttempted && !newName.trim() ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950/50' : 'border-input-border focus:border-primary focus:ring-primary/15'}`}
+              placeholder={t('registry.identifierPlaceholder')}
+              aria-invalid={registrationAttempted && !newName.trim()}
+              aria-describedby={registrationAttempted && !newName.trim() ? 'identifier-name-error' : undefined}
+              required
+              id="identifier-name"
+            />
+            {registrationAttempted && !newName.trim() && (
+              <p id="identifier-name-error" role="alert" className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300">
+                {t('registry.requiredFieldInline', { field: t('registry.identifierName') })}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
             <select
               value={newGender}
               onChange={(e) => changeGender(e.target.value)}
-              className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
+              className={`w-full p-3 border rounded-md text-sm bg-muted font-extrabold focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer ${registrationAttempted && !newGender.trim() ? 'border-rose-500' : 'border-input-border'} ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
+              aria-invalid={registrationAttempted && !newGender.trim()}
+              aria-describedby={registrationAttempted && !newGender.trim() ? 'gender-class-error' : undefined}
               required
               id="gender-class"
             >
@@ -1030,6 +1074,11 @@ export default function EncodeForm({
                 </option>
               ))}
             </select>
+            {registrationAttempted && !newGender.trim() && (
+              <p id="gender-class-error" role="alert" className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300">
+                {t('registry.requiredFieldInline', { field: t('registry.genderClass') })}
+              </p>
+            )}
           </div>
         </div>
         {(() => {
@@ -1281,8 +1330,9 @@ export default function EncodeForm({
             {strainOpen && strainDropdownPos && createPortal(
               <div
                 ref={strainDropdownRef}
-                className="fixed z-[10000] flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                className="fixed flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
                 style={{
+                  zIndex: Z_LAYERS.dropdown,
                   top: strainDropdownPos.top,
                   left: strainDropdownPos.left,
                   width: strainDropdownPos.width,
@@ -1502,15 +1552,29 @@ export default function EncodeForm({
             onChange={(e) => handleNewBirthdateChange(e.target.value)}
             max={new Date().toISOString().split('T')[0]}
             className={`w-full p-3 border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:ring-4 transition-all ${
-              birthdateValidation.errors.length > 0
+              (registrationAttempted && !newBirthdate.trim()) || birthdateValidation.errors.length > 0
                 ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950/50'
                 : 'border-input-border focus:border-primary focus:ring-primary/15'
             }`}
+            aria-invalid={
+              (registrationAttempted && !newBirthdate.trim()) || birthdateValidation.errors.length > 0
+            }
+            aria-describedby={
+              (registrationAttempted && !newBirthdate.trim()) || birthdateValidation.errors.length > 0
+                ? 'birth-date-error'
+                : undefined
+            }
             required
             id="birth-date"
           />
+          {registrationAttempted && !newBirthdate.trim() && (
+            <p id="birth-date-error" role="alert" className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
+              <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{t('registry.requiredFieldInline', { field: t('registry.birthDate') })}</span>
+            </p>
+          )}
           {birthdateValidation.errors.map((err, i) => (
-            <p key={`bd-err-${i}`} className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
+            <p key={`bd-err-${i}`} id={i === 0 ? 'birth-date-error' : undefined} className="mt-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-sm px-2.5 py-1.5 flex items-center gap-1.5">
               <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{err}</span>
             </p>
@@ -1605,8 +1669,8 @@ export default function EncodeForm({
               id="leg-color-listbox"
               role="listbox"
               aria-label={t('registry.legColor')}
-              className="fixed z-[9999] bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col"
-              style={{ top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}
+              className="fixed bg-white dark:bg-card border border-slate-200 dark:border-border rounded-md shadow-2xl overflow-hidden max-h-56 flex flex-col"
+              style={{ zIndex: Z_LAYERS.dropdown, top: legColorDropdownPos.top, left: legColorDropdownPos.left, width: legColorDropdownPos.width }}
             >
               <div className="overflow-y-auto">
                 {(() => {
@@ -1803,7 +1867,6 @@ export default function EncodeForm({
         lineageTone={lineageTone}
         lineageLabel={lineageLabel}
         lineageHelper={lineageHelper}
-        registerDisabled={registerDisabled}
         registerBusy={registerBusy}
         registerLabel={registerLabel}
         registerHelper={registerHelper}
@@ -1813,9 +1876,10 @@ export default function EncodeForm({
             <button
               type="button"
               onClick={onCancel}
-              className="bg-accent-soft text-brand-red border-primary/30 hover:bg-primary/10 hover:text-brand-red focus-visible:ring-primary focus-visible:ring-offset-background flex min-h-[58px] w-full cursor-pointer items-center justify-center rounded-full border px-4 py-3 text-xs font-black tracking-widest uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label={t('registry.cancelRegistration')}
+              className="bg-accent-soft text-brand-red border-primary/30 hover:bg-primary/10 hover:text-brand-red focus-visible:ring-primary focus-visible:ring-offset-background flex min-h-11 w-full min-w-32 cursor-pointer items-center justify-center rounded-full border px-4 py-2.5 text-xs font-black whitespace-nowrap tracking-widest uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:min-w-40"
             >
-              {t('registry.cancelRegistration')}
+              {t('common.cancel')}
             </button>
           ) : undefined
         }

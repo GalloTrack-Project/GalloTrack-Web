@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from './utils';
+import { Z_LAYERS } from '@/lib/ui-layers';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -117,7 +118,7 @@ function Modal({
   if (!open || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z_LAYERS.modal }}>
       <div
         aria-hidden="true"
         onClick={closeOnBackdrop ? onClose : undefined}
@@ -167,7 +168,14 @@ function Modal({
           </button>
         </div>
         {children ? <div className="flex flex-col gap-4">{children}</div> : null}
-        {footer ? <div className="flex flex-wrap justify-end gap-2 pt-2">{footer}</div> : null}
+        {footer ? (
+          <div
+            className="bg-card border-border sticky bottom-0 -mx-6 -mb-6 flex flex-wrap justify-end gap-2 rounded-b-md border-t px-6 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]"
+            style={{ zIndex: Z_LAYERS.actionBar }}
+          >
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>,
     document.body,

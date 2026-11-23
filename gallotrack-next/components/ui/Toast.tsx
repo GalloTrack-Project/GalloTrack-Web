@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { cn } from './utils';
+import { Z_LAYERS } from '@/lib/ui-layers';
 import { registerToastHandler, type ToastInput, type ToastVariant } from '@/lib/toast-bus';
 
 type ToastRecord = {
@@ -135,7 +136,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-0 right-0 z-[100] flex w-full flex-col items-center gap-2 p-4 sm:bottom-auto sm:left-auto sm:top-0 sm:items-end sm:p-6">
+      <div className="pointer-events-none fixed bottom-0 right-0 flex w-full flex-col items-center gap-2 p-4 sm:bottom-auto sm:left-auto sm:top-0 sm:items-end sm:p-6" style={{ zIndex: Z_LAYERS.toast }}>
         <div
           role="region"
           aria-label="Notifications"

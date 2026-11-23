@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -23,7 +23,9 @@ describe('native suggestion contract', () => {
   it('keeps autocomplete off on every explicit combobox input and never adds a list', () => {
     const violations: string[] = [];
     for (const relative of sourceFiles) {
-      const source = readFileSync(resolve(repoRoot, relative), 'utf8');
+      const absolute = resolve(repoRoot, relative);
+      if (!existsSync(absolute)) continue;
+      const source = readFileSync(absolute, 'utf8');
       for (const tag of inputTags(source)) {
         if (!/\brole=(["'])combobox\1/.test(tag)) continue;
         const autoCompleteOff =
@@ -38,7 +40,9 @@ describe('native suggestion contract', () => {
   it('keeps autocomplete off on inputs that intentionally use a native datalist', () => {
     const violations: string[] = [];
     for (const relative of sourceFiles) {
-      const source = readFileSync(resolve(repoRoot, relative), 'utf8');
+      const absolute = resolve(repoRoot, relative);
+      if (!existsSync(absolute)) continue;
+      const source = readFileSync(absolute, 'utf8');
       for (const tag of inputTags(source)) {
         if (!/\blist=/.test(tag)) continue;
         const autoCompleteOff =
