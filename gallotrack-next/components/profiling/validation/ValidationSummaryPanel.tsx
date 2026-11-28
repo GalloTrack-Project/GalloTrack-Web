@@ -3,6 +3,7 @@
 import React from 'react';
 import { BadgeCheck, GitBranch, ListChecks, ShieldCheck, Tag } from 'lucide-react';
 import { useT } from '@/lib/i18n';
+import { Z_LAYERS } from '@/lib/ui-layers';
 import { cn } from '@/components/ui/utils';
 import { MissingFieldsList } from './MissingFieldsList';
 import { StatusCard } from './StatusCard';
@@ -18,7 +19,6 @@ export type ValidationSummaryPanelProps = {
   lineageTone: StatusTone;
   lineageLabel: string;
   lineageHelper: string;
-  registerDisabled: boolean;
   registerBusy: boolean;
   registerLabel: string;
   registerHelper: string;
@@ -38,7 +38,6 @@ export function ValidationSummaryPanel({
   lineageTone,
   lineageLabel,
   lineageHelper,
-  registerDisabled,
   registerBusy,
   registerLabel,
   registerHelper,
@@ -46,6 +45,7 @@ export function ValidationSummaryPanel({
   stickyActions = false,
 }: ValidationSummaryPanelProps) {
   const { t } = useT();
+  const actionBarRef = React.useRef<HTMLDivElement>(null);
   const completed = requiredFields.filter((field) => field.complete).length;
   const total = requiredFields.length;
   const allComplete = total > 0 && completed === total;
@@ -55,16 +55,36 @@ export function ValidationSummaryPanel({
     total: String(total),
   });
 
+  React.useEffect(() => {
+    if (!stickyActions || typeof document === 'undefined') return;
+    const bar = actionBarRef.current;
+    if (!bar) return;
+    const root = document.documentElement;
+    const update = () => {
+      root.style.setProperty('--form-action-bar-height', `${bar.getBoundingClientRect().height}px`);
+    };
+    update();
+    const observer =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    observer?.observe(bar);
+    window.addEventListener('resize', update);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', update);
+      root.style.removeProperty('--form-action-bar-height');
+    };
+  }, [stickyActions]);
+
   const submitButton = (
     <button
       type="submit"
-      disabled={registerDisabled || registerBusy}
+      disabled={registerBusy}
       aria-busy={registerBusy}
       aria-describedby="registration-status"
       className={cn(
         'focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-[58px] w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-black tracking-widest uppercase transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
         stickyActions && 'sm:w-auto sm:min-w-56',
-        registerDisabled || registerBusy
+        registerBusy
           ? 'border-border bg-muted text-muted-foreground cursor-not-allowed border'
           : 'from-sidebar to-sidebar-active cursor-pointer bg-gradient-to-r text-white shadow-lg shadow-primary/25 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99]',
       )}
@@ -75,7 +95,7 @@ export function ValidationSummaryPanel({
           aria-hidden="true"
         />
       ) : null}
-      <span>{registerLabel}</span>
+      <span className="whitespace-nowrap">{registerLabel}</span>
     </button>
   );
 
@@ -85,9 +105,9 @@ export function ValidationSummaryPanel({
       role="status"
       aria-live="polite"
       className={cn(
-        'text-center text-xs font-semibold break-words',
+        'min-w-0 text-center text-xs font-semibold break-words',
         stickyActions && 'order-2 sm:order-1 sm:flex-1 sm:text-left',
-        registerDisabled || registerBusy ? 'text-warning' : 'text-muted-foreground',
+        registerBusy ? 'text-warning' : 'text-muted-foreground',
       )}
     >
       {registerHelper}
@@ -170,10 +190,15 @@ export function ValidationSummaryPanel({
       <MissingFieldsList items={requiredFields} />
 
       {stickyActions ? (
-        <div className="bg-card/95 border-primary/10 fixed inset-x-0 bottom-20 z-40 border-t px-4 py-3 shadow-[0_-18px_36px_-24px_rgba(0,0,0,0.35)] backdrop-blur md:bottom-0 md:left-64 md:px-6">
+        <div
+          ref={actionBarRef}
+          data-testid="form-action-bar"
+          className="bg-card border-border fixed inset-x-0 bottom-0 border-t px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] md:left-64 md:px-6 dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]"
+          style={{ zIndex: Z_LAYERS.actionBar }}
+        >
           <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             {statusText}
-            <div className="order-1 flex flex-col gap-2 sm:order-2 sm:flex-row sm:items-center">
+            <div className="order-1 flex min-w-0 flex-col gap-2 sm:order-2 sm:flex-row sm:items-center">
               {footerNode}
               {submitButton}
             </div>

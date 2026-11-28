@@ -24,6 +24,8 @@ export type ParentSelectorProps = {
   compact?: boolean;
   /** Offspring registration only accepts registered parents. */
   allowExternal?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
 function getChildrenOf(parentName: string, fowls: FowlRecord[], gender: 'sire' | 'dam'): FowlRecord[] {
@@ -72,7 +74,7 @@ function ChildItem({ child, parentName, parentGender, allFowls, onSelect }: { ch
   );
 }
 
-export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact, allowExternal = true }: ParentSelectorProps) {
+export default function ParentSelector({ id, value, onChange, onPick, fowls, preferredGender, placeholder, accent = 'emerald', compact, allowExternal = true, invalid = false, describedBy }: ParentSelectorProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(value);
@@ -185,6 +187,8 @@ export default function ParentSelector({ id, value, onChange, onPick, fowls, pre
         onFocus={() => setOpen(true)}
         expanded={open}
         controls={open ? listboxId : undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={invalid ? describedBy : undefined}
         className={`w-full ${pad} border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground focus:border-emerald-500 font-semibold`}
         placeholder={placeholder || 'Type a name or pick from registry...'}
       />

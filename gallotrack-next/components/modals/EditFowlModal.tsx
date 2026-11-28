@@ -23,9 +23,11 @@ import ComboboxInput from '@/components/ui/ComboboxInput';
 import DeclaredCompositionEditor from '@/components/profiling/DeclaredCompositionEditor';
 import {
   getDescendantFowls,
+  parseDeclaredComposition,
   validateDeclaredComposition,
   computePedigreeComposition,
   type BloodlineComposition,
+  type DeclaredCompositionValidationResult,
 } from '@/lib/bloodline-composition';
 import { getCompositionSource } from '@/lib/breeding-classification';
 import {
@@ -34,7 +36,9 @@ import {
   normalizeBirdCode,
   previewBirdCode,
 } from '@/lib/bird-code';
-import { bloodlineOf, isCustomOption, normalizeOptionValue } from '@/lib/helpers';
+import { bloodlineOf, isCustomOption, normalizeOptionValue, sexLabel } from '@/lib/helpers';
+import { isValidWingBand } from '@/lib/wing-band';
+import { validateParentRoles } from '@/lib/parent-sex';
 import { findStrainName, normalizeStrainSearch, strainMatchesQuery } from '@/lib/strain-options';
 import { createRegisteredBreed } from '@/lib/services/strain-service';
 import { toastMessage } from '@/lib/toast-bus';
@@ -42,16 +46,17 @@ import { GENDER_CLASS_OPTIONS } from '@/lib/gender-class';
 import { useT } from '@/lib/i18n';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { mergeOptions } from '@/lib/lifecycle';
-import { useUnitPrefs, weightUnitLabel, heightUnitLabel } from '@/lib/units';
+import { useUnitPrefs, weightUnitLabel, heightUnitLabel, weightFromStorage, heightFromStorage } from '@/lib/units';
 import { validateOffspringBirthdate, type BirthdateValidationResult } from '@/lib/registry-roles';
 import { Modal } from '@/components/ui';
 import ChickenPhotoField from '@/components/ChickenPhotoField';
 import { useFowlFormStateOptional } from '@/lib/contexts/fowl-form-context';
+import { Z_LAYERS } from '@/lib/ui-layers';
 
 type EditFowlModalProps = {
   editingFowl: FowlRecord | null;
   setEditingFowl: (f: FowlRecord | null) => void;
-  handleUpdateFowl: (e: React.FormEvent) => void;
+  handleUpdateFowl: (e: React.FormEvent) => Promise<{ ok: boolean; error?: string } | void>;
   loading: boolean;
   fowls: FowlRecord[];
   availableStrains: string[];
@@ -188,6 +193,8 @@ export default function EditFowlModal({
   const [photoProcessing, setPhotoProcessing] = React.useState(false);
   const [draftRestored, setDraftRestored] = React.useState(false);
   const [draftPhotoNotice, setDraftPhotoNotice] = React.useState(false);
+  const [saveAttempted, setSaveAttempted] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
   const restoredDraftIdRef = React.useRef<number | string | null>(null);
   const [strainOpen, setStrainOpen] = React.useState(false);
   const [strainActiveIndex, setStrainActiveIndex] = React.useState(-1);
@@ -339,6 +346,8 @@ export default function EditFowlModal({
 
   const handleClose = () => {
     if (editingFowl) clearDraft?.(editingFowl.id);
+    setSaveAttempted(false);
+    setSaveError(null);
     setEditingFowl(null);
   };
 
@@ -404,9 +413,9 @@ export default function EditFowlModal({
     return prev !== curr;
   }, [editingFowl, editDeclaredComposition]);
 
-  const declaredValidation = React.useMemo(() => {
+  const declaredValidation = React.useMemo<DeclaredCompositionValidationResult>(() => {
     if (!editDeclaredComposition || editDeclaredComposition.length === 0) {
-      return { valid: true };
+      return { valid: true, errors: [], warnings: [], parsed: [], total: 100 };
     }
     return validateDeclaredComposition(editDeclaredComposition, editBreed, availableStrains ?? [], {
       isOffspring,
@@ -422,11 +431,239 @@ export default function EditFowlModal({
     [editingFowl, editBirthdate, editSire, editDam, fowls],
   );
 
+  React.useEffect(() => {
+    setSaveAttempted(false);
+    setSaveError(null);
+  }, [editingFowl?.id]);
+
   if (!editingFowl) return null;
 
   const photoUploading = photoForm?.uploadingImage ?? false;
   const saveBusy = loading || photoUploading || photoProcessing;
+  const normalizedText = (value: string | null | undefined) => (value ?? '').trim();
+  const normalizedNumber = (value: string | number | null | undefined) => {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? String(parsed) : raw;
+  };
+  const originalBirdCode = normalizeBirdCode(editingFowl.bird_code);
+  const effectiveBirdCode = normalizeBirdCode(editBirdCode || originalBirdCode);
+  const originalDeclared = JSON.stringify(
+    parseDeclaredComposition(editingFowl.declared_composition) ?? null,
+  );
+  const currentDeclared = JSON.stringify(editDeclaredComposition ?? null);
+  const isDirty =
+    normalizedText(editName) !== normalizedText(editingFowl.name) ||
+    normalizeStrainSearch(editBreed) !== normalizeStrainSearch(editingFowl.breed) ||
+    normalizedText(editGender) !== normalizedText(editingFowl.gender) ||
+    normalizedText(editColor) !== normalizedText(editingFowl.feather_color || editingFowl.color) ||
+    normalizedText(editColorCategory) !== normalizedText(editingFowl.color_category) ||
+    normalizedText(editBehaviorTrait) !==
+      normalizedText(editingFowl.trait || editingFowl.behavior_trait) ||
+    normalizedText(editEyeVariant) !== normalizedText(editingFowl.eye_variant) ||
+    normalizedText(editBirthdate) !== normalizedText(editingFowl.birthdate) ||
+    normalizedText(editGrowthStage) !== normalizedText(editingFowl.growth_stage) ||
+    normalizedNumber(editWeight) !==
+      normalizedNumber(weightFromStorage(editingFowl.weight, unitPrefs.weightUnit)) ||
+    normalizedNumber(editHeight) !==
+      normalizedNumber(heightFromStorage(editingFowl.height, unitPrefs.heightUnit)) ||
+    normalizedText(editLegColor) !== normalizedText(editingFowl.leg_color) ||
+    normalizedText(editSire) !== normalizedText(editingFowl.sire) ||
+    normalizedText(editDam) !== normalizedText(editingFowl.dam) ||
+    effectiveBirdCode.toLowerCase() !== originalBirdCode.toLowerCase() ||
+    normalizedText(editWingBand) !== normalizedText(editingFowl.wing_band) ||
+    originalDeclared !== currentDeclared ||
+    Boolean(photoForm?.editPhotoFile) ||
+    Boolean(photoForm?.editPhotoRemoved);
 
+  const originalBreed = normalizedText(editingFowl.breed);
+  const strainChanged = normalizeStrainSearch(editBreed) !== normalizeStrainSearch(originalBreed);
+  const editSireValue = normalizedText(editSire) || 'Foundation Stock';
+  const editDamValue = normalizedText(editDam) || 'Foundation Stock';
+  const birthdateTouched =
+    normalizedText(editBirthdate) !== normalizedText(editingFowl.birthdate) ||
+    normalizedText(editSire) !== normalizedText(editingFowl.sire) ||
+    normalizedText(editDam) !== normalizedText(editingFowl.dam);
+  const parentSexError = validateParentRoles(
+    { sire: editSireValue, dam: editDamValue },
+    fowls,
+    {
+      child: { id: editingFowl.id, user_id: editingFowl.user_id },
+      previous: { sire: editingFowl.sire, dam: editingFowl.dam },
+    },
+  );
+
+  const trimmedName = normalizedText(editName);
+  const duplicateName =
+    Boolean(trimmedName) &&
+    fowls.some(
+      (fowl) =>
+        fowl.id !== editingFowl.id &&
+        normalizedText(fowl.name).toLowerCase() === trimmedName.toLowerCase(),
+    );
+  const strainProblem = !normalizedText(editBreed)
+    ? t('editFowl.strainRequired')
+    : strainChanged && !registeredEditBreed
+      ? t('registry.chooseRegisteredBreedOrAdd')
+      : strainError;
+  const blockingBirthdateErrors = birthdateTouched ? birthdateValidation.errors : [];
+  const blockingDeclaredError = declaredChanged ? declaredValidation.error : null;
+  const codeChanged =
+    Boolean(normalizedText(editBirdCode)) &&
+    effectiveBirdCode.toLowerCase() !== originalBirdCode.toLowerCase();
+  const codeRole: 'sire' | 'dam' | 'offspring' = isOffspring
+    ? 'offspring'
+    : sexLabel({ gender: editGender }) === 'Hen'
+      ? 'dam'
+      : 'sire';
+  const codeFormatCheck = codeChanged ? validateIdentifierFormat(effectiveBirdCode, codeRole) : null;
+  const duplicateCode =
+    codeChanged &&
+    fowls.some(
+      (fowl) =>
+        fowl.id !== editingFowl.id &&
+        normalizeBirdCode(fowl.bird_code).toLowerCase() === effectiveBirdCode.toLowerCase(),
+    );
+  const codeProblem = !codeChanged
+    ? null
+    : duplicateCode
+      ? t('editFowl.codeDuplicate', { code: effectiveBirdCode })
+      : codeFormatCheck && !codeFormatCheck.valid
+        ? t('editFowl.codeInvalid', { error: codeFormatCheck.error ?? '' })
+        : null;
+  const trimmedBand = normalizedText(editWingBand);
+  const originalBand = normalizedText(editingFowl.wing_band);
+  const wingBandChanged = trimmedBand !== originalBand;
+  const wingBandInvalid = Boolean(trimmedBand) && !isValidWingBand(trimmedBand);
+  const wingBandDuplicate =
+    Boolean(trimmedBand) &&
+    fowls.some(
+      (fowl) =>
+        fowl.id !== editingFowl.id &&
+        normalizedText(fowl.wing_band).toLowerCase() === trimmedBand.toLowerCase(),
+    );
+  const wingBandProblem = wingBandChanged
+    ? wingBandInvalid
+      ? t('editFowl.wingBandInvalid')
+      : wingBandDuplicate
+        ? t('editFowl.wingBandDuplicate', { band: trimmedBand })
+        : null
+    : null;
+  const photoProcessingProblem =
+    Boolean(photoForm?.editPhotoFile) !== Boolean(photoForm?.editPhotoThumbnail) && !photoProcessing
+      ? t('editFowl.photoProcessing')
+      : null;
+
+  const saveProblems: Array<{ id: string; label: string; message: string }> = [];
+  if (!trimmedName) {
+    saveProblems.push({
+      id: 'identifier-name',
+      label: t('editFowl.fieldName'),
+      message: t('editFowl.nameRequired'),
+    });
+  } else if (duplicateName) {
+    saveProblems.push({
+      id: 'identifier-name',
+      label: t('editFowl.fieldName'),
+      message: t('editFowl.nameDuplicate', { name: trimmedName }),
+    });
+  }
+  if (strainProblem) {
+    saveProblems.push({
+      id: 'genetic-strain',
+      label: t('editFowl.fieldStrain'),
+      message: strainProblem,
+    });
+  }
+  if (blockingBirthdateErrors.length > 0) {
+    saveProblems.push({
+      id: 'birth-date',
+      label: t('editFowl.fieldBirthdate'),
+      message: blockingBirthdateErrors.join(' '),
+    });
+  }
+  if (blockingDeclaredError) {
+    saveProblems.push({
+      id: 'declared-percent-0',
+      label: t('editFowl.fieldPurity'),
+      message: blockingDeclaredError,
+    });
+  }
+  if (wingBandProblem) {
+    saveProblems.push({
+      id: 'wing-band-id',
+      label: t('editFowl.fieldWingBand'),
+      message: wingBandProblem,
+    });
+  }
+  if (codeProblem) {
+    saveProblems.push({
+      id: 'chicken-code',
+      label: t('editFowl.fieldCode'),
+      message: codeProblem,
+    });
+  }
+  if (parentSexError) {
+    saveProblems.push({
+      id: /sire/i.test(parentSexError) ? 'edit-sire' : 'edit-dam',
+      label: t('editFowl.fieldParents'),
+      message: parentSexError,
+    });
+  }
+  if (photoProcessingProblem) {
+    saveProblems.push({
+      id: 'chicken-photo-dropzone',
+      label: t('editFowl.fieldPhoto'),
+      message: photoProcessingProblem,
+    });
+  }
+
+  const legacyWarnings: string[] = [];
+  if (isLegacyStrain) legacyWarnings.push(t('editFowl.legacyStrain'));
+  if (
+    sexLabel(editingFowl) === 'Hen' &&
+    Boolean(originalBand) &&
+    !wingBandChanged
+  ) {
+    legacyWarnings.push(t('editFowl.legacyHenWingBand'));
+  }
+  if (!wingBandChanged && (wingBandInvalid || wingBandDuplicate)) {
+    legacyWarnings.push(t('editFowl.legacyWingBand'));
+  }
+  if (!declaredChanged && declaredValidation.error) {
+    legacyWarnings.push(t('editFowl.legacyComposition'));
+  }
+  if (!birthdateTouched && birthdateValidation.errors.length > 0) {
+    legacyWarnings.push(t('editFowl.legacyBirthdate'));
+  }
+
+  const focusField = (id: string) => {
+    if (id === 'chicken-code') setManualCodeOpen(true);
+    if (id === 'genetic-strain') setStrainOpen(true);
+    window.requestAnimationFrame(() => {
+      const field = document.getElementById(id);
+      if (field && typeof field.scrollIntoView === 'function') {
+        field.scrollIntoView({ block: 'center' });
+      }
+      field?.focus();
+    });
+  };
+
+  const submitEdit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSaveAttempted(true);
+    setSaveError(null);
+    if (saveBusy || !isDirty) return;
+    if (saveProblems.length > 0) {
+      focusField(saveProblems[0].id);
+      return;
+    }
+    const result = await handleUpdateFowl(event);
+    if (result && !result.ok && result.error) {
+      setSaveError(result.error);
+    }
+  };
   const editAgeParts = editBirthdate ? getAgeParts(editBirthdate) : null;
   const editAgeDisplay = editBirthdate
     ? editAgeParts
@@ -445,34 +682,87 @@ export default function EditFowlModal({
       title="Edit Node Registry"
       description={`Update parameters for ${editingFowl.name}`}
       icon={<Pencil className="h-5 w-5" />}
-      className="max-w-lg"
+      iconClassName="hidden h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-border bg-muted text-muted-foreground sm:flex"
+      className="max-w-lg min-w-0 overflow-x-hidden p-3! sm:p-6!"
     >
       <form
-        onSubmit={(e) => {
-          if (photoProcessing) {
-            e.preventDefault();
-            return;
-          }
-          const originalBreed = (editingFowl?.breed || '').trim();
-          const strainChanged =
-            normalizeStrainSearch(editBreed) !== normalizeStrainSearch(originalBreed);
-          if (strainChanged && !findStrainName(availableStrains, editBreed)) {
-            e.preventDefault();
-            setStrainError(t('registry.chooseRegisteredBreedOrAdd'));
-            setStrainAnnouncement(t('registry.noMatchingBreedPressEnter'));
-            setStrainOpen(true);
-            strainInputRef.current?.focus();
-            return;
-          }
-          if (!birthdateValidation.valid) {
-            e.preventDefault();
-            return;
-          }
-          handleUpdateFowl(e);
+        noValidate
+        onSubmit={(event) => {
+          void submitEdit(event);
         }}
         autoComplete="off"
-        className="space-y-4 overflow-y-auto p-6 text-sm"
+        className="min-w-0 space-y-4 text-sm"
       >
+        {saveError && (
+          <div
+            role="alert"
+            className="border-loss/30 bg-loss-bg text-loss flex items-start gap-2.5 rounded-lg border p-3 text-xs font-bold"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 break-words">
+              {t('editFowl.saveFailed')}: {saveError}
+            </span>
+          </div>
+        )}
+
+        {saveAttempted && saveProblems.length > 0 && (
+          <div
+            role="alert"
+            className="border-loss/30 bg-loss-bg text-loss rounded-lg border p-3 text-xs font-bold"
+          >
+            <p className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                {saveProblems.length === 1
+                  ? t('editFowl.cannotSaveOne')
+                  : t('editFowl.cannotSave', { count: saveProblems.length })}
+              </span>
+            </p>
+            <p className="mt-1 pl-6 opacity-80">{t('editFowl.fixHighlighted')}</p>
+            <ul className="mt-2 space-y-1 pl-6">
+              {saveProblems.map((problem) => (
+                <li key={`${problem.id}-${problem.label}`} className="min-w-0 break-words">
+                  <button
+                    type="button"
+                    onClick={() => focusField(problem.id)}
+                    className="text-left underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                  >
+                    {problem.label}: {problem.message}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {saveAttempted && !isDirty && (
+          <div
+            role="status"
+            className="border-border bg-muted text-foreground rounded-lg border p-3 text-xs font-bold"
+          >
+            {t('editFowl.noChanges')}
+          </div>
+        )}
+
+        {legacyWarnings.length > 0 && (
+          <div
+            role="status"
+            className="border-low-sample/30 bg-low-sample-bg text-low-sample rounded-lg border p-3 text-xs font-semibold"
+          >
+            <p className="flex items-start gap-2 font-black">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{t('editFowl.legacyTitle')}</span>
+            </p>
+            <ul className="mt-1 list-disc space-y-1 pl-8">
+              {legacyWarnings.map((warning) => (
+                <li key={warning} className="break-words">
+                  {warning}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {draftRestored && (
           <div
             role="status"
@@ -529,8 +819,8 @@ export default function EditFowlModal({
           onProcessingChange={setPhotoProcessing}
         />
 
-        <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
-          <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+        <div className="dark:bg-muted/50 dark:border-border min-w-0 space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-2.5 sm:p-4">
+          <h4 className="flex min-w-0 flex-wrap items-center gap-1.5 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <Tag className="h-3.5 w-3.5" /> <span>Core Identity</span>
           </h4>
           <div>
@@ -544,12 +834,34 @@ export default function EditFowlModal({
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
+              aria-invalid={Boolean(
+                saveAttempted &&
+                  saveProblems.some((problem) => problem.id === 'identifier-name'),
+              )}
+              aria-describedby={
+                saveAttempted && saveProblems.some((problem) => problem.id === 'identifier-name')
+                  ? 'identifier-name-error'
+                  : undefined
+              }
               className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 text-sm font-medium text-neutral-900 focus:border-emerald-500"
               required
               id="identifier-name"
             />
+            {saveAttempted &&
+              saveProblems
+                .filter((problem) => problem.id === 'identifier-name')
+                .map((problem) => (
+                  <p
+                    key={problem.message}
+                    id="identifier-name-error"
+                    role="alert"
+                    className="text-danger mt-1 text-xs font-bold break-words"
+                  >
+                    {problem.message}
+                  </p>
+                ))}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="relative z-30">
               <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                 <label
@@ -563,10 +875,10 @@ export default function EditFowlModal({
                     type="button"
                     onClick={onAddBreeds}
                     aria-label={t('registry.addBreed')}
-                    className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:text-emerald-300"
+                    className="inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 max-sm:gap-1 max-sm:px-1.5 max-sm:text-[10px] dark:text-emerald-300"
                   >
-                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>{t('registry.addBreed')}</span>
+                    <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 break-words">{t('registry.addBreed')}</span>
                   </button>
                 )}
               </div>
@@ -588,8 +900,19 @@ export default function EditFowlModal({
                   }}
                   onBlur={() => setTimeout(() => setStrainOpen(false), 120)}
                   onKeyDown={handleStrainInputKeyDown}
-                  aria-invalid={Boolean(strainError)}
-                  aria-describedby={strainError ? 'genetic-strain-error' : undefined}
+                  aria-invalid={Boolean(
+                    strainError ||
+                      (saveAttempted &&
+                        saveProblems.some((problem) => problem.id === 'genetic-strain')),
+                  )}
+                  aria-describedby={
+                    strainError
+                      ? 'genetic-strain-error'
+                      : saveAttempted &&
+                          saveProblems.some((problem) => problem.id === 'genetic-strain')
+                        ? 'genetic-strain-save-error'
+                        : undefined
+                  }
                   expanded={strainOpen}
                   controls={strainOpen ? 'genetic-strain-listbox' : undefined}
                   activeOptionId={
@@ -646,10 +969,25 @@ export default function EditFowlModal({
                     )}
                   </div>
                 )}
+                {saveAttempted &&
+                  !strainError &&
+                  saveProblems
+                    .filter((problem) => problem.id === 'genetic-strain')
+                    .map((problem) => (
+                      <p
+                        key={problem.message}
+                        id="genetic-strain-save-error"
+                        role="alert"
+                        className="text-danger mt-1.5 text-xs font-bold break-words"
+                      >
+                        {problem.message}
+                      </p>
+                    ))}
                 {strainOpen && strainDropdownPos && createPortal(
                   <div
-                    className="fixed z-[10000] flex max-h-64 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
+                    className="fixed flex max-h-64 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card"
                     style={{
+                      zIndex: Z_LAYERS.modalPopover,
                       top: strainDropdownPos.top,
                       left: strainDropdownPos.left,
                       width: strainDropdownPos.width,
@@ -765,6 +1103,7 @@ export default function EditFowlModal({
                 hasParents={false}
                 currentValue={editingFowl.declared_composition as any}
                 source={compositionSource}
+                nonBlockingError={!declaredChanged}
               />
             </div>
           )}
@@ -865,8 +1204,8 @@ export default function EditFowlModal({
           </div>
         </div>
 
-        <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
-          <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+        <div className="dark:bg-muted/50 dark:border-border min-w-0 space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-2.5 sm:p-4">
+          <h4 className="flex min-w-0 flex-wrap items-center gap-1.5 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <Ruler className="h-3.5 w-3.5" /> <span>Physical Parameters</span>
           </h4>
           <div className="mb-2">
@@ -882,22 +1221,42 @@ export default function EditFowlModal({
               value={editBirthdate}
               onChange={(e) => handleEditBirthdateChange(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
+              aria-invalid={birthdateTouched && birthdateValidation.errors.length > 0}
+              aria-describedby={
+                birthdateTouched && birthdateValidation.errors.length > 0
+                  ? 'edit-birthdate-error'
+                  : !birthdateTouched && birthdateValidation.errors.length > 0
+                    ? 'edit-birthdate-legacy-warning'
+                    : undefined
+              }
               className={`dark:bg-input dark:text-foreground w-full rounded-md border bg-white p-2.5 text-sm font-semibold text-neutral-900 ${
-                birthdateValidation.errors.length > 0
+                birthdateTouched && birthdateValidation.errors.length > 0
                   ? 'border-rose-500 focus:border-rose-500'
                   : 'border-input-border focus:border-emerald-500'
               }`}
               id="birth-date"
             />
-            {birthdateValidation.errors.map((err, i) => (
+            {birthdateTouched &&
+              birthdateValidation.errors.map((err, i) => (
+                <p
+                  key={`edit-bd-err-${i}`}
+                  id={i === 0 ? 'edit-birthdate-error' : undefined}
+                  role="alert"
+                  className="mt-1 flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300"
+                >
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{err}</span>
+                </p>
+              ))}
+            {!birthdateTouched && birthdateValidation.errors.length > 0 && (
               <p
-                key={`edit-bd-err-${i}`}
-                className="mt-1 flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300"
+                id="edit-birthdate-legacy-warning"
+                className="border-low-sample/30 bg-low-sample-bg text-low-sample mt-1 flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-xs font-bold"
               >
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>{err}</span>
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{birthdateValidation.errors.join(' ')}</span>
               </p>
-            ))}
+            )}
             {birthdateValidation.warnings.map((warn, i) => (
               <p
                 key={`edit-bd-warn-${i}`}
@@ -1072,8 +1431,8 @@ export default function EditFowlModal({
           </div>
         </div>
 
-        <div className="dark:bg-muted/50 dark:border-border space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-4">
-          <h4 className="flex items-center space-x-1 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
+        <div className="dark:bg-muted/50 dark:border-border min-w-0 space-y-3 rounded-lg border border-slate-200/40 bg-slate-50/50 p-2.5 sm:p-4">
+          <h4 className="flex min-w-0 flex-wrap items-center gap-1.5 border-b pb-1 text-xs font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-300">
             <TreePine className="h-3.5 w-3.5" /> <span>Ancestry Heritage Roots</span>
           </h4>
           {(() => {
@@ -1098,31 +1457,31 @@ export default function EditFowlModal({
 
             return (
               <div className="dark:bg-muted/40 dark:border-border space-y-2 rounded-lg border border-slate-200/80 bg-slate-50/80 p-3">
-                <div className="flex items-center justify-between">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <label
-                    className="dark:text-card-foreground block text-xs font-black tracking-wider text-slate-800 uppercase"
+                    className="dark:text-card-foreground block min-w-0 text-xs font-black tracking-wider text-slate-800 uppercase break-words"
                     htmlFor="chicken-code"
                   >
-                    Unique Chicken Identifier
+                    Permanent Assigned Code
                   </label>
                   <button
                     type="button"
                     onClick={() => setManualCodeOpen(!manualCodeOpen)}
-                    className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
+                    className="inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1 text-left text-xs font-bold whitespace-normal text-emerald-700 hover:underline dark:text-emerald-400"
                   >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    <span>{manualCodeOpen ? 'Lock Identifier' : 'Edit identifier manually'}</span>
+                    <Edit3 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="min-w-0 break-words">{manualCodeOpen ? 'Lock Identifier' : 'Edit identifier manually'}</span>
                   </button>
                 </div>
                 {!manualCodeOpen ? (
-                  <div className="dark:border-border dark:bg-card flex items-center justify-between rounded-md border border-slate-200 bg-white p-2.5">
-                    <div className="flex items-center gap-2">
+                  <div className="dark:border-border dark:bg-card flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 bg-white p-2.5">
+                    <div className="flex min-w-0 items-center gap-2">
                       <Lock className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
                       <span className="dark:text-card-foreground font-mono text-sm font-extrabold text-slate-800">
                         [{formatBirdCodeForDisplay(editBirdCode) || '—'}]
                       </span>
                     </div>
-                    <span className="text-muted-foreground text-xs font-semibold">
+                    <span className="text-muted-foreground min-w-0 text-xs font-semibold break-words">
                       Permanent Assigned Code
                     </span>
                   </div>
@@ -1132,6 +1491,14 @@ export default function EditFowlModal({
                       type="text"
                       value={editBirdCode}
                       onChange={(e) => setEditBirdCode(e.target.value)}
+                      aria-invalid={Boolean(
+                        codeProblem ||
+                          (saveAttempted &&
+                            saveProblems.some((problem) => problem.id === 'chicken-code')),
+                      )}
+                      aria-describedby={
+                        codeProblem ? 'chicken-code-error' : undefined
+                      }
                       className="dark:bg-input dark:text-foreground w-full rounded-md border border-emerald-500 bg-white p-2.5 font-mono text-sm font-bold text-neutral-900 focus:border-emerald-500"
                       placeholder="e.g. 1, A, 1A1"
                       id="chicken-code"
@@ -1139,11 +1506,11 @@ export default function EditFowlModal({
                     <div className="flex items-center justify-between text-xs font-semibold">
                       {editBirdCode.trim() ? (
                         formatCheck && !formatCheck.valid ? (
-                          <span className="font-bold text-rose-600 dark:text-rose-400">
+                          <span id="chicken-code-error" role="alert" className="font-bold text-rose-600 dark:text-rose-400">
                              {formatCheck.error}
                           </span>
                         ) : isDuplicate ? (
-                          <span className="font-bold text-rose-600 dark:text-rose-400">
+                          <span id="chicken-code-error" role="alert" className="font-bold text-rose-600 dark:text-rose-400">
                              Already taken by another chicken
                           </span>
                         ) : (
@@ -1165,15 +1532,6 @@ export default function EditFowlModal({
             );
           })()}
           {(() => {
-            const trimmedBand = editWingBand.trim();
-            const isBandDuplicate = trimmedBand
-              ? fowls.some(
-                  (f) =>
-                    f.id !== editingFowl?.id &&
-                    (f.wing_band || '').trim().toLowerCase() === trimmedBand.toLowerCase(),
-                )
-              : false;
-
             return (
               <div>
                 <div className="mb-1 flex items-center justify-between">
@@ -1192,14 +1550,41 @@ export default function EditFowlModal({
                   value={editWingBand}
                   onChange={(e) => setEditWingBand(e.target.value)}
                   maxLength={50}
+                  aria-invalid={Boolean(
+                    (saveAttempted &&
+                      saveProblems.some((problem) => problem.id === 'wing-band-id')) ||
+                    (wingBandChanged && Boolean(wingBandProblem))
+                  )}
+                  aria-describedby={
+                    (saveAttempted && saveProblems.some((problem) => problem.id === 'wing-band-id')) ||
+                    (wingBandChanged && wingBandProblem)
+                      ? 'wing-band-error'
+                      : undefined
+                  }
                   className="border-input-border dark:bg-input dark:text-foreground placeholder:text-muted-foreground w-full rounded-md border bg-white p-2.5 font-mono text-sm font-bold text-neutral-900 focus:border-emerald-500"
                   placeholder="e.g. W-001"
                   id="wing-band-id"
                 />
-                {isBandDuplicate && (
-                  <p className="mt-1 text-xs font-bold text-rose-600 dark:text-rose-400">
-                     Wing Banding &quot;{trimmedBand}&quot; is already assigned to another
-                    chicken.
+                {saveAttempted &&
+                  saveProblems
+                    .filter((problem) => problem.id === 'wing-band-id')
+                    .map((problem) => (
+                      <p
+                        key={problem.message}
+                        id="wing-band-error"
+                        role="alert"
+                        className="text-danger mt-1 text-xs font-bold break-words"
+                      >
+                        {problem.message}
+                      </p>
+                    ))}
+                {!saveAttempted && wingBandChanged && wingBandProblem && (
+                  <p
+                    id="wing-band-error"
+                    role="alert"
+                    className="text-danger mt-1 text-xs font-bold break-words"
+                  >
+                    {wingBandProblem}
                   </p>
                 )}
                 <p className="text-muted-foreground mt-1 text-xs font-semibold">
@@ -1210,7 +1595,7 @@ export default function EditFowlModal({
               </div>
             );
           })()}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="edit-sire"
@@ -1231,6 +1616,8 @@ export default function EditFowlModal({
                 preferredGender="Male"
                 placeholder="External / Unregistered name..."
                 compact
+                invalid={Boolean(saveAttempted && parentSexError && /sire/i.test(parentSexError))}
+                describedBy="edit-parent-error"
               />
             </div>
             <div>
@@ -1254,9 +1641,21 @@ export default function EditFowlModal({
                 accent="amber"
                 placeholder="External / Unregistered name..."
                 compact
+                invalid={Boolean(saveAttempted && parentSexError && /dam/i.test(parentSexError))}
+                describedBy="edit-parent-error"
               />
             </div>
           </div>
+
+          {saveAttempted && parentSexError && (
+            <p
+              id="edit-parent-error"
+              role="alert"
+              className="text-danger text-xs font-bold break-words"
+            >
+              {parentSexError}
+            </p>
+          )}
 
           {isOffspring && (
             <div className="pt-2">
@@ -1270,6 +1669,7 @@ export default function EditFowlModal({
                 currentValue={editingFowl.declared_composition as any}
                 calculatedValue={pedigreeComposition}
                 source={compositionSource}
+                nonBlockingError={!declaredChanged}
               />
             </div>
           )}
@@ -1300,28 +1700,30 @@ export default function EditFowlModal({
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
+        <div className="bg-card border-border sticky bottom-0 mt-2 flex min-w-0 flex-col-reverse gap-2 border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] sm:flex-row dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]" style={{ zIndex: Z_LAYERS.actionBar }}>
           <button
             type="button"
             onClick={handleClose}
-            className="cursor-pointer rounded-md border border-border bg-muted px-4 py-3.5 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground sm:w-36"
+            className="border-border bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground focus-visible:ring-focus-ring focus-visible:ring-offset-background min-h-11 w-full min-w-0 cursor-pointer rounded-md border px-4 py-2.5 text-xs font-black tracking-widest uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none max-sm:px-1 max-sm:text-[10px] max-sm:tracking-normal sm:w-36"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
-            disabled={saveBusy || !birthdateValidation.valid || !declaredValidation.valid}
-            className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-md bg-slate-900 py-3.5 text-sm font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={saveBusy}
+            className="bg-brand text-brand-foreground hover:bg-brand-strong focus-visible:ring-focus-ring focus-visible:ring-offset-background flex min-h-11 w-full min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-extrabold tracking-wider uppercase shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70 max-sm:px-2 max-sm:text-xs sm:w-auto"
           >
             {saveBusy && (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+              <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
             )}
-            <span>
+            <span className="min-w-0 break-words text-center">
               {photoProcessing
-                ? 'Processing photo...'
+                ? t('editFowl.preparingPhoto')
                 : saveBusy
-                  ? 'Updating Chicken Node...'
-                  : 'Save Changes'}
+                  ? t('editFowl.saving')
+                  : !isDirty
+                    ? t('editFowl.noChanges')
+                    : t('editFowl.saveChanges')}
             </span>
           </button>
         </div>

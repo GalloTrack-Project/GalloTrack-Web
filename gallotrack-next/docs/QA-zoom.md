@@ -76,6 +76,23 @@ from 25% to 500%, in English, Tagalog, and Hiligaynon.
 - [ ] KPI cards, milestone rows, bloodline cards, donut legend, and recent match rows wrap without clipping.
 - [ ] No horizontal page scrollbar appears at any width, zoom, theme, or language.
 
+## Footer Band and Form Action Bars
+
+Check the Register Chicken form (/profiling?tab=form) and the Edit Chicken modal at 320, 375,
+640, 768, 1024, and 1280 px with browser zoom from 100% to 200%, in English, Tagalog, and
+Hiligaynon, light and dark.
+
+- [ ] Every dashboard route renders exactly one footer band (data-testid="footer-band"); the Register route renders no page-level wavy band.
+- [ ] The footer band is in normal flow, hidden below 768 px or under 700 px height, and is never fixed or sticky.
+- [ ] The footer band is fully visible above the fixed form action bar when the page is scrolled to the bottom; neither Cancel nor Register is covered.
+- [ ] elementFromPoint at the centre of Register and Cancel returns the button (or a child of it), never the footer band, a panel, or another overlay.
+- [ ] The action bar has a solid background, top border, soft shadow, safe-area padding, and the Register/Cancel buttons are inside the viewport.
+- [ ] The action bar is above page content and below dropdowns, modals, and toasts.
+- [ ] Cancel shows the short label "Cancel" with "Cancel registration" as its accessible name; labels do not break into awkward lines.
+- [ ] Register is enabled when idle and disabled only while registering, processing a photo, or uploading a photo.
+- [ ] Clicking Register with missing fields shows the top summary ("Cannot register yet: N required fields"), focuses the first missing field, keeps typed values, and shows inline field messages.
+- [ ] The existing Required field checklist remains visible and its links still focus the matching fields.
+- [ ] Edit Chicken keeps its action buttons inside a sticky modal footer; no page-level footer band appears inside the modal.
 ## Full Siblings & Families Cards
 
 Verify the family card at 320, 375, 640, 768, 1024, 1280, and 1920 px and at 100% to 200%

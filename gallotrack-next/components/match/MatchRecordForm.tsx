@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { isMale } from '@/lib/helpers';
 import { formatBirdCodeForDisplay } from '@/lib/bird-code';
+import { Z_LAYERS } from '@/lib/ui-layers';
 import { mergeOptions } from '@/lib/lifecycle';
 import { useRegistryOptions } from '@/lib/hooks/use-registry-options';
 import { useUserSettings } from '@/lib/hooks/use-user-settings';
@@ -1114,20 +1115,25 @@ export default function MatchRecordForm({
               >
                 Number of Cocks
               </label>
-              <div className="flex items-center gap-2">
+              <div className="relative min-w-0">
                 <input
                   type="number"
                   min={1}
                   max={99}
+                  inputMode="numeric"
+                  onWheel={(e) => e.currentTarget.blur()}
                   id="number-of-cocks"
                   value={form.cockCount || ''}
                   onChange={(e) => {
                     const count = Number(e.target.value) || 0;
                     setForm((prev) => ({ ...prev, cockCount: count }));
                   }}
-                  className={`${inputClass()} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                  className={`${inputClass()} no-spinner w-full pr-20`}
                 />
-                <span className="bg-muted text-muted-foreground flex h-11 shrink-0 items-center rounded-lg px-4 py-3 text-xs font-bold sm:h-12 sm:text-sm">
+                <span
+                  aria-hidden="true"
+                  className="bg-muted text-muted-foreground pointer-events-none absolute inset-y-0 right-1.5 my-auto flex h-9 items-center rounded-md px-3 text-xs font-bold sm:text-sm"
+                >
                   cocks
                 </span>
               </div>
@@ -1549,7 +1555,7 @@ export default function MatchRecordForm({
               top border and shadow, kept INSIDE the page container (no negative
               margins) and padded for the iOS safe-area inset.
             - lg and up: static, at the end of the form, so it never covers a field. */}
-        <div className="bg-card border-border sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] sm:gap-4 sm:pt-5 lg:static lg:border-t-0 lg:bg-transparent lg:pt-6 lg:pb-0 lg:shadow-none dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+        <div className="bg-card border-border sticky bottom-0 flex items-center justify-between gap-3 border-t pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] sm:gap-4 sm:pt-5 lg:static lg:border-t-0 lg:bg-transparent lg:pt-6 lg:pb-0 lg:shadow-none dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]" style={{ zIndex: Z_LAYERS.actionBar }}>
           <button
             type="button"
             onClick={() => handleCancel(onSuccessRedirect)}

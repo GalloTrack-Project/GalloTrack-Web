@@ -116,7 +116,7 @@ describe('nav-manifest', () => {
     expect(REGISTRY_TABS).toContain('breeds');
     // Legacy 'match' renders nothing - deliberately excluded
     expect(REGISTRY_TABS).not.toContain('match');
-    expect([...INVENTORY_STATUS_TABS]).toEqual(['all', 'active', 'breeding', 'archived', 'deceased']);
+    expect([...INVENTORY_STATUS_TABS]).toEqual(['all', 'active', 'breeders', 'breeding', 'archived', 'deceased']);
     expect([...BREEDING_TABS]).toEqual(['coding', 'pairs', 'identity', 'safety']);
     expect([...MARKETPLACE_TABS]).toEqual(['browse', 'my', 'create']);
     expect([...LINEAGE_TABS]).toEqual(['tree', 'families', 'sire', 'dam', 'pedigree']);

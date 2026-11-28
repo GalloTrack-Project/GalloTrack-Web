@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import EncodeForm from './EncodeForm';
 import type { FowlRecord } from '@/lib/types';
 
@@ -150,6 +150,54 @@ describe('Validation & Summary Panel', () => {
     expect(screen.getByText(/Auto · Sire/i)).toBeInTheDocument();
     expect(screen.getByText(/This number will be banded on the chicken’s wing/i)).toBeInTheDocument();
   });
+  it('keeps register enabled when idle and shows the missing-field summary on click', async () => {
+    const handleAddFowl = vi.fn();
+    render(
+      <EncodeForm
+        {...mockProps}
+        newName=""
+        newBreed=""
+        newGender=""
+        newBirthdate=""
+        selectedStrains={[]}
+        availableStrains={[]}
+        handleAddFowl={handleAddFowl}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const register = screen.getByRole('button', { name: /REGISTER/i });
+    expect(register).toBeEnabled();
+    const cancel = screen.getByRole('button', { name: 'Cancel registration' });
+    expect(cancel).toHaveTextContent('Cancel');
+    expect(cancel.className).toContain('whitespace-nowrap');
+
+    fireEvent.click(register);
+
+    const summary = screen.getByTestId('registration-error-summary');
+    expect(summary).toHaveTextContent('Cannot register yet: 4 required fields');
+    expect(screen.getByText('Complete the required fields to register')).toBeInTheDocument();
+    expect(screen.getAllByText('Identifier Name').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Gender Class').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Birth Date').length).toBeGreaterThan(0);
+    expect(screen.getByText('Identifier Name is required.')).toBeInTheDocument();
+    expect(screen.getByText('Gender Class is required.')).toBeInTheDocument();
+    expect(screen.getByText('Birth Date is required.')).toBeInTheDocument();
+    expect(handleAddFowl).not.toHaveBeenCalled();
+    await waitFor(() => expect(document.getElementById('identifier-name')).toHaveFocus());
+
+    fireEvent.click(within(summary).getByRole('button', { name: 'Gender Class' }));
+    expect(document.getElementById('gender-class')).toHaveFocus();
+  });
+
+  it('disables register only while a registration request is running', () => {
+    render(<EncodeForm {...mockProps} loading />);
+
+    const register = screen.getByRole('button', { name: /Registering/i });
+    expect(register).toBeDisabled();
+    expect(register).toHaveAttribute('aria-busy', 'true');
+  });
+
   it('disables register while the selected photo is still processing', async () => {
     let resolveProcess!: (value: { full: File; thumbnail: File }) => void;
     processPhoto.mockReturnValue(
